@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -67,6 +66,9 @@ public class Nxt extends HttpServlet {
 	
 	static final long initialBaseTarget = 153722867, maxBaseTarget = 1000000000L * initialBaseTarget;
 	static final BigInteger two64 = new BigInteger("18446744073709551616");
+
+    //TODO: go through all those global static variables and see which should be final, volatile, or atomic
+    //TODO: verify thread safety of all collections, make Concurrent or synchronized
 	static long epochBeginning;
 	static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 	
@@ -96,6 +98,7 @@ public class Nxt extends HttpServlet {
 	
 	static int blockCounter;
 	static HashMap<Long, Block> blocks;
+    //TODO: lastBlock is accessed by multiple threads? should be volatile or atomic
 	static long lastBlock;
 	static Peer lastBlockchainFeeder;
 	
@@ -243,6 +246,8 @@ public class Nxt extends HttpServlet {
 		long balance;
 		int height;
 		
+        //BUG: this is accessed in multiple threads without being synchronized
+        //TODO: use atomic variable
 		byte[] publicKey;
 		
 		HashMap<Long, Integer> assetBalances;
@@ -280,6 +285,7 @@ public class Nxt extends HttpServlet {
 				
 				sortedTransactions = unconfirmedTransactions.values().toArray(new Transaction[0]);
 				
+				//TODO: can be simplified, if removing transactions with absent referencedTransaction is all this is indeed doing
 				while (sortedTransactions.length > 0) {
 					
 					int i;
@@ -313,6 +319,7 @@ public class Nxt extends HttpServlet {
 			HashSet<String> newAliases = new HashSet<>();
 			HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
 			int payloadLength = 0;
+            //TODO: why the while loop, isn't it enough to go only once through sortedTransactions and break when payloadLength exceeded?
 			while (payloadLength <= MAX_PAYLOAD_LENGTH) {
 				
 				int prevNumberOfNewTransactions = newTransactions.size();
@@ -326,12 +333,14 @@ public class Nxt extends HttpServlet {
 						long sender = Account.getId(transaction.senderPublicKey);
 						Long accumulatedAmount = accumulatedAmounts.get(sender);
 						if (accumulatedAmount == null) {
-							
+                            //TODO: not needed if using autoboxing
 							accumulatedAmount = new Long(0);
 							
 						}
 						
 						long amount = (transaction.amount + transaction.fee) * 100L;
+                        //BUG: account.balance accessed without being synchronized on account
+                        //TODO: add account.getBalance() method that takes care of synchronization and make account.balance private
 						if (accumulatedAmount + amount <= accounts.get(sender).balance && transaction.validateAttachment()) {
 							
 							switch (transaction.type) {
@@ -427,6 +436,7 @@ public class Nxt extends HttpServlet {
 			System.arraycopy(data, 0, data2, 0, data2.length);
 			block.blockSignature = Crypto.sign(data2, secretPhrase);
 			
+			//TODO: only prepare request if block verification succeeds
 			JSONObject request = block.getJSONObject(newTransactions);
 			request.put("requestType", "processBlock");
 			
@@ -467,7 +477,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 			}
-			
+            //TODO: is it intentional that balance is not adjusted also for outgoing transactions in the last block?
+
 			return (int)(balance / 100) - amount;
 			
 		}
@@ -480,6 +491,8 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
+        //TODO: setBalance is in almost all case used together with setUnconfirmedBalance, within synchronized(account).
+        // Consider adding a single method that sets both, and is synchronized
 		void setBalance(long balance) throws Exception {
 			
 			this.balance = balance;
@@ -687,6 +700,7 @@ public class Nxt extends HttpServlet {
 		
 		static final long serialVersionUID = 0;
 		
+        //TODO: at least some of those should be final
 		int version;
 		int timestamp;
 		long previousBlock;
@@ -801,6 +815,7 @@ public class Nxt extends HttpServlet {
 						
 					}
 					
+                    //TODO: refactor, don't use switch but create e.g. transaction handler class for each case
 					switch (transaction.type) {
 					
 					case Transaction.TYPE_PAYMENT:
@@ -875,6 +890,7 @@ public class Nxt extends HttpServlet {
 									
 									long assetId = transaction.getId();
 									Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
+                                    //TODO: use concurrent collections instead of synchronized
 									synchronized (assets) {
 										
 										assets.put(assetId, asset);
@@ -1105,9 +1121,10 @@ public class Nxt extends HttpServlet {
 				return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 				
 			}
-			
-		}
-		
+
+        }
+
+        //TODO: cache this byte[] ?
 		byte[] getBytes() {
 			
 			ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
@@ -1135,6 +1152,7 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
+        //TODO: again, cache the id
 		long getId() throws Exception {
 			
 			byte[] hash = MessageDigest.getInstance("SHA-256").digest(getBytes());
@@ -2902,6 +2920,8 @@ public class Nxt extends HttpServlet {
 				Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
 				if (peer == null) {
 					
+					//TODO: Check addresses
+
 					peer = new Peer(announcedAddress);
 					peer.index = ++peerCounter;
 					peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
@@ -3019,7 +3039,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 			} catch (Exception e) { }
-			
+			//TODO: log errors on all Exceptions
+
 			return false;
 			
 		}
@@ -3411,6 +3432,7 @@ public class Nxt extends HttpServlet {
 				connection.setConnectTimeout(connectTimeout);
 				connection.setReadTimeout(readTimeout);
 				byte[] requestBytes = request.toString().getBytes("UTF-8");
+                //TODO: use JSONObject.writeJSONString(writer) to skip intermediate byte[] creation
 				OutputStream outputStream = connection.getOutputStream();
 				outputStream.write(requestBytes);
 				outputStream.close();
@@ -3435,7 +3457,7 @@ public class Nxt extends HttpServlet {
 						
 					}
 					updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
-					
+					//TODO: parse using a reader from the stream, skip String creation
 					response = (JSONObject)JSONValue.parse(responseValue);
 					
 				} else {
@@ -3473,7 +3495,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 				response = null;
-				
+                //TODO: make sure all streams are closed in finally
+
 			}
 			
 			if (showLog) {
@@ -3665,6 +3688,7 @@ public class Nxt extends HttpServlet {
 		
 		static final int ASSET_ISSUANCE_FEE = 1000;
 		
+        //TODO: timestamp and signature currently not thread safe
 		byte type, subtype;
 		int timestamp;
 		short deadline;
@@ -3676,6 +3700,7 @@ public class Nxt extends HttpServlet {
 		Attachment attachment;
 		
 		int index;
+        //TODO: volatile?
 		long block;
 		int height;
 		
@@ -3708,7 +3733,7 @@ public class Nxt extends HttpServlet {
 				return 1;
 				
 			} else {
-				
+				//TODO: cache bytes or at least bytes.length
 				if (fee * 1048576L / getBytes().length > o.fee * 1048576L / o.getBytes().length) {
 					
 					return -1;
@@ -3946,6 +3971,7 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
+        //TODO: refactor common code with the above getTransaction(ByteBuffer)
 		static Transaction getTransaction(JSONObject transactionData) {
 			
 			byte type = ((Long)transactionData.get("type")).byteValue();
@@ -4065,6 +4091,7 @@ public class Nxt extends HttpServlet {
 			
 			FileInputStream fileInputStream = new FileInputStream(fileName);
 			ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            //TODO: accessing transactionCounter should be synchronized(Nxt.transactions)
 			transactionCounter = objectInputStream.readInt();
 			transactions = (HashMap<Long, Transaction>)objectInputStream.readObject();
 			objectInputStream.close();
@@ -4288,13 +4315,13 @@ public class Nxt extends HttpServlet {
 		}
 		
 		boolean validateAttachment() {
-			
+			//TODO: too many zeros, define a static final constant
 			if (fee > 1000000000) {
 				
 				return false;
 				
 			}
-			
+			//TODO: refactor switch statements
 			switch (type) {
 			
 			case TYPE_PAYMENT:
@@ -4580,7 +4607,7 @@ public class Nxt extends HttpServlet {
 		static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
 			
 			static final long serialVersionUID = 0;
-			
+			//TODO: final, caching
 			String alias;
 			String uri;
 			
@@ -4884,8 +4911,9 @@ public class Nxt extends HttpServlet {
 	
 	static class User {
 		
-		ConcurrentLinkedQueue<JSONObject> pendingResponses;
-		AsyncContext asyncContext;
+		final ConcurrentLinkedQueue<JSONObject> pendingResponses;
+        //TODO: asyncContext access not thread safe
+        AsyncContext asyncContext;
 		volatile boolean isInactive;
 		
 		String secretPhrase;
@@ -4989,8 +5017,8 @@ public class Nxt extends HttpServlet {
 		
 		@Override
 		public void onError(AsyncEvent asyncEvent) throws IOException {
-			
-			user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
+
+            user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 			
 			ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream();
 			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
@@ -5499,7 +5527,7 @@ public class Nxt extends HttpServlet {
 				}
 				
 				for (Transaction transaction : transactions.values()) {
-					
+					//TODO: accessing transactionCounter should be synchronized(Nxt.transactions)
 					transaction.index = ++transactionCounter;
 					transaction.block = GENESIS_BLOCK_ID;
 					
@@ -5597,7 +5625,7 @@ public class Nxt extends HttpServlet {
 						
 						Collection<Peer> peers;
 						synchronized (Nxt.peers) {
-							
+							//TODO: why the clone? extra work for the GC, better use thread-safe concurrent collection
 							peers = ((HashMap<String, Peer>)Nxt.peers.clone()).values();
 							
 						}
@@ -5626,7 +5654,7 @@ public class Nxt extends HttpServlet {
 						
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
-							
+							//TODO: don't create a new JSONObject every time for constant requests like this one, reuse a single immutable instance
 							JSONObject request = new JSONObject();
 							request.put("requestType", "getPeers");
 							JSONObject response = peer.send(request);
@@ -5637,7 +5665,7 @@ public class Nxt extends HttpServlet {
 									
 									String address = ((String)peers.get(i)).trim(); 
 									if (address.length() > 0) {
-										
+										//TODO: can a rogue peer fill the peer pool with zombie addresses? consider an option to trust only highly-hallmarked peers
 										Peer.addPeer(address, address);
 										
 									}
@@ -5703,7 +5731,8 @@ public class Nxt extends HttpServlet {
 									
 									Account account = accounts.get(Account.getId(transaction.senderPublicKey));
 									synchronized (account) {
-										
+										//TODO: this sends a request to all unlocked users, and until that completes account and Nxt.transactions are held locked
+                                        //  - get rid of synchronized and use concurrent
 										account.setUnconfirmedBalance(account.unconfirmedBalance + (transaction.amount + transaction.fee) * 100L);
 										
 									}
@@ -5724,7 +5753,7 @@ public class Nxt extends HttpServlet {
 								response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
 								
 								for (User user : users.values()) {
-									
+									//TODO: do the response sending outside the synchronized block
 									user.send(response);
 									
 								}
@@ -5748,7 +5777,7 @@ public class Nxt extends HttpServlet {
 						
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
-							
+							//TODO: not thread-safe, make volatile or atomic
 							lastBlockchainFeeder = peer;
 							
 							JSONObject request = new JSONObject();
@@ -6032,7 +6061,15 @@ public class Nxt extends HttpServlet {
 								response.put("response", "setBlockGenerationDeadline");
 								response.put("deadline", hit.divide(BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
 								
-								user.send(response);
+                                // there may be multiple User entries for the same secretPhrase/account in the users map
+                                // because of multiple logins, ideally the duplicates should be removed on account unlock
+                                // so this is a temporary fix (or better, keep a separate miningUsers map with no duplicates)
+                                for (User u : users.values()) {
+                                    if (user.secretPhrase.equals(u.secretPhrase)) {
+                                        u.send(response);
+                                    }
+                                }
+								//user.send(response);
 								
 							}
 							
@@ -6064,6 +6101,8 @@ public class Nxt extends HttpServlet {
 		
 	}
 	
+    //TODO: the huge switch statement should be refactored completely, a separate class should handle each case
+    // This is required in order to be able to factor out closed-source code into separate class files
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
 		User user = null;
@@ -6922,7 +6961,7 @@ public class Nxt extends HttpServlet {
 								JSONArray peers = new JSONArray();
 								Set<String> peerKeys;
 								synchronized (Nxt.peers) {
-									
+									//TODO: get rid of clone
 									peerKeys = ((HashMap<String, Peer>)Nxt.peers.clone()).keySet();
 									
 								}
@@ -8273,10 +8312,10 @@ public class Nxt extends HttpServlet {
 												byte[] data = buffer.array();
 												byte[] signature;
 												do {
-													
+													//TODO: use SecureRandom ?
 													data[data.length - 1] = (byte)ThreadLocalRandom.current().nextInt();
 													signature = Crypto.sign(data, secretPhrase);
-													
+													//TODO: why the loop? risk of infinite loop?
 												} while (!Crypto.verify(signature, data, publicKey));
 												
 												response.put("hallmark", convert(data) + convert(signature));
@@ -8870,7 +8909,17 @@ public class Nxt extends HttpServlet {
 				
 			case "sendMoney":
 				{
-					
+					//TODO: SECURITY
+                    //
+                    // User is obtained from the Nxt.users map only by means of the userPasscode, so anyone that can
+                    // guess or bruteforce-attack userPasscode can send money without knowing the secretPhrase
+                    //
+                    // userPasscode is currently generated in javascript using Math.random() which should not be assumed
+                    // to be secure, and is browser dependent
+                    // (see http://landing2.trusteer.com/sites/default/files/Temporary_User_Tracking_in_Major_Browsers.pdf )
+                    //
+                    // I suggest changing the API to require re-entering the secret phrase for any transaction,
+                    // thus not having to rely on the security of javascript Math.random()
 					if (user.secretPhrase != null) {
 						
 						String recipientValue = req.getParameter("recipient"), amountValue = req.getParameter("amount"), feeValue = req.getParameter("fee"), deadlineValue = req.getParameter("deadline");
@@ -9273,6 +9322,9 @@ public class Nxt extends HttpServlet {
 			{
 				
 				InputStream inputStream = req.getInputStream();
+
+				//TODO: change to have the JSON parser read from the input stream via a reader directly,
+                //instead of creating an intermediate byte[] and String
 				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 				byte[] buffer = new byte[65536];
 				int numberOfBytes;
@@ -9599,10 +9651,20 @@ public class Nxt extends HttpServlet {
 		servletOutputStream.write(responseBytes);
 		servletOutputStream.close();
 		
+        /* //TODO: I would rewrite the above to avoid the creation of byte[] and to avoid JSONObject.toString()
+        DataOutputStream os = new DataOutputStream(resp.getOutputStream());
+        Writer writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        try {
+            response.writeJSONString(writer);
+        } finally {
+            writer.close();
+        }
+        */
+
 		if (peer != null) {
 			
 			peer.updateUploadedVolume(responseBytes.length);
-			
+			//peer.updateUploadedVolume(os.size());
 		}
 		
 	}
@@ -9612,12 +9674,14 @@ public class Nxt extends HttpServlet {
 		
 		scheduledThreadPool.shutdown();
 		cachedThreadPool.shutdown();
-		
+        //TODO: use awaitTermination()
+
 		try {
 			
 			Block.saveBlocks("blocks.nxt", true);
 			
 		} catch (Exception e) { }
+        //TODO: log errors
 		try {
 			
 			Transaction.saveTransactions("transactions.nxt");
