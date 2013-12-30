@@ -62,7 +62,7 @@ public class Nxt extends HttpServlet {
 	static final int MAX_PAYLOAD_LENGTH = 255 * 128;
 	
 	static final int ALIAS_SYSTEM_BLOCK = 22000;
-	static final int TRANSPARENT_FORGING_BLOCK = 30000;
+	static final int TRANSPARENT_FORGING_BLOCK = 32000;
 	
 	static final long initialBaseTarget = 153722867, maxBaseTarget = 1000000000L * initialBaseTarget;
 	static final BigInteger two64 = new BigInteger("18446744073709551616");
