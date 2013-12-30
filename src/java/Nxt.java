@@ -8509,7 +8509,7 @@ public class Nxt extends HttpServlet {
 				
 				return;
 				
-			} else {
+			} else { // userPasscode != null
 				
 				if (allowedUserHosts != null && !allowedUserHosts.contains(req.getRemoteHost())) {
 					
@@ -8909,22 +8909,13 @@ public class Nxt extends HttpServlet {
 				
 			case "sendMoney":
 				{
-					//TODO: SECURITY
-                    //
-                    // User is obtained from the Nxt.users map only by means of the userPasscode, so anyone that can
-                    // guess or bruteforce-attack userPasscode can send money without knowing the secretPhrase
-                    //
-                    // userPasscode is currently generated in javascript using Math.random() which should not be assumed
-                    // to be secure, and is browser dependent
-                    // (see http://landing2.trusteer.com/sites/default/files/Temporary_User_Tracking_in_Major_Browsers.pdf )
-                    //
-                    // I suggest changing the API to require re-entering the secret phrase for any transaction,
-                    // thus not having to rely on the security of javascript Math.random()
-					if (user.secretPhrase != null) {
+
+                    if (user.secretPhrase != null) {
 						
 						String recipientValue = req.getParameter("recipient"), amountValue = req.getParameter("amount"), feeValue = req.getParameter("fee"), deadlineValue = req.getParameter("deadline");
-						
-						long recipient;
+                        String secretPhrase = req.getParameter("secretPhrase");
+
+                        long recipient;
 						int amount = 0, fee = 0;
 						short deadline = 0;
 						
@@ -8950,8 +8941,20 @@ public class Nxt extends HttpServlet {
 							break;
 							
 						}
-						
-						if (amount <= 0) {
+
+                        if (! user.secretPhrase.equals(secretPhrase)) {
+
+                            JSONObject response = new JSONObject();
+                            response.put("response", "notifyOfIncorrectTransaction");
+                            response.put("message", "Wrong secret phrase!");
+                            response.put("recipient", recipientValue);
+                            response.put("amount", amountValue);
+                            response.put("fee", feeValue);
+                            response.put("deadline", deadlineValue);
+
+                            user.pendingResponses.offer(response);
+
+                        } else if (amount <= 0) {
 							
 							JSONObject response = new JSONObject();
 							response.put("response", "notifyOfIncorrectTransaction");
