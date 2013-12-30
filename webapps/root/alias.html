@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Alias System Tool</title>
+		<script type="text/javascript">
+			function assignAlias() {
+				document.getElementById("ok").disabled = true;
+				document.getElementById("response").value = "";
+				var secretPhrase = document.getElementById("secretPhrase").value;
+				var alias = document.getElementById("alias").value;
+				var uri = document.getElementById("uri").value;
+				var fee = document.getElementById("fee").value;
+				var deadline = document.getElementById("deadline").value;
+				sendRequest("assignAlias&secretPhrase=" + encodeURIComponent(secretPhrase) + "&alias=" + encodeURIComponent(alias) + "&uri=" + encodeURIComponent(uri) + "&fee=" + fee + "&deadline=" + deadline);
+			}
+			function sendRequest(requestParameters) {
+				var request = new XMLHttpRequest();
+				request.open("GET", "nxt?requestType=" + requestParameters + "&" + Math.random());
+				request.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						document.getElementById("response").value = this.responseText;
+						document.getElementById("ok").disabled = false;
+					}
+				};
+				request.send();
+			}
+		</script>
+	</head>
+	<body>
+		<table>
+			<tr>
+				<td colspan="2"><b>Assign alias</b><hr></td>
+			</tr>
+			<tr>
+				<td>Secret phrase:</td>
+				<td><input type="password" id="secretPhrase"></td>
+			</tr>
+			<tr>
+				<td>Alias:</td>
+				<td><input id="alias"></td>
+			</tr>
+			<tr>
+				<td>URI:</td>
+				<td><input id="uri"></td>
+			</tr>
+			<tr>
+				<td>Fee, NXT:</td>
+				<td><input id="fee"></td>
+			</tr>
+			<tr>
+				<td>Deadline, minute:</td>
+				<td><input id="deadline"></td>
+			</tr>
+			<tr>
+				<td colspan="2"><button id="ok" style="width: 100%;" onclick="assignAlias();">OK</button></td>
+			</tr>
+			<tr>
+				<td colspan="2">Server response</td>
+			</tr>
+			<tr>
+				<td colspan="2"><textarea id="response" style="width: 100%;"></textarea></td>
+			</tr>
+		</table>
+	</body>
+</html>

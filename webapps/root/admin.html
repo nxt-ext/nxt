@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>NRS</title>
+    <style type="text/css">
+        table {border-collapse: collapse;}
+        td {padding: 10px;}
+        .result {white-space: pre; font-family: monospace;}
+    </style>
+    <script type="text/javascript">
+        function submitForm(form) {
+            var url = '/nxt?';
+            for (i = 0; i < form.elements.length; i++) {
+                if (! form.elements[i].name) {
+                    continue;
+                }
+                if (! url.endsWith('?')) {
+                    url += '&';
+                }
+                url += encodeURIComponent(form.elements[i].name);
+                url += '=';
+                url += encodeURIComponent(form.elements[i].value);
+            }
+            var request = new XMLHttpRequest();
+            request.open("GET", url, false);
+            request.send();
+            var result = JSON.stringify(JSON.parse(request.responseText), null, 4);
+            form.getElementsByClassName("result")[0].textContent = result;
+            return false;
+        }
+    </script>
+</head>
+<body>
+<h3>Nxt admin tools</h3>
+<b>Generate Hallmark:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="markHost"/>
+    <table>
+        <tr>
+            <td>Public IP:</td>
+            <td><input type="text" name="host"/></td>
+        </tr>
+        <tr>
+            <td>Weight:</td>
+            <td><input type="number" name="weight" value="100"/></td>
+        </tr>
+        <tr>
+            <td>Date:</td>
+            <td><input type="text" name="date" value="2013-12-10"/></td>
+        </tr>
+        <tr>
+            <td>Secret Phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Verify Hallmark:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="decodeHallmark"/>
+    <table>
+        <tr>
+            <td>Hallmark:</td>
+            <td><input type="text" name="hallmark"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Verify Token:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="decodeToken"/>
+    <table>
+        <tr>
+            <td>Token:</td>
+            <td><input type="text" name="token"/></td>
+        </tr>
+        <tr>
+            <td>Website:</td>
+            <td><input type="text" name="website"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Peers:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getPeers"/>
+    <table>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Peer Info:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getPeer"/>
+    <table>
+        <tr>
+            <td>Peer:</td>
+            <td><input type="text" name="peer"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get State:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getState"/>
+    <table>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get My Info:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getMyInfo"/>
+    <table>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Balance:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getBalance"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+</body>
+</html>

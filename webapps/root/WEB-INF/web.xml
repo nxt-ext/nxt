@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app>
+	<servlet>
+		<servlet-name>Nxt</servlet-name>
+		<servlet-class>Nxt</servlet-class>
+		<async-supported>true</async-supported>
+		<load-on-startup>1</load-on-startup>
+
+		<init-param>
+			<param-name>blockchainStoragePath</param-name>
+			<param-value>blockchain.nrs</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>myScheme</param-name>
+			<param-value>http</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>myPort</param-name>
+			<param-value>7874</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>myAddress</param-name>
+			<param-value></param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>shareMyAddress</param-name>
+			<param-value>true</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>myHallmark</param-name>
+			<param-value></param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>wellKnownPeers</param-name>
+			<param-value>78.46.63.221; 95.85.22.142</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>wellKnownPeers2</param-name>
+			<param-value>87.230.14.1; 46.19.137.116; 95.85.22.142; 162.243.214.183; scum2.bounceme.net; 162.243.213.115; node11.nxtbase.com; 78.46.63.221; scum5.bounceme.net; scum4.bounceme.net; vps5.nxtcrypto.org; node16.nxtbase.com;</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>maxNumberOfConnectedPublicPeers</param-name>
+			<param-value>20</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>connectTimeout</param-name>
+			<param-value>2000</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>readTimeout</param-name>
+			<param-value>5000</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>enableHallmarkProtection</param-name>
+			<param-value>true</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>pushThreshold</param-name>
+			<param-value>0</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>pullThreshold</param-name>
+			<param-value>0</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>allowedUserHosts</param-name>
+			<param-value>127.0.0.1; localhost; 0:0:0:0:0:0:0:1;</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>allowedBotHosts</param-name>
+			<param-value>127.0.0.1; localhost; 0:0:0:0:0:0:0:1;</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>blacklistingPeriod</param-name>
+			<param-value>300000</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>communicationLoggingMask</param-name>
+			<param-value>0</param-value>
+		</init-param>
+
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Nxt</servlet-name>
+		<url-pattern>/nxt</url-pattern>
+	</servlet-mapping>
+
+	<filter>
+		<filter-name>DoSFilter</filter-name>
+		<filter-class>org.eclipse.jetty.servlets.DoSFilter</filter-class>
+		<init-param>
+			<param-name>maxRequestsPerSec</param-name>
+			<param-value>3000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>delayMs</param-name>
+			<param-value>1000</param-value>
+		</init-param>
+		<init-param>
+			<param-name>trackSessions</param-name>
+			<param-value>false</param-value>
+		</init-param>
+		<async-supported>true</async-supported>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>DoSFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+</web-app>

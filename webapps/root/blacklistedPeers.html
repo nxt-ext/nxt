@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<style type="text/css">
+			body {background-color: #E0E0E0; color: #000; font-family: Tahoma; font-size: 10pt; margin: 0; padding: 10px;}
+			table {border-collapse: collapse; width: 100%;}
+			td {height: 20px; line-height: 20px; padding: 0;}
+			.announcedAddress {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACdUlEQVQ4y8XUy08TURQG8DMVAiFRYsAQceXGnStXkrgw6h9gXLEwJD5gY0yUhSgmuCDVKKGEuhECgi/CAqMGxFZalUdJJIA8pCS0sfJoZzozbWlLO9O5dz4XulDTQIFEv+S3/XJucs8h+hdZWPDma5p2gjF2kzH+lHP+9pfnjLHbmqad9Pn8BVsWiZJUnMlkGjnnkmkymBuzMJVemCH7T3IPzOQ0TG6Ac65mMkaTrCglWcvi8XiFwdgy19Zg+muB8YPAJ8rOcwDm0hXwVACMMTGRSJ7+o0yNRI4bhrHBgz2AuxhwUm5cReAr7TAMQ49GY2eIiMjhcBZqmuZjq73AgAXop20SwALt0HQ9ODk5VUyiJJ3T03FgoAzoo515sw/6hgxZli+Soqo2PfgB6KFd0b+/gqqq7RQSxYfplSGgi3ZF8/dBlKTH5PUunk+uKzC7S4A22pnOIiQjq1jy+a7Sjbq6/bKihtIzbYBdAOy0bemJ+1AjkWir3V5ORERDLvfZSDSWSU20Ai2FQBPlxpaPtMeKaCzGh0dGq37/isI7h6NSDMvR2PIXaK+rYDbtBayUlfmgCPrLSqwHPiMsKwmXy32JiCx/L4tgtd49MjM790IKy6nY0gjQQEADgTeVI+WsR3K4Gevz/VDDQUiyos3Nf+1rttmOEpGw2UpbxjzjNYq4CtyyAPX5iM4NYmUtqCx4Fz2TU9NdzvdD1Zeraw4T0Z6crs3omKdCkhXwO+VIDDZiLSTGOzo6jxFR3lbTZE2zraVMlGQzMXgPohQ2Xe6PF3Z1DwVByPN/C8yHpDCmpmce5fy0zXLteu2h7ifPTpWWlhbQ/8wPAy/eSMdSNZAAAAAASUVORK5CYII=); width: 20px;}
+			.remove {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAADrklEQVQ4y42UzWtcVRiHnzv3TmYymUy+LNhALTRp0FrootBVDUXFgggigrUrUes/4Eqoi2z9WIibtuK2xWx0obZoNS3UukiN0A5US9LYJE2TmkkymXvPvefc8+WiicSmKb5weD95+J1z4IVNliTJoFLq+Vartfvy5cvReu2AtfZ7a+0VKeUx/q8JId52zhnnnHfOeWttaoy5aa1tNO4rPzedeuecbjQaw+Pj48XtOMGGz7Ls2sKsOXjz9xaVakhHZ0ilGlHtjJi6mSASw8vHdhKGAYB0zs0AU865K3N37342ODCg/gNcWlr6qtRWe2NuWhCvGZKWJl7TyNTi/YOhqBjQ0RlRrRWp1h74XXsqWJd/1FmtfgAQrQP92bPn3j9+/M3+of29hzdfwWhPvA6Pm5pWM6fVVMzPxKSJ5rmjO3lyV3hwY34DyN69g6u1rq49M7djfvvlb2RqH/vmHZ0RL77az86nOpianPx6o17YCIaGhg4EQdD/wzd/cWeqSZYpnLcs3osxVpPnmsV7MWHkiGPJ7VurXDo/h3eepUbj4hbgyspK5pzDGIMQkr3PdnFoeAdCSA4c6mP/wR6EkBx+qZ/dAx0IIfFYnHO+fuNGawvwRr2+6J33UREykSOlJowCMpFjrcNaRyZywgiyLCcTOeVKAW10c2RkpLkFePrUqaaxJiuWAlIhEbGCwJMKidYGrQ2pkIQhJLEiFZJKNSRX+fzy8rLZApyYmNB5rhulckAqFKlQhNGD2GiL1gYhFIUwIGlJUqGo1opoo2cBtwUIOGPM/UpHRJYq4pakUIAsVWhj0dois5wwCkhiRZYqurrb0NrMbv79zUBvjFmsVCPSVCESRbEtQAiF0QajDTJTFArQWssQqaK7r4TW+s52QIy1i7WeEtZ6MqEJowLOeZzzWOcphAEEoKQhALp6y0ilZrcHarNQ6y7hnUMpQxQF4D1+/YRhgMcjU013b3ld7dr2CrXOF7p7SjjnkZmBAIJCgHMO5xzFYgHvPUpZene045ynXq/PbGZEm5M0y+729T1BuT3izuQq347+ic4Nv16aw2hHc1Xy3egtFudjBp7uQRu99uknHy9vq/DS2Ng1Y414/a195Llh9Ms6znkmrs5zfXwBnVvOnblOrauNo68NkiTJ1cnJyfxR+/Df/OJPYyee2bfvc2cp5/mjF0R7JUJKOT029vMr7737zh+PAwIEJ09+ODR85MgL7eX2noebHu9Xllemvzhz+scLF86vPNz/B+AKUQAzzOteAAAAAElFTkSuQmCC); cursor: pointer; width: 20px;}
+			.text {cursor: default; padding: 0 10px 0 5px; white-space: nowrap;}
+			.wellKnown {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACpElEQVQ4y62U30tTYRjH36lkkSjeGKF4UVQXFUJ420VmQeJFV+YfkGGYWAlCKOSFhOVAUi9mWnkxTVNzZkppRW4zpzmKzM1tBm5zZz+PTo8729k5O9/ONAgrdc2+8OG878X7ed+X57wPITFkZmYmKRAIHGMY5ohKpUog8cZisSSHw+E6URRp/EwkEnFwHHdrbGwsNrHfv3qc5/leQRCMvCAYfCER5Z+BE6+Bk2+AmllgnRcRCoXaMjMzZTvK9Hp9qiSzT7gjqNKL0HlFnB4GSOdW8t8BvBCJSp+wLFvQ09Mj+/1qB4LBYL10PYoNC0hTSgufAokdm9+/UTUtYtQeAccLUfGI3W5P25DJ5fIEaZcRiuFRoY0gb0gEUSBmcnpFfF/hEWDZoeLiYhlxudyFgSCHnC5J1IS4yO0WEQxxoCjneeKj6cYPi2EQOfaE2spBcjUQB0U1fLSGQO5hT3TPcvB4vUqi003lM+vrKFAKIHfF+KgVMWVlYbXZ6qN1STSZzB20n8FDDYvcFg7kTvifuPg4hNU1RhxXq89uVDojIyNZo5247XK7nc3jayCVTEzIJArbGVg9azBbFrqih9vyP86bzLXzS34crFwGKad3pfTZCpZX/JFvc4bOoqKi1D9eSlNzS5bT5fZ062ik33SCXPvF0WoXriu9SCzdnJ+pc8OytAxJppCWJm37/Pr6X5yzS6VfpGg8n/Qi774Dhyps0Ft88PpoGK00dPM+eKSxyWx5X1ZWlr5rg7haUnLYYDQNWCkfsm4s4O0XNxZtdrOite2CWqOtntRNPejrH7ickpKyP9bOJZNOOd04aEP76BKksVfR+uhU3H0wOzt7n4NyMdqvTjicrtCAavAS2WNkas1EzZzB+Onlq+Er0Tn5D5HtWL1t8gNKktsJilVhCwAAAABJRU5ErkJggg==); width: 20px;}
+		</style>
+		<script type="text/javascript">
+			function addPeer(peer) {
+				var peers = document.getElementById("peers"), row = peers.insertRow(peers.rows.length), element;
+				row.id = "peer" + peer.index;
+				element = row.insertCell(0);
+				if (peer.wellKnown) {
+					element.className = "wellKnown";
+					element.title = "Well-known address";
+				} else {
+					element.className = "announcedAddress";
+					element.title = "Announced address";
+				}
+				element = row.insertCell(1);
+				element.className = "text";
+				element.title = peer.announcedAddress;
+				if (peer.announcedAddress.length <= 20) {
+					element.innerHTML = peer.announcedAddress;
+				} else {
+					element.innerHTML = peer.announcedAddress.substr(0, 20) + "...";
+				}
+				element = row.insertCell(2);
+				element.className = "remove";
+				element.title = "Remove blacklisted status";
+				element.onclick = function() {
+					requestPeerRemoving(peer.index);
+				};
+				element = parent.document.getElementById("blacklistedPeersCounter");
+				element.innerHTML = parseInt(element.innerHTML) + 1;
+			}
+			
+			function addPeers(peers) {
+				var i;
+				for (i = 0; i < peers.length; i++) {
+					addPeer(peers[i]);
+				}
+			}
+			
+			function removePeer(peer) {
+				document.getElementById("peers").deleteRow(document.getElementById("peer" + peer.index).rowIndex);
+				var element = parent.document.getElementById("blacklistedPeersCounter");
+				element.innerHTML = parseInt(element.innerHTML) - 1;
+			}
+			
+			function removePeers(peers) {
+				var i;
+				for (i = 0; i < peers.length; i++) {
+					removePeer(peers[i]);
+				}
+			}
+			
+			function requestPeerRemoving(index) {
+				parent.sendRequest("removeBlacklistedPeer&peer=" + index);
+			}
+		</script>
+	</head>
+	<body>
+		<table id="peers"></table>
+	</body>
+</html>
