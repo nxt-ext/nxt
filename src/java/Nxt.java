@@ -1,3 +1,16 @@
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,16 +32,16 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,20 +50,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
-import javax.servlet.AsyncContext;
-import javax.servlet.AsyncEvent;
-import javax.servlet.AsyncListener;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Nxt extends HttpServlet {
 	
@@ -86,15 +86,16 @@ public class Nxt extends HttpServlet {
 	
 	static int transactionCounter;
 	static HashMap<Long, Transaction> transactions;
-	static ConcurrentHashMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>(), doubleSpendingTransactions = new ConcurrentHashMap<>();
+	static final ConcurrentHashMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
+    static final ConcurrentHashMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
 	
-	static HashSet<String> wellKnownPeers = new HashSet<>();
+	static final HashSet<String> wellKnownPeers = new HashSet<>();
 	static int maxNumberOfConnectedPublicPeers;
 	static int connectTimeout, readTimeout;
 	static boolean enableHallmarkProtection;
 	static int pushThreshold, pullThreshold;
-	static int peerCounter;
-	static HashMap<String, Peer> peers = new HashMap<>();
+	static final AtomicInteger peerCounter = new AtomicInteger();
+	static final ConcurrentHashMap<String, Peer> peers = new ConcurrentHashMap<>();
 	
 	static int blockCounter;
 	static HashMap<Long, Block> blocks;
@@ -2860,7 +2861,7 @@ public class Nxt extends HttpServlet {
 		static final int STATE_CONNECTED = 1;
 		static final int STATE_DISCONNECTED = 2;
 		
-		int index;
+		final int index;
 		String platform;
 		String scheme;
 		int port;
@@ -2876,10 +2877,11 @@ public class Nxt extends HttpServlet {
 		int state;
 		long downloadedVolume, uploadedVolume;
 		
-		Peer(String announcedAddress) {
+		Peer(String announcedAddress, int index) {
 			
 			this.announcedAddress = announcedAddress;
-			
+			this.index = index;
+
 		}
 		
 		static Peer addPeer(String address, String announcedAddress) {
@@ -2908,30 +2910,25 @@ public class Nxt extends HttpServlet {
 				return null;
 				
 			}
-			
-			synchronized (peers) {
-				
-				if (myAddress != null && myAddress.length() > 0 && myAddress.equals(announcedAddress)) {
-					
-					return null;
-					
-				}
-				
-				Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
-				if (peer == null) {
-					
-					//TODO: Check addresses
 
-					peer = new Peer(announcedAddress);
-					peer.index = ++peerCounter;
-					peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
-					
-				}
-				
-				return peer;
-				
-			}
-			
+            if (myAddress != null && myAddress.length() > 0 && myAddress.equals(announcedAddress)) {
+
+                return null;
+
+            }
+
+            Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
+            if (peer == null) {
+
+                //TODO: Check addresses
+
+                peer = new Peer(announcedAddress, peerCounter.incrementAndGet());
+                peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
+
+            }
+
+            return peer;
+
 		}
 		
 		boolean analyzeHallmark(String realHost, String hallmark) {
@@ -2987,53 +2984,49 @@ public class Nxt extends HttpServlet {
 					}
 					LinkedList<Peer> groupedPeers = new LinkedList<>();
 					int validDate = 0;
-					
-					synchronized (peers) {
-						
-						this.accountId = accountId;
-						this.weight = weight;
-						this.date = date;
-						
-						for (Peer peer : peers.values()) {
-							
-							if (peer.accountId == accountId) {
-								
-								groupedPeers.add(peer);
-								if (peer.date > validDate) {
-									
-									validDate = peer.date;
-									
-								}
-								
-							}
-							
-						}
-						
-						long totalWeight = 0;
-						for (Peer peer : groupedPeers) {
-							
-							if (peer.date == validDate) {
-								
-								totalWeight += peer.weight;
-								
-							} else {
-								
-								peer.adjustedWeight = 0;
-								peer.updateWeight();
-								
-							}
-							
-						}
-						
-						for (Peer peer : groupedPeers) {
-							
-							peer.adjustedWeight = 1000000000L * peer.weight / totalWeight;
-							peer.updateWeight();
-							
-						}
-						
-					}
-					
+
+                    this.accountId = accountId;
+                    this.weight = weight;
+                    this.date = date;
+
+                    for (Peer peer : peers.values()) {
+
+                        if (peer.accountId == accountId) {
+
+                            groupedPeers.add(peer);
+                            if (peer.date > validDate) {
+
+                                validDate = peer.date;
+
+                            }
+
+                        }
+
+                    }
+
+                    long totalWeight = 0;
+                    for (Peer peer : groupedPeers) {
+
+                        if (peer.date == validDate) {
+
+                            totalWeight += peer.weight;
+
+                        } else {
+
+                            peer.adjustedWeight = 0;
+                            peer.updateWeight();
+
+                        }
+
+                    }
+
+                    for (Peer peer : groupedPeers) {
+
+                        peer.adjustedWeight = 1000000000L * peer.weight / totalWeight;
+                        peer.updateWeight();
+
+                    }
+
 					return true;
 					
 				}
@@ -3209,9 +3202,21 @@ public class Nxt extends HttpServlet {
 		}
 		
 		static Peer getAnyPeer(int state, boolean applyPullThreshold) {
-			
-			synchronized (peers) {
-				
+
+            List<Peer> selectedPeers = new ArrayList<Peer>();
+
+            for (Peer peer : Nxt.peers.values()) {
+
+                if (peer.blacklistingTime <= 0 && peer.state == state && peer.announcedAddress.length() > 0
+                        && (!applyPullThreshold || !enableHallmarkProtection || peer.getWeight() >= pullThreshold)) {
+
+                    selectedPeers.add(peer);
+
+                }
+
+            }
+            /*  was:
+
 				Collection<Peer> peers = ((HashMap<String, Peer>)Nxt.peers.clone()).values();
 				Iterator<Peer> iterator = peers.iterator();
 				while (iterator.hasNext()) {
@@ -3224,67 +3229,60 @@ public class Nxt extends HttpServlet {
 					}
 					
 				}
+			*/
+
+			if (selectedPeers.size() > 0) {
+
+                long totalWeight = 0;
+                for (Peer peer : selectedPeers) {
+
+                    long weight = peer.getWeight();
+                    if (weight == 0) {
+
+                        weight = 1;
+
+                    }
+                    totalWeight += weight;
+
+                }
+
+                long hit = ThreadLocalRandom.current().nextLong(totalWeight);
+                for (Peer peer : selectedPeers) {
+
+                    long weight = peer.getWeight();
+                    if (weight == 0) {
+
+                        weight = 1;
+
+                    }
+                    if ((hit -= weight) < 0) {
+
+                        return peer;
+
+                    }
+
+                }
+
+            }
 				
-				if (peers.size() > 0) {
-					
-					Peer[] selectedPeers = peers.toArray(new Peer[0]);
-					long totalWeight = 0;
-					for (int i = 0; i < selectedPeers.length; i++) {
-						
-						long weight = selectedPeers[i].getWeight();
-						if (weight == 0) {
-							
-							weight = 1;
-							
-						}
-						totalWeight += weight;
-						
-					}
-					
-					long hit = ThreadLocalRandom.current().nextLong(totalWeight);
-					for (int i = 0; i < selectedPeers.length; i++) {
-						
-						Peer peer = selectedPeers[i];
-						long weight = peer.getWeight();
-						if (weight == 0) {
-							
-							weight = 1;
-							
-						}
-						if ((hit -= weight) < 0) {
-							
-							return peer;
-							
-						}
-						
-					}
-					
-				}
-				
-				return null;
-				
-			}
-			
+            return null;
+
 		}
 		
 		static int getNumberOfConnectedPublicPeers() {
 			
 			int numberOfConnectedPeers = 0;
-			
-			synchronized (peers) {
-				
-				for (Peer peer : peers.values()) {
-					
-					if (peer.state == STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-						
-						numberOfConnectedPeers++;
-						
-					}
-					
-				}
-				
-			}
-			
+
+            for (Peer peer : peers.values()) {
+
+                if (peer.state == STATE_CONNECTED && peer.announcedAddress.length() > 0) {
+
+                    numberOfConnectedPeers++;
+
+                }
+
+            }
+
 			return numberOfConnectedPeers;
 			
 		}
@@ -3348,19 +3346,9 @@ public class Nxt extends HttpServlet {
 		}
 		
 		void removePeer() {
-			
-			for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
-				
-				if (peerEntry.getValue() == this) {
-					
-					peers.remove(peerEntry.getKey());
-					
-					break;
-					
-				}
-				
-			}
-			
+
+            peers.values().remove(this);
+
 			JSONObject response = new JSONObject();
 			response.put("response", "processNewData");
 			
@@ -3379,8 +3367,23 @@ public class Nxt extends HttpServlet {
 		}
 		
 		static void sendToAllPeers(JSONObject request) {
-			
-			Peer[] peers;
+
+            for (Peer peer : Nxt.peers.values()) {
+
+                if (enableHallmarkProtection && peer.getWeight() < pushThreshold) {
+                    continue;
+                }
+
+                if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
+
+                    peer.send(request);
+
+                }
+
+            }
+
+            /* was:
+            Peer[] peers;
 			synchronized (Nxt.peers) {
 				
 				peers = Nxt.peers.values().toArray(new Peer[0]);
@@ -3402,6 +3405,7 @@ public class Nxt extends HttpServlet {
 				}
 				
 			}
+			*/
 			
 		}
 		
@@ -3540,6 +3544,8 @@ public class Nxt extends HttpServlet {
 					addedActivePeer.put("disconnected", true);
 					
 				}
+
+                //TODO: there must be a better way
 				for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
 					
 					if (peerEntry.getValue() == this) {
@@ -5623,13 +5629,7 @@ public class Nxt extends HttpServlet {
 						
 						long curTime = System.currentTimeMillis();
 						
-						Collection<Peer> peers;
-						synchronized (Nxt.peers) {
-							//TODO: why the clone? extra work for the GC, better use thread-safe concurrent collection
-							peers = ((HashMap<String, Peer>)Nxt.peers.clone()).values();
-							
-						}
-						for (Peer peer : peers) {
+						for (Peer peer : Nxt.peers.values()) {
 							
 							if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
 								
@@ -6959,17 +6959,7 @@ public class Nxt extends HttpServlet {
 							{
 								
 								JSONArray peers = new JSONArray();
-								Set<String> peerKeys;
-								synchronized (Nxt.peers) {
-									//TODO: get rid of clone
-									peerKeys = ((HashMap<String, Peer>)Nxt.peers.clone()).keySet();
-									
-								}
-								for (String peer : peerKeys) {
-									
-									peers.add(peer);
-									
-								}
+                                peers.addAll(Nxt.peers.keySet());
 								response.put("peers", peers);
 								
 							}
@@ -8633,91 +8623,87 @@ public class Nxt extends HttpServlet {
 						}
 						
 					}
-					
-					synchronized (peers) {
-						
-						for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
-							
-							String address = peerEntry.getKey();
-							Peer peer = peerEntry.getValue();
-							
-							if (peer.blacklistingTime > 0) {
-								
-								JSONObject blacklistedPeer = new JSONObject();
-								blacklistedPeer.put("index", peer.index);
-								blacklistedPeer.put("announcedAddress", peer.announcedAddress.length() > 0 ? (peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress) : address);
-								for (String wellKnownPeer : wellKnownPeers) {
-									
-									if (peer.announcedAddress.equals(wellKnownPeer)) {
-										
-										blacklistedPeer.put("wellKnown", true);
-										
-										break;
-										
-									}
-									
-								}
-								
-								blacklistedPeers.add(blacklistedPeer);
-								
-							} else if (peer.state == Peer.STATE_NONCONNECTED) {
-								
-								if (peer.announcedAddress.length() > 0) {
-									
-									JSONObject knownPeer = new JSONObject();
-									knownPeer.put("index", peer.index);
-									knownPeer.put("announcedAddress", peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress);
-									for (String wellKnownPeer : wellKnownPeers) {
-										
-										if (peer.announcedAddress.equals(wellKnownPeer)) {
-											
-											knownPeer.put("wellKnown", true);
-											
-											break;
-											
-										}
-										
-									}
-									
-									knownPeers.add(knownPeer);
-									
-								}
-								
-							} else {
-								
-								JSONObject activePeer = new JSONObject();
-								activePeer.put("index", peer.index);
-								if (peer.state == peer.STATE_DISCONNECTED) {
-									
-									activePeer.put("disconnected", true);
-									
-								}
-								activePeer.put("address", address.length() > 30 ? (address.substring(0, 30) + "...") : address);
-								activePeer.put("announcedAddress", peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress);
-								activePeer.put("weight", peer.getWeight());
-								activePeer.put("downloaded", peer.downloadedVolume);
-								activePeer.put("uploaded", peer.uploadedVolume);
-								activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")" + " @ " + (peer.platform == null ? "?" : peer.platform));
-								for (String wellKnownPeer : wellKnownPeers) {
-									
-									if (peer.announcedAddress.equals(wellKnownPeer)) {
-										
-										activePeer.put("wellKnown", true);
-										
-										break;
-										
-									}
-									
-								}
-								
-								activePeers.add(activePeer);
-								
-							}
-							
-						}
-						
-					}
-					
+
+                    for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
+
+                        String address = peerEntry.getKey();
+                        Peer peer = peerEntry.getValue();
+
+                        if (peer.blacklistingTime > 0) {
+
+                            JSONObject blacklistedPeer = new JSONObject();
+                            blacklistedPeer.put("index", peer.index);
+                            blacklistedPeer.put("announcedAddress", peer.announcedAddress.length() > 0 ? (peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress) : address);
+                            for (String wellKnownPeer : wellKnownPeers) {
+
+                                if (peer.announcedAddress.equals(wellKnownPeer)) {
+
+                                    blacklistedPeer.put("wellKnown", true);
+
+                                    break;
+
+                                }
+
+                            }
+
+                            blacklistedPeers.add(blacklistedPeer);
+
+                        } else if (peer.state == Peer.STATE_NONCONNECTED) {
+
+                            if (peer.announcedAddress.length() > 0) {
+
+                                JSONObject knownPeer = new JSONObject();
+                                knownPeer.put("index", peer.index);
+                                knownPeer.put("announcedAddress", peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress);
+                                for (String wellKnownPeer : wellKnownPeers) {
+
+                                    if (peer.announcedAddress.equals(wellKnownPeer)) {
+
+                                        knownPeer.put("wellKnown", true);
+
+                                        break;
+
+                                    }
+
+                                }
+
+                                knownPeers.add(knownPeer);
+
+                            }
+
+                        } else {
+
+                            JSONObject activePeer = new JSONObject();
+                            activePeer.put("index", peer.index);
+                            if (peer.state == peer.STATE_DISCONNECTED) {
+
+                                activePeer.put("disconnected", true);
+
+                            }
+                            activePeer.put("address", address.length() > 30 ? (address.substring(0, 30) + "...") : address);
+                            activePeer.put("announcedAddress", peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress);
+                            activePeer.put("weight", peer.getWeight());
+                            activePeer.put("downloaded", peer.downloadedVolume);
+                            activePeer.put("uploaded", peer.uploadedVolume);
+                            activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")" + " @ " + (peer.platform == null ? "?" : peer.platform));
+                            for (String wellKnownPeer : wellKnownPeers) {
+
+                                if (peer.announcedAddress.equals(wellKnownPeer)) {
+
+                                    activePeer.put("wellKnown", true);
+
+                                    break;
+
+                                }
+
+                            }
+
+                            activePeers.add(activePeer);
+
+                        }
+
+                    }
+
 					synchronized (blocks) {
 						
 						long blockId = lastBlock;
