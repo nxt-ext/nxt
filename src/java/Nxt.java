@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
@@ -54,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Nxt extends HttpServlet {
 	
-	static final String VERSION = "0.4.8";
+	static final String VERSION = "0.4.9e";
 	
 	static final long GENESIS_BLOCK_ID = 2680262203532249785L;
 	static final long CREATOR_ID = 1739068987193023818L;
@@ -84,7 +83,8 @@ public class Nxt extends HttpServlet {
 	static final int LOGGING_MASK_200_RESPONSES = 4;
 	static int communicationLoggingMask;
 	
-	static int transactionCounter;
+	static final AtomicInteger transactionCounter = new AtomicInteger();
+    //TODO: make transactions concurrent
 	static HashMap<Long, Transaction> transactions;
 	static final ConcurrentHashMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     static final ConcurrentHashMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
@@ -97,41 +97,47 @@ public class Nxt extends HttpServlet {
 	static final AtomicInteger peerCounter = new AtomicInteger();
 	static final ConcurrentHashMap<String, Peer> peers = new ConcurrentHashMap<>();
 	
-	static int blockCounter;
+	static final AtomicInteger blockCounter = new AtomicInteger();
+    //TODO: make blocks concurrent
 	static HashMap<Long, Block> blocks;
-    //TODO: lastBlock is accessed by multiple threads? should be volatile or atomic
-	static long lastBlock;
-	static Peer lastBlockchainFeeder;
+    static volatile long lastBlock;
+	static volatile Peer lastBlockchainFeeder;
 	
-	static HashMap<Long, Account> accounts = new HashMap<>();
+	static final ConcurrentHashMap<Long, Account> accounts = new ConcurrentHashMap<>();
 	
-	static HashMap<String, Alias> aliases = new HashMap<>();
-	static HashMap<Long, Alias> aliasIdToAliasMappings = new HashMap<>();
-	static HashMap<Long, Asset> assets = new HashMap<>();
-	static HashMap<String, Long> assetNameToIdMappings = new HashMap<>();
+	static final ConcurrentHashMap<String, Alias> aliases = new ConcurrentHashMap<>();
+	static final ConcurrentHashMap<Long, Alias> aliasIdToAliasMappings = new ConcurrentHashMap<>();
+	static final HashMap<Long, Asset> assets = new HashMap<>();
+	static final HashMap<String, Long> assetNameToIdMappings = new HashMap<>();
 	
-	static HashMap<Long, AskOrder> askOrders = new HashMap<>();
-	static HashMap<Long, BidOrder> bidOrders = new HashMap<>();
-	static HashMap<Long, TreeSet<AskOrder>> sortedAskOrders = new HashMap<>();
-	static HashMap<Long, TreeSet<BidOrder>> sortedBidOrders = new HashMap<>();
+	static final HashMap<Long, AskOrder> askOrders = new HashMap<>();
+	static final HashMap<Long, BidOrder> bidOrders = new HashMap<>();
+	static final HashMap<Long, TreeSet<AskOrder>> sortedAskOrders = new HashMap<>();
+	static final HashMap<Long, TreeSet<BidOrder>> sortedBidOrders = new HashMap<>();
 	
-	static ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
-	static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
-	static ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
+	static final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+	static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
 	
-	static HashMap<Account, Block> lastBlocks = new HashMap<>();
-	static HashMap<Account, BigInteger> hits = new HashMap<>();
+	static final ConcurrentHashMap<Account, Block> lastBlocks = new ConcurrentHashMap<>();
+	static final ConcurrentHashMap<Account, BigInteger> hits = new ConcurrentHashMap<>();
 	
 	static int getEpochTime(long time) {
 		
 		return (int)((time - epochBeginning + 500) / 1000);
 		
 	}
-	
+
+    static final ThreadLocal<SimpleDateFormat> logDateFormat = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS] ");
+        }
+    };
+
 	static void logMessage(String message) {
 		
-		System.out.println((new StringBuilder((new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS] ")).format(new Date()))).append(message).toString());
-		
+		System.out.println(logDateFormat.get().format(new Date()) + message);
+
 	}
 	
 	static byte[] convert(String string) {
@@ -243,18 +249,19 @@ public class Nxt extends HttpServlet {
 	
 	static class Account {
 		
-		long id;
+		final long id;
+        //TODO: make balance AtomicLong?
 		long balance;
-		int height;
+		final int height;
 		
         //BUG: this is accessed in multiple threads without being synchronized
         //TODO: use atomic variable
 		byte[] publicKey;
 		
-		HashMap<Long, Integer> assetBalances;
+		final HashMap<Long, Integer> assetBalances;
 		
 		long unconfirmedBalance;
-		HashMap<Long, Integer> unconfirmedAssetBalances;
+		final HashMap<Long, Integer> unconfirmedAssetBalances;
 		
 		Account(long id) {
 			
@@ -267,16 +274,12 @@ public class Nxt extends HttpServlet {
 		}
 		
 		static Account addAccount(long id) {
-			
-			synchronized (accounts) {
-				
-				Account account = new Account(id);
-				accounts.put(id, account);
-				
-				return account;
-				
-			}
-			
+
+            Account account = new Account(id);
+            accounts.put(id, account);
+
+            return account;
+
 		}
 		
 		void generateBlock(String secretPhrase) throws Exception {
@@ -325,17 +328,16 @@ public class Nxt extends HttpServlet {
 				
 				int prevNumberOfNewTransactions = newTransactions.size();
 				
-				for (int i = 0; i < sortedTransactions.length; i++) {
+				for (Transaction transaction : sortedTransactions) {
 					
-					Transaction transaction = sortedTransactions[i];
 					int transactionLength = transaction.getBytes().length;
 					if (newTransactions.get(transaction.getId()) == null && payloadLength + transactionLength <= MAX_PAYLOAD_LENGTH) {
 						
 						long sender = Account.getId(transaction.senderPublicKey);
 						Long accumulatedAmount = accumulatedAmounts.get(sender);
 						if (accumulatedAmount == null) {
-                            //TODO: not needed if using autoboxing
-							accumulatedAmount = new Long(0);
+
+							accumulatedAmount = 0L;
 							
 						}
 						
@@ -436,14 +438,12 @@ public class Nxt extends HttpServlet {
 			byte[] data2 = new byte[data.length - 64];
 			System.arraycopy(data, 0, data2, 0, data2.length);
 			block.blockSignature = Crypto.sign(data2, secretPhrase);
-			
-			//TODO: only prepare request if block verification succeeds
-			JSONObject request = block.getJSONObject(newTransactions);
-			request.put("requestType", "processBlock");
-			
+
 			if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
-				
-				Peer.sendToAllPeers(request);
+
+                JSONObject request = block.getJSONObject(newTransactions);
+                request.put("requestType", "processBlock");
+                Peer.sendToAllPeers(request);
 				
 			} else {
 				
@@ -853,8 +853,9 @@ public class Nxt extends HttpServlet {
 									Transaction.MessagingAliasAssignmentAttachment attachment = (Transaction.MessagingAliasAssignmentAttachment)transaction.attachment;
 									
 									String normalizedAlias = attachment.alias.toLowerCase();
-									synchronized (aliases) {
-										
+                                    // keep the synchronized so that aliases and aliasIdToAliasMappings are kept in sync
+                                    synchronized (aliases) {
+
 										Alias alias = aliases.get(normalizedAlias);
 										if (alias == null) {
 											
@@ -1205,7 +1206,7 @@ public class Nxt extends HttpServlet {
 			
 			FileInputStream fileInputStream = new FileInputStream(fileName);
 			ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-			blockCounter = objectInputStream.readInt();
+			blockCounter.set(objectInputStream.readInt());
 			blocks = (HashMap<Long, Block>)objectInputStream.readObject();
 			lastBlock = objectInputStream.readLong();
 			objectInputStream.close();
@@ -1390,12 +1391,9 @@ public class Nxt extends HttpServlet {
 				block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 				
 			}
-			synchronized (blocks) {
-				
-				block.index = ++blockCounter;
-				
-			}
-			
+
+            block.index = blockCounter.incrementAndGet();
+
 			try {
 				
 				if (block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
@@ -1410,12 +1408,9 @@ public class Nxt extends HttpServlet {
 				for (int i = 0; i < block.numberOfTransactions; i++) {
 					
 					Transaction transaction = Transaction.getTransaction(buffer);
-					synchronized (Nxt.transactions) {
-						
-						transaction.index = ++transactionCounter;
-						
-					}
-					if (blockTransactions.put(block.transactions[i] = transaction.getId(), transaction) != null) {
+                    transaction.index = transactionCounter.incrementAndGet();
+
+                    if (blockTransactions.put(block.transactions[i] = transaction.getId(), transaction) != null) {
 						
 						return false;
 						
@@ -1468,7 +1463,7 @@ public class Nxt extends HttpServlet {
 					Long accumulatedAmount = accumulatedAmounts.get(sender);
 					if (accumulatedAmount == null) {
 						
-						accumulatedAmount = new Long(0);
+						accumulatedAmount = 0L;
 						
 					}
 					accumulatedAmounts.put(sender, accumulatedAmount + (transaction.amount + transaction.fee) * 100L);
@@ -1730,7 +1725,7 @@ public class Nxt extends HttpServlet {
 				
 				FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 				ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-				objectOutputStream.writeInt(blockCounter);
+				objectOutputStream.writeInt(blockCounter.get());
 				objectOutputStream.writeObject(blocks);
 				objectOutputStream.writeLong(lastBlock);
 				objectOutputStream.close();
@@ -3365,7 +3360,8 @@ public class Nxt extends HttpServlet {
 			}
 			
 		}
-		
+
+        //TODO: send in parallel using an executor service
 		static void sendToAllPeers(JSONObject request) {
 
             for (Peer peer : Nxt.peers.values()) {
@@ -4097,8 +4093,7 @@ public class Nxt extends HttpServlet {
 			
 			FileInputStream fileInputStream = new FileInputStream(fileName);
 			ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            //TODO: accessing transactionCounter should be synchronized(Nxt.transactions)
-			transactionCounter = objectInputStream.readInt();
+			transactionCounter.set(objectInputStream.readInt());
 			transactions = (HashMap<Long, Transaction>)objectInputStream.readObject();
 			objectInputStream.close();
 			fileInputStream.close();
@@ -4212,7 +4207,7 @@ public class Nxt extends HttpServlet {
 							
 						}
 						
-						transaction.index = ++transactionCounter;
+						transaction.index = transactionCounter.incrementAndGet();
 						
 						if (doubleSpendingTransaction) {
 							
@@ -4289,7 +4284,7 @@ public class Nxt extends HttpServlet {
 				
 				FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 				ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-				objectOutputStream.writeInt(transactionCounter);
+				objectOutputStream.writeInt(transactionCounter.get());
 				objectOutputStream.writeObject(transactions);
 				objectOutputStream.close();
 				fileOutputStream.close();
@@ -4395,12 +4390,7 @@ public class Nxt extends HttpServlet {
 										
 									}
 									
-									Alias alias;
-									synchronized (aliases) {
-										
-										alias = aliases.get(normalizedAlias);
-										
-									}
+									Alias alias = aliases.get(normalizedAlias);
 									if (alias != null && alias.account.id != Account.getId(senderPublicKey)) {
 										
 										return false;
@@ -4613,9 +4603,9 @@ public class Nxt extends HttpServlet {
 		static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
 			
 			static final long serialVersionUID = 0;
-			//TODO: final, caching
-			String alias;
-			String uri;
+
+            final String alias;
+			final String uri;
 			
 			MessagingAliasAssignmentAttachment(String alias, String uri) {
 				
@@ -4623,7 +4613,8 @@ public class Nxt extends HttpServlet {
 				this.uri = uri;
 				
 			}
-			
+
+            //TODO: cache?
 			@Override
 			public byte[] getBytes() {
 				
@@ -5533,8 +5524,7 @@ public class Nxt extends HttpServlet {
 				}
 				
 				for (Transaction transaction : transactions.values()) {
-					//TODO: accessing transactionCounter should be synchronized(Nxt.transactions)
-					transaction.index = ++transactionCounter;
+					transaction.index = transactionCounter.incrementAndGet();
 					transaction.block = GENESIS_BLOCK_ID;
 					
 				}
@@ -5554,7 +5544,7 @@ public class Nxt extends HttpServlet {
 				blocks = new HashMap<>();
 				
 				Block block = new Block(-1, 0, 0, transactions.size(), 1000000000, 0, transactions.size() * 128, null, new byte[]{18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27}, new byte[64], new byte[]{105, -44, 38, -60, -104, -73, 10, -58, -47, 103, -127, -128, 53, 101, 39, -63, -2, -32, 48, -83, 115, 47, -65, 118, 114, -62, 38, 109, 22, 106, 76, 8, -49, -113, -34, -76, 82, 79, -47, -76, -106, -69, -54, -85, 3, -6, 110, 103, 118, 15, 109, -92, 82, 37, 20, 2, 36, -112, 21, 72, 108, 72, 114, 17});
-				block.index = ++blockCounter;
+				block.index = blockCounter.incrementAndGet();
 				blocks.put(GENESIS_BLOCK_ID, block);
 				
 				block.transactions = new long[block.numberOfTransactions];
@@ -5646,7 +5636,12 @@ public class Nxt extends HttpServlet {
 			}, 0, 1, TimeUnit.SECONDS);
 			
 			scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-				
+
+                private final JSONObject getPeersRequest = new JSONObject();
+                {
+                    getPeersRequest.put("requestType", "getPeers");
+                }
+
 				@Override
 				public void run() {
 					
@@ -5654,10 +5649,7 @@ public class Nxt extends HttpServlet {
 						
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
-							//TODO: don't create a new JSONObject every time for constant requests like this one, reuse a single immutable instance
-							JSONObject request = new JSONObject();
-							request.put("requestType", "getPeers");
-							JSONObject response = peer.send(request);
+							JSONObject response = peer.send(getPeersRequest);
 							if (response != null) {
 								
 								JSONArray peers = (JSONArray)response.get("peers");
@@ -5683,7 +5675,12 @@ public class Nxt extends HttpServlet {
 			}, 0, 5, TimeUnit.SECONDS);
 			
 			scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-				
+
+                private final JSONObject getUnconfirmedTransactionsRequest = new JSONObject();
+                {
+                    getUnconfirmedTransactionsRequest.put("requestType", "getUnconfirmedTransactions");
+                }
+
 				@Override
 				public void run() {
 					
@@ -5692,9 +5689,7 @@ public class Nxt extends HttpServlet {
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
 							
-							JSONObject request = new JSONObject();
-							request.put("requestType", "getUnconfirmedTransactions");
-							JSONObject response = peer.send(request);
+							JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
 							if (response != null) {
 								
 								Transaction.processTransactions(response, "unconfirmedTransactions");
@@ -5769,6 +5764,13 @@ public class Nxt extends HttpServlet {
 			}, 0, 1, TimeUnit.SECONDS);
 			
 			scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
+
+                private final JSONObject getCumulativeDifficultyRequest = new JSONObject();
+                private final JSONObject getMilestoneBlockIdsRequest = new JSONObject();
+                {
+                    getCumulativeDifficultyRequest.put("requestType", "getCumulativeDifficulty");
+                    getMilestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
+                }
 				
 				@Override
 				public void run() {
@@ -5777,20 +5779,16 @@ public class Nxt extends HttpServlet {
 						
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
-							//TODO: not thread-safe, make volatile or atomic
+
 							lastBlockchainFeeder = peer;
 							
-							JSONObject request = new JSONObject();
-							request.put("requestType", "getCumulativeDifficulty");
-							JSONObject response = peer.send(request);
+							JSONObject response = peer.send(getCumulativeDifficultyRequest);
 							if (response != null) {
 								
 								BigInteger curCumulativeDifficulty = Block.getLastBlock().cumulativeDifficulty, betterCumulativeDifficulty = new BigInteger((String)response.get("cumulativeDifficulty"));
 								if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) > 0) {
 									
-									request = new JSONObject();
-									request.put("requestType", "getMilestoneBlockIds");
-									response = peer.send(request);
+									response = peer.send(getMilestoneBlockIdsRequest);
 									if (response != null) {
 										
 										long commonBlockId = GENESIS_BLOCK_ID;
@@ -5813,7 +5811,7 @@ public class Nxt extends HttpServlet {
 										int i, numberOfBlocks;
 										do {
 											
-											request = new JSONObject();
+											JSONObject request = new JSONObject();
 											request.put("requestType", "getNextBlockIds");
 											request.put("blockId", convert(commonBlockId));
 											response = peer.send(request);
@@ -5859,7 +5857,7 @@ public class Nxt extends HttpServlet {
 											
 											do {
 												
-												request = new JSONObject();
+												JSONObject request = new JSONObject();
 												request.put("requestType", "getNextBlocks");
 												request.put("blockId", convert(curBlockId));
 												response = peer.send(request);
@@ -5893,9 +5891,9 @@ public class Nxt extends HttpServlet {
 																	buffer.put(block.getBytes());
 																	
 																	JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-																	for (int j = 0; j < transactionsData.size(); j++) {
+																	for (Object transaction : transactionsData) {
 																		
-																		buffer.put(Transaction.getTransaction((JSONObject)transactionsData.get(j)).getBytes());
+																		buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
 																		
 																	}
 																	
@@ -6069,8 +6067,7 @@ public class Nxt extends HttpServlet {
                                         u.send(response);
                                     }
                                 }
-								//user.send(response);
-								
+
 							}
 							
 							int elapsedTime = getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp;
@@ -6216,6 +6213,7 @@ public class Nxt extends HttpServlet {
 														if (deadline < 1) {
 															
 															throw new Exception();
+                                                            //TODO: better error checking
 															
 														}
 														
@@ -6238,12 +6236,7 @@ public class Nxt extends HttpServlet {
 																
 															} else {
 																
-																Alias aliasData;
-																synchronized (aliases) {
-																	
-																	aliasData = aliases.get(normalizedAlias);
-																	
-																}
+																Alias aliasData = aliases.get(normalizedAlias);
 																if (aliasData != null && aliasData.account != account) {
 																	
 																	response.put("errorCode", 8);
@@ -6827,7 +6820,8 @@ public class Nxt extends HttpServlet {
 								
 							}
 							break;
-							
+
+                        //TODO: cache
 						case "getConstants":
 							{
 								
@@ -9662,20 +9656,27 @@ public class Nxt extends HttpServlet {
 	public void destroy() {
 		
 		scheduledThreadPool.shutdown();
-		cachedThreadPool.shutdown();
-        //TODO: use awaitTermination()
+        try {
+            scheduledThreadPool.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
 		try {
 			
 			Block.saveBlocks("blocks.nxt", true);
 			
-		} catch (Exception e) { }
-        //TODO: log errors
+		} catch (Exception e) {
+            logMessage("error saving blocks.nxt");
+        }
+
 		try {
 			
 			Transaction.saveTransactions("transactions.nxt");
 			
-		} catch (Exception e) { }
+		} catch (Exception e) {
+            logMessage("error saving transactions.nxt");
+        }
 		
 		try {
 			
