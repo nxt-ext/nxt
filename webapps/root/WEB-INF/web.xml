@@ -31,6 +31,11 @@
 			<param-value>true</param-value>
 		</init-param>
 
+        <init-param>
+            <param-name>myPlatform</param-name>
+            <param-value>PC</param-value>
+        </init-param>
+
 		<init-param>
 			<param-name>myHallmark</param-name>
 			<param-value></param-value>

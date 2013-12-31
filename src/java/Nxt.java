@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -55,20 +54,26 @@ import org.json.simple.JSONValue;
 
 public class Nxt extends HttpServlet {
 	
-	static final String VERSION = "0.4.7e";
+	static final String VERSION = "0.4.8";
 	
 	static final long GENESIS_BLOCK_ID = 2680262203532249785L;
 	static final long CREATOR_ID = 1739068987193023818L;
 	static final int BLOCK_HEADER_LENGTH = 224;
 	static final int MAX_PAYLOAD_LENGTH = 255 * 128;
 	
+	static final int ALIAS_SYSTEM_BLOCK = 22000;
+	static final int TRANSPARENT_FORGING_BLOCK = 32000;
+	
 	static final long initialBaseTarget = 153722867, maxBaseTarget = 1000000000L * initialBaseTarget;
 	static final BigInteger two64 = new BigInteger("18446744073709551616");
+
+    //TODO: go through all those global static variables and see which should be final, volatile, or atomic
+    //TODO: verify thread safety of all collections, make Concurrent or synchronized
 	static long epochBeginning;
 	static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 	
 	static FileChannel blockchainChannel;
-	static String myScheme, myAddress, myHallmark;
+	static String myPlatform, myScheme, myAddress, myHallmark;
 	static int myPort;
 	static boolean shareMyAddress;
 	static HashSet<String> allowedUserHosts, allowedBotHosts;
@@ -93,6 +98,7 @@ public class Nxt extends HttpServlet {
 	
 	static int blockCounter;
 	static HashMap<Long, Block> blocks;
+    //TODO: lastBlock is accessed by multiple threads? should be volatile or atomic
 	static long lastBlock;
 	static Peer lastBlockchainFeeder;
 	
@@ -240,6 +246,8 @@ public class Nxt extends HttpServlet {
 		long balance;
 		int height;
 		
+        //BUG: this is accessed in multiple threads without being synchronized
+        //TODO: use atomic variable
 		byte[] publicKey;
 		
 		HashMap<Long, Integer> assetBalances;
@@ -277,6 +285,7 @@ public class Nxt extends HttpServlet {
 				
 				sortedTransactions = unconfirmedTransactions.values().toArray(new Transaction[0]);
 				
+				//TODO: can be simplified, if removing transactions with absent referencedTransaction is all this is indeed doing
 				while (sortedTransactions.length > 0) {
 					
 					int i;
@@ -310,6 +319,7 @@ public class Nxt extends HttpServlet {
 			HashSet<String> newAliases = new HashSet<>();
 			HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
 			int payloadLength = 0;
+            //TODO: why the while loop, isn't it enough to go only once through sortedTransactions and break when payloadLength exceeded?
 			while (payloadLength <= MAX_PAYLOAD_LENGTH) {
 				
 				int prevNumberOfNewTransactions = newTransactions.size();
@@ -323,12 +333,14 @@ public class Nxt extends HttpServlet {
 						long sender = Account.getId(transaction.senderPublicKey);
 						Long accumulatedAmount = accumulatedAmounts.get(sender);
 						if (accumulatedAmount == null) {
-							
+                            //TODO: not needed if using autoboxing
 							accumulatedAmount = new Long(0);
 							
 						}
 						
 						long amount = (transaction.amount + transaction.fee) * 100L;
+                        //BUG: account.balance accessed without being synchronized on account
+                        //TODO: add account.getBalance() method that takes care of synchronization and make account.balance private
 						if (accumulatedAmount + amount <= accounts.get(sender).balance && transaction.validateAttachment()) {
 							
 							switch (transaction.type) {
@@ -376,7 +388,17 @@ public class Nxt extends HttpServlet {
 				
 			}
 			
-			Block block = new Block(1, getEpochTime(System.currentTimeMillis()), lastBlock, newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64]);
+			Block block;
+			if (Block.getLastBlock().height < TRANSPARENT_FORGING_BLOCK) {
+				
+				block = new Block(1, getEpochTime(System.currentTimeMillis()), lastBlock, newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64]);
+				
+			} else {
+				
+				byte[] previousBlockHash = MessageDigest.getInstance("SHA-256").digest(Block.getLastBlock().getBytes());
+				block = new Block(2, getEpochTime(System.currentTimeMillis()), lastBlock, newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64], previousBlockHash);
+				
+			}
 			block.transactions = new long[block.numberOfTransactions];
 			int i = 0;
 			for (Map.Entry<Long, Transaction> transactionEntry : newTransactions.entrySet()) {
@@ -398,13 +420,23 @@ public class Nxt extends HttpServlet {
 			}
 			block.payloadHash = digest.digest();
 			
-			block.generationSignature = Crypto.sign(Block.getLastBlock().generationSignature, secretPhrase);
+			if (Block.getLastBlock().height < TRANSPARENT_FORGING_BLOCK) {
+				
+				block.generationSignature = Crypto.sign(Block.getLastBlock().generationSignature, secretPhrase);
+				
+			} else {
+				
+				digest.update(Block.getLastBlock().generationSignature);
+				block.generationSignature = digest.digest(Crypto.getPublicKey(secretPhrase));
+				
+			}
 			
 			byte[] data = block.getBytes();
 			byte[] data2 = new byte[data.length - 64];
 			System.arraycopy(data, 0, data2, 0, data2.length);
 			block.blockSignature = Crypto.sign(data2, secretPhrase);
 			
+			//TODO: only prepare request if block verification succeeds
 			JSONObject request = block.getJSONObject(newTransactions);
 			request.put("requestType", "processBlock");
 			
@@ -445,7 +477,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 			}
-			
+            //TODO: is it intentional that balance is not adjusted also for outgoing transactions in the last block?
+
 			return (int)(balance / 100) - amount;
 			
 		}
@@ -458,6 +491,8 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
+        //TODO: setBalance is in almost all case used together with setUnconfirmedBalance, within synchronized(account).
+        // Consider adding a single method that sets both, and is synchronized
 		void setBalance(long balance) throws Exception {
 			
 			this.balance = balance;
@@ -665,6 +700,7 @@ public class Nxt extends HttpServlet {
 		
 		static final long serialVersionUID = 0;
 		
+        //TODO: at least some of those should be final
 		int version;
 		int timestamp;
 		long previousBlock;
@@ -675,6 +711,8 @@ public class Nxt extends HttpServlet {
 		byte[] generatorPublicKey;
 		byte[] generationSignature;
 		byte[] blockSignature;
+		
+		byte[] previousBlockHash;
 		
 		int index;
 		long[] transactions;
@@ -697,6 +735,24 @@ public class Nxt extends HttpServlet {
 			this.generatorPublicKey = generatorPublicKey;
 			this.generationSignature = generationSignature;
 			this.blockSignature = blockSignature;
+			
+		}
+		
+		Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
+			
+			this.version = version;
+			this.timestamp = timestamp;
+			this.previousBlock = previousBlock;
+			this.numberOfTransactions = numberOfTransactions;
+			this.totalAmount = totalAmount;
+			this.totalFee = totalFee;
+			this.payloadLength = payloadLength;
+			this.payloadHash = payloadHash;
+			this.generatorPublicKey = generatorPublicKey;
+			this.generationSignature = generationSignature;
+			this.blockSignature = blockSignature;
+			
+			this.previousBlockHash = previousBlockHash;
 			
 		}
 		
@@ -759,6 +815,7 @@ public class Nxt extends HttpServlet {
 						
 					}
 					
+                    //TODO: refactor, don't use switch but create e.g. transaction handler class for each case
 					switch (transaction.type) {
 					
 					case Transaction.TYPE_PAYMENT:
@@ -833,6 +890,7 @@ public class Nxt extends HttpServlet {
 									
 									long assetId = transaction.getId();
 									Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
+                                    //TODO: use concurrent collections instead of synchronized
 									synchronized (assets) {
 										
 										assets.put(assetId, asset);
@@ -1052,13 +1110,24 @@ public class Nxt extends HttpServlet {
 			byte[] generationSignature = convert((String)blockData.get("generationSignature"));
 			byte[] blockSignature = convert((String)blockData.get("blockSignature"));
 			
-			return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
-			
-		}
-		
+			if (version == 1) {
+				
+				return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
+				
+			} else {
+				
+				byte[] previousBlockHash = convert((String)blockData.get("previousBlockHash"));
+				
+				return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+				
+			}
+
+        }
+
+        //TODO: cache this byte[] ?
 		byte[] getBytes() {
 			
-			ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + 64 + 64);
+			ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
 			buffer.order(ByteOrder.LITTLE_ENDIAN);
 			buffer.putInt(version);
 			buffer.putInt(timestamp);
@@ -1069,13 +1138,21 @@ public class Nxt extends HttpServlet {
 			buffer.putInt(payloadLength);
 			buffer.put(payloadHash);
 			buffer.put(generatorPublicKey);
+			//logMessage(generationSignature.length+":"+previousBlockHash);
 			buffer.put(generationSignature);
+			if (version > 1) {
+				
+				//logMessage("@ "+getLastBlock().height);
+				buffer.put(previousBlockHash);
+				
+			}
 			buffer.put(blockSignature);
 			
 			return buffer.array();
 			
 		}
 		
+        //TODO: again, cache the id
 		long getId() throws Exception {
 			
 			byte[] hash = MessageDigest.getInstance("SHA-256").digest(getBytes());
@@ -1098,6 +1175,11 @@ public class Nxt extends HttpServlet {
 			block.put("payloadHash", convert(payloadHash));
 			block.put("generatorPublicKey", convert(generatorPublicKey));
 			block.put("generationSignature", convert(generationSignature));
+			if (version > 1) {
+				
+				block.put("previousBlockHash", convert(previousBlockHash));
+				
+			}
 			block.put("blockSignature", convert(blockSignature));
 			
 			JSONArray transactionsData = new JSONArray();
@@ -1238,12 +1320,12 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
-		static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
+		static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) throws Exception {
 			
 			buffer.flip();
 			
 			int version = buffer.getInt();
-			if (version != 1) {
+			if (version != (getLastBlock().height < TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
 				
 				return false;
 				
@@ -1259,16 +1341,30 @@ public class Nxt extends HttpServlet {
 			buffer.get(payloadHash);
 			byte[] generatorPublicKey = new byte[32];
 			buffer.get(generatorPublicKey);
-			byte[] generationSignature = new byte[64];
-			buffer.get(generationSignature);
-			byte[] blockSignature = new byte[64];
-			buffer.get(blockSignature);
-			
-			if (Block.getLastBlock().previousBlock == previousBlock) {
+			byte[] generationSignature;
+			byte[] previousBlockHash;
+			if (version == 1) {
 				
-				return false;
+				generationSignature = new byte[64];
+				buffer.get(generationSignature);
+				previousBlockHash = null;
+				
+			} else {
+				
+				generationSignature = new byte[32];
+				buffer.get(generationSignature);
+				previousBlockHash = new byte[32];
+				buffer.get(previousBlockHash);
+				
+				if (!Arrays.equals(MessageDigest.getInstance("SHA-256").digest(Block.getLastBlock().getBytes()), previousBlockHash)) {
+					
+					return false;
+					
+				}
 				
 			}
+			byte[] blockSignature = new byte[64];
+			buffer.get(blockSignature);
 			
 			int curTime = getEpochTime(System.currentTimeMillis());
 			if (blockTimestamp > curTime + 15 || blockTimestamp <= Block.getLastBlock().timestamp) {
@@ -1283,7 +1379,16 @@ public class Nxt extends HttpServlet {
 				
 			}
 			
-			Block block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
+			Block block;
+			if (version == 1) {
+				
+				block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
+				
+			} else {
+				
+				block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+				
+			}
 			synchronized (blocks) {
 				
 				block.index = ++blockCounter;
@@ -1703,67 +1808,51 @@ public class Nxt extends HttpServlet {
 			
 			try {
 				
-				if (getLastBlock().height <= 20000) {
+				Block previousBlock = blocks.get(this.previousBlock);
+				if (previousBlock == null) {
 					
-					Block previousBlock = blocks.get(this.previousBlock);
-					if (previousBlock == null) {
-						
-						return false;
-						
-					}
+					return false;
 					
-					if (!Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
-						
-						return false;
-						
-					}
+				}
+				
+				if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
 					
-					Account account = accounts.get(Account.getId(generatorPublicKey));
-					if (account == null || account.getEffectiveBalance() == 0) {
-						
-						return false;
-						
-					}
-					int elapsedTime = timestamp - previousBlock.timestamp;
-					BigInteger target = BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
-					byte[] generationSignatureHash = MessageDigest.getInstance("SHA-256").digest(generationSignature);
-					BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-					if (hit.compareTo(target) >= 0) {
-						
-						return false;
-						
-					}
+					return false;
+					
+				}
+				
+				Account account = accounts.get(Account.getId(generatorPublicKey));
+				if (account == null || account.getEffectiveBalance() == 0) {
+					
+					return false;
+					
+				}
+				
+				int elapsedTime = timestamp - previousBlock.timestamp;
+				BigInteger target = BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+				
+				MessageDigest digest = MessageDigest.getInstance("SHA-256");
+				byte[] generationSignatureHash;
+				if (version == 1) {
+					
+					generationSignatureHash = digest.digest(generationSignature);
 					
 				} else {
 					
-					Block previousBlock = blocks.get(this.previousBlock);
-					if (previousBlock == null) {
+					digest.update(previousBlock.generationSignature);
+					generationSignatureHash = digest.digest(generatorPublicKey);
+					if (!Arrays.equals(generationSignature, generationSignatureHash)) {
 						
 						return false;
 						
 					}
 					
-					if (!Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
-						
-						return false;
-						
-					}
+				}
+				
+				BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+				if (hit.compareTo(target) >= 0) {
 					
-					Account account = accounts.get(Account.getId(generatorPublicKey));
-					if (account == null || account.getEffectiveBalance() == 0) {
-						
-						return false;
-						
-					}
-					int elapsedTime = timestamp - previousBlock.timestamp;
-					BigInteger target = BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
-					byte[] generationSignatureHash = MessageDigest.getInstance("SHA-256").digest(generationSignature);
-					BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-					if (hit.compareTo(target) >= 0) {
-						
-						return false;
-						
-					}
+					return false;
 					
 				}
 				
@@ -2772,9 +2861,11 @@ public class Nxt extends HttpServlet {
 		static final int STATE_DISCONNECTED = 2;
 		
 		int index;
+		String platform;
 		String scheme;
 		int port;
 		String announcedAddress;
+		boolean shareAddress;
 		String hallmark;
 		long accountId;
 		int weight, date;
@@ -2830,7 +2921,7 @@ public class Nxt extends HttpServlet {
 				if (peer == null) {
 					
 					//TODO: Check addresses
-					
+
 					peer = new Peer(announcedAddress);
 					peer.index = ++peerCounter;
 					peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
@@ -2948,7 +3039,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 			} catch (Exception e) { }
-			
+			//TODO: log errors on all Exceptions
+
 			return false;
 			
 		}
@@ -3028,6 +3120,7 @@ public class Nxt extends HttpServlet {
 			}
 			request.put("application", "NRS");
 			request.put("version", VERSION);
+			request.put("platform", myPlatform);
 			request.put("scheme", myScheme);
 			request.put("port", myPort);
 			request.put("shareAddress", shareMyAddress);
@@ -3036,6 +3129,16 @@ public class Nxt extends HttpServlet {
 				
 				application = (String)response.get("application");
 				version = (String)response.get("version");
+				platform = (String)response.get("platform");
+				try {
+					
+					shareAddress = Boolean.parseBoolean((String)response.get("shareAddress"));
+					
+				} catch (Exception e) {
+					
+					/**/shareAddress = true;
+					
+				}
 				
 				if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
 					
@@ -3329,6 +3432,7 @@ public class Nxt extends HttpServlet {
 				connection.setConnectTimeout(connectTimeout);
 				connection.setReadTimeout(readTimeout);
 				byte[] requestBytes = request.toString().getBytes("UTF-8");
+                //TODO: use JSONObject.writeJSONString(writer) to skip intermediate byte[] creation
 				OutputStream outputStream = connection.getOutputStream();
 				outputStream.write(requestBytes);
 				outputStream.close();
@@ -3353,7 +3457,7 @@ public class Nxt extends HttpServlet {
 						
 					}
 					updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
-					
+					//TODO: parse using a reader from the stream, skip String creation
 					response = (JSONObject)JSONValue.parse(responseValue);
 					
 				} else {
@@ -3391,7 +3495,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 				response = null;
-				
+                //TODO: make sure all streams are closed in finally
+
 			}
 			
 			if (showLog) {
@@ -3450,7 +3555,7 @@ public class Nxt extends HttpServlet {
 				addedActivePeer.put("weight", getWeight());
 				addedActivePeer.put("downloaded", downloadedVolume);
 				addedActivePeer.put("uploaded", uploadedVolume);
-				addedActivePeer.put("software", (application == null ? "?" : application) + " (" + (version == null ? "?" : version) + ")");
+				addedActivePeer.put("software", (application == null ? "?" : application) + " (" + (version == null ? "?" : version) + ")" + " @ " + (platform == null ? "?" : platform));
 				for (String wellKnownPeer : wellKnownPeers) {
 					
 					if (announcedAddress.equals(wellKnownPeer)) {
@@ -3583,6 +3688,7 @@ public class Nxt extends HttpServlet {
 		
 		static final int ASSET_ISSUANCE_FEE = 1000;
 		
+        //TODO: timestamp and signature currently not thread safe
 		byte type, subtype;
 		int timestamp;
 		short deadline;
@@ -3594,6 +3700,7 @@ public class Nxt extends HttpServlet {
 		Attachment attachment;
 		
 		int index;
+        //TODO: volatile?
 		long block;
 		int height;
 		
@@ -3626,7 +3733,7 @@ public class Nxt extends HttpServlet {
 				return 1;
 				
 			} else {
-				
+				//TODO: cache bytes or at least bytes.length
 				if (fee * 1048576L / getBytes().length > o.fee * 1048576L / o.getBytes().length) {
 					
 					return -1;
@@ -3864,6 +3971,7 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
+        //TODO: refactor common code with the above getTransaction(ByteBuffer)
 		static Transaction getTransaction(JSONObject transactionData) {
 			
 			byte type = ((Long)transactionData.get("type")).byteValue();
@@ -3983,6 +4091,7 @@ public class Nxt extends HttpServlet {
 			
 			FileInputStream fileInputStream = new FileInputStream(fileName);
 			ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            //TODO: accessing transactionCounter should be synchronized(Nxt.transactions)
 			transactionCounter = objectInputStream.readInt();
 			transactions = (HashMap<Long, Transaction>)objectInputStream.readObject();
 			objectInputStream.close();
@@ -4206,13 +4315,13 @@ public class Nxt extends HttpServlet {
 		}
 		
 		boolean validateAttachment() {
-			
+			//TODO: too many zeros, define a static final constant
 			if (fee > 1000000000) {
 				
 				return false;
 				
 			}
-			
+			//TODO: refactor switch statements
 			switch (type) {
 			
 			case TYPE_PAYMENT:
@@ -4254,7 +4363,7 @@ public class Nxt extends HttpServlet {
 					case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
 						{
 							
-							if (Block.getLastBlock().height < 22000) {
+							if (Block.getLastBlock().height < ALIAS_SYSTEM_BLOCK) {
 								
 								return false;
 								
@@ -4498,7 +4607,7 @@ public class Nxt extends HttpServlet {
 		static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
 			
 			static final long serialVersionUID = 0;
-			
+			//TODO: final, caching
 			String alias;
 			String uri;
 			
@@ -4802,8 +4911,10 @@ public class Nxt extends HttpServlet {
 	
 	static class User {
 		
-		ConcurrentLinkedQueue<JSONObject> pendingResponses;
-		AsyncContext asyncContext;
+		final ConcurrentLinkedQueue<JSONObject> pendingResponses;
+        //TODO: asyncContext access not thread safe
+        AsyncContext asyncContext;
+		volatile boolean isInactive;
 		
 		String secretPhrase;
 		
@@ -4835,6 +4946,21 @@ public class Nxt extends HttpServlet {
 				
 				if (asyncContext == null) {
 					
+                    if (isInactive) {
+                        // user not seen recently, no responses should be collected
+                        return;
+                    }
+                    if (pendingResponses.size() > 1000) {
+                        pendingResponses.clear();
+                        // stop collecting responses for this user
+                        isInactive = true;
+                        if (secretPhrase == null) {
+                            // but only completely remove users that don't have unlocked accounts
+                            Nxt.users.values().remove(this);
+                        }
+                        return;
+                    }
+                    
 					pendingResponses.offer(response);
 					
 				} else {
@@ -4891,8 +5017,8 @@ public class Nxt extends HttpServlet {
 		
 		@Override
 		public void onError(AsyncEvent asyncEvent) throws IOException {
-			
-			user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
+
+            user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 			
 			ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream();
 			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
@@ -4943,6 +5069,18 @@ public class Nxt extends HttpServlet {
 			String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
 			logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
 			blockchainChannel = FileChannel.open(Paths.get(blockchainStoragePath), StandardOpenOption.READ, StandardOpenOption.WRITE);
+			
+			myPlatform = servletConfig.getInitParameter("myPlatform");
+			logMessage("\"myPlatform\" = \"" + myPlatform + "\"");
+			if (myPlatform == null) {
+				
+				myPlatform = "PC";
+				
+			} else {
+				
+				myPlatform = myPlatform.trim();
+				
+			}
 			
 			myScheme = servletConfig.getInitParameter("myScheme");
 			logMessage("\"myScheme\" = \"" + myScheme + "\"");
@@ -5389,7 +5527,7 @@ public class Nxt extends HttpServlet {
 				}
 				
 				for (Transaction transaction : transactions.values()) {
-					
+					//TODO: accessing transactionCounter should be synchronized(Nxt.transactions)
 					transaction.index = ++transactionCounter;
 					transaction.block = GENESIS_BLOCK_ID;
 					
@@ -5487,7 +5625,7 @@ public class Nxt extends HttpServlet {
 						
 						Collection<Peer> peers;
 						synchronized (Nxt.peers) {
-							
+							//TODO: why the clone? extra work for the GC, better use thread-safe concurrent collection
 							peers = ((HashMap<String, Peer>)Nxt.peers.clone()).values();
 							
 						}
@@ -5516,7 +5654,7 @@ public class Nxt extends HttpServlet {
 						
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
-							
+							//TODO: don't create a new JSONObject every time for constant requests like this one, reuse a single immutable instance
 							JSONObject request = new JSONObject();
 							request.put("requestType", "getPeers");
 							JSONObject response = peer.send(request);
@@ -5527,7 +5665,7 @@ public class Nxt extends HttpServlet {
 									
 									String address = ((String)peers.get(i)).trim(); 
 									if (address.length() > 0) {
-										
+										//TODO: can a rogue peer fill the peer pool with zombie addresses? consider an option to trust only highly-hallmarked peers
 										Peer.addPeer(address, address);
 										
 									}
@@ -5593,7 +5731,8 @@ public class Nxt extends HttpServlet {
 									
 									Account account = accounts.get(Account.getId(transaction.senderPublicKey));
 									synchronized (account) {
-										
+										//TODO: this sends a request to all unlocked users, and until that completes account and Nxt.transactions are held locked
+                                        //  - get rid of synchronized and use concurrent
 										account.setUnconfirmedBalance(account.unconfirmedBalance + (transaction.amount + transaction.fee) * 100L);
 										
 									}
@@ -5614,7 +5753,7 @@ public class Nxt extends HttpServlet {
 								response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
 								
 								for (User user : users.values()) {
-									
+									//TODO: do the response sending outside the synchronized block
 									user.send(response);
 									
 								}
@@ -5638,7 +5777,7 @@ public class Nxt extends HttpServlet {
 						
 						Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
 						if (peer != null) {
-							
+							//TODO: not thread-safe, make volatile or atomic
 							lastBlockchainFeeder = peer;
 							
 							JSONObject request = new JSONObject();
@@ -5900,8 +6039,19 @@ public class Nxt extends HttpServlet {
 							Block lastBlock = Block.getLastBlock();
 							if (lastBlocks.get(account) != lastBlock) {
 								
-								byte[] generationSignature = Crypto.sign(lastBlock.generationSignature, user.secretPhrase);
-								byte[] generationSignatureHash = MessageDigest.getInstance("SHA-256").digest(generationSignature);
+								MessageDigest digest = MessageDigest.getInstance("SHA-256");
+								byte[] generationSignatureHash;
+								if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
+									
+									byte[] generationSignature = Crypto.sign(lastBlock.generationSignature, user.secretPhrase);
+									generationSignatureHash = digest.digest(generationSignature);
+									
+								} else {
+									
+									digest.update(lastBlock.generationSignature);
+									generationSignatureHash = digest.digest(Crypto.getPublicKey(user.secretPhrase));
+									
+								}
 								BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 								
 								lastBlocks.put(account, lastBlock);
@@ -5911,7 +6061,15 @@ public class Nxt extends HttpServlet {
 								response.put("response", "setBlockGenerationDeadline");
 								response.put("deadline", hit.divide(BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
 								
-								user.send(response);
+                                // there may be multiple User entries for the same secretPhrase/account in the users map
+                                // because of multiple logins, ideally the duplicates should be removed on account unlock
+                                // so this is a temporary fix (or better, keep a separate miningUsers map with no duplicates)
+                                for (User u : users.values()) {
+                                    if (user.secretPhrase.equals(u.secretPhrase)) {
+                                        u.send(response);
+                                    }
+                                }
+								//user.send(response);
 								
 							}
 							
@@ -5943,6 +6101,8 @@ public class Nxt extends HttpServlet {
 		
 	}
 	
+    //TODO: the huge switch statement should be refactored completely, a separate class should handle each case
+    // This is required in order to be able to factor out closed-source code into separate class files
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
 		User user = null;
@@ -6640,6 +6800,11 @@ public class Nxt extends HttpServlet {
 											}
 											response.put("payloadHash", convert(blockData.payloadHash));
 											response.put("generationSignature", convert(blockData.generationSignature));
+											if (blockData.version > 1) {
+												
+												response.put("previousBlockHash", convert(blockData.previousBlockHash));
+												
+											}
 											response.put("blockSignature", convert(blockData.blockSignature));
 											JSONArray transactions = new JSONArray();
 											for (int i = 0; i < blockData.numberOfTransactions; i++) {
@@ -6781,6 +6946,7 @@ public class Nxt extends HttpServlet {
 										response.put("uploadedVolume", peerData.uploadedVolume);
 										response.put("application", peerData.application);
 										response.put("version", peerData.version);
+										response.put("platform", peerData.platform);
 										
 									}
 									
@@ -6795,7 +6961,7 @@ public class Nxt extends HttpServlet {
 								JSONArray peers = new JSONArray();
 								Set<String> peerKeys;
 								synchronized (Nxt.peers) {
-									
+									//TODO: get rid of clone
 									peerKeys = ((HashMap<String, Peer>)Nxt.peers.clone()).keySet();
 									
 								}
@@ -6821,6 +6987,7 @@ public class Nxt extends HttpServlet {
 								response.put("numberOfAssets", assets.size());
 								response.put("numberOfOrders", askOrders.size() + bidOrders.size());
 								response.put("numberOfAliases", aliases.size());
+								response.put("numberOfPeers", peers.size());
 								response.put("numberOfUsers", users.size());
 								response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.announcedAddress);
 								response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
@@ -8145,10 +8312,10 @@ public class Nxt extends HttpServlet {
 												byte[] data = buffer.array();
 												byte[] signature;
 												do {
-													
+													//TODO: use SecureRandom ?
 													data[data.length - 1] = (byte)ThreadLocalRandom.current().nextInt();
 													signature = Crypto.sign(data, secretPhrase);
-													
+													//TODO: why the loop? risk of infinite loop?
 												} while (!Crypto.verify(signature, data, publicKey));
 												
 												response.put("hallmark", convert(data) + convert(signature));
@@ -8342,7 +8509,7 @@ public class Nxt extends HttpServlet {
 				
 				return;
 				
-			} else {
+			} else { // userPasscode != null
 				
 				if (allowedUserHosts != null && !allowedUserHosts.contains(req.getRemoteHost())) {
 					
@@ -8368,6 +8535,10 @@ public class Nxt extends HttpServlet {
 					
 					user = new User();
 					users.put(userPasscode, user);
+					
+				} else {
+					
+                    user.isInactive = false; // make sure to activate dormant user
 					
 				}
 				
@@ -8526,7 +8697,7 @@ public class Nxt extends HttpServlet {
 								activePeer.put("weight", peer.getWeight());
 								activePeer.put("downloaded", peer.downloadedVolume);
 								activePeer.put("uploaded", peer.uploadedVolume);
-								activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")");
+								activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")" + " @ " + (peer.platform == null ? "?" : peer.platform));
 								for (String wellKnownPeer : wellKnownPeers) {
 									
 									if (peer.announcedAddress.equals(wellKnownPeer)) {
@@ -8738,12 +8909,13 @@ public class Nxt extends HttpServlet {
 				
 			case "sendMoney":
 				{
-					
-					if (user.secretPhrase != null) {
+
+                    if (user.secretPhrase != null) {
 						
 						String recipientValue = req.getParameter("recipient"), amountValue = req.getParameter("amount"), feeValue = req.getParameter("fee"), deadlineValue = req.getParameter("deadline");
-						
-						long recipient;
+                        String secretPhrase = req.getParameter("secretPhrase");
+
+                        long recipient;
 						int amount = 0, fee = 0;
 						short deadline = 0;
 						
@@ -8769,8 +8941,20 @@ public class Nxt extends HttpServlet {
 							break;
 							
 						}
-						
-						if (amount <= 0) {
+
+                        if (! user.secretPhrase.equals(secretPhrase)) {
+
+                            JSONObject response = new JSONObject();
+                            response.put("response", "notifyOfIncorrectTransaction");
+                            response.put("message", "Wrong secret phrase!");
+                            response.put("recipient", recipientValue);
+                            response.put("amount", amountValue);
+                            response.put("fee", feeValue);
+                            response.put("deadline", deadlineValue);
+
+                            user.pendingResponses.offer(response);
+
+                        } else if (amount <= 0) {
 							
 							JSONObject response = new JSONObject();
 							response.put("response", "notifyOfIncorrectTransaction");
@@ -8884,8 +9068,19 @@ public class Nxt extends HttpServlet {
 							response2.put("response", "setBlockGenerationDeadline");
 							
 							Block lastBlock = Block.getLastBlock();
-							byte[] generationSignature = Crypto.sign(lastBlock.generationSignature, user.secretPhrase);
-							byte[] generationSignatureHash = MessageDigest.getInstance("SHA-256").digest(generationSignature);
+							MessageDigest digest = MessageDigest.getInstance("SHA-256");
+							byte[] generationSignatureHash;
+							if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
+								
+								byte[] generationSignature = Crypto.sign(lastBlock.generationSignature, user.secretPhrase);
+								generationSignatureHash = digest.digest(generationSignature);
+								
+							} else {
+								
+								digest.update(lastBlock.generationSignature);
+								generationSignatureHash = digest.digest(Crypto.getPublicKey(user.secretPhrase));
+								
+							}
 							BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 							response2.put("deadline", hit.divide(BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
 							
@@ -9130,6 +9325,9 @@ public class Nxt extends HttpServlet {
 			{
 				
 				InputStream inputStream = req.getInputStream();
+
+				//TODO: change to have the JSON parser read from the input stream via a reader directly,
+                //instead of creating an intermediate byte[] and String
 				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 				byte[] buffer = new byte[65536];
 				int numberOfBytes;
@@ -9143,8 +9341,6 @@ public class Nxt extends HttpServlet {
 				
 				peer = Peer.addPeer(req.getRemoteHost(), "");
 				if (peer != null) {
-					
-					/**///if (peer.getWeight() == 0 && !((String)request.get("requestType")).equals("getInfo")) return;
 					
 					if (peer.state == Peer.STATE_DISCONNECTED) {
 						
@@ -9219,6 +9415,29 @@ public class Nxt extends HttpServlet {
 							}
 							peer.version = version;
 							
+							String platform = (String)request.get("platform");
+							if (platform == null) {
+								
+								platform = "?";
+								
+							} else {
+								
+								platform = platform.trim();
+								if (platform.length() > 10) {
+									
+									platform = platform.substring(0, 10) + "...";
+									
+								}
+								
+							}
+							peer.platform = platform;
+							
+							try {
+								
+								peer.shareAddress = Boolean.parseBoolean((String)request.get("shareAddress"));
+								
+							} catch (Exception e) { }
+							
 							if (peer.analyzeHallmark(req.getRemoteHost(), (String)request.get("hallmark"))) {
 								
 								peer.setState(Peer.STATE_CONNECTED);
@@ -9238,6 +9457,8 @@ public class Nxt extends HttpServlet {
 						}
 						response.put("application", "NRS");
 						response.put("version", VERSION);
+						response.put("platform", myPlatform);
+						response.put("shareAddress", shareMyAddress);
 						
 					}
 					break;
@@ -9325,7 +9546,7 @@ public class Nxt extends HttpServlet {
 						JSONArray peers = new JSONArray();
 						for (Peer otherPeer : Nxt.peers.values()) {
 							
-							if (otherPeer.blacklistingTime == 0 && otherPeer.announcedAddress.length() > 0) {
+							if (otherPeer.blacklistingTime == 0 && otherPeer.announcedAddress.length() > 0 && otherPeer.state == Peer.STATE_CONNECTED && otherPeer.shareAddress) {
 								
 								peers.add(otherPeer.announcedAddress);
 								
@@ -9340,19 +9561,10 @@ public class Nxt extends HttpServlet {
 				case "getUnconfirmedTransactions":
 					{
 						
-						int counter = 0;
-						
 						JSONArray transactionsData = new JSONArray();
 						for (Transaction transaction : unconfirmedTransactions.values()) {
 							
 							transactionsData.add(transaction.getJSONObject());
-							
-							counter++;
-							if (counter >= 255) {
-								
-								break;
-								
-							}
 							
 						}
 						response.put("unconfirmedTransactions", transactionsData);
@@ -9375,7 +9587,18 @@ public class Nxt extends HttpServlet {
 						byte[] generationSignature = convert((String)request.get("generationSignature"));
 						byte[] blockSignature = convert((String)request.get("blockSignature"));
 						
-						Block block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
+						Block block;
+						if (version == 1) {
+							
+							block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
+							
+						} else {
+							
+							byte[] previousBlockHash = convert((String)request.get("previousBlockHash"));
+							
+							block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+							
+						}
 						
 						ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + payloadLength);
 						buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -9431,10 +9654,20 @@ public class Nxt extends HttpServlet {
 		servletOutputStream.write(responseBytes);
 		servletOutputStream.close();
 		
+        /* //TODO: I would rewrite the above to avoid the creation of byte[] and to avoid JSONObject.toString()
+        DataOutputStream os = new DataOutputStream(resp.getOutputStream());
+        Writer writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        try {
+            response.writeJSONString(writer);
+        } finally {
+            writer.close();
+        }
+        */
+
 		if (peer != null) {
 			
 			peer.updateUploadedVolume(responseBytes.length);
-			
+			//peer.updateUploadedVolume(os.size());
 		}
 		
 	}
@@ -9444,12 +9677,14 @@ public class Nxt extends HttpServlet {
 		
 		scheduledThreadPool.shutdown();
 		cachedThreadPool.shutdown();
-		
+        //TODO: use awaitTermination()
+
 		try {
 			
 			Block.saveBlocks("blocks.nxt", true);
 			
 		} catch (Exception e) { }
+        //TODO: log errors
 		try {
 			
 			Transaction.saveTransactions("transactions.nxt");
