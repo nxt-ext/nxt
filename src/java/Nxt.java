@@ -62,8 +62,9 @@ public class Nxt extends HttpServlet {
 	
 	static final int ALIAS_SYSTEM_BLOCK = 22000;
 	static final int TRANSPARENT_FORGING_BLOCK = 30000;
-	
-	static final long initialBaseTarget = 153722867, maxBaseTarget = 1000000000L * initialBaseTarget;
+
+    static final long MAX_BALANCE = 1000000000;
+	static final long initialBaseTarget = 153722867, maxBaseTarget = MAX_BALANCE * initialBaseTarget;
 	static final BigInteger two64 = new BigInteger("18446744073709551616");
 
     // /*final*/ variables are set in the init() and are to be treated as final
@@ -322,7 +323,7 @@ public class Nxt extends HttpServlet {
 			HashSet<String> newAliases = new HashSet<>();
 			HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
 			int payloadLength = 0;
-            //TODO: why the while loop, isn't it enough to go only once through sortedTransactions and break when payloadLength exceeded?
+
 			while (payloadLength <= MAX_PAYLOAD_LENGTH) {
 				
 				int prevNumberOfNewTransactions = newTransactions.size();
@@ -477,7 +478,6 @@ public class Nxt extends HttpServlet {
 				}
 				
 			}
-            //TODO: is it intentional that balance is not adjusted also for outgoing transactions in the last block?
 
 			return (int)(balance / 100) - amount;
 			
@@ -700,19 +700,19 @@ public class Nxt extends HttpServlet {
 		
 		static final long serialVersionUID = 0;
 		
-        //TODO: at least some of those should be final
-		int version;
-		int timestamp;
-		long previousBlock;
-		int numberOfTransactions;
+        //TODO: at least some of those should be volatile
+		final int version;
+		final int timestamp;
+		final long previousBlock;
+		final int numberOfTransactions;
 		int totalAmount, totalFee;
 		int payloadLength;
 		byte[] payloadHash;
-		byte[] generatorPublicKey;
+		final byte[] generatorPublicKey;
 		byte[] generationSignature;
 		byte[] blockSignature;
 		
-		byte[] previousBlockHash;
+		final byte[] previousBlockHash;
 		
 		int index;
 		long[] transactions;
@@ -720,22 +720,11 @@ public class Nxt extends HttpServlet {
 		int height;
 		long nextBlock;
 		BigInteger cumulativeDifficulty;
-		long prevBlockPtr;
-		
+
 		Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
-			
-			this.version = version;
-			this.timestamp = timestamp;
-			this.previousBlock = previousBlock;
-			this.numberOfTransactions = numberOfTransactions;
-			this.totalAmount = totalAmount;
-			this.totalFee = totalFee;
-			this.payloadLength = payloadLength;
-			this.payloadHash = payloadHash;
-			this.generatorPublicKey = generatorPublicKey;
-			this.generationSignature = generationSignature;
-			this.blockSignature = blockSignature;
-			
+
+            this(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, null);
+
 		}
 		
 		Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
@@ -1194,17 +1183,17 @@ public class Nxt extends HttpServlet {
 		}
 		
 		static void loadBlocks(String fileName) throws Exception {
-			
-			FileInputStream fileInputStream = new FileInputStream(fileName);
-			ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-			blockCounter.set(objectInputStream.readInt());
-            blocks.clear();
-			blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
-			lastBlock = objectInputStream.readLong();
-			objectInputStream.close();
-			fileInputStream.close();
-			
-		}
+
+            try (FileInputStream fileInputStream = new FileInputStream(fileName);
+                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
+            ) {
+                blockCounter.set(objectInputStream.readInt());
+                blocks.clear();
+                blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
+                lastBlock = objectInputStream.readLong();
+            }
+
+        }
 		
 		static boolean popLastBlock() {
 			
@@ -1710,14 +1699,14 @@ public class Nxt extends HttpServlet {
 		
 		static void saveBlocks(String fileName, boolean flag) throws Exception {
 
-            FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeInt(blockCounter.get());
-            objectOutputStream.writeObject(new HashMap<>(blocks));
-            objectOutputStream.writeLong(lastBlock);
-            objectOutputStream.close();
-            fileOutputStream.close();
-				
+            try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
+            ) {
+                objectOutputStream.writeInt(blockCounter.get());
+                objectOutputStream.writeObject(new HashMap<>(blocks));
+                objectOutputStream.writeLong(lastBlock);
+            }
+
 				/*if (flag) {
 					
 					ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + MAX_PAYLOAD_LENGTH);
@@ -2938,7 +2927,7 @@ public class Nxt extends HttpServlet {
 					
 				}
 				int weight = buffer.getInt();
-				if (weight <= 0 || weight > 1000000000) {
+				if (weight <= 0 || weight > MAX_BALANCE) {
 					
 					return false;
 					
@@ -3002,7 +2991,7 @@ public class Nxt extends HttpServlet {
 
                     for (Peer peer : groupedPeers) {
 
-                        peer.adjustedWeight = 1000000000L * peer.weight / totalWeight;
+                        peer.adjustedWeight = MAX_BALANCE * peer.weight / totalWeight;
                         peer.updateWeight();
 
                     }
@@ -3012,7 +3001,6 @@ public class Nxt extends HttpServlet {
 				}
 				
 			} catch (Exception e) { }
-			//TODO: log errors on all Exceptions
 
 			return false;
 			
@@ -3281,7 +3269,7 @@ public class Nxt extends HttpServlet {
 				
 			}
 			
-			return (int)(adjustedWeight * (account.balance / 100) / 1000000000);
+			return (int)(adjustedWeight * (account.balance / 100) / MAX_BALANCE);
 			
 		}
 		
@@ -3418,22 +3406,22 @@ public class Nxt extends HttpServlet {
 				connection.setReadTimeout(readTimeout);
 				byte[] requestBytes = request.toString().getBytes("UTF-8");
                 //TODO: use JSONObject.writeJSONString(writer) to skip intermediate byte[] creation
-				OutputStream outputStream = connection.getOutputStream();
-				outputStream.write(requestBytes);
-				outputStream.close();
+				try (OutputStream outputStream = connection.getOutputStream()) {
+    				outputStream.write(requestBytes);
+                }
 				updateUploadedVolume(requestBytes.length);
 				if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
 					
-					InputStream inputStream = connection.getInputStream();
 					ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-					byte[] buffer = new byte[65536];
-					int numberOfBytes;
-					while ((numberOfBytes = inputStream.read(buffer)) > 0) {
-						
-						byteArrayOutputStream.write(buffer, 0, numberOfBytes);
-						
-					}
-					inputStream.close();
+                    byte[] buffer = new byte[65536];
+                    int numberOfBytes;
+                    try (InputStream inputStream = connection.getInputStream()) {
+                        while ((numberOfBytes = inputStream.read(buffer)) > 0) {
+
+                            byteArrayOutputStream.write(buffer, 0, numberOfBytes);
+
+                        }
+                    }
 					String responseValue = byteArrayOutputStream.toString("UTF-8");
 					if ((communicationLoggingMask & LOGGING_MASK_200_RESPONSES) != 0) {
 						
@@ -3480,7 +3468,6 @@ public class Nxt extends HttpServlet {
 				}
 				
 				response = null;
-                //TODO: make sure all streams are closed in finally
 
 			}
 			
@@ -4076,16 +4063,15 @@ public class Nxt extends HttpServlet {
 		}
 		
 		static void loadTransactions(String fileName) throws Exception {
-			
-			FileInputStream fileInputStream = new FileInputStream(fileName);
-			ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-			transactionCounter.set(objectInputStream.readInt());
-            transactions.clear();
-			transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
-			objectInputStream.close();
-			fileInputStream.close();
-			
-		}
+
+            try (FileInputStream fileInputStream = new FileInputStream(fileName);
+                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+                transactionCounter.set(objectInputStream.readInt());
+                transactions.clear();
+                transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
+            }
+
+        }
 		
 		static void processTransactions(JSONObject request, String parameterName) {
 			
@@ -4268,12 +4254,13 @@ public class Nxt extends HttpServlet {
 		
 		static void saveTransactions(String fileName) throws Exception {
 
-            FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeInt(transactionCounter.get());
-            objectOutputStream.writeObject(new HashMap(transactions));
-            objectOutputStream.close();
-            fileOutputStream.close();
+            try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
+            ) {
+                objectOutputStream.writeInt(transactionCounter.get());
+                objectOutputStream.writeObject(new HashMap(transactions));
+                objectOutputStream.close();
+            }
 
         }
 		
@@ -4300,8 +4287,8 @@ public class Nxt extends HttpServlet {
 		}
 		
 		boolean validateAttachment() {
-			//TODO: too many zeros, define a static final constant
-			if (fee > 1000000000) {
+
+			if (fee > MAX_BALANCE) {
 				
 				return false;
 				
@@ -4317,7 +4304,7 @@ public class Nxt extends HttpServlet {
 					case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
 						{
 							
-							if (amount <= 0 || amount > 1000000000) {
+							if (amount <= 0 || amount > MAX_BALANCE) {
 								
 								return false;
 								
@@ -4962,10 +4949,10 @@ public class Nxt extends HttpServlet {
 						
 						asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 						
-						ServletOutputStream servletOutputStream = asyncContext.getResponse().getOutputStream();
-						servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
-						servletOutputStream.close();
-						
+						try (ServletOutputStream servletOutputStream = asyncContext.getResponse().getOutputStream()) {
+						    servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                        }
+
 						asyncContext.complete();
 						asyncContext = null;
 						
@@ -5001,10 +4988,10 @@ public class Nxt extends HttpServlet {
 
             user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 			
-			ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream();
-			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
-			servletOutputStream.close();
-			
+			try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
+    			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+            }
+
 			user.asyncContext.complete();
 			user.asyncContext = null;
 			
@@ -5018,10 +5005,10 @@ public class Nxt extends HttpServlet {
 			
 			user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 			
-			ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream();
-			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
-			servletOutputStream.close();
-			
+			try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
+    			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+            }
+
 			user.asyncContext.complete();
 			user.asyncContext = null;
 			
@@ -6186,7 +6173,7 @@ public class Nxt extends HttpServlet {
 												try {
 													
 													int fee = Integer.parseInt(feeValue);
-													if (fee <= 0 || fee >= 1000000000) {
+													if (fee <= 0 || fee >= MAX_BALANCE) {
 														
 														throw new Exception();
 														
@@ -6354,7 +6341,7 @@ public class Nxt extends HttpServlet {
 										response.put("date", (year < 10 ? "000" : (year < 100 ? "00" : (year < 1000 ? "0" : ""))) + year + "-" + (month < 10 ? "0" : "") + month + "-" + (day < 10 ? "0" : "") + day);
 										byte[] data = new byte[hallmark.length - 64];
 										System.arraycopy(hallmark, 0, data, 0, data.length);
-										response.put("valid", host.length() > 100 || weight <= 0 || weight > 1000000000 ? false : Crypto.verify(signature, data, publicKey));
+										response.put("valid", host.length() > 100 || weight <= 0 || weight > MAX_BALANCE ? false : Crypto.verify(signature, data, publicKey));
 										
 									} catch (Exception e) {
 										
@@ -8257,7 +8244,7 @@ public class Nxt extends HttpServlet {
 										try {
 											
 											int weight = Integer.parseInt(weightValue);
-											if (weight <= 0 || weight > 1000000000) {
+											if (weight <= 0 || weight > MAX_BALANCE) {
 												
 												throw new Exception();
 												
@@ -8281,10 +8268,8 @@ public class Nxt extends HttpServlet {
 												byte[] data = buffer.array();
 												byte[] signature;
 												do {
-													//TODO: use SecureRandom ?
 													data[data.length - 1] = (byte)ThreadLocalRandom.current().nextInt();
 													signature = Crypto.sign(data, secretPhrase);
-													//TODO: why the loop? risk of infinite loop?
 												} while (!Crypto.verify(signature, data, publicKey));
 												
 												response.put("hallmark", convert(data) + convert(signature));
@@ -8362,7 +8347,7 @@ public class Nxt extends HttpServlet {
 										try {
 											
 											int amount = Integer.parseInt(amountValue);
-											if (amount <= 0 || amount >= 1000000000) {
+											if (amount <= 0 || amount >= MAX_BALANCE) {
 												
 												throw new Exception();
 												
@@ -8371,7 +8356,7 @@ public class Nxt extends HttpServlet {
 											try {
 												
 												int fee = Integer.parseInt(feeValue);
-												if (fee <= 0 || fee >= 1000000000) {
+												if (fee <= 0 || fee >= MAX_BALANCE) {
 													
 													throw new Exception();
 													
@@ -8471,11 +8456,11 @@ public class Nxt extends HttpServlet {
 				}
 				
 				resp.setContentType("text/plain; charset=UTF-8");
-				
-				ServletOutputStream servletOutputStream = resp.getOutputStream();
-				servletOutputStream.write(response.toString().getBytes("UTF-8"));
-				servletOutputStream.close();
-				
+
+                try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
+                    servletOutputStream.write(response.toString().getBytes("UTF-8"));
+                }
+
 				return;
 				
 			} else { // userPasscode != null
@@ -8490,11 +8475,10 @@ public class Nxt extends HttpServlet {
 					combinedResponse.put("responses", responses);
 					
 					resp.setContentType("text/plain; charset=UTF-8");
-					
-					ServletOutputStream servletOutputStream = resp.getOutputStream();
-					servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
-					servletOutputStream.close();
-					
+
+                    try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
+                        servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                    }
 					return;
 					
 				}
@@ -9219,11 +9203,10 @@ public class Nxt extends HttpServlet {
 					if (user.asyncContext != null) {
 						
 						user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-						
-						ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream();
-						servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
-						servletOutputStream.close();
-						
+
+                        try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
+                            servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                        }
 						user.asyncContext.complete();
 						user.asyncContext = req.startAsync();
 						user.asyncContext.addListener(new UserAsyncListener(user));
@@ -9232,10 +9215,10 @@ public class Nxt extends HttpServlet {
 					} else {
 						
 						resp.setContentType("text/plain; charset=UTF-8");
-						
-						ServletOutputStream servletOutputStream = resp.getOutputStream();
-						servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
-						servletOutputStream.close();
+
+                        try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
+                            servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                        }
 						
 					}
 					
@@ -9244,11 +9227,10 @@ public class Nxt extends HttpServlet {
 					if (user.asyncContext != null) {
 						
 						user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-						
-						ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream();
-						servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
-						servletOutputStream.close();
-						
+
+                        try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
+                            servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+                        }
 						user.asyncContext.complete();
 						
 					}
@@ -9275,20 +9257,21 @@ public class Nxt extends HttpServlet {
 			
 			JSONObject request;
 			{
-				
-				InputStream inputStream = req.getInputStream();
 
-				//TODO: change to have the JSON parser read from the input stream via a reader directly,
+                //TODO: change to have the JSON parser read from the input stream via a reader directly,
                 //instead of creating an intermediate byte[] and String
-				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-				byte[] buffer = new byte[65536];
-				int numberOfBytes;
-				while ((numberOfBytes = inputStream.read(buffer)) > 0) {
-					
-					byteArrayOutputStream.write(buffer, 0, numberOfBytes);
-					
-				}
-				inputStream.close();
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                byte[] buffer = new byte[65536];
+                int numberOfBytes;
+
+				try (InputStream inputStream = req.getInputStream()) {
+
+                    while ((numberOfBytes = inputStream.read(buffer)) > 0) {
+
+                        byteArrayOutputStream.write(buffer, 0, numberOfBytes);
+
+                    }
+                }
 				request = (JSONObject)JSONValue.parse(byteArrayOutputStream.toString("UTF-8"));
 				
 				peer = Peer.addPeer(req.getRemoteHost(), "");
@@ -9602,10 +9585,10 @@ public class Nxt extends HttpServlet {
 		resp.setContentType("text/plain; charset=UTF-8");
 		
 		byte[] responseBytes = response.toString().getBytes("UTF-8");
-		ServletOutputStream servletOutputStream = resp.getOutputStream();
-		servletOutputStream.write(responseBytes);
-		servletOutputStream.close();
-		
+		try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
+    		servletOutputStream.write(responseBytes);
+        }
+
         /* //TODO: I would rewrite the above to avoid the creation of byte[] and to avoid JSONObject.toString()
         DataOutputStream os = new DataOutputStream(resp.getOutputStream());
         Writer writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
