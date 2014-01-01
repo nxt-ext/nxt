@@ -4867,7 +4867,7 @@ public class Nxt extends HttpServlet {
         AsyncContext asyncContext;
 		volatile boolean isInactive;
 		
-		String secretPhrase;
+		volatile String secretPhrase;
 		
 		User() {
 			
@@ -6012,15 +6012,8 @@ public class Nxt extends HttpServlet {
 								JSONObject response = new JSONObject();
 								response.put("response", "setBlockGenerationDeadline");
 								response.put("deadline", hit.divide(BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
-								
-                                // there may be multiple User entries for the same secretPhrase/account in the users map
-                                // because of multiple logins, ideally the duplicates should be removed on account unlock
-                                // so this is a temporary fix (or better, keep a separate miningUsers map with no duplicates)
-                                for (User u : users.values()) {
-                                    if (user.secretPhrase.equals(u.secretPhrase)) {
-                                        u.send(response);
-                                    }
-                                }
+
+                                user.send(response);
 
 							}
 							
@@ -8716,9 +8709,9 @@ public class Nxt extends HttpServlet {
 				
 			case "lockAccount":
 				{
-					
+
 					user.deinitializeKeyPair();
-					
+
 					JSONObject response = new JSONObject();
 					response.put("response", "lockAccount");
 					
@@ -8958,7 +8951,19 @@ public class Nxt extends HttpServlet {
 				{
 					
 					String secretPhrase = req.getParameter("secretPhrase");
-					BigInteger accountId = user.initializeKeyPair(secretPhrase);
+                    // lock all other instances of this account being unlocked
+                    for (User u : Nxt.users.values()) {
+                        if (secretPhrase.equals(u.secretPhrase)) {
+                            u.deinitializeKeyPair();
+                            if (! u.isInactive) {
+                                JSONObject response = new JSONObject();
+                                response.put("response", "lockAccount");
+                                u.pendingResponses.offer(response);
+                            }
+                        }
+                    }
+
+                    BigInteger accountId = user.initializeKeyPair(secretPhrase);
 					
 					JSONObject response = new JSONObject();
 					response.put("response", "unlockAccount");
