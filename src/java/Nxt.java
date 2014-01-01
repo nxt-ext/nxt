@@ -158,11 +158,11 @@ public class Nxt extends HttpServlet {
 	static String convert(byte[] bytes) {
 		
 		StringBuilder string = new StringBuilder();
-		for (int i = 0; i < bytes.length; i++) {
-			
+		for (byte b : bytes) {
+
 			int number;
-			string.append(alphabet.charAt((number = bytes[i] & 0xFF) >> 4)).append(alphabet.charAt(number & 0xF));
-			
+			string.append(alphabet.charAt((number = b & 0xFF) >> 4)).append(alphabet.charAt(number & 0xF));
+
 		}
 		
 		return string.toString();
@@ -285,7 +285,20 @@ public class Nxt extends HttpServlet {
 		}
 		
 		void generateBlock(String secretPhrase) throws Exception {
-			
+
+            Set<Transaction> sortedTransactions = new TreeSet<>();
+
+            for (Transaction transaction : unconfirmedTransactions.values()) {
+
+                if (transaction.referencedTransaction == 0 || Nxt.transactions.get(transaction.referencedTransaction) != null) {
+
+                    sortedTransactions.add(transaction);
+
+                }
+
+            }
+
+            /* was:
 			Transaction[] sortedTransactions;
 
             sortedTransactions = unconfirmedTransactions.values().toArray(new Transaction[0]);
@@ -318,10 +331,11 @@ public class Nxt extends HttpServlet {
             }
 
             Arrays.sort(sortedTransactions);
-			
-			HashMap<Long, Transaction> newTransactions = new HashMap<>();
-			HashSet<String> newAliases = new HashSet<>();
-			HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
+			*/
+
+			Map<Long, Transaction> newTransactions = new HashMap<>();
+			Set<String> newAliases = new HashSet<>();
+			Map<Long, Long> accumulatedAmounts = new HashMap<>();
 			int payloadLength = 0;
 
 			while (payloadLength <= MAX_PAYLOAD_LENGTH) {
@@ -700,7 +714,7 @@ public class Nxt extends HttpServlet {
 		
 		static final long serialVersionUID = 0;
 		
-        //TODO: at least some of those should be volatile
+        //TODO: check if any of those should be volatile
 		final int version;
 		final int timestamp;
 		final long previousBlock;
@@ -1091,18 +1105,10 @@ public class Nxt extends HttpServlet {
 			byte[] generatorPublicKey = convert((String)blockData.get("generatorPublicKey"));
 			byte[] generationSignature = convert((String)blockData.get("generationSignature"));
 			byte[] blockSignature = convert((String)blockData.get("blockSignature"));
-			
-			if (version == 1) {
-				
-				return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
-				
-			} else {
-				
-				byte[] previousBlockHash = convert((String)blockData.get("previousBlockHash"));
-				
-				return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-				
-			}
+
+            byte[] previousBlockHash = version == 1 ? null : convert((String)blockData.get("previousBlockHash"));
+
+            return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
         }
 
@@ -1361,15 +1367,9 @@ public class Nxt extends HttpServlet {
 			}
 			
 			Block block;
-			if (version == 1) {
-				
-				block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
-				
-			} else {
-				
-				block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-				
-			}
+
+            // no need for if/else here
+            block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
             block.index = blockCounter.incrementAndGet();
 
@@ -1764,15 +1764,10 @@ public class Nxt extends HttpServlet {
 			byte[] data = getBytes();
 			byte[] data2 = new byte[data.length - 64];
 			System.arraycopy(data, 0, data2, 0, data2.length);
-			if (!Crypto.verify(blockSignature, data2, generatorPublicKey)) {
-				
-				return false;
-				
-			}
-			
-			return true;
-			
-		}
+
+            return Crypto.verify(blockSignature, data2, generatorPublicKey);
+
+        }
 		
 		boolean verifyGenerationSignature() {
 			
@@ -1820,15 +1815,10 @@ public class Nxt extends HttpServlet {
 				}
 				
 				BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-				if (hit.compareTo(target) >= 0) {
-					
-					return false;
-					
-				}
-				
-				return true;
-				
-			} catch (Exception e) {
+
+                return hit.compareTo(target) < 0;
+
+            } catch (Exception e) {
 				
 				return false;
 				
@@ -2832,8 +2822,6 @@ public class Nxt extends HttpServlet {
 		
 		final int index;
 		String platform;
-		String scheme;
-		int port;
 		String announcedAddress;
 		boolean shareAddress;
 		String hallmark;
@@ -3334,7 +3322,7 @@ public class Nxt extends HttpServlet {
 			
 		}
 
-        //TODO: send in parallel using an executor service
+        //TODO: send in parallel using an executor service or NIO
 		static void sendToAllPeers(JSONObject request) {
 
             for (Peer peer : Nxt.peers.values()) {
@@ -4362,15 +4350,10 @@ public class Nxt extends HttpServlet {
 									}
 									
 									Alias alias = aliases.get(normalizedAlias);
-									if (alias != null && alias.account.id != Account.getId(senderPublicKey)) {
-										
-										return false;
-										
-									}
-									
-									return true;
-									
-								}
+
+                                    return alias == null || alias.account.id == Account.getId(senderPublicKey);
+
+                                }
 								
 							} catch (Exception e) {
 								
@@ -4902,10 +4885,8 @@ public class Nxt extends HttpServlet {
 			
 			this.secretPhrase = secretPhrase;
 			byte[] publicKeyHash = MessageDigest.getInstance("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
-			BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
-			
-			return bigInteger;
-			
+			return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
+
 		}
 		
 		void send(JSONObject response) {
@@ -5628,16 +5609,17 @@ public class Nxt extends HttpServlet {
 							if (response != null) {
 								
 								JSONArray peers = (JSONArray)response.get("peers");
-								for (int i = 0; i < peers.size(); i++) {
-									
-									String address = ((String)peers.get(i)).trim(); 
-									if (address.length() > 0) {
-										//TODO: can a rogue peer fill the peer pool with zombie addresses? consider an option to trust only highly-hallmarked peers
-										Peer.addPeer(address, address);
-										
-									}
-									
-								}
+                                for (Object peerAddress : peers) {
+
+                                    String address = ((String)peerAddress).trim();
+                                    if (address.length() > 0) {
+                                        //TODO: can a rogue peer fill the peer pool with zombie addresses?
+                                        //consider an option to trust only highly-hallmarked peers
+                                        Peer.addPeer(address, address);
+
+                                    }
+
+                                }
 								
 							}
 							
@@ -5764,19 +5746,19 @@ public class Nxt extends HttpServlet {
 										long commonBlockId = GENESIS_BLOCK_ID;
 										
 										JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
-										for (int i = 0; i < milestoneBlockIds.size(); i++) {
-											
-											long blockId = (new BigInteger((String)milestoneBlockIds.get(i))).longValue();
-											Block block = blocks.get(blockId);
-											if (block != null) {
-												
-												commonBlockId = blockId;
-												
-												break;
-												
-											}
-											
-										}
+                                        for (Object milestoneBlockId : milestoneBlockIds) {
+
+                                            long blockId = (new BigInteger((String)milestoneBlockId)).longValue();
+                                            Block block = blocks.get(blockId);
+                                            if (block != null) {
+
+                                                commonBlockId = blockId;
+
+                                                break;
+
+                                            }
+
+                                        }
 										
 										int i, numberOfBlocks;
 										do {
@@ -5915,7 +5897,7 @@ public class Nxt extends HttpServlet {
 													
 													curCumulativeDifficulty = Block.getLastBlock().cumulativeDifficulty;
 													
-													while (lastBlock != commonBlockId && Block.popLastBlock()) { }
+													while (lastBlock != commonBlockId && Block.popLastBlock()) {}
 													
 													if (lastBlock == commonBlockId) {
 														
@@ -9303,20 +9285,17 @@ public class Nxt extends HttpServlet {
 				case "getInfo":
 					{
 						
-						String announcedAddress = (String)request.get("announcedAddress");
-						if (announcedAddress != null) {
-							
-							announcedAddress = announcedAddress.trim();
-							if (announcedAddress.length() > 0) {
-								
-								peer.announcedAddress = announcedAddress;
-								
-							}
-							
-						}
 						if (peer != null) {
-							
-							String application = (String)request.get("application");
+                            String announcedAddress = (String)request.get("announcedAddress");
+                            if (announcedAddress != null) {
+                                announcedAddress = announcedAddress.trim();
+                                if (announcedAddress.length() > 0) {
+
+                                    peer.announcedAddress = announcedAddress;
+
+                                }
+                            }
+                            String application = (String)request.get("application");
 							if (application == null) {
 								
 								application = "?";
@@ -9442,7 +9421,7 @@ public class Nxt extends HttpServlet {
 				case "getNextBlocks":
 					{
 						
-						LinkedList<Block> nextBlockIds = new LinkedList<>();
+						List<Block> nextBlocks = new ArrayList<>();
 						int totalLength = 0;
 						Block block = blocks.get((new BigInteger((String)request.get("blockId")).longValue()));
 						while (block != null) {
@@ -9457,20 +9436,20 @@ public class Nxt extends HttpServlet {
 									
 								}
 								
-								nextBlockIds.add(block);
+								nextBlocks.add(block);
 								totalLength += length;
 								
 							}
 							
 						}
 						
-						JSONArray nextBlocks = new JSONArray();
-						for (int i = 0; i < nextBlockIds.size(); i++) {
-							
-							nextBlocks.add(nextBlockIds.get(i).getJSONObject(transactions));
-							
-						}
-						response.put("nextBlocks", nextBlocks);
+						JSONArray nextBlocksArray = new JSONArray();
+                        for (Block nextBlock : nextBlocks) {
+
+                            nextBlocksArray.add(nextBlock.getJSONObject(transactions));
+
+                        }
+						response.put("nextBlocks", nextBlocksArray);
 						
 					}
 					break;
@@ -9510,42 +9489,19 @@ public class Nxt extends HttpServlet {
 				case "processBlock":
 					{
 						
-						int version = ((Long)request.get("version")).intValue();
-						int blockTimestamp = ((Long)request.get("timestamp")).intValue();
-						long previousBlock = (new BigInteger((String)request.get("previousBlock"))).longValue();
-						int numberOfTransactions = ((Long)request.get("numberOfTransactions")).intValue();
-						int totalAmount = ((Long)request.get("totalAmount")).intValue();
-						int totalFee = ((Long)request.get("totalFee")).intValue();
-						int payloadLength = ((Long)request.get("payloadLength")).intValue();
-						byte[] payloadHash = convert((String)request.get("payloadHash"));
-						byte[] generatorPublicKey = convert((String)request.get("generatorPublicKey"));
-						byte[] generationSignature = convert((String)request.get("generationSignature"));
-						byte[] blockSignature = convert((String)request.get("blockSignature"));
+                        Block block = Block.getBlock(request);
 						
-						Block block;
-						if (version == 1) {
-							
-							block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature);
-							
-						} else {
-							
-							byte[] previousBlockHash = convert((String)request.get("previousBlockHash"));
-							
-							block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-							
-						}
-						
-						ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + payloadLength);
+						ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
 						buffer.order(ByteOrder.LITTLE_ENDIAN);
 						
 						buffer.put(block.getBytes());
 						
 						JSONArray transactionsData = (JSONArray)request.get("transactions");
-						for (int i = 0; i < transactionsData.size(); i++) {
-							
-							buffer.put(Transaction.getTransaction((JSONObject)transactionsData.get(i)).getBytes());
-							
-						}
+                        for (Object transaction : transactionsData) {
+
+                            buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
+
+                        }
 						
 						boolean accepted = Block.pushBlock(buffer, true);
 						response.put("accepted", accepted);
