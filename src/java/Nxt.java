@@ -11,16 +11,24 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -3392,35 +3400,44 @@ public class Nxt extends HttpServlet {
 				connection.setDoOutput(true);
 				connection.setConnectTimeout(connectTimeout);
 				connection.setReadTimeout(readTimeout);
-				byte[] requestBytes = request.toString().getBytes("UTF-8");
-                //TODO: use JSONObject.writeJSONString(writer) to skip intermediate byte[] creation
-				try (OutputStream outputStream = connection.getOutputStream()) {
-    				outputStream.write(requestBytes);
+
+                CountingOutputStream cos = new CountingOutputStream(connection.getOutputStream());
+                try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
+                    request.writeJSONString(writer);
                 }
-				updateUploadedVolume(requestBytes.length);
+				updateUploadedVolume(cos.getCount());
+
 				if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-					
-					ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[65536];
-                    int numberOfBytes;
-                    try (InputStream inputStream = connection.getInputStream()) {
-                        while ((numberOfBytes = inputStream.read(buffer)) > 0) {
 
-                            byteArrayOutputStream.write(buffer, 0, numberOfBytes);
+                    if ((communicationLoggingMask & LOGGING_MASK_200_RESPONSES) != 0) {
 
+                        // inefficient
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[65536];
+                        int numberOfBytes;
+                        try (InputStream inputStream = connection.getInputStream()) {
+                            while ((numberOfBytes = inputStream.read(buffer)) > 0) {
+                                byteArrayOutputStream.write(buffer, 0, numberOfBytes);
+                            }
                         }
+                        String responseValue = byteArrayOutputStream.toString("UTF-8");
+                        log += " >>> " + responseValue;
+                        showLog = true;
+                        updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
+                        response = (JSONObject)JSONValue.parse(responseValue);
+
+                    } else {
+
+                        CountingInputStream cis = new CountingInputStream(connection.getInputStream());
+
+                        try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
+                            response = (JSONObject)JSONValue.parse(reader);
+                        }
+
+                        updateDownloadedVolume(cis.getCount());
+
                     }
-					String responseValue = byteArrayOutputStream.toString("UTF-8");
-					if ((communicationLoggingMask & LOGGING_MASK_200_RESPONSES) != 0) {
-						
-						log += " >>> " + responseValue;
-						showLog = true;
-						
-					}
-					updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
-					//TODO: parse using a reader from the stream, skip String creation
-					response = (JSONObject)JSONValue.parse(responseValue);
-					
+
 				} else {
 					
 					if ((communicationLoggingMask & LOGGING_MASK_NON200_RESPONSES) != 0) {
@@ -3562,7 +3579,7 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
-		void updateDownloadedVolume(int volume) {
+		void updateDownloadedVolume(long volume) {
 			
 			downloadedVolume += volume;
 			
@@ -3584,7 +3601,7 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
-		void updateUploadedVolume(int volume) {
+		void updateUploadedVolume(long volume) {
 			
 			uploadedVolume += volume;
 			
@@ -3650,19 +3667,18 @@ public class Nxt extends HttpServlet {
 		
 		static final int ASSET_ISSUANCE_FEE = 1000;
 		
-        //TODO: timestamp and signature currently not thread safe
-		byte type, subtype;
+        //TODO: attachment, timestamp and signature currently not thread safe
+		final byte type, subtype;
 		int timestamp;
-		short deadline;
-		byte[] senderPublicKey;
-		long recipient;
-		int amount, fee;
-		long referencedTransaction;
+		final short deadline;
+		final byte[] senderPublicKey;
+		final long recipient;
+		final int amount, fee;
+		final long referencedTransaction;
 		byte[] signature;
 		Attachment attachment;
 		
 		int index;
-        //TODO: volatile?
 		long block;
 		int height;
 		
@@ -3934,7 +3950,6 @@ public class Nxt extends HttpServlet {
 			
 		}
 		
-        //TODO: refactor common code with the above getTransaction(ByteBuffer)
 		static Transaction getTransaction(JSONObject transactionData) {
 			
 			byte type = ((Long)transactionData.get("type")).byteValue();
@@ -9256,22 +9271,12 @@ public class Nxt extends HttpServlet {
 			JSONObject request;
 			{
 
-                //TODO: change to have the JSON parser read from the input stream via a reader directly,
-                //instead of creating an intermediate byte[] and String
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                byte[] buffer = new byte[65536];
-                int numberOfBytes;
+                CountingInputStream cis = new CountingInputStream(req.getInputStream());
 
-				try (InputStream inputStream = req.getInputStream()) {
-
-                    while ((numberOfBytes = inputStream.read(buffer)) > 0) {
-
-                        byteArrayOutputStream.write(buffer, 0, numberOfBytes);
-
-                    }
+                try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
+                    request = (JSONObject)JSONValue.parse(reader);
                 }
-				request = (JSONObject)JSONValue.parse(byteArrayOutputStream.toString("UTF-8"));
-				
+
 				peer = Peer.addPeer(req.getRemoteHost(), "");
 				if (peer != null) {
 					
@@ -9280,7 +9285,7 @@ public class Nxt extends HttpServlet {
 						peer.setState(Peer.STATE_CONNECTED);
 						
 					}
-					peer.updateDownloadedVolume(byteArrayOutputStream.size());
+					peer.updateDownloadedVolume(cis.getCount());
 					
 				}
 				
@@ -9556,30 +9561,79 @@ public class Nxt extends HttpServlet {
 		
 		resp.setContentType("text/plain; charset=UTF-8");
 		
-		byte[] responseBytes = response.toString().getBytes("UTF-8");
-		try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
-    		servletOutputStream.write(responseBytes);
-        }
-
-        /* //TODO: I would rewrite the above to avoid the creation of byte[] and to avoid JSONObject.toString()
-        DataOutputStream os = new DataOutputStream(resp.getOutputStream());
-        Writer writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-        try {
+        CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
             response.writeJSONString(writer);
-        } finally {
-            writer.close();
         }
-        */
 
 		if (peer != null) {
-			
-			peer.updateUploadedVolume(responseBytes.length);
-			//peer.updateUploadedVolume(os.size());
+			peer.updateUploadedVolume(cos.getCount());
 		}
 		
 	}
-	
-	@Override
+
+    static class CountingOutputStream extends FilterOutputStream {
+
+        private long count;
+
+        public CountingOutputStream(OutputStream out) {
+            super(out);
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            count += 1;
+            super.write(b);
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+    }
+
+    static class CountingInputStream extends FilterInputStream {
+
+        private long count;
+
+        public CountingInputStream(InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public int read() throws IOException {
+            int read = super.read();
+            if (read >= 0) {
+                count += 1;
+            }
+            return read;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            int read = super.read(b, off, len);
+            if (read >= 0) {
+                count += 1;
+            }
+            return read;
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            long skipped = super.skip(n);
+            if (skipped >= 0) {
+                count += skipped;
+            }
+            return skipped;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+    }
+
+    @Override
 	public void destroy() {
 		
 		scheduledThreadPool.shutdown();
@@ -9620,5 +9674,5 @@ public class Nxt extends HttpServlet {
 		logMessage("Nxt stopped.");
 		
 	}
-	
+
 }
