@@ -6048,7 +6048,11 @@ public class Nxt extends HttpServlet {
     //TODO: the huge switch statement should be refactored completely, a separate class should handle each case
     // This is required in order to be able to factor out closed-source code into separate class files
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		
+
+        resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
+        resp.setHeader("Pragma", "no-cache");
+        resp.setDateHeader("Expires", 0);
+
 		User user = null;
 		
 		try {
@@ -8476,7 +8480,14 @@ public class Nxt extends HttpServlet {
 			
 			case "generateAuthorizationToken":
 				{
-					
+					String secretPhrase = req.getParameter("secretPhrase");
+                    if (! user.secretPhrase.equals(secretPhrase)) {
+                        JSONObject response = new JSONObject();
+                        response.put("response", "showMessage");
+                        response.put("message", "Invalid secret phrase!");
+                        user.pendingResponses.offer(response);
+                        break;
+                    }
 					byte[] website = req.getParameter("website").trim().getBytes("UTF-8");
 					byte[] data = new byte[website.length + 32 + 4];
 					System.arraycopy(website, 0, data, 0, website.length);

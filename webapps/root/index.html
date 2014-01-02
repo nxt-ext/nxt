@@ -182,7 +182,8 @@
 			function generateAuthorizationToken() {
 				document.getElementById("input").readOnly = true;
 				document.getElementById("generateAuthorizationToken").disabled = true;
-				sendRequest("generateAuthorizationToken&website=" + encodeURIComponent(document.getElementById("input").value));
+				document.getElementById("secretPhrase").readOnly = true;
+				sendRequest("generateAuthorizationToken&website=" + encodeURIComponent(document.getElementById("input").value) + "&secretPhrase=" + encodeURIComponent(document.getElementById("secretPhrase").value));
 			}
 			
 			function initialize() {
@@ -472,7 +473,7 @@
 			}
 			
 			function showAuthorizationDialog() {
-				showDialog("Authorization", "<table style='margin-top: 50px;'><tr><td class='label'>Website</td></tr><tr><td class='input'><input id='input' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td><button id='generateAuthorizationToken' onclick='generateAuthorizationToken();'>Generate authorization token</button></td></tr></table>");
+				showDialog("Authorization", "<table style='margin-top: 50px;'><tr><td class='label'>Website</td></tr><tr><td class='input'><input id='input' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td class='label'>Secret phrase</td></tr><tr><td class='input'><input type='password' id='secretPhrase' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td><button id='generateAuthorizationToken' onclick='generateAuthorizationToken();'>Generate authorization token</button></td></tr></table>");
 			}
 			
 			function showDialog(title, content, oncloseFunction) {
