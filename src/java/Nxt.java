@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,6 +72,7 @@ public class Nxt extends HttpServlet {
 	
 	static final int ALIAS_SYSTEM_BLOCK = 22000;
 	static final int TRANSPARENT_FORGING_BLOCK = 30000;
+    static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
     static final long MAX_BALANCE = 1000000000;
 	static final long initialBaseTarget = 153722867, maxBaseTarget = MAX_BALANCE * initialBaseTarget;
@@ -129,6 +131,9 @@ public class Nxt extends HttpServlet {
 	static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
 	static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
+
+
+    //TODO: go through all Exception handling, no method should ever throw just "Exception"
 
 	static int getEpochTime(long time) {
 		
@@ -1298,7 +1303,19 @@ public class Nxt extends HttpServlet {
 				return false;
 				
 			}
-			
+
+            if (getLastBlock().height == TRANSPARENT_FORGING_BLOCK) {
+
+                byte[] checksum = Transaction.calculateTransactionsChecksum();
+                if (CHECKSUM_TRANSPARENT_FORGING == null) {
+                    System.out.println(Arrays.toString(checksum));
+                } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
+                    logMessage("Checksum failed at block " + TRANSPARENT_FORGING_BLOCK);
+                    return false;
+                }
+
+            }
+
 			int blockTimestamp = buffer.getInt();
 			long previousBlock = buffer.getLong();
 			int numberOfTransactions = buffer.getInt();
@@ -1412,7 +1429,7 @@ public class Nxt extends HttpServlet {
 				for (i = 0; i < block.numberOfTransactions; i++) {
 					
 					Transaction transaction = blockTransactions.get(block.transactions[i]);
-					
+					//TODO: what is special about height 303 ???
 					if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && getLastBlock().height > 303) || transaction.fee <= 0 || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
 						
 						break;
@@ -4519,8 +4536,32 @@ public class Nxt extends HttpServlet {
 			return Crypto.verify(signature, data, senderPublicKey);
 			
 		}
-		
-		static interface Attachment {
+
+        public static byte[] calculateTransactionsChecksum() throws Exception {
+            synchronized (blocksAndTransactionsLock) {
+                Set<Transaction> sortedTransactions = new TreeSet<>(new Comparator<Transaction>() {
+                    @Override
+                    public int compare(Transaction o1, Transaction o2) {
+                        //TODO: a getId() method should never throw an Exception
+                        try {
+                            long id1 = o1.getId();
+                            long id2 = o2.getId();
+                            return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+                sortedTransactions.addAll(Nxt.transactions.values());
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                for (Transaction transaction : sortedTransactions) {
+                    digest.update(transaction.getBytes());
+                }
+                return digest.digest();
+            }
+        }
+
+        static interface Attachment {
 			
 			byte[] getBytes();
 			JSONObject getJSONObject();
