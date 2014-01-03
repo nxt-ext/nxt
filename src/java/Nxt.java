@@ -58,10 +58,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 	
-	static final String VERSION = "0.4.9e";
+	static final String VERSION = "0.5.0";
 	
 	static final long GENESIS_BLOCK_ID = 2680262203532249785L;
 	static final long CREATOR_ID = 1739068987193023818L;
@@ -126,11 +127,9 @@ public class Nxt extends HttpServlet {
 	static final HashMap<Long, TreeSet<BidOrder>> sortedBidOrders = new HashMap<>();
 	
 	static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
+
 	static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
-	
-	static final ConcurrentMap<Account, Block> lastBlocks = new ConcurrentHashMap<>();
-	static final ConcurrentMap<Account, BigInteger> hits = new ConcurrentHashMap<>();
-	
+
 	static int getEpochTime(long time) {
 		
 		return (int)((time - epochBeginning + 500) / 1000);
@@ -219,13 +218,9 @@ public class Nxt extends HttpServlet {
 						sortedAskOrders.remove(askOrder);
 						
 					}
-					synchronized (askOrder.account) {
-						
-						askOrder.account.setBalance(askOrder.account.balance + quantity * price);
-						askOrder.account.setUnconfirmedBalance(askOrder.account.unconfirmedBalance + quantity * price);
-						
-					}
-					
+
+                    askOrder.account.addToBalanceAndUnconfirmedBalance(quantity * price);
+
 					if ((bidOrder.quantity -= quantity) == 0) {
 						
 						bidOrders.remove(bidOrder.id);
@@ -260,20 +255,17 @@ public class Nxt extends HttpServlet {
 	static class Account {
 		
 		final long id;
-        //TODO: make balance AtomicLong?
-		long balance;
+		private long balance;
 		final int height;
 		
-        //BUG: this is accessed in multiple threads without being synchronized
-        //TODO: use atomic variable
-		byte[] publicKey;
+		final AtomicReference<byte[]> publicKey = new AtomicReference<>();
 		
 		final HashMap<Long, Integer> assetBalances;
 		
-		long unconfirmedBalance;
+		private long unconfirmedBalance;
 		final HashMap<Long, Integer> unconfirmedAssetBalances;
 		
-		Account(long id) {
+		private Account(long id) {
 			
 			this.id = id;
 			height = Block.getLastBlock().height;
@@ -291,6 +283,16 @@ public class Nxt extends HttpServlet {
             return account;
 
 		}
+
+        // returns true iff:
+        // this.publicKey is set to null (in which case this.publicKey also gets set to key)
+        // or
+        // this.publicKey is already set to an array equal to key
+        boolean setOrVerify(byte[] key) {
+
+            return this.publicKey.compareAndSet(null, key) || Arrays.equals(key, this.publicKey.get());
+
+        }
 		
 		void generateBlock(String secretPhrase) throws Exception {
 
@@ -305,41 +307,6 @@ public class Nxt extends HttpServlet {
                 }
 
             }
-
-            /* was:
-			Transaction[] sortedTransactions;
-
-            sortedTransactions = unconfirmedTransactions.values().toArray(new Transaction[0]);
-
-            //TODO: can be simplified, if removing transactions with absent referencedTransaction is all this is indeed doing
-            while (sortedTransactions.length > 0) {
-
-                int i;
-                for (i = 0; i < sortedTransactions.length; i++) {
-
-                    Transaction transaction = sortedTransactions[i];
-                    if (transaction.referencedTransaction != 0 && transactions.get(transaction.referencedTransaction) == null) {
-
-                        sortedTransactions[i] = sortedTransactions[sortedTransactions.length - 1];
-                        Transaction[] tmp = new Transaction[sortedTransactions.length - 1];
-                        System.arraycopy(sortedTransactions, 0, tmp, 0, tmp.length);
-                        sortedTransactions = tmp;
-
-                        break;
-
-                    }
-
-                }
-                if (i == sortedTransactions.length) {
-
-                    break;
-
-                }
-
-            }
-
-            Arrays.sort(sortedTransactions);
-			*/
 
 			Map<Long, Transaction> newTransactions = new HashMap<>();
 			Set<String> newAliases = new HashSet<>();
@@ -364,9 +331,7 @@ public class Nxt extends HttpServlet {
 						}
 						
 						long amount = (transaction.amount + transaction.fee) * 100L;
-                        //BUG: account.balance accessed without being synchronized on account
-                        //TODO: add account.getBalance() method that takes care of synchronization and make account.balance private
-						if (accumulatedAmount + amount <= accounts.get(sender).balance && transaction.validateAttachment()) {
+						if (accumulatedAmount + amount <= accounts.get(sender).getBalance() && transaction.validateAttachment()) {
 							
 							switch (transaction.type) {
 							
@@ -479,7 +444,7 @@ public class Nxt extends HttpServlet {
 			
 			if (height == 0) {
 				
-				return (int)(balance / 100);
+				return (int)(getBalance() / 100);
 				
 			}
 			
@@ -501,7 +466,7 @@ public class Nxt extends HttpServlet {
 				
 			}
 
-			return (int)(balance / 100) - amount;
+			return (int)(getBalance() / 100) - amount;
 			
 		}
 		
@@ -512,53 +477,93 @@ public class Nxt extends HttpServlet {
 			return bigInteger.longValue();
 			
 		}
-		
-        //TODO: setBalance is in almost all case used together with setUnconfirmedBalance, within synchronized(account).
-        // Consider adding a single method that sets both, and is synchronized
-		void setBalance(long balance) throws Exception {
-			
-			this.balance = balance;
-			
-			for (Peer peer : peers.values()) {
-				
-				if (peer.accountId == id && peer.adjustedWeight > 0) {
-					
-					peer.updateWeight();
-					
-				}
-				
-			}
-			
+
+        synchronized long getBalance() {
+            return balance;
+        }
+
+        synchronized long getUnconfirmedBalance() {
+            return unconfirmedBalance;
+        }
+
+		void addToBalance(long amount) throws Exception {
+
+            synchronized (this) {
+
+                this.balance += amount;
+
+            }
+
+            updatePeerWeights();
+
 		}
 		
-		void setUnconfirmedBalance(long unconfirmedBalance) throws Exception {
-			
-			this.unconfirmedBalance = unconfirmedBalance;
-			
-			JSONObject response = new JSONObject();
-			response.put("response", "setBalance");
-			response.put("balance", unconfirmedBalance);
-			
-			for (User user : users.values()) {
-				
-				if (user.secretPhrase != null && Account.getId(Crypto.getPublicKey(user.secretPhrase)) == id) {
-					
-					user.send(response);
-					
-				}
-				
-			}
-			
+		void addToUnconfirmedBalance(long amount) throws Exception {
+
+            synchronized (this) {
+
+			    this.unconfirmedBalance += amount;
+
+            }
+
+			updateUserUnconfirmedBalance();
+
 		}
-		
-	}
+
+        void addToBalanceAndUnconfirmedBalance(long amount) throws Exception {
+
+            synchronized (this) {
+
+                this.balance += amount;
+                this.unconfirmedBalance += amount;
+
+            }
+
+            updatePeerWeights();
+            updateUserUnconfirmedBalance();
+
+        }
+
+        private void updatePeerWeights() {
+
+            for (Peer peer : peers.values()) {
+
+                if (peer.accountId == id && peer.adjustedWeight > 0) {
+
+                    peer.updateWeight();
+
+                }
+
+            }
+
+        }
+
+        private void updateUserUnconfirmedBalance() throws Exception {
+
+            JSONObject response = new JSONObject();
+            response.put("response", "setBalance");
+            response.put("balance", getUnconfirmedBalance());
+
+            for (User user : users.values()) {
+
+                if (user.secretPhrase != null && Account.getId(Crypto.getPublicKey(user.secretPhrase)) == id) {
+
+                    user.send(response);
+
+                }
+
+            }
+
+        }
+
+    }
 	
 	static class Alias {
 		
-		Account account;
-		String alias;
-		String uri;
-		int timestamp;
+		final Account account;
+		final String alias;
+		volatile String uri;
+		volatile int timestamp;
 		
 		Alias(Account account, String alias, String uri, int timestamp) {
 			
@@ -766,293 +771,275 @@ public class Nxt extends HttpServlet {
 			this.previousBlockHash = previousBlockHash;
 			
 		}
-		
+
 		void analyze() throws Exception {
-			
-			if (previousBlock == 0) {
-				
-				lastBlock = GENESIS_BLOCK_ID;
-				blocks.put(lastBlock, this);
-				baseTarget = initialBaseTarget;
-				cumulativeDifficulty = BigInteger.ZERO;
-				
-				Account.addAccount(CREATOR_ID);
-				
-			} else {
-				
-				Block.getLastBlock().nextBlock = getId();
-				
-				height = Block.getLastBlock().height + 1;
-				lastBlock = getId();
-				blocks.put(lastBlock, this);
-				baseTarget = Block.getBaseTarget();
-				cumulativeDifficulty = blocks.get(previousBlock).cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
-				
-				Account generatorAccount = accounts.get(Account.getId(generatorPublicKey));
-				synchronized (generatorAccount) {
-					
-					generatorAccount.setBalance(generatorAccount.balance + totalFee * 100L);
-					generatorAccount.setUnconfirmedBalance(generatorAccount.unconfirmedBalance + totalFee * 100L);
-					
-				}
-				
-			}
 
-            for (int i = 0; i < numberOfTransactions; i++) {
+            // analyze is only called with the blocksAndTransactionsLock already held (except in init, where it doesn't matter)
+            // but a lot of thread safety depends on that fact, so let's make that explicit here by obtaining this lock again, at no extra cost
+            synchronized (blocksAndTransactionsLock) {
+                if (previousBlock == 0) {
 
-                Transaction transaction = Nxt.transactions.get(transactions[i]);
+                    lastBlock = GENESIS_BLOCK_ID;
+                    blocks.put(lastBlock, this);
+                    baseTarget = initialBaseTarget;
+                    cumulativeDifficulty = BigInteger.ZERO;
 
-                long sender = Account.getId(transaction.senderPublicKey);
-                Account senderAccount = accounts.get(sender);
-                synchronized (senderAccount) {
+                    Account.addAccount(CREATOR_ID);
 
-                    senderAccount.setBalance(senderAccount.balance - (transaction.amount + transaction.fee) * 100L);
-                    senderAccount.setUnconfirmedBalance(senderAccount.unconfirmedBalance - (transaction.amount + transaction.fee) * 100L);
+                } else {
 
-                    if (senderAccount.publicKey == null) {
+                    Block.getLastBlock().nextBlock = getId();
 
-                        senderAccount.publicKey = transaction.senderPublicKey;
+                    height = Block.getLastBlock().height + 1;
+                    lastBlock = getId();
+                    blocks.put(lastBlock, this);
+                    baseTarget = Block.getBaseTarget();
+                    cumulativeDifficulty = blocks.get(previousBlock).cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
 
-                    }
+                    Account generatorAccount = accounts.get(Account.getId(generatorPublicKey));
+                    generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
                 }
 
-                Account recipientAccount = accounts.get(transaction.recipient);
-                if (recipientAccount == null) {
+                for (int i = 0; i < numberOfTransactions; i++) {
 
-                    recipientAccount = Account.addAccount(transaction.recipient);
+                    Transaction transaction = Nxt.transactions.get(transactions[i]);
 
-                }
+                    long sender = Account.getId(transaction.senderPublicKey);
+                    Account senderAccount = accounts.get(sender);
+                    if (! senderAccount.setOrVerify(transaction.senderPublicKey)) {
 
-                //TODO: refactor, don't use switch but create e.g. transaction handler class for each case
-                switch (transaction.type) {
-
-                    case Transaction.TYPE_PAYMENT:
-                    {
-
-                        switch (transaction.subtype) {
-
-                            case Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
-                            {
-
-                                synchronized (recipientAccount) {
-
-                                    recipientAccount.setBalance(recipientAccount.balance + transaction.amount * 100L);
-                                    recipientAccount.setUnconfirmedBalance(recipientAccount.unconfirmedBalance + transaction.amount * 100L);
-
-                                }
-
-                            }
-                            break;
-
-                        }
+                        throw new RuntimeException("sender public key mismatch");
+                        // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
 
                     }
-                    break;
+                    senderAccount.addToBalanceAndUnconfirmedBalance(- (transaction.amount + transaction.fee) * 100L);
 
-                    case Transaction.TYPE_MESSAGING:
-                    {
+                    Account recipientAccount = accounts.get(transaction.recipient);
+                    if (recipientAccount == null) {
 
-                        switch (transaction.subtype) {
-
-                            case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                            {
-
-                                Transaction.MessagingAliasAssignmentAttachment attachment = (Transaction.MessagingAliasAssignmentAttachment)transaction.attachment;
-
-                                String normalizedAlias = attachment.alias.toLowerCase();
-
-                                Alias alias = aliases.get(normalizedAlias);
-                                if (alias == null) {
-
-                                    alias = new Alias(senderAccount, attachment.alias, attachment.uri, timestamp);
-                                    aliases.put(normalizedAlias, alias);
-                                    aliasIdToAliasMappings.put(transaction.getId(), alias);
-
-                                } else {
-
-                                    alias.uri = attachment.uri;
-                                    alias.timestamp = timestamp;
-
-                                }
-
-                            }
-                            break;
-
-                        }
+                        recipientAccount = Account.addAccount(transaction.recipient);
 
                     }
-                    break;
 
-                    case Transaction.TYPE_COLORED_COINS:
-                    {
+                    //TODO: refactor, don't use switch but create e.g. transaction handler class for each case
+                    switch (transaction.type) {
 
-                        switch (transaction.subtype) {
+                        case Transaction.TYPE_PAYMENT:
+                        {
 
-                            case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
-                            {
+                            switch (transaction.subtype) {
 
-                                Transaction.ColoredCoinsAssetIssuanceAttachment attachment = (Transaction.ColoredCoinsAssetIssuanceAttachment)transaction.attachment;
+                                case Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
+                                {
 
-                                long assetId = transaction.getId();
-                                Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
-                                //TODO: use concurrent collections instead of synchronized
-                                synchronized (assets) {
-
-                                    assets.put(assetId, asset);
-                                    assetNameToIdMappings.put(attachment.name.toLowerCase(), assetId);
+                                    recipientAccount.addToBalanceAndUnconfirmedBalance(transaction.amount * 100L);
 
                                 }
-                                synchronized (askOrders) {
-
-                                    sortedAskOrders.put(assetId, new TreeSet<AskOrder>());
-
-                                }
-                                synchronized (bidOrders) {
-
-                                    sortedBidOrders.put(assetId, new TreeSet<BidOrder>());
-
-                                }
-                                synchronized (senderAccount) {
-
-                                    senderAccount.assetBalances.put(assetId, attachment.quantity);
-                                    senderAccount.unconfirmedAssetBalances.put(assetId, attachment.quantity);
-
-                                }
+                                break;
 
                             }
-                            break;
 
-                            case Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
-                            {
+                        }
+                        break;
 
-                                Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
+                        case Transaction.TYPE_MESSAGING:
+                        {
 
-                                synchronized (senderAccount) {
+                            switch (transaction.subtype) {
 
-                                    senderAccount.assetBalances.put(attachment.asset, senderAccount.assetBalances.get(attachment.asset) - attachment.quantity);
-                                    senderAccount.unconfirmedAssetBalances.put(attachment.asset, senderAccount.unconfirmedAssetBalances.get(attachment.asset) - attachment.quantity);
+                                case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
+                                {
 
-                                }
-                                synchronized (recipientAccount) {
+                                    Transaction.MessagingAliasAssignmentAttachment attachment = (Transaction.MessagingAliasAssignmentAttachment)transaction.attachment;
 
-                                    Integer assetBalance = recipientAccount.assetBalances.get(attachment.asset);
-                                    if (assetBalance == null) {
+                                    String normalizedAlias = attachment.alias.toLowerCase();
 
-                                        recipientAccount.assetBalances.put(attachment.asset, attachment.quantity);
-                                        recipientAccount.unconfirmedAssetBalances.put(attachment.asset, attachment.quantity);
+                                    Alias alias = aliases.get(normalizedAlias);
+                                    if (alias == null) {
+
+                                        alias = new Alias(senderAccount, attachment.alias, attachment.uri, timestamp);
+                                        aliases.put(normalizedAlias, alias);
+                                        aliasIdToAliasMappings.put(transaction.getId(), alias);
 
                                     } else {
 
-                                        recipientAccount.assetBalances.put(attachment.asset, assetBalance + attachment.quantity);
-                                        recipientAccount.unconfirmedAssetBalances.put(attachment.asset, recipientAccount.unconfirmedAssetBalances.get(attachment.asset) + attachment.quantity);
+                                        alias.uri = attachment.uri;
+                                        alias.timestamp = timestamp;
 
                                     }
 
                                 }
+                                break;
 
                             }
-                            break;
-
-                            case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
-                            {
-
-                                Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
-
-                                AskOrder order = new AskOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-                                synchronized (senderAccount) {
-
-                                    senderAccount.assetBalances.put(attachment.asset, senderAccount.assetBalances.get(attachment.asset) - attachment.quantity);
-                                    senderAccount.unconfirmedAssetBalances.put(attachment.asset, senderAccount.unconfirmedAssetBalances.get(attachment.asset) - attachment.quantity);
-
-                                }
-                                synchronized (askOrders) {
-
-                                    askOrders.put(order.id, order);
-                                    sortedAskOrders.get(attachment.asset).add(order);
-
-                                }
-
-                                matchOrders(attachment.asset);
-
-                            }
-                            break;
-
-                            case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
-                            {
-
-                                Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
-
-                                BidOrder order = new BidOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-                                synchronized (senderAccount) {
-
-                                    senderAccount.setBalance(senderAccount.balance - attachment.quantity * attachment.price);
-                                    senderAccount.setUnconfirmedBalance(senderAccount.unconfirmedBalance - attachment.quantity * attachment.price);
-
-                                }
-                                synchronized (bidOrders) {
-
-                                    bidOrders.put(order.id, order);
-                                    sortedBidOrders.get(attachment.asset).add(order);
-
-                                }
-
-                                matchOrders(attachment.asset);
-
-                            }
-                            break;
-
-                            case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
-                            {
-
-                                Transaction.ColoredCoinsAskOrderCancellationAttachment attachment = (Transaction.ColoredCoinsAskOrderCancellationAttachment)transaction.attachment;
-
-                                AskOrder order;
-                                synchronized (askOrders) {
-
-                                    order = askOrders.remove(attachment.order);
-                                    sortedAskOrders.get(order.asset).remove(order);
-
-                                }
-                                synchronized (senderAccount) {
-
-                                    senderAccount.assetBalances.put(order.asset, senderAccount.assetBalances.get(order.asset) + order.quantity);
-                                    senderAccount.unconfirmedAssetBalances.put(order.asset, senderAccount.unconfirmedAssetBalances.get(order.asset) + order.quantity);
-
-                                }
-
-                            }
-                            break;
-
-                            case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
-                            {
-
-                                Transaction.ColoredCoinsBidOrderCancellationAttachment attachment = (Transaction.ColoredCoinsBidOrderCancellationAttachment)transaction.attachment;
-
-                                BidOrder order;
-                                synchronized (bidOrders) {
-
-                                    order = bidOrders.remove(attachment.order);
-                                    sortedBidOrders.get(order.asset).remove(order);
-
-                                }
-                                synchronized (senderAccount) {
-
-                                    senderAccount.setBalance(senderAccount.balance + order.quantity * order.price);
-                                    senderAccount.setUnconfirmedBalance(senderAccount.unconfirmedBalance + order.quantity * order.price);
-
-                                }
-
-                            }
-                            break;
 
                         }
+                        break;
+
+                        case Transaction.TYPE_COLORED_COINS:
+                        {
+
+                            switch (transaction.subtype) {
+
+                                case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
+                                {
+
+                                    Transaction.ColoredCoinsAssetIssuanceAttachment attachment = (Transaction.ColoredCoinsAssetIssuanceAttachment)transaction.attachment;
+
+                                    long assetId = transaction.getId();
+                                    Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
+                                    //TODO: use concurrent collections instead of synchronized
+                                    synchronized (assets) {
+
+                                        assets.put(assetId, asset);
+                                        assetNameToIdMappings.put(attachment.name.toLowerCase(), assetId);
+
+                                    }
+                                    synchronized (askOrders) {
+
+                                        sortedAskOrders.put(assetId, new TreeSet<AskOrder>());
+
+                                    }
+                                    synchronized (bidOrders) {
+
+                                        sortedBidOrders.put(assetId, new TreeSet<BidOrder>());
+
+                                    }
+                                    synchronized (senderAccount) {
+
+                                        senderAccount.assetBalances.put(assetId, attachment.quantity);
+                                        senderAccount.unconfirmedAssetBalances.put(assetId, attachment.quantity);
+
+                                    }
+
+                                }
+                                break;
+
+                                case Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
+                                {
+
+                                    Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
+
+                                    synchronized (senderAccount) {
+
+                                        senderAccount.assetBalances.put(attachment.asset, senderAccount.assetBalances.get(attachment.asset) - attachment.quantity);
+                                        senderAccount.unconfirmedAssetBalances.put(attachment.asset, senderAccount.unconfirmedAssetBalances.get(attachment.asset) - attachment.quantity);
+
+                                    }
+                                    synchronized (recipientAccount) {
+
+                                        Integer assetBalance = recipientAccount.assetBalances.get(attachment.asset);
+                                        if (assetBalance == null) {
+
+                                            recipientAccount.assetBalances.put(attachment.asset, attachment.quantity);
+                                            recipientAccount.unconfirmedAssetBalances.put(attachment.asset, attachment.quantity);
+
+                                        } else {
+
+                                            recipientAccount.assetBalances.put(attachment.asset, assetBalance + attachment.quantity);
+                                            recipientAccount.unconfirmedAssetBalances.put(attachment.asset, recipientAccount.unconfirmedAssetBalances.get(attachment.asset) + attachment.quantity);
+
+                                        }
+
+                                    }
+
+                                }
+                                break;
+
+                                case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
+                                {
+
+                                    Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
+
+                                    AskOrder order = new AskOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
+                                    synchronized (senderAccount) {
+
+                                        senderAccount.assetBalances.put(attachment.asset, senderAccount.assetBalances.get(attachment.asset) - attachment.quantity);
+                                        senderAccount.unconfirmedAssetBalances.put(attachment.asset, senderAccount.unconfirmedAssetBalances.get(attachment.asset) - attachment.quantity);
+
+                                    }
+                                    synchronized (askOrders) {
+
+                                        askOrders.put(order.id, order);
+                                        sortedAskOrders.get(attachment.asset).add(order);
+
+                                    }
+
+                                    matchOrders(attachment.asset);
+
+                                }
+                                break;
+
+                                case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
+                                {
+
+                                    Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
+
+                                    BidOrder order = new BidOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
+
+                                    senderAccount.addToBalanceAndUnconfirmedBalance(- attachment.quantity * attachment.price);
+
+                                    synchronized (bidOrders) {
+
+                                        bidOrders.put(order.id, order);
+                                        sortedBidOrders.get(attachment.asset).add(order);
+
+                                    }
+
+                                    matchOrders(attachment.asset);
+
+                                }
+                                break;
+
+                                case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
+                                {
+
+                                    Transaction.ColoredCoinsAskOrderCancellationAttachment attachment = (Transaction.ColoredCoinsAskOrderCancellationAttachment)transaction.attachment;
+
+                                    AskOrder order;
+                                    synchronized (askOrders) {
+
+                                        order = askOrders.remove(attachment.order);
+                                        sortedAskOrders.get(order.asset).remove(order);
+
+                                    }
+                                    synchronized (senderAccount) {
+
+                                        senderAccount.assetBalances.put(order.asset, senderAccount.assetBalances.get(order.asset) + order.quantity);
+                                        senderAccount.unconfirmedAssetBalances.put(order.asset, senderAccount.unconfirmedAssetBalances.get(order.asset) + order.quantity);
+
+                                    }
+
+                                }
+                                break;
+
+                                case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
+                                {
+
+                                    Transaction.ColoredCoinsBidOrderCancellationAttachment attachment = (Transaction.ColoredCoinsBidOrderCancellationAttachment)transaction.attachment;
+
+                                    BidOrder order;
+                                    synchronized (bidOrders) {
+
+                                        order = bidOrders.remove(attachment.order);
+                                        sortedBidOrders.get(order.asset).remove(order);
+
+                                    }
+
+                                    senderAccount.addToBalanceAndUnconfirmedBalance(order.quantity * order.price);
+
+                                }
+                                break;
+
+                            }
+
+                        }
+                        break;
 
                     }
-                    break;
 
                 }
-
             }
 
 		}
@@ -1231,12 +1218,7 @@ public class Nxt extends HttpServlet {
 					block = Block.getLastBlock();
 					
 					Account generatorAccount = accounts.get(Account.getId(block.generatorPublicKey));
-					synchronized (generatorAccount) {
-						
-						generatorAccount.setBalance(generatorAccount.balance - block.totalFee * 100L);
-						generatorAccount.setUnconfirmedBalance(generatorAccount.unconfirmedBalance - block.totalFee * 100L);
-						
-					}
+					generatorAccount.addToBalanceAndUnconfirmedBalance(- block.totalFee * 100L);
 
                     for (int i = 0; i < block.numberOfTransactions; i++) {
 
@@ -1244,19 +1226,10 @@ public class Nxt extends HttpServlet {
                         unconfirmedTransactions.put(block.transactions[i], transaction);
 
                         Account senderAccount = accounts.get(Account.getId(transaction.senderPublicKey));
-                        synchronized (senderAccount) {
-
-                            senderAccount.setBalance(senderAccount.balance + (transaction.amount + transaction.fee) * 100L);
-
-                        }
+                        senderAccount.addToBalance((transaction.amount + transaction.fee) * 100L);
 
                         Account recipientAccount = accounts.get(transaction.recipient);
-                        synchronized (recipientAccount) {
-
-                            recipientAccount.setBalance(recipientAccount.balance - transaction.amount * 100L);
-                            recipientAccount.setUnconfirmedBalance(recipientAccount.unconfirmedBalance - transaction.amount * 100L);
-
-                        }
+                        recipientAccount.addToBalanceAndUnconfirmedBalance(- transaction.amount * 100L);
 
                         JSONObject addedUnconfirmedTransaction = new JSONObject();
                         addedUnconfirmedTransaction.put("index", transaction.index);
@@ -1558,7 +1531,7 @@ public class Nxt extends HttpServlet {
 					for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
 						
 						Account senderAccount = accounts.get(accumulatedAmountEntry.getKey());
-						if (senderAccount.balance < accumulatedAmountEntry.getValue()) {
+						if (senderAccount.getBalance() < accumulatedAmountEntry.getValue()) {
 							
 							return false;
 							
@@ -1625,11 +1598,7 @@ public class Nxt extends HttpServlet {
 							removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
 							
 							Account senderAccount = accounts.get(Account.getId(removedTransaction.senderPublicKey));
-							synchronized (senderAccount) {
-								
-								senderAccount.setUnconfirmedBalance(senderAccount.unconfirmedBalance + (removedTransaction.amount + removedTransaction.fee) * 100L);
-								
-							}
+							senderAccount.addToUnconfirmedBalance((removedTransaction.amount + removedTransaction.fee) * 100L);
 							
 						}
 						
@@ -1758,7 +1727,13 @@ public class Nxt extends HttpServlet {
 			if (account == null) {
 				
 				return false;
-				
+
+            } else if (! account.setOrVerify(generatorPublicKey)) {
+
+                return false;
+
+            }
+            /* was:
 			} else if (account.publicKey == null) {
 				
 				account.publicKey = generatorPublicKey;
@@ -1768,7 +1743,8 @@ public class Nxt extends HttpServlet {
 				return false;
 				
 			}
-			
+			*/
+
 			byte[] data = getBytes();
 			byte[] data2 = new byte[data.length - 64];
 			System.arraycopy(data, 0, data2, 0, data2.length);
@@ -3265,7 +3241,7 @@ public class Nxt extends HttpServlet {
 				
 			}
 			
-			return (int)(adjustedWeight * (account.balance / 100) / MAX_BALANCE);
+			return (int)(adjustedWeight * (account.getBalance() / 100) / MAX_BALANCE);
 			
 		}
 		
@@ -3347,31 +3323,6 @@ public class Nxt extends HttpServlet {
 
             }
 
-            /* was:
-            Peer[] peers;
-			synchronized (Nxt.peers) {
-				
-				peers = Nxt.peers.values().toArray(new Peer[0]);
-				
-			}
-			Arrays.sort(peers);
-			for (Peer peer : peers) {
-				
-				if (enableHallmarkProtection && peer.getWeight() < pushThreshold) {
-					
-					break;
-					
-				}
-				
-				if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-					
-					peer.send(request);
-					
-				}
-				
-			}
-			*/
-			
 		}
 		
 		JSONObject send(JSONObject request) {
@@ -4117,7 +4068,7 @@ public class Nxt extends HttpServlet {
 							int amount = transaction.amount + transaction.fee;
 							synchronized (account) {
 								
-								if (account.unconfirmedBalance < amount * 100L) {
+								if (account.getUnconfirmedBalance() < amount * 100L) {
 									
 									doubleSpendingTransaction = true;
 									
@@ -4125,7 +4076,7 @@ public class Nxt extends HttpServlet {
 									
 									doubleSpendingTransaction = false;
 									
-									account.setUnconfirmedBalance(account.unconfirmedBalance - amount * 100L);
+									account.addToUnconfirmedBalance(- amount * 100L);
 									
 									if (transaction.type == Transaction.TYPE_COLORED_COINS) {
 										
@@ -4136,7 +4087,7 @@ public class Nxt extends HttpServlet {
 												
 												doubleSpendingTransaction = true;
 												
-												account.setUnconfirmedBalance(account.unconfirmedBalance + amount * 100L);
+												account.addToUnconfirmedBalance(amount * 100L);
 												
 											} else {
 												
@@ -4151,7 +4102,7 @@ public class Nxt extends HttpServlet {
 												
 												doubleSpendingTransaction = true;
 												
-												account.setUnconfirmedBalance(account.unconfirmedBalance + amount * 100L);
+												account.addToUnconfirmedBalance(amount * 100L);
 												
 											} else {
 												
@@ -4162,15 +4113,15 @@ public class Nxt extends HttpServlet {
 										} else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
 											
 											Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
-											if (account.unconfirmedBalance < attachment.quantity * attachment.price) {
+											if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
 												
 												doubleSpendingTransaction = true;
 												
-												account.setUnconfirmedBalance(account.unconfirmedBalance + amount * 100L);
+												account.addToUnconfirmedBalance(amount * 100L);
 												
 											} else {
 												
-												account.setUnconfirmedBalance(account.unconfirmedBalance - attachment.quantity * attachment.price);
+												account.addToUnconfirmedBalance(- attachment.quantity * attachment.price);
 												
 											}
 											
@@ -4275,7 +4226,7 @@ public class Nxt extends HttpServlet {
 				
 				while (!verify()) {
 					
-					timestamp++;
+					timestamp++; //TODO: ???
 					signature = new byte[64];
 					signature = Crypto.sign(getBytes(), secretPhrase);
 					
@@ -4540,7 +4491,13 @@ public class Nxt extends HttpServlet {
 			if (account == null) {
 				
 				return false;
-				
+
+            } else if (! account.setOrVerify(senderPublicKey)) {
+
+                return false;
+
+            }
+            /* was:
 			} else if (account.publicKey == null) {
 				
 				account.publicKey = senderPublicKey;
@@ -4550,7 +4507,8 @@ public class Nxt extends HttpServlet {
 				return false;
 				
 			}
-			
+			*/
+
 			byte[] data = getBytes();
 			for (int i = 64; i < 128; i++) {
 				
@@ -4878,7 +4836,6 @@ public class Nxt extends HttpServlet {
 	static class User {
 		
 		final ConcurrentLinkedQueue<JSONObject> pendingResponses;
-        //TODO: asyncContext access not thread safe
         AsyncContext asyncContext;
 		volatile boolean isInactive;
 		
@@ -4968,7 +4925,7 @@ public class Nxt extends HttpServlet {
 	
 	static class UserAsyncListener implements AsyncListener {
 		
-		User user;
+		final User user;
 		
 		UserAsyncListener(User user) {
 			
@@ -4982,15 +4939,17 @@ public class Nxt extends HttpServlet {
 		@Override
 		public void onError(AsyncEvent asyncEvent) throws IOException {
 
-            user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-			
-			try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
-    			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+            synchronized (user) {
+                user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
+
+		    	try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
+    		    	servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+                }
+
+    			user.asyncContext.complete();
+	    		user.asyncContext = null;
             }
 
-			user.asyncContext.complete();
-			user.asyncContext = null;
-			
 		}
 		
 		@Override
@@ -4999,15 +4958,17 @@ public class Nxt extends HttpServlet {
 		@Override
 		public void onTimeout(AsyncEvent asyncEvent) throws IOException {
 			
-			user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-			
-			try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
-    			servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+			synchronized (user) {
+                user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
+
+		    	try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
+    		    	servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+                }
+
+	    		user.asyncContext.complete();
+		    	user.asyncContext = null;
             }
 
-			user.asyncContext.complete();
-			user.asyncContext = null;
-			
 		}
 		
 	}
@@ -5695,11 +5656,7 @@ public class Nxt extends HttpServlet {
                                 iterator.remove();
 
                                 Account account = accounts.get(Account.getId(transaction.senderPublicKey));
-                                synchronized (account) {
-
-                                    account.setUnconfirmedBalance(account.unconfirmedBalance + (transaction.amount + transaction.fee) * 100L);
-
-                                }
+                                account.addToUnconfirmedBalance((transaction.amount + transaction.fee) * 100L);
 
                                 JSONObject removedUnconfirmedTransaction = new JSONObject();
                                 removedUnconfirmedTransaction.put("index", transaction.index);
@@ -5977,8 +5934,12 @@ public class Nxt extends HttpServlet {
 			}, 0, 1, TimeUnit.SECONDS);
 			
 			scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-				
-				@Override
+
+                private final ConcurrentMap<Account, Block> lastBlocks = new ConcurrentHashMap<>();
+                private final ConcurrentMap<Account, BigInteger> hits = new ConcurrentHashMap<>();
+
+
+                @Override
 				public void run() {
 					
 					try {
@@ -6195,7 +6156,7 @@ public class Nxt extends HttpServlet {
 															
 														} else {
 															
-															if (fee * 100L > account.unconfirmedBalance) {
+															if (fee * 100L > account.getUnconfirmedBalance()) {
 																
 																response.put("errorCode", 6);
 																response.put("errorDescription", "Not enough funds");
@@ -6455,9 +6416,9 @@ public class Nxt extends HttpServlet {
 											
 										} else {
 											
-											if (accountData.publicKey != null) {
+											if (accountData.publicKey.get() != null) {
 												
-												response.put("publicKey", convert(accountData.publicKey));
+												response.put("publicKey", convert(accountData.publicKey.get()));
 												
 											}
 											
@@ -6697,8 +6658,8 @@ public class Nxt extends HttpServlet {
 											
 											synchronized (accountData) {
 												
-												response.put("balance", accountData.balance);
-												response.put("unconfirmedBalance", accountData.unconfirmedBalance);
+												response.put("balance", accountData.getBalance());
+												response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
 												response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
 												
 											}
@@ -8377,7 +8338,7 @@ public class Nxt extends HttpServlet {
 														
 													} else {
 														
-														if ((amount + fee) * 100L > account.unconfirmedBalance) {
+														if ((amount + fee) * 100L > account.getUnconfirmedBalance()) {
 															
 															response.put("errorCode", 6);
 															response.put("errorDescription", "Not enough funds");
@@ -8481,7 +8442,11 @@ public class Nxt extends HttpServlet {
 				if (user == null) {
 					
 					user = new User();
-					users.put(userPasscode, user);
+					User oldUser = users.putIfAbsent(userPasscode, user);
+                    if (oldUser != null) {
+                        user = oldUser;
+                        user.isInactive = false;
+                    }
 					
 				} else {
 					
@@ -8934,7 +8899,7 @@ public class Nxt extends HttpServlet {
 							
 							byte[] publicKey = Crypto.getPublicKey(user.secretPhrase);
 							Account account = accounts.get(Account.getId(publicKey));
-							if (account == null || (amount + fee) * 100L > account.unconfirmedBalance) {
+							if (account == null || (amount + fee) * 100L > account.getUnconfirmedBalance()) {
 								
 								JSONObject response = new JSONObject();
 								response.put("response", "notifyOfIncorrectTransaction");
@@ -9012,7 +8977,7 @@ public class Nxt extends HttpServlet {
 						
 					} else {
 						
-						response.put("balance", account.unconfirmedBalance);
+						response.put("balance", account.getUnconfirmedBalance());
 						
 						if (account.getEffectiveBalance() > 0) {
 							
@@ -9090,7 +9055,7 @@ public class Nxt extends HttpServlet {
 							if (Account.getId(block.generatorPublicKey) == accountId.longValue() && block.totalFee > 0) {
 								
 								JSONObject myTransaction = new JSONObject();
-								myTransaction.put("index", convert(blockId)); //???
+								myTransaction.put("index", convert(blockId)); //TODO: ???
 								myTransaction.put("blockTimestamp", block.timestamp);
 								myTransaction.put("block", convert(blockId));
 								myTransaction.put("earnedAmount", block.totalFee);
