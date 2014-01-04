@@ -732,7 +732,6 @@ public class Nxt extends HttpServlet {
 		
 		static final long serialVersionUID = 0;
 		
-        //TODO: check if any of those should be volatile
 		final int version;
 		final int timestamp;
 		final long previousBlock;
@@ -748,10 +747,10 @@ public class Nxt extends HttpServlet {
 		
 		int index;
 		long[] transactions;
-		long baseTarget;
+		volatile long baseTarget;
 		int height;
-		long nextBlock;
-		BigInteger cumulativeDifficulty;
+		volatile long nextBlock;
+		volatile BigInteger cumulativeDifficulty;
 
 		Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
 
@@ -785,9 +784,9 @@ public class Nxt extends HttpServlet {
                 if (previousBlock == 0) {
 
                     lastBlock = GENESIS_BLOCK_ID;
-                    blocks.put(lastBlock, this);
                     baseTarget = initialBaseTarget;
                     cumulativeDifficulty = BigInteger.ZERO;
+                    blocks.put(lastBlock, this);
 
                     Account.addAccount(CREATOR_ID);
 
@@ -3635,7 +3634,6 @@ public class Nxt extends HttpServlet {
 		
 		static final int ASSET_ISSUANCE_FEE = 1000;
 		
-        //TODO: attachment, timestamp and signature currently not thread safe
 		final byte type, subtype;
 		int timestamp;
 		final short deadline;
@@ -3647,7 +3645,7 @@ public class Nxt extends HttpServlet {
 		Attachment attachment;
 		
 		int index;
-		long block;
+		volatile long block;
 		int height;
 		
 		Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient, int amount, int fee, long referencedTransaction, byte[] signature) {
@@ -4526,6 +4524,7 @@ public class Nxt extends HttpServlet {
 			}
 			*/
 
+            //TODO: ???
 			byte[] data = getBytes();
 			for (int i = 64; i < 128; i++) {
 				
@@ -5727,7 +5726,8 @@ public class Nxt extends HttpServlet {
 				}
 				
 			}, 0, 1, TimeUnit.SECONDS);
-			
+
+            //TODO: figure out what this thread is actually doing
 			scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
 
                 private final JSONObject getCumulativeDifficultyRequest = new JSONObject();
