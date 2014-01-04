@@ -1429,7 +1429,8 @@ public class Nxt extends HttpServlet {
 					
 					Transaction transaction = blockTransactions.get(block.transactions[i]);
 					//TODO: what is special about height 303 ???
-					if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && getLastBlock().height > 303) || transaction.fee <= 0 || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
+                    //TODO: similar transaction validation is done in several places, refactor common code out
+					if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && getLastBlock().height > 303) || transaction.fee <= 0 || transaction.fee > MAX_BALANCE || transaction.amount < 0 || transaction.amount > MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
 						
 						break;
 						
@@ -4256,7 +4257,7 @@ public class Nxt extends HttpServlet {
 		}
 		
 		boolean validateAttachment() {
-
+            //TODO: this check may no longer be needed here now
 			if (fee > MAX_BALANCE) {
 				
 				return false;
@@ -8900,7 +8901,7 @@ public class Nxt extends HttpServlet {
 
                             user.pendingResponses.offer(response);
 
-                        } else if (amount <= 0) {
+                        } else if (amount <= 0 || amount > MAX_BALANCE) {
 							
 							JSONObject response = new JSONObject();
 							response.put("response", "notifyOfIncorrectTransaction");
@@ -8912,7 +8913,7 @@ public class Nxt extends HttpServlet {
 							
 							user.pendingResponses.offer(response);
 							
-						} else if (fee <= 0) {
+						} else if (fee <= 0 || fee > MAX_BALANCE) {
 							
 							JSONObject response = new JSONObject();
 							response.put("response", "notifyOfIncorrectTransaction");
