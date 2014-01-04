@@ -29,6 +29,48 @@
             form.getElementsByClassName("result")[0].textContent = result;
             return false;
         }
+        function getAccountBalances(form) {
+            var accounts = form.elements["accounts"].value.split('\n');
+            var balance = 0;
+            var result = '<table><tr><th>account</th><th>balance</th></tr>';
+            for (i = 0; i < accounts.length; i++) {
+                account = accounts[i].trim();
+                if (account != '') {
+                    var accountBalance = getBalance(accounts[i]) / 100;
+                    result += '<tr><td>';
+                    result += account;
+                    result += ':</td><td>';
+                    result += formatAmount(accountBalance);
+                    result += '</td></tr>';
+                    balance += accountBalance;
+                }
+            }
+            result += '<tr><td>total:</td><td>';
+            result += formatAmount(balance);
+            result += '</td></tr></table>';
+            form.getElementsByClassName("result")[0].innerHTML = result;
+            return false;
+        }
+        function getBalance(account) {
+            var request = new XMLHttpRequest();
+            request.open("GET", '/nxt?requestType=getBalance&account=' + account, false);
+            request.send();
+            return JSON.parse(request.responseText).balance;
+        }
+        function formatAmount(amount) {
+            var digits=[], formattedAmount = "", i;
+            do {
+                digits[digits.length] = amount % 10;
+                amount = Math.floor(amount / 10);
+            } while (amount > 0);
+            for (i = 0; i < digits.length; i++) {
+                if (i > 0 && i % 3 == 0) {
+                    formattedAmount = "'" + formattedAmount;
+                }
+                formattedAmount = digits[i] + formattedAmount;
+            }
+            return formattedAmount;
+        }
     </script>
 </head>
 <body>
@@ -149,6 +191,50 @@
         <tr>
             <td>Account:</td>
             <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Multiple Account Balances:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return getAccountBalances(this);">
+    <table>
+        <tr>
+            <td>Accounts (enter one per line):</td>
+            <td><textarea name="accounts" style="width: 100%; height: auto;" rows="6"></textarea></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Aliases:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="listAccountAliases"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Alias URI:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAliasURI"/>
+    <table>
+        <tr>
+            <td>Alias:</td>
+            <td><input type="text" name="alias"/></td>
         </tr>
         <tr>
             <td colspan="2"><input type="submit" value="submit"/></td>
