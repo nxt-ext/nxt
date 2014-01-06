@@ -491,7 +491,7 @@ public class Nxt extends HttpServlet {
             return unconfirmedBalance;
         }
 
-		void addToBalance(long amount) throws Exception {
+        void addToBalance(long amount) throws Exception {
 
             synchronized (this) {
 
@@ -501,19 +501,19 @@ public class Nxt extends HttpServlet {
 
             updatePeerWeights();
 
-		}
-		
-		void addToUnconfirmedBalance(long amount) throws Exception {
+        }
+
+        void addToUnconfirmedBalance(long amount) throws Exception {
 
             synchronized (this) {
 
-			    this.unconfirmedBalance += amount;
+                this.unconfirmedBalance += amount;
 
             }
 
-			updateUserUnconfirmedBalance();
+            updateUserUnconfirmedBalance();
 
-		}
+        }
 
         void addToBalanceAndUnconfirmedBalance(long amount) throws Exception {
 
@@ -1788,7 +1788,7 @@ public class Nxt extends HttpServlet {
 				}
 				
 				Account account = accounts.get(Account.getId(generatorPublicKey));
-				if (account == null || account.getEffectiveBalance() == 0) {
+				if (account == null || account.getEffectiveBalance() <= 0) {
 					
 					return false;
 					
@@ -9103,7 +9103,7 @@ public class Nxt extends HttpServlet {
 								myTransaction.put("earnedAmount", block.totalFee);
 								myTransaction.put("numberOfConfirmations", numberOfConfirmations);
 								myTransaction.put("id", "-");
-								
+
 								myTransactions.add(myTransaction);
 								
 							}
