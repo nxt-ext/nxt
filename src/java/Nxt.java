@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.0";
+    static final String VERSION = "0.5.1e";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -5947,6 +5947,26 @@ public class Nxt extends HttpServlet {
                                                         Transaction.loadTransactions("transactions.nxt.bak");
 
                                                         peer.blacklist();
+
+                                                        Nxt.accounts.clear();
+                                                        Nxt.aliases.clear();
+                                                        Nxt.aliasIdToAliasMappings.clear();
+                                                        //TODO: clean this up
+                                                        logMessage("Re-scanning blockchain...");
+                                                        Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
+                                                        blocks.clear();
+                                                        lastBlock = GENESIS_BLOCK_ID;
+                                                        long currentBlockId = GENESIS_BLOCK_ID;
+                                                        do {
+
+                                                            Block currentBlock = loadedBlocks.get(currentBlockId);
+                                                            long nextBlockId = currentBlock.nextBlock;
+                                                            currentBlock.analyze();
+                                                            currentBlockId = nextBlockId;
+
+                                                        } while (curBlockId != 0);
+                                                        logMessage("...Done");
+
 
                                                     }
 
