@@ -1745,10 +1745,6 @@ public class Nxt extends HttpServlet {
 
                 return false;
 
-            } else if (! account.setOrVerify(generatorPublicKey)) {
-
-                return false;
-
             }
             /* was:
             } else if (account.publicKey == null) {
@@ -1766,7 +1762,15 @@ public class Nxt extends HttpServlet {
             byte[] data2 = new byte[data.length - 64];
             System.arraycopy(data, 0, data2, 0, data2.length);
 
-            return Crypto.verify(blockSignature, data2, generatorPublicKey);
+            if (Crypto.verify(blockSignature, data2, generatorPublicKey)) {
+
+                return account.setOrVerify(generatorPublicKey);
+
+            } else {
+
+                return false;
+
+            }
 
         }
 
@@ -3095,10 +3099,6 @@ public class Nxt extends HttpServlet {
                 if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
 
                     setState(STATE_CONNECTED);
-
-                } else {
-
-                    blacklist();
 
                 }
 
@@ -4510,10 +4510,6 @@ public class Nxt extends HttpServlet {
 
                 return false;
 
-            } else if (! account.setOrVerify(senderPublicKey)) {
-
-                return false;
-
             }
             /* was:
             } else if (account.publicKey == null) {
@@ -4527,7 +4523,6 @@ public class Nxt extends HttpServlet {
             }
             */
 
-            //TODO: ???
             byte[] data = getBytes();
             for (int i = 64; i < 128; i++) {
 
@@ -4535,7 +4530,16 @@ public class Nxt extends HttpServlet {
 
             }
 
-            return Crypto.verify(signature, data, senderPublicKey);
+            if (Crypto.verify(signature, data, senderPublicKey)) {
+
+                return account.setOrVerify(senderPublicKey);
+
+            } else {
+
+                return false;
+
+            }
+
 
         }
 
@@ -9405,10 +9409,6 @@ public class Nxt extends HttpServlet {
                             if (peer.analyzeHallmark(req.getRemoteHost(), (String)request.get("hallmark"))) {
 
                                 peer.setState(Peer.STATE_CONNECTED);
-
-                            } else {
-
-                                peer.blacklist();
 
                             }
 
