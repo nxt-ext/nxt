@@ -1745,10 +1745,6 @@ public class Nxt extends HttpServlet {
 				
 				return false;
 
-            } else if (! account.setOrVerify(generatorPublicKey)) {
-
-                return false;
-
             }
             /* was:
 			} else if (account.publicKey == null) {
@@ -1766,7 +1762,15 @@ public class Nxt extends HttpServlet {
 			byte[] data2 = new byte[data.length - 64];
 			System.arraycopy(data, 0, data2, 0, data2.length);
 
-            return Crypto.verify(blockSignature, data2, generatorPublicKey);
+            if (Crypto.verify(blockSignature, data2, generatorPublicKey)) {
+
+                return account.setOrVerify(generatorPublicKey);
+
+            } else {
+
+                return false;
+
+            }
 
         }
 		
@@ -1788,7 +1792,7 @@ public class Nxt extends HttpServlet {
 				}
 				
 				Account account = accounts.get(Account.getId(generatorPublicKey));
-				if (account == null || account.getEffectiveBalance() == 0) {
+				if (account == null || account.getEffectiveBalance() <= 0) {
 					
 					return false;
 					
@@ -3094,14 +3098,10 @@ public class Nxt extends HttpServlet {
 					
 					setState(STATE_CONNECTED);
 					
-				} else {
-					
-					blacklist();
-					
 				}
-				
+
 			}
-			
+
 		}
 		
 		void deactivate() {
@@ -4508,10 +4508,6 @@ public class Nxt extends HttpServlet {
 				
 				return false;
 
-            } else if (! account.setOrVerify(senderPublicKey)) {
-
-                return false;
-
             }
             /* was:
 			} else if (account.publicKey == null) {
@@ -4526,15 +4522,24 @@ public class Nxt extends HttpServlet {
 			*/
 
             //TODO: ???
+            // cfb: Before a transaction is signed, bytes for the signature must be zeroed
 			byte[] data = getBytes();
 			for (int i = 64; i < 128; i++) {
 				
 				data[i] = 0;
 				
 			}
-			
-			return Crypto.verify(signature, data, senderPublicKey);
-			
+
+            if (Crypto.verify(signature, data, senderPublicKey)) {
+
+                return account.setOrVerify(senderPublicKey);
+
+            } else {
+
+                return false;
+
+            }
+
 		}
 
         public static byte[] calculateTransactionsChecksum() throws Exception {
@@ -9383,10 +9388,6 @@ public class Nxt extends HttpServlet {
 							if (peer.analyzeHallmark(req.getRemoteHost(), (String)request.get("hallmark"))) {
 								
 								peer.setState(Peer.STATE_CONNECTED);
-								
-							} else {
-								
-								peer.blacklist();
 								
 							}
 							
