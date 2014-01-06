@@ -355,13 +355,13 @@
 									for (j = 0; j < response.addedConfirmedTransactions.length; j++) {
 										object = response.addedConfirmedTransactions[j];
 										if (object.sender == account) {
-											object2 = {"index": object.index, "blockTimestamp": object.blockTimestamp, "transactionTimestamp": object.transactionTimestamp, "account": object.recipient, "sentAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 1};
+											object2 = {"index": object.index, "blockTimestamp": object.blockTimestamp, "transactionTimestamp": object.transactionTimestamp, "account": object.recipient, "sentAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 1, "id": object.id};
 											if (object.recipient == account) {
 												object2.receivedAmount = object.amount;
 											}
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction(object2, true);
 										} else if (object.recipient == account) {
-											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.index, "blockTimestamp": object.blockTimestamp, "transactionTimestamp": object.transactionTimestamp, "account": object.sender, "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 1}, true);
+											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.index, "blockTimestamp": object.blockTimestamp, "transactionTimestamp": object.transactionTimestamp, "account": object.sender, "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 1, "id": object.id}, true);
 										}
 									}
 									;
