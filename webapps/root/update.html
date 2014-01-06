@@ -98,13 +98,7 @@ function load() {
         
         updateResponseCount();
     });
-    
-    // Setup the dnd listeners.
-    var dropZone = document.getElementById('drop_zone');
-    dropZone.addEventListener('dragover', handleDragOver, false);
-    dropZone.addEventListener('drop', handleFileSelect, false);
-    document.getElementById('files').addEventListener('change', handleFileSelect, false);
-    
+        
     //clicking on dropzone is the same as selecting a file from the file input..
     document.getElementById('drop_zone').onclick = function () {
         document.getElementById('files').click();
@@ -118,7 +112,7 @@ function handleDragOver(evt) {
     evt.dataTransfer.dropEffect = 'copy';
 }
 
-function handleFileSelect(evt) {
+function handleFileSelect(evt) {    
     evt.stopPropagation();
     evt.preventDefault();
 
@@ -138,11 +132,13 @@ function handleFileSelect(evt) {
                     
            if (e.data.sha256 == downloadedVersion.hash) {
                document.getElementById('result').innerHTML = 'The downloaded version has been verified, the hash is correct. You may proceed with the installation.';
+               document.getElementById('result').className = '';
            } else {
                document.getElementById('result').innerHTML = 'The downloaded version hash does not compare to the specified hash in the blockchain. DO NOT PROCEED.';
                document.getElementById('result').className = 'incorrect';
            }
         
+           document.getElementById('hash_version').innerHTML = downloadedVersion.versionNr;
            document.getElementById('hash_download').innerHTML = e.data.sha256;
            document.getElementById('hash_official').innerHTML = downloadedVersion.hash;
            document.getElementById('hashes').style.display = 'block';
@@ -241,6 +237,15 @@ function downloadNxtClient(normal) {
     ifrm.src = "http://info.nxtcrypto.org/nxt-client-" + (normal ? normalVersion.versionNr : betaVersion.versionNr) + ".zip";
     document.getElementById('explanation').style.display = 'none';
     document.getElementById('drop_zone').style.display = 'block';
+    
+    // Setup the dnd listeners.
+    var dropZone = document.getElementsByTagName('html')[0];
+    dropZone.addEventListener('dragover', handleDragOver, false);
+    dropZone.addEventListener('drop', handleFileSelect, false);
+    
+    document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    document.getElementById('download_again').style.display = 'block';
+    
     return false;
 }
 </script>
@@ -326,10 +331,27 @@ body {
 }
 #hashes {
     display:none;
-    margin-top:10px;
+    margin-top:20px;
 }
-#hash_download, #hash_official {
-    font-weight:bold;
+    
+#download_again {
+    position:absolute;
+    right:5px;
+    bottom:5px;
+    display:none;
+}
+    
+#download_again a, #download_again a:visited {
+    color:blue;
+}
+#hashes table {
+    border-collapse:collapse;
+    border:1px solid #bbb;
+}
+
+#hashes table td {
+    padding:2px;
+    margin-bottom:1px;
 }
 </style>
 </head>
@@ -379,7 +401,13 @@ body {
     
 <div id="drop_zone">Drop client update (zip file) here when downloaded or click to select</div>
 <div id="result"></div>
-<div id="hashes">* Downloaded file hash: <span id="hash_download"></span><br />* Official file hash: <span id="hash_official"></span></div>
+<div id="hashes">
+<table>
+    <tr><td style="background-color:#efefef;font-weight:bold;">Version:</td><td><span id="hash_version"></span></td></tr>
+    <tr><td style="background-color:#efefef;font-weight:bold;">Downloaded file hash:</td><td><span id="hash_download"></span></td></tr>
+    <tr><td style="background-color:#efefef;font-weight:bold;">Official file hash:</td><td><span id="hash_official"></span></td></tr>
+</table>
+</div>
 <div id="hash-progress">&nbsp;</div>
 </div>
     
@@ -387,6 +415,8 @@ body {
 <iframe id="frame"></iframe>
 <input type="file" id="files" name="files[]" />
 </div>
+    
+<div id="download_again"><a href="update.html">Download again?</a></div>
     
 </body>
 </html>
