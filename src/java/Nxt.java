@@ -2934,12 +2934,14 @@ public class Nxt extends HttpServlet {
                     this.hallmark = hallmark;
 
                     long accountId = Account.getId(publicKey);
+                    /*
                     Account account = accounts.get(accountId);
                     if (account == null) {
 
                         return false;
 
                     }
+                    */
                     LinkedList<Peer> groupedPeers = new LinkedList<>();
                     int validDate = 0;
 
@@ -3502,7 +3504,7 @@ public class Nxt extends HttpServlet {
                 addedActivePeer.put("weight", getWeight());
                 addedActivePeer.put("downloaded", downloadedVolume);
                 addedActivePeer.put("uploaded", uploadedVolume);
-                addedActivePeer.put("software", (application == null ? "?" : application) + " (" + (version == null ? "?" : version) + ")" + " @ " + (platform == null ? "?" : platform));
+                addedActivePeer.put("software", (application == null ? "?" : application.substring(0, Math.min(application.length(), 10))) + " (" + (version == null ? "?" : version.substring(0, Math.min(version.length(), 10))) + ")" + " @ " + (platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10))));
                 for (String wellKnownPeer : wellKnownPeers) {
 
                     if (announcedAddress.equals(wellKnownPeer)) {
