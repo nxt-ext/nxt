@@ -1762,15 +1762,7 @@ public class Nxt extends HttpServlet {
             byte[] data2 = new byte[data.length - 64];
             System.arraycopy(data, 0, data2, 0, data2.length);
 
-            if (Crypto.verify(blockSignature, data2, generatorPublicKey)) {
-
-                return account.setOrVerify(generatorPublicKey);
-
-            } else {
-
-                return false;
-
-            }
+            return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey);
 
         }
 
@@ -4530,15 +4522,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            if (Crypto.verify(signature, data, senderPublicKey)) {
-
-                return account.setOrVerify(senderPublicKey);
-
-            } else {
-
-                return false;
-
-            }
+            return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
 
 
         }
