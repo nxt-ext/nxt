@@ -3269,6 +3269,16 @@ public class Nxt extends HttpServlet {
 
         }
 
+        String getSoftware() {
+            StringBuilder buf = new StringBuilder();
+            buf.append(application == null ? "?" : application.substring(0, Math.min(application.length(), 10)));
+            buf.append(" (");
+            buf.append(version == null ? "?" : version.substring(0, Math.min(version.length(), 10)));
+            buf.append(")").append(" @ ");
+            buf.append(platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10)));
+            return buf.toString();
+        }
+
         void removeBlacklistedStatus() {
 
             setState(STATE_NONCONNECTED);
@@ -3512,7 +3522,7 @@ public class Nxt extends HttpServlet {
                 addedActivePeer.put("weight", getWeight());
                 addedActivePeer.put("downloaded", downloadedVolume);
                 addedActivePeer.put("uploaded", uploadedVolume);
-                addedActivePeer.put("software", (application == null ? "?" : application.substring(0, Math.min(application.length(), 10))) + " (" + (version == null ? "?" : version.substring(0, Math.min(version.length(), 10))) + ")" + " @ " + (platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10))));
+                addedActivePeer.put("software", getSoftware());
                 for (String wellKnownPeer : wellKnownPeers) {
 
                     if (announcedAddress.equals(wellKnownPeer)) {
@@ -8687,7 +8697,7 @@ public class Nxt extends HttpServlet {
                             activePeer.put("weight", peer.getWeight());
                             activePeer.put("downloaded", peer.downloadedVolume);
                             activePeer.put("uploaded", peer.uploadedVolume);
-                            activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")" + " @ " + (peer.platform == null ? "?" : peer.platform));
+                            activePeer.put("software", peer.getSoftware());
                             for (String wellKnownPeer : wellKnownPeers) {
 
                                 if (peer.announcedAddress.equals(wellKnownPeer)) {
