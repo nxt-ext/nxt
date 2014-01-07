@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.2";
+    static final String VERSION = "0.5.3";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -5975,6 +5975,8 @@ public class Nxt extends HttpServlet {
                                                         Nxt.accounts.clear();
                                                         Nxt.aliases.clear();
                                                         Nxt.aliasIdToAliasMappings.clear();
+                                                        Nxt.unconfirmedTransactions.clear(); //TODO: safe?
+                                                        Nxt.doubleSpendingTransactions.clear();
                                                         //TODO: clean this up
                                                         logMessage("Re-scanning blockchain...");
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
@@ -5988,7 +5990,7 @@ public class Nxt extends HttpServlet {
                                                             currentBlock.analyze();
                                                             currentBlockId = nextBlockId;
 
-                                                        } while (curBlockId != 0);
+                                                        } while (currentBlockId != 0);
                                                         logMessage("...Done");
 
 
