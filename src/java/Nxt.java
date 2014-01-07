@@ -63,12 +63,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.1";
+    static final String VERSION = "0.5.2";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
     static final int BLOCK_HEADER_LENGTH = 224;
-    static final int MAX_PAYLOAD_LENGTH = 255 * 128;
+    static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
+    static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
 
     static final int ALIAS_SYSTEM_BLOCK = 22000;
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
@@ -394,7 +395,6 @@ public class Nxt extends HttpServlet {
                 block = new Block(2, getEpochTime(System.currentTimeMillis()), lastBlock, newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64], previousBlockHash);
 
             }
-            block.transactions = new long[block.numberOfTransactions];
             int i = 0;
             for (Map.Entry<Long, Transaction> transactionEntry : newTransactions.entrySet()) {
 
@@ -746,7 +746,7 @@ public class Nxt extends HttpServlet {
         final byte[] previousBlockHash;
 
         int index;
-        long[] transactions;
+        final long[] transactions;
         volatile long baseTarget;
         int height;
         volatile long nextBlock;
@@ -759,6 +759,14 @@ public class Nxt extends HttpServlet {
         }
 
         Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
+
+            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
+                throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
+            }
+
+            if (payloadLength > MAX_PAYLOAD_LENGTH) {
+                throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
+            }
 
             this.version = version;
             this.timestamp = timestamp;
@@ -773,6 +781,7 @@ public class Nxt extends HttpServlet {
             this.blockSignature = blockSignature;
 
             this.previousBlockHash = previousBlockHash;
+            this.transactions = new long[numberOfTransactions];
 
         }
 
@@ -1107,6 +1116,11 @@ public class Nxt extends HttpServlet {
 
             byte[] previousBlockHash = version == 1 ? null : convert((String)blockData.get("previousBlockHash"));
 
+            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || payloadLength > MAX_PAYLOAD_LENGTH) {
+
+                return null;
+
+            }
             return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
         }
@@ -1357,7 +1371,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity()) {
+            if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity() || numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
 
                 return false;
 
@@ -1365,14 +1379,13 @@ public class Nxt extends HttpServlet {
 
             Block block;
 
-            // no need for if/else here
             block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
             block.index = blockCounter.incrementAndGet();
 
             try {
 
-                if (block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+                if (block.numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
                     return false;
 
@@ -1380,7 +1393,6 @@ public class Nxt extends HttpServlet {
 
                 HashMap<Long, Transaction> blockTransactions = new HashMap<>();
                 HashSet<String> blockAliases = new HashSet<>();
-                block.transactions = new long[block.numberOfTransactions];
                 for (int i = 0; i < block.numberOfTransactions; i++) {
 
                     Transaction transaction = Transaction.getTransaction(buffer);
@@ -1429,6 +1441,7 @@ public class Nxt extends HttpServlet {
 
                     Transaction transaction = blockTransactions.get(block.transactions[i]);
                     //TODO: what is special about height 303 ???
+                    // cfb: Block 303 contains a transaction which expired before the block timestamp
                     //TODO: similar transaction validation is done in several places, refactor common code out
                     if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && getLastBlock().height > 303) || transaction.fee <= 0 || transaction.fee > MAX_BALANCE || transaction.amount < 0 || transaction.amount > MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
 
@@ -3256,6 +3269,16 @@ public class Nxt extends HttpServlet {
 
         }
 
+        String getSoftware() {
+            StringBuilder buf = new StringBuilder();
+            buf.append(application == null ? "?" : application.substring(0, Math.min(application.length(), 10)));
+            buf.append(" (");
+            buf.append(version == null ? "?" : version.substring(0, Math.min(version.length(), 10)));
+            buf.append(")").append(" @ ");
+            buf.append(platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10)));
+            return buf.toString();
+        }
+
         void removeBlacklistedStatus() {
 
             setState(STATE_NONCONNECTED);
@@ -3318,6 +3341,8 @@ public class Nxt extends HttpServlet {
         }
 
         //TODO: send in parallel using an executor service or NIO
+        // cfb: Will this help if there are a lot of other sendToAllPeers() in progress?
+        // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
         static void sendToAllPeers(JSONObject request) {
 
             for (Peer peer : Nxt.peers.values()) {
@@ -3481,6 +3506,7 @@ public class Nxt extends HttpServlet {
                 }
 
                 //TODO: there must be a better way
+                // cfb: This will be removed after we get a better client
                 for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
 
                     if (peerEntry.getValue() == this) {
@@ -3496,7 +3522,7 @@ public class Nxt extends HttpServlet {
                 addedActivePeer.put("weight", getWeight());
                 addedActivePeer.put("downloaded", downloadedVolume);
                 addedActivePeer.put("uploaded", uploadedVolume);
-                addedActivePeer.put("software", (application == null ? "?" : application.substring(0, Math.min(application.length(), 10))) + " (" + (version == null ? "?" : version.substring(0, Math.min(version.length(), 10))) + ")" + " @ " + (platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10))));
+                addedActivePeer.put("software", getSoftware());
                 for (String wellKnownPeer : wellKnownPeers) {
 
                     if (announcedAddress.equals(wellKnownPeer)) {
@@ -3674,6 +3700,7 @@ public class Nxt extends HttpServlet {
             } else {
                 //TODO: cache bytes or at least bytes.length
                 //TODO: rewrite comparison, WTF is 1048576L ???
+                // cfb: 1048576L = 1024*1024
                 if (fee * 1048576L / getBytes().length > o.fee * 1048576L / o.getBytes().length) {
 
                     return -1;
@@ -4237,6 +4264,7 @@ public class Nxt extends HttpServlet {
                 while (!verify()) {
 
                     timestamp++; //TODO: ???
+                    // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
                     signature = new byte[64];
                     signature = Crypto.sign(getBytes(), secretPhrase);
 
@@ -5510,7 +5538,6 @@ public class Nxt extends HttpServlet {
                 block.index = blockCounter.incrementAndGet();
                 blocks.put(GENESIS_BLOCK_ID, block);
 
-                block.transactions = new long[block.numberOfTransactions];
                 int i = 0;
                 for (long transaction : transactions.keySet()) {
 
@@ -5835,6 +5862,14 @@ public class Nxt extends HttpServlet {
 
                                                             JSONObject blockData = (JSONObject)nextBlocks.get(i);
                                                             Block block = Block.getBlock(blockData);
+                                                            if (block == null) {
+
+                                                                // peer tried to send us invalid transactions length or payload parameters
+                                                                peer.blacklist();
+                                                                return;
+
+                                                            }
+
                                                             curBlockId = block.getId();
 
                                                             synchronized (blocksAndTransactionsLock) {
@@ -5866,11 +5901,10 @@ public class Nxt extends HttpServlet {
                                                                     }
 
                                                                 }
-                                                                if (!alreadyPushed && blocks.get(block.getId()) == null) {
+                                                                if (!alreadyPushed && blocks.get(block.getId()) == null && block.numberOfTransactions <= MAX_NUMBER_OF_TRANSACTIONS) {
 
                                                                     futureBlocks.add(block);
 
-                                                                    block.transactions = new long[block.numberOfTransactions];
                                                                     JSONArray transactionsData = (JSONArray)blockData.get("transactions");
                                                                     for (int j = 0; j < block.numberOfTransactions; j++) {
 
@@ -6193,6 +6227,7 @@ public class Nxt extends HttpServlet {
 
                                                             throw new Exception();
                                                             //TODO: better error checking
+                                                            // cfb: This is a part of Legacy API, it isn't worth rewriting
 
                                                         }
 
@@ -8662,7 +8697,7 @@ public class Nxt extends HttpServlet {
                             activePeer.put("weight", peer.getWeight());
                             activePeer.put("downloaded", peer.downloadedVolume);
                             activePeer.put("uploaded", peer.uploadedVolume);
-                            activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")" + " @ " + (peer.platform == null ? "?" : peer.platform));
+                            activePeer.put("software", peer.getSoftware());
                             for (String wellKnownPeer : wellKnownPeers) {
 
                                 if (peer.announcedAddress.equals(wellKnownPeer)) {
@@ -9107,7 +9142,7 @@ public class Nxt extends HttpServlet {
                             if (Account.getId(block.generatorPublicKey) == accountId.longValue() && block.totalFee > 0) {
 
                                 JSONObject myTransaction = new JSONObject();
-                                myTransaction.put("index", convert(blockId)); //TODO: ???
+                                myTransaction.put("index", convert(blockId)); //TODO: ??? // cfb: Generated fee transactions get an id equal to the block id
                                 myTransaction.put("blockTimestamp", block.timestamp);
                                 myTransaction.put("block", convert(blockId));
                                 myTransaction.put("earnedAmount", block.totalFee);
@@ -9523,21 +9558,34 @@ public class Nxt extends HttpServlet {
                     case "processBlock":
                     {
 
+                        boolean accepted;
+
                         Block block = Block.getBlock(request);
 
-                        ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
-                        buffer.order(ByteOrder.LITTLE_ENDIAN);
+                        if (block == null) {
 
-                        buffer.put(block.getBytes());
+                            accepted = false;
+                            if (peer != null) {
+                                peer.blacklist();
+                            }
 
-                        JSONArray transactionsData = (JSONArray)request.get("transactions");
-                        for (Object transaction : transactionsData) {
+                        } else {
 
-                            buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
+                            ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
+                            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+                            buffer.put(block.getBytes());
+
+                            JSONArray transactionsData = (JSONArray)request.get("transactions");
+                            for (Object transaction : transactionsData) {
+
+                                buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
+
+                            }
+
+                            accepted = Block.pushBlock(buffer, true);
 
                         }
-
-                        boolean accepted = Block.pushBlock(buffer, true);
                         response.put("accepted", accepted);
 
                     }
