@@ -1429,6 +1429,7 @@ public class Nxt extends HttpServlet {
 
                     Transaction transaction = blockTransactions.get(block.transactions[i]);
                     //TODO: what is special about height 303 ???
+                    // cfb: Block 303 contains a transaction which expired before the block timestamp
                     //TODO: similar transaction validation is done in several places, refactor common code out
                     if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && getLastBlock().height > 303) || transaction.fee <= 0 || transaction.fee > MAX_BALANCE || transaction.amount < 0 || transaction.amount > MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
 
@@ -3318,6 +3319,8 @@ public class Nxt extends HttpServlet {
         }
 
         //TODO: send in parallel using an executor service or NIO
+        // cfb: Will this help if there are a lot of other sendToAllPeers() in progress?
+        // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
         static void sendToAllPeers(JSONObject request) {
 
             for (Peer peer : Nxt.peers.values()) {
@@ -3481,6 +3484,7 @@ public class Nxt extends HttpServlet {
                 }
 
                 //TODO: there must be a better way
+                // cfb: This will be removed after we get a better client
                 for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
 
                     if (peerEntry.getValue() == this) {
@@ -3674,6 +3678,7 @@ public class Nxt extends HttpServlet {
             } else {
                 //TODO: cache bytes or at least bytes.length
                 //TODO: rewrite comparison, WTF is 1048576L ???
+                // cfb: 1048576L = 1024*1024
                 if (fee * 1048576L / getBytes().length > o.fee * 1048576L / o.getBytes().length) {
 
                     return -1;
@@ -4237,6 +4242,7 @@ public class Nxt extends HttpServlet {
                 while (!verify()) {
 
                     timestamp++; //TODO: ???
+                    // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
                     signature = new byte[64];
                     signature = Crypto.sign(getBytes(), secretPhrase);
 
@@ -6193,6 +6199,7 @@ public class Nxt extends HttpServlet {
 
                                                             throw new Exception();
                                                             //TODO: better error checking
+                                                            // cfb: This is a part of Legacy API, it isn't worth rewriting
 
                                                         }
 
@@ -9107,7 +9114,7 @@ public class Nxt extends HttpServlet {
                             if (Account.getId(block.generatorPublicKey) == accountId.longValue() && block.totalFee > 0) {
 
                                 JSONObject myTransaction = new JSONObject();
-                                myTransaction.put("index", convert(blockId)); //TODO: ???
+                                myTransaction.put("index", convert(blockId)); //TODO: ??? // cfb: Generated fee transactions get an id equal to the block id
                                 myTransaction.put("blockTimestamp", block.timestamp);
                                 myTransaction.put("block", convert(blockId));
                                 myTransaction.put("earnedAmount", block.totalFee);
