@@ -68,7 +68,8 @@ public class Nxt extends HttpServlet {
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
     static final int BLOCK_HEADER_LENGTH = 224;
-    static final int MAX_PAYLOAD_LENGTH = 255 * 128;
+    static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
+    static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
 
     static final int ALIAS_SYSTEM_BLOCK = 22000;
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
@@ -1372,7 +1373,7 @@ public class Nxt extends HttpServlet {
 
             try {
 
-                if (block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+                if (block.numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
                     return false;
 
@@ -5872,7 +5873,7 @@ public class Nxt extends HttpServlet {
                                                                     }
 
                                                                 }
-                                                                if (!alreadyPushed && blocks.get(block.getId()) == null) {
+                                                                if (!alreadyPushed && blocks.get(block.getId()) == null && block.numberOfTransactions <= MAX_NUMBER_OF_TRANSACTIONS) {
 
                                                                     futureBlocks.add(block);
 
@@ -9532,19 +9533,28 @@ public class Nxt extends HttpServlet {
 
                         Block block = Block.getBlock(request);
 
-                        ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
-                        buffer.order(ByteOrder.LITTLE_ENDIAN);
+                        boolean accepted;
+                        if (block.payloadLength > MAX_PAYLOAD_LENGTH) {
 
-                        buffer.put(block.getBytes());
+                            accepted = false;
 
-                        JSONArray transactionsData = (JSONArray)request.get("transactions");
-                        for (Object transaction : transactionsData) {
+                        } else {
 
-                            buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
+                            ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
+                            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+                            buffer.put(block.getBytes());
+
+                            JSONArray transactionsData = (JSONArray)request.get("transactions");
+                            for (Object transaction : transactionsData) {
+
+                                buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
+
+                            }
+
+                            accepted = Block.pushBlock(buffer, true);
 
                         }
-
-                        boolean accepted = Block.pushBlock(buffer, true);
                         response.put("accepted", accepted);
 
                     }
