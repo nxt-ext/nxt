@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.1";
+    static final String VERSION = "0.5.2";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -397,7 +397,6 @@ public class Nxt extends HttpServlet {
                 block = new Block(2, getEpochTime(System.currentTimeMillis()), lastBlock, newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64], previousBlockHash);
 
             }
-            block.transactions = new long[block.numberOfTransactions];
             int i = 0;
             for (Map.Entry<Long, Transaction> transactionEntry : newTransactions.entrySet()) {
 
@@ -749,7 +748,7 @@ public class Nxt extends HttpServlet {
         final byte[] previousBlockHash;
 
         int index;
-        long[] transactions;
+        final long[] transactions;
         volatile long baseTarget;
         int height;
         volatile long nextBlock;
@@ -762,6 +761,14 @@ public class Nxt extends HttpServlet {
         }
 
         Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
+
+            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
+                throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
+            }
+
+            if (payloadLength > MAX_PAYLOAD_LENGTH) {
+                throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
+            }
 
             this.version = version;
             this.timestamp = timestamp;
@@ -776,6 +783,7 @@ public class Nxt extends HttpServlet {
             this.blockSignature = blockSignature;
 
             this.previousBlockHash = previousBlockHash;
+            this.transactions = new long[numberOfTransactions];
 
         }
 
@@ -1110,6 +1118,11 @@ public class Nxt extends HttpServlet {
 
             byte[] previousBlockHash = version == 1 ? null : convert((String)blockData.get("previousBlockHash"));
 
+            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || payloadLength > MAX_PAYLOAD_LENGTH) {
+
+                return null;
+
+            }
             return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
         }
@@ -1360,7 +1373,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity()) {
+            if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity() || numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
 
                 return false;
 
@@ -1368,7 +1381,6 @@ public class Nxt extends HttpServlet {
 
             Block block;
 
-            // no need for if/else here
             block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
             block.index = blockCounter.incrementAndGet();
@@ -1383,7 +1395,6 @@ public class Nxt extends HttpServlet {
 
                 HashMap<Long, Transaction> blockTransactions = new HashMap<>();
                 HashSet<String> blockAliases = new HashSet<>();
-                block.transactions = new long[block.numberOfTransactions];
                 for (int i = 0; i < block.numberOfTransactions; i++) {
 
                     Transaction transaction = Transaction.getTransaction(buffer);
@@ -5610,7 +5621,6 @@ public class Nxt extends HttpServlet {
                 block.index = blockCounter.incrementAndGet();
                 blocks.put(GENESIS_BLOCK_ID, block);
 
-                block.transactions = new long[block.numberOfTransactions];
                 int i = 0;
                 for (long transaction : transactions.keySet()) {
 
@@ -5935,6 +5945,14 @@ public class Nxt extends HttpServlet {
 
                                                             JSONObject blockData = (JSONObject)nextBlocks.get(i);
                                                             Block block = Block.getBlock(blockData);
+                                                            if (block == null) {
+
+                                                                // peer tried to send us invalid transactions length or payload parameters
+                                                                peer.blacklist();
+                                                                return;
+
+                                                            }
+
                                                             curBlockId = block.getId();
 
                                                             synchronized (blocksAndTransactionsLock) {
@@ -5970,7 +5988,6 @@ public class Nxt extends HttpServlet {
 
                                                                     futureBlocks.add(block);
 
-                                                                    block.transactions = new long[block.numberOfTransactions];
                                                                     JSONArray transactionsData = (JSONArray)blockData.get("transactions");
                                                                     for (int j = 0; j < block.numberOfTransactions; j++) {
 
@@ -9757,12 +9774,16 @@ public class Nxt extends HttpServlet {
                     case "processBlock":
                     {
 
+                        boolean accepted;
+
                         Block block = Block.getBlock(request);
 
-                        boolean accepted;
-                        if (block.payloadLength > MAX_PAYLOAD_LENGTH) {
+                        if (block == null) {
 
                             accepted = false;
+                            if (peer != null) {
+                                peer.blacklist();
+                            }
 
                         } else {
 
