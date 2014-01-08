@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.2";
+    static final String VERSION = "0.5.3";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -762,11 +762,11 @@ public class Nxt extends HttpServlet {
 
         Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
 
-            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
+            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
                 throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
             }
 
-            if (payloadLength > MAX_PAYLOAD_LENGTH) {
+            if (payloadLength > MAX_PAYLOAD_LENGTH || payloadLength < 0) {
                 throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
             }
 
@@ -3271,6 +3271,16 @@ public class Nxt extends HttpServlet {
 
         }
 
+        String getSoftware() {
+            StringBuilder buf = new StringBuilder();
+            buf.append(application == null ? "?" : application.substring(0, Math.min(application.length(), 10)));
+            buf.append(" (");
+            buf.append(version == null ? "?" : version.substring(0, Math.min(version.length(), 10)));
+            buf.append(")").append(" @ ");
+            buf.append(platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10)));
+            return buf.toString();
+        }
+
         void removeBlacklistedStatus() {
 
             setState(STATE_NONCONNECTED);
@@ -3514,7 +3524,7 @@ public class Nxt extends HttpServlet {
                 addedActivePeer.put("weight", getWeight());
                 addedActivePeer.put("downloaded", downloadedVolume);
                 addedActivePeer.put("uploaded", uploadedVolume);
-                addedActivePeer.put("software", (application == null ? "?" : application.substring(0, Math.min(application.length(), 10))) + " (" + (version == null ? "?" : version.substring(0, Math.min(version.length(), 10))) + ")" + " @ " + (platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 10))));
+                addedActivePeer.put("software", getSoftware());
                 for (String wellKnownPeer : wellKnownPeers) {
 
                     if (announcedAddress.equals(wellKnownPeer)) {
@@ -6058,6 +6068,8 @@ public class Nxt extends HttpServlet {
                                                         Nxt.accounts.clear();
                                                         Nxt.aliases.clear();
                                                         Nxt.aliasIdToAliasMappings.clear();
+                                                        Nxt.unconfirmedTransactions.clear(); //TODO: safe?
+                                                        Nxt.doubleSpendingTransactions.clear();
                                                         //TODO: clean this up
                                                         logMessage("Re-scanning blockchain...");
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
@@ -6071,7 +6083,7 @@ public class Nxt extends HttpServlet {
                                                             currentBlock.analyze();
                                                             currentBlockId = nextBlockId;
 
-                                                        } while (curBlockId != 0);
+                                                        } while (currentBlockId != 0);
                                                         logMessage("...Done");
 
 
@@ -8598,9 +8610,16 @@ public class Nxt extends HttpServlet {
 
                                 } else {
 
+                                    //TODO: fix ugly error handling
                                     try {
 
-                                        long recipient = (new BigInteger(recipientValue)).longValue();
+                                        BigInteger bigInt = new BigInteger(recipientValue.trim());
+                                        // check for negative recipientValue and for overflow
+                                        if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
+                                            throw new Exception();
+                                        }
+                                        // it is OK for recipient (as signed long value) itself to be negative
+                                        long recipient = bigInt.longValue();
 
                                         try {
 
@@ -8913,7 +8932,7 @@ public class Nxt extends HttpServlet {
                             activePeer.put("weight", peer.getWeight());
                             activePeer.put("downloaded", peer.downloadedVolume);
                             activePeer.put("uploaded", peer.uploadedVolume);
-                            activePeer.put("software", (peer.application == null ? "?" : peer.application) + " (" + (peer.version == null ? "?" : peer.version) + ")" + " @ " + (peer.platform == null ? "?" : peer.platform));
+                            activePeer.put("software", peer.getSoftware());
                             for (String wellKnownPeer : wellKnownPeers) {
 
                                 if (peer.announcedAddress.equals(wellKnownPeer)) {
@@ -9129,7 +9148,13 @@ public class Nxt extends HttpServlet {
 
                         try {
 
-                            recipient = (new BigInteger(recipientValue.trim())).longValue();
+                            BigInteger bigInt = new BigInteger(recipientValue.trim());
+                            // check for negative recipientValue and for overflow
+                            if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
+                                throw new Exception();
+                            }
+                            // it is OK for recipient (as signed long value) itself to be negative
+                            recipient = bigInt.longValue();
                             amount = Integer.parseInt(amountValue.trim());
                             fee = Integer.parseInt(feeValue.trim());
                             deadline = (short)(Double.parseDouble(deadlineValue) * 60);
