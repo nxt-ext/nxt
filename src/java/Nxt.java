@@ -8387,15 +8387,13 @@ public class Nxt extends HttpServlet {
                                     //TODO: fix ugly error handling
                                     try {
 
-                                        recipientValue = recipientValue.trim();
-
-                                        if (recipientValue.charAt(0) == '-') {
-
+                                        BigInteger bigInt = new BigInteger(recipientValue.trim());
+                                        // check for negative recipientValue and for overflow
+                                        if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
                                             throw new Exception();
-
                                         }
-
-                                        long recipient = (new BigInteger(recipientValue)).longValue();
+                                        // it is OK for recipient (as signed long value) itself to be negative
+                                        long recipient = bigInt.longValue();
 
                                         try {
 
@@ -8924,11 +8922,13 @@ public class Nxt extends HttpServlet {
 
                         try {
 
-                            recipientValue = recipientValue.trim();
-                            if (recipientValue.charAt(0) == '-') {
+                            BigInteger bigInt = new BigInteger(recipientValue.trim());
+                            // check for negative recipientValue and for overflow
+                            if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
                                 throw new Exception();
                             }
-                            recipient = (new BigInteger(recipientValue)).longValue();
+                            // it is OK for recipient (as signed long value) itself to be negative
+                            recipient = bigInt.longValue();
                             amount = Integer.parseInt(amountValue.trim());
                             fee = Integer.parseInt(feeValue.trim());
                             deadline = (short)(Double.parseDouble(deadlineValue) * 60);
