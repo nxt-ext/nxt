@@ -70,9 +70,11 @@ public class Nxt extends HttpServlet {
     static final int BLOCK_HEADER_LENGTH = 224;
     static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
     static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
+    static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
 
     static final int ALIAS_SYSTEM_BLOCK = 22000;
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
+    static final int ARBITRARY_MESSAGES_BLOCK = 38000;
     static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
     static final long MAX_BALANCE = 1000000000;
@@ -1460,7 +1462,7 @@ public class Nxt extends HttpServlet {
 
                     } else if (transaction.type == Transaction.TYPE_MESSAGING) {
 
-                        if (transaction.subtype != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
+                        if (transaction.subtype != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE && transaction.subtype != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
 
                             break;
 
@@ -3802,6 +3804,22 @@ public class Nxt extends HttpServlet {
 
                     switch (subtype) {
 
+                        case Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
+                        {
+
+                            int messageLength = buffer.getInt();
+                            if (messageLength <= MAX_ARBITRARY_MESSAGE_LENGTH) {
+
+                                byte[] message = new byte[messageLength];
+                                buffer.get(message);
+
+                                transaction.attachment = new MessagingArbitraryMessageAttachment(message);
+
+                            }
+
+                        }
+                        break;
+
                         case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                         {
 
@@ -3939,6 +3957,15 @@ public class Nxt extends HttpServlet {
                 {
 
                     switch (subtype) {
+
+                        case SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
+                        {
+
+                            String message = (String)attachmentData.get("message");
+                            transaction.attachment = new MessagingArbitraryMessageAttachment(convert(message));
+
+                        }
+                        break;
 
                         case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                         {
@@ -4303,6 +4330,28 @@ public class Nxt extends HttpServlet {
 
                     switch (subtype) {
 
+                        case SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
+                        {
+
+                            if (Block.getLastBlock().height < ARBITRARY_MESSAGES_BLOCK) {
+
+                                return false;
+
+                            }
+
+                            try {
+
+                                MessagingArbitraryMessageAttachment attachment = (MessagingArbitraryMessageAttachment)this.attachment;
+                                return amount == 0 && attachment.message.length <= MAX_ARBITRARY_MESSAGE_LENGTH;
+
+                            } catch (Exception e) {
+
+                                return false;
+
+                            }
+
+                        }
+
                         case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                         {
 
@@ -4562,6 +4611,50 @@ public class Nxt extends HttpServlet {
 
             byte[] getBytes();
             JSONObject getJSONObject();
+
+        }
+
+        static class MessagingArbitraryMessageAttachment implements Attachment, Serializable {
+
+            static final long serialVersionUID = 0;
+
+            final byte[] message;
+
+            MessagingArbitraryMessageAttachment(byte[] message) {
+
+                this.message = message;
+
+            }
+
+            @Override
+            public byte[] getBytes() {
+
+                try {
+
+                    ByteBuffer buffer = ByteBuffer.allocate(4 + message.length);
+                    buffer.order(ByteOrder.LITTLE_ENDIAN);
+                    buffer.putInt(message.length);
+                    buffer.put(message);
+
+                    return buffer.array();
+
+                } catch (Exception e) {
+
+                    return null;
+
+                }
+
+            }
+
+            @Override
+            public JSONObject getJSONObject() {
+
+                JSONObject attachment = new JSONObject();
+                attachment.put("message", convert(message));
+
+                return attachment;
+
+            }
 
         }
 
@@ -8302,6 +8395,139 @@ public class Nxt extends HttpServlet {
                                             response.put("errorDescription", "Incorrect \"weight\"");
 
                                         }
+
+                                    }
+
+                                }
+
+                            }
+                            break;
+
+                            case "sendMessage":
+                            {
+
+                                String secretPhrase = req.getParameter("secretPhrase");
+                                String recipientValue = req.getParameter("recipient");
+                                String messageValue = req.getParameter("message");
+                                String feeValue = req.getParameter("fee");
+                                String deadlineValue = req.getParameter("deadline");
+                                String referencedTransactionValue = req.getParameter("referencedTransaction");
+                                if (secretPhrase == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"secretPhrase\" not specified");
+
+                                } else if (recipientValue == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"recipient\" not specified");
+
+                                } else if (messageValue == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"message\" not specified");
+
+                                } else if (feeValue == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"fee\" not specified");
+
+                                } else if (deadlineValue == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"deadline\" not specified");
+
+                                } else {
+
+                                    try {
+
+                                        long recipient = (new BigInteger(recipientValue)).longValue();
+
+                                        try {
+
+                                            byte[] message = convert(messageValue);
+                                            if (message.length > MAX_ARBITRARY_MESSAGE_LENGTH) {
+
+                                                response.put("errorCode", 4);
+                                                response.put("errorDescription", "Incorrect \"message\" (length must be not longer than " + MAX_ARBITRARY_MESSAGE_LENGTH + " bytes)");
+
+                                            } else {
+
+                                                try {
+
+                                                    int fee = Integer.parseInt(feeValue);
+                                                    if (fee <= 0 || fee >= MAX_BALANCE) {
+
+                                                        throw new Exception();
+
+                                                    }
+
+                                                    try {
+
+                                                        short deadline = Short.parseShort(deadlineValue);
+                                                        if (deadline < 1) {
+
+                                                            throw new Exception();
+
+                                                        }
+
+                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : (new BigInteger(referencedTransactionValue)).longValue();
+
+                                                        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+
+                                                        Account account = accounts.get(Account.getId(publicKey));
+                                                        if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
+
+                                                            response.put("errorCode", 6);
+                                                            response.put("errorDescription", "Not enough funds");
+
+                                                        } else {
+
+                                                            int timestamp = getEpochTime(System.currentTimeMillis());
+
+                                                            Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction, new byte[64]);
+                                                            transaction.attachment = new Transaction.MessagingArbitraryMessageAttachment(message);
+                                                            transaction.sign(secretPhrase);
+
+                                                            JSONObject peerRequest = new JSONObject();
+                                                            peerRequest.put("requestType", "processTransactions");
+                                                            JSONArray transactionsData = new JSONArray();
+                                                            transactionsData.add(transaction.getJSONObject());
+                                                            peerRequest.put("transactions", transactionsData);
+
+                                                            Peer.sendToAllPeers(peerRequest);
+
+                                                            response.put("transaction", convert(transaction.getId()));
+
+                                                        }
+
+                                                    } catch (Exception e) {
+
+                                                        response.put("errorCode", 4);
+                                                        response.put("errorDescription", "Incorrect \"deadline\"");
+
+                                                    }
+
+                                                } catch (Exception e) {
+
+                                                    response.put("errorCode", 4);
+                                                    response.put("errorDescription", "Incorrect \"fee\"");
+
+                                                }
+
+                                            }
+
+                                        } catch (Exception e) {
+
+                                            response.put("errorCode", 4);
+                                            response.put("errorDescription", "Incorrect \"message\"");
+
+                                        }
+
+                                    } catch (Exception e) {
+
+                                        response.put("errorCode", 4);
+                                        response.put("errorDescription", "Incorrect \"recipient\"");
 
                                     }
 
