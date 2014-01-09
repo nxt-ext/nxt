@@ -79,6 +79,7 @@ public class Nxt extends HttpServlet {
 
     static final long MAX_BALANCE = 1000000000;
     static final long initialBaseTarget = 153722867, maxBaseTarget = MAX_BALANCE * initialBaseTarget;
+    static final long MAX_ASSET_QUANTITY = 1000000000;
     static final BigInteger two64 = new BigInteger("18446744073709551616");
 
     // /*final*/ variables are set in the init() and are to be treated as final
@@ -4385,7 +4386,7 @@ public class Nxt extends HttpServlet {
                             try {
 
                                 ColoredCoinsAssetIssuanceAttachment attachment = (ColoredCoinsAssetIssuanceAttachment)this.attachment;
-                                if (recipient != CREATOR_ID || amount != 0 || fee < ASSET_ISSUANCE_FEE || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000 || attachment.quantity <= 0 || attachment.quantity > MAX_BALANCE) {
+                                if (recipient != CREATOR_ID || amount != 0 || fee < ASSET_ISSUANCE_FEE || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY) {
 
                                     return false;
 
@@ -4423,7 +4424,7 @@ public class Nxt extends HttpServlet {
                         {
 
                             ColoredCoinsAssetTransferAttachment attachment = (ColoredCoinsAssetTransferAttachment)this.attachment;
-                            if (amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_BALANCE) {
+                            if (amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY) {
 
                                 return false;
 
@@ -4439,7 +4440,7 @@ public class Nxt extends HttpServlet {
                         {
 
                             ColoredCoinsAskOrderPlacementAttachment attachment = (ColoredCoinsAskOrderPlacementAttachment)this.attachment;
-                            if (recipient != CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_BALANCE || attachment.price <= 0 || attachment.price > MAX_BALANCE * 100L) {
+                            if (recipient != CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY || attachment.price <= 0 || attachment.price > MAX_BALANCE * 100L) {
 
                                 return false;
 
@@ -4455,7 +4456,7 @@ public class Nxt extends HttpServlet {
                         {
 
                             ColoredCoinsBidOrderPlacementAttachment attachment = (ColoredCoinsBidOrderPlacementAttachment)this.attachment;
-                            if (recipient != CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_BALANCE || attachment.price <= 0 || attachment.price > MAX_BALANCE * 100L) {
+                            if (recipient != CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY || attachment.price <= 0 || attachment.price > MAX_BALANCE * 100L) {
 
                                 return false;
 
@@ -7339,7 +7340,7 @@ public class Nxt extends HttpServlet {
                                                 try {
 
                                                     int quantity = Integer.parseInt(quantityValue);
-                                                    if (quantity <= 0 || quantity > 1000000000) {
+                                                    if (quantity <= 0 || quantity > MAX_ASSET_QUANTITY) {
 
                                                         response.put("errorCode", 4);
                                                         response.put("errorDescription", "Incorrect \"quantity\" (must be in [1..1'000'000'000] range)");
@@ -7789,7 +7790,7 @@ public class Nxt extends HttpServlet {
                                             try {
 
                                                 int quantity = Integer.parseInt(quantityValue);
-                                                if (quantity <= 0 || quantity >= MAX_BALANCE) {
+                                                if (quantity <= 0 || quantity >= MAX_ASSET_QUANTITY) {
 
                                                     throw new Exception();
 
@@ -7960,7 +7961,7 @@ public class Nxt extends HttpServlet {
                                             try {
 
                                                 int quantity = Integer.parseInt(quantityValue);
-                                                if (quantity <= 0 || quantity >= MAX_BALANCE) {
+                                                if (quantity <= 0 || quantity >= MAX_ASSET_QUANTITY) {
 
                                                     throw new Exception();
 
@@ -8131,7 +8132,7 @@ public class Nxt extends HttpServlet {
                                             try {
 
                                                 int quantity = Integer.parseInt(quantityValue);
-                                                if (quantity <= 0 || quantity >= MAX_BALANCE) {
+                                                if (quantity <= 0 || quantity >= MAX_ASSET_QUANTITY) {
 
                                                     throw new Exception();
 
