@@ -86,6 +86,7 @@ public class Nxt extends HttpServlet {
     static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 
     // blockchain.nrs not used anymore?
+    // cfb: If u decide to use a 3rd party DB then we can get rid of blockchain.nrs
     //static FileChannel blockchainChannel;
     static /*final*/ String myPlatform, myScheme, myAddress, myHallmark;
     static /*final*/ int myPort;
@@ -198,6 +199,7 @@ public class Nxt extends HttpServlet {
     }
 
     //TODO: would it be safe to replace all instances of (new BigInteger(String)).longValue() with this overflow-checking version?
+    // cfb: Yes
     static long parseUnsignedLong(String number) {
         BigInteger bigInt = new BigInteger(number.trim());
         if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
@@ -6489,6 +6491,76 @@ public class Nxt extends HttpServlet {
                             }
                             break;
 
+                            case "getAccountBlockIds":
+                            {
+
+                                String account = req.getParameter("account");
+                                String timestampValue = req.getParameter("timestamp");
+                                if (account == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"account\" not specified");
+
+                                } else if (timestampValue == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"timestamp\" not specified");
+
+                                } else {
+
+                                    try {
+
+                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        if (accountData == null) {
+
+                                            response.put("errorCode", 5);
+                                            response.put("errorDescription", "Unknown account");
+
+                                        } else {
+
+                                            try {
+
+                                                int timestamp = Integer.parseInt(timestampValue);
+                                                if (timestamp < 0) {
+
+                                                    throw new Exception();
+
+                                                }
+
+                                                JSONArray blockIds = new JSONArray();
+                                                for (Map.Entry<Long, Block> blockEntry : blocks.entrySet()) {
+
+                                                    Block block = blockEntry.getValue();
+                                                    if (block.timestamp >= timestamp && Account.getId(block.generatorPublicKey) == accountData.id) {
+
+                                                        blockIds.add(convert(blockEntry.getKey()));
+
+                                                    }
+
+                                                }
+                                                response.put("blockIds", blockIds);
+
+                                            } catch (Exception e) {
+
+                                                response.put("errorCode", 4);
+                                                response.put("errorDescription", "Incorrect \"timestamp\"");
+
+                                            }
+
+                                        }
+
+                                    } catch (Exception e) {
+
+                                        response.put("errorCode", 4);
+                                        response.put("errorDescription", "Incorrect \"account\"");
+
+                                    }
+
+                                }
+
+                            }
+                            break;
+
                             case "getAccountId":
                             {
 
@@ -7007,6 +7079,21 @@ public class Nxt extends HttpServlet {
                                 response.put("version", VERSION);
                                 response.put("time", getEpochTime(System.currentTimeMillis()));
                                 response.put("lastBlock", convert(lastBlock));
+                                response.put("cumulativeDifficulty", Block.getLastBlock().cumulativeDifficulty.toString());
+
+                                long totalEffectiveBalance = 0;
+                                for (Account account : accounts.values()) {
+
+                                    long effectiveBalance = account.getEffectiveBalance();
+                                    if (effectiveBalance > 0) {
+
+                                        totalEffectiveBalance += effectiveBalance;
+
+                                    }
+
+                                }
+                                response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
+
                                 response.put("numberOfBlocks", blocks.size());
                                 response.put("numberOfTransactions", transactions.size());
                                 response.put("numberOfAccounts", accounts.size());
