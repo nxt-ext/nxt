@@ -598,13 +598,15 @@ public class Nxt extends HttpServlet {
     static class Alias {
 
         final Account account;
+        final long id;
         final String alias;
         volatile String uri;
         volatile int timestamp;
 
-        Alias(Account account, String alias, String uri, int timestamp) {
+        Alias(Account account, long id, String alias, String uri, int timestamp) {
 
             this.account = account;
+            this.id = id;
             this.alias = alias;
             this.uri = uri;
             this.timestamp = timestamp;
@@ -906,9 +908,10 @@ public class Nxt extends HttpServlet {
                                     Alias alias = aliases.get(normalizedAlias);
                                     if (alias == null) {
 
-                                        alias = new Alias(senderAccount, attachment.alias, attachment.uri, timestamp);
+                                        long aliasId = transaction.getId();
+                                        alias = new Alias(senderAccount, aliasId, attachment.alias, attachment.uri, timestamp);
                                         aliases.put(normalizedAlias, alias);
-                                        aliasIdToAliasMappings.put(transaction.getId(), alias);
+                                        aliasIdToAliasMappings.put(aliasId, alias);
 
                                     } else {
 
@@ -6730,6 +6733,34 @@ public class Nxt extends HttpServlet {
 
                                         response.put("errorCode", 4);
                                         response.put("errorDescription", "Incorrect \"alias\"");
+
+                                    }
+
+                                }
+
+                            }
+                            break;
+
+                            case "getAliasId":
+                            {
+
+                                String alias = req.getParameter("alias");
+                                if (alias == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"alias\" not specified");
+
+                                } else {
+
+                                    Alias aliasData = aliases.get(alias.toLowerCase());
+                                    if (aliasData == null) {
+
+                                        response.put("errorCode", 5);
+                                        response.put("errorDescription", "Unknown alias");
+
+                                    } else {
+
+                                        response.put("id", convert(aliasData.id));
 
                                     }
 
