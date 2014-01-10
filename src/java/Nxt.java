@@ -8,7 +8,6 @@ import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,7 +64,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.4e";
+    static final String VERSION = "0.5.5";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -141,7 +140,6 @@ public class Nxt extends HttpServlet {
 
 
     //TODO: go through all Exception handling, no method should ever throw just "Exception"
-    //TODO: minimize Long/long autoboxing
 
     static int getEpochTime(long time) {
 
@@ -904,7 +902,9 @@ public class Nxt extends HttpServlet {
 
                     height = Block.getLastBlock().height + 1;
                     lastBlock = getId();
-                    blocks.put(lastBlock, this);
+                    if (blocks.putIfAbsent(lastBlock, this) != null) {
+                        throw new RuntimeException("duplicate block id: " + getId()); // shouldn't happen
+                    }
                     baseTarget = Block.getBaseTarget();
                     cumulativeDifficulty = blocks.get(previousBlock).cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
 
@@ -1685,7 +1685,11 @@ public class Nxt extends HttpServlet {
 
                         Transaction transaction = transactionEntry.getValue();
                         transaction.height = block.height;
-                        Nxt.transactions.put(transactionEntry.getKey(), transaction);
+
+                        if (Nxt.transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
+                            logMessage("duplicate transaction id " + transactionEntry.getKey());
+                            return false;
+                        }
 
                     }
 
@@ -4701,7 +4705,6 @@ public class Nxt extends HttpServlet {
                 Set<Transaction> sortedTransactions = new TreeSet<>(new Comparator<Transaction>() {
                     @Override
                     public int compare(Transaction o1, Transaction o2) {
-                        //TODO: a getId() method should never throw an Exception
                         try {
                             long id1 = o1.getId();
                             long id2 = o2.getId();
@@ -5316,8 +5319,8 @@ public class Nxt extends HttpServlet {
 
                         asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
-                        try (ServletOutputStream servletOutputStream = asyncContext.getResponse().getOutputStream()) {
-                            servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                        try (Writer writer = asyncContext.getResponse().getWriter()) {
+                            combinedResponse.writeJSONString(writer);
                         }
 
                         asyncContext.complete();
@@ -5356,8 +5359,8 @@ public class Nxt extends HttpServlet {
             synchronized (user) {
                 user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
-                try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
-                    servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+                try (Writer writer = user.asyncContext.getResponse().getWriter()) {
+                    new JSONObject().writeJSONString(writer);
                 }
 
                 user.asyncContext.complete();
@@ -5375,8 +5378,8 @@ public class Nxt extends HttpServlet {
             synchronized (user) {
                 user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
-                try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
-                    servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+                try (Writer writer = user.asyncContext.getResponse().getWriter()) {
+                    new JSONObject().writeJSONString(writer);
                 }
 
                 user.asyncContext.complete();
@@ -9152,8 +9155,8 @@ public class Nxt extends HttpServlet {
 
                 resp.setContentType("text/plain; charset=UTF-8");
 
-                try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
-                    servletOutputStream.write(response.toString().getBytes("UTF-8"));
+                try (Writer writer = resp.getWriter()) {
+                    response.writeJSONString(writer);
                 }
 
                 return;
@@ -9171,9 +9174,10 @@ public class Nxt extends HttpServlet {
 
                     resp.setContentType("text/plain; charset=UTF-8");
 
-                    try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
-                        servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                    try (Writer writer = resp.getWriter()) {
+                        combinedResponse.writeJSONString(writer);
                     }
+
                     return;
 
                 }
@@ -9922,8 +9926,8 @@ public class Nxt extends HttpServlet {
 
                         user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
-                        try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
-                            servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                        try (Writer writer = user.asyncContext.getResponse().getWriter()) {
+                            combinedResponse.writeJSONString(writer);
                         }
                         user.asyncContext.complete();
                         user.asyncContext = req.startAsync();
@@ -9934,8 +9938,8 @@ public class Nxt extends HttpServlet {
 
                         resp.setContentType("text/plain; charset=UTF-8");
 
-                        try (ServletOutputStream servletOutputStream = resp.getOutputStream()) {
-                            servletOutputStream.write(combinedResponse.toString().getBytes("UTF-8"));
+                        try (Writer writer = resp.getWriter()) {
+                            combinedResponse.writeJSONString(writer);
                         }
 
                     }
@@ -9946,9 +9950,10 @@ public class Nxt extends HttpServlet {
 
                         user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
-                        try (ServletOutputStream servletOutputStream = user.asyncContext.getResponse().getOutputStream()) {
-                            servletOutputStream.write((new JSONObject()).toString().getBytes("UTF-8"));
+                        try (Writer writer = user.asyncContext.getResponse().getWriter()) {
+                            new JSONObject().writeJSONString(writer);
                         }
+
                         user.asyncContext.complete();
 
                     }
