@@ -1186,16 +1186,16 @@ public class Nxt extends HttpServlet {
 
         }
 
-        transient Long id = null;
-        transient String stringId = null;
+        transient volatile Long id = null;
+        transient volatile String stringId = null;
 
-        synchronized long getId() {
+        long getId() {
             calculateIds();
             return id;
         }
 
 
-        synchronized String getStringId() throws Exception {
+        String getStringId() throws Exception {
             calculateIds();
             return stringId;
         }
@@ -3835,16 +3835,16 @@ public class Nxt extends HttpServlet {
 
         }
 
-        transient Long id = null;
-        transient String stringId = null;
+        transient volatile Long id = null;
+        transient volatile String stringId = null;
 
-        synchronized long getId() {
+        long getId() {
             calculateIds();
             return id;
         }
 
 
-        synchronized String getStringId() throws Exception {
+        String getStringId() throws Exception {
             calculateIds();
             return stringId;
         }
