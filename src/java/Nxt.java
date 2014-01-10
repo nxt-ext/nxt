@@ -519,6 +519,63 @@ public class Nxt extends HttpServlet {
             return balance;
         }
 
+        synchronized long getGuaranteedBalance(int numberOfConfirmations) throws Exception {
+
+            long balance = this.balance;
+            ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
+
+            for (Block block : lastBlocks) {
+
+                if (getId(block.generatorPublicKey) == id) {
+
+                    if ((balance -= block.totalFee * 100L) <= 0) {
+
+                        return 0;
+
+                    }
+
+                }
+
+                for (int i = block.numberOfTransactions; i-- > 0; ) {
+
+                    Transaction transaction = transactions.get(block.transactions[i]);
+                    if (Account.getId(transaction.senderPublicKey) == id) {
+
+                        long deltaBalance = transaction.getSenderDeltaBalance();
+                        if (deltaBalance > 0 && (balance -= deltaBalance) <= 0) {
+
+                            return 0;
+
+                        } else if (deltaBalance < 0 && (balance += deltaBalance) <= 0) {
+
+                            return 0;
+
+                        }
+
+                    }
+                    if (transaction.recipient == id) {
+
+                        long deltaBalance = transaction.getRecipientDeltaBalance();
+                        if (deltaBalance > 0 && (balance -= deltaBalance) <= 0) {
+
+                            return 0;
+
+                        } else if (deltaBalance < 0 && (balance += deltaBalance) <= 0) {
+
+                            return 0;
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            return balance;
+
+        }
+
         synchronized long getUnconfirmedBalance() {
             return unconfirmedBalance;
         }
@@ -1164,6 +1221,28 @@ public class Nxt extends HttpServlet {
             block.put("transactions", transactionsData);
 
             return block;
+
+        }
+
+        static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
+
+            ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
+            int i = 0;
+
+            synchronized (blocks) {
+
+                long curBlock = lastBlock;
+                do {
+
+                    Block block = blocks.get(curBlock);
+                    lastBlocks.add(block);
+                    curBlock = block.previousBlock;
+
+                } while (++i < numberOfBlocks);
+
+            }
+
+            return lastBlocks;
 
         }
 
@@ -3744,6 +3823,18 @@ public class Nxt extends HttpServlet {
 
         }
 
+        long getRecipientDeltaBalance() {
+
+            return amount * 100L + (attachment == null ? 0 : attachment.getRecipientDeltaBalance());
+
+        }
+
+        long getSenderDeltaBalance() {
+
+            return -(amount + fee) * 100L + (attachment == null ? 0 : attachment.getSenderDeltaBalance());
+
+        }
+
         static Transaction getTransaction(ByteBuffer buffer) {
 
             byte type = buffer.get();
@@ -4571,6 +4662,9 @@ public class Nxt extends HttpServlet {
             byte[] getBytes();
             JSONObject getJSONObject();
 
+            long getRecipientDeltaBalance();
+            long getSenderDeltaBalance();
+
         }
 
         static class MessagingArbitraryMessageAttachment implements Attachment, Serializable {
@@ -4612,6 +4706,20 @@ public class Nxt extends HttpServlet {
                 attachment.put("message", convert(message));
 
                 return attachment;
+
+            }
+
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return 0;
 
             }
 
@@ -4665,6 +4773,20 @@ public class Nxt extends HttpServlet {
                 attachment.put("uri", uri);
 
                 return attachment;
+
+            }
+
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return 0;
 
             }
 
@@ -4724,6 +4846,20 @@ public class Nxt extends HttpServlet {
 
             }
 
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return 0;
+
+            }
+
         }
 
         static class ColoredCoinsAssetTransferAttachment implements Attachment, Serializable {
@@ -4760,6 +4896,20 @@ public class Nxt extends HttpServlet {
                 attachment.put("quantity", quantity);
 
                 return attachment;
+
+            }
+
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return 0;
 
             }
 
@@ -4806,6 +4956,20 @@ public class Nxt extends HttpServlet {
 
             }
 
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return 0;
+
+            }
+
         }
 
         static class ColoredCoinsBidOrderPlacementAttachment implements Attachment, Serializable {
@@ -4849,6 +5013,20 @@ public class Nxt extends HttpServlet {
 
             }
 
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return -quantity * price;
+
+            }
+
         }
 
         static class ColoredCoinsAskOrderCancellationAttachment implements Attachment, Serializable {
@@ -4884,6 +5062,20 @@ public class Nxt extends HttpServlet {
 
             }
 
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                return 0;
+
+            }
+
         }
 
         static class ColoredCoinsBidOrderCancellationAttachment implements Attachment, Serializable {
@@ -4916,6 +5108,27 @@ public class Nxt extends HttpServlet {
                 attachment.put("order", convert(order));
 
                 return attachment;
+
+            }
+
+            @Override
+            public long getRecipientDeltaBalance() {
+
+                return 0;
+
+            }
+
+            @Override
+            public long getSenderDeltaBalance() {
+
+                BidOrder bidOrder = bidOrders.get(order);
+                if (bidOrder == null) {
+
+                    return 0;
+
+                }
+
+                return bidOrder.quantity * bidOrder.price;
 
             }
 
@@ -7041,6 +7254,58 @@ public class Nxt extends HttpServlet {
                                 peerState.put("description", "Disconnected");
                                 peerStates.add(peerState);
                                 response.put("peerStates", peerStates);
+
+                            }
+                            break;
+
+                            case "getGuaranteedBalance":
+                            {
+
+                                String account = req.getParameter("account");
+                                String numberOfConfirmationsValue = req.getParameter("numberOfConfirmations");
+                                if (account == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"account\" not specified");
+
+                                } else if (numberOfConfirmationsValue == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"numberOfConfirmations\" not specified");
+
+                                } else {
+
+                                    try {
+
+                                        Account accountData = accounts.get((new BigInteger(account)).longValue());
+                                        if (accountData == null) {
+
+                                            response.put("guaranteedBalance", 0);
+
+                                        } else {
+
+                                            try {
+
+                                                int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
+                                                response.put("guaranteedBalance", accountData.getGuaranteedBalance(numberOfConfirmations));
+
+                                            } catch (Exception e) {
+
+                                                response.put("errorCode", 4);
+                                                response.put("errorDescription", "Incorrect \"numberOfConfirmations\"");
+
+                                            }
+
+                                        }
+
+                                    } catch (Exception e) {
+
+                                        response.put("errorCode", 4);
+                                        response.put("errorDescription", "Incorrect \"account\"");
+
+                                    }
+
+                                }
 
                             }
                             break;
