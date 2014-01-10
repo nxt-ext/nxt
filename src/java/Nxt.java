@@ -524,16 +524,16 @@ public class Nxt extends HttpServlet {
             return balance;
         }
 
-        synchronized long getGuaranteedBalance(int numberOfConfirmations) throws Exception {
+        long getGuaranteedBalance(int numberOfConfirmations) throws Exception {
 
-            long balance = this.balance;
+            long guaranteedBalance = getBalance();
             ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
 
             for (Block block : lastBlocks) {
 
                 if (getId(block.generatorPublicKey) == id) {
 
-                    if ((balance -= block.totalFee * 100L) <= 0) {
+                    if ((guaranteedBalance -= block.totalFee * 100L) <= 0) {
 
                         return 0;
 
@@ -547,11 +547,11 @@ public class Nxt extends HttpServlet {
                     if (Account.getId(transaction.senderPublicKey) == id) {
 
                         long deltaBalance = transaction.getSenderDeltaBalance();
-                        if (deltaBalance > 0 && (balance -= deltaBalance) <= 0) {
+                        if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
 
                             return 0;
 
-                        } else if (deltaBalance < 0 && (balance += deltaBalance) <= 0) {
+                        } else if (deltaBalance < 0 && (guaranteedBalance += deltaBalance) <= 0) {
 
                             return 0;
 
@@ -561,11 +561,11 @@ public class Nxt extends HttpServlet {
                     if (transaction.recipient == id) {
 
                         long deltaBalance = transaction.getRecipientDeltaBalance();
-                        if (deltaBalance > 0 && (balance -= deltaBalance) <= 0) {
+                        if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
 
                             return 0;
 
-                        } else if (deltaBalance < 0 && (balance += deltaBalance) <= 0) {
+                        } else if (deltaBalance < 0 && (guaranteedBalance += deltaBalance) <= 0) {
 
                             return 0;
 
@@ -577,7 +577,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            return balance;
+            return guaranteedBalance;
 
         }
 
@@ -1271,20 +1271,15 @@ public class Nxt extends HttpServlet {
         static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
 
             ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
-            int i = 0;
 
-            synchronized (blocks) {
+            long curBlock = lastBlock;
+            do {
 
-                long curBlock = lastBlock;
-                do {
+                Block block = blocks.get(curBlock);
+                lastBlocks.add(block);
+                curBlock = block.previousBlock;
 
-                    Block block = blocks.get(curBlock);
-                    lastBlocks.add(block);
-                    curBlock = block.previousBlock;
-
-                } while (++i < numberOfBlocks);
-
-            }
+            } while (lastBlocks.size() < numberOfBlocks && curBlock != 0);
 
             return lastBlocks;
 
@@ -7389,7 +7384,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get((new BigInteger(account)).longValue());
+                                        Account accountData = accounts.get(parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("guaranteedBalance", 0);
