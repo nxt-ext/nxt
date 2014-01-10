@@ -213,6 +213,40 @@
     <div class="result"></div>
 </form>
 <hr>
+<b>Get Guaranteed Account Balance:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getGuaranteedBalance"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td>Number of confirmations:</td>
+            <td><input type="number" name="numberOfConfirmations"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Public Key:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAccountPublicKey"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
 <b>Get Account Aliases:</b><br/>
 <form action="/nxt" method="GET" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="listAccountAliases"/>
