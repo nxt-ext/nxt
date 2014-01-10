@@ -141,6 +141,7 @@ public class Nxt extends HttpServlet {
 
 
     //TODO: go through all Exception handling, no method should ever throw just "Exception"
+    //TODO: minimize Long/long autoboxing
 
     static int getEpochTime(long time) {
 
@@ -1200,10 +1201,10 @@ public class Nxt extends HttpServlet {
                 }
             }
             json = new JSONStreamAware() {
-                private String jsonString = getJSONObject(Nxt.transactions).toJSONString();
+                private char[] jsonChars = getJSONObject(Nxt.transactions).toJSONString().toCharArray();
                 @Override
                 public void writeJSONString(Writer out) throws IOException {
-                    out.write(jsonString);
+                    out.write(jsonChars);
                 }
             };
             jsonRef = new SoftReference<JSONStreamAware>(json);
