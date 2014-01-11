@@ -50,6 +50,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -320,7 +321,7 @@ public class Nxt extends HttpServlet {
                     int transactionLength = transaction.getSize();
                     if (newTransactions.get(transaction.getId()) == null && payloadLength + transactionLength <= MAX_PAYLOAD_LENGTH) {
 
-                        long sender = Account.getId(transaction.senderPublicKey);
+                        long sender = transaction.getSenderAccountId();
                         Long accumulatedAmount = accumulatedAmounts.get(sender);
                         if (accumulatedAmount == null) {
 
@@ -526,10 +527,10 @@ public class Nxt extends HttpServlet {
 
             long guaranteedBalance = getBalance();
             ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
-
+            byte[] accountPublicKey = publicKey.get();
             for (Block block : lastBlocks) {
 
-                if (getId(block.generatorPublicKey) == id) {
+                if (Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
 
                     if ((guaranteedBalance -= block.totalFee * 100L) <= 0) {
 
@@ -542,7 +543,7 @@ public class Nxt extends HttpServlet {
                 for (int i = block.numberOfTransactions; i-- > 0; ) {
 
                     Transaction transaction = transactions.get(block.transactions[i]);
-                    if (Account.getId(transaction.senderPublicKey) == id) {
+                    if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
                         long deltaBalance = transaction.getSenderDeltaBalance();
                         if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
@@ -640,10 +641,10 @@ public class Nxt extends HttpServlet {
             JSONObject response = new JSONObject();
             response.put("response", "setBalance");
             response.put("balance", getUnconfirmedBalance());
-
+            byte[] accountPublicKey = publicKey.get();
             for (User user : users.values()) {
 
-                if (user.secretPhrase != null && Account.getId(Crypto.getPublicKey(user.secretPhrase)) == id) {
+                if (user.secretPhrase != null && Arrays.equals(Crypto.getPublicKey(user.secretPhrase), accountPublicKey)) {
 
                     user.send(response);
 
@@ -908,7 +909,7 @@ public class Nxt extends HttpServlet {
                     baseTarget = Block.getBaseTarget();
                     cumulativeDifficulty = blocks.get(previousBlock).cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
 
-                    Account generatorAccount = accounts.get(Account.getId(generatorPublicKey));
+                    Account generatorAccount = accounts.get(getGeneratorAccountId());
                     generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
                 }
@@ -917,7 +918,7 @@ public class Nxt extends HttpServlet {
 
                     Transaction transaction = Nxt.transactions.get(transactions[i]);
 
-                    long sender = Account.getId(transaction.senderPublicKey);
+                    long sender = transaction.getSenderAccountId();
                     Account senderAccount = accounts.get(sender);
                     if (! senderAccount.setOrVerify(transaction.senderPublicKey)) {
 
@@ -1186,8 +1187,9 @@ public class Nxt extends HttpServlet {
 
         }
 
-        transient volatile Long id = null;
+        transient volatile long id;
         transient volatile String stringId = null;
+        transient volatile long generatorAccountId;
 
         long getId() {
             calculateIds();
@@ -1195,13 +1197,18 @@ public class Nxt extends HttpServlet {
         }
 
 
-        String getStringId() throws Exception {
+        String getStringId() {
             calculateIds();
             return stringId;
         }
 
+        long getGeneratorAccountId() {
+            calculateIds();
+            return generatorAccountId;
+        }
+
         private void calculateIds() {
-            if (id != null) {
+            if (stringId != null) {
                 return;
             }
             try {
@@ -1209,8 +1216,10 @@ public class Nxt extends HttpServlet {
                 BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
                 id = bigInteger.longValue();
                 stringId = bigInteger.toString();
+                generatorAccountId = Account.getId(generatorPublicKey);
             } catch (Exception e) {
                 logMessage(e.getMessage());
+                throw new RuntimeException(e);
             }
         }
 
@@ -1285,6 +1294,13 @@ public class Nxt extends HttpServlet {
 
         }
 
+        public static final Comparator<Block> heightComparator = new Comparator<Block>() {
+            @Override
+            public int compare(Block o1, Block o2) {
+                return o1.height < o2.height ? -1 : (o1.height > o2.height ? 1 : 0);
+            }
+        };
+
         static Block getLastBlock() {
 
             return blocks.get(lastBlock);
@@ -1325,7 +1341,7 @@ public class Nxt extends HttpServlet {
 
                     block = Block.getLastBlock();
 
-                    Account generatorAccount = accounts.get(Account.getId(block.generatorPublicKey));
+                    Account generatorAccount = accounts.get(block.getGeneratorAccountId());
                     generatorAccount.addToBalanceAndUnconfirmedBalance(- block.totalFee * 100L);
 
                     for (int i = 0; i < block.numberOfTransactions; i++) {
@@ -1333,7 +1349,7 @@ public class Nxt extends HttpServlet {
                         Transaction transaction = Nxt.transactions.remove(block.transactions[i]);
                         unconfirmedTransactions.put(block.transactions[i], transaction);
 
-                        Account senderAccount = accounts.get(Account.getId(transaction.senderPublicKey));
+                        Account senderAccount = accounts.get(transaction.getSenderAccountId());
                         senderAccount.addToBalance((transaction.amount + transaction.fee) * 100L);
 
                         Account recipientAccount = accounts.get(transaction.recipient);
@@ -1346,7 +1362,7 @@ public class Nxt extends HttpServlet {
                         addedUnconfirmedTransaction.put("recipient", convert(transaction.recipient));
                         addedUnconfirmedTransaction.put("amount", transaction.amount);
                         addedUnconfirmedTransaction.put("fee", transaction.fee);
-                        addedUnconfirmedTransaction.put("sender", convert(Account.getId(transaction.senderPublicKey)));
+                        addedUnconfirmedTransaction.put("sender", convert(transaction.getSenderAccountId()));
                         addedUnconfirmedTransaction.put("id", transaction.getStringId());
                         addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
 
@@ -1364,7 +1380,7 @@ public class Nxt extends HttpServlet {
                 addedOrphanedBlock.put("totalAmount", block.totalAmount);
                 addedOrphanedBlock.put("totalFee", block.totalFee);
                 addedOrphanedBlock.put("payloadLength", block.payloadLength);
-                addedOrphanedBlock.put("generator", convert(Account.getId(block.generatorPublicKey)));
+                addedOrphanedBlock.put("generator", convert(block.getGeneratorAccountId()));
                 addedOrphanedBlock.put("height", block.height);
                 addedOrphanedBlock.put("version", block.version);
                 addedOrphanedBlock.put("block", block.getStringId());
@@ -1538,7 +1554,7 @@ public class Nxt extends HttpServlet {
 
                     }
 
-                    long sender = Account.getId(transaction.senderPublicKey);
+                    long sender = transaction.getSenderAccountId();
                     Long accumulatedAmount = accumulatedAmounts.get(sender);
                     if (accumulatedAmount == null) {
 
@@ -1706,7 +1722,7 @@ public class Nxt extends HttpServlet {
                         addedConfirmedTransaction.put("index", transaction.index);
                         addedConfirmedTransaction.put("blockTimestamp", block.timestamp);
                         addedConfirmedTransaction.put("transactionTimestamp", transaction.timestamp);
-                        addedConfirmedTransaction.put("sender", convert(Account.getId(transaction.senderPublicKey)));
+                        addedConfirmedTransaction.put("sender", convert(transaction.getSenderAccountId()));
                         addedConfirmedTransaction.put("recipient", convert(transaction.recipient));
                         addedConfirmedTransaction.put("amount", transaction.amount);
                         addedConfirmedTransaction.put("fee", transaction.fee);
@@ -1720,7 +1736,7 @@ public class Nxt extends HttpServlet {
                             removedUnconfirmedTransaction.put("index", removedTransaction.index);
                             removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
 
-                            Account senderAccount = accounts.get(Account.getId(removedTransaction.senderPublicKey));
+                            Account senderAccount = accounts.get(removedTransaction.getSenderAccountId());
                             senderAccount.addToUnconfirmedBalance((removedTransaction.amount + removedTransaction.fee) * 100L);
 
                         }
@@ -1762,7 +1778,7 @@ public class Nxt extends HttpServlet {
                 addedRecentBlock.put("totalAmount", block.totalAmount);
                 addedRecentBlock.put("totalFee", block.totalFee);
                 addedRecentBlock.put("payloadLength", block.payloadLength);
-                addedRecentBlock.put("generator", convert(Account.getId(block.generatorPublicKey)));
+                addedRecentBlock.put("generator", convert(block.getGeneratorAccountId()));
                 addedRecentBlock.put("height", Block.getLastBlock().height);
                 addedRecentBlock.put("version", block.version);
                 addedRecentBlock.put("block", block.getStringId());
@@ -1846,7 +1862,7 @@ public class Nxt extends HttpServlet {
 
         boolean verifyBlockSignature() throws Exception {
 
-            Account account = accounts.get(Account.getId(generatorPublicKey));
+            Account account = accounts.get(getGeneratorAccountId());
             if (account == null) {
 
                 return false;
@@ -1878,7 +1894,7 @@ public class Nxt extends HttpServlet {
 
                 }
 
-                Account account = accounts.get(Account.getId(generatorPublicKey));
+                Account account = accounts.get(getGeneratorAccountId());
                 if (account == null || account.getEffectiveBalance() <= 0) {
 
                     return false;
@@ -3734,6 +3750,7 @@ public class Nxt extends HttpServlet {
 
         int index;
         volatile long block;
+        //TODO: height not being set as expected, is it needed at all?
         int height;
 
         Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient, int amount, int fee, long referencedTransaction, byte[] signature) {
@@ -3809,6 +3826,13 @@ public class Nxt extends HttpServlet {
 
         }
 
+        public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
+            @Override
+            public int compare(Transaction o1, Transaction o2) {
+                return o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0);
+            }
+        };
+
         private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
 
         int getSize() {
@@ -3839,8 +3863,9 @@ public class Nxt extends HttpServlet {
 
         }
 
-        transient volatile Long id = null;
+        transient volatile long id;
         transient volatile String stringId = null;
+        transient volatile long senderAccountId;
 
         long getId() {
             calculateIds();
@@ -3848,13 +3873,18 @@ public class Nxt extends HttpServlet {
         }
 
 
-        String getStringId() throws Exception {
+        String getStringId() {
             calculateIds();
             return stringId;
         }
 
+        long getSenderAccountId() {
+            calculateIds();
+            return senderAccountId;
+        }
+
         private void calculateIds() {
-            if (id != null) {
+            if (stringId != null) {
                 return;
             }
             try {
@@ -3862,8 +3892,10 @@ public class Nxt extends HttpServlet {
                 BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
                 id = bigInteger.longValue();
                 stringId = bigInteger.toString();
+                senderAccountId = Account.getId(senderPublicKey);
             } catch (Exception e) {
                 logMessage(e.getMessage());
+                throw new RuntimeException(e);
             }
         }
 
@@ -4222,7 +4254,7 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                        senderId = Account.getId(transaction.senderPublicKey);
+                        senderId = transaction.getSenderAccountId();
                         Account account = accounts.get(senderId);
                         if (account == null) {
 
@@ -4507,7 +4539,7 @@ public class Nxt extends HttpServlet {
 
                                     Alias alias = aliases.get(normalizedAlias);
 
-                                    return alias == null || alias.account.id == Account.getId(senderPublicKey);
+                                    return alias == null || Arrays.equals(alias.account.publicKey.get(), senderPublicKey);
 
                                 }
 
@@ -4681,7 +4713,7 @@ public class Nxt extends HttpServlet {
 
         boolean verify() throws Exception {
 
-            Account account = accounts.get(Account.getId(senderPublicKey));
+            Account account = accounts.get(getSenderAccountId());
             if (account == null) {
 
                 return false;
@@ -6071,7 +6103,7 @@ public class Nxt extends HttpServlet {
 
                                 iterator.remove();
 
-                                Account account = accounts.get(Account.getId(transaction.senderPublicKey));
+                                Account account = accounts.get(transaction.getSenderAccountId());
                                 account.addToUnconfirmedBalance((transaction.amount + transaction.fee) * 100L);
 
                                 JSONObject removedUnconfirmedTransaction = new JSONObject();
@@ -6857,15 +6889,20 @@ public class Nxt extends HttpServlet {
 
                                                 }
 
-                                                JSONArray blockIds = new JSONArray();
+                                                PriorityQueue<Block> sortedBlocks = new PriorityQueue<>(11, Block.heightComparator);
+                                                byte[] accountPublicKey = accountData.publicKey.get();
                                                 for (Block block : blocks.values()) {
 
-                                                    if (block.timestamp >= timestamp && Account.getId(block.generatorPublicKey) == accountData.id) {
+                                                    if (block.timestamp >= timestamp && Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
 
-                                                        blockIds.add(block.getStringId());
+                                                        sortedBlocks.offer(block);
 
                                                     }
 
+                                                }
+                                                JSONArray blockIds = new JSONArray();
+                                                while (! sortedBlocks.isEmpty()) {
+                                                    blockIds.add(sortedBlocks.poll().getStringId());
                                                 }
                                                 response.put("blockIds", blockIds);
 
@@ -6987,15 +7024,16 @@ public class Nxt extends HttpServlet {
 
                                                 }
 
-                                                JSONArray transactionIds = new JSONArray();
+                                                PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(11, Transaction.timestampComparator);
+                                                byte[] accountPublicKey = accountData.publicKey.get();
                                                 for (Transaction transaction : transactions.values()) {
-
-                                                    if (blocks.get(transaction.block).timestamp >= timestamp && (Account.getId(transaction.senderPublicKey) == accountData.id || transaction.recipient == accountData.id)) {
-
-                                                        transactionIds.add(transaction.getStringId());
-
+                                                    if (blocks.get(transaction.block).timestamp >= timestamp && (Arrays.equals(transaction.senderPublicKey, accountPublicKey) || transaction.recipient == accountData.id)) {
+                                                        sortedTransactions.offer(transaction);
                                                     }
-
+                                                }
+                                                JSONArray transactionIds = new JSONArray();
+                                                while (! sortedTransactions.isEmpty()) {
+                                                    transactionIds.add(sortedTransactions.poll().getStringId());
                                                 }
                                                 response.put("transactionIds", transactionIds);
 
@@ -7241,7 +7279,7 @@ public class Nxt extends HttpServlet {
                                         } else {
 
                                             response.put("height", blockData.height);
-                                            response.put("generator", convert(Account.getId(blockData.generatorPublicKey)));
+                                            response.put("generator", convert(blockData.getGeneratorAccountId()));
                                             response.put("timestamp", blockData.timestamp);
                                             response.put("numberOfTransactions", blockData.numberOfTransactions);
                                             response.put("totalAmount", blockData.totalAmount);
@@ -7551,7 +7589,7 @@ public class Nxt extends HttpServlet {
                                             } else {
 
                                                 response = transactionData.getJSONObject();
-                                                response.put("sender", convert(Account.getId(transactionData.senderPublicKey)));
+                                                response.put("sender", convert(transactionData.getSenderAccountId()));
 
                                             }
 
@@ -7559,7 +7597,7 @@ public class Nxt extends HttpServlet {
 
                                             response = transactionData.getJSONObject();
 
-                                            response.put("sender", convert(Account.getId(transactionData.senderPublicKey)));
+                                            response.put("sender", convert(transactionData.getSenderAccountId()));
                                             Block block = blocks.get(transactionData.block);
                                             response.put("block", block.getStringId());
                                             response.put("confirmations", Block.getLastBlock().height - block.height + 1);
@@ -9287,7 +9325,7 @@ public class Nxt extends HttpServlet {
                         unconfirmedTransaction.put("recipient", convert(transaction.recipient));
                         unconfirmedTransaction.put("amount", transaction.amount);
                         unconfirmedTransaction.put("fee", transaction.fee);
-                        unconfirmedTransaction.put("sender", convert(Account.getId(transaction.senderPublicKey)));
+                        unconfirmedTransaction.put("sender", convert(transaction.getSenderAccountId()));
 
                         unconfirmedTransactions.add(unconfirmedTransaction);
 
@@ -9387,7 +9425,7 @@ public class Nxt extends HttpServlet {
                         recentBlock.put("totalAmount", block.totalAmount);
                         recentBlock.put("totalFee", block.totalFee);
                         recentBlock.put("payloadLength", block.payloadLength);
-                        recentBlock.put("generator", convert(Account.getId(block.generatorPublicKey)));
+                        recentBlock.put("generator", convert(block.getGeneratorAccountId()));
                         recentBlock.put("height", block.height);
                         recentBlock.put("version", block.version);
                         recentBlock.put("block", block.getStringId());
@@ -9698,11 +9736,12 @@ public class Nxt extends HttpServlet {
                         }
                     }
 
-                    BigInteger accountId = user.initializeKeyPair(secretPhrase);
+                    BigInteger bigInt = user.initializeKeyPair(secretPhrase);
+                    long accountId = bigInt.longValue();
 
                     JSONObject response = new JSONObject();
                     response.put("response", "unlockAccount");
-                    response.put("account", accountId.toString());
+                    response.put("account", bigInt.toString());
 
                     if (secretPhrase.length() < 30) {
 
@@ -9714,7 +9753,7 @@ public class Nxt extends HttpServlet {
 
                     }
 
-                    Account account = accounts.get(accountId.longValue());
+                    Account account = accounts.get(accountId);
                     if (account == null) {
 
                         response.put("balance", 0);
@@ -9750,10 +9789,10 @@ public class Nxt extends HttpServlet {
                         }
 
                         JSONArray myTransactions = new JSONArray();
-
+                        byte[] accountPublicKey = account.publicKey.get();
                         for (Transaction transaction : unconfirmedTransactions.values()) {
 
-                            if (Account.getId(transaction.senderPublicKey) == accountId.longValue()) {
+                            if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
                                 JSONObject myTransaction = new JSONObject();
                                 myTransaction.put("index", transaction.index);
@@ -9761,7 +9800,7 @@ public class Nxt extends HttpServlet {
                                 myTransaction.put("deadline", transaction.deadline);
                                 myTransaction.put("account", convert(transaction.recipient));
                                 myTransaction.put("sentAmount", transaction.amount);
-                                if (transaction.recipient == accountId.longValue()) {
+                                if (transaction.recipient == accountId) {
 
                                     myTransaction.put("receivedAmount", transaction.amount);
 
@@ -9772,13 +9811,13 @@ public class Nxt extends HttpServlet {
 
                                 myTransactions.add(myTransaction);
 
-                            } else if (transaction.recipient == accountId.longValue()) {
+                            } else if (transaction.recipient == accountId) {
 
                                 JSONObject myTransaction = new JSONObject();
                                 myTransaction.put("index", transaction.index);
                                 myTransaction.put("transactionTimestamp", transaction.timestamp);
                                 myTransaction.put("deadline", transaction.deadline);
-                                myTransaction.put("account", convert(Account.getId(transaction.senderPublicKey)));
+                                myTransaction.put("account", convert(transaction.getSenderAccountId()));
                                 myTransaction.put("receivedAmount", transaction.amount);
                                 myTransaction.put("fee", transaction.fee);
                                 myTransaction.put("numberOfConfirmations", 0);
@@ -9796,7 +9835,7 @@ public class Nxt extends HttpServlet {
 
                             Block block = blocks.get(blockId);
 
-                            if (Account.getId(block.generatorPublicKey) == accountId.longValue() && block.totalFee > 0) {
+                            if (block.totalFee > 0 && Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
 
                                 JSONObject myTransaction = new JSONObject();
                                 myTransaction.put("index", block.getStringId()); // cfb: Generated fee transactions get an id equal to the block id
@@ -9813,7 +9852,7 @@ public class Nxt extends HttpServlet {
                             for (int i = 0; i < block.transactions.length; i++) {
 
                                 Transaction transaction = transactions.get(block.transactions[i]);
-                                if (Account.getId(transaction.senderPublicKey) == accountId.longValue()) {
+                                if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
                                     JSONObject myTransaction = new JSONObject();
                                     myTransaction.put("index", transaction.index);
@@ -9821,7 +9860,7 @@ public class Nxt extends HttpServlet {
                                     myTransaction.put("transactionTimestamp", transaction.timestamp);
                                     myTransaction.put("account", convert(transaction.recipient));
                                     myTransaction.put("sentAmount", transaction.amount);
-                                    if (transaction.recipient == accountId.longValue()) {
+                                    if (transaction.recipient == accountId) {
 
                                         myTransaction.put("receivedAmount", transaction.amount);
 
@@ -9832,13 +9871,13 @@ public class Nxt extends HttpServlet {
 
                                     myTransactions.add(myTransaction);
 
-                                } else if (transaction.recipient == accountId.longValue()) {
+                                } else if (transaction.recipient == accountId) {
 
                                     JSONObject myTransaction = new JSONObject();
                                     myTransaction.put("index", transaction.index);
                                     myTransaction.put("blockTimestamp", block.timestamp);
                                     myTransaction.put("transactionTimestamp", transaction.timestamp);
-                                    myTransaction.put("account", convert(Account.getId(transaction.senderPublicKey)));
+                                    myTransaction.put("account", convert(transaction.getSenderAccountId()));
                                     myTransaction.put("receivedAmount", transaction.amount);
                                     myTransaction.put("fee", transaction.fee);
                                     myTransaction.put("numberOfConfirmations", numberOfConfirmations);
