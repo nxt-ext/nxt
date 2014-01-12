@@ -35,7 +35,9 @@ import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NoRouteToHostException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
@@ -169,6 +171,12 @@ public class Nxt extends HttpServlet {
             e.printStackTrace();
         } else {
             logMessage(message + ":\n" + e.toString());
+        }
+    }
+
+    static void logDebugMessage(String message) {
+        if (debug) {
+            logMessage("DEBUG: " + message);
         }
     }
 
@@ -3559,7 +3567,8 @@ public class Nxt extends HttpServlet {
 
                 String error = e.getMessage();
 
-                if (! ("connect timed out".equals(error) || "Read timed out".equals(error) || "Connection refused".equals(error))) {
+                if (! ("connect timed out".equals(error) || "Read timed out".equals(error) || "Connection refused".equals(error)
+                        || e instanceof UnknownHostException || e instanceof NoRouteToHostException)) {
                     logDebugMessage("Error sending JSON request", e);
                 }
 
@@ -10118,7 +10127,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            if (request.get("protocol") != null && request.get("protocol") == 1) { // autoboxing sucks
+            if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) { // autoboxing sucks
 
                 switch ((String)request.get("requestType")) {
 
@@ -10381,6 +10390,7 @@ public class Nxt extends HttpServlet {
 
             } else {
 
+                logDebugMessage("Unsupported protocol " + request.get("protocol"));
                 response.put("error", "Unsupported protocol!");
 
             }
