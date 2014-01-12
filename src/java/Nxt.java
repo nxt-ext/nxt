@@ -158,8 +158,8 @@ public class Nxt extends HttpServlet {
         }
     };
 
-    static final boolean debug = Boolean.getBoolean("nxt.debug");
-    static final boolean enableStackTraces = Boolean.getBoolean("nxt.enableStackTraces");
+    static final boolean debug = System.getProperty("nxt.debug") != null;
+    static final boolean enableStackTraces = System.getProperty("nxt.enableStackTraces") != null;
 
     static void logMessage(String message) {
         System.out.println(logDateFormat.get().format(new Date()) + message);
@@ -5464,6 +5464,12 @@ public class Nxt extends HttpServlet {
     public void init(ServletConfig servletConfig) throws ServletException {
 
         logMessage("Nxt " + VERSION + " starting...");
+        if (debug) {
+            logMessage("DEBUG logging enabled");
+        }
+        if (enableStackTraces) {
+            logMessage("logging of exception stack traces enabled");
+        }
 
         try {
 
