@@ -70,7 +70,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.6";
+    static final String VERSION = "0.5.6e";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -3145,7 +3145,7 @@ public class Nxt extends HttpServlet {
                 }
 
             } catch (RuntimeException|UnsupportedEncodingException e) {
-                logDebugMessage("Failed to analyze hallmark", e);
+                logDebugMessage("Failed to analyze hallmark for host " + realHost, e);
             }
             return false;
 
