@@ -3143,9 +3143,11 @@ public class Nxt extends HttpServlet {
                     return true;
 
                 }
-
+            } catch (NumberFormatException e) {
+                logDebugMessage("Failed to analyze hallmark for peer " + realHost);
+                logDebugMessage("Hallmark :" + hallmark);
             } catch (RuntimeException|UnsupportedEncodingException e) {
-                logDebugMessage("Failed to analyze hallmark for host " + realHost, e);
+                logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
             }
             return false;
 
@@ -10403,7 +10405,7 @@ public class Nxt extends HttpServlet {
             }
 
         } catch (RuntimeException e) {
-            logDebugMessage("Error prossesing POST request", e);
+            logDebugMessage("Error processing POST request", e);
             response.put("error", e.toString());
         }
 
