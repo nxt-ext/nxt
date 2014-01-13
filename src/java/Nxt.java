@@ -7416,6 +7416,11 @@ public class Nxt extends HttpServlet {
                             case "getConstants":
                             {
 
+                                response.put("genesisBlockId", convert(GENESIS_BLOCK_ID));
+                                response.put("genesisAccountId", convert(CREATOR_ID));
+                                response.put("maxBlockPayloadLength", MAX_PAYLOAD_LENGTH);
+                                response.put("maxArbitraryMessageLength", MAX_ARBITRARY_MESSAGE_LENGTH);
+
                                 JSONArray transactionTypes = new JSONArray();
                                 JSONObject transactionType = new JSONObject();
                                 transactionType.put("value", Transaction.TYPE_PAYMENT);
