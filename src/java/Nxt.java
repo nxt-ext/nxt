@@ -9075,6 +9075,7 @@ public class Nxt extends HttpServlet {
                                                             Peer.sendToAllPeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
+                                                            response.put("bytes", convert(transaction.getBytes()));
 
                                                         }
 
