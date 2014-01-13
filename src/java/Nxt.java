@@ -6021,7 +6021,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error connecting to peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6052,7 +6052,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error un-blacklisting peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6098,7 +6098,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error requesting peers from a peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6134,7 +6134,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error processing unconfirmed transactions from peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6190,7 +6190,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error removing unconfirmed transactions", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6477,7 +6477,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error in milestone blocks processing thread", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6563,7 +6563,7 @@ public class Nxt extends HttpServlet {
                     } catch (Exception e) {
                         logDebugMessage("Error in block generation thread", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS." + t.toString());
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
