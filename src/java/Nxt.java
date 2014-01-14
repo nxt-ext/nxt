@@ -32,10 +32,12 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -70,7 +72,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.6e";
+    static final String VERSION = "0.5.7";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -3152,9 +3154,7 @@ public class Nxt extends HttpServlet {
                     return true;
 
                 }
-            } catch (NumberFormatException e) {
-                logDebugMessage("Failed to analyze hallmark for peer " + realHost);
-                logDebugMessage("Hallmark :" + hallmark);
+            } catch (NumberFormatException ignore) { // only old clients would cause this
             } catch (RuntimeException|UnsupportedEncodingException e) {
                 logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
             }
@@ -3576,10 +3576,8 @@ public class Nxt extends HttpServlet {
 
             } catch (RuntimeException|IOException e) {
 
-                String error = e.getMessage();
-
-                if (! ("connect timed out".equals(error) || "Read timed out".equals(error) || "Connection refused".equals(error)
-                        || e instanceof UnknownHostException || e instanceof NoRouteToHostException)) {
+                if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException
+                        || e instanceof SocketTimeoutException)) {
                     logDebugMessage("Error sending JSON request", e);
                 }
 
@@ -5474,7 +5472,7 @@ public class Nxt extends HttpServlet {
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
 
-        logMessage("Nxt " + VERSION + " starting...");
+        logMessage("NRS " + VERSION + " starting...");
         if (debug) {
             logMessage("DEBUG logging enabled");
         }
@@ -5495,8 +5493,8 @@ public class Nxt extends HttpServlet {
             calendar.set(Calendar.MILLISECOND, 0);
             epochBeginning = calendar.getTimeInMillis();
 
-            String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
-            logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
+            //String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
+            //logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
             //blockchainChannel = FileChannel.open(Paths.get(blockchainStoragePath), StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             myPlatform = servletConfig.getInitParameter("myPlatform");
@@ -5552,6 +5550,13 @@ public class Nxt extends HttpServlet {
             if (myHallmark != null) {
 
                 myHallmark = myHallmark.trim();
+
+                try {
+                    convert(myHallmark); // check for parsing exceptions
+                } catch (NumberFormatException e) {
+                    logMessage("Your hallmark is invalid: " + myHallmark);
+                    System.exit(1);
+                }
 
             }
 
@@ -6581,7 +6586,7 @@ public class Nxt extends HttpServlet {
 
             }, 0, 1, TimeUnit.SECONDS);
 
-            logMessage("Nxt started successfully.");
+            logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
         } catch (Exception e) {
 
@@ -10531,7 +10536,7 @@ public class Nxt extends HttpServlet {
         } catch (Exception e) { }
         */
 
-        logMessage("Nxt stopped.");
+        logMessage("NRS " + Nxt.VERSION + " stopped.");
 
     }
 
