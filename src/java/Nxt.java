@@ -32,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -3143,9 +3144,7 @@ public class Nxt extends HttpServlet {
                     return true;
 
                 }
-            } catch (NumberFormatException e) {
-                logDebugMessage("Failed to analyze hallmark for peer " + realHost);
-                logDebugMessage("Hallmark :" + hallmark);
+            } catch (NumberFormatException ignore) { // only old clients would cause this
             } catch (RuntimeException|UnsupportedEncodingException e) {
                 logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
             }
@@ -3567,10 +3566,7 @@ public class Nxt extends HttpServlet {
 
             } catch (RuntimeException|IOException e) {
 
-                String error = e.getMessage();
-
-                if (! ("connect timed out".equals(error) || "Read timed out".equals(error) || "Connection refused".equals(error)
-                        || e instanceof UnknownHostException || e instanceof NoRouteToHostException)) {
+                if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException)) {
                     logDebugMessage("Error sending JSON request", e);
                 }
 
