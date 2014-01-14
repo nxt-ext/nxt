@@ -5486,8 +5486,8 @@ public class Nxt extends HttpServlet {
             calendar.set(Calendar.MILLISECOND, 0);
             epochBeginning = calendar.getTimeInMillis();
 
-            String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
-            logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
+            //String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
+            //logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
             //blockchainChannel = FileChannel.open(Paths.get(blockchainStoragePath), StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             myPlatform = servletConfig.getInitParameter("myPlatform");
@@ -5543,6 +5543,13 @@ public class Nxt extends HttpServlet {
             if (myHallmark != null) {
 
                 myHallmark = myHallmark.trim();
+
+                try {
+                    convert(myHallmark); // check for parsing exceptions
+                } catch (NumberFormatException e) {
+                    logMessage("Your hallmark is invalid: " + myHallmark);
+                    System.exit(1);
+                }
 
             }
 
