@@ -37,6 +37,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -71,7 +72,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.6e";
+    static final String VERSION = "0.5.7";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -3566,7 +3567,8 @@ public class Nxt extends HttpServlet {
 
             } catch (RuntimeException|IOException e) {
 
-                if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException)) {
+                if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException
+                        || e instanceof SocketTimeoutException)) {
                     logDebugMessage("Error sending JSON request", e);
                 }
 
@@ -5461,7 +5463,7 @@ public class Nxt extends HttpServlet {
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
 
-        logMessage("Nxt " + VERSION + " starting...");
+        logMessage("NRS " + VERSION + " starting...");
         if (debug) {
             logMessage("DEBUG logging enabled");
         }
@@ -6575,7 +6577,7 @@ public class Nxt extends HttpServlet {
 
             }, 0, 1, TimeUnit.SECONDS);
 
-            logMessage("Nxt started successfully.");
+            logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
         } catch (Exception e) {
 
@@ -10525,7 +10527,7 @@ public class Nxt extends HttpServlet {
         } catch (Exception e) { }
         */
 
-        logMessage("Nxt stopped.");
+        logMessage("NRS " + Nxt.VERSION + " stopped.");
 
     }
 
