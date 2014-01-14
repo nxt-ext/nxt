@@ -82,6 +82,7 @@ public class Nxt extends HttpServlet {
     static final int ALIAS_SYSTEM_BLOCK = 22000;
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
     static final int ARBITRARY_MESSAGES_BLOCK = 40000;
+    static final int TRANSPARENT_FORGING_BLOCK_2 = 45000;
     static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
     static final long MAX_BALANCE = 1000000000;
@@ -480,31 +481,39 @@ public class Nxt extends HttpServlet {
 
         int getEffectiveBalance() {
 
-            if (height == 0) {
+            if (height < TRANSPARENT_FORGING_BLOCK_2) {
 
-                return (int)(getBalance() / 100);
+                if (height == 0) {
 
-            }
-
-            if (Block.getLastBlock().height - height < 1440) {
-
-                return 0;
-
-            }
-
-            int amount = 0;
-            for (long transactionId : Block.getLastBlock().transactions) {
-
-                Transaction transaction = transactions.get(transactionId);
-                if (transaction.recipient == id) {
-
-                    amount += transaction.amount;
+                    return (int)(getBalance() / 100);
 
                 }
 
-            }
+                if (Block.getLastBlock().height - height < 1440) {
 
-            return (int)(getBalance() / 100) - amount;
+                    return 0;
+
+                }
+
+                int amount = 0;
+                for (long transactionId : Block.getLastBlock().transactions) {
+
+                    Transaction transaction = transactions.get(transactionId);
+                    if (transaction.recipient == id) {
+
+                        amount += transaction.amount;
+
+                    }
+
+                }
+
+                return (int)(getBalance() / 100) - amount;
+
+            } else {
+
+                return (int)(getGuaranteedBalance(1440) / 100);
+
+            }
 
         }
 
