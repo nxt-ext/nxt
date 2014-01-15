@@ -472,7 +472,7 @@ public class Nxt extends HttpServlet {
 
                 JSONObject request = block.getJSONObject(newTransactions);
                 request.put("requestType", "processBlock");
-                Peer.sendToAllPeers(request);
+                Peer.sendToSomePeers(request);
 
             } else {
 
@@ -1819,7 +1819,7 @@ public class Nxt extends HttpServlet {
                     JSONObject request = block.getJSONObject(Nxt.transactions);
                     request.put("requestType", "processBlock");
 
-                    Peer.sendToAllPeers(request);
+                    Peer.sendToSomePeers(request);
 
                 }
 
@@ -3481,9 +3481,9 @@ public class Nxt extends HttpServlet {
         }
 
         //TODO: send in parallel using an executor service or NIO
-        // cfb: Will this help if there are a lot of other sendToAllPeers() in progress?
+        // cfb: Will this help if there are a lot of other sendToSomePeers() in progress?
         // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
-        static void sendToAllPeers(JSONObject request) {
+        static void sendToSomePeers(JSONObject request) {
 
             int successful = 0;
             for (Peer peer : Nxt.peers.values()) {
@@ -4473,7 +4473,7 @@ public class Nxt extends HttpServlet {
                 peerRequest.put("requestType", "processTransactions");
                 peerRequest.put("transactions", validTransactionsData);
 
-                Peer.sendToAllPeers(peerRequest);
+                Peer.sendToSomePeers(peerRequest);
 
             }
 
@@ -6786,7 +6786,7 @@ public class Nxt extends HttpServlet {
                                                                     transactionsData.add(transaction.getJSONObject());
                                                                     peerRequest.put("transactions", transactionsData);
 
-                                                                    Peer.sendToAllPeers(peerRequest);
+                                                                    Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
 
@@ -6844,7 +6844,7 @@ public class Nxt extends HttpServlet {
                                         transactionsData.add(transaction.getJSONObject());
                                         peerRequest.put("transactions", transactionsData);
 
-                                        Peer.sendToAllPeers(peerRequest);
+                                        Peer.sendToSomePeers(peerRequest);
 
                                         response.put("transaction", transaction.getStringId());
 
@@ -7926,7 +7926,7 @@ public class Nxt extends HttpServlet {
                                                                         transactionsData.add(transaction.getJSONObject());
                                                                         peerRequest.put("transactions", transactionsData);
 
-                                                                        Peer.sendToAllPeers(peerRequest);
+                                                                        Peer.sendToSomePeers(peerRequest);
 
                                                                         response.put("transaction", transaction.getStringId());
 
@@ -8055,7 +8055,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
 
@@ -8183,7 +8183,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
 
@@ -8393,7 +8393,7 @@ public class Nxt extends HttpServlet {
                                                                     transactionsData.add(transaction.getJSONObject());
                                                                     peerRequest.put("transactions", transactionsData);
 
-                                                                    Peer.sendToAllPeers(peerRequest);
+                                                                    Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
 
@@ -8564,7 +8564,7 @@ public class Nxt extends HttpServlet {
                                                                     transactionsData.add(transaction.getJSONObject());
                                                                     peerRequest.put("transactions", transactionsData);
 
-                                                                    Peer.sendToAllPeers(peerRequest);
+                                                                    Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
 
@@ -8727,7 +8727,7 @@ public class Nxt extends HttpServlet {
                                                                 transactionsData.add(transaction.getJSONObject());
                                                                 peerRequest.put("transactions", transactionsData);
 
-                                                                Peer.sendToAllPeers(peerRequest);
+                                                                Peer.sendToSomePeers(peerRequest);
 
                                                                 response.put("transaction", transaction.getStringId());
 
@@ -9118,7 +9118,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
                                                             response.put("bytes", convert(transaction.getBytes()));
@@ -9265,7 +9265,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
                                                             response.put("bytes", convert(transaction.getBytes()));
@@ -9834,7 +9834,7 @@ public class Nxt extends HttpServlet {
                                 transactionsData.add(transaction.getJSONObject());
                                 peerRequest.put("transactions", transactionsData);
 
-                                Peer.sendToAllPeers(peerRequest);
+                                Peer.sendToSomePeers(peerRequest);
 
                                 JSONObject response = new JSONObject();
                                 response.put("response", "notifyOfAcceptedTransaction");
