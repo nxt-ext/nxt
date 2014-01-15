@@ -3,7 +3,7 @@
 #
 
 [depend]
-npn/npn-${java.version}
+#npn/npn-${java.version}
 
 [files]
 lib/
