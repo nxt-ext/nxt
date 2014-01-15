@@ -37,6 +37,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -88,7 +89,7 @@ public class Nxt extends HttpServlet {
     static final int ALIAS_SYSTEM_BLOCK = 22000;
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
     static final int ARBITRARY_MESSAGES_BLOCK = 40000;
-    static final int TRANSPARENT_FORGING_BLOCK_2 = 45000;
+    static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
     static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
     static final long MAX_BALANCE = 1000000000;
@@ -3615,7 +3616,7 @@ public class Nxt extends HttpServlet {
             } catch (RuntimeException|IOException e) {
 
                 if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException
-                        || e instanceof SocketTimeoutException)) {
+                        || e instanceof SocketTimeoutException || e instanceof SocketException)) {
                     logDebugMessage("Error sending JSON request", e);
                 }
 
