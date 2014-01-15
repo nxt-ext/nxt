@@ -60,10 +60,14 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -147,6 +151,8 @@ public class Nxt extends HttpServlet {
     static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
     static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
+
+    static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
 
     static int getEpochTime(long time) {
@@ -3483,22 +3489,40 @@ public class Nxt extends HttpServlet {
         //TODO: send in parallel using an executor service or NIO
         // cfb: Will this help if there are a lot of other sendToSomePeers() in progress?
         // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
-        static void sendToSomePeers(JSONObject request) {
+        static void sendToSomePeers(final JSONObject request) {
 
             int successful = 0;
-            for (Peer peer : Nxt.peers.values()) {
+            List<Future<JSONObject>> expectedResponses = new ArrayList<>();
+            for (final Peer peer : Nxt.peers.values()) {
 
                 if (enableHallmarkProtection && peer.getWeight() < pushThreshold) {
                     continue;
                 }
 
                 if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
+                    Future<JSONObject> futureResponse = sendToPeersService.submit(new Callable<JSONObject>() {
+                        @Override
+                        public JSONObject call() {
+                            return peer.send(request);
+                        }
+                    });
+                    expectedResponses.add(futureResponse);
+                }
+                if (expectedResponses.size() >= sendToPeersLimit - successful) {
+                    for (Future<JSONObject> future : expectedResponses) {
+                        try {
+                            JSONObject response = future.get();
+                            if (response != null && response.get("error") == null) {
+                                successful += 1;
+                            }
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (ExecutionException e) {
+                            logDebugMessage("Error in sendToSomePeers", e);
+                        }
 
-                    JSONObject response = peer.send(request);
-                    if (response != null && response.get("error") == null) {
-                        successful += 1;
                     }
-
+                    expectedResponses.clear();
                 }
                 if (successful >= sendToPeersLimit) {
                     return;
@@ -5736,7 +5760,7 @@ public class Nxt extends HttpServlet {
 
             } catch (NumberFormatException e) {
                 Nxt.sendToPeersLimit = 10;
-                logMessage("Invalid value for sendToPeersLimit" + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
+                logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
             }
 
             try {
@@ -10530,16 +10554,8 @@ public class Nxt extends HttpServlet {
     @Override
     public void destroy() {
 
-        scheduledThreadPool.shutdown();
-        try {
-            scheduledThreadPool.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        if (! scheduledThreadPool.isTerminated()) {
-            logMessage("some threads didn't terminate, forcing shutdown");
-            scheduledThreadPool.shutdownNow();
-        }
+        shutdownExecutor(scheduledThreadPool);
+        shutdownExecutor(sendToPeersService);
 
         try {
             Block.saveBlocks("blocks.nxt", true);
@@ -10565,6 +10581,19 @@ public class Nxt extends HttpServlet {
 
         logMessage("NRS " + Nxt.VERSION + " stopped.");
 
+    }
+
+    private static void shutdownExecutor(ExecutorService executor) {
+        executor.shutdown();
+        try {
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (! executor.isTerminated()) {
+            logMessage("some threads didn't terminate, forcing shutdown");
+            executor.shutdownNow();
+        }
     }
 
 }
