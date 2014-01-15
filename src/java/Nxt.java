@@ -28,15 +28,23 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,10 +61,14 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.5";
+    static final String VERSION = "0.5.7";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -77,6 +89,7 @@ public class Nxt extends HttpServlet {
     static final int ALIAS_SYSTEM_BLOCK = 22000;
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
     static final int ARBITRARY_MESSAGES_BLOCK = 40000;
+    static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
     static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
     static final long MAX_BALANCE = 1000000000;
@@ -112,6 +125,7 @@ public class Nxt extends HttpServlet {
     static /*final*/ int connectTimeout, readTimeout;
     static /*final*/ boolean enableHallmarkProtection;
     static /*final*/ int pushThreshold, pullThreshold;
+    static /*final*/ int sendToPeersLimit;
     static final AtomicInteger peerCounter = new AtomicInteger();
     static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
 
@@ -139,8 +153,8 @@ public class Nxt extends HttpServlet {
 
     static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
 
+    static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
-    //TODO: go through all Exception handling, no method should ever throw just "Exception"
 
     static int getEpochTime(long time) {
 
@@ -155,10 +169,37 @@ public class Nxt extends HttpServlet {
         }
     };
 
+    static final boolean debug = System.getProperty("nxt.debug") != null;
+    static final boolean enableStackTraces = System.getProperty("nxt.enableStackTraces") != null;
+
     static void logMessage(String message) {
-
         System.out.println(logDateFormat.get().format(new Date()) + message);
+    }
 
+    static void logMessage(String message, Exception e) {
+        if (enableStackTraces) {
+            logMessage(message);
+            e.printStackTrace();
+        } else {
+            logMessage(message + ":\n" + e.toString());
+        }
+    }
+
+    static void logDebugMessage(String message) {
+        if (debug) {
+            logMessage("DEBUG: " + message);
+        }
+    }
+
+    static void logDebugMessage(String message, Exception e) {
+        if (debug) {
+            if (enableStackTraces) {
+                logMessage("DEBUG: " + message);
+                e.printStackTrace();
+            } else {
+                logMessage("DEBUG: " + message + ":\n" + e.toString());
+            }
+        }
     }
 
     static byte[] convert(String string) {
@@ -212,8 +253,18 @@ public class Nxt extends HttpServlet {
         return bigInt.longValue();
     }
 
+    static MessageDigest getMessageDigest(String algorithm) {
+        try {
+            return MessageDigest.getInstance(algorithm);
+        } catch (NoSuchAlgorithmException e) {
+            logMessage("Missing message digest algorithm: " + algorithm);
+            System.exit(1);
+            return null;
+        }
+    }
+
     // this is called within block.analyze only, which is already inside the big blocksAndTransactions lock
-    static void matchOrders(long assetId) throws Exception {
+    static void matchOrders(long assetId) {
 
         TreeSet<AskOrder> sortedAskOrders = Nxt.sortedAskOrders.get(assetId);
         TreeSet<BidOrder> sortedBidOrders = Nxt.sortedBidOrders.get(assetId);
@@ -293,7 +344,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        void generateBlock(String secretPhrase) throws Exception {
+        void generateBlock(String secretPhrase) {
 
             Set<Transaction> sortedTransactions = new TreeSet<>();
 
@@ -384,7 +435,7 @@ public class Nxt extends HttpServlet {
 
             } else {
 
-                byte[] previousBlockHash = MessageDigest.getInstance("SHA-256").digest(Block.getLastBlock().getBytes());
+                byte[] previousBlockHash = Nxt.getMessageDigest("SHA-256").digest(Block.getLastBlock().getBytes());
                 block = new Block(2, getEpochTime(System.currentTimeMillis()), lastBlock, newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64], previousBlockHash);
 
             }
@@ -400,10 +451,10 @@ public class Nxt extends HttpServlet {
             }
 
             Arrays.sort(block.transactions);
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            for (i = 0; i < block.numberOfTransactions; i++) {
+            MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+            for (long transactionId : block.transactions) {
 
-                digest.update(newTransactions.get(block.transactions[i]).getBytes());
+                digest.update(newTransactions.get(transactionId).getBytes());
 
             }
             block.payloadHash = digest.digest();
@@ -428,7 +479,7 @@ public class Nxt extends HttpServlet {
 
                 JSONObject request = block.getJSONObject(newTransactions);
                 request.put("requestType", "processBlock");
-                Peer.sendToAllPeers(request);
+                Peer.sendToSomePeers(request);
 
             } else {
 
@@ -440,37 +491,45 @@ public class Nxt extends HttpServlet {
 
         int getEffectiveBalance() {
 
-            if (height == 0) {
+            if (height < TRANSPARENT_FORGING_BLOCK_2) {
 
-                return (int)(getBalance() / 100);
+                if (height == 0) {
 
-            }
-
-            if (Block.getLastBlock().height - height < 1440) {
-
-                return 0;
-
-            }
-
-            int amount = 0;
-            for (long transactionId : Block.getLastBlock().transactions) {
-
-                Transaction transaction = transactions.get(transactionId);
-                if (transaction.recipient == id) {
-
-                    amount += transaction.amount;
+                    return (int)(getBalance() / 100);
 
                 }
 
-            }
+                if (Block.getLastBlock().height - height < 1440) {
 
-            return (int)(getBalance() / 100) - amount;
+                    return 0;
+
+                }
+
+                int amount = 0;
+                for (long transactionId : Block.getLastBlock().transactions) {
+
+                    Transaction transaction = transactions.get(transactionId);
+                    if (transaction.recipient == id) {
+
+                        amount += transaction.amount;
+
+                    }
+
+                }
+
+                return (int)(getBalance() / 100) - amount;
+
+            } else {
+
+                return (int)(getGuaranteedBalance(1440) / 100);
+
+            }
 
         }
 
-        static long getId(byte[] publicKey) throws Exception {
+        static long getId(byte[] publicKey) {
 
-            byte[] publicKeyHash = MessageDigest.getInstance("SHA-256").digest(publicKey);
+            byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(publicKey);
             BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
             return bigInteger.longValue();
 
@@ -523,7 +582,7 @@ public class Nxt extends HttpServlet {
             return balance;
         }
 
-        long getGuaranteedBalance(int numberOfConfirmations) throws Exception {
+        long getGuaranteedBalance(int numberOfConfirmations) {
 
             long guaranteedBalance = getBalance();
             ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
@@ -540,7 +599,7 @@ public class Nxt extends HttpServlet {
 
                 }
 
-                for (int i = block.numberOfTransactions; i-- > 0; ) {
+                for (int i = block.transactions.length; i-- > 0; ) {
 
                     Transaction transaction = transactions.get(block.transactions[i]);
                     if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
@@ -584,7 +643,7 @@ public class Nxt extends HttpServlet {
             return unconfirmedBalance;
         }
 
-        void addToBalance(long amount) throws Exception {
+        void addToBalance(long amount) {
 
             synchronized (this) {
 
@@ -596,7 +655,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        void addToUnconfirmedBalance(long amount) throws Exception {
+        void addToUnconfirmedBalance(long amount) {
 
             synchronized (this) {
 
@@ -608,7 +667,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        void addToBalanceAndUnconfirmedBalance(long amount) throws Exception {
+        void addToBalanceAndUnconfirmedBalance(long amount) {
 
             synchronized (this) {
 
@@ -636,7 +695,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        private void updateUserUnconfirmedBalance() throws Exception {
+        private void updateUserUnconfirmedBalance() {
 
             JSONObject response = new JSONObject();
             response.put("response", "setBalance");
@@ -833,7 +892,6 @@ public class Nxt extends HttpServlet {
         final int version;
         final int timestamp;
         final long previousBlock;
-        final int numberOfTransactions;
         int totalAmount, totalFee;
         int payloadLength;
         byte[] payloadHash;
@@ -869,7 +927,6 @@ public class Nxt extends HttpServlet {
             this.version = version;
             this.timestamp = timestamp;
             this.previousBlock = previousBlock;
-            this.numberOfTransactions = numberOfTransactions;
             this.totalAmount = totalAmount;
             this.totalFee = totalFee;
             this.payloadLength = payloadLength;
@@ -883,7 +940,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        void analyze() throws Exception {
+        void analyze() {
 
             // analyze is only called with the blocksAndTransactionsLock already held (except in init, where it doesn't matter)
             // but a lot of thread safety depends on that fact, so let's make that explicit here by obtaining this lock again, at no extra cost
@@ -914,9 +971,10 @@ public class Nxt extends HttpServlet {
 
                 }
 
-                for (int i = 0; i < numberOfTransactions; i++) {
+                for (long transactionId : this.transactions) {
 
-                    Transaction transaction = Nxt.transactions.get(transactions[i]);
+                    Transaction transaction = Nxt.transactions.get(transactionId);
+                    transaction.height = this.height;
 
                     long sender = transaction.getSenderAccountId();
                     Account senderAccount = accounts.get(sender);
@@ -1092,7 +1150,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        static long getBaseTarget() throws Exception {
+        static long getBaseTarget() {
 
             if (lastBlock == GENESIS_BLOCK_ID) {
 
@@ -1167,7 +1225,7 @@ public class Nxt extends HttpServlet {
             buffer.putInt(version);
             buffer.putInt(timestamp);
             buffer.putLong(previousBlock);
-            buffer.putInt(numberOfTransactions);
+            buffer.putInt(this.transactions.length);
             buffer.putInt(totalAmount);
             buffer.putInt(totalFee);
             buffer.putInt(payloadLength);
@@ -1211,16 +1269,11 @@ public class Nxt extends HttpServlet {
             if (stringId != null) {
                 return;
             }
-            try {
-                byte[] hash = MessageDigest.getInstance("SHA-256").digest(getBytes());
-                BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-                id = bigInteger.longValue();
-                stringId = bigInteger.toString();
-                generatorAccountId = Account.getId(generatorPublicKey);
-            } catch (Exception e) {
-                logMessage(e.getMessage());
-                throw new RuntimeException(e);
-            }
+            byte[] hash = Nxt.getMessageDigest("SHA-256").digest(getBytes());
+            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            id = bigInteger.longValue();
+            stringId = bigInteger.toString();
+            generatorAccountId = Account.getId(generatorPublicKey);
         }
 
         JSONObject getJSONObject(Map<Long, Transaction> transactions) {
@@ -1230,7 +1283,7 @@ public class Nxt extends HttpServlet {
             block.put("version", version);
             block.put("timestamp", timestamp);
             block.put("previousBlock", convert(previousBlock));
-            block.put("numberOfTransactions", numberOfTransactions);
+            block.put("numberOfTransactions", this.transactions.length);
             block.put("totalAmount", totalAmount);
             block.put("totalFee", totalFee);
             block.put("payloadLength", payloadLength);
@@ -1245,9 +1298,9 @@ public class Nxt extends HttpServlet {
             block.put("blockSignature", convert(blockSignature));
 
             JSONArray transactionsData = new JSONArray();
-            for (int i = 0; i < numberOfTransactions; i++) {
+            for (long transactionId : this.transactions) {
 
-                transactionsData.add(transactions.get(this.transactions[i]).getJSONObject());
+                transactionsData.add(transactions.get(transactionId).getJSONObject());
 
             }
             block.put("transactions", transactionsData);
@@ -1307,7 +1360,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        static void loadBlocks(String fileName) throws Exception {
+        static void loadBlocks(String fileName) throws FileNotFoundException {
 
             try (FileInputStream fileInputStream = new FileInputStream(fileName);
                  ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
@@ -1316,6 +1369,11 @@ public class Nxt extends HttpServlet {
                 blocks.clear();
                 blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
                 lastBlock = objectInputStream.readLong();
+            } catch (FileNotFoundException e) {
+                throw e;
+            } catch (IOException|ClassNotFoundException e) {
+                logMessage("Error loading blocks from " + fileName, e);
+                System.exit(1);
             }
 
         }
@@ -1344,10 +1402,10 @@ public class Nxt extends HttpServlet {
                     Account generatorAccount = accounts.get(block.getGeneratorAccountId());
                     generatorAccount.addToBalanceAndUnconfirmedBalance(- block.totalFee * 100L);
 
-                    for (int i = 0; i < block.numberOfTransactions; i++) {
+                    for (long transactionId : block.transactions) {
 
-                        Transaction transaction = Nxt.transactions.remove(block.transactions[i]);
-                        unconfirmedTransactions.put(block.transactions[i], transaction);
+                        Transaction transaction = Nxt.transactions.remove(transactionId);
+                        unconfirmedTransactions.put(transactionId, transaction);
 
                         Account senderAccount = accounts.get(transaction.getSenderAccountId());
                         senderAccount.addToBalance((transaction.amount + transaction.fee) * 100L);
@@ -1376,7 +1434,7 @@ public class Nxt extends HttpServlet {
                 JSONObject addedOrphanedBlock = new JSONObject();
                 addedOrphanedBlock.put("index", block.index);
                 addedOrphanedBlock.put("timestamp", block.timestamp);
-                addedOrphanedBlock.put("numberOfTransactions", block.numberOfTransactions);
+                addedOrphanedBlock.put("numberOfTransactions", block.transactions.length);
                 addedOrphanedBlock.put("totalAmount", block.totalAmount);
                 addedOrphanedBlock.put("totalFee", block.totalFee);
                 addedOrphanedBlock.put("payloadLength", block.payloadLength);
@@ -1400,9 +1458,9 @@ public class Nxt extends HttpServlet {
 
                 }
 
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
 
-                logMessage("19: " + e.toString());
+                logMessage("Error popping last block", e);
 
                 return false;
 
@@ -1412,7 +1470,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) throws Exception {
+        static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
 
             buffer.flip();
 
@@ -1460,7 +1518,7 @@ public class Nxt extends HttpServlet {
                 previousBlockHash = new byte[32];
                 buffer.get(previousBlockHash);
 
-                if (!Arrays.equals(MessageDigest.getInstance("SHA-256").digest(Block.getLastBlock().getBytes()), previousBlockHash)) {
+                if (!Arrays.equals(Nxt.getMessageDigest("SHA-256").digest(Block.getLastBlock().getBytes()), previousBlockHash)) {
 
                     return false;
 
@@ -1491,7 +1549,7 @@ public class Nxt extends HttpServlet {
 
             try {
 
-                if (block.numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+                if (block.transactions.length > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != lastBlock || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
                     return false;
 
@@ -1499,7 +1557,7 @@ public class Nxt extends HttpServlet {
 
                 HashMap<Long, Transaction> blockTransactions = new HashMap<>();
                 HashSet<String> blockAliases = new HashSet<>();
-                for (int i = 0; i < block.numberOfTransactions; i++) {
+                for (int i = 0; i < block.transactions.length; i++) {
 
                     Transaction transaction = Transaction.getTransaction(buffer);
                     transaction.index = transactionCounter.incrementAndGet();
@@ -1543,7 +1601,7 @@ public class Nxt extends HttpServlet {
                 HashMap<Long, HashMap<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
                 int calculatedTotalAmount = 0, calculatedTotalFee = 0;
                 int i;
-                for (i = 0; i < block.numberOfTransactions; i++) {
+                for (i = 0; i < block.transactions.length; i++) {
 
                     Transaction transaction = blockTransactions.get(block.transactions[i]);
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
@@ -1640,16 +1698,16 @@ public class Nxt extends HttpServlet {
 
                 }
 
-                if (i != block.numberOfTransactions || calculatedTotalAmount != block.totalAmount || calculatedTotalFee != block.totalFee) {
+                if (i != block.transactions.length || calculatedTotalAmount != block.totalAmount || calculatedTotalFee != block.totalFee) {
 
                     return false;
 
                 }
 
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                for (i = 0; i < block.numberOfTransactions; i++) {
+                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                for (long transactionId : block.transactions) {
 
-                    digest.update(blockTransactions.get(block.transactions[i]).getBytes());
+                    digest.update(blockTransactions.get(transactionId).getBytes());
 
                 }
                 if (!Arrays.equals(digest.digest(), block.payloadHash)) {
@@ -1696,6 +1754,8 @@ public class Nxt extends HttpServlet {
                         return false;
 
                     }
+
+                    block.height = Block.getLastBlock().height + 1;
 
                     for (Map.Entry<Long, Transaction> transactionEntry : blockTransactions.entrySet()) {
 
@@ -1746,9 +1806,9 @@ public class Nxt extends HttpServlet {
                     }
 
                     long blockId = block.getId();
-                    for (i = 0; i < block.transactions.length; i++) {
+                    for (long transactionId : block.transactions) {
 
-                        Nxt.transactions.get(block.transactions[i]).block = blockId;
+                        Nxt.transactions.get(transactionId).block = blockId;
 
                     }
 
@@ -1766,7 +1826,7 @@ public class Nxt extends HttpServlet {
                     JSONObject request = block.getJSONObject(Nxt.transactions);
                     request.put("requestType", "processBlock");
 
-                    Peer.sendToAllPeers(request);
+                    Peer.sendToSomePeers(request);
 
                 }
 
@@ -1774,12 +1834,12 @@ public class Nxt extends HttpServlet {
                 JSONObject addedRecentBlock = new JSONObject();
                 addedRecentBlock.put("index", block.index);
                 addedRecentBlock.put("timestamp", block.timestamp);
-                addedRecentBlock.put("numberOfTransactions", block.numberOfTransactions);
+                addedRecentBlock.put("numberOfTransactions", block.transactions.length);
                 addedRecentBlock.put("totalAmount", block.totalAmount);
                 addedRecentBlock.put("totalFee", block.totalFee);
                 addedRecentBlock.put("payloadLength", block.payloadLength);
                 addedRecentBlock.put("generator", convert(block.getGeneratorAccountId()));
-                addedRecentBlock.put("height", Block.getLastBlock().height);
+                addedRecentBlock.put("height", block.height);
                 addedRecentBlock.put("version", block.version);
                 addedRecentBlock.put("block", block.getStringId());
                 addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.baseTarget).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(initialBaseTarget)));
@@ -1803,9 +1863,9 @@ public class Nxt extends HttpServlet {
 
                 return true;
 
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
 
-                logMessage("11: " + e.toString());
+                logMessage("Error pushing block", e);
 
                 return false;
 
@@ -1813,7 +1873,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        static void saveBlocks(String fileName, boolean flag) throws Exception {
+        static void saveBlocks(String fileName, boolean flag) {
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
                  ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
@@ -1821,6 +1881,9 @@ public class Nxt extends HttpServlet {
                 objectOutputStream.writeInt(blockCounter.get());
                 objectOutputStream.writeObject(new HashMap<>(blocks));
                 objectOutputStream.writeLong(lastBlock);
+            } catch (IOException e) {
+                logMessage("Error saving blocks to " + fileName, e);
+                throw new RuntimeException(e);
             }
 
                 /*if (flag) {
@@ -1860,7 +1923,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        boolean verifyBlockSignature() throws Exception {
+        boolean verifyBlockSignature() {
 
             Account account = accounts.get(getGeneratorAccountId());
             if (account == null) {
@@ -1904,7 +1967,7 @@ public class Nxt extends HttpServlet {
                 int elapsedTime = timestamp - previousBlock.timestamp;
                 BigInteger target = BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
 
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                 byte[] generationSignatureHash;
                 if (version == 1) {
 
@@ -1926,8 +1989,9 @@ public class Nxt extends HttpServlet {
 
                 return hit.compareTo(target) < 0;
 
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
 
+                logMessage("Error verifying block generation signature", e);
                 return false;
 
             }
@@ -1943,12 +2007,12 @@ public class Nxt extends HttpServlet {
             try {
 
                 byte[] publicKey = new byte[32];
-                Curve25519.keygen(publicKey, null, MessageDigest.getInstance("SHA-256").digest(secretPhrase.getBytes("UTF-8")));
+                Curve25519.keygen(publicKey, null, Nxt.getMessageDigest("SHA-256").digest(secretPhrase.getBytes("UTF-8")));
 
                 return publicKey;
 
-            } catch (Exception e) {
-
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                logMessage("Error getting public key", e);
                 return null;
 
             }
@@ -1961,7 +2025,7 @@ public class Nxt extends HttpServlet {
 
                 byte[] P = new byte[32];
                 byte[] s = new byte[32];
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                 Curve25519.keygen(P, s, digest.digest(secretPhrase.getBytes("UTF-8")));
 
                 byte[] m = digest.digest(message);
@@ -1984,8 +2048,9 @@ public class Nxt extends HttpServlet {
 
                 return signature;
 
-            } catch (Exception e) {
+            } catch (RuntimeException|UnsupportedEncodingException e) {
 
+                logMessage("Error in signing message", e);
                 return null;
 
             }
@@ -2003,15 +2068,16 @@ public class Nxt extends HttpServlet {
                 System.arraycopy(signature, 32, h, 0, 32);
                 Curve25519.verify(Y, v, h, publicKey);
 
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                 byte[] m = digest.digest(message);
                 digest.update(m);
                 byte[] h2 = digest.digest(Y);
 
                 return Arrays.equals(h, h2);
 
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
 
+                logMessage("Error in Nxt.Crypto verify", e);
                 return false;
 
             }
@@ -2955,8 +3021,8 @@ public class Nxt extends HttpServlet {
 
                 new URL("http://" + address);
 
-            } catch (Exception e) {
-
+            } catch (MalformedURLException e) {
+                logDebugMessage("malformed peer address " + address, e);
                 return null;
 
             }
@@ -2964,8 +3030,8 @@ public class Nxt extends HttpServlet {
 
                 new URL("http://" + announcedAddress);
 
-            } catch (Exception e) {
-
+            } catch (MalformedURLException e) {
+                logDebugMessage("malformed peer announced address " + announcedAddress, e);
                 announcedAddress = "";
 
             }
@@ -3006,7 +3072,13 @@ public class Nxt extends HttpServlet {
 
             try {
 
-                byte[] hallmarkBytes = convert(hallmark);
+                byte[] hallmarkBytes;
+
+                try {
+                    hallmarkBytes = convert(hallmark);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
 
                 ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -3097,9 +3169,9 @@ public class Nxt extends HttpServlet {
                     return true;
 
                 }
-
-            } catch (Exception e) { }
-
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
+            }
             return false;
 
         }
@@ -3189,15 +3261,7 @@ public class Nxt extends HttpServlet {
                 application = (String)response.get("application");
                 version = (String)response.get("version");
                 platform = (String)response.get("platform");
-                try {
-
-                    shareAddress = Boolean.parseBoolean((String)response.get("shareAddress"));
-
-                } catch (Exception e) {
-
-                    /**/shareAddress = true;
-
-                }
+                shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
 
                 if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
 
@@ -3424,26 +3488,52 @@ public class Nxt extends HttpServlet {
         }
 
         //TODO: send in parallel using an executor service or NIO
-        // cfb: Will this help if there are a lot of other sendToAllPeers() in progress?
+        // cfb: Will this help if there are a lot of other sendToSomePeers() in progress?
         // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
-        static void sendToAllPeers(JSONObject request) {
+        static void sendToSomePeers(final JSONObject request) {
 
-            for (Peer peer : Nxt.peers.values()) {
+            int successful = 0;
+            List<Future<JSONObject>> expectedResponses = new ArrayList<>();
+            for (final Peer peer : Nxt.peers.values()) {
 
                 if (enableHallmarkProtection && peer.getWeight() < pushThreshold) {
                     continue;
                 }
 
                 if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
+                    Future<JSONObject> futureResponse = sendToPeersService.submit(new Callable<JSONObject>() {
+                        @Override
+                        public JSONObject call() {
+                            return peer.send(request);
+                        }
+                    });
+                    expectedResponses.add(futureResponse);
+                }
+                if (expectedResponses.size() >= sendToPeersLimit - successful) {
+                    for (Future<JSONObject> future : expectedResponses) {
+                        try {
+                            JSONObject response = future.get();
+                            if (response != null && response.get("error") == null) {
+                                successful += 1;
+                            }
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } catch (ExecutionException e) {
+                            logDebugMessage("Error in sendToSomePeers", e);
+                        }
 
-                    peer.send(request);
-
+                    }
+                    expectedResponses.clear();
+                }
+                if (successful >= sendToPeersLimit) {
+                    return;
                 }
 
             }
 
         }
 
+        //TODO: use JSONStreamAware instead
         JSONObject send(JSONObject request) {
 
             JSONObject response;
@@ -3523,7 +3613,12 @@ public class Nxt extends HttpServlet {
 
                 }
 
-            } catch (Exception e) {
+            } catch (RuntimeException|IOException e) {
+
+                if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException
+                        || e instanceof SocketTimeoutException || e instanceof SocketException)) {
+                    logDebugMessage("Error sending JSON request", e);
+                }
 
                 if ((communicationLoggingMask & LOGGING_MASK_EXCEPTIONS) != 0) {
 
@@ -3887,16 +3982,11 @@ public class Nxt extends HttpServlet {
             if (stringId != null) {
                 return;
             }
-            try {
-                byte[] hash = MessageDigest.getInstance("SHA-256").digest(getBytes());
-                BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-                id = bigInteger.longValue();
-                stringId = bigInteger.toString();
-                senderAccountId = Account.getId(senderPublicKey);
-            } catch (Exception e) {
-                logMessage(e.getMessage());
-                throw new RuntimeException(e);
-            }
+            byte[] hash = Nxt.getMessageDigest("SHA-256").digest(getBytes());
+            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            id = bigInteger.longValue();
+            stringId = bigInteger.toString();
+            senderAccountId = Account.getId(senderPublicKey);
         }
 
 
@@ -3990,7 +4080,9 @@ public class Nxt extends HttpServlet {
 
                                 transaction.attachment = new Transaction.MessagingAliasAssignmentAttachment(new String(alias, "UTF-8"), new String(uri, "UTF-8"));
 
-                            } catch (Exception e) { }
+                            } catch (RuntimeException|UnsupportedEncodingException e) {
+                                logDebugMessage("Error parsing alias assignment", e);
+                            }
 
                         }
                         break;
@@ -4020,7 +4112,9 @@ public class Nxt extends HttpServlet {
 
                                 transaction.attachment = new Transaction.ColoredCoinsAssetIssuanceAttachment(new String(name, "UTF-8"), new String(description, "UTF-8"), quantity);
 
-                            } catch (Exception e) { }
+                            } catch (RuntimeException|UnsupportedEncodingException e) {
+                                logDebugMessage("Error in asset issuance", e);
+                            }
 
                         }
                         break;
@@ -4213,13 +4307,18 @@ public class Nxt extends HttpServlet {
 
         }
 
-        static void loadTransactions(String fileName) throws Exception {
+        static void loadTransactions(String fileName) throws FileNotFoundException {
 
             try (FileInputStream fileInputStream = new FileInputStream(fileName);
                  ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
                 transactionCounter.set(objectInputStream.readInt());
                 transactions.clear();
                 transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
+            } catch (FileNotFoundException e) {
+                throw e;
+            } catch (IOException|ClassNotFoundException e) {
+                logMessage("Error loading transactions from " + fileName, e);
+                System.exit(1);
             }
 
         }
@@ -4385,9 +4484,9 @@ public class Nxt extends HttpServlet {
 
                     }
 
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
 
-                    logMessage("15: " + e.toString());
+                    logMessage("Error processing transaction", e);
 
                 }
 
@@ -4399,13 +4498,13 @@ public class Nxt extends HttpServlet {
                 peerRequest.put("requestType", "processTransactions");
                 peerRequest.put("transactions", validTransactionsData);
 
-                Peer.sendToAllPeers(peerRequest);
+                Peer.sendToSomePeers(peerRequest);
 
             }
 
         }
 
-        static void saveTransactions(String fileName) throws Exception {
+        static void saveTransactions(String fileName) {
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
                  ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
@@ -4413,6 +4512,9 @@ public class Nxt extends HttpServlet {
                 objectOutputStream.writeInt(transactionCounter.get());
                 objectOutputStream.writeObject(new HashMap(transactions));
                 objectOutputStream.close();
+            } catch (IOException e) {
+                logMessage("Error saving transactions to " + fileName, e);
+                throw new RuntimeException(e);
             }
 
         }
@@ -4432,9 +4534,9 @@ public class Nxt extends HttpServlet {
 
                 }
 
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
 
-                logMessage("16: " + e.toString());
+                logMessage("Error signing transaction", e);
 
             }
 
@@ -4500,8 +4602,9 @@ public class Nxt extends HttpServlet {
                                 MessagingArbitraryMessageAttachment attachment = (MessagingArbitraryMessageAttachment)this.attachment;
                                 return amount == 0 && attachment.message.length <= MAX_ARBITRARY_MESSAGE_LENGTH;
 
-                            } catch (Exception e) {
+                            } catch (RuntimeException e) {
 
+                                logDebugMessage("Error validating arbitrary message", e);
                                 return false;
 
                             }
@@ -4543,8 +4646,9 @@ public class Nxt extends HttpServlet {
 
                                 }
 
-                            } catch (Exception e) {
+                            } catch (RuntimeException e) {
 
+                                logDebugMessage("Error validation alias assignment", e);
                                 return false;
 
                             }
@@ -4601,8 +4705,9 @@ public class Nxt extends HttpServlet {
 
                                 }
 
-                            } catch (Exception e) {
+                            } catch (RuntimeException e) {
 
+                                logDebugMessage("Error validating colored coins asset issuance", e);
                                 return false;
 
                             }
@@ -4711,7 +4816,7 @@ public class Nxt extends HttpServlet {
 
         }
 
-        boolean verify() throws Exception {
+        boolean verify() {
 
             Account account = accounts.get(getSenderAccountId());
             if (account == null) {
@@ -4732,24 +4837,20 @@ public class Nxt extends HttpServlet {
 
         }
 
-        public static byte[] calculateTransactionsChecksum() throws Exception {
+        public static byte[] calculateTransactionsChecksum() {
             synchronized (blocksAndTransactionsLock) {
-                Set<Transaction> sortedTransactions = new TreeSet<>(new Comparator<Transaction>() {
+                PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(Nxt.transactions.size(), new Comparator<Transaction>() {
                     @Override
                     public int compare(Transaction o1, Transaction o2) {
-                        try {
-                            long id1 = o1.getId();
-                            long id2 = o2.getId();
-                            return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        long id1 = o1.getId();
+                        long id2 = o2.getId();
+                        return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
                     }
                 });
                 sortedTransactions.addAll(Nxt.transactions.values());
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                for (Transaction transaction : sortedTransactions) {
-                    digest.update(transaction.getBytes());
+                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                while (! sortedTransactions.isEmpty()) {
+                    digest.update(sortedTransactions.poll().getBytes());
                 }
                 return digest.digest();
             }
@@ -4786,20 +4887,12 @@ public class Nxt extends HttpServlet {
             @Override
             public byte[] getBytes() {
 
-                try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putInt(message.length);
+                buffer.put(message);
 
-                    ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                    buffer.order(ByteOrder.LITTLE_ENDIAN);
-                    buffer.putInt(message.length);
-                    buffer.put(message);
-
-                    return buffer.array();
-
-                } catch (Exception e) {
-
-                    return null;
-
-                }
+                return buffer.array();
 
             }
 
@@ -4847,7 +4940,8 @@ public class Nxt extends HttpServlet {
             public int getSize() {
                 try {
                     return 1 + alias.getBytes("UTF-8").length + 2 + uri.getBytes("UTF-8").length;
-                } catch (Exception e) {
+                } catch (RuntimeException|UnsupportedEncodingException e) {
+                    logMessage("Error in getBytes", e);
                     return 0;
                 }
             }
@@ -4869,8 +4963,8 @@ public class Nxt extends HttpServlet {
 
                     return buffer.array();
 
-                } catch (Exception e) {
-
+                } catch (RuntimeException|UnsupportedEncodingException e) {
+                    logMessage("Error in getBytes", e);
                     return null;
 
                 }
@@ -4924,7 +5018,8 @@ public class Nxt extends HttpServlet {
             public int getSize() {
                 try {
                     return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 4;
-                } catch (Exception e) {
+                } catch (RuntimeException|UnsupportedEncodingException e) {
+                    logMessage("Error in getBytes", e);
                     return 0;
                 }
             }
@@ -4933,7 +5028,6 @@ public class Nxt extends HttpServlet {
             public byte[] getBytes() {
 
                 try {
-
                     byte[] name = this.name.getBytes("UTF-8");
                     byte[] description = this.description.getBytes("UTF-8");
 
@@ -4946,11 +5040,9 @@ public class Nxt extends HttpServlet {
                     buffer.putInt(quantity);
 
                     return buffer.array();
-
-                } catch (Exception e) {
-
+                } catch (RuntimeException|UnsupportedEncodingException e) {
+                    logMessage("Error in getBytes", e);
                     return null;
-
                 }
 
             }
@@ -5302,10 +5394,10 @@ public class Nxt extends HttpServlet {
 
         }
 
-        BigInteger initializeKeyPair(String secretPhrase) throws Exception {
+        BigInteger initializeKeyPair(String secretPhrase) {
 
             this.secretPhrase = secretPhrase;
-            byte[] publicKeyHash = MessageDigest.getInstance("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
+            byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
             return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
 
         }
@@ -5347,22 +5439,16 @@ public class Nxt extends HttpServlet {
                     JSONObject combinedResponse = new JSONObject();
                     combinedResponse.put("responses", responses);
 
-                    try {
+                    asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
-                        asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-
-                        try (Writer writer = asyncContext.getResponse().getWriter()) {
-                            combinedResponse.writeJSONString(writer);
-                        }
-
-                        asyncContext.complete();
-                        asyncContext = null;
-
-                    } catch (Exception e) {
-
-                        logMessage("17: " + e.toString());
-
+                    try (Writer writer = asyncContext.getResponse().getWriter()) {
+                        combinedResponse.writeJSONString(writer);
+                    } catch (IOException e) {
+                        logMessage("Error sending response to user", e);
                     }
+
+                    asyncContext.complete();
+                    asyncContext = null;
 
                 }
 
@@ -5425,7 +5511,13 @@ public class Nxt extends HttpServlet {
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
 
-        logMessage("Nxt " + VERSION + " started.");
+        logMessage("NRS " + VERSION + " starting...");
+        if (debug) {
+            logMessage("DEBUG logging enabled");
+        }
+        if (enableStackTraces) {
+            logMessage("logging of exception stack traces enabled");
+        }
 
         try {
 
@@ -5440,8 +5532,8 @@ public class Nxt extends HttpServlet {
             calendar.set(Calendar.MILLISECOND, 0);
             epochBeginning = calendar.getTimeInMillis();
 
-            String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
-            logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
+            //String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
+            //logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
             //blockchainChannel = FileChannel.open(Paths.get(blockchainStoragePath), StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             myPlatform = servletConfig.getInitParameter("myPlatform");
@@ -5474,10 +5566,10 @@ public class Nxt extends HttpServlet {
 
                 Nxt.myPort = Integer.parseInt(myPort);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.myPort = myScheme.equals("https") ? 7875 : 7874;
-
+                logMessage("Invalid value for myPort " + myPort + ", using default " + Nxt.myPort);
             }
 
             myAddress = servletConfig.getInitParameter("myAddress");
@@ -5490,21 +5582,20 @@ public class Nxt extends HttpServlet {
 
             String shareMyAddress = servletConfig.getInitParameter("shareMyAddress");
             logMessage("\"shareMyAddress\" = \"" + shareMyAddress + "\"");
-            try {
-
-                Nxt.shareMyAddress = Boolean.parseBoolean(shareMyAddress);
-
-            } catch (Exception e) {
-
-                Nxt.shareMyAddress = true;
-
-            }
+            Nxt.shareMyAddress = Boolean.parseBoolean(shareMyAddress);
 
             myHallmark = servletConfig.getInitParameter("myHallmark");
             logMessage("\"myHallmark\" = \"" + myHallmark + "\"");
             if (myHallmark != null) {
 
                 myHallmark = myHallmark.trim();
+
+                try {
+                    convert(myHallmark); // check for parsing exceptions
+                } catch (NumberFormatException e) {
+                    logMessage("Your hallmark is invalid: " + myHallmark);
+                    System.exit(1);
+                }
 
             }
 
@@ -5535,10 +5626,10 @@ public class Nxt extends HttpServlet {
 
                 Nxt.maxNumberOfConnectedPublicPeers = Integer.parseInt(maxNumberOfConnectedPublicPeers);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.maxNumberOfConnectedPublicPeers = 10;
-
+                logMessage("Invalid value for maxNumberOfConnectedPublicPeers " + maxNumberOfConnectedPublicPeers + ", using default " + Nxt.maxNumberOfConnectedPublicPeers);
             }
 
             String connectTimeout = servletConfig.getInitParameter("connectTimeout");
@@ -5547,10 +5638,10 @@ public class Nxt extends HttpServlet {
 
                 Nxt.connectTimeout = Integer.parseInt(connectTimeout);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.connectTimeout = 1000;
-
+                logMessage("Invalid value for connectTimeout " + connectTimeout + ", using default " + Nxt.connectTimeout);
             }
 
             String readTimeout = servletConfig.getInitParameter("readTimeout");
@@ -5559,23 +5650,15 @@ public class Nxt extends HttpServlet {
 
                 Nxt.readTimeout = Integer.parseInt(readTimeout);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.readTimeout = 1000;
-
+                logMessage("Invalid value for readTimeout " + readTimeout + ", using default " + Nxt.readTimeout);
             }
 
             String enableHallmarkProtection = servletConfig.getInitParameter("enableHallmarkProtection");
             logMessage("\"enableHallmarkProtection\" = \"" + enableHallmarkProtection + "\"");
-            try {
-
-                Nxt.enableHallmarkProtection = Boolean.parseBoolean(enableHallmarkProtection);
-
-            } catch (Exception e) {
-
-                Nxt.enableHallmarkProtection = true;
-
-            }
+            Nxt.enableHallmarkProtection = Boolean.parseBoolean(enableHallmarkProtection);
 
             String pushThreshold = servletConfig.getInitParameter("pushThreshold");
             logMessage("\"pushThreshold\" = \"" + pushThreshold + "\"");
@@ -5583,10 +5666,10 @@ public class Nxt extends HttpServlet {
 
                 Nxt.pushThreshold = Integer.parseInt(pushThreshold);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.pushThreshold = 0;
-
+                logMessage("Invalid value for pushThreshold " + pushThreshold + ", using default " + Nxt.pushThreshold);
             }
 
             String pullThreshold = servletConfig.getInitParameter("pullThreshold");
@@ -5595,9 +5678,10 @@ public class Nxt extends HttpServlet {
 
                 Nxt.pullThreshold = Integer.parseInt(pullThreshold);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.pullThreshold = 0;
+                logMessage("Invalid value for pullThreshold " + pullThreshold + ", using default " + Nxt.pullThreshold);
 
             }
 
@@ -5652,9 +5736,10 @@ public class Nxt extends HttpServlet {
 
                 Nxt.blacklistingPeriod = Integer.parseInt(blacklistingPeriod);
 
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
 
                 Nxt.blacklistingPeriod = 300000;
+                logMessage("Invalid value for blacklistingPeriod " + blacklistingPeriod + ", using default " + Nxt.blacklistingPeriod);
 
             }
 
@@ -5664,7 +5749,20 @@ public class Nxt extends HttpServlet {
 
                 Nxt.communicationLoggingMask = Integer.parseInt(communicationLoggingMask);
 
-            } catch (Exception e) { }
+            } catch (NumberFormatException e) {
+                logMessage("Invalid value for communicationLogginMask " + communicationLoggingMask + ", using default 0");
+            }
+
+            String sendToPeersLimit = servletConfig.getInitParameter("sendToPeersLimit");
+            logMessage("\"sendToPeersLimit\" = \"" + sendToPeersLimit + "\"");
+            try {
+
+                Nxt.sendToPeersLimit = Integer.parseInt(sendToPeersLimit);
+
+            } catch (NumberFormatException e) {
+                Nxt.sendToPeersLimit = 10;
+                logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
+            }
 
             try {
 
@@ -5673,7 +5771,7 @@ public class Nxt extends HttpServlet {
                 logMessage("...Done");
 
             } catch (FileNotFoundException e) {
-
+                logMessage("transactions.nxt not found, starting from scratch");
                 transactions.clear();
 
                 long[] recipients = {(new BigInteger("163918645372308887")).longValue(),
@@ -5921,7 +6019,7 @@ public class Nxt extends HttpServlet {
                 logMessage("...Done");
 
             } catch (FileNotFoundException e) {
-
+                logMessage("blocks.nxt not found, starting from scratch");
                 blocks.clear();
 
                 Block block = new Block(-1, 0, 0, transactions.size(), 1000000000, 0, transactions.size() * 128, null, new byte[]{18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27}, new byte[64], new byte[]{105, -44, 38, -60, -104, -73, 10, -58, -47, 103, -127, -128, 53, 101, 39, -63, -2, -32, 48, -83, 115, 47, -65, 118, 114, -62, 38, 109, 22, 106, 76, 8, -49, -113, -34, -76, 82, 79, -47, -76, -106, -69, -54, -85, 3, -6, 110, 103, 118, 15, 109, -92, 82, 37, 20, 2, 36, -112, 21, 72, 108, 72, 114, 17});
@@ -5935,10 +6033,10 @@ public class Nxt extends HttpServlet {
 
                 }
                 Arrays.sort(block.transactions);
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                for (i = 0; i < block.numberOfTransactions; i++) {
+                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                for (long transactionId : block.transactions) {
 
-                    digest.update(transactions.get(block.transactions[i]).getBytes());
+                    digest.update(transactions.get(transactionId).getBytes());
 
                 }
                 block.payloadHash = digest.digest();
@@ -5984,7 +6082,13 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error connecting to peer", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
@@ -6009,7 +6113,13 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error un-blacklisting peer", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
@@ -6049,7 +6159,13 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error requesting peers from a peer", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
@@ -6079,7 +6195,13 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error processing unconfirmed transactions from peer", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
@@ -6129,7 +6251,13 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error removing unconfirmed transactions", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
@@ -6158,7 +6286,12 @@ public class Nxt extends HttpServlet {
                             JSONObject response = peer.send(getCumulativeDifficultyRequest);
                             if (response != null) {
 
-                                BigInteger curCumulativeDifficulty = Block.getLastBlock().cumulativeDifficulty, betterCumulativeDifficulty = new BigInteger((String)response.get("cumulativeDifficulty"));
+                                BigInteger curCumulativeDifficulty = Block.getLastBlock().cumulativeDifficulty;
+                                String peerCumulativeDifficulty = (String)response.get("cumulativeDifficulty");
+                                if (peerCumulativeDifficulty == null) {
+                                    return;
+                                }
+                                BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
                                 if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) > 0) {
 
                                     response = peer.send(getMilestoneBlockIdsRequest);
@@ -6291,12 +6424,12 @@ public class Nxt extends HttpServlet {
                                                                     }
 
                                                                 }
-                                                                if (!alreadyPushed && blocks.get(block.getId()) == null && block.numberOfTransactions <= MAX_NUMBER_OF_TRANSACTIONS) {
+                                                                if (!alreadyPushed && blocks.get(block.getId()) == null && block.transactions.length <= MAX_NUMBER_OF_TRANSACTIONS) {
 
                                                                     futureBlocks.add(block);
 
                                                                     JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-                                                                    for (int j = 0; j < block.numberOfTransactions; j++) {
+                                                                    for (int j = 0; j < block.transactions.length; j++) {
 
                                                                         Transaction transaction = Transaction.getTransaction((JSONObject)transactionsData.get(j));
                                                                         block.transactions[j] = transaction.getId();
@@ -6337,9 +6470,9 @@ public class Nxt extends HttpServlet {
                                                                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                                                                 buffer.put(block.getBytes());
 
-                                                                for (int j = 0; j < block.transactions.length; j++) {
+                                                                for (long transactionId : block.transactions) {
 
-                                                                    buffer.put(futureTransactions.get(block.transactions[j]).getBytes());
+                                                                    buffer.put(futureTransactions.get(transactionId).getBytes());
 
                                                                 }
 
@@ -6405,7 +6538,13 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error in milestone blocks processing thread", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
@@ -6445,7 +6584,7 @@ public class Nxt extends HttpServlet {
                             Block lastBlock = Block.getLastBlock();
                             if (lastBlocks.get(account) != lastBlock) {
 
-                                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                                 byte[] generationSignatureHash;
                                 if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
 
@@ -6485,20 +6624,30 @@ public class Nxt extends HttpServlet {
 
                         }
 
-                    } catch (Exception e) { }
+                    } catch (Exception e) {
+                        logDebugMessage("Error in block generation thread", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
 
                 }
 
             }, 0, 1, TimeUnit.SECONDS);
 
+            logMessage("NRS " + Nxt.VERSION + " started successfully.");
+
         } catch (Exception e) {
 
-            logMessage("10: " + e.toString());
+            logMessage("Error initializing Nxt servlet", e);
+            System.exit(1);
 
         }
 
     }
 
+    //TODO: clean up Exception and error handling as part of the refactoring
     //TODO: the huge switch statement should be refactored completely, a separate class should handle each case
     // This is required in order to be able to factor out closed-source code into separate class files
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -6662,7 +6811,7 @@ public class Nxt extends HttpServlet {
                                                                     transactionsData.add(transaction.getJSONObject());
                                                                     peerRequest.put("transactions", transactionsData);
 
-                                                                    Peer.sendToAllPeers(peerRequest);
+                                                                    Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
 
@@ -6720,7 +6869,7 @@ public class Nxt extends HttpServlet {
                                         transactionsData.add(transaction.getJSONObject());
                                         peerRequest.put("transactions", transactionsData);
 
-                                        Peer.sendToAllPeers(peerRequest);
+                                        Peer.sendToSomePeers(peerRequest);
 
                                         response.put("transaction", transaction.getStringId());
 
@@ -6938,7 +7087,7 @@ public class Nxt extends HttpServlet {
 
                                 } else {
 
-                                    byte[] publicKeyHash = MessageDigest.getInstance("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
+                                    byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
                                     BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
                                     response.put("accountId", bigInteger.toString());
 
@@ -7281,7 +7430,7 @@ public class Nxt extends HttpServlet {
                                             response.put("height", blockData.height);
                                             response.put("generator", convert(blockData.getGeneratorAccountId()));
                                             response.put("timestamp", blockData.timestamp);
-                                            response.put("numberOfTransactions", blockData.numberOfTransactions);
+                                            response.put("numberOfTransactions", blockData.transactions.length);
                                             response.put("totalAmount", blockData.totalAmount);
                                             response.put("totalFee", blockData.totalFee);
                                             response.put("payloadLength", blockData.payloadLength);
@@ -7306,9 +7455,9 @@ public class Nxt extends HttpServlet {
                                             }
                                             response.put("blockSignature", convert(blockData.blockSignature));
                                             JSONArray transactions = new JSONArray();
-                                            for (int i = 0; i < blockData.numberOfTransactions; i++) {
+                                            for (long transactionId : blockData.transactions) {
 
-                                                transactions.add(convert(blockData.transactions[i]));
+                                                transactions.add(convert(transactionId));
 
                                             }
                                             response.put("transactions", transactions);
@@ -7330,6 +7479,11 @@ public class Nxt extends HttpServlet {
                             //TODO: cache
                             case "getConstants":
                             {
+
+                                response.put("genesisBlockId", convert(GENESIS_BLOCK_ID));
+                                response.put("genesisAccountId", convert(CREATOR_ID));
+                                response.put("maxBlockPayloadLength", MAX_PAYLOAD_LENGTH);
+                                response.put("maxArbitraryMessageLength", MAX_ARBITRARY_MESSAGE_LENGTH);
 
                                 JSONArray transactionTypes = new JSONArray();
                                 JSONObject transactionType = new JSONObject();
@@ -7797,7 +7951,7 @@ public class Nxt extends HttpServlet {
                                                                         transactionsData.add(transaction.getJSONObject());
                                                                         peerRequest.put("transactions", transactionsData);
 
-                                                                        Peer.sendToAllPeers(peerRequest);
+                                                                        Peer.sendToSomePeers(peerRequest);
 
                                                                         response.put("transaction", transaction.getStringId());
 
@@ -7926,7 +8080,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
 
@@ -8054,7 +8208,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
 
@@ -8264,7 +8418,7 @@ public class Nxt extends HttpServlet {
                                                                     transactionsData.add(transaction.getJSONObject());
                                                                     peerRequest.put("transactions", transactionsData);
 
-                                                                    Peer.sendToAllPeers(peerRequest);
+                                                                    Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
 
@@ -8435,7 +8589,7 @@ public class Nxt extends HttpServlet {
                                                                     transactionsData.add(transaction.getJSONObject());
                                                                     peerRequest.put("transactions", transactionsData);
 
-                                                                    Peer.sendToAllPeers(peerRequest);
+                                                                    Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
 
@@ -8598,7 +8752,7 @@ public class Nxt extends HttpServlet {
                                                                 transactionsData.add(transaction.getJSONObject());
                                                                 peerRequest.put("transactions", transactionsData);
 
-                                                                Peer.sendToAllPeers(peerRequest);
+                                                                Peer.sendToSomePeers(peerRequest);
 
                                                                 response.put("transaction", transaction.getStringId());
 
@@ -8989,9 +9143,10 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
+                                                            response.put("bytes", convert(transaction.getBytes()));
 
                                                         }
 
@@ -9135,7 +9290,7 @@ public class Nxt extends HttpServlet {
                                                             transactionsData.add(transaction.getJSONObject());
                                                             peerRequest.put("transactions", transactionsData);
 
-                                                            Peer.sendToAllPeers(peerRequest);
+                                                            Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
                                                             response.put("bytes", convert(transaction.getBytes()));
@@ -9421,7 +9576,7 @@ public class Nxt extends HttpServlet {
                         JSONObject recentBlock = new JSONObject();
                         recentBlock.put("index", block.index);
                         recentBlock.put("timestamp", block.timestamp);
-                        recentBlock.put("numberOfTransactions", block.numberOfTransactions);
+                        recentBlock.put("numberOfTransactions", block.transactions.length);
                         recentBlock.put("totalAmount", block.totalAmount);
                         recentBlock.put("totalFee", block.totalFee);
                         recentBlock.put("payloadLength", block.payloadLength);
@@ -9704,7 +9859,7 @@ public class Nxt extends HttpServlet {
                                 transactionsData.add(transaction.getJSONObject());
                                 peerRequest.put("transactions", transactionsData);
 
-                                Peer.sendToAllPeers(peerRequest);
+                                Peer.sendToSomePeers(peerRequest);
 
                                 JSONObject response = new JSONObject();
                                 response.put("response", "notifyOfAcceptedTransaction");
@@ -9768,7 +9923,7 @@ public class Nxt extends HttpServlet {
                             response2.put("response", "setBlockGenerationDeadline");
 
                             Block lastBlock = Block.getLastBlock();
-                            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                            MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                             byte[] generationSignatureHash;
                             if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
 
@@ -9849,9 +10004,9 @@ public class Nxt extends HttpServlet {
 
                             }
 
-                            for (int i = 0; i < block.transactions.length; i++) {
+                            for (long transactionId : block.transactions) {
 
-                                Transaction transaction = transactions.get(block.transactions[i]);
+                                Transaction transaction = transactions.get(transactionId);
                                 if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
                                     JSONObject myTransaction = new JSONObject();
@@ -9934,11 +10089,17 @@ public class Nxt extends HttpServlet {
 
             if (user != null) {
 
+                logMessage("Error processing GET request", e);
+
                 JSONObject response = new JSONObject();
                 response.put("response", "showMessage");
                 response.put("message", e.toString());
 
                 user.pendingResponses.offer(response);
+
+            } else {
+
+                logDebugMessage("Error processing GET request", e);
 
             }
 
@@ -10026,6 +10187,10 @@ public class Nxt extends HttpServlet {
                     request = (JSONObject)JSONValue.parse(reader);
                 }
 
+                if (request == null) {
+                    return;
+                }
+
                 peer = Peer.addPeer(req.getRemoteHost(), "");
                 if (peer != null) {
 
@@ -10040,7 +10205,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            if (((Long)request.get("protocol")) == 1) {
+            if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) { // autoboxing sucks
 
                 switch ((String)request.get("requestType")) {
 
@@ -10116,11 +10281,7 @@ public class Nxt extends HttpServlet {
                             }
                             peer.platform = platform;
 
-                            try {
-
-                                peer.shareAddress = Boolean.parseBoolean((String)request.get("shareAddress"));
-
-                            } catch (Exception e) { }
+                            peer.shareAddress = Boolean.TRUE.equals(request.get("shareAddress"));
 
                             if (peer.analyzeHallmark(req.getRemoteHost(), (String)request.get("hallmark"))) {
 
@@ -10307,14 +10468,14 @@ public class Nxt extends HttpServlet {
 
             } else {
 
+                logDebugMessage("Unsupported protocol " + request.get("protocol"));
                 response.put("error", "Unsupported protocol!");
 
             }
 
-        } catch (Exception e) {
-
+        } catch (RuntimeException e) {
+            logDebugMessage("Error processing POST request", e);
             response.put("error", e.toString());
-
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
@@ -10394,31 +10555,21 @@ public class Nxt extends HttpServlet {
     @Override
     public void destroy() {
 
-        scheduledThreadPool.shutdown();
-        try {
-            scheduledThreadPool.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        if (! scheduledThreadPool.isTerminated()) {
-            logMessage("some threads didn't terminate, forcing shutdown");
-            scheduledThreadPool.shutdownNow();
-        }
+        shutdownExecutor(scheduledThreadPool);
+        shutdownExecutor(sendToPeersService);
 
         try {
-
             Block.saveBlocks("blocks.nxt", true);
-
-        } catch (Exception e) {
-            logMessage("error saving blocks.nxt");
+            logMessage("Saved blocks.nxt");
+        } catch (RuntimeException e) {
+            logMessage("Error saving blocks", e);
         }
 
         try {
-
             Transaction.saveTransactions("transactions.nxt");
-
-        } catch (Exception e) {
-            logMessage("error saving transactions.nxt");
+            logMessage("Saved transactions.nxt");
+        } catch (RuntimeException e) {
+            logMessage("Error saving transactions", e);
         }
 
         /* no longer used
@@ -10429,8 +10580,21 @@ public class Nxt extends HttpServlet {
         } catch (Exception e) { }
         */
 
-        logMessage("Nxt stopped.");
+        logMessage("NRS " + Nxt.VERSION + " stopped.");
 
+    }
+
+    private static void shutdownExecutor(ExecutorService executor) {
+        executor.shutdown();
+        try {
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (! executor.isTerminated()) {
+            logMessage("some threads didn't terminate, forcing shutdown");
+            executor.shutdownNow();
+        }
     }
 
 }

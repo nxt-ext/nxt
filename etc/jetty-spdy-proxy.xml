@@ -120,7 +120,7 @@
   <!-- =========================================================== -->
   <!-- These are the reverse proxy connectors accepting requests   -->
   <!-- from clients.                                               -->
-  <!-- They accept non-SSL (on port 80) and SSL (on port 8443)   -->
+  <!-- They accept non-SSL (on port 8080) and SSL (on port 8443)   -->
   <!-- HTTP, SPDY/2(HTTP) and SPDY/3(HTTP).                        -->
   <!-- Non-SPDY HTTP requests are converted to SPDY internally     -->
   <!-- and passed to the ProxyEngine above.                        -->
@@ -134,7 +134,7 @@
         <Arg>
           <Ref refid="proxyEngineSelector"/>
         </Arg>
-        <Set name="Port">80</Set>
+        <Set name="Port">8080</Set>
       </New>
     </Arg>
   </Call>
