@@ -96,6 +96,11 @@
 			<param-value>300000</param-value>
 		</init-param>
 
+        <init-param>
+            <param-name>sendToPeersLimit</param-name>
+            <param-value>10</param-value>
+        </init-param>
+
 		<init-param>
 			<param-name>communicationLoggingMask</param-name>
 			<param-value>0</param-value>

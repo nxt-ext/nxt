@@ -120,6 +120,7 @@ public class Nxt extends HttpServlet {
     static /*final*/ int connectTimeout, readTimeout;
     static /*final*/ boolean enableHallmarkProtection;
     static /*final*/ int pushThreshold, pullThreshold;
+    static /*final*/ int sendToPeersLimit;
     static final AtomicInteger peerCounter = new AtomicInteger();
     static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
 
@@ -3484,6 +3485,7 @@ public class Nxt extends HttpServlet {
         // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
         static void sendToAllPeers(JSONObject request) {
 
+            int successful = 0;
             for (Peer peer : Nxt.peers.values()) {
 
                 if (enableHallmarkProtection && peer.getWeight() < pushThreshold) {
@@ -3492,8 +3494,14 @@ public class Nxt extends HttpServlet {
 
                 if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
 
-                    peer.send(request);
+                    JSONObject response = peer.send(request);
+                    if (response != null && response.get("error") == null) {
+                        successful += 1;
+                    }
 
+                }
+                if (successful >= sendToPeersLimit) {
+                    return;
                 }
 
             }
@@ -5718,6 +5726,17 @@ public class Nxt extends HttpServlet {
 
             } catch (NumberFormatException e) {
                 logMessage("Invalid value for communicationLogginMask " + communicationLoggingMask + ", using default 0");
+            }
+
+            String sendToPeersLimit = servletConfig.getInitParameter("sendToPeersLimit");
+            logMessage("\"sendToPeersLimit\" = \"" + sendToPeersLimit + "\"");
+            try {
+
+                Nxt.sendToPeersLimit = Integer.parseInt(sendToPeersLimit);
+
+            } catch (NumberFormatException e) {
+                Nxt.sendToPeersLimit = 10;
+                logMessage("Invalid value for sendToPeersLimit" + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
             }
 
             try {
