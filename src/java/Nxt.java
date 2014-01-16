@@ -3496,7 +3496,7 @@ public class Nxt extends HttpServlet {
         }
 
         static void sendToSomePeers(final JSONObject request) {
-
+            request.put("protocol", 1);
             final JSONStreamAware jsonStreamAware = new JSONStreamAware() {
                 final char[] jsonChars = request.toJSONString().toCharArray();
                 @Override
