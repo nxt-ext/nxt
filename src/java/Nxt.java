@@ -7193,10 +7193,30 @@ public class Nxt extends HttpServlet {
 
                                                 }
 
+                                                int type, subtype;
+                                                try {
+
+                                                    type = Integer.parseInt(req.getParameter("type"));
+
+                                                } catch (Exception e) {
+
+                                                    type = -1;
+
+                                                }
+                                                try {
+
+                                                    subtype = Integer.parseInt(req.getParameter("subtype"));
+
+                                                } catch (Exception e) {
+
+                                                    subtype = -1;
+
+                                                }
+
                                                 PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(11, Transaction.timestampComparator);
                                                 byte[] accountPublicKey = accountData.publicKey.get();
                                                 for (Transaction transaction : transactions.values()) {
-                                                    if (blocks.get(transaction.block).timestamp >= timestamp && (Arrays.equals(transaction.senderPublicKey, accountPublicKey) || transaction.recipient == accountData.id)) {
+                                                    if ((transaction.recipient == accountData.id || Arrays.equals(transaction.senderPublicKey, accountPublicKey)) && (type < 0 || transaction.type == type) && (subtype < 0 || transaction.subtype == subtype) && blocks.get(transaction.block).timestamp >= timestamp) {
                                                         sortedTransactions.offer(transaction);
                                                     }
                                                 }
