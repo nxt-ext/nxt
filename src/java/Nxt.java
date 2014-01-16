@@ -81,6 +81,7 @@ public class Nxt extends HttpServlet {
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
+    static final byte[] CREATOR_PUBLIC_KEY = {18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27};
     static final int BLOCK_HEADER_LENGTH = 224;
     static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
     static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
@@ -6015,7 +6016,7 @@ public class Nxt extends HttpServlet {
 
                 for (int i = 0; i < recipients.length; i++) {
 
-                    Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, 0, (short)0, new byte[]{18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27}, recipients[i], amounts[i], 0, 0, signatures[i]);
+                    Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, 0, (short)0, CREATOR_PUBLIC_KEY, recipients[i], amounts[i], 0, 0, signatures[i]);
 
                     transactions.put(transaction.getId(), transaction);
 
@@ -6041,7 +6042,7 @@ public class Nxt extends HttpServlet {
                 logMessage("blocks.nxt not found, starting from scratch");
                 blocks.clear();
 
-                Block block = new Block(-1, 0, 0, transactions.size(), 1000000000, 0, transactions.size() * 128, null, new byte[]{18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27}, new byte[64], new byte[]{105, -44, 38, -60, -104, -73, 10, -58, -47, 103, -127, -128, 53, 101, 39, -63, -2, -32, 48, -83, 115, 47, -65, 118, 114, -62, 38, 109, 22, 106, 76, 8, -49, -113, -34, -76, 82, 79, -47, -76, -106, -69, -54, -85, 3, -6, 110, 103, 118, 15, 109, -92, 82, 37, 20, 2, 36, -112, 21, 72, 108, 72, 114, 17});
+                Block block = new Block(-1, 0, 0, transactions.size(), 1000000000, 0, transactions.size() * 128, null, CREATOR_PUBLIC_KEY, new byte[64], new byte[]{105, -44, 38, -60, -104, -73, 10, -58, -47, 103, -127, -128, 53, 101, 39, -63, -2, -32, 48, -83, 115, 47, -65, 118, 114, -62, 38, 109, 22, 106, 76, 8, -49, -113, -34, -76, 82, 79, -47, -76, -106, -69, -54, -85, 3, -6, 110, 103, 118, 15, 109, -92, 82, 37, 20, 2, 36, -112, 21, 72, 108, 72, 114, 17});
                 block.index = blockCounter.incrementAndGet();
                 blocks.put(GENESIS_BLOCK_ID, block);
 
