@@ -102,6 +102,11 @@
         </init-param>
 
         <init-param>
+            <param-name>sendInParallel</param-name>
+            <param-value>3</param-value>
+        </init-param>
+
+        <init-param>
             <param-name>communicationLoggingMask</param-name>
             <param-value>0</param-value>
         </init-param>

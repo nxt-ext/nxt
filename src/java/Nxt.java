@@ -153,7 +153,7 @@ public class Nxt extends HttpServlet {
 
     static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
 
-    static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
+    static /*final*/ ExecutorService sendToPeersService;
 
 
     static int getEpochTime(long time) {
@@ -703,7 +703,7 @@ public class Nxt extends HttpServlet {
             byte[] accountPublicKey = publicKey.get();
             for (User user : users.values()) {
 
-                if (user.secretPhrase != null && Arrays.equals(Crypto.getPublicKey(user.secretPhrase), accountPublicKey)) {
+                if (user.secretPhrase != null && Arrays.equals(user.publicKey, accountPublicKey)) {
 
                     user.send(response);
 
@@ -888,6 +888,7 @@ public class Nxt extends HttpServlet {
     static class Block implements Serializable {
 
         static final long serialVersionUID = 0;
+        static final long[] emptyLong = new long[0];
 
         final int version;
         final int timestamp;
@@ -936,7 +937,7 @@ public class Nxt extends HttpServlet {
             this.blockSignature = blockSignature;
 
             this.previousBlockHash = previousBlockHash;
-            this.transactions = new long[numberOfTransactions];
+            this.transactions = numberOfTransactions == 0 ? emptyLong : new long[numberOfTransactions];
 
         }
 
@@ -1195,27 +1196,31 @@ public class Nxt extends HttpServlet {
 
         static Block getBlock(JSONObject blockData) {
 
-            int version = ((Long)blockData.get("version")).intValue();
-            int timestamp = ((Long)blockData.get("timestamp")).intValue();
-            long previousBlock = parseUnsignedLong((String) blockData.get("previousBlock"));
-            int numberOfTransactions = ((Long)blockData.get("numberOfTransactions")).intValue();
-            int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
-            int totalFee = ((Long)blockData.get("totalFee")).intValue();
-            int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-            byte[] payloadHash = convert((String)blockData.get("payloadHash"));
-            byte[] generatorPublicKey = convert((String)blockData.get("generatorPublicKey"));
-            byte[] generationSignature = convert((String)blockData.get("generationSignature"));
-            byte[] blockSignature = convert((String)blockData.get("blockSignature"));
+            try {
+                int version = ((Long)blockData.get("version")).intValue();
+                int timestamp = ((Long)blockData.get("timestamp")).intValue();
+                long previousBlock = parseUnsignedLong((String) blockData.get("previousBlock"));
+                int numberOfTransactions = ((Long)blockData.get("numberOfTransactions")).intValue();
+                int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
+                int totalFee = ((Long)blockData.get("totalFee")).intValue();
+                int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
+                byte[] payloadHash = convert((String)blockData.get("payloadHash"));
+                byte[] generatorPublicKey = convert((String)blockData.get("generatorPublicKey"));
+                byte[] generationSignature = convert((String)blockData.get("generationSignature"));
+                byte[] blockSignature = convert((String)blockData.get("blockSignature"));
 
-            byte[] previousBlockHash = version == 1 ? null : convert((String)blockData.get("previousBlockHash"));
+                byte[] previousBlockHash = version == 1 ? null : convert((String)blockData.get("previousBlockHash"));
 
-            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || payloadLength > MAX_PAYLOAD_LENGTH) {
+                if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || payloadLength > MAX_PAYLOAD_LENGTH) {
 
+                    return null;
+
+                }
+                return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+            } catch (RuntimeException e) {
+                logDebugMessage("Failed to parse JSON block data", e);
                 return null;
-
             }
-            return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-
         }
 
         byte[] getBytes() {
@@ -1489,6 +1494,8 @@ public class Nxt extends HttpServlet {
                 } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
                     logMessage("Checksum failed at block " + TRANSPARENT_FORGING_BLOCK);
                     return false;
+                } else {
+                    logMessage("Checksum passed at block " + TRANSPARENT_FORGING_BLOCK);
                 }
 
             }
@@ -4078,7 +4085,7 @@ public class Nxt extends HttpServlet {
 
                             try {
 
-                                transaction.attachment = new Transaction.MessagingAliasAssignmentAttachment(new String(alias, "UTF-8"), new String(uri, "UTF-8"));
+                                transaction.attachment = new Transaction.MessagingAliasAssignmentAttachment(new String(alias, "UTF-8").intern(), new String(uri, "UTF-8").intern());
 
                             } catch (RuntimeException|UnsupportedEncodingException e) {
                                 logDebugMessage("Error parsing alias assignment", e);
@@ -4110,7 +4117,7 @@ public class Nxt extends HttpServlet {
 
                             try {
 
-                                transaction.attachment = new Transaction.ColoredCoinsAssetIssuanceAttachment(new String(name, "UTF-8"), new String(description, "UTF-8"), quantity);
+                                transaction.attachment = new Transaction.ColoredCoinsAssetIssuanceAttachment(new String(name, "UTF-8").intern(), new String(description, "UTF-8").intern(), quantity);
 
                             } catch (RuntimeException|UnsupportedEncodingException e) {
                                 logDebugMessage("Error in asset issuance", e);
@@ -5381,6 +5388,7 @@ public class Nxt extends HttpServlet {
         volatile boolean isInactive;
 
         volatile String secretPhrase;
+        volatile byte[] publicKey;
 
         User() {
 
@@ -5391,13 +5399,15 @@ public class Nxt extends HttpServlet {
         void deinitializeKeyPair() {
 
             secretPhrase = null;
+            publicKey = null;
 
         }
 
         BigInteger initializeKeyPair(String secretPhrase) {
 
             this.secretPhrase = secretPhrase;
-            byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
+            this.publicKey = Crypto.getPublicKey(secretPhrase);
+            byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(publicKey);
             return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
 
         }
@@ -5762,6 +5772,15 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
                 Nxt.sendToPeersLimit = 10;
                 logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
+            }
+
+            String sendInParallel = servletConfig.getInitParameter("sendInParallel");
+            logMessage("\"sendInParallel\" = \"" + sendInParallel + "\"");
+            try {
+               sendToPeersService = Executors.newFixedThreadPool(Integer.parseInt(sendInParallel));
+            } catch (IllegalArgumentException e) {
+                sendToPeersService = Executors.newFixedThreadPool(3);
+                logMessage("Invalid valid for sendInParallel " + sendInParallel + ", using default 3");
             }
 
             try {
@@ -6566,7 +6585,7 @@ public class Nxt extends HttpServlet {
 
                             if (user.secretPhrase != null) {
 
-                                Account account = accounts.get(Account.getId(Crypto.getPublicKey(user.secretPhrase)));
+                                Account account = accounts.get(Account.getId(user.publicKey));
                                 if (account != null && account.getEffectiveBalance() > 0) {
 
                                     unlockedAccounts.put(account, user);
@@ -6594,7 +6613,7 @@ public class Nxt extends HttpServlet {
                                 } else {
 
                                     digest.update(lastBlock.generationSignature);
-                                    generationSignatureHash = digest.digest(Crypto.getPublicKey(user.secretPhrase));
+                                    generationSignatureHash = digest.digest(user.publicKey);
 
                                 }
                                 BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
@@ -9408,7 +9427,7 @@ public class Nxt extends HttpServlet {
                     byte[] website = req.getParameter("website").trim().getBytes("UTF-8");
                     byte[] data = new byte[website.length + 32 + 4];
                     System.arraycopy(website, 0, data, 0, website.length);
-                    System.arraycopy(Crypto.getPublicKey(user.secretPhrase), 0, data, website.length, 32);
+                    System.arraycopy(user.publicKey, 0, data, website.length, 32);
                     int timestamp = getEpochTime(System.currentTimeMillis());
                     data[website.length + 32] = (byte)timestamp;
                     data[website.length + 32 + 1] = (byte)(timestamp >> 8);
@@ -9834,8 +9853,7 @@ public class Nxt extends HttpServlet {
 
                         } else {
 
-                            byte[] publicKey = Crypto.getPublicKey(user.secretPhrase);
-                            Account account = accounts.get(Account.getId(publicKey));
+                            Account account = accounts.get(Account.getId(user.publicKey));
                             if (account == null || (amount + fee) * 100L > account.getUnconfirmedBalance()) {
 
                                 JSONObject response = new JSONObject();
@@ -9850,7 +9868,7 @@ public class Nxt extends HttpServlet {
 
                             } else {
 
-                                final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, publicKey, recipient, amount, fee, 0, new byte[64]);
+                                final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, user.publicKey, recipient, amount, fee, 0, new byte[64]);
                                 transaction.sign(user.secretPhrase);
 
                                 JSONObject peerRequest = new JSONObject();
@@ -9933,7 +9951,7 @@ public class Nxt extends HttpServlet {
                             } else {
 
                                 digest.update(lastBlock.generationSignature);
-                                generationSignatureHash = digest.digest(Crypto.getPublicKey(user.secretPhrase));
+                                generationSignatureHash = digest.digest(user.publicKey);
 
                             }
                             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
