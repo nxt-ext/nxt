@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.7";
+    static final String VERSION = "0.5.8";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -154,7 +154,7 @@ public class Nxt extends HttpServlet {
 
     static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
 
-    static /*final*/ ExecutorService sendToPeersService;
+    static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
 
     static int getEpochTime(long time) {
@@ -3495,10 +3495,15 @@ public class Nxt extends HttpServlet {
 
         }
 
-        //TODO: send in parallel using an executor service or NIO
-        // cfb: Will this help if there are a lot of other sendToSomePeers() in progress?
-        // cfb: Also, sending many identical packets at once (which are broadcasted in the same manner by other nodes) will lead to large spikes on the bandwidth graph of the whole network
         static void sendToSomePeers(final JSONObject request) {
+
+            final JSONStreamAware jsonStreamAware = new JSONStreamAware() {
+                final char[] jsonChars = request.toJSONString().toCharArray();
+                @Override
+                public void writeJSONString(Writer out) throws IOException {
+                    out.write(jsonChars);
+                }
+            };
 
             int successful = 0;
             List<Future<JSONObject>> expectedResponses = new ArrayList<>();
@@ -3512,7 +3517,7 @@ public class Nxt extends HttpServlet {
                     Future<JSONObject> futureResponse = sendToPeersService.submit(new Callable<JSONObject>() {
                         @Override
                         public JSONObject call() {
-                            return peer.send(request);
+                            return peer.send(jsonStreamAware);
                         }
                     });
                     expectedResponses.add(futureResponse);
@@ -3541,8 +3546,18 @@ public class Nxt extends HttpServlet {
 
         }
 
-        //TODO: use JSONStreamAware instead
-        JSONObject send(JSONObject request) {
+        //TODO: replace usage of this method with send(JSONStreamAware) for requests that are constant
+        JSONObject send(final JSONObject request) {
+            request.put("protocol", 1);
+            return send(new JSONStreamAware() {
+                @Override
+                public void writeJSONString(Writer out) throws IOException {
+                    request.writeJSONString(out);
+                }
+            });
+        }
+
+        JSONObject send(final JSONStreamAware request) {
 
             JSONObject response;
 
@@ -3558,8 +3573,6 @@ public class Nxt extends HttpServlet {
                     log = "\"" + announcedAddress + "\": " + request.toString();
 
                 }
-
-                request.put("protocol", 1);
 
                 /**/URL url = new URL("http://" + announcedAddress + ((new URL("http://" + announcedAddress)).getPort() < 0 ? ":7874" : "") + "/nxt");
                 /**///URL url = new URL("http://" + announcedAddress + ":6874" + "/nxt");
@@ -5773,15 +5786,6 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
                 Nxt.sendToPeersLimit = 10;
                 logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
-            }
-
-            String sendInParallel = servletConfig.getInitParameter("sendInParallel");
-            logMessage("\"sendInParallel\" = \"" + sendInParallel + "\"");
-            try {
-               sendToPeersService = Executors.newFixedThreadPool(Integer.parseInt(sendInParallel));
-            } catch (IllegalArgumentException e) {
-                sendToPeersService = Executors.newFixedThreadPool(3);
-                logMessage("Invalid valid for sendInParallel " + sendInParallel + ", using default 3");
             }
 
             try {
