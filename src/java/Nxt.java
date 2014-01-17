@@ -951,10 +951,10 @@ public class Nxt extends HttpServlet {
             synchronized (blocksAndTransactionsLock) {
                 if (previousBlock == 0) {
 
-                    lastBlock.set(this);
                     baseTarget = initialBaseTarget;
                     cumulativeDifficulty = BigInteger.ZERO;
                     blocks.put(GENESIS_BLOCK_ID, this);
+                    lastBlock.set(this);
 
                     Account.addAccount(CREATOR_ID);
 
@@ -962,18 +962,17 @@ public class Nxt extends HttpServlet {
 
                     Block previousLastBlock = lastBlock.get();
 
-                    if (! (previousLastBlock.getId() == previousBlock && lastBlock.compareAndSet(previousLastBlock, this))) {
-                        throw new RuntimeException("Last block not equal to this.previousBlock");
-                    }
-
                     previousLastBlock.nextBlock = getId();
                     height = previousLastBlock.height + 1;
-                    baseTarget = Block.getBaseTarget();
+                    baseTarget = calculateBaseTarget();
                     cumulativeDifficulty = previousLastBlock.cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
+                    if (! (previousLastBlock.getId() == previousBlock && lastBlock.compareAndSet(previousLastBlock, this))) {
+                        throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
+                    }
                     Account generatorAccount = accounts.get(getGeneratorAccountId());
                     generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
                     if (blocks.putIfAbsent(getId(), this) != null) {
-                        throw new RuntimeException("duplicate block id: " + getId()); // shouldn't happen
+                        throw new IllegalStateException("duplicate block id: " + getId()); // shouldn't happen
                     }
                 }
 
@@ -1157,16 +1156,19 @@ public class Nxt extends HttpServlet {
         }
 
         static long getBaseTarget() {
+            return lastBlock.get().calculateBaseTarget();
+        }
 
-            Block lastBlock = Nxt.lastBlock.get();
-            if (lastBlock.getId() == GENESIS_BLOCK_ID) {
+        long calculateBaseTarget() {
 
-                return lastBlock.baseTarget;
+            if (getId() == GENESIS_BLOCK_ID) {
+
+                return baseTarget;
 
             }
 
-            Block previousBlock = blocks.get(lastBlock.previousBlock);
-            long curBaseTarget = previousBlock.baseTarget, newBaseTarget = BigInteger.valueOf(curBaseTarget).multiply(BigInteger.valueOf(lastBlock.timestamp - previousBlock.timestamp)).divide(BigInteger.valueOf(60)).longValue();
+            Block previousBlock = blocks.get(this.previousBlock);
+            long curBaseTarget = previousBlock.baseTarget, newBaseTarget = BigInteger.valueOf(curBaseTarget).multiply(BigInteger.valueOf(timestamp - previousBlock.timestamp)).divide(BigInteger.valueOf(60)).longValue();
             if (newBaseTarget < 0 || newBaseTarget > maxBaseTarget) {
 
                 newBaseTarget = maxBaseTarget;
@@ -1224,7 +1226,8 @@ public class Nxt extends HttpServlet {
                 }
                 return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
             } catch (RuntimeException e) {
-                logDebugMessage("Failed to parse JSON block data", e);
+                //logDebugMessage("Failed to parse JSON block data");
+                //logDebugMessage(blockData.toJSONString());
                 return null;
             }
         }
@@ -1371,7 +1374,7 @@ public class Nxt extends HttpServlet {
                 blockCounter.set(objectInputStream.readInt());
                 blocks.clear();
                 blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
-                lastBlock.set(blocks.get(objectInputStream.readLong()));
+                //lastBlock.set(blocks.get(objectInputStream.readLong()));
             } catch (FileNotFoundException e) {
                 throw e;
             } catch (IOException|ClassNotFoundException e) {
@@ -1382,12 +1385,6 @@ public class Nxt extends HttpServlet {
         }
 
         static boolean popLastBlock() {
-
-            if (lastBlock.get().getId() == GENESIS_BLOCK_ID) {
-
-                return false;
-
-            }
 
             try {
 
@@ -1401,6 +1398,20 @@ public class Nxt extends HttpServlet {
                 synchronized (blocksAndTransactionsLock) {
 
                     block = lastBlock.get();
+
+                    if (block.getId() == GENESIS_BLOCK_ID) {
+                        return false;
+                    }
+
+                    Block previousBlock = blocks.get(block.previousBlock);
+                    if (previousBlock == null) {
+                        logMessage("Previous block is null");
+                        throw new IllegalStateException();
+                    }
+                    if (! lastBlock.compareAndSet(block, previousBlock)) {
+                        logMessage("This block is no longer last block");
+                        throw new IllegalStateException();
+                    }
 
                     Account generatorAccount = accounts.get(block.getGeneratorAccountId());
                     generatorAccount.addToBalanceAndUnconfirmedBalance(- block.totalFee * 100L);
@@ -1429,12 +1440,7 @@ public class Nxt extends HttpServlet {
 
                     }
 
-                    if (! lastBlock.compareAndSet(block, blocks.get(block.previousBlock))) {
-                        logMessage("Error popping last block");
-                        throw new RuntimeException("Error popping last block"); // shouldn't happen
-                    }
-
-                }
+                } // synchronized
 
                 JSONArray addedOrphanedBlocks = new JSONArray();
                 JSONObject addedOrphanedBlock = new JSONObject();
@@ -1478,257 +1484,258 @@ public class Nxt extends HttpServlet {
 
         static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
 
-            Block previousLastBlock = Nxt.lastBlock.get();
-            buffer.flip();
-
-            int version = buffer.getInt();
-            if (version != (previousLastBlock.height < TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
-
-                return false;
-
-            }
-
-            if (previousLastBlock.height == TRANSPARENT_FORGING_BLOCK) {
-
-                byte[] checksum = Transaction.calculateTransactionsChecksum();
-                if (CHECKSUM_TRANSPARENT_FORGING == null) {
-                    System.out.println(Arrays.toString(checksum));
-                } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
-                    logMessage("Checksum failed at block " + TRANSPARENT_FORGING_BLOCK);
-                    return false;
-                } else {
-                    logMessage("Checksum passed at block " + TRANSPARENT_FORGING_BLOCK);
-                }
-
-            }
-
-            int blockTimestamp = buffer.getInt();
-            long previousBlock = buffer.getLong();
-            int numberOfTransactions = buffer.getInt();
-            int totalAmount = buffer.getInt();
-            int totalFee = buffer.getInt();
-            int payloadLength = buffer.getInt();
-            byte[] payloadHash = new byte[32];
-            buffer.get(payloadHash);
-            byte[] generatorPublicKey = new byte[32];
-            buffer.get(generatorPublicKey);
-            byte[] generationSignature;
-            byte[] previousBlockHash;
-            if (version == 1) {
-
-                generationSignature = new byte[64];
-                buffer.get(generationSignature);
-                previousBlockHash = null;
-
-            } else {
-
-                generationSignature = new byte[32];
-                buffer.get(generationSignature);
-                previousBlockHash = new byte[32];
-                buffer.get(previousBlockHash);
-
-                if (!Arrays.equals(Nxt.getMessageDigest("SHA-256").digest(previousLastBlock.getBytes()), previousBlockHash)) {
-
-                    return false;
-
-                }
-
-            }
-            byte[] blockSignature = new byte[64];
-            buffer.get(blockSignature);
-
-            int curTime = getEpochTime(System.currentTimeMillis());
-            if (blockTimestamp > curTime + 15 || blockTimestamp <= previousLastBlock.timestamp) {
-
-                return false;
-
-            }
-
-            if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity() || numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
-
-                return false;
-
-            }
-
             Block block;
+            JSONArray addedConfirmedTransactions;
+            JSONArray removedUnconfirmedTransactions;
+            int curTime = getEpochTime(System.currentTimeMillis());
 
-            block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+            synchronized (blocksAndTransactionsLock) {
+                try {
 
-            block.index = blockCounter.incrementAndGet();
+                    Block previousLastBlock = Nxt.lastBlock.get();
+                    buffer.flip();
 
-            try {
-
-                if (block.transactions.length > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
-
-                    return false;
-
-                }
-
-                HashMap<Long, Transaction> blockTransactions = new HashMap<>();
-                HashSet<String> blockAliases = new HashSet<>();
-                for (int i = 0; i < block.transactions.length; i++) {
-
-                    Transaction transaction = Transaction.getTransaction(buffer);
-                    transaction.index = transactionCounter.incrementAndGet();
-
-                    if (blockTransactions.put(block.transactions[i] = transaction.getId(), transaction) != null) {
+                    int version = buffer.getInt();
+                    if (version != (previousLastBlock.height < TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
 
                         return false;
 
                     }
 
-                    switch (transaction.type) {
+                    if (previousLastBlock.height == TRANSPARENT_FORGING_BLOCK) {
 
-                        case Transaction.TYPE_MESSAGING:
-                        {
+                        byte[] checksum = Transaction.calculateTransactionsChecksum();
+                        if (CHECKSUM_TRANSPARENT_FORGING == null) {
+                            System.out.println(Arrays.toString(checksum));
+                        } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
+                            logMessage("Checksum failed at block " + TRANSPARENT_FORGING_BLOCK);
+                            return false;
+                        } else {
+                            logMessage("Checksum passed at block " + TRANSPARENT_FORGING_BLOCK);
+                        }
 
-                            switch (transaction.subtype) {
+                    }
 
-                                case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                                {
+                    int blockTimestamp = buffer.getInt();
+                    long previousBlock = buffer.getLong();
+                    int numberOfTransactions = buffer.getInt();
+                    int totalAmount = buffer.getInt();
+                    int totalFee = buffer.getInt();
+                    int payloadLength = buffer.getInt();
+                    byte[] payloadHash = new byte[32];
+                    buffer.get(payloadHash);
+                    byte[] generatorPublicKey = new byte[32];
+                    buffer.get(generatorPublicKey);
+                    byte[] generationSignature;
+                    byte[] previousBlockHash;
+                    if (version == 1) {
 
-                                    if (!blockAliases.add(((Transaction.MessagingAliasAssignmentAttachment)transaction.attachment).alias.toLowerCase())) {
+                        generationSignature = new byte[64];
+                        buffer.get(generationSignature);
+                        previousBlockHash = null;
 
-                                        return false;
+                    } else {
+
+                        generationSignature = new byte[32];
+                        buffer.get(generationSignature);
+                        previousBlockHash = new byte[32];
+                        buffer.get(previousBlockHash);
+
+                        if (!Arrays.equals(Nxt.getMessageDigest("SHA-256").digest(previousLastBlock.getBytes()), previousBlockHash)) {
+
+                            return false;
+
+                        }
+
+                    }
+                    byte[] blockSignature = new byte[64];
+                    buffer.get(blockSignature);
+
+                    if (blockTimestamp > curTime + 15 || blockTimestamp <= previousLastBlock.timestamp) {
+
+                        return false;
+
+                    }
+
+                    if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity() || numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
+
+                        return false;
+
+                    }
+
+                    block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+
+                    block.index = blockCounter.incrementAndGet();
+
+
+                    if (block.transactions.length > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+
+                        return false;
+
+                    }
+
+                    HashMap<Long, Transaction> blockTransactions = new HashMap<>();
+                    HashSet<String> blockAliases = new HashSet<>();
+                    for (int i = 0; i < block.transactions.length; i++) {
+
+                        Transaction transaction = Transaction.getTransaction(buffer);
+                        transaction.index = transactionCounter.incrementAndGet();
+
+                        if (blockTransactions.put(block.transactions[i] = transaction.getId(), transaction) != null) {
+
+                            return false;
+
+                        }
+
+                        switch (transaction.type) {
+
+                            case Transaction.TYPE_MESSAGING:
+                            {
+
+                                switch (transaction.subtype) {
+
+                                    case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
+                                    {
+
+                                        if (!blockAliases.add(((Transaction.MessagingAliasAssignmentAttachment)transaction.attachment).alias.toLowerCase())) {
+
+                                            return false;
+
+                                        }
 
                                     }
+                                    break;
 
                                 }
+
+                            }
+                            break;
+
+                        }
+
+                    }
+                    Arrays.sort(block.transactions);
+
+                    HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
+                    HashMap<Long, HashMap<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
+                    int calculatedTotalAmount = 0, calculatedTotalFee = 0;
+                    int i;
+                    for (i = 0; i < block.transactions.length; i++) {
+
+                        Transaction transaction = blockTransactions.get(block.transactions[i]);
+                        // cfb: Block 303 contains a transaction which expired before the block timestamp
+                        //TODO: similar transaction validation is done in several places, refactor common code out
+                        if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && previousLastBlock.height > 303) || transaction.fee <= 0 || transaction.fee > MAX_BALANCE || transaction.amount < 0 || transaction.amount > MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
+
+                            break;
+
+                        }
+
+                        long sender = transaction.getSenderAccountId();
+                        Long accumulatedAmount = accumulatedAmounts.get(sender);
+                        if (accumulatedAmount == null) {
+
+                            accumulatedAmount = 0L;
+
+                        }
+                        accumulatedAmounts.put(sender, accumulatedAmount + (transaction.amount + transaction.fee) * 100L);
+                        if (transaction.type == Transaction.TYPE_PAYMENT) {
+
+                            if (transaction.subtype == Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
+
+                                calculatedTotalAmount += transaction.amount;
+
+                            } else {
+
                                 break;
 
                             }
 
-                        }
-                        break;
+                        } else if (transaction.type == Transaction.TYPE_MESSAGING) {
 
-                    }
+                            if (transaction.subtype != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE && transaction.subtype != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
 
-                }
-                Arrays.sort(block.transactions);
+                                break;
 
-                HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
-                HashMap<Long, HashMap<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
-                int calculatedTotalAmount = 0, calculatedTotalFee = 0;
-                int i;
-                for (i = 0; i < block.transactions.length; i++) {
+                            }
 
-                    Transaction transaction = blockTransactions.get(block.transactions[i]);
-                    // cfb: Block 303 contains a transaction which expired before the block timestamp
-                    //TODO: similar transaction validation is done in several places, refactor common code out
-                    if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && previousLastBlock.height > 303) || transaction.fee <= 0 || transaction.fee > MAX_BALANCE || transaction.amount < 0 || transaction.amount > MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
+                        } else if (transaction.type == Transaction.TYPE_COLORED_COINS) {
 
-                        break;
+                            if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
 
-                    }
+                                Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
+                                HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
+                                if (accountAccumulatedAssetQuantities == null) {
 
-                    long sender = transaction.getSenderAccountId();
-                    Long accumulatedAmount = accumulatedAmounts.get(sender);
-                    if (accumulatedAmount == null) {
+                                    accountAccumulatedAssetQuantities = new HashMap<>();
+                                    accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
 
-                        accumulatedAmount = 0L;
+                                }
+                                Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
+                                if (assetAccumulatedAssetQuantities == null) {
 
-                    }
-                    accumulatedAmounts.put(sender, accumulatedAmount + (transaction.amount + transaction.fee) * 100L);
-                    if (transaction.type == Transaction.TYPE_PAYMENT) {
+                                    assetAccumulatedAssetQuantities = 0L;
 
-                        if (transaction.subtype == Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
+                                }
+                                accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
 
-                            calculatedTotalAmount += transaction.amount;
+                            } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
+
+                                Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
+                                HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
+                                if (accountAccumulatedAssetQuantities == null) {
+
+                                    accountAccumulatedAssetQuantities = new HashMap<>();
+                                    accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
+
+                                }
+                                Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
+                                if (assetAccumulatedAssetQuantities == null) {
+
+                                    assetAccumulatedAssetQuantities = 0L;
+
+                                }
+                                accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
+
+                            } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
+
+                                Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
+                                accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
+
+                            } else if (transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {
+
+                                break;
+
+                            }
 
                         } else {
 
                             break;
 
                         }
-
-                    } else if (transaction.type == Transaction.TYPE_MESSAGING) {
-
-                        if (transaction.subtype != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE && transaction.subtype != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
-
-                            break;
-
-                        }
-
-                    } else if (transaction.type == Transaction.TYPE_COLORED_COINS) {
-
-                        if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                            Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
-                            HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                            if (accountAccumulatedAssetQuantities == null) {
-
-                                accountAccumulatedAssetQuantities = new HashMap<>();
-                                accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                            }
-                            Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                            if (assetAccumulatedAssetQuantities == null) {
-
-                                assetAccumulatedAssetQuantities = 0L;
-
-                            }
-                            accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                        } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                            Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
-                            HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                            if (accountAccumulatedAssetQuantities == null) {
-
-                                accountAccumulatedAssetQuantities = new HashMap<>();
-                                accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                            }
-                            Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                            if (assetAccumulatedAssetQuantities == null) {
-
-                                assetAccumulatedAssetQuantities = 0L;
-
-                            }
-                            accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                        } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                            Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
-                            accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
-
-                        } else if (transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {
-
-                            break;
-
-                        }
-
-                    } else {
-
-                        break;
+                        calculatedTotalFee += transaction.fee;
 
                     }
-                    calculatedTotalFee += transaction.fee;
 
-                }
+                    if (i != block.transactions.length || calculatedTotalAmount != block.totalAmount || calculatedTotalFee != block.totalFee) {
 
-                if (i != block.transactions.length || calculatedTotalAmount != block.totalAmount || calculatedTotalFee != block.totalFee) {
+                        return false;
 
-                    return false;
+                    }
 
-                }
+                    MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                    for (long transactionId : block.transactions) {
 
-                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-                for (long transactionId : block.transactions) {
+                        digest.update(blockTransactions.get(transactionId).getBytes());
 
-                    digest.update(blockTransactions.get(transactionId).getBytes());
+                    }
+                    if (!Arrays.equals(digest.digest(), block.payloadHash)) {
 
-                }
-                if (!Arrays.equals(digest.digest(), block.payloadHash)) {
+                        return false;
 
-                    return false;
+                    }
 
-                }
-
-                JSONArray addedConfirmedTransactions;
-                JSONArray removedUnconfirmedTransactions;
-
-                synchronized (blocksAndTransactionsLock) {
+                    //synchronized (blocksAndTransactionsLock) {
 
                     for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
 
@@ -1770,6 +1777,7 @@ public class Nxt extends HttpServlet {
 
                         Transaction transaction = transactionEntry.getValue();
                         transaction.height = block.height;
+                        transaction.block = block.getId();
 
                         if (Nxt.transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
                             logMessage("duplicate transaction id " + transactionEntry.getKey());
@@ -1813,13 +1821,14 @@ public class Nxt extends HttpServlet {
                         // TODO: Remove from double-spending transactions
 
                     }
-
+                    /*
                     long blockId = block.getId();
                     for (long transactionId : block.transactions) {
 
                         Nxt.transactions.get(transactionId).block = blockId;
 
                     }
+                    */
 
                     if (savingFlag) {
 
@@ -1828,57 +1837,53 @@ public class Nxt extends HttpServlet {
 
                     }
 
+                } catch (RuntimeException e) {
+                    logMessage("Error pushing block", e);
+                    return false;
                 }
+            } // synchronized
+            if (block.timestamp >= curTime - 15) {
 
-                if (block.timestamp >= curTime - 15) {
+                JSONObject request = block.getJSONObject(Nxt.transactions);
+                request.put("requestType", "processBlock");
 
-                    JSONObject request = block.getJSONObject(Nxt.transactions);
-                    request.put("requestType", "processBlock");
-
-                    Peer.sendToSomePeers(request);
-
-                }
-
-                JSONArray addedRecentBlocks = new JSONArray();
-                JSONObject addedRecentBlock = new JSONObject();
-                addedRecentBlock.put("index", block.index);
-                addedRecentBlock.put("timestamp", block.timestamp);
-                addedRecentBlock.put("numberOfTransactions", block.transactions.length);
-                addedRecentBlock.put("totalAmount", block.totalAmount);
-                addedRecentBlock.put("totalFee", block.totalFee);
-                addedRecentBlock.put("payloadLength", block.payloadLength);
-                addedRecentBlock.put("generator", convert(block.getGeneratorAccountId()));
-                addedRecentBlock.put("height", block.height);
-                addedRecentBlock.put("version", block.version);
-                addedRecentBlock.put("block", block.getStringId());
-                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.baseTarget).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(initialBaseTarget)));
-                addedRecentBlocks.add(addedRecentBlock);
-
-                JSONObject response = new JSONObject();
-                response.put("response", "processNewData");
-                response.put("addedConfirmedTransactions", addedConfirmedTransactions);
-                if (removedUnconfirmedTransactions.size() > 0) {
-
-                    response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
-
-                }
-                response.put("addedRecentBlocks", addedRecentBlocks);
-
-                for (User user : users.values()) {
-
-                    user.send(response);
-
-                }
-
-                return true;
-
-            } catch (RuntimeException e) {
-
-                logMessage("Error pushing block", e);
-
-                return false;
+                Peer.sendToSomePeers(request);
 
             }
+
+            JSONArray addedRecentBlocks = new JSONArray();
+            JSONObject addedRecentBlock = new JSONObject();
+            addedRecentBlock.put("index", block.index);
+            addedRecentBlock.put("timestamp", block.timestamp);
+            addedRecentBlock.put("numberOfTransactions", block.transactions.length);
+            addedRecentBlock.put("totalAmount", block.totalAmount);
+            addedRecentBlock.put("totalFee", block.totalFee);
+            addedRecentBlock.put("payloadLength", block.payloadLength);
+            addedRecentBlock.put("generator", convert(block.getGeneratorAccountId()));
+            addedRecentBlock.put("height", block.height);
+            addedRecentBlock.put("version", block.version);
+            addedRecentBlock.put("block", block.getStringId());
+            addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.baseTarget).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(initialBaseTarget)));
+            addedRecentBlocks.add(addedRecentBlock);
+
+            JSONObject response = new JSONObject();
+            response.put("response", "processNewData");
+            response.put("addedConfirmedTransactions", addedConfirmedTransactions);
+            if (removedUnconfirmedTransactions.size() > 0) {
+
+                response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
+
+            }
+            response.put("addedRecentBlocks", addedRecentBlocks);
+
+            for (User user : users.values()) {
+
+                user.send(response);
+
+            }
+
+            return true;
+
 
         }
 
@@ -1889,7 +1894,7 @@ public class Nxt extends HttpServlet {
             ) {
                 objectOutputStream.writeInt(blockCounter.get());
                 objectOutputStream.writeObject(new HashMap<>(blocks));
-                objectOutputStream.writeLong(lastBlock.get().getId());
+                //objectOutputStream.writeLong(lastBlock.get().getId());
             } catch (IOException e) {
                 logMessage("Error saving blocks to " + fileName, e);
                 throw new RuntimeException(e);
@@ -5420,8 +5425,8 @@ public class Nxt extends HttpServlet {
 
         BigInteger initializeKeyPair(String secretPhrase) {
 
-            this.secretPhrase = secretPhrase;
             this.publicKey = Crypto.getPublicKey(secretPhrase);
+            this.secretPhrase = secretPhrase;
             byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(publicKey);
             return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
 
@@ -6067,8 +6072,8 @@ public class Nxt extends HttpServlet {
                 block.payloadHash = digest.digest();
 
                 block.baseTarget = initialBaseTarget;
-                lastBlock.set(block);
                 block.cumulativeDifficulty = BigInteger.ZERO;
+                lastBlock.set(block);
 
                 Block.saveBlocks("blocks.nxt", false);
 
@@ -6076,7 +6081,6 @@ public class Nxt extends HttpServlet {
 
             logMessage("Scanning blockchain...");
             Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
-            //lastBlock.set(blocks.get(GENESIS_BLOCK_ID));
             blocks.clear();
             long curBlockId = GENESIS_BLOCK_ID;
             do {
@@ -6406,21 +6410,22 @@ public class Nxt extends HttpServlet {
 
                                                     } else {
 
-                                                        for (i = 0; i < numberOfBlocks; i++) {
+                                                        synchronized (blocksAndTransactionsLock) {
+                                                            for (i = 0; i < numberOfBlocks; i++) {
 
-                                                            JSONObject blockData = (JSONObject)nextBlocks.get(i);
-                                                            Block block = Block.getBlock(blockData);
-                                                            if (block == null) {
+                                                                JSONObject blockData = (JSONObject)nextBlocks.get(i);
+                                                                Block block = Block.getBlock(blockData);
+                                                                if (block == null) {
 
-                                                                // peer tried to send us invalid transactions length or payload parameters
-                                                                peer.blacklist();
-                                                                return;
+                                                                    // peer tried to send us invalid transactions length or payload parameters
+                                                                    peer.blacklist();
+                                                                    return;
 
-                                                            }
+                                                                }
 
-                                                            curBlockId = block.getId();
+                                                                curBlockId = block.getId();
 
-                                                            synchronized (blocksAndTransactionsLock) {
+                                                                //synchronized (blocksAndTransactionsLock) {
 
                                                                 boolean alreadyPushed = false;
                                                                 if (block.previousBlock == lastBlock.get().getId()) {
@@ -6464,10 +6469,11 @@ public class Nxt extends HttpServlet {
 
                                                                 }
 
+                                                                //}
+
                                                             }
 
-                                                        }
-
+                                                        } //synchronized
                                                     }
 
                                                 }
@@ -6528,7 +6534,6 @@ public class Nxt extends HttpServlet {
                                                         //TODO: clean this up
                                                         logMessage("Re-scanning blockchain...");
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
-                                                        //lastBlock.set(blocks.get(GENESIS_BLOCK_ID));
                                                         blocks.clear();
                                                         long currentBlockId = GENESIS_BLOCK_ID;
                                                         do {
@@ -8953,7 +8958,7 @@ public class Nxt extends HttpServlet {
                             }
                             break;
 */
-                        // TODO: comment ends here
+                            // TODO: comment ends here
 
                             case "listAccountAliases":
                             {
