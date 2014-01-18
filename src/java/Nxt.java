@@ -1572,14 +1572,13 @@ public class Nxt extends HttpServlet {
 
                     block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
-                    block.index = blockCounter.incrementAndGet();
-
-
-                    if (block.transactions.length > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+                    if (block.transactions.length > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || block.getId() == 0L || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
                         return false;
 
                     }
+
+                    block.index = blockCounter.incrementAndGet();
 
                     HashMap<Long, Transaction> blockTransactions = new HashMap<>();
                     HashSet<String> blockAliases = new HashSet<>();
@@ -6072,14 +6071,11 @@ public class Nxt extends HttpServlet {
             Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
             blocks.clear();
             long curBlockId = GENESIS_BLOCK_ID;
-            do {
-
-                Block curBlock = loadedBlocks.get(curBlockId);
-                long nextBlockId = curBlock.nextBlock;
+            Block curBlock;
+            while ((curBlock = loadedBlocks.get(curBlockId)) != null) {
                 curBlock.analyze();
-                curBlockId = nextBlockId;
-
-            } while (curBlockId != 0);
+                curBlockId = curBlock.nextBlock;
+            }
             logMessage("...Done");
 
             scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
@@ -6526,14 +6522,11 @@ public class Nxt extends HttpServlet {
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
                                                         blocks.clear();
                                                         long currentBlockId = GENESIS_BLOCK_ID;
-                                                        do {
-
-                                                            Block currentBlock = loadedBlocks.get(currentBlockId);
-                                                            long nextBlockId = currentBlock.nextBlock;
+                                                        Block currentBlock;
+                                                        while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
                                                             currentBlock.analyze();
-                                                            currentBlockId = nextBlockId;
-
-                                                        } while (currentBlockId != 0);
+                                                            currentBlockId = currentBlock.nextBlock;
+                                                        }
                                                         logMessage("...Done");
 
 
