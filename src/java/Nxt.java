@@ -8851,8 +8851,132 @@ public class Nxt extends HttpServlet {
 
                             }
                             break;
+*/
+                            // TODO: comment ends here
 
-                        case "getAskOrder":
+                            case "getAccountCurrentAskOrderIds":
+                            {
+
+                                String account = req.getParameter("account");
+                                if (account == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"account\" not specified");
+
+                                } else {
+
+                                    try {
+
+                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        if (accountData == null) {
+
+                                            response.put("errorCode", 5);
+                                            response.put("errorDescription", "Unknown account");
+
+                                        } else {
+
+                                            boolean assetIsNotUsed;
+                                            long assetId;
+                                            try {
+
+                                                assetId = parseUnsignedLong(req.getParameter("asset"));
+                                                assetIsNotUsed = false;
+
+                                            } catch (Exception e) {
+
+                                                assetId = 0;
+                                                assetIsNotUsed = true;
+
+                                            }
+
+                                            JSONArray orderIds = new JSONArray();
+                                            for (AskOrder askOrder : askOrders.values()) {
+
+                                                if ((assetIsNotUsed || askOrder.asset == assetId) && askOrder.account == accountData) {
+
+                                                    orderIds.add(convert(askOrder.id));
+
+                                                }
+
+                                            }
+                                            response.put("askOrderIds", orderIds);
+
+                                        }
+
+                                    } catch (Exception e) {
+
+                                        response.put("errorCode", 4);
+                                        response.put("errorDescription", "Incorrect \"account\"");
+
+                                    }
+
+                                }
+
+                            }
+                            break;
+
+                            case "getAccountCurrentBidOrderIds":
+                            {
+
+                                String account = req.getParameter("account");
+                                if (account == null) {
+
+                                    response.put("errorCode", 3);
+                                    response.put("errorDescription", "\"account\" not specified");
+
+                                } else {
+
+                                    try {
+
+                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        if (accountData == null) {
+
+                                            response.put("errorCode", 5);
+                                            response.put("errorDescription", "Unknown account");
+
+                                        } else {
+
+                                            boolean assetIsNotUsed;
+                                            long assetId;
+                                            try {
+
+                                                assetId = parseUnsignedLong(req.getParameter("asset"));
+                                                assetIsNotUsed = false;
+
+                                            } catch (Exception e) {
+
+                                                assetId = 0;
+                                                assetIsNotUsed = true;
+
+                                            }
+
+                                            JSONArray orderIds = new JSONArray();
+                                            for (BidOrder bidOrder : bidOrders.values()) {
+
+                                                if ((assetIsNotUsed || bidOrder.asset == assetId) && bidOrder.account == accountData) {
+
+                                                    orderIds.add(convert(bidOrder.id));
+
+                                                }
+
+                                            }
+                                            response.put("bidOrderIds", orderIds);
+
+                                        }
+
+                                    } catch (Exception e) {
+
+                                        response.put("errorCode", 4);
+                                        response.put("errorDescription", "Incorrect \"account\"");
+
+                                    }
+
+                                }
+
+                            }
+                            break;
+
+                            case "getAskOrder":
                             {
 
                                 String order = req.getParameter("order");
@@ -8959,8 +9083,6 @@ public class Nxt extends HttpServlet {
 
                             }
                             break;
-*/
-                            // TODO: comment ends here
 
                             case "listAccountAliases":
                             {
