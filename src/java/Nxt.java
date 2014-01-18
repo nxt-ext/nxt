@@ -1165,20 +1165,17 @@ public class Nxt extends HttpServlet {
 
         }
 
-        static long getBaseTarget() {
-            return lastBlock.get().calculateBaseTarget();
-        }
-
-        long calculateBaseTarget() {
+        private long calculateBaseTarget() {
 
             if (getId() == GENESIS_BLOCK_ID) {
 
-                return baseTarget;
+                return initialBaseTarget;
 
             }
 
             Block previousBlock = blocks.get(this.previousBlock);
-            long curBaseTarget = previousBlock.baseTarget, newBaseTarget = BigInteger.valueOf(curBaseTarget).multiply(BigInteger.valueOf(timestamp - previousBlock.timestamp)).divide(BigInteger.valueOf(60)).longValue();
+            long curBaseTarget = previousBlock.baseTarget;
+            long newBaseTarget = BigInteger.valueOf(curBaseTarget).multiply(BigInteger.valueOf(timestamp - previousBlock.timestamp)).divide(BigInteger.valueOf(60)).longValue();
             if (newBaseTarget < 0 || newBaseTarget > maxBaseTarget) {
 
                 newBaseTarget = maxBaseTarget;
@@ -1980,7 +1977,7 @@ public class Nxt extends HttpServlet {
                 }
 
                 int elapsedTime = timestamp - previousBlock.timestamp;
-                BigInteger target = BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+                BigInteger target = BigInteger.valueOf(lastBlock.get().baseTarget).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
 
                 MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                 byte[] generationSignatureHash;
@@ -6615,6 +6612,10 @@ public class Nxt extends HttpServlet {
                             Block lastBlock = Nxt.lastBlock.get();
                             if (lastBlocks.get(account) != lastBlock) {
 
+                                long effectiveBalance = account.getEffectiveBalance();
+                                if (effectiveBalance <= 0) {
+                                    continue;
+                                }
                                 MessageDigest digest = Nxt.getMessageDigest("SHA-256");
                                 byte[] generationSignatureHash;
                                 if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
@@ -6635,7 +6636,7 @@ public class Nxt extends HttpServlet {
 
                                 JSONObject response = new JSONObject();
                                 response.put("response", "setBlockGenerationDeadline");
-                                response.put("deadline", hit.divide(BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
+                                response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
 
                                 user.send(response);
 
@@ -6644,7 +6645,7 @@ public class Nxt extends HttpServlet {
                             int elapsedTime = getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp;
                             if (elapsedTime > 0) {
 
-                                BigInteger target = BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+                                BigInteger target = BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
                                 if (hits.get(account).compareTo(target) < 0) {
 
                                     account.generateBlock(user.secretPhrase);
@@ -9967,7 +9968,8 @@ public class Nxt extends HttpServlet {
 
                         response.put("balance", account.getUnconfirmedBalance());
 
-                        if (account.getEffectiveBalance() > 0) {
+                        long effectiveBalance = account.getEffectiveBalance();
+                        if (effectiveBalance > 0) {
 
                             JSONObject response2 = new JSONObject();
                             response2.put("response", "setBlockGenerationDeadline");
@@ -9987,7 +9989,7 @@ public class Nxt extends HttpServlet {
 
                             }
                             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-                            response2.put("deadline", hit.divide(BigInteger.valueOf(Block.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
+                            response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
 
                             user.pendingResponses.offer(response2);
 
