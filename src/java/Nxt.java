@@ -4584,15 +4584,7 @@ public class Nxt extends HttpServlet {
                         case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
                         {
 
-                            if (amount <= 0 || amount > MAX_BALANCE) {
-
-                                return false;
-
-                            } else {
-
-                                return true;
-
-                            }
+                            return amount > 0 && amount < MAX_BALANCE;
 
                         }
 
@@ -4672,7 +4664,7 @@ public class Nxt extends HttpServlet {
 
                             } catch (RuntimeException e) {
 
-                                logDebugMessage("Error validation alias assignment", e);
+                                logDebugMessage("Error in alias assignment validation", e);
                                 return false;
 
                             }
