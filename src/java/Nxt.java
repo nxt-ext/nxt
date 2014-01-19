@@ -120,6 +120,7 @@ public class Nxt extends HttpServlet {
     static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
+    static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
 
     static /*final*/ Set<String> wellKnownPeers;
     static /*final*/ int maxNumberOfConnectedPublicPeers;
@@ -152,7 +153,7 @@ public class Nxt extends HttpServlet {
 
     static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
-    static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(7);
+    static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
 
     static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
@@ -6653,6 +6654,51 @@ public class Nxt extends HttpServlet {
 
             }, 0, 1, TimeUnit.SECONDS);
 
+            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+
+                        JSONArray transactionsData = new JSONArray();
+
+                        for (Transaction transaction : nonBroadcastedTransactions.values()) {
+
+                            if (unconfirmedTransactions.get(transaction.id) == null && transactions.get(transaction.id) == null) {
+
+                                transactionsData.add(transaction.getJSONObject());
+
+                            } else {
+
+                                nonBroadcastedTransactions.remove(transaction.id);
+
+                            }
+
+                        }
+
+                        if (transactionsData.size() > 0) {
+
+                            JSONObject peerRequest = new JSONObject();
+                            peerRequest.put("requestType", "processTransactions");
+                            peerRequest.put("transactions", transactionsData);
+
+                            Peer.sendToSomePeers(peerRequest);
+
+                        }
+
+                    } catch (Exception e) {
+                        logDebugMessage("Error in transaction re-broadcasting thread", e);
+                    } catch (Throwable t) {
+                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        t.printStackTrace();
+                        System.exit(1);
+                    }
+
+                }
+
+            }, 0, 60, TimeUnit.SECONDS);
+
             logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
         } catch (Exception e) {
@@ -6831,6 +6877,8 @@ public class Nxt extends HttpServlet {
                                                                     Peer.sendToSomePeers(peerRequest);
 
                                                                     response.put("transaction", transaction.getStringId());
+
+                                                                    nonBroadcastedTransactions.put(transaction.id, transaction);
 
                                                                 }
 
@@ -7992,6 +8040,8 @@ public class Nxt extends HttpServlet {
 
                                                                         response.put("transaction", transaction.getStringId());
 
+                                                                        nonBroadcastedTransactions.put(transaction.id, transaction);
+
                                                                     }
 
                                                                 }
@@ -8121,6 +8171,8 @@ public class Nxt extends HttpServlet {
 
                                                             response.put("transaction", transaction.getStringId());
 
+                                                            nonBroadcastedTransactions.put(transaction.id, transaction);
+
                                                         }
 
                                                     }
@@ -8248,6 +8300,8 @@ public class Nxt extends HttpServlet {
                                                             Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
+
+                                                            nonBroadcastedTransactions.put(transaction.id, transaction);
 
                                                         }
 
@@ -8459,6 +8513,8 @@ public class Nxt extends HttpServlet {
 
                                                                     response.put("transaction", transaction.getStringId());
 
+                                                                    nonBroadcastedTransactions.put(transaction.id, transaction);
+
                                                                 }
 
                                                             }
@@ -8630,6 +8686,8 @@ public class Nxt extends HttpServlet {
 
                                                                     response.put("transaction", transaction.getStringId());
 
+                                                                    nonBroadcastedTransactions.put(transaction.id, transaction);
+
                                                                 }
 
                                                             }
@@ -8792,6 +8850,8 @@ public class Nxt extends HttpServlet {
                                                                 Peer.sendToSomePeers(peerRequest);
 
                                                                 response.put("transaction", transaction.getStringId());
+
+                                                                nonBroadcastedTransactions.put(transaction.id, transaction);
 
                                                             }
 
@@ -9307,6 +9367,8 @@ public class Nxt extends HttpServlet {
                                                             response.put("transaction", transaction.getStringId());
                                                             response.put("bytes", convert(transaction.getBytes()));
 
+                                                            nonBroadcastedTransactions.put(transaction.id, transaction);
+
                                                         }
 
                                                     } catch (Exception e) {
@@ -9453,6 +9515,8 @@ public class Nxt extends HttpServlet {
 
                                                             response.put("transaction", transaction.getStringId());
                                                             response.put("bytes", convert(transaction.getBytes()));
+
+                                                            nonBroadcastedTransactions.put(transaction.id, transaction);
 
                                                         }
 
@@ -10023,6 +10087,8 @@ public class Nxt extends HttpServlet {
                                 response.put("response", "notifyOfAcceptedTransaction");
 
                                 user.pendingResponses.offer(response);
+
+                                nonBroadcastedTransactions.put(transaction.id, transaction);
 
                             }
 
