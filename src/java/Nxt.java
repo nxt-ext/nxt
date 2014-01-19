@@ -960,6 +960,9 @@ public class Nxt extends HttpServlet {
             synchronized (blocksAndTransactionsLock) {
                 for (int i = 0; i < this.transactions.length; i++) {
                     this.blockTransactions[i] = Nxt.transactions.get(this.transactions[i]);
+                    if (this.blockTransactions[i] == null) {
+                        throw new IllegalStateException("Missing transaction " + convert(this.transactions[i]));
+                    }
                 }
                 if (previousBlock == 0) {
 
