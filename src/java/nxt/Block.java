@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeSet;
 
-class Block implements Serializable {
+public class Block implements Serializable {
 
     static final long serialVersionUID = 0;
     static final long[] emptyLong = new long[0];
@@ -46,12 +46,12 @@ class Block implements Serializable {
 
     final byte[] previousBlockHash;
 
-    int index;
-    final long[] transactions;
-    long baseTarget;
-    int height;
-    volatile long nextBlock;
-    BigInteger cumulativeDifficulty;
+    public int index;
+    public final long[] transactions;
+    public long baseTarget;
+    public int height;
+    public volatile long nextBlock;
+    public BigInteger cumulativeDifficulty;
 
     transient Transaction[] blockTransactions;
 
@@ -61,7 +61,7 @@ class Block implements Serializable {
 
     }
 
-    Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
+    public Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
 
         if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
             throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");

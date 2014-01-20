@@ -23,7 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 
-class Transaction implements Comparable<Transaction>, Serializable {
+public class Transaction implements Comparable<Transaction>, Serializable {
 
     static final long serialVersionUID = 0;
 
@@ -53,13 +53,13 @@ class Transaction implements Comparable<Transaction>, Serializable {
     final int amount, fee;
     final long referencedTransaction;
     byte[] signature;
-    Attachment attachment;
+    public Attachment attachment;
 
-    int index;
-    long block;
-    int height;
+    public int index;
+    public long block;
+    public int height;
 
-    Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient, int amount, int fee, long referencedTransaction, byte[] signature) {
+    public Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient, int amount, int fee, long referencedTransaction, byte[] signature) {
 
         this.type = type;
         this.subtype = subtype;
@@ -1059,7 +1059,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
         }
     }
 
-    static interface Attachment {
+    public static interface Attachment {
 
         int getSize();
         byte[] getBytes();
@@ -1070,13 +1070,13 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class MessagingArbitraryMessageAttachment implements Attachment, Serializable {
+    public static class MessagingArbitraryMessageAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         final byte[] message;
 
-        MessagingArbitraryMessageAttachment(byte[] message) {
+        public MessagingArbitraryMessageAttachment(byte[] message) {
 
             this.message = message;
 
@@ -1125,14 +1125,14 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
+    public static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         final String alias;
         final String uri;
 
-        MessagingAliasAssignmentAttachment(String alias, String uri) {
+        public MessagingAliasAssignmentAttachment(String alias, String uri) {
 
             this.alias = alias;
             this.uri = uri;
@@ -1201,7 +1201,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class ColoredCoinsAssetIssuanceAttachment implements Attachment, Serializable {
+    public static class ColoredCoinsAssetIssuanceAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -1209,7 +1209,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
         String description;
         int quantity;
 
-        ColoredCoinsAssetIssuanceAttachment(String name, String description, int quantity) {
+        public ColoredCoinsAssetIssuanceAttachment(String name, String description, int quantity) {
 
             this.name = name;
             this.description = description == null ? "" : description;
@@ -1278,14 +1278,14 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class ColoredCoinsAssetTransferAttachment implements Attachment, Serializable {
+    public static class ColoredCoinsAssetTransferAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         long asset;
         int quantity;
 
-        ColoredCoinsAssetTransferAttachment(long asset, int quantity) {
+        public ColoredCoinsAssetTransferAttachment(long asset, int quantity) {
 
             this.asset = asset;
             this.quantity = quantity;
@@ -1336,7 +1336,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class ColoredCoinsAskOrderPlacementAttachment implements Attachment, Serializable {
+    public static class ColoredCoinsAskOrderPlacementAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -1344,7 +1344,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
         int quantity;
         long price;
 
-        ColoredCoinsAskOrderPlacementAttachment(long asset, int quantity, long price) {
+        public ColoredCoinsAskOrderPlacementAttachment(long asset, int quantity, long price) {
 
             this.asset = asset;
             this.quantity = quantity;
@@ -1398,7 +1398,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class ColoredCoinsBidOrderPlacementAttachment implements Attachment, Serializable {
+    public static class ColoredCoinsBidOrderPlacementAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -1406,7 +1406,7 @@ class Transaction implements Comparable<Transaction>, Serializable {
         int quantity;
         long price;
 
-        ColoredCoinsBidOrderPlacementAttachment(long asset, int quantity, long price) {
+        public ColoredCoinsBidOrderPlacementAttachment(long asset, int quantity, long price) {
 
             this.asset = asset;
             this.quantity = quantity;
@@ -1460,13 +1460,13 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class ColoredCoinsAskOrderCancellationAttachment implements Attachment, Serializable {
+    public static class ColoredCoinsAskOrderCancellationAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         long order;
 
-        ColoredCoinsAskOrderCancellationAttachment(long order) {
+        public ColoredCoinsAskOrderCancellationAttachment(long order) {
 
             this.order = order;
 
@@ -1514,13 +1514,13 @@ class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static class ColoredCoinsBidOrderCancellationAttachment implements Attachment, Serializable {
+    public static class ColoredCoinsBidOrderCancellationAttachment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         long order;
 
-        ColoredCoinsBidOrderCancellationAttachment(long order) {
+        public ColoredCoinsBidOrderCancellationAttachment(long order) {
 
             this.order = order;
 

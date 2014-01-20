@@ -194,27 +194,6 @@ public final class Nxt extends HttpServlet {
 
     }
 
-    private static class OldTransaction {
-
-        static final long serialVersionUID = 0;
-
-        byte type, subtype;
-        int timestamp;
-        short deadline;
-        byte[] senderPublicKey;
-        long recipient;
-        int amount, fee;
-        long referencedTransaction;
-        byte[] signature;
-        Transaction.Attachment attachment;
-
-        int index;
-        long block;
-        int height;
-
-    }
-
-
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
 

@@ -204,7 +204,7 @@ class Peer implements Comparable<Peer> {
                     } else {
 
                         peer.weight = 0;
-                        
+
                     }
 
                 }
