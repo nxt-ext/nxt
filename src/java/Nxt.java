@@ -3167,8 +3167,7 @@ public class Nxt extends HttpServlet {
 
                         } else {
 
-                            peer.adjustedWeight = 0;
-                            peer.updateWeight();
+                            peer.weight = 0;
 
                         }
 
