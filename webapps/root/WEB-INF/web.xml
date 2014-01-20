@@ -2,7 +2,7 @@
 <web-app>
     <servlet>
         <servlet-name>Nxt</servlet-name>
-        <servlet-class>Nxt</servlet-class>
+        <servlet-class>nxt.Nxt</servlet-class>
         <async-supported>true</async-supported>
         <load-on-startup>1</load-on-startup>
 

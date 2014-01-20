@@ -1,11 +1,14 @@
+package nxt;
+
+import nxt.crypto.Crypto;
+import nxt.util.Convert;
+import nxt.util.CountingInputStream;
+import nxt.util.CountingOutputStream;
+import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.AsyncEvent;
-import javax.servlet.AsyncListener;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,45 +16,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.lang.ref.SoftReference;
 import java.math.BigInteger;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.NoRouteToHostException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -61,55 +40,62 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Nxt extends HttpServlet {
+public final class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.9";
+    public static final String VERSION = "0.6.0";
 
-    static final long GENESIS_BLOCK_ID = 2680262203532249785L;
-    static final long CREATOR_ID = 1739068987193023818L;
-    static final byte[] CREATOR_PUBLIC_KEY = {18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27};
-    static final int BLOCK_HEADER_LENGTH = 224;
-    static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
-    static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
-    static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
+    public static final long GENESIS_BLOCK_ID = 2680262203532249785L;
+    public static final long CREATOR_ID = 1739068987193023818L;
+    public static final byte[] CREATOR_PUBLIC_KEY = {18, 89, -20, 33, -45, 26, 48, -119, -115, 124, -47, 96, -97, -128, -39, 102, -117, 71, 120, -29, -39, 126, -108, 16, 68, -77, -97, 12, 68, -46, -27, 27};
+    public static final int BLOCK_HEADER_LENGTH = 224;
+    public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
+    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
+    public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
 
-    static final int ALIAS_SYSTEM_BLOCK = 22000;
-    static final int TRANSPARENT_FORGING_BLOCK = 30000;
-    static final int ARBITRARY_MESSAGES_BLOCK = 40000;
-    static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
-    static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
+    public static final int ALIAS_SYSTEM_BLOCK = 22000;
+    public static final int TRANSPARENT_FORGING_BLOCK = 30000;
+    public static final int ARBITRARY_MESSAGES_BLOCK = 40000;
+    public static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
+    public static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
-    static final long MAX_BALANCE = 1000000000;
-    static final long initialBaseTarget = 153722867, maxBaseTarget = MAX_BALANCE * initialBaseTarget;
-    static final long MAX_ASSET_QUANTITY = 1000000000;
-    static final BigInteger two64 = new BigInteger("18446744073709551616");
+    public static final long MAX_BALANCE = 1000000000;
+    public static final long initialBaseTarget = 153722867;
+    public static final long maxBaseTarget = MAX_BALANCE * initialBaseTarget;
+    public static final long MAX_ASSET_QUANTITY = 1000000000;
+
+    public static final long epochBeginning;
+    static {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.ZONE_OFFSET, 0);
+        calendar.set(Calendar.YEAR, 2013);
+        calendar.set(Calendar.MONTH, Calendar.NOVEMBER);
+        calendar.set(Calendar.DAY_OF_MONTH, 24);
+        calendar.set(Calendar.HOUR_OF_DAY, 12);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        epochBeginning = calendar.getTimeInMillis();
+    }
 
     // /*final*/ variables are set in the init() and are to be treated as final
-    static /*final*/ long epochBeginning;
-    static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-
-    // blockchain.nrs not used anymore?
-    // cfb: If u decide to use a 3rd party DB then we can get rid of blockchain.nrs
-    //static FileChannel blockchainChannel;
-    static /*final*/ String myPlatform, myScheme, myAddress, myHallmark;
+    static /*final*/ String myPlatform;
+    static String myScheme;
+    static String myAddress;
+    static String myHallmark;
     static /*final*/ int myPort;
     static /*final*/ boolean shareMyAddress;
-    static /*final*/ Set<String> allowedUserHosts, allowedBotHosts;
-    static /*final*/ int blacklistingPeriod;
+    private static /*final*/ Set<String> allowedUserHosts, allowedBotHosts;
+    private static /*final*/ int blacklistingPeriod;
 
     static final int LOGGING_MASK_EXCEPTIONS = 1;
     static final int LOGGING_MASK_NON200_RESPONSES = 2;
@@ -120,13 +106,15 @@ public class Nxt extends HttpServlet {
     static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
-    static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
 
     static /*final*/ Set<String> wellKnownPeers;
-    static /*final*/ int maxNumberOfConnectedPublicPeers;
-    static /*final*/ int connectTimeout, readTimeout;
+    private static /*final*/ int maxNumberOfConnectedPublicPeers;
+    static /*final*/ int connectTimeout;
+    static int readTimeout;
     static /*final*/ boolean enableHallmarkProtection;
-    static /*final*/ int pushThreshold, pullThreshold;
+    static /*final*/ int pushThreshold;
+    static int pullThreshold;
     static /*final*/ int sendToPeersLimit;
     static final AtomicInteger peerCounter = new AtomicInteger();
     static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
@@ -136,7 +124,7 @@ public class Nxt extends HttpServlet {
     static final AtomicInteger blockCounter = new AtomicInteger();
     static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
     static final AtomicReference<Block> lastBlock = new AtomicReference<>();
-    static volatile Peer lastBlockchainFeeder;
+    private static volatile Peer lastBlockchainFeeder;
 
     static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
 
@@ -153,7 +141,7 @@ public class Nxt extends HttpServlet {
 
     static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
-    static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
+    private static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
 
     static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
@@ -162,107 +150,6 @@ public class Nxt extends HttpServlet {
 
         return (int)((time - epochBeginning + 500) / 1000);
 
-    }
-
-    static final ThreadLocal<SimpleDateFormat> logDateFormat = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS] ");
-        }
-    };
-
-    static final boolean debug = System.getProperty("nxt.debug") != null;
-    static final boolean enableStackTraces = System.getProperty("nxt.enableStackTraces") != null;
-
-    static void logMessage(String message) {
-        System.out.println(logDateFormat.get().format(new Date()) + message);
-    }
-
-    static void logMessage(String message, Exception e) {
-        if (enableStackTraces) {
-            logMessage(message);
-            e.printStackTrace();
-        } else {
-            logMessage(message + ":\n" + e.toString());
-        }
-    }
-
-    static void logDebugMessage(String message) {
-        if (debug) {
-            logMessage("DEBUG: " + message);
-        }
-    }
-
-    static void logDebugMessage(String message, Exception e) {
-        if (debug) {
-            if (enableStackTraces) {
-                logMessage("DEBUG: " + message);
-                e.printStackTrace();
-            } else {
-                logMessage("DEBUG: " + message + ":\n" + e.toString());
-            }
-        }
-    }
-
-    static byte[] convert(String string) {
-
-        byte[] bytes = new byte[string.length() / 2];
-        for (int i = 0; i < bytes.length; i++) {
-
-            bytes[i] = (byte)Integer.parseInt(string.substring(i * 2, i * 2 + 2), 16);
-
-        }
-
-        return bytes;
-
-    }
-
-    static String convert(byte[] bytes) {
-
-        StringBuilder string = new StringBuilder();
-        for (byte b : bytes) {
-
-            int number;
-            string.append(alphabet.charAt((number = b & 0xFF) >> 4)).append(alphabet.charAt(number & 0xF));
-
-        }
-
-        return string.toString();
-
-    }
-
-    static String convert(long objectId) {
-
-        BigInteger id = BigInteger.valueOf(objectId);
-        if (objectId < 0) {
-
-            id = id.add(two64);
-
-        }
-
-        return id.toString();
-
-    }
-
-    static long parseUnsignedLong(String number) {
-        if (number == null) {
-            throw new IllegalArgumentException("trying to parse null");
-        }
-        BigInteger bigInt = new BigInteger(number.trim());
-        if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
-            throw new IllegalArgumentException("overflow: " + number);
-        }
-        return bigInt.longValue();
-    }
-
-    static MessageDigest getMessageDigest(String algorithm) {
-        try {
-            return MessageDigest.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException e) {
-            logMessage("Missing message digest algorithm: " + algorithm);
-            System.exit(1);
-            return null;
-        }
     }
 
     // this is called within block.analyze only, which is already inside the big blocksAndTransactions lock
@@ -307,5258 +194,46 @@ public class Nxt extends HttpServlet {
 
     }
 
-    static class Account {
-
-        final long id;
-        private long balance;
-        final int height;
-
-        final AtomicReference<byte[]> publicKey = new AtomicReference<>();
-
-        private final Map<Long, Integer> assetBalances = new HashMap<>();
-
-        private long unconfirmedBalance;
-        private final Map<Long, Integer> unconfirmedAssetBalances = new HashMap<>();
-
-        private Account(long id) {
-
-            this.id = id;
-            this.height = lastBlock.get().height;
-
-        }
-
-        static Account addAccount(long id) {
-
-            Account account = new Account(id);
-            accounts.put(id, account);
-
-            return account;
-
-        }
-
-        // returns true iff:
-        // this.publicKey is set to null (in which case this.publicKey also gets set to key)
-        // or
-        // this.publicKey is already set to an array equal to key
-        boolean setOrVerify(byte[] key) {
-
-            return this.publicKey.compareAndSet(null, key) || Arrays.equals(key, this.publicKey.get());
-
-        }
-
-        void generateBlock(String secretPhrase) {
-
-            Set<Transaction> sortedTransactions = new TreeSet<>();
-
-            for (Transaction transaction : unconfirmedTransactions.values()) {
-
-                if (transaction.referencedTransaction == 0 || Nxt.transactions.get(transaction.referencedTransaction) != null) {
-
-                    sortedTransactions.add(transaction);
-
-                }
-
-            }
-
-            Map<Long, Transaction> newTransactions = new HashMap<>();
-            Set<String> newAliases = new HashSet<>();
-            Map<Long, Long> accumulatedAmounts = new HashMap<>();
-            int payloadLength = 0;
-
-            while (payloadLength <= MAX_PAYLOAD_LENGTH) {
-
-                int prevNumberOfNewTransactions = newTransactions.size();
-
-                for (Transaction transaction : sortedTransactions) {
-
-                    int transactionLength = transaction.getSize();
-                    if (newTransactions.get(transaction.getId()) == null && payloadLength + transactionLength <= MAX_PAYLOAD_LENGTH) {
-
-                        long sender = transaction.getSenderAccountId();
-                        Long accumulatedAmount = accumulatedAmounts.get(sender);
-                        if (accumulatedAmount == null) {
-
-                            accumulatedAmount = 0L;
-
-                        }
-
-                        long amount = (transaction.amount + transaction.fee) * 100L;
-                        if (accumulatedAmount + amount <= accounts.get(sender).getBalance() && transaction.validateAttachment()) {
-
-                            switch (transaction.type) {
-
-                                case Transaction.TYPE_MESSAGING:
-                                {
-
-                                    switch (transaction.subtype) {
-
-                                        case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                                        {
-
-                                            if (!newAliases.add(((Transaction.MessagingAliasAssignmentAttachment)transaction.attachment).alias.toLowerCase())) {
-
-                                                continue;
-
-                                            }
-
-                                        }
-                                        break;
-
-                                    }
-
-                                }
-                                break;
-
-                            }
-
-                            accumulatedAmounts.put(sender, accumulatedAmount + amount);
-
-                            newTransactions.put(transaction.getId(), transaction);
-                            payloadLength += transactionLength;
-
-                        }
-
-                    }
-
-                }
-
-                if (newTransactions.size() == prevNumberOfNewTransactions) {
-
-                    break;
-
-                }
-
-            }
-
-            Block block;
-            Block previousBlock = lastBlock.get();
-            if (previousBlock.height < TRANSPARENT_FORGING_BLOCK) {
-
-                block = new Block(1, getEpochTime(System.currentTimeMillis()), previousBlock.getId(), newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64]);
-
-            } else {
-
-                byte[] previousBlockHash = Nxt.getMessageDigest("SHA-256").digest(previousBlock.getBytes());
-                block = new Block(2, getEpochTime(System.currentTimeMillis()), previousBlock.getId(), newTransactions.size(), 0, 0, 0, null, Crypto.getPublicKey(secretPhrase), null, new byte[64], previousBlockHash);
-
-            }
-            int i = 0;
-            for (Map.Entry<Long, Transaction> transactionEntry : newTransactions.entrySet()) {
-
-                Transaction transaction = transactionEntry.getValue();
-                block.totalAmount += transaction.amount;
-                block.totalFee += transaction.fee;
-                block.payloadLength += transaction.getSize();
-                block.transactions[i++] = transactionEntry.getKey();
-
-            }
-
-            Arrays.sort(block.transactions);
-            MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-            for (i = 0; i < block.transactions.length; i++) {
-                Transaction transaction = newTransactions.get(block.transactions[i]);
-                digest.update(transaction.getBytes());
-                block.blockTransactions[i] = transaction;
-            }
-            block.payloadHash = digest.digest();
-
-            if (previousBlock.height < TRANSPARENT_FORGING_BLOCK) {
-
-                block.generationSignature = Crypto.sign(previousBlock.generationSignature, secretPhrase);
-
-            } else {
-
-                digest.update(previousBlock.generationSignature);
-                block.generationSignature = digest.digest(Crypto.getPublicKey(secretPhrase));
-
-            }
-
-            byte[] data = block.getBytes();
-            byte[] data2 = new byte[data.length - 64];
-            System.arraycopy(data, 0, data2, 0, data2.length);
-            block.blockSignature = Crypto.sign(data2, secretPhrase);
-
-            if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
-
-                JSONObject request = block.getJSONObject();
-                request.put("requestType", "processBlock");
-                Peer.sendToSomePeers(request);
-
-            } else {
-
-                logMessage("Generated an incorrect block. Waiting for the next one...");
-
-            }
-
-        }
-
-        int getEffectiveBalance() {
-
-            Block lastBlock = Nxt.lastBlock.get();
-            if (height < TRANSPARENT_FORGING_BLOCK_2) {
-
-                if (height == 0) {
-
-                    return (int)(getBalance() / 100);
-
-                }
-
-                if (lastBlock.height - height < 1440) {
-
-                    return 0;
-
-                }
-
-                int amount = 0;
-                for (Transaction transaction : lastBlock.blockTransactions) {
-
-                    if (transaction.recipient == id) {
-
-                        amount += transaction.amount;
-
-                    }
-
-                }
-
-                return (int)(getBalance() / 100) - amount;
-
-            } else {
-
-                return (int)(getGuaranteedBalance(1440) / 100);
-
-            }
-
-        }
-
-        static long getId(byte[] publicKey) {
-
-            byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(publicKey);
-            BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
-            return bigInteger.longValue();
-
-        }
-
-        synchronized Integer getAssetBalance(Long assetId) {
-            return assetBalances.get(assetId);
-        }
-
-        synchronized Integer getUnconfirmedAssetBalance(Long assetId) {
-            return unconfirmedAssetBalances.get(assetId);
-        }
-
-        synchronized void addToAssetBalance(Long assetId, int quantity) {
-
-            Integer assetBalance = assetBalances.get(assetId);
-            if (assetBalance == null) {
-                assetBalances.put(assetId, quantity);
-            } else {
-                assetBalances.put(assetId, assetBalance + quantity);
-            }
-
-        }
-
-        synchronized void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
-
-            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
-            if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantity);
-            } else {
-                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
-            }
-
-        }
-
-        synchronized void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
-
-            Integer assetBalance = assetBalances.get(assetId);
-            if (assetBalance == null) {
-                assetBalances.put(assetId, quantity);
-                unconfirmedAssetBalances.put(assetId, quantity);
-            } else {
-                assetBalances.put(assetId, assetBalance + quantity);
-                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalances.get(assetId) + quantity);
-            }
-
-        }
-
-        synchronized long getBalance() {
-            return balance;
-        }
-
-        long getGuaranteedBalance(int numberOfConfirmations) {
-
-            long guaranteedBalance = getBalance();
-            ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
-            byte[] accountPublicKey = publicKey.get();
-            for (Block block : lastBlocks) {
-
-                if (Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
-
-                    if ((guaranteedBalance -= block.totalFee * 100L) <= 0) {
-
-                        return 0;
-
-                    }
-
-                }
-
-                for (int i = block.blockTransactions.length; i-- > 0; ) {
-
-                    Transaction transaction = block.blockTransactions[i];
-                    if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
-
-                        long deltaBalance = transaction.getSenderDeltaBalance();
-                        if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
-
-                            return 0;
-
-                        } else if (deltaBalance < 0 && (guaranteedBalance += deltaBalance) <= 0) {
-
-                            return 0;
-
-                        }
-
-                    }
-                    if (transaction.recipient == id) {
-
-                        long deltaBalance = transaction.getRecipientDeltaBalance();
-                        if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
-
-                            return 0;
-
-                        } else if (deltaBalance < 0 && (guaranteedBalance += deltaBalance) <= 0) {
-
-                            return 0;
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-            return guaranteedBalance;
-
-        }
-
-        synchronized long getUnconfirmedBalance() {
-            return unconfirmedBalance;
-        }
-
-        void addToBalance(long amount) {
-
-            synchronized (this) {
-
-                this.balance += amount;
-
-            }
-
-            updatePeerWeights();
-
-        }
-
-        void addToUnconfirmedBalance(long amount) {
-
-            synchronized (this) {
-
-                this.unconfirmedBalance += amount;
-
-            }
-
-            updateUserUnconfirmedBalance();
-
-        }
-
-        void addToBalanceAndUnconfirmedBalance(long amount) {
-
-            synchronized (this) {
-
-                this.balance += amount;
-                this.unconfirmedBalance += amount;
-
-            }
-
-            updatePeerWeights();
-            updateUserUnconfirmedBalance();
-
-        }
-
-        private void updatePeerWeights() {
-
-            for (Peer peer : peers.values()) {
-
-                if (peer.accountId == id && peer.adjustedWeight > 0) {
-
-                    peer.updateWeight();
-
-                }
-
-            }
-
-        }
-
-        private void updateUserUnconfirmedBalance() {
-
-            JSONObject response = new JSONObject();
-            response.put("response", "setBalance");
-            response.put("balance", getUnconfirmedBalance());
-            byte[] accountPublicKey = publicKey.get();
-            for (User user : users.values()) {
-
-                if (user.secretPhrase != null && Arrays.equals(user.publicKey, accountPublicKey)) {
-
-                    user.send(response);
-
-                }
-
-            }
-
-        }
-
-    }
-
-    static class Alias {
-
-        final Account account;
-        final long id;
-        final String alias;
-        volatile String uri;
-        volatile int timestamp;
-
-        Alias(Account account, long id, String alias, String uri, int timestamp) {
-
-            this.account = account;
-            this.id = id;
-            this.alias = alias;
-            this.uri = uri;
-            this.timestamp = timestamp;
-
-        }
-
-    }
-
-    static class AskOrder implements Comparable<AskOrder> {
-
-        final long id;
-        final long height;
-        final Account account;
-        final long asset;
-        // writes protected by blocksAndTransactions lock
-        volatile int quantity;
-        final long price;
-
-        AskOrder(long id, Account account, long asset, int quantity, long price) {
-
-            this.id = id;
-            this.height = lastBlock.get().height;
-            this.account = account;
-            this.asset = asset;
-            this.quantity = quantity;
-            this.price = price;
-
-        }
-
-        @Override
-        public int compareTo(AskOrder o) {
-
-            if (price < o.price) {
-
-                return -1;
-
-            } else if (price > o.price) {
-
-                return 1;
-
-            } else {
-
-                if (height < o.height) {
-
-                    return -1;
-
-                } else if (height > o.height) {
-
-                    return 1;
-
-                } else {
-
-                    if (id < o.id) {
-
-                        return -1;
-
-                    } else if (id > o.id) {
-
-                        return 1;
-
-                    } else {
-
-                        return 0;
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
-    static class Asset {
-
-        final long accountId;
-        final String name;
-        final String description;
-        final int quantity;
-
-        Asset(long accountId, String name, String description, int quantity) {
-
-            this.accountId = accountId;
-            this.name = name;
-            this.description = description;
-            this.quantity = quantity;
-
-        }
-
-    }
-
-    static class BidOrder implements Comparable<BidOrder> {
-
-        final long id;
-        final long height;
-        final Account account;
-        final long asset;
-        // writes protected by blocksAndTransactions lock
-        volatile int quantity;
-        final long price;
-
-        BidOrder(long id, Account account, long asset, int quantity, long price) {
-
-            this.id = id;
-            this.height = lastBlock.get().height;
-            this.account = account;
-            this.asset = asset;
-            this.quantity = quantity;
-            this.price = price;
-
-        }
-
-        @Override
-        public int compareTo(BidOrder o) {
-
-            if (price > o.price) {
-
-                return -1;
-
-            } else if (price < o.price) {
-
-                return 1;
-
-            } else {
-
-                if (height < o.height) {
-
-                    return -1;
-
-                } else if (height > o.height) {
-
-                    return 1;
-
-                } else {
-
-                    if (id < o.id) {
-
-                        return -1;
-
-                    } else if (id > o.id) {
-
-                        return 1;
-
-                    } else {
-
-                        return 0;
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
-    static class Block implements Serializable {
-
-        static final long serialVersionUID = 0;
-        static final long[] emptyLong = new long[0];
-        static final Transaction[] emptyTransactions = new Transaction[0];
-
-        final int version;
-        final int timestamp;
-        final long previousBlock;
-        int totalAmount, totalFee;
-        int payloadLength;
-        byte[] payloadHash;
-        final byte[] generatorPublicKey;
-        byte[] generationSignature;
-        byte[] blockSignature;
-
-        final byte[] previousBlockHash;
-
-        int index;
-        final long[] transactions;
-        long baseTarget;
-        int height;
-        volatile long nextBlock;
-        BigInteger cumulativeDifficulty;
-
-        transient Transaction[] blockTransactions;
-
-        Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
-
-            this(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, null);
-
-        }
-
-        Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
-
-            if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
-                throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
-            }
-
-            if (payloadLength > MAX_PAYLOAD_LENGTH || payloadLength < 0) {
-                throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
-            }
-
-            this.version = version;
-            this.timestamp = timestamp;
-            this.previousBlock = previousBlock;
-            this.totalAmount = totalAmount;
-            this.totalFee = totalFee;
-            this.payloadLength = payloadLength;
-            this.payloadHash = payloadHash;
-            this.generatorPublicKey = generatorPublicKey;
-            this.generationSignature = generationSignature;
-            this.blockSignature = blockSignature;
-
-            this.previousBlockHash = previousBlockHash;
-            this.transactions = numberOfTransactions == 0 ? emptyLong : new long[numberOfTransactions];
-            this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
-
-        }
-
-        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-            in.defaultReadObject();
-            this.blockTransactions = transactions.length == 0 ? emptyTransactions : new Transaction[transactions.length];
-        }
-
-        void analyze() {
-
-            // analyze is only called with the blocksAndTransactionsLock already held (except in init, where it doesn't matter)
-            // but a lot of thread safety depends on that fact, so let's make that explicit here by obtaining this lock again, at no extra cost
-            synchronized (blocksAndTransactionsLock) {
-                for (int i = 0; i < this.transactions.length; i++) {
-                    this.blockTransactions[i] = Nxt.transactions.get(this.transactions[i]);
-                    if (this.blockTransactions[i] == null) {
-                        throw new IllegalStateException("Missing transaction " + convert(this.transactions[i]));
-                    }
-                }
-                if (previousBlock == 0) {
-
-                    baseTarget = initialBaseTarget;
-                    cumulativeDifficulty = BigInteger.ZERO;
-                    blocks.put(GENESIS_BLOCK_ID, this);
-                    lastBlock.set(this);
-
-                    Account.addAccount(CREATOR_ID);
-
-                } else {
-
-                    Block previousLastBlock = lastBlock.get();
-
-                    previousLastBlock.nextBlock = getId();
-                    height = previousLastBlock.height + 1;
-                    baseTarget = calculateBaseTarget();
-                    cumulativeDifficulty = previousLastBlock.cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
-                    if (! (previousLastBlock.getId() == previousBlock && lastBlock.compareAndSet(previousLastBlock, this))) {
-                        throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
-                    }
-                    Account generatorAccount = accounts.get(getGeneratorAccountId());
-                    generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
-                    if (blocks.putIfAbsent(getId(), this) != null) {
-                        throw new IllegalStateException("duplicate block id: " + getId()); // shouldn't happen
-                    }
-                }
-
-                for (Transaction transaction : this.blockTransactions) {
-
-                    transaction.height = this.height;
-
-                    long sender = transaction.getSenderAccountId();
-                    Account senderAccount = accounts.get(sender);
-                    if (! senderAccount.setOrVerify(transaction.senderPublicKey)) {
-
-                        throw new RuntimeException("sender public key mismatch");
-                        // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
-
-                    }
-                    senderAccount.addToBalanceAndUnconfirmedBalance(- (transaction.amount + transaction.fee) * 100L);
-
-                    Account recipientAccount = accounts.get(transaction.recipient);
-                    if (recipientAccount == null) {
-
-                        recipientAccount = Account.addAccount(transaction.recipient);
-
-                    }
-
-                    //TODO: refactor, don't use switch but create e.g. transaction handler class for each case
-                    switch (transaction.type) {
-
-                        case Transaction.TYPE_PAYMENT:
-                        {
-
-                            switch (transaction.subtype) {
-
-                                case Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
-                                {
-
-                                    recipientAccount.addToBalanceAndUnconfirmedBalance(transaction.amount * 100L);
-
-                                }
-                                break;
-
-                            }
-
-                        }
-                        break;
-
-                        case Transaction.TYPE_MESSAGING:
-                        {
-
-                            switch (transaction.subtype) {
-
-                                case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                                {
-
-                                    Transaction.MessagingAliasAssignmentAttachment attachment = (Transaction.MessagingAliasAssignmentAttachment)transaction.attachment;
-
-                                    String normalizedAlias = attachment.alias.toLowerCase();
-
-                                    Alias alias = aliases.get(normalizedAlias);
-                                    if (alias == null) {
-
-                                        long aliasId = transaction.getId();
-                                        alias = new Alias(senderAccount, aliasId, attachment.alias, attachment.uri, timestamp);
-                                        aliases.put(normalizedAlias, alias);
-                                        aliasIdToAliasMappings.put(aliasId, alias);
-
-                                    } else {
-
-                                        alias.uri = attachment.uri;
-                                        alias.timestamp = timestamp;
-
-                                    }
-
-                                }
-                                break;
-
-                            }
-
-                        }
-                        break;
-
-                        case Transaction.TYPE_COLORED_COINS:
-                        {
-
-                            switch (transaction.subtype) {
-
-                                case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
-                                {
-
-                                    Transaction.ColoredCoinsAssetIssuanceAttachment attachment = (Transaction.ColoredCoinsAssetIssuanceAttachment)transaction.attachment;
-
-                                    long assetId = transaction.getId();
-                                    Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
-                                    assets.put(assetId, asset);
-                                    assetNameToIdMappings.put(attachment.name.toLowerCase(), assetId);
-                                    sortedAskOrders.put(assetId, new TreeSet<AskOrder>());
-                                    sortedBidOrders.put(assetId, new TreeSet<BidOrder>());
-                                    senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.quantity);
-
-                                }
-                                break;
-
-                                case Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
-                                {
-
-                                    Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
-
-                                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                                    recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, attachment.quantity);
-
-                                }
-                                break;
-
-                                case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
-                                {
-
-                                    Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
-
-                                    AskOrder order = new AskOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-                                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                                    askOrders.put(order.id, order);
-                                    sortedAskOrders.get(attachment.asset).add(order);
-                                    matchOrders(attachment.asset);
-
-                                }
-                                break;
-
-                                case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
-                                {
-
-                                    Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
-
-                                    BidOrder order = new BidOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-
-                                    senderAccount.addToBalanceAndUnconfirmedBalance(- attachment.quantity * attachment.price);
-
-                                    bidOrders.put(order.id, order);
-                                    sortedBidOrders.get(attachment.asset).add(order);
-
-                                    matchOrders(attachment.asset);
-
-                                }
-                                break;
-
-                                case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
-                                {
-
-                                    Transaction.ColoredCoinsAskOrderCancellationAttachment attachment = (Transaction.ColoredCoinsAskOrderCancellationAttachment)transaction.attachment;
-
-                                    AskOrder order;
-                                    order = askOrders.remove(attachment.order);
-                                    sortedAskOrders.get(order.asset).remove(order);
-                                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.quantity);
-
-                                }
-                                break;
-
-                                case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
-                                {
-
-                                    Transaction.ColoredCoinsBidOrderCancellationAttachment attachment = (Transaction.ColoredCoinsBidOrderCancellationAttachment)transaction.attachment;
-
-                                    BidOrder order;
-                                    order = bidOrders.remove(attachment.order);
-                                    sortedBidOrders.get(order.asset).remove(order);
-                                    senderAccount.addToBalanceAndUnconfirmedBalance(order.quantity * order.price);
-
-                                }
-                                break;
-
-                            }
-
-                        }
-                        break;
-
-                    }
-
-                }
-            }
-
-        }
-
-        private long calculateBaseTarget() {
-
-            if (getId() == GENESIS_BLOCK_ID) {
-
-                return initialBaseTarget;
-
-            }
-
-            Block previousBlock = blocks.get(this.previousBlock);
-            long curBaseTarget = previousBlock.baseTarget;
-            long newBaseTarget = BigInteger.valueOf(curBaseTarget).multiply(BigInteger.valueOf(timestamp - previousBlock.timestamp)).divide(BigInteger.valueOf(60)).longValue();
-            if (newBaseTarget < 0 || newBaseTarget > maxBaseTarget) {
-
-                newBaseTarget = maxBaseTarget;
-
-            }
-
-            if (newBaseTarget < curBaseTarget / 2) {
-
-                newBaseTarget = curBaseTarget / 2;
-
-            }
-            if (newBaseTarget == 0) {
-
-                newBaseTarget = 1;
-
-            }
-
-            long twofoldCurBaseTarget = curBaseTarget * 2;
-            if (twofoldCurBaseTarget < 0) {
-
-                twofoldCurBaseTarget = maxBaseTarget;
-
-            }
-            if (newBaseTarget > twofoldCurBaseTarget) {
-
-                newBaseTarget = twofoldCurBaseTarget;
-
-            }
-
-            return newBaseTarget;
-
-        }
-
-        static Block getBlock(JSONObject blockData) {
-
-            try {
-                int version = ((Long)blockData.get("version")).intValue();
-                int timestamp = ((Long)blockData.get("timestamp")).intValue();
-                long previousBlock = parseUnsignedLong((String) blockData.get("previousBlock"));
-                int numberOfTransactions = ((Long)blockData.get("numberOfTransactions")).intValue();
-                int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
-                int totalFee = ((Long)blockData.get("totalFee")).intValue();
-                int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-                byte[] payloadHash = convert((String)blockData.get("payloadHash"));
-                byte[] generatorPublicKey = convert((String)blockData.get("generatorPublicKey"));
-                byte[] generationSignature = convert((String)blockData.get("generationSignature"));
-                byte[] blockSignature = convert((String)blockData.get("blockSignature"));
-
-                byte[] previousBlockHash = version == 1 ? null : convert((String)blockData.get("previousBlockHash"));
-
-                if (numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS || payloadLength > MAX_PAYLOAD_LENGTH) {
-
-                    return null;
-
-                }
-                return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-            } catch (RuntimeException e) {
-                //logDebugMessage("Failed to parse JSON block data");
-                //logDebugMessage(blockData.toJSONString());
-                return null;
-            }
-        }
-
-        byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putInt(version);
-            buffer.putInt(timestamp);
-            buffer.putLong(previousBlock);
-            buffer.putInt(this.transactions.length);
-            buffer.putInt(totalAmount);
-            buffer.putInt(totalFee);
-            buffer.putInt(payloadLength);
-            buffer.put(payloadHash);
-            buffer.put(generatorPublicKey);
-            buffer.put(generationSignature);
-            if (version > 1) {
-
-                buffer.put(previousBlockHash);
-
-            }
-            buffer.put(blockSignature);
-
-            return buffer.array();
-
-        }
-
-        transient volatile long id;
-        transient volatile String stringId = null;
-        transient volatile long generatorAccountId;
-
-        long getId() {
-            calculateIds();
-            return id;
-        }
-
-
-        String getStringId() {
-            calculateIds();
-            return stringId;
-        }
-
-        long getGeneratorAccountId() {
-            calculateIds();
-            return generatorAccountId;
-        }
-
-        private void calculateIds() {
-            if (stringId != null) {
-                return;
-            }
-            byte[] hash = Nxt.getMessageDigest("SHA-256").digest(getBytes());
-            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-            id = bigInteger.longValue();
-            stringId = bigInteger.toString();
-            generatorAccountId = Account.getId(generatorPublicKey);
-        }
-
-        JSONObject getJSONObject() {
-
-            JSONObject block = new JSONObject();
-
-            block.put("version", version);
-            block.put("timestamp", timestamp);
-            block.put("previousBlock", convert(previousBlock));
-            block.put("numberOfTransactions", this.transactions.length);
-            block.put("totalAmount", totalAmount);
-            block.put("totalFee", totalFee);
-            block.put("payloadLength", payloadLength);
-            block.put("payloadHash", convert(payloadHash));
-            block.put("generatorPublicKey", convert(generatorPublicKey));
-            block.put("generationSignature", convert(generationSignature));
-            if (version > 1) {
-
-                block.put("previousBlockHash", convert(previousBlockHash));
-
-            }
-            block.put("blockSignature", convert(blockSignature));
-
-            JSONArray transactionsData = new JSONArray();
-            for (Transaction transaction : this.blockTransactions) {
-
-                transactionsData.add(transaction.getJSONObject());
-
-            }
-            block.put("transactions", transactionsData);
-
-            return block;
-
-        }
-
-        private transient SoftReference<JSONStreamAware> jsonRef;
-
-        synchronized JSONStreamAware getJSONStreamAware() {
-            JSONStreamAware json;
-            if (jsonRef != null) {
-                json = jsonRef.get();
-                if (json != null) {
-                    return json;
-                }
-            }
-            json = new JSONStreamAware() {
-                private char[] jsonChars = getJSONObject().toJSONString().toCharArray();
-                @Override
-                public void writeJSONString(Writer out) throws IOException {
-                    out.write(jsonChars);
-                }
-            };
-            jsonRef = new SoftReference<>(json);
-            return json;
-        }
-
-        static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
-
-            ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
-
-            long curBlock = lastBlock.get().getId();
-            do {
-
-                Block block = blocks.get(curBlock);
-                lastBlocks.add(block);
-                curBlock = block.previousBlock;
-
-            } while (lastBlocks.size() < numberOfBlocks && curBlock != 0);
-
-            return lastBlocks;
-
-        }
-
-        public static final Comparator<Block> heightComparator = new Comparator<Block>() {
-            @Override
-            public int compare(Block o1, Block o2) {
-                return o1.height < o2.height ? -1 : (o1.height > o2.height ? 1 : 0);
-            }
-        };
-
-        static void loadBlocks(String fileName) throws FileNotFoundException {
-
-            try (FileInputStream fileInputStream = new FileInputStream(fileName);
-                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
-            ) {
-                blockCounter.set(objectInputStream.readInt());
-                blocks.clear();
-                blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
-                //lastBlock.set(blocks.get(objectInputStream.readLong()));
-            } catch (FileNotFoundException e) {
-                throw e;
-            } catch (IOException|ClassNotFoundException e) {
-                logMessage("Error loading blocks from " + fileName, e);
-                System.exit(1);
-            }
-
-        }
-
-        static boolean popLastBlock() {
-
-            try {
-
-                JSONObject response = new JSONObject();
-                response.put("response", "processNewData");
-
-                JSONArray addedUnconfirmedTransactions = new JSONArray();
-
-                Block block;
-
-                synchronized (blocksAndTransactionsLock) {
-
-                    block = lastBlock.get();
-
-                    if (block.getId() == GENESIS_BLOCK_ID) {
-                        return false;
-                    }
-
-                    Block previousBlock = blocks.get(block.previousBlock);
-                    if (previousBlock == null) {
-                        logMessage("Previous block is null");
-                        throw new IllegalStateException();
-                    }
-                    if (! lastBlock.compareAndSet(block, previousBlock)) {
-                        logMessage("This block is no longer last block");
-                        throw new IllegalStateException();
-                    }
-
-                    Account generatorAccount = accounts.get(block.getGeneratorAccountId());
-                    generatorAccount.addToBalanceAndUnconfirmedBalance(- block.totalFee * 100L);
-
-                    for (long transactionId : block.transactions) {
-
-                        Transaction transaction = Nxt.transactions.remove(transactionId);
-                        unconfirmedTransactions.put(transactionId, transaction);
-
-                        Account senderAccount = accounts.get(transaction.getSenderAccountId());
-                        senderAccount.addToBalance((transaction.amount + transaction.fee) * 100L);
-
-                        Account recipientAccount = accounts.get(transaction.recipient);
-                        recipientAccount.addToBalanceAndUnconfirmedBalance(- transaction.amount * 100L);
-
-                        JSONObject addedUnconfirmedTransaction = new JSONObject();
-                        addedUnconfirmedTransaction.put("index", transaction.index);
-                        addedUnconfirmedTransaction.put("timestamp", transaction.timestamp);
-                        addedUnconfirmedTransaction.put("deadline", transaction.deadline);
-                        addedUnconfirmedTransaction.put("recipient", convert(transaction.recipient));
-                        addedUnconfirmedTransaction.put("amount", transaction.amount);
-                        addedUnconfirmedTransaction.put("fee", transaction.fee);
-                        addedUnconfirmedTransaction.put("sender", convert(transaction.getSenderAccountId()));
-                        addedUnconfirmedTransaction.put("id", transaction.getStringId());
-                        addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
-
-                    }
-
-                } // synchronized
-
-                JSONArray addedOrphanedBlocks = new JSONArray();
-                JSONObject addedOrphanedBlock = new JSONObject();
-                addedOrphanedBlock.put("index", block.index);
-                addedOrphanedBlock.put("timestamp", block.timestamp);
-                addedOrphanedBlock.put("numberOfTransactions", block.transactions.length);
-                addedOrphanedBlock.put("totalAmount", block.totalAmount);
-                addedOrphanedBlock.put("totalFee", block.totalFee);
-                addedOrphanedBlock.put("payloadLength", block.payloadLength);
-                addedOrphanedBlock.put("generator", convert(block.getGeneratorAccountId()));
-                addedOrphanedBlock.put("height", block.height);
-                addedOrphanedBlock.put("version", block.version);
-                addedOrphanedBlock.put("block", block.getStringId());
-                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.baseTarget).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(initialBaseTarget)));
-                addedOrphanedBlocks.add(addedOrphanedBlock);
-                response.put("addedOrphanedBlocks", addedOrphanedBlocks);
-
-                if (addedUnconfirmedTransactions.size() > 0) {
-
-                    response.put("addedUnconfirmedTransactions", addedUnconfirmedTransactions);
-
-                }
-
-                for (User user : users.values()) {
-
-                    user.send(response);
-
-                }
-
-            } catch (RuntimeException e) {
-
-                logMessage("Error popping last block", e);
-
-                return false;
-
-            }
-
-            return true;
-
-        }
-
-        static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
-
-            Block block;
-            JSONArray addedConfirmedTransactions;
-            JSONArray removedUnconfirmedTransactions;
-            int curTime = getEpochTime(System.currentTimeMillis());
-
-            synchronized (blocksAndTransactionsLock) {
-                try {
-
-                    Block previousLastBlock = Nxt.lastBlock.get();
-                    buffer.flip();
-
-                    int version = buffer.getInt();
-                    if (version != (previousLastBlock.height < TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
-
-                        return false;
-
-                    }
-
-                    if (previousLastBlock.height == TRANSPARENT_FORGING_BLOCK) {
-
-                        byte[] checksum = Transaction.calculateTransactionsChecksum();
-                        if (CHECKSUM_TRANSPARENT_FORGING == null) {
-                            System.out.println(Arrays.toString(checksum));
-                        } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
-                            logMessage("Checksum failed at block " + TRANSPARENT_FORGING_BLOCK);
-                            return false;
-                        } else {
-                            logMessage("Checksum passed at block " + TRANSPARENT_FORGING_BLOCK);
-                        }
-
-                    }
-
-                    int blockTimestamp = buffer.getInt();
-                    long previousBlock = buffer.getLong();
-                    int numberOfTransactions = buffer.getInt();
-                    int totalAmount = buffer.getInt();
-                    int totalFee = buffer.getInt();
-                    int payloadLength = buffer.getInt();
-                    byte[] payloadHash = new byte[32];
-                    buffer.get(payloadHash);
-                    byte[] generatorPublicKey = new byte[32];
-                    buffer.get(generatorPublicKey);
-                    byte[] generationSignature;
-                    byte[] previousBlockHash;
-                    if (version == 1) {
-
-                        generationSignature = new byte[64];
-                        buffer.get(generationSignature);
-                        previousBlockHash = null;
-
-                    } else {
-
-                        generationSignature = new byte[32];
-                        buffer.get(generationSignature);
-                        previousBlockHash = new byte[32];
-                        buffer.get(previousBlockHash);
-
-                        if (!Arrays.equals(Nxt.getMessageDigest("SHA-256").digest(previousLastBlock.getBytes()), previousBlockHash)) {
-
-                            return false;
-
-                        }
-
-                    }
-                    byte[] blockSignature = new byte[64];
-                    buffer.get(blockSignature);
-
-                    if (blockTimestamp > curTime + 15 || blockTimestamp <= previousLastBlock.timestamp) {
-
-                        return false;
-
-                    }
-
-                    if (payloadLength > MAX_PAYLOAD_LENGTH || BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity() || numberOfTransactions > MAX_NUMBER_OF_TRANSACTIONS) {
-
-                        return false;
-
-                    }
-
-                    block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-
-                    if (block.transactions.length > MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || block.getId() == 0L || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
-
-                        return false;
-
-                    }
-
-                    block.index = blockCounter.incrementAndGet();
-
-                    HashMap<Long, Transaction> blockTransactions = new HashMap<>();
-                    HashSet<String> blockAliases = new HashSet<>();
-                    for (int i = 0; i < block.transactions.length; i++) {
-
-                        Transaction transaction = Transaction.getTransaction(buffer);
-                        transaction.index = transactionCounter.incrementAndGet();
-
-                        if (blockTransactions.put(block.transactions[i] = transaction.getId(), transaction) != null) {
-
-                            return false;
-
-                        }
-
-                        switch (transaction.type) {
-
-                            case Transaction.TYPE_MESSAGING:
-                            {
-
-                                switch (transaction.subtype) {
-
-                                    case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                                    {
-
-                                        if (!blockAliases.add(((Transaction.MessagingAliasAssignmentAttachment)transaction.attachment).alias.toLowerCase())) {
-
-                                            return false;
-
-                                        }
-
-                                    }
-                                    break;
-
-                                }
-
-                            }
-                            break;
-
-                        }
-
-                    }
-                    Arrays.sort(block.transactions);
-
-                    HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
-                    HashMap<Long, HashMap<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
-                    int calculatedTotalAmount = 0, calculatedTotalFee = 0;
-                    MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-                    int i;
-                    for (i = 0; i < block.transactions.length; i++) {
-
-                        Transaction transaction = blockTransactions.get(block.transactions[i]);
-                        // cfb: Block 303 contains a transaction which expired before the block timestamp
-                        //TODO: similar transaction validation is done in several places, refactor common code out
-                        if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && previousLastBlock.height > 303) || transaction.fee <= 0 || transaction.fee > MAX_BALANCE || transaction.amount < 0 || transaction.amount > MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
-
-                            break;
-
-                        }
-
-                        long sender = transaction.getSenderAccountId();
-                        Long accumulatedAmount = accumulatedAmounts.get(sender);
-                        if (accumulatedAmount == null) {
-
-                            accumulatedAmount = 0L;
-
-                        }
-                        accumulatedAmounts.put(sender, accumulatedAmount + (transaction.amount + transaction.fee) * 100L);
-                        if (transaction.type == Transaction.TYPE_PAYMENT) {
-
-                            if (transaction.subtype == Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
-
-                                calculatedTotalAmount += transaction.amount;
-
-                            } else {
-
-                                break;
-
-                            }
-
-                        } else if (transaction.type == Transaction.TYPE_MESSAGING) {
-
-                            if (transaction.subtype != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE && transaction.subtype != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
-
-                                break;
-
-                            }
-
-                        } else if (transaction.type == Transaction.TYPE_COLORED_COINS) {
-
-                            if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                                Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
-                                HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                                if (accountAccumulatedAssetQuantities == null) {
-
-                                    accountAccumulatedAssetQuantities = new HashMap<>();
-                                    accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                                }
-                                Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                                if (assetAccumulatedAssetQuantities == null) {
-
-                                    assetAccumulatedAssetQuantities = 0L;
-
-                                }
-                                accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                            } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                                Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
-                                HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                                if (accountAccumulatedAssetQuantities == null) {
-
-                                    accountAccumulatedAssetQuantities = new HashMap<>();
-                                    accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                                }
-                                Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                                if (assetAccumulatedAssetQuantities == null) {
-
-                                    assetAccumulatedAssetQuantities = 0L;
-
-                                }
-                                accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                            } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                                Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
-                                accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
-
-                            } else if (transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {
-
-                                break;
-
-                            }
-
-                        } else {
-
-                            break;
-
-                        }
-                        calculatedTotalFee += transaction.fee;
-
-                        digest.update(transaction.getBytes());
-
-                    }
-
-                    if (i != block.transactions.length || calculatedTotalAmount != block.totalAmount || calculatedTotalFee != block.totalFee) {
-
-                        return false;
-
-                    }
-
-                    if (!Arrays.equals(digest.digest(), block.payloadHash)) {
-
-                        return false;
-
-                    }
-
-                    //synchronized (blocksAndTransactionsLock) {
-
-                    for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
-
-                        Account senderAccount = accounts.get(accumulatedAmountEntry.getKey());
-                        if (senderAccount.getBalance() < accumulatedAmountEntry.getValue()) {
-
-                            return false;
-
-                        }
-
-                    }
-
-                    for (Map.Entry<Long, HashMap<Long, Long>> accumulatedAssetQuantitiesEntry : accumulatedAssetQuantities.entrySet()) {
-
-                        Account senderAccount = accounts.get(accumulatedAssetQuantitiesEntry.getKey());
-                        for (Map.Entry<Long, Long> accountAccumulatedAssetQuantitiesEntry : accumulatedAssetQuantitiesEntry.getValue().entrySet()) {
-
-                            long asset = accountAccumulatedAssetQuantitiesEntry.getKey();
-                            long quantity = accountAccumulatedAssetQuantitiesEntry.getValue();
-                            if (senderAccount.getAssetBalance(asset) < quantity) {
-
-                                return false;
-
-                            }
-
-                        }
-
-                    }
-
-                    block.height = previousLastBlock.height + 1;
-
-                    for (Map.Entry<Long, Transaction> transactionEntry : blockTransactions.entrySet()) {
-
-                        Transaction transaction = transactionEntry.getValue();
-                        transaction.height = block.height;
-                        transaction.block = block.getId();
-
-                        if (Nxt.transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
-                            logMessage("duplicate transaction id " + transactionEntry.getKey());
-                            return false;
-                        }
-
-                    }
-
-                    block.analyze();
-
-                    addedConfirmedTransactions = new JSONArray();
-                    removedUnconfirmedTransactions = new JSONArray();
-
-                    for (Map.Entry<Long, Transaction> transactionEntry : blockTransactions.entrySet()) {
-
-                        Transaction transaction = transactionEntry.getValue();
-
-                        JSONObject addedConfirmedTransaction = new JSONObject();
-                        addedConfirmedTransaction.put("index", transaction.index);
-                        addedConfirmedTransaction.put("blockTimestamp", block.timestamp);
-                        addedConfirmedTransaction.put("transactionTimestamp", transaction.timestamp);
-                        addedConfirmedTransaction.put("sender", convert(transaction.getSenderAccountId()));
-                        addedConfirmedTransaction.put("recipient", convert(transaction.recipient));
-                        addedConfirmedTransaction.put("amount", transaction.amount);
-                        addedConfirmedTransaction.put("fee", transaction.fee);
-                        addedConfirmedTransaction.put("id", transaction.getStringId());
-                        addedConfirmedTransactions.add(addedConfirmedTransaction);
-
-                        Transaction removedTransaction = unconfirmedTransactions.remove(transactionEntry.getKey());
-                        if (removedTransaction != null) {
-
-                            JSONObject removedUnconfirmedTransaction = new JSONObject();
-                            removedUnconfirmedTransaction.put("index", removedTransaction.index);
-                            removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
-
-                            Account senderAccount = accounts.get(removedTransaction.getSenderAccountId());
-                            senderAccount.addToUnconfirmedBalance((removedTransaction.amount + removedTransaction.fee) * 100L);
-
-                        }
-
-                        // TODO: Remove from double-spending transactions
-
-                    }
-                    /*
-                    long blockId = block.getId();
-                    for (long transactionId : block.transactions) {
-
-                        Nxt.transactions.get(transactionId).block = blockId;
-
-                    }
-                    */
-
-                    if (savingFlag) {
-
-                        Transaction.saveTransactions("transactions.nxt");
-                        Block.saveBlocks("blocks.nxt", false);
-
-                    }
-
-                } catch (RuntimeException e) {
-                    logMessage("Error pushing block", e);
-                    return false;
-                }
-            } // synchronized
-            if (block.timestamp >= curTime - 15) {
-
-                JSONObject request = block.getJSONObject();
-                request.put("requestType", "processBlock");
-
-                Peer.sendToSomePeers(request);
-
-            }
-
-            JSONArray addedRecentBlocks = new JSONArray();
-            JSONObject addedRecentBlock = new JSONObject();
-            addedRecentBlock.put("index", block.index);
-            addedRecentBlock.put("timestamp", block.timestamp);
-            addedRecentBlock.put("numberOfTransactions", block.transactions.length);
-            addedRecentBlock.put("totalAmount", block.totalAmount);
-            addedRecentBlock.put("totalFee", block.totalFee);
-            addedRecentBlock.put("payloadLength", block.payloadLength);
-            addedRecentBlock.put("generator", convert(block.getGeneratorAccountId()));
-            addedRecentBlock.put("height", block.height);
-            addedRecentBlock.put("version", block.version);
-            addedRecentBlock.put("block", block.getStringId());
-            addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.baseTarget).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(initialBaseTarget)));
-            addedRecentBlocks.add(addedRecentBlock);
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-            response.put("addedConfirmedTransactions", addedConfirmedTransactions);
-            if (removedUnconfirmedTransactions.size() > 0) {
-
-                response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
-
-            }
-            response.put("addedRecentBlocks", addedRecentBlocks);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-            return true;
-
-
-        }
-
-        static void saveBlocks(String fileName, boolean flag) {
-
-            try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-            ) {
-                objectOutputStream.writeInt(blockCounter.get());
-                objectOutputStream.writeObject(new HashMap<>(blocks));
-                //objectOutputStream.writeLong(lastBlock.get().getId());
-            } catch (IOException e) {
-                logMessage("Error saving blocks to " + fileName, e);
-                throw new RuntimeException(e);
-            }
-
-                /*if (flag) {
-
-                    ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + MAX_PAYLOAD_LENGTH);
-                    buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-                    long curBlockId = GENESIS_BLOCK_ID;
-                    long prevBlockPtr = -1, curBlockPtr = 0;
-                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                    do {
-
-                        Block block = blocks.get(curBlockId);
-                        buffer.clear();
-                        buffer.putLong(prevBlockPtr);
-                        buffer.put(block.getBytes());
-                        for (int i = 0; i < block.numberOfTransactions; i++) {
-
-                            buffer.put(Nxt.transactions.get(block.transactions[i]).getBytes());
-
-                        }
-                        buffer.flip();
-                        byte[] rawBytes = new byte[buffer.limit()];
-                        buffer.get(rawBytes);
-
-                        MappedByteBuffer window = blockchainChannel.map(FileChannel.MapMode.READ_WRITE, curBlockPtr, 32 + rawBytes.length);
-                        window.put(digest.digest(rawBytes));
-                        window.put(rawBytes);
-
-                        prevBlockPtr = curBlockPtr;
-                        curBlockPtr += 32 + rawBytes.length;
-                        curBlockId = block.nextBlock;
-
-                    } while (curBlockId != 0);
-
-                }*/
-
-        }
-
-        boolean verifyBlockSignature() {
-
-            Account account = accounts.get(getGeneratorAccountId());
-            if (account == null) {
-
-                return false;
-
-            }
-
-            byte[] data = getBytes();
-            byte[] data2 = new byte[data.length - 64];
-            System.arraycopy(data, 0, data2, 0, data2.length);
-
-            return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey);
-
-        }
-
-        boolean verifyGenerationSignature() {
-
-            try {
-
-                Block previousBlock = blocks.get(this.previousBlock);
-                if (previousBlock == null) {
-
-                    return false;
-
-                }
-
-                if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
-
-                    return false;
-
-                }
-
-                Account account = accounts.get(getGeneratorAccountId());
-                if (account == null || account.getEffectiveBalance() <= 0) {
-
-                    return false;
-
-                }
-
-                int elapsedTime = timestamp - previousBlock.timestamp;
-                BigInteger target = BigInteger.valueOf(lastBlock.get().baseTarget).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
-
-                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-                byte[] generationSignatureHash;
-                if (version == 1) {
-
-                    generationSignatureHash = digest.digest(generationSignature);
-
-                } else {
-
-                    digest.update(previousBlock.generationSignature);
-                    generationSignatureHash = digest.digest(generatorPublicKey);
-                    if (!Arrays.equals(generationSignature, generationSignatureHash)) {
-
-                        return false;
-
-                    }
-
-                }
-
-                BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-
-                return hit.compareTo(target) < 0;
-
-            } catch (RuntimeException e) {
-
-                logMessage("Error verifying block generation signature", e);
-                return false;
-
-            }
-
-        }
-
-    }
-
-    static class Crypto {
-
-        static byte[] getPublicKey(String secretPhrase) {
-
-            try {
-
-                byte[] publicKey = new byte[32];
-                Curve25519.keygen(publicKey, null, Nxt.getMessageDigest("SHA-256").digest(secretPhrase.getBytes("UTF-8")));
-
-                return publicKey;
-
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                logMessage("Error getting public key", e);
-                return null;
-
-            }
-
-        }
-
-        static byte[] sign(byte[] message, String secretPhrase) {
-
-            try {
-
-                byte[] P = new byte[32];
-                byte[] s = new byte[32];
-                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-                Curve25519.keygen(P, s, digest.digest(secretPhrase.getBytes("UTF-8")));
-
-                byte[] m = digest.digest(message);
-
-                digest.update(m);
-                byte[] x = digest.digest(s);
-
-                byte[] Y = new byte[32];
-                Curve25519.keygen(Y, null, x);
-
-                digest.update(m);
-                byte[] h = digest.digest(Y);
-
-                byte[] v = new byte[32];
-                Curve25519.sign(v, h, x, s);
-
-                byte[] signature = new byte[64];
-                System.arraycopy(v, 0, signature, 0, 32);
-                System.arraycopy(h, 0, signature, 32, 32);
-
-                return signature;
-
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-
-                logMessage("Error in signing message", e);
-                return null;
-
-            }
-
-        }
-
-        static boolean verify(byte[] signature, byte[] message, byte[] publicKey) {
-
-            try {
-
-                byte[] Y = new byte[32];
-                byte[] v = new byte[32];
-                System.arraycopy(signature, 0, v, 0, 32);
-                byte[] h = new byte[32];
-                System.arraycopy(signature, 32, h, 0, 32);
-                Curve25519.verify(Y, v, h, publicKey);
-
-                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-                byte[] m = digest.digest(message);
-                digest.update(m);
-                byte[] h2 = digest.digest(Y);
-
-                return Arrays.equals(h, h2);
-
-            } catch (RuntimeException e) {
-
-                logMessage("Error in Nxt.Crypto verify", e);
-                return false;
-
-            }
-
-        }
-
-    }
-
-    /* Ported from C to Java by Dmitry Skiba [sahn0], 23/02/08.
-     * Original: http://cds.xs4all.nl:8081/ecdh/
-     */
-    /* Generic 64-bit integer implementation of Curve25519 ECDH
-     * Written by Matthijs van Duin, 200608242056
-     * Public domain.
-     *
-     * Based on work by Daniel J Bernstein, http://cr.yp.to/ecdh.html
-     */
-    static class Curve25519 {
-
-        /* key size */
-        public static final int KEY_SIZE = 32;
-
-        /* 0 */
-        public static final byte[] ZERO = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        };
-
-        /* the prime 2^255-19 */
-        public static final byte[] PRIME = {
-                (byte)237, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)255,
-                (byte)255, (byte)255, (byte)255, (byte)127
-        };
-
-        /* group order (a prime near 2^252+2^124) */
-        public static final byte[] ORDER = {
-                (byte)237, (byte)211, (byte)245, (byte)92,
-                (byte)26,  (byte)99,  (byte)18,  (byte)88,
-                (byte)214, (byte)156, (byte)247, (byte)162,
-                (byte)222, (byte)249, (byte)222, (byte)20,
-                (byte)0,   (byte)0,   (byte)0,   (byte)0,
-                (byte)0,   (byte)0,   (byte)0,   (byte)0,
-                (byte)0,   (byte)0,   (byte)0,   (byte)0,
-                (byte)0,   (byte)0,   (byte)0,   (byte)16
-        };
-
-        /********* KEY AGREEMENT *********/
-
-        /* Private key clamping
-         *   k [out] your private key for key agreement
-         *   k  [in]  32 random bytes
-         */
-        public static final void clamp(byte[] k) {
-            k[31] &= 0x7F;
-            k[31] |= 0x40;
-            k[ 0] &= 0xF8;
-        }
-
-        /* Key-pair generation
-         *   P  [out] your public key
-         *   s  [out] your private key for signing
-         *   k  [out] your private key for key agreement
-         *   k  [in]  32 random bytes
-         * s may be NULL if you don't care
-         *
-         * WARNING: if s is not NULL, this function has data-dependent timing */
-        public static final void keygen(byte[] P, byte[] s, byte[] k) {
-            clamp(k);
-            core(P, s, k, null);
-        }
-
-        /* Key agreement
-         *   Z  [out] shared secret (needs hashing before use)
-         *   k  [in]  your private key for key agreement
-         *   P  [in]  peer's public key
-         */
-        public static final void curve(byte[] Z, byte[] k, byte[] P) {
-            core(Z, null, k, P);
-        }
-
-        /********* DIGITAL SIGNATURES *********/
-
-        /* deterministic EC-KCDSA
-         *
-         *    s is the private key for signing
-         *    P is the corresponding public key
-         *    Z is the context data (signer public key or certificate, etc)
-         *
-         * signing:
-         *
-         *    m = hash(Z, message)
-         *    x = hash(m, s)
-         *    keygen25519(Y, NULL, x);
-         *    r = hash(Y);
-         *    h = m XOR r
-         *    sign25519(v, h, x, s);
-         *
-         *    output (v,r) as the signature
-         *
-         * verification:
-         *
-         *    m = hash(Z, message);
-         *    h = m XOR r
-         *    verify25519(Y, v, h, P)
-         *
-         *    confirm  r == hash(Y)
-         *
-         * It would seem to me that it would be simpler to have the signer directly do
-         * h = hash(m, Y) and send that to the recipient instead of r, who can verify
-         * the signature by checking h == hash(m, Y).  If there are any problems with
-         * such a scheme, please let me know.
-         *
-         * Also, EC-KCDSA (like most DS algorithms) picks x random, which is a waste of
-         * perfectly good entropy, but does allow Y to be calculated in advance of (or
-         * parallel to) hashing the message.
-         */
-
-        /* Signature generation primitive, calculates (x-h)s mod q
-         *   v  [out] signature value
-         *   h  [in]  signature hash (of message, signature pub key, and context data)
-         *   x  [in]  signature private key
-         *   s  [in]  private key for signing
-         * returns true on success, false on failure (use different x or h)
-         */
-        public static final boolean sign(byte[] v, byte[] h, byte[] x, byte[] s) {
-            /* v = (x - h) s  mod q  */
-            byte[] tmp1=new byte[65];
-            byte[] tmp2=new byte[33];
-            int w;
-            int i;
-            for (i = 0; i < 32; i++)
-                v[i] = 0;
-            i = mula_small(v, x, 0, h, 32, -1);
-            mula_small(v, v, 0, ORDER, 32, (15-v[31])/16);
-            mula32(tmp1, v, s, 32, 1);
-            divmod(tmp2, tmp1, 64, ORDER, 32);
-            for (w = 0, i = 0; i < 32; i++)
-                w |= v[i] = tmp1[i];
-            return w != 0;
-        }
-
-        /* Signature verification primitive, calculates Y = vP + hG
-         *   Y  [out] signature public key
-         *   v  [in]  signature value
-         *   h  [in]  signature hash
-         *   P  [in]  public key
-         */
-        public static final void verify(byte[] Y, byte[] v, byte[] h, byte[] P) {
-            /* Y = v abs(P) + h G  */
-            byte[] d=new byte[32];
-            long10[]
-                    p=new long10[]{new long10(),new long10()},
-                    s=new long10[]{new long10(),new long10()},
-                    yx=new long10[]{new long10(),new long10(),new long10()},
-                    yz=new long10[]{new long10(),new long10(),new long10()},
-                    t1=new long10[]{new long10(),new long10(),new long10()},
-                    t2=new long10[]{new long10(),new long10(),new long10()};
-
-            int vi = 0, hi = 0, di = 0, nvh=0, i, j, k;
-
-            /* set p[0] to G and p[1] to P  */
-
-            set(p[0], 9);
-            unpack(p[1], P);
-
-            /* set s[0] to P+G and s[1] to P-G  */
-
-            /* s[0] = (Py^2 + Gy^2 - 2 Py Gy)/(Px - Gx)^2 - Px - Gx - 486662  */
-            /* s[1] = (Py^2 + Gy^2 + 2 Py Gy)/(Px - Gx)^2 - Px - Gx - 486662  */
-
-            x_to_y2(t1[0], t2[0], p[1]);	/* t2[0] = Py^2  */
-            sqrt(t1[0], t2[0]);	/* t1[0] = Py or -Py  */
-            j = is_negative(t1[0]);		/*      ... check which  */
-            t2[0]._0 += 39420360;		/* t2[0] = Py^2 + Gy^2  */
-            mul(t2[1], BASE_2Y, t1[0]);/* t2[1] = 2 Py Gy or -2 Py Gy  */
-            sub(t1[j], t2[0], t2[1]);	/* t1[0] = Py^2 + Gy^2 - 2 Py Gy  */
-            add(t1[1-j], t2[0], t2[1]);/* t1[1] = Py^2 + Gy^2 + 2 Py Gy  */
-            cpy(t2[0], p[1]);		/* t2[0] = Px  */
-            t2[0]._0 -= 9;			/* t2[0] = Px - Gx  */
-            sqr(t2[1], t2[0]);		/* t2[1] = (Px - Gx)^2  */
-            recip(t2[0], t2[1], 0);	/* t2[0] = 1/(Px - Gx)^2  */
-            mul(s[0], t1[0], t2[0]);	/* s[0] = t1[0]/(Px - Gx)^2  */
-            sub(s[0], s[0], p[1]);	/* s[0] = t1[0]/(Px - Gx)^2 - Px  */
-            s[0]._0 -= 9 + 486662;		/* s[0] = X(P+G)  */
-            mul(s[1], t1[1], t2[0]);	/* s[1] = t1[1]/(Px - Gx)^2  */
-            sub(s[1], s[1], p[1]);	/* s[1] = t1[1]/(Px - Gx)^2 - Px  */
-            s[1]._0 -= 9 + 486662;		/* s[1] = X(P-G)  */
-            mul_small(s[0], s[0], 1);	/* reduce s[0] */
-            mul_small(s[1], s[1], 1);	/* reduce s[1] */
-
-
-            /* prepare the chain  */
-            for (i = 0; i < 32; i++) {
-                vi = (vi >> 8) ^ (v[i] & 0xFF) ^ ((v[i] & 0xFF) << 1);
-                hi = (hi >> 8) ^ (h[i] & 0xFF) ^ ((h[i] & 0xFF) << 1);
-                nvh = ~(vi ^ hi);
-                di = (nvh & (di & 0x80) >> 7) ^ vi;
-                di ^= nvh & (di & 0x01) << 1;
-                di ^= nvh & (di & 0x02) << 1;
-                di ^= nvh & (di & 0x04) << 1;
-                di ^= nvh & (di & 0x08) << 1;
-                di ^= nvh & (di & 0x10) << 1;
-                di ^= nvh & (di & 0x20) << 1;
-                di ^= nvh & (di & 0x40) << 1;
-                d[i] = (byte)di;
-            }
-
-            di = ((nvh & (di & 0x80) << 1) ^ vi) >> 8;
-
-            /* initialize state */
-            set(yx[0], 1);
-            cpy(yx[1], p[di]);
-            cpy(yx[2], s[0]);
-            set(yz[0], 0);
-            set(yz[1], 1);
-            set(yz[2], 1);
-
-            /* y[0] is (even)P + (even)G
-             * y[1] is (even)P + (odd)G  if current d-bit is 0
-             * y[1] is (odd)P + (even)G  if current d-bit is 1
-             * y[2] is (odd)P + (odd)G
-             */
-
-            vi = 0;
-            hi = 0;
-
-            /* and go for it! */
-            for (i = 32; i--!=0; ) {
-                vi = (vi << 8) | (v[i] & 0xFF);
-                hi = (hi << 8) | (h[i] & 0xFF);
-                di = (di << 8) | (d[i] & 0xFF);
-
-                for (j = 8; j--!=0; ) {
-                    mont_prep(t1[0], t2[0], yx[0], yz[0]);
-                    mont_prep(t1[1], t2[1], yx[1], yz[1]);
-                    mont_prep(t1[2], t2[2], yx[2], yz[2]);
-
-                    k = ((vi ^ vi >> 1) >> j & 1)
-                            + ((hi ^ hi >> 1) >> j & 1);
-                    mont_dbl(yx[2], yz[2], t1[k], t2[k], yx[0], yz[0]);
-
-                    k = (di >> j & 2) ^ ((di >> j & 1) << 1);
-                    mont_add(t1[1], t2[1], t1[k], t2[k], yx[1], yz[1],
-                            p[di >> j & 1]);
-
-                    mont_add(t1[2], t2[2], t1[0], t2[0], yx[2], yz[2],
-                            s[((vi ^ hi) >> j & 2) >> 1]);
-                }
-            }
-
-            k = (vi & 1) + (hi & 1);
-            recip(t1[0], yz[k], 0);
-            mul(t1[1], yx[k], t1[0]);
-
-            pack(t1[1], Y);
-        }
-
-        ///////////////////////////////////////////////////////////////////////////
-
-        /* sahn0:
-         * Using this class instead of long[10] to avoid bounds checks. */
-        private static final class long10 {
-            public long10() {}
-            public long10(
-                    long _0, long _1, long _2, long _3, long _4,
-                    long _5, long _6, long _7, long _8, long _9)
-            {
-                this._0=_0; this._1=_1; this._2=_2;
-                this._3=_3; this._4=_4; this._5=_5;
-                this._6=_6; this._7=_7; this._8=_8;
-                this._9=_9;
-            }
-            public long _0,_1,_2,_3,_4,_5,_6,_7,_8,_9;
-        }
-
-        /********************* radix 2^8 math *********************/
-
-        private static final void cpy32(byte[] d, byte[] s) {
-            int i;
-            for (i = 0; i < 32; i++)
-                d[i] = s[i];
-        }
-
-        /* p[m..n+m-1] = q[m..n+m-1] + z * x */
-        /* n is the size of x */
-        /* n+m is the size of p and q */
-        private static final int mula_small(byte[] p,byte[] q,int m,byte[] x,int n,int z) {
-            int v=0;
-            for (int i=0;i<n;++i) {
-                v+=(q[i+m] & 0xFF)+z*(x[i] & 0xFF);
-                p[i+m]=(byte)v;
-                v>>=8;
-            }
-            return v;
-        }
-
-        /* p += x * y * z  where z is a small integer
-         * x is size 32, y is size t, p is size 32+t
-         * y is allowed to overlap with p+32 if you don't care about the upper half  */
-        private static final int mula32(byte[] p, byte[] x, byte[] y, int t, int z) {
-            final int n = 31;
-            int w = 0;
-            int i = 0;
-            for (; i < t; i++) {
-                int zy = z * (y[i] & 0xFF);
-                w += mula_small(p, p, i, x, n, zy) +
-                        (p[i+n] & 0xFF) + zy * (x[n] & 0xFF);
-                p[i+n] = (byte)w;
-                w >>= 8;
-            }
-            p[i+n] = (byte)(w + (p[i+n] & 0xFF));
-            return w >> 8;
-        }
-
-        /* divide r (size n) by d (size t), returning quotient q and remainder r
-         * quotient is size n-t+1, remainder is size t
-         * requires t > 0 && d[t-1] != 0
-         * requires that r[-1] and d[-1] are valid memory locations
-         * q may overlap with r+t */
-        private static final void divmod(byte[] q, byte[] r, int n, byte[] d, int t) {
-            int rn = 0;
-            int dt = ((d[t-1] & 0xFF) << 8);
-            if (t>1) {
-                dt |= (d[t-2] & 0xFF);
-            }
-            while (n-- >= t) {
-                int z = (rn << 16) | ((r[n] & 0xFF) << 8);
-                if (n>0) {
-                    z |= (r[n-1] & 0xFF);
-                }
-                z/=dt;
-                rn += mula_small(r,r, n-t+1, d, t, -z);
-                q[n-t+1] = (byte)((z + rn) & 0xFF); /* rn is 0 or -1 (underflow) */
-                mula_small(r,r, n-t+1, d, t, -rn);
-                rn = (r[n] & 0xFF);
-                r[n] = 0;
-            }
-            r[t-1] = (byte)rn;
-        }
-
-        private static final int numsize(byte[] x,int n) {
-            while (n--!=0 && x[n]==0)
-                ;
-            return n+1;
-        }
-
-        /* Returns x if a contains the gcd, y if b.
-         * Also, the returned buffer contains the inverse of a mod b,
-         * as 32-byte signed.
-         * x and y must have 64 bytes space for temporary use.
-         * requires that a[-1] and b[-1] are valid memory locations  */
-        private static final byte[] egcd32(byte[] x,byte[] y,byte[] a,byte[] b) {
-            int an, bn = 32, qn, i;
-            for (i = 0; i < 32; i++)
-                x[i] = y[i] = 0;
-            x[0] = 1;
-            an = numsize(a, 32);
-            if (an==0)
-                return y;	/* division by zero */
-            byte[] temp=new byte[32];
-            while (true) {
-                qn = bn - an + 1;
-                divmod(temp, b, bn, a, an);
-                bn = numsize(b, bn);
-                if (bn==0)
-                    return x;
-                mula32(y, x, temp, qn, -1);
-
-                qn = an - bn + 1;
-                divmod(temp, a, an, b, bn);
-                an = numsize(a, an);
-                if (an==0)
-                    return y;
-                mula32(x, y, temp, qn, -1);
-            }
-        }
-
-        /********************* radix 2^25.5 GF(2^255-19) math *********************/
-
-        private static final int P25=33554431;	/* (1 << 25) - 1 */
-        private static final int P26=67108863;	/* (1 << 26) - 1 */
-
-        /* Convert to internal format from little-endian byte format */
-        private static final void unpack(long10 x,byte[] m) {
-            x._0 = ((m[0] & 0xFF))         | ((m[1] & 0xFF))<<8 |
-                    (m[2] & 0xFF)<<16      | ((m[3] & 0xFF)& 3)<<24;
-            x._1 = ((m[3] & 0xFF)&~ 3)>>2  | (m[4] & 0xFF)<<6 |
-                    (m[5] & 0xFF)<<14 | ((m[6] & 0xFF)& 7)<<22;
-            x._2 = ((m[6] & 0xFF)&~ 7)>>3  | (m[7] & 0xFF)<<5 |
-                    (m[8] & 0xFF)<<13 | ((m[9] & 0xFF)&31)<<21;
-            x._3 = ((m[9] & 0xFF)&~31)>>5  | (m[10] & 0xFF)<<3 |
-                    (m[11] & 0xFF)<<11 | ((m[12] & 0xFF)&63)<<19;
-            x._4 = ((m[12] & 0xFF)&~63)>>6 | (m[13] & 0xFF)<<2 |
-                    (m[14] & 0xFF)<<10 |  (m[15] & 0xFF)    <<18;
-            x._5 =  (m[16] & 0xFF)         | (m[17] & 0xFF)<<8 |
-                    (m[18] & 0xFF)<<16 | ((m[19] & 0xFF)& 1)<<24;
-            x._6 = ((m[19] & 0xFF)&~ 1)>>1 | (m[20] & 0xFF)<<7 |
-                    (m[21] & 0xFF)<<15 | ((m[22] & 0xFF)& 7)<<23;
-            x._7 = ((m[22] & 0xFF)&~ 7)>>3 | (m[23] & 0xFF)<<5 |
-                    (m[24] & 0xFF)<<13 | ((m[25] & 0xFF)&15)<<21;
-            x._8 = ((m[25] & 0xFF)&~15)>>4 | (m[26] & 0xFF)<<4 |
-                    (m[27] & 0xFF)<<12 | ((m[28] & 0xFF)&63)<<20;
-            x._9 = ((m[28] & 0xFF)&~63)>>6 | (m[29] & 0xFF)<<2 |
-                    (m[30] & 0xFF)<<10 |  (m[31] & 0xFF)    <<18;
-        }
-
-        /* Check if reduced-form input >= 2^255-19 */
-        private static final boolean is_overflow(long10 x) {
-            return (
-                    ((x._0 > P26-19)) &&
-                            ((x._1 & x._3 & x._5 & x._7 & x._9) == P25) &&
-                            ((x._2 & x._4 & x._6 & x._8) == P26)
-            ) || (x._9 > P25);
-        }
-
-        /* Convert from internal format to little-endian byte format.  The
-         * number must be in a reduced form which is output by the following ops:
-         *     unpack, mul, sqr
-         *     set --  if input in range 0 .. P25
-         * If you're unsure if the number is reduced, first multiply it by 1.  */
-        private static final void pack(long10 x,byte[] m) {
-            int ld = 0, ud = 0;
-            long t;
-            ld = (is_overflow(x)?1:0) - ((x._9 < 0)?1:0);
-            ud = ld * -(P25+1);
-            ld *= 19;
-            t = ld + x._0 + (x._1 << 26);
-            m[ 0] = (byte)t;
-            m[ 1] = (byte)(t >> 8);
-            m[ 2] = (byte)(t >> 16);
-            m[ 3] = (byte)(t >> 24);
-            t = (t >> 32) + (x._2 << 19);
-            m[ 4] = (byte)t;
-            m[ 5] = (byte)(t >> 8);
-            m[ 6] = (byte)(t >> 16);
-            m[ 7] = (byte)(t >> 24);
-            t = (t >> 32) + (x._3 << 13);
-            m[ 8] = (byte)t;
-            m[ 9] = (byte)(t >> 8);
-            m[10] = (byte)(t >> 16);
-            m[11] = (byte)(t >> 24);
-            t = (t >> 32) + (x._4 <<  6);
-            m[12] = (byte)t;
-            m[13] = (byte)(t >> 8);
-            m[14] = (byte)(t >> 16);
-            m[15] = (byte)(t >> 24);
-            t = (t >> 32) + x._5 + (x._6 << 25);
-            m[16] = (byte)t;
-            m[17] = (byte)(t >> 8);
-            m[18] = (byte)(t >> 16);
-            m[19] = (byte)(t >> 24);
-            t = (t >> 32) + (x._7 << 19);
-            m[20] = (byte)t;
-            m[21] = (byte)(t >> 8);
-            m[22] = (byte)(t >> 16);
-            m[23] = (byte)(t >> 24);
-            t = (t >> 32) + (x._8 << 12);
-            m[24] = (byte)t;
-            m[25] = (byte)(t >> 8);
-            m[26] = (byte)(t >> 16);
-            m[27] = (byte)(t >> 24);
-            t = (t >> 32) + ((x._9 + ud) << 6);
-            m[28] = (byte)t;
-            m[29] = (byte)(t >> 8);
-            m[30] = (byte)(t >> 16);
-            m[31] = (byte)(t >> 24);
-        }
-
-        /* Copy a number */
-        private static final void cpy(long10 out, long10 in) {
-            out._0=in._0;	out._1=in._1;
-            out._2=in._2;	out._3=in._3;
-            out._4=in._4;	out._5=in._5;
-            out._6=in._6;	out._7=in._7;
-            out._8=in._8;	out._9=in._9;
-        }
-
-        /* Set a number to value, which must be in range -185861411 .. 185861411 */
-        private static final void set(long10 out, int in) {
-            out._0=in;	out._1=0;
-            out._2=0;	out._3=0;
-            out._4=0;	out._5=0;
-            out._6=0;	out._7=0;
-            out._8=0;	out._9=0;
-        }
-
-        /* Add/subtract two numbers.  The inputs must be in reduced form, and the
-         * output isn't, so to do another addition or subtraction on the output,
-         * first multiply it by one to reduce it. */
-        private static final void add(long10 xy, long10 x, long10 y) {
-            xy._0 = x._0 + y._0;	xy._1 = x._1 + y._1;
-            xy._2 = x._2 + y._2;	xy._3 = x._3 + y._3;
-            xy._4 = x._4 + y._4;	xy._5 = x._5 + y._5;
-            xy._6 = x._6 + y._6;	xy._7 = x._7 + y._7;
-            xy._8 = x._8 + y._8;	xy._9 = x._9 + y._9;
-        }
-        private static final void sub(long10 xy, long10 x, long10 y) {
-            xy._0 = x._0 - y._0;	xy._1 = x._1 - y._1;
-            xy._2 = x._2 - y._2;	xy._3 = x._3 - y._3;
-            xy._4 = x._4 - y._4;	xy._5 = x._5 - y._5;
-            xy._6 = x._6 - y._6;	xy._7 = x._7 - y._7;
-            xy._8 = x._8 - y._8;	xy._9 = x._9 - y._9;
-        }
-
-        /* Multiply a number by a small integer in range -185861411 .. 185861411.
-         * The output is in reduced form, the input x need not be.  x and xy may point
-         * to the same buffer. */
-        private static final long10 mul_small(long10 xy, long10 x, long y) {
-            long t;
-            t = (x._8*y);
-            xy._8 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x._9*y);
-            xy._9 = (t & ((1 << 25) - 1));
-            t = 19 * (t >> 25) + (x._0*y);
-            xy._0 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x._1*y);
-            xy._1 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x._2*y);
-            xy._2 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x._3*y);
-            xy._3 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x._4*y);
-            xy._4 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x._5*y);
-            xy._5 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x._6*y);
-            xy._6 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x._7*y);
-            xy._7 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + xy._8;
-            xy._8 = (t & ((1 << 26) - 1));
-            xy._9 += (t >> 26);
-            return xy;
-        }
-
-        /* Multiply two numbers.  The output is in reduced form, the inputs need not
-         * be. */
-        private static final long10 mul(long10 xy, long10 x, long10 y) {
-            /* sahn0:
-             * Using local variables to avoid class access.
-             * This seem to improve performance a bit...
-             */
-            long
-                    x_0=x._0,x_1=x._1,x_2=x._2,x_3=x._3,x_4=x._4,
-                    x_5=x._5,x_6=x._6,x_7=x._7,x_8=x._8,x_9=x._9;
-            long
-                    y_0=y._0,y_1=y._1,y_2=y._2,y_3=y._3,y_4=y._4,
-                    y_5=y._5,y_6=y._6,y_7=y._7,y_8=y._8,y_9=y._9;
-            long t;
-            t = (x_0*y_8) + (x_2*y_6) + (x_4*y_4) + (x_6*y_2) +
-                    (x_8*y_0) + 2 * ((x_1*y_7) + (x_3*y_5) +
-                    (x_5*y_3) + (x_7*y_1)) + 38 *
-                    (x_9*y_9);
-            xy._8 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x_0*y_9) + (x_1*y_8) + (x_2*y_7) +
-                    (x_3*y_6) + (x_4*y_5) + (x_5*y_4) +
-                    (x_6*y_3) + (x_7*y_2) + (x_8*y_1) +
-                    (x_9*y_0);
-            xy._9 = (t & ((1 << 25) - 1));
-            t = (x_0*y_0) + 19 * ((t >> 25) + (x_2*y_8) + (x_4*y_6)
-                    + (x_6*y_4) + (x_8*y_2)) + 38 *
-                    ((x_1*y_9) + (x_3*y_7) + (x_5*y_5) +
-                            (x_7*y_3) + (x_9*y_1));
-            xy._0 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x_0*y_1) + (x_1*y_0) + 19 * ((x_2*y_9)
-                    + (x_3*y_8) + (x_4*y_7) + (x_5*y_6) +
-                    (x_6*y_5) + (x_7*y_4) + (x_8*y_3) +
-                    (x_9*y_2));
-            xy._1 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x_0*y_2) + (x_2*y_0) + 19 * ((x_4*y_8)
-                    + (x_6*y_6) + (x_8*y_4)) + 2 * (x_1*y_1)
-                    + 38 * ((x_3*y_9) + (x_5*y_7) +
-                    (x_7*y_5) + (x_9*y_3));
-            xy._2 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x_0*y_3) + (x_1*y_2) + (x_2*y_1) +
-                    (x_3*y_0) + 19 * ((x_4*y_9) + (x_5*y_8) +
-                    (x_6*y_7) + (x_7*y_6) +
-                    (x_8*y_5) + (x_9*y_4));
-            xy._3 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x_0*y_4) + (x_2*y_2) + (x_4*y_0) + 19 *
-                    ((x_6*y_8) + (x_8*y_6)) + 2 * ((x_1*y_3) +
-                    (x_3*y_1)) + 38 *
-                    ((x_5*y_9) + (x_7*y_7) + (x_9*y_5));
-            xy._4 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x_0*y_5) + (x_1*y_4) + (x_2*y_3) +
-                    (x_3*y_2) + (x_4*y_1) + (x_5*y_0) + 19 *
-                    ((x_6*y_9) + (x_7*y_8) + (x_8*y_7) +
-                            (x_9*y_6));
-            xy._5 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x_0*y_6) + (x_2*y_4) + (x_4*y_2) +
-                    (x_6*y_0) + 19 * (x_8*y_8) + 2 * ((x_1*y_5) +
-                    (x_3*y_3) + (x_5*y_1)) + 38 *
-                    ((x_7*y_9) + (x_9*y_7));
-            xy._6 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + (x_0*y_7) + (x_1*y_6) + (x_2*y_5) +
-                    (x_3*y_4) + (x_4*y_3) + (x_5*y_2) +
-                    (x_6*y_1) + (x_7*y_0) + 19 * ((x_8*y_9) +
-                    (x_9*y_8));
-            xy._7 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + xy._8;
-            xy._8 = (t & ((1 << 26) - 1));
-            xy._9 += (t >> 26);
-            return xy;
-        }
-
-        /* Square a number.  Optimization of  mul25519(x2, x, x)  */
-        private static final long10 sqr(long10 x2, long10 x) {
-            long
-                    x_0=x._0,x_1=x._1,x_2=x._2,x_3=x._3,x_4=x._4,
-                    x_5=x._5,x_6=x._6,x_7=x._7,x_8=x._8,x_9=x._9;
-            long t;
-            t = (x_4*x_4) + 2 * ((x_0*x_8) + (x_2*x_6)) + 38 *
-                    (x_9*x_9) + 4 * ((x_1*x_7) + (x_3*x_5));
-            x2._8 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + 2 * ((x_0*x_9) + (x_1*x_8) + (x_2*x_7) +
-                    (x_3*x_6) + (x_4*x_5));
-            x2._9 = (t & ((1 << 25) - 1));
-            t = 19 * (t >> 25) + (x_0*x_0) + 38 * ((x_2*x_8) +
-                    (x_4*x_6) + (x_5*x_5)) + 76 * ((x_1*x_9)
-                    + (x_3*x_7));
-            x2._0 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + 2 * (x_0*x_1) + 38 * ((x_2*x_9) +
-                    (x_3*x_8) + (x_4*x_7) + (x_5*x_6));
-            x2._1 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + 19 * (x_6*x_6) + 2 * ((x_0*x_2) +
-                    (x_1*x_1)) + 38 * (x_4*x_8) + 76 *
-                    ((x_3*x_9) + (x_5*x_7));
-            x2._2 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + 2 * ((x_0*x_3) + (x_1*x_2)) + 38 *
-                    ((x_4*x_9) + (x_5*x_8) + (x_6*x_7));
-            x2._3 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + (x_2*x_2) + 2 * (x_0*x_4) + 38 *
-                    ((x_6*x_8) + (x_7*x_7)) + 4 * (x_1*x_3) + 76 *
-                    (x_5*x_9);
-            x2._4 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + 2 * ((x_0*x_5) + (x_1*x_4) + (x_2*x_3))
-                    + 38 * ((x_6*x_9) + (x_7*x_8));
-            x2._5 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + 19 * (x_8*x_8) + 2 * ((x_0*x_6) +
-                    (x_2*x_4) + (x_3*x_3)) + 4 * (x_1*x_5) +
-                    76 * (x_7*x_9);
-            x2._6 = (t & ((1 << 26) - 1));
-            t = (t >> 26) + 2 * ((x_0*x_7) + (x_1*x_6) + (x_2*x_5) +
-                    (x_3*x_4)) + 38 * (x_8*x_9);
-            x2._7 = (t & ((1 << 25) - 1));
-            t = (t >> 25) + x2._8;
-            x2._8 = (t & ((1 << 26) - 1));
-            x2._9 += (t >> 26);
-            return x2;
-        }
-
-        /* Calculates a reciprocal.  The output is in reduced form, the inputs need not
-         * be.  Simply calculates  y = x^(p-2)  so it's not too fast. */
-        /* When sqrtassist is true, it instead calculates y = x^((p-5)/8) */
-        private static final void recip(long10 y, long10 x, int sqrtassist) {
-            long10
-                    t0=new long10(),
-                    t1=new long10(),
-                    t2=new long10(),
-                    t3=new long10(),
-                    t4=new long10();
-            int i;
-            /* the chain for x^(2^255-21) is straight from djb's implementation */
-            sqr(t1, x);	/*  2 == 2 * 1	*/
-            sqr(t2, t1);	/*  4 == 2 * 2	*/
-            sqr(t0, t2);	/*  8 == 2 * 4	*/
-            mul(t2, t0, x);	/*  9 == 8 + 1	*/
-            mul(t0, t2, t1);	/* 11 == 9 + 2	*/
-            sqr(t1, t0);	/* 22 == 2 * 11	*/
-            mul(t3, t1, t2);	/* 31 == 22 + 9
-                        == 2^5   - 2^0	*/
-            sqr(t1, t3);	/* 2^6   - 2^1	*/
-            sqr(t2, t1);	/* 2^7   - 2^2	*/
-            sqr(t1, t2);	/* 2^8   - 2^3	*/
-            sqr(t2, t1);	/* 2^9   - 2^4	*/
-            sqr(t1, t2);	/* 2^10  - 2^5	*/
-            mul(t2, t1, t3);	/* 2^10  - 2^0	*/
-            sqr(t1, t2);	/* 2^11  - 2^1	*/
-            sqr(t3, t1);	/* 2^12  - 2^2	*/
-            for (i = 1; i < 5; i++) {
-                sqr(t1, t3);
-                sqr(t3, t1);
-            } /* t3 */		/* 2^20  - 2^10	*/
-            mul(t1, t3, t2);	/* 2^20  - 2^0	*/
-            sqr(t3, t1);	/* 2^21  - 2^1	*/
-            sqr(t4, t3);	/* 2^22  - 2^2	*/
-            for (i = 1; i < 10; i++) {
-                sqr(t3, t4);
-                sqr(t4, t3);
-            } /* t4 */		/* 2^40  - 2^20	*/
-            mul(t3, t4, t1);	/* 2^40  - 2^0	*/
-            for (i = 0; i < 5; i++) {
-                sqr(t1, t3);
-                sqr(t3, t1);
-            } /* t3 */		/* 2^50  - 2^10	*/
-            mul(t1, t3, t2);	/* 2^50  - 2^0	*/
-            sqr(t2, t1);	/* 2^51  - 2^1	*/
-            sqr(t3, t2);	/* 2^52  - 2^2	*/
-            for (i = 1; i < 25; i++) {
-                sqr(t2, t3);
-                sqr(t3, t2);
-            } /* t3 */		/* 2^100 - 2^50 */
-            mul(t2, t3, t1);	/* 2^100 - 2^0	*/
-            sqr(t3, t2);	/* 2^101 - 2^1	*/
-            sqr(t4, t3);	/* 2^102 - 2^2	*/
-            for (i = 1; i < 50; i++) {
-                sqr(t3, t4);
-                sqr(t4, t3);
-            } /* t4 */		/* 2^200 - 2^100 */
-            mul(t3, t4, t2);	/* 2^200 - 2^0	*/
-            for (i = 0; i < 25; i++) {
-                sqr(t4, t3);
-                sqr(t3, t4);
-            } /* t3 */		/* 2^250 - 2^50	*/
-            mul(t2, t3, t1);	/* 2^250 - 2^0	*/
-            sqr(t1, t2);	/* 2^251 - 2^1	*/
-            sqr(t2, t1);	/* 2^252 - 2^2	*/
-            if (sqrtassist!=0) {
-                mul(y, x, t2);	/* 2^252 - 3 */
-            } else {
-                sqr(t1, t2);	/* 2^253 - 2^3	*/
-                sqr(t2, t1);	/* 2^254 - 2^4	*/
-                sqr(t1, t2);	/* 2^255 - 2^5	*/
-                mul(y, t1, t0);	/* 2^255 - 21	*/
-            }
-        }
-
-        /* checks if x is "negative", requires reduced input */
-        private static final int is_negative(long10 x) {
-            return (int)(((is_overflow(x) || (x._9 < 0))?1:0) ^ (x._0 & 1));
-        }
-
-        /* a square root */
-        private static final void sqrt(long10 x, long10 u) {
-            long10 v=new long10(), t1=new long10(), t2=new long10();
-            add(t1, u, u);	/* t1 = 2u		*/
-            recip(v, t1, 1);	/* v = (2u)^((p-5)/8)	*/
-            sqr(x, v);		/* x = v^2		*/
-            mul(t2, t1, x);	/* t2 = 2uv^2		*/
-            t2._0--;		/* t2 = 2uv^2-1		*/
-            mul(t1, v, t2);	/* t1 = v(2uv^2-1)	*/
-            mul(x, u, t1);	/* x = uv(2uv^2-1)	*/
-        }
-
-        /********************* Elliptic curve *********************/
-
-        /* y^2 = x^3 + 486662 x^2 + x  over GF(2^255-19) */
-
-        /* t1 = ax + az
-         * t2 = ax - az  */
-        private static final void mont_prep(long10 t1, long10 t2, long10 ax, long10 az) {
-            add(t1, ax, az);
-            sub(t2, ax, az);
-        }
-
-        /* A = P + Q   where
-         *  X(A) = ax/az
-         *  X(P) = (t1+t2)/(t1-t2)
-         *  X(Q) = (t3+t4)/(t3-t4)
-         *  X(P-Q) = dx
-         * clobbers t1 and t2, preserves t3 and t4  */
-        private static final void mont_add(long10 t1, long10 t2, long10 t3, long10 t4,long10 ax, long10 az, long10 dx) {
-            mul(ax, t2, t3);
-            mul(az, t1, t4);
-            add(t1, ax, az);
-            sub(t2, ax, az);
-            sqr(ax, t1);
-            sqr(t1, t2);
-            mul(az, t1, dx);
-        }
-
-        /* B = 2 * Q   where
-         *  X(B) = bx/bz
-         *  X(Q) = (t3+t4)/(t3-t4)
-         * clobbers t1 and t2, preserves t3 and t4  */
-        private static final void mont_dbl(long10 t1, long10 t2, long10 t3, long10 t4,long10 bx, long10 bz) {
-            sqr(t1, t3);
-            sqr(t2, t4);
-            mul(bx, t1, t2);
-            sub(t2, t1, t2);
-            mul_small(bz, t2, 121665);
-            add(t1, t1, bz);
-            mul(bz, t1, t2);
-        }
-
-        /* Y^2 = X^3 + 486662 X^2 + X
-         * t is a temporary  */
-        private static final void x_to_y2(long10 t, long10 y2, long10 x) {
-            sqr(t, x);
-            mul_small(y2, x, 486662);
-            add(t, t, y2);
-            t._0++;
-            mul(y2, t, x);
-        }
-
-        /* P = kG   and  s = sign(P)/k  */
-        private static final void core(byte[] Px, byte[] s, byte[] k, byte[] Gx) {
-            long10
-                    dx=new long10(),
-                    t1=new long10(),
-                    t2=new long10(),
-                    t3=new long10(),
-                    t4=new long10();
-            long10[]
-                    x=new long10[]{new long10(),new long10()},
-                    z=new long10[]{new long10(),new long10()};
-            int i, j;
-
-            /* unpack the base */
-            if (Gx!=null)
-                unpack(dx, Gx);
-            else
-                set(dx, 9);
-
-            /* 0G = point-at-infinity */
-            set(x[0], 1);
-            set(z[0], 0);
-
-            /* 1G = G */
-            cpy(x[1], dx);
-            set(z[1], 1);
-
-            for (i = 32; i--!=0; ) {
-                if (i==0) {
-                    i=0;
-                }
-                for (j = 8; j--!=0; ) {
-                    /* swap arguments depending on bit */
-                    int bit1 = (k[i] & 0xFF) >> j & 1;
-                    int bit0 = ~(k[i] & 0xFF) >> j & 1;
-                    long10 ax = x[bit0];
-                    long10 az = z[bit0];
-                    long10 bx = x[bit1];
-                    long10 bz = z[bit1];
-
-                    /* a' = a + b	*/
-                    /* b' = 2 b	*/
-                    mont_prep(t1, t2, ax, az);
-                    mont_prep(t3, t4, bx, bz);
-                    mont_add(t1, t2, t3, t4, ax, az, dx);
-                    mont_dbl(t1, t2, t3, t4, bx, bz);
-                }
-            }
-
-            recip(t1, z[0], 0);
-            mul(dx, x[0], t1);
-            pack(dx, Px);
-
-            /* calculate s such that s abs(P) = G  .. assumes G is std base point */
-            if (s!=null) {
-                x_to_y2(t2, t1, dx);	/* t1 = Py^2  */
-                recip(t3, z[1], 0);	/* where Q=P+G ... */
-                mul(t2, x[1], t3);	/* t2 = Qx  */
-                add(t2, t2, dx);	/* t2 = Qx + Px  */
-                t2._0 += 9 + 486662;	/* t2 = Qx + Px + Gx + 486662  */
-                dx._0 -= 9;		/* dx = Px - Gx  */
-                sqr(t3, dx);	/* t3 = (Px - Gx)^2  */
-                mul(dx, t2, t3);	/* dx = t2 (Px - Gx)^2  */
-                sub(dx, dx, t1);	/* dx = t2 (Px - Gx)^2 - Py^2  */
-                dx._0 -= 39420360;	/* dx = t2 (Px - Gx)^2 - Py^2 - Gy^2  */
-                mul(t1, dx, BASE_R2Y);	/* t1 = -Py  */
-                if (is_negative(t1)!=0)	/* sign is 1, so just copy  */
-                    cpy32(s, k);
-                else			/* sign is -1, so negate  */
-                    mula_small(s, ORDER_TIMES_8, 0, k, 32, -1);
-
-                /* reduce s mod q
-                 * (is this needed?  do it just in case, it's fast anyway) */
-                //divmod((dstptr) t1, s, 32, order25519, 32);
-
-                /* take reciprocal of s mod q */
-                byte[] temp1=new byte[32];
-                byte[] temp2=new byte[64];
-                byte[] temp3=new byte[64];
-                cpy32(temp1, ORDER);
-                cpy32(s, egcd32(temp2, temp3, s, temp1));
-                if ((s[31] & 0x80)!=0)
-                    mula_small(s, s, 0, ORDER, 32, 1);
-            }
-        }
-
-        /* smallest multiple of the order that's >= 2^255 */
-        private static final byte[] ORDER_TIMES_8 = {
-                (byte)104, (byte)159, (byte)174, (byte)231,
-                (byte)210, (byte)24,  (byte)147, (byte)192,
-                (byte)178, (byte)230, (byte)188, (byte)23,
-                (byte)245, (byte)206, (byte)247, (byte)166,
-                (byte)0,   (byte)0,   (byte)0,   (byte)0,
-                (byte)0,   (byte)0,   (byte)0,   (byte)0,
-                (byte)0,   (byte)0,   (byte)0,   (byte)0,
-                (byte)0,   (byte)0,   (byte)0,   (byte)128
-        };
-
-        /* constants 2Gy and 1/(2Gy) */
-        private static final long10 BASE_2Y = new long10(
-                39999547, 18689728, 59995525, 1648697, 57546132,
-                24010086, 19059592, 5425144, 63499247, 16420658
-        );
-        private static final long10 BASE_R2Y = new long10(
-                5744, 8160848, 4790893, 13779497, 35730846,
-                12541209, 49101323, 30047407, 40071253, 6226132
-        );
-    }
-
-    static class Peer implements Comparable<Peer> {
-
-        static final int STATE_NONCONNECTED = 0;
-        static final int STATE_CONNECTED = 1;
-        static final int STATE_DISCONNECTED = 2;
-
-        final int index;
-        String platform;
-        String announcedAddress;
-        boolean shareAddress;
-        String hallmark;
-        long accountId;
-        int weight, date;
-        long adjustedWeight;
-        String application, version;
-
-        long blacklistingTime;
-        int state;
-        long downloadedVolume, uploadedVolume;
-
-        Peer(String announcedAddress, int index) {
-
-            this.announcedAddress = announcedAddress;
-            this.index = index;
-
-        }
-
-        static Peer addPeer(String address, String announcedAddress) {
-
-            try {
-
-                new URL("http://" + address);
-
-            } catch (MalformedURLException e) {
-                logDebugMessage("malformed peer address " + address, e);
-                return null;
-
-            }
-            try {
-
-                new URL("http://" + announcedAddress);
-
-            } catch (MalformedURLException e) {
-                logDebugMessage("malformed peer announced address " + announcedAddress, e);
-                announcedAddress = "";
-
-            }
-
-            if (address.equals("localhost") || address.equals("127.0.0.1") || address.equals("0:0:0:0:0:0:0:1")) {
-
-                return null;
-
-            }
-
-            if (myAddress != null && myAddress.length() > 0 && myAddress.equals(announcedAddress)) {
-
-                return null;
-
-            }
-
-            Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
-            if (peer == null) {
-
-                //TODO: Check addresses
-
-                peer = new Peer(announcedAddress, peerCounter.incrementAndGet());
-                peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
-
-            }
-
-            return peer;
-
-        }
-
-        boolean analyzeHallmark(String realHost, String hallmark) {
-
-            if (hallmark == null) {
-
-                return true;
-
-            }
-
-            try {
-
-                byte[] hallmarkBytes;
-
-                try {
-                    hallmarkBytes = convert(hallmark);
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-
-                ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-                byte[] publicKey = new byte[32];
-                buffer.get(publicKey);
-                int hostLength = buffer.getShort();
-                byte[] hostBytes = new byte[hostLength];
-                buffer.get(hostBytes);
-                String host = new String(hostBytes, "UTF-8");
-                if (host.length() > 100 || !host.equals(realHost)) {
-
-                    return false;
-
-                }
-                int weight = buffer.getInt();
-                if (weight <= 0 || weight > MAX_BALANCE) {
-
-                    return false;
-
-                }
-                int date = buffer.getInt();
-                buffer.get();
-                byte[] signature = new byte[64];
-                buffer.get(signature);
-
-                byte[] data = new byte[hallmarkBytes.length - 64];
-                System.arraycopy(hallmarkBytes, 0, data, 0, data.length);
-
-                if (Crypto.verify(signature, data, publicKey)) {
-
-                    this.hallmark = hallmark;
-
-                    long accountId = Account.getId(publicKey);
-                    /*
-                    Account account = accounts.get(accountId);
-                    if (account == null) {
-
-                        return false;
-
-                    }
-                    */
-                    LinkedList<Peer> groupedPeers = new LinkedList<>();
-                    int validDate = 0;
-
-                    this.accountId = accountId;
-                    this.weight = weight;
-                    this.date = date;
-
-                    for (Peer peer : peers.values()) {
-
-                        if (peer.accountId == accountId) {
-
-                            groupedPeers.add(peer);
-                            if (peer.date > validDate) {
-
-                                validDate = peer.date;
-
-                            }
-
-                        }
-
-                    }
-
-                    long totalWeight = 0;
-                    for (Peer peer : groupedPeers) {
-
-                        if (peer.date == validDate) {
-
-                            totalWeight += peer.weight;
-
-                        } else {
-
-                            peer.weight = 0;
-
-                        }
-
-                    }
-
-                    for (Peer peer : groupedPeers) {
-
-                        peer.adjustedWeight = MAX_BALANCE * peer.weight / totalWeight;
-                        peer.updateWeight();
-
-                    }
-
-                    return true;
-
-                }
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
-            }
-            return false;
-
-        }
-
-        void blacklist() {
-
-            blacklistingTime = System.currentTimeMillis();
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray removedKnownPeers = new JSONArray();
-            JSONObject removedKnownPeer = new JSONObject();
-            removedKnownPeer.put("index", index);
-            removedKnownPeers.add(removedKnownPeer);
-            response.put("removedKnownPeers", removedKnownPeers);
-
-            JSONArray addedBlacklistedPeers = new JSONArray();
-            JSONObject addedBlacklistedPeer = new JSONObject();
-            addedBlacklistedPeer.put("index", index);
-            addedBlacklistedPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-            for (String wellKnownPeer : wellKnownPeers) {
-
-                if (announcedAddress.equals(wellKnownPeer)) {
-
-                    addedBlacklistedPeer.put("wellKnown", true);
-
-                    break;
-
-                }
-
-            }
-            addedBlacklistedPeers.add(addedBlacklistedPeer);
-            response.put("addedBlacklistedPeers", addedBlacklistedPeers);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-        @Override
-        public int compareTo(Peer o) {
-
-            long weight = getWeight(), weight2 = o.getWeight();
-            if (weight > weight2) {
-
-                return -1;
-
-            } else if (weight < weight2) {
-
-                return 1;
-
-            } else {
-
-                return index - o.index;
-
-            }
-
-        }
-
-        void connect() {
-
-            JSONObject request = new JSONObject();
-            request.put("requestType", "getInfo");
-            if (myAddress != null && myAddress.length() > 0) {
-
-                request.put("announcedAddress", myAddress);
-
-            }
-            if (myHallmark != null && myHallmark.length() > 0) {
-
-                request.put("hallmark", myHallmark);
-
-            }
-            request.put("application", "NRS");
-            request.put("version", VERSION);
-            request.put("platform", myPlatform);
-            request.put("scheme", myScheme);
-            request.put("port", myPort);
-            request.put("shareAddress", shareMyAddress);
-            JSONObject response = send(request);
-            if (response != null) {
-
-                application = (String)response.get("application");
-                version = (String)response.get("version");
-                platform = (String)response.get("platform");
-                shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
-
-                if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
-
-                    setState(STATE_CONNECTED);
-
-                }
-
-            }
-
-        }
-
-        void deactivate() {
-
-            if (state == STATE_CONNECTED) {
-
-                disconnect();
-
-            }
-            setState(STATE_NONCONNECTED);
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray removedActivePeers = new JSONArray();
-            JSONObject removedActivePeer = new JSONObject();
-            removedActivePeer.put("index", index);
-            removedActivePeers.add(removedActivePeer);
-            response.put("removedActivePeers", removedActivePeers);
-
-            if (announcedAddress.length() > 0) {
-
-                JSONArray addedKnownPeers = new JSONArray();
-                JSONObject addedKnownPeer = new JSONObject();
-                addedKnownPeer.put("index", index);
-                addedKnownPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-                for (String wellKnownPeer : wellKnownPeers) {
-
-                    if (announcedAddress.equals(wellKnownPeer)) {
-
-                        addedKnownPeer.put("wellKnown", true);
-
-                        break;
-
-                    }
-
-                }
-                addedKnownPeers.add(addedKnownPeer);
-                response.put("addedKnownPeers", addedKnownPeers);
-
-            }
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-        void disconnect() {
-
-            setState(STATE_DISCONNECTED);
-
-        }
-
-        static Peer getAnyPeer(int state, boolean applyPullThreshold) {
-
-            List<Peer> selectedPeers = new ArrayList<Peer>();
-
-            for (Peer peer : Nxt.peers.values()) {
-
-                if (peer.blacklistingTime <= 0 && peer.state == state && peer.announcedAddress.length() > 0
-                        && (!applyPullThreshold || !enableHallmarkProtection || peer.getWeight() >= pullThreshold)) {
-
-                    selectedPeers.add(peer);
-
-                }
-
-            }
-
-            if (selectedPeers.size() > 0) {
-
-                long totalWeight = 0;
-                for (Peer peer : selectedPeers) {
-
-                    long weight = peer.getWeight();
-                    if (weight == 0) {
-
-                        weight = 1;
-
-                    }
-                    totalWeight += weight;
-
-                }
-
-                long hit = ThreadLocalRandom.current().nextLong(totalWeight);
-                for (Peer peer : selectedPeers) {
-
-                    long weight = peer.getWeight();
-                    if (weight == 0) {
-
-                        weight = 1;
-
-                    }
-                    if ((hit -= weight) < 0) {
-
-                        return peer;
-
-                    }
-
-                }
-
-            }
-
-            return null;
-
-        }
-
-        static int getNumberOfConnectedPublicPeers() {
-
-            int numberOfConnectedPeers = 0;
-
-            for (Peer peer : peers.values()) {
-
-                if (peer.state == STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-
-                    numberOfConnectedPeers++;
-
-                }
-
-            }
-
-            return numberOfConnectedPeers;
-
-        }
-
-        int getWeight() {
-
-            if (accountId == 0) {
-
-                return 0;
-
-            }
-            Account account = accounts.get(accountId);
-            if (account == null) {
-
-                return 0;
-
-            }
-
-            return (int)(adjustedWeight * (account.getBalance() / 100) / MAX_BALANCE);
-
-        }
-
-        String getSoftware() {
-            StringBuilder buf = new StringBuilder();
-            buf.append(application == null ? "?" : application.substring(0, Math.min(application.length(), 10)));
-            buf.append(" (");
-            buf.append(version == null ? "?" : version.substring(0, Math.min(version.length(), 10)));
-            buf.append(")").append(" @ ");
-            buf.append(platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 12)));
-            return buf.toString();
-        }
-
-        void removeBlacklistedStatus() {
-
-            setState(STATE_NONCONNECTED);
-            blacklistingTime = 0;
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray removedBlacklistedPeers = new JSONArray();
-            JSONObject removedBlacklistedPeer = new JSONObject();
-            removedBlacklistedPeer.put("index", index);
-            removedBlacklistedPeers.add(removedBlacklistedPeer);
-            response.put("removedBlacklistedPeers", removedBlacklistedPeers);
-
-            JSONArray addedKnownPeers = new JSONArray();
-            JSONObject addedKnownPeer = new JSONObject();
-            addedKnownPeer.put("index", index);
-            addedKnownPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-            for (String wellKnownPeer : wellKnownPeers) {
-
-                if (announcedAddress.equals(wellKnownPeer)) {
-
-                    addedKnownPeer.put("wellKnown", true);
-
-                    break;
-
-                }
-
-            }
-            addedKnownPeers.add(addedKnownPeer);
-            response.put("addedKnownPeers", addedKnownPeers);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-        void removePeer() {
-
-            peers.values().remove(this);
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray removedKnownPeers = new JSONArray();
-            JSONObject removedKnownPeer = new JSONObject();
-            removedKnownPeer.put("index", index);
-            removedKnownPeers.add(removedKnownPeer);
-            response.put("removedKnownPeers", removedKnownPeers);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-        static void sendToSomePeers(final JSONObject request) {
-            request.put("protocol", 1);
-            final JSONStreamAware jsonStreamAware = new JSONStreamAware() {
-                final char[] jsonChars = request.toJSONString().toCharArray();
-                @Override
-                public void writeJSONString(Writer out) throws IOException {
-                    out.write(jsonChars);
-                }
-            };
-
-            int successful = 0;
-            List<Future<JSONObject>> expectedResponses = new ArrayList<>();
-            for (final Peer peer : Nxt.peers.values()) {
-
-                if (enableHallmarkProtection && peer.getWeight() < pushThreshold) {
-                    continue;
-                }
-
-                if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-                    Future<JSONObject> futureResponse = sendToPeersService.submit(new Callable<JSONObject>() {
-                        @Override
-                        public JSONObject call() {
-                            return peer.send(jsonStreamAware);
-                        }
-                    });
-                    expectedResponses.add(futureResponse);
-                }
-                if (expectedResponses.size() >= sendToPeersLimit - successful) {
-                    for (Future<JSONObject> future : expectedResponses) {
-                        try {
-                            JSONObject response = future.get();
-                            if (response != null && response.get("error") == null) {
-                                successful += 1;
-                            }
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        } catch (ExecutionException e) {
-                            logDebugMessage("Error in sendToSomePeers", e);
-                        }
-
-                    }
-                    expectedResponses.clear();
-                }
-                if (successful >= sendToPeersLimit) {
-                    return;
-                }
-
-            }
-
-        }
-
-        //TODO: replace usage of this method with send(JSONStreamAware) for requests that are constant
-        JSONObject send(final JSONObject request) {
-            request.put("protocol", 1);
-            return send(new JSONStreamAware() {
-                @Override
-                public void writeJSONString(Writer out) throws IOException {
-                    request.writeJSONString(out);
-                }
-            });
-        }
-
-        JSONObject send(final JSONStreamAware request) {
-
-            JSONObject response;
-
-            String log = null;
-            boolean showLog = false;
-
-            HttpURLConnection connection = null;
-
-            try {
-
-                if (communicationLoggingMask != 0) {
-
-                    log = "\"" + announcedAddress + "\": " + request.toString();
-
-                }
-
-                /**/URL url = new URL("http://" + announcedAddress + ((new URL("http://" + announcedAddress)).getPort() < 0 ? ":7874" : "") + "/nxt");
-                /**///URL url = new URL("http://" + announcedAddress + ":6874" + "/nxt");
-                connection = (HttpURLConnection)url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setDoOutput(true);
-                connection.setConnectTimeout(connectTimeout);
-                connection.setReadTimeout(readTimeout);
-
-                CountingOutputStream cos = new CountingOutputStream(connection.getOutputStream());
-                try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
-                    request.writeJSONString(writer);
-                }
-                updateUploadedVolume(cos.getCount());
-
-                if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-
-                    if ((communicationLoggingMask & LOGGING_MASK_200_RESPONSES) != 0) {
-
-                        // inefficient
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        byte[] buffer = new byte[65536];
-                        int numberOfBytes;
-                        try (InputStream inputStream = connection.getInputStream()) {
-                            while ((numberOfBytes = inputStream.read(buffer)) > 0) {
-                                byteArrayOutputStream.write(buffer, 0, numberOfBytes);
-                            }
-                        }
-                        String responseValue = byteArrayOutputStream.toString("UTF-8");
-                        log += " >>> " + responseValue;
-                        showLog = true;
-                        updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
-                        response = (JSONObject)JSONValue.parse(responseValue);
-
-                    } else {
-
-                        CountingInputStream cis = new CountingInputStream(connection.getInputStream());
-
-                        try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
-                            response = (JSONObject)JSONValue.parse(reader);
-                        }
-
-                        updateDownloadedVolume(cis.getCount());
-
-                    }
-
-                } else {
-
-                    if ((communicationLoggingMask & LOGGING_MASK_NON200_RESPONSES) != 0) {
-
-                        log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
-                        showLog = true;
-
-                    }
-
-                    disconnect();
-
-                    response = null;
-
-                }
-
-            } catch (RuntimeException|IOException e) {
-
-                if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException
-                        || e instanceof SocketTimeoutException || e instanceof SocketException)) {
-                    logDebugMessage("Error sending JSON request", e);
-                }
-
-                if ((communicationLoggingMask & LOGGING_MASK_EXCEPTIONS) != 0) {
-
-                    log += " >>> " + e.toString();
-                    showLog = true;
-
-                }
-
-                if (state == STATE_NONCONNECTED) {
-
-                    blacklist();
-
-                } else {
-
-                    disconnect();
-
-                }
-
-                response = null;
-
-            }
-
-            if (showLog) {
-
-                logMessage(log + "\n");
-
-            }
-
-            if (connection != null) {
-
-                connection.disconnect();
-
-            }
-
-            return response;
-
-        }
-
-        void setState(int state) {
-
-            if (this.state == STATE_NONCONNECTED && state != STATE_NONCONNECTED) {
-
-                JSONObject response = new JSONObject();
-                response.put("response", "processNewData");
-
-                if (announcedAddress.length() > 0) {
-
-                    JSONArray removedKnownPeers = new JSONArray();
-                    JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", index);
-                    removedKnownPeers.add(removedKnownPeer);
-                    response.put("removedKnownPeers", removedKnownPeers);
-
-                }
-
-                JSONArray addedActivePeers = new JSONArray();
-                JSONObject addedActivePeer = new JSONObject();
-                addedActivePeer.put("index", index);
-                if (state == STATE_DISCONNECTED) {
-
-                    addedActivePeer.put("disconnected", true);
-
-                }
-
-                //TODO: there must be a better way
-                // cfb: This will be removed after we get a better client
-                for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
-
-                    if (peerEntry.getValue() == this) {
-
-                        addedActivePeer.put("address", peerEntry.getKey().length() > 30 ? (peerEntry.getKey().substring(0, 30) + "...") : peerEntry.getKey());
-
-                        break;
-
-                    }
-
-                }
-                addedActivePeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-                addedActivePeer.put("weight", getWeight());
-                addedActivePeer.put("downloaded", downloadedVolume);
-                addedActivePeer.put("uploaded", uploadedVolume);
-                addedActivePeer.put("software", getSoftware());
-                for (String wellKnownPeer : wellKnownPeers) {
-
-                    if (announcedAddress.equals(wellKnownPeer)) {
-
-                        addedActivePeer.put("wellKnown", true);
-
-                        break;
-
-                    }
-
-                }
-                addedActivePeers.add(addedActivePeer);
-                response.put("addedActivePeers", addedActivePeers);
-
-                for (User user : users.values()) {
-
-                    user.send(response);
-
-                }
-
-            } else if (this.state != STATE_NONCONNECTED && state != STATE_NONCONNECTED) {
-
-                JSONObject response = new JSONObject();
-                response.put("response", "processNewData");
-
-                JSONArray changedActivePeers = new JSONArray();
-                JSONObject changedActivePeer = new JSONObject();
-                changedActivePeer.put("index", index);
-                changedActivePeer.put(state == STATE_CONNECTED ? "connected" : "disconnected", true);
-                changedActivePeers.add(changedActivePeer);
-                response.put("changedActivePeers", changedActivePeers);
-
-                for (User user : users.values()) {
-
-                    user.send(response);
-
-                }
-
-            }
-
-            this.state = state;
-
-        }
-
-        void updateDownloadedVolume(long volume) {
-
-            downloadedVolume += volume;
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray changedActivePeers = new JSONArray();
-            JSONObject changedActivePeer = new JSONObject();
-            changedActivePeer.put("index", index);
-            changedActivePeer.put("downloaded", downloadedVolume);
-            changedActivePeers.add(changedActivePeer);
-            response.put("changedActivePeers", changedActivePeers);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-        void updateUploadedVolume(long volume) {
-
-            uploadedVolume += volume;
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray changedActivePeers = new JSONArray();
-            JSONObject changedActivePeer = new JSONObject();
-            changedActivePeer.put("index", index);
-            changedActivePeer.put("uploaded", uploadedVolume);
-            changedActivePeers.add(changedActivePeer);
-            response.put("changedActivePeers", changedActivePeers);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-        void updateWeight() {
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray changedActivePeers = new JSONArray();
-            JSONObject changedActivePeer = new JSONObject();
-            changedActivePeer.put("index", index);
-            changedActivePeer.put("weight", getWeight());
-            changedActivePeers.add(changedActivePeer);
-            response.put("changedActivePeers", changedActivePeers);
-
-            for (User user : users.values()) {
-
-                user.send(response);
-
-            }
-
-        }
-
-    }
-
-    static class Transaction implements Comparable<Transaction>, Serializable {
+    private static class OldTransaction {
 
         static final long serialVersionUID = 0;
 
-        static final byte TYPE_PAYMENT = 0;
-        static final byte TYPE_MESSAGING = 1;
-        static final byte TYPE_COLORED_COINS = 2;
-
-        static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
-
-        static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
-        static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
-
-        static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
-        static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
-        static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
-        static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
-        static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
-        static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
-
-        static final int ASSET_ISSUANCE_FEE = 1000;
-
-        final byte type, subtype;
+        byte type, subtype;
         int timestamp;
-        final short deadline;
-        final byte[] senderPublicKey;
-        final long recipient;
-        final int amount, fee;
-        final long referencedTransaction;
+        short deadline;
+        byte[] senderPublicKey;
+        long recipient;
+        int amount, fee;
+        long referencedTransaction;
         byte[] signature;
-        Attachment attachment;
+        Transaction.Attachment attachment;
 
         int index;
         long block;
         int height;
 
-        Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient, int amount, int fee, long referencedTransaction, byte[] signature) {
-
-            this.type = type;
-            this.subtype = subtype;
-            this.timestamp = timestamp;
-            this.deadline = deadline;
-            this.senderPublicKey = senderPublicKey;
-            this.recipient = recipient;
-            this.amount = amount;
-            this.fee = fee;
-            this.referencedTransaction = referencedTransaction;
-            this.signature = signature;
-
-            height = Integer.MAX_VALUE;
-
-        }
-
-        @Override
-        public int compareTo(Transaction o) {
-
-            if (height < o.height) {
-
-                return -1;
-
-            } else if (height > o.height) {
-
-                return 1;
-
-            } else {
-
-                // equivalent to: fee * 1048576L / getSize() > o.fee * 1048576L / o.getSize()
-                if (fee * o.getSize() > o.fee * getSize()) {
-
-                    return -1;
-
-                } else if (fee * o.getSize() < o.fee * getSize()) {
-
-                    return 1;
-
-                } else {
-
-                    if (timestamp < o.timestamp) {
-
-                        return -1;
-
-                    } else if (timestamp > o.timestamp) {
-
-                        return 1;
-
-                    } else {
-
-                        if (index < o.index) {
-
-                            return -1;
-
-                        } else if (index > o.index) {
-
-                            return 1;
-
-                        } else {
-
-                            return 0;
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        }
-
-        public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction o1, Transaction o2) {
-                return o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0);
-            }
-        };
-
-        private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
-
-        int getSize() {
-            return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
-        }
-
-        byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.put(type);
-            buffer.put(subtype);
-            buffer.putInt(timestamp);
-            buffer.putShort(deadline);
-            buffer.put(senderPublicKey);
-            buffer.putLong(recipient);
-            buffer.putInt(amount);
-            buffer.putInt(fee);
-            buffer.putLong(referencedTransaction);
-            buffer.put(signature);
-            if (attachment != null) {
-
-                buffer.put(attachment.getBytes());
-
-            }
-
-            return buffer.array();
-
-        }
-
-        transient volatile long id;
-        transient volatile String stringId = null;
-        transient volatile long senderAccountId;
-
-        long getId() {
-            calculateIds();
-            return id;
-        }
-
-
-        String getStringId() {
-            calculateIds();
-            return stringId;
-        }
-
-        long getSenderAccountId() {
-            calculateIds();
-            return senderAccountId;
-        }
-
-        private void calculateIds() {
-            if (stringId != null) {
-                return;
-            }
-            byte[] hash = Nxt.getMessageDigest("SHA-256").digest(getBytes());
-            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-            id = bigInteger.longValue();
-            stringId = bigInteger.toString();
-            senderAccountId = Account.getId(senderPublicKey);
-        }
-
-
-        JSONObject getJSONObject() {
-
-            JSONObject transaction = new JSONObject();
-
-            transaction.put("type", type);
-            transaction.put("subtype", subtype);
-            transaction.put("timestamp", timestamp);
-            transaction.put("deadline", deadline);
-            transaction.put("senderPublicKey", convert(senderPublicKey));
-            transaction.put("recipient", convert(recipient));
-            transaction.put("amount", amount);
-            transaction.put("fee", fee);
-            transaction.put("referencedTransaction", convert(referencedTransaction));
-            transaction.put("signature", convert(signature));
-            if (attachment != null) {
-
-                transaction.put("attachment", attachment.getJSONObject());
-
-            }
-
-            return transaction;
-
-        }
-
-        long getRecipientDeltaBalance() {
-
-            return amount * 100L + (attachment == null ? 0 : attachment.getRecipientDeltaBalance());
-
-        }
-
-        long getSenderDeltaBalance() {
-
-            return -(amount + fee) * 100L + (attachment == null ? 0 : attachment.getSenderDeltaBalance());
-
-        }
-
-        static Transaction getTransaction(ByteBuffer buffer) {
-
-            byte type = buffer.get();
-            byte subtype = buffer.get();
-            int timestamp = buffer.getInt();
-            short deadline = buffer.getShort();
-            byte[] senderPublicKey = new byte[32];
-            buffer.get(senderPublicKey);
-            long recipient = buffer.getLong();
-            int amount = buffer.getInt();
-            int fee = buffer.getInt();
-            long referencedTransaction = buffer.getLong();
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-
-            Transaction transaction = new Transaction(type, subtype, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
-
-            switch (type) {
-
-                case Transaction.TYPE_MESSAGING:
-                {
-
-                    switch (subtype) {
-
-                        case Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
-                        {
-
-                            int messageLength = buffer.getInt();
-                            if (messageLength <= MAX_ARBITRARY_MESSAGE_LENGTH) {
-
-                                byte[] message = new byte[messageLength];
-                                buffer.get(message);
-
-                                transaction.attachment = new MessagingArbitraryMessageAttachment(message);
-
-                            }
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                        {
-
-                            int aliasLength = buffer.get();
-                            byte[] alias = new byte[aliasLength];
-                            buffer.get(alias);
-                            int uriLength = buffer.getShort();
-                            byte[] uri = new byte[uriLength];
-                            buffer.get(uri);
-
-                            try {
-
-                                transaction.attachment = new Transaction.MessagingAliasAssignmentAttachment(new String(alias, "UTF-8").intern(), new String(uri, "UTF-8").intern());
-
-                            } catch (RuntimeException|UnsupportedEncodingException e) {
-                                logDebugMessage("Error parsing alias assignment", e);
-                            }
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-                case Transaction.TYPE_COLORED_COINS:
-                {
-
-                    switch (subtype) {
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
-                        {
-
-                            int nameLength = buffer.get();
-                            byte[] name = new byte[nameLength];
-                            buffer.get(name);
-                            int descriptionLength = buffer.getShort();
-                            byte[] description = new byte[descriptionLength];
-                            buffer.get(description);
-                            int quantity = buffer.getInt();
-
-                            try {
-
-                                transaction.attachment = new Transaction.ColoredCoinsAssetIssuanceAttachment(new String(name, "UTF-8").intern(), new String(description, "UTF-8").intern(), quantity);
-
-                            } catch (RuntimeException|UnsupportedEncodingException e) {
-                                logDebugMessage("Error in asset issuance", e);
-                            }
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
-                        {
-
-                            long asset = buffer.getLong();
-                            int quantity = buffer.getInt();
-
-                            transaction.attachment = new Transaction.ColoredCoinsAssetTransferAttachment(asset, quantity);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
-                        {
-
-                            long asset = buffer.getLong();
-                            int quantity = buffer.getInt();
-                            long price = buffer.getLong();
-
-                            transaction.attachment = new Transaction.ColoredCoinsAskOrderPlacementAttachment(asset, quantity, price);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
-                        {
-
-                            long asset = buffer.getLong();
-                            int quantity = buffer.getInt();
-                            long price = buffer.getLong();
-
-                            transaction.attachment = new Transaction.ColoredCoinsBidOrderPlacementAttachment(asset, quantity, price);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
-                        {
-
-                            long order = buffer.getLong();
-
-                            transaction.attachment = new Transaction.ColoredCoinsAskOrderCancellationAttachment(order);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
-                        {
-
-                            long order = buffer.getLong();
-
-                            transaction.attachment = new Transaction.ColoredCoinsBidOrderCancellationAttachment(order);
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-            }
-
-            return transaction;
-
-        }
-
-        static Transaction getTransaction(JSONObject transactionData) {
-
-            byte type = ((Long)transactionData.get("type")).byteValue();
-            byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-            int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-            short deadline = ((Long)transactionData.get("deadline")).shortValue();
-            byte[] senderPublicKey = convert((String)transactionData.get("senderPublicKey"));
-            long recipient = parseUnsignedLong((String) transactionData.get("recipient"));
-            int amount = ((Long)transactionData.get("amount")).intValue();
-            int fee = ((Long)transactionData.get("fee")).intValue();
-            long referencedTransaction = parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-            byte[] signature = convert((String)transactionData.get("signature"));
-
-            Transaction transaction = new Transaction(type, subtype, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
-
-            JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-            switch (type) {
-
-                case TYPE_MESSAGING:
-                {
-
-                    switch (subtype) {
-
-                        case SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
-                        {
-
-                            String message = (String)attachmentData.get("message");
-                            transaction.attachment = new MessagingArbitraryMessageAttachment(convert(message));
-
-                        }
-                        break;
-
-                        case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                        {
-
-                            String alias = (String)attachmentData.get("alias");
-                            String uri = (String)attachmentData.get("uri");
-                            transaction.attachment = new MessagingAliasAssignmentAttachment(alias.trim(), uri.trim());
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-                case TYPE_COLORED_COINS:
-                {
-
-                    switch (subtype) {
-
-                        case SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
-                        {
-
-                            String name = (String)attachmentData.get("name");
-                            String description = (String)attachmentData.get("description");
-                            int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                            transaction.attachment = new ColoredCoinsAssetIssuanceAttachment(name.trim(), description.trim(), quantity);
-
-                        }
-                        break;
-
-                        case SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
-                        {
-
-                            long asset = parseUnsignedLong((String) attachmentData.get("asset"));
-                            int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                            transaction.attachment = new ColoredCoinsAssetTransferAttachment(asset, quantity);
-
-                        }
-                        break;
-
-                        case SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
-                        {
-
-                            long asset = parseUnsignedLong((String) attachmentData.get("asset"));
-                            int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                            long price = (Long)attachmentData.get("price");
-                            transaction.attachment = new ColoredCoinsAskOrderPlacementAttachment(asset, quantity, price);
-
-                        }
-                        break;
-
-                        case SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
-                        {
-
-                            long asset = parseUnsignedLong((String) attachmentData.get("asset"));
-                            int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                            long price = (Long)attachmentData.get("price");
-                            transaction.attachment = new ColoredCoinsBidOrderPlacementAttachment(asset, quantity, price);
-
-                        }
-                        break;
-
-                        case SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
-                        {
-
-                            transaction.attachment = new ColoredCoinsAskOrderCancellationAttachment(parseUnsignedLong((String)attachmentData.get("order")));
-
-                        }
-                        break;
-
-                        case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
-                        {
-
-                            transaction.attachment = new ColoredCoinsBidOrderCancellationAttachment(parseUnsignedLong((String)attachmentData.get("order")));
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-            }
-
-            return transaction;
-
-        }
-
-        static void loadTransactions(String fileName) throws FileNotFoundException {
-
-            try (FileInputStream fileInputStream = new FileInputStream(fileName);
-                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-                transactionCounter.set(objectInputStream.readInt());
-                transactions.clear();
-                transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
-            } catch (FileNotFoundException e) {
-                throw e;
-            } catch (IOException|ClassNotFoundException e) {
-                logMessage("Error loading transactions from " + fileName, e);
-                System.exit(1);
-            }
-
-        }
-
-        static void processTransactions(JSONObject request, String parameterName) {
-
-            JSONArray transactionsData = (JSONArray)request.get(parameterName);
-            JSONArray validTransactionsData = new JSONArray();
-
-            for (Object transactionData : transactionsData) {
-
-                Transaction transaction = Transaction.getTransaction((JSONObject)transactionData);
-
-                try {
-
-                    int curTime = getEpochTime(System.currentTimeMillis());
-                    if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || transaction.timestamp + transaction.deadline * 60 < curTime || transaction.fee <= 0 || !transaction.validateAttachment()) {
-
-                        continue;
-
-                    }
-
-                    long senderId;
-                    boolean doubleSpendingTransaction;
-
-                    synchronized (blocksAndTransactionsLock) {
-
-                        long id = transaction.getId();
-                        if (transactions.get(id) != null || unconfirmedTransactions.get(id) != null || doubleSpendingTransactions.get(id) != null || !transaction.verify()) {
-
-                            continue;
-
-                        }
-
-                        senderId = transaction.getSenderAccountId();
-                        Account account = accounts.get(senderId);
-                        if (account == null) {
-
-                            doubleSpendingTransaction = true;
-
-                        } else {
-
-                            int amount = transaction.amount + transaction.fee;
-                            synchronized (account) {
-
-                                if (account.getUnconfirmedBalance() < amount * 100L) {
-
-                                    doubleSpendingTransaction = true;
-
-                                } else {
-
-                                    doubleSpendingTransaction = false;
-
-                                    account.addToUnconfirmedBalance(- amount * 100L);
-
-                                    if (transaction.type == Transaction.TYPE_COLORED_COINS) {
-
-                                        if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                                            Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
-                                            Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                            if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
-
-                                                doubleSpendingTransaction = true;
-
-                                                account.addToUnconfirmedBalance(amount * 100L);
-
-                                            } else {
-
-                                                account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-
-                                            }
-
-                                        } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                                            Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
-                                            Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                            if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
-
-                                                doubleSpendingTransaction = true;
-
-                                                account.addToUnconfirmedBalance(amount * 100L);
-
-                                            } else {
-
-                                                account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-
-                                            }
-
-                                        } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                                            Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
-                                            if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
-
-                                                doubleSpendingTransaction = true;
-
-                                                account.addToUnconfirmedBalance(amount * 100L);
-
-                                            } else {
-
-                                                account.addToUnconfirmedBalance(- attachment.quantity * attachment.price);
-
-                                            }
-
-                                        }
-
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                        transaction.index = transactionCounter.incrementAndGet();
-
-                        if (doubleSpendingTransaction) {
-
-                            doubleSpendingTransactions.put(transaction.getId(), transaction);
-
-                        } else {
-
-                            unconfirmedTransactions.put(transaction.getId(), transaction);
-
-                            if (parameterName.equals("transactions")) {
-
-                                validTransactionsData.add(transactionData);
-
-                            }
-
-                        }
-
-                    }
-
-                    JSONObject response = new JSONObject();
-                    response.put("response", "processNewData");
-
-                    JSONArray newTransactions = new JSONArray();
-                    JSONObject newTransaction = new JSONObject();
-                    newTransaction.put("index", transaction.index);
-                    newTransaction.put("timestamp", transaction.timestamp);
-                    newTransaction.put("deadline", transaction.deadline);
-                    newTransaction.put("recipient", convert(transaction.recipient));
-                    newTransaction.put("amount", transaction.amount);
-                    newTransaction.put("fee", transaction.fee);
-                    newTransaction.put("sender", convert(senderId));
-                    newTransaction.put("id", transaction.getStringId());
-                    newTransactions.add(newTransaction);
-
-                    if (doubleSpendingTransaction) {
-
-                        response.put("addedDoubleSpendingTransactions", newTransactions);
-
-                    } else {
-
-                        response.put("addedUnconfirmedTransactions", newTransactions);
-
-                    }
-
-                    for (User user : users.values()) {
-
-                        user.send(response);
-
-                    }
-
-                } catch (RuntimeException e) {
-
-                    logMessage("Error processing transaction", e);
-
-                }
-
-            }
-
-            if (validTransactionsData.size() > 0) {
-
-                JSONObject peerRequest = new JSONObject();
-                peerRequest.put("requestType", "processTransactions");
-                peerRequest.put("transactions", validTransactionsData);
-
-                Peer.sendToSomePeers(peerRequest);
-
-            }
-
-        }
-
-        static void saveTransactions(String fileName) {
-
-            try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-            ) {
-                objectOutputStream.writeInt(transactionCounter.get());
-                objectOutputStream.writeObject(new HashMap(transactions));
-                objectOutputStream.close();
-            } catch (IOException e) {
-                logMessage("Error saving transactions to " + fileName, e);
-                throw new RuntimeException(e);
-            }
-
-        }
-
-        void sign(String secretPhrase) {
-
-            signature = Crypto.sign(getBytes(), secretPhrase);
-
-            try {
-
-                while (!verify()) {
-
-                    timestamp++;
-                    // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
-                    signature = new byte[64];
-                    signature = Crypto.sign(getBytes(), secretPhrase);
-
-                }
-
-            } catch (RuntimeException e) {
-
-                logMessage("Error signing transaction", e);
-
-            }
-
-        }
-
-        boolean validateAttachment() {
-            //TODO: this check may no longer be needed here now
-            if (fee > MAX_BALANCE) {
-
-                return false;
-
-            }
-            //TODO: refactor switch statements
-            switch (type) {
-
-                case TYPE_PAYMENT:
-                {
-
-                    switch (subtype) {
-
-                        case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
-                        {
-
-                            return amount > 0 && amount < MAX_BALANCE;
-
-                        }
-
-                        default:
-                        {
-
-                            return false;
-
-                        }
-
-                    }
-
-                }
-
-                case TYPE_MESSAGING:
-                {
-
-                    switch (subtype) {
-
-                        case SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
-                        {
-
-                            if (lastBlock.get().height < ARBITRARY_MESSAGES_BLOCK) {
-
-                                return false;
-
-                            }
-
-                            try {
-
-                                MessagingArbitraryMessageAttachment attachment = (MessagingArbitraryMessageAttachment)this.attachment;
-                                return amount == 0 && attachment.message.length <= MAX_ARBITRARY_MESSAGE_LENGTH;
-
-                            } catch (RuntimeException e) {
-
-                                logDebugMessage("Error validating arbitrary message", e);
-                                return false;
-
-                            }
-
-                        }
-
-                        case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                        {
-
-                            if (lastBlock.get().height < ALIAS_SYSTEM_BLOCK) {
-
-                                return false;
-
-                            }
-
-                            try {
-
-                                MessagingAliasAssignmentAttachment attachment = (MessagingAliasAssignmentAttachment)this.attachment;
-                                if (recipient != CREATOR_ID || amount != 0 || attachment.alias.length() == 0 || attachment.alias.length() > 100 || attachment.uri.length() > 1000) {
-
-                                    return false;
-
-                                } else {
-
-                                    String normalizedAlias = attachment.alias.toLowerCase();
-                                    for (int i = 0; i < normalizedAlias.length(); i++) {
-
-                                        if (alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
-
-                                            return false;
-
-                                        }
-
-                                    }
-
-                                    Alias alias = aliases.get(normalizedAlias);
-
-                                    return alias == null || Arrays.equals(alias.account.publicKey.get(), senderPublicKey);
-
-                                }
-
-                            } catch (RuntimeException e) {
-
-                                logDebugMessage("Error in alias assignment validation", e);
-                                return false;
-
-                            }
-
-                        }
-
-                        default:
-                        {
-
-                            return false;
-
-                        }
-
-                    }
-
-                }
-
-                //TODO: uncomment, review and clean up the code, comment out again
-/*
-            case TYPE_COLORED_COINS:
-                {
-
-                    switch (subtype) {
-
-                    case SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
-                        {
-
-                            try {
-
-                                ColoredCoinsAssetIssuanceAttachment attachment = (ColoredCoinsAssetIssuanceAttachment)this.attachment;
-                                if (recipient != CREATOR_ID || amount != 0 || fee < ASSET_ISSUANCE_FEE || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY) {
-
-                                    return false;
-
-                                } else {
-
-                                    String normalizedName = attachment.name.toLowerCase();
-                                    for (int i = 0; i < normalizedName.length(); i++) {
-
-                                        if (alphabet.indexOf(normalizedName.charAt(i)) < 0) {
-
-                                            return false;
-
-                                        }
-
-                                    }
-                                    if (assetNameToIdMappings.get(normalizedName) != null) {
-
-                                        return false;
-
-                                    }
-
-                                    return true;
-
-                                }
-
-                            } catch (RuntimeException e) {
-
-                                logDebugMessage("Error validating colored coins asset issuance", e);
-                                return false;
-
-                            }
-
-                        }
-
-                    case SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
-                        {
-
-                            ColoredCoinsAssetTransferAttachment attachment = (ColoredCoinsAssetTransferAttachment)this.attachment;
-                            if (amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY) {
-
-                                return false;
-
-                            } else {
-
-                                return true;
-
-                            }
-
-                        }
-
-                    case SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
-                        {
-
-                            ColoredCoinsAskOrderPlacementAttachment attachment = (ColoredCoinsAskOrderPlacementAttachment)this.attachment;
-                            if (recipient != CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY || attachment.price <= 0 || attachment.price > MAX_BALANCE * 100L) {
-
-                                return false;
-
-                            } else {
-
-                                return true;
-
-                            }
-
-                        }
-
-                    case SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
-                        {
-
-                            ColoredCoinsBidOrderPlacementAttachment attachment = (ColoredCoinsBidOrderPlacementAttachment)this.attachment;
-                            if (recipient != CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > MAX_ASSET_QUANTITY || attachment.price <= 0 || attachment.price > MAX_BALANCE * 100L) {
-
-                                return false;
-
-                            } else {
-
-                                return true;
-
-                            }
-
-                        }
-
-                    case SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
-                        {
-
-                            if (recipient != CREATOR_ID || amount != 0) {
-
-                                return false;
-
-                            } else {
-
-                                return true;
-
-                            }
-
-                        }
-
-                    case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
-                        {
-
-                            if (recipient != CREATOR_ID || amount != 0) {
-
-                                return false;
-
-                            } else {
-
-                                return true;
-
-                            }
-
-                        }
-
-                    default:
-                        {
-
-                            return false;
-
-                        }
-
-                    }
-
-                }
-*/
-                // TODO: comment ends here
-
-                default:
-                {
-
-                    return false;
-
-                }
-
-            }
-
-        }
-
-        boolean verify() {
-
-            Account account = accounts.get(getSenderAccountId());
-            if (account == null) {
-
-                return false;
-
-            }
-
-            byte[] data = getBytes();
-            for (int i = 64; i < 128; i++) {
-
-                data[i] = 0;
-
-            }
-
-            return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
-
-
-        }
-
-        public static byte[] calculateTransactionsChecksum() {
-            synchronized (blocksAndTransactionsLock) {
-                PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(Nxt.transactions.size(), new Comparator<Transaction>() {
-                    @Override
-                    public int compare(Transaction o1, Transaction o2) {
-                        long id1 = o1.getId();
-                        long id2 = o2.getId();
-                        return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
-                    }
-                });
-                sortedTransactions.addAll(Nxt.transactions.values());
-                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
-                while (! sortedTransactions.isEmpty()) {
-                    digest.update(sortedTransactions.poll().getBytes());
-                }
-                return digest.digest();
-            }
-        }
-
-        static interface Attachment {
-
-            int getSize();
-            byte[] getBytes();
-            JSONObject getJSONObject();
-
-            long getRecipientDeltaBalance();
-            long getSenderDeltaBalance();
-
-        }
-
-        static class MessagingArbitraryMessageAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            final byte[] message;
-
-            MessagingArbitraryMessageAttachment(byte[] message) {
-
-                this.message = message;
-
-            }
-
-            @Override
-            public int getSize() {
-                return 4 + message.length;
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putInt(message.length);
-                buffer.put(message);
-
-                return buffer.array();
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("message", convert(message));
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return 0;
-
-            }
-
-        }
-
-        static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            final String alias;
-            final String uri;
-
-            MessagingAliasAssignmentAttachment(String alias, String uri) {
-
-                this.alias = alias;
-                this.uri = uri;
-
-            }
-
-            @Override
-            public int getSize() {
-                try {
-                    return 1 + alias.getBytes("UTF-8").length + 2 + uri.getBytes("UTF-8").length;
-                } catch (RuntimeException|UnsupportedEncodingException e) {
-                    logMessage("Error in getBytes", e);
-                    return 0;
-                }
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                try {
-
-                    byte[] alias = this.alias.getBytes("UTF-8");
-                    byte[] uri = this.uri.getBytes("UTF-8");
-
-                    ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
-                    buffer.order(ByteOrder.LITTLE_ENDIAN);
-                    buffer.put((byte)alias.length);
-                    buffer.put(alias);
-                    buffer.putShort((short)uri.length);
-                    buffer.put(uri);
-
-                    return buffer.array();
-
-                } catch (RuntimeException|UnsupportedEncodingException e) {
-                    logMessage("Error in getBytes", e);
-                    return null;
-
-                }
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("alias", alias);
-                attachment.put("uri", uri);
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return 0;
-
-            }
-
-        }
-
-        static class ColoredCoinsAssetIssuanceAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            String name;
-            String description;
-            int quantity;
-
-            ColoredCoinsAssetIssuanceAttachment(String name, String description, int quantity) {
-
-                this.name = name;
-                this.description = description == null ? "" : description;
-                this.quantity = quantity;
-
-            }
-
-            @Override
-            public int getSize() {
-                try {
-                    return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 4;
-                } catch (RuntimeException|UnsupportedEncodingException e) {
-                    logMessage("Error in getBytes", e);
-                    return 0;
-                }
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                try {
-                    byte[] name = this.name.getBytes("UTF-8");
-                    byte[] description = this.description.getBytes("UTF-8");
-
-                    ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 4);
-                    buffer.order(ByteOrder.LITTLE_ENDIAN);
-                    buffer.put((byte)name.length);
-                    buffer.put(name);
-                    buffer.putShort((short)description.length);
-                    buffer.put(description);
-                    buffer.putInt(quantity);
-
-                    return buffer.array();
-                } catch (RuntimeException|UnsupportedEncodingException e) {
-                    logMessage("Error in getBytes", e);
-                    return null;
-                }
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("name", name);
-                attachment.put("description", description);
-                attachment.put("quantity", quantity);
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return 0;
-
-            }
-
-        }
-
-        static class ColoredCoinsAssetTransferAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            long asset;
-            int quantity;
-
-            ColoredCoinsAssetTransferAttachment(long asset, int quantity) {
-
-                this.asset = asset;
-                this.quantity = quantity;
-
-            }
-
-            @Override
-            public int getSize() {
-                return 8 + 4;
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(asset);
-                buffer.putInt(quantity);
-
-                return buffer.array();
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("asset", convert(asset));
-                attachment.put("quantity", quantity);
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return 0;
-
-            }
-
-        }
-
-        static class ColoredCoinsAskOrderPlacementAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            long asset;
-            int quantity;
-            long price;
-
-            ColoredCoinsAskOrderPlacementAttachment(long asset, int quantity, long price) {
-
-                this.asset = asset;
-                this.quantity = quantity;
-                this.price = price;
-
-            }
-
-            @Override
-            public int getSize() {
-                return 8 + 4 + 8;
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(asset);
-                buffer.putInt(quantity);
-                buffer.putLong(price);
-
-                return buffer.array();
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("asset", convert(asset));
-                attachment.put("quantity", quantity);
-                attachment.put("price", price);
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return 0;
-
-            }
-
-        }
-
-        static class ColoredCoinsBidOrderPlacementAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            long asset;
-            int quantity;
-            long price;
-
-            ColoredCoinsBidOrderPlacementAttachment(long asset, int quantity, long price) {
-
-                this.asset = asset;
-                this.quantity = quantity;
-                this.price = price;
-
-            }
-
-            @Override
-            public int getSize() {
-                return 8 + 4 + 8;
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(asset);
-                buffer.putInt(quantity);
-                buffer.putLong(price);
-
-                return buffer.array();
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("asset", convert(asset));
-                attachment.put("quantity", quantity);
-                attachment.put("price", price);
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return -quantity * price;
-
-            }
-
-        }
-
-        static class ColoredCoinsAskOrderCancellationAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            long order;
-
-            ColoredCoinsAskOrderCancellationAttachment(long order) {
-
-                this.order = order;
-
-            }
-
-            @Override
-            public int getSize() {
-                return 8;
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(order);
-
-                return buffer.array();
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("order", convert(order));
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                return 0;
-
-            }
-
-        }
-
-        static class ColoredCoinsBidOrderCancellationAttachment implements Attachment, Serializable {
-
-            static final long serialVersionUID = 0;
-
-            long order;
-
-            ColoredCoinsBidOrderCancellationAttachment(long order) {
-
-                this.order = order;
-
-            }
-
-            @Override
-            public int getSize() {
-                return 8;
-            }
-
-            @Override
-            public byte[] getBytes() {
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(order);
-
-                return buffer.array();
-
-            }
-
-            @Override
-            public JSONObject getJSONObject() {
-
-                JSONObject attachment = new JSONObject();
-                attachment.put("order", convert(order));
-
-                return attachment;
-
-            }
-
-            @Override
-            public long getRecipientDeltaBalance() {
-
-                return 0;
-
-            }
-
-            @Override
-            public long getSenderDeltaBalance() {
-
-                BidOrder bidOrder = bidOrders.get(order);
-                if (bidOrder == null) {
-
-                    return 0;
-
-                }
-
-                return bidOrder.quantity * bidOrder.price;
-
-            }
-
-        }
-
     }
 
-    static class User {
-
-        final ConcurrentLinkedQueue<JSONObject> pendingResponses;
-        AsyncContext asyncContext;
-        volatile boolean isInactive;
-
-        volatile String secretPhrase;
-        volatile byte[] publicKey;
-
-        User() {
-
-            pendingResponses = new ConcurrentLinkedQueue<>();
-
-        }
-
-        void deinitializeKeyPair() {
-
-            secretPhrase = null;
-            publicKey = null;
-
-        }
-
-        BigInteger initializeKeyPair(String secretPhrase) {
-
-            this.publicKey = Crypto.getPublicKey(secretPhrase);
-            this.secretPhrase = secretPhrase;
-            byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(publicKey);
-            return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
-
-        }
-
-        void send(JSONObject response) {
-
-            synchronized (this) {
-
-                if (asyncContext == null) {
-
-                    if (isInactive) {
-                        // user not seen recently, no responses should be collected
-                        return;
-                    }
-                    if (pendingResponses.size() > 1000) {
-                        pendingResponses.clear();
-                        // stop collecting responses for this user
-                        isInactive = true;
-                        if (secretPhrase == null) {
-                            // but only completely remove users that don't have unlocked accounts
-                            Nxt.users.values().remove(this);
-                        }
-                        return;
-                    }
-
-                    pendingResponses.offer(response);
-
-                } else {
-
-                    JSONArray responses = new JSONArray();
-                    JSONObject pendingResponse;
-                    while ((pendingResponse = pendingResponses.poll()) != null) {
-
-                        responses.add(pendingResponse);
-
-                    }
-                    responses.add(response);
-
-                    JSONObject combinedResponse = new JSONObject();
-                    combinedResponse.put("responses", responses);
-
-                    asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-
-                    try (Writer writer = asyncContext.getResponse().getWriter()) {
-                        combinedResponse.writeJSONString(writer);
-                    } catch (IOException e) {
-                        logMessage("Error sending response to user", e);
-                    }
-
-                    asyncContext.complete();
-                    asyncContext = null;
-
-                }
-
-            }
-
-        }
-
-    }
-
-    static class UserAsyncListener implements AsyncListener {
-
-        final User user;
-
-        UserAsyncListener(User user) {
-
-            this.user = user;
-
-        }
-
-        @Override
-        public void onComplete(AsyncEvent asyncEvent) throws IOException { }
-
-        @Override
-        public void onError(AsyncEvent asyncEvent) throws IOException {
-
-            synchronized (user) {
-                user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-
-                try (Writer writer = user.asyncContext.getResponse().getWriter()) {
-                    new JSONObject().writeJSONString(writer);
-                }
-
-                user.asyncContext.complete();
-                user.asyncContext = null;
-            }
-
-        }
-
-        @Override
-        public void onStartAsync(AsyncEvent asyncEvent) throws IOException { }
-
-        @Override
-        public void onTimeout(AsyncEvent asyncEvent) throws IOException {
-
-            synchronized (user) {
-                user.asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-
-                try (Writer writer = user.asyncContext.getResponse().getWriter()) {
-                    new JSONObject().writeJSONString(writer);
-                }
-
-                user.asyncContext.complete();
-                user.asyncContext = null;
-            }
-
-        }
-
-    }
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
 
-        logMessage("NRS " + VERSION + " starting...");
-        if (debug) {
-            logMessage("DEBUG logging enabled");
+        Logger.logMessage("NRS " + VERSION + " starting...");
+        if (Logger.debug) {
+            Logger.logMessage("DEBUG logging enabled");
         }
-        if (enableStackTraces) {
-            logMessage("logging of exception stack traces enabled");
+        if (Logger.enableStackTraces) {
+            Logger.logMessage("logging of exception stack traces enabled");
         }
 
         try {
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.ZONE_OFFSET, 0);
-            calendar.set(Calendar.YEAR, 2013);
-            calendar.set(Calendar.MONTH, Calendar.NOVEMBER);
-            calendar.set(Calendar.DAY_OF_MONTH, 24);
-            calendar.set(Calendar.HOUR_OF_DAY, 12);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
-            epochBeginning = calendar.getTimeInMillis();
 
             //String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
             //logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
             //blockchainChannel = FileChannel.open(Paths.get(blockchainStoragePath), StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             myPlatform = servletConfig.getInitParameter("myPlatform");
-            logMessage("\"myPlatform\" = \"" + myPlatform + "\"");
+            Logger.logMessage("\"myPlatform\" = \"" + myPlatform + "\"");
             if (myPlatform == null) {
 
                 myPlatform = "PC";
@@ -5570,7 +245,7 @@ public class Nxt extends HttpServlet {
             }
 
             myScheme = servletConfig.getInitParameter("myScheme");
-            logMessage("\"myScheme\" = \"" + myScheme + "\"");
+            Logger.logMessage("\"myScheme\" = \"" + myScheme + "\"");
             if (myScheme == null) {
 
                 myScheme = "http";
@@ -5582,7 +257,7 @@ public class Nxt extends HttpServlet {
             }
 
             String myPort = servletConfig.getInitParameter("myPort");
-            logMessage("\"myPort\" = \"" + myPort + "\"");
+            Logger.logMessage("\"myPort\" = \"" + myPort + "\"");
             try {
 
                 Nxt.myPort = Integer.parseInt(myPort);
@@ -5590,11 +265,11 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.myPort = myScheme.equals("https") ? 7875 : 7874;
-                logMessage("Invalid value for myPort " + myPort + ", using default " + Nxt.myPort);
+                Logger.logMessage("Invalid value for myPort " + myPort + ", using default " + Nxt.myPort);
             }
 
             myAddress = servletConfig.getInitParameter("myAddress");
-            logMessage("\"myAddress\" = \"" + myAddress + "\"");
+            Logger.logMessage("\"myAddress\" = \"" + myAddress + "\"");
             if (myAddress != null) {
 
                 myAddress = myAddress.trim();
@@ -5602,26 +277,26 @@ public class Nxt extends HttpServlet {
             }
 
             String shareMyAddress = servletConfig.getInitParameter("shareMyAddress");
-            logMessage("\"shareMyAddress\" = \"" + shareMyAddress + "\"");
+            Logger.logMessage("\"shareMyAddress\" = \"" + shareMyAddress + "\"");
             Nxt.shareMyAddress = Boolean.parseBoolean(shareMyAddress);
 
             myHallmark = servletConfig.getInitParameter("myHallmark");
-            logMessage("\"myHallmark\" = \"" + myHallmark + "\"");
+            Logger.logMessage("\"myHallmark\" = \"" + myHallmark + "\"");
             if (myHallmark != null) {
 
                 myHallmark = myHallmark.trim();
 
                 try {
-                    convert(myHallmark); // check for parsing exceptions
+                    Convert.convert(myHallmark); // check for parsing exceptions
                 } catch (NumberFormatException e) {
-                    logMessage("Your hallmark is invalid: " + myHallmark);
+                    Logger.logMessage("Your hallmark is invalid: " + myHallmark);
                     System.exit(1);
                 }
 
             }
 
             String wellKnownPeers = servletConfig.getInitParameter("wellKnownPeers");
-            logMessage("\"wellKnownPeers\" = \"" + wellKnownPeers + "\"");
+            Logger.logMessage("\"wellKnownPeers\" = \"" + wellKnownPeers + "\"");
             if (wellKnownPeers != null) {
                 Set<String> set = new HashSet<>();
                 for (String wellKnownPeer : wellKnownPeers.split(";")) {
@@ -5638,11 +313,11 @@ public class Nxt extends HttpServlet {
                 Nxt.wellKnownPeers = Collections.unmodifiableSet(set);
             } else {
                 Nxt.wellKnownPeers = Collections.emptySet();
-                logMessage("No wellKnownPeers defined, it is unlikely to work");
+                Logger.logMessage("No wellKnownPeers defined, it is unlikely to work");
             }
 
             String maxNumberOfConnectedPublicPeers = servletConfig.getInitParameter("maxNumberOfConnectedPublicPeers");
-            logMessage("\"maxNumberOfConnectedPublicPeers\" = \"" + maxNumberOfConnectedPublicPeers + "\"");
+            Logger.logMessage("\"maxNumberOfConnectedPublicPeers\" = \"" + maxNumberOfConnectedPublicPeers + "\"");
             try {
 
                 Nxt.maxNumberOfConnectedPublicPeers = Integer.parseInt(maxNumberOfConnectedPublicPeers);
@@ -5650,11 +325,11 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.maxNumberOfConnectedPublicPeers = 10;
-                logMessage("Invalid value for maxNumberOfConnectedPublicPeers " + maxNumberOfConnectedPublicPeers + ", using default " + Nxt.maxNumberOfConnectedPublicPeers);
+                Logger.logMessage("Invalid value for maxNumberOfConnectedPublicPeers " + maxNumberOfConnectedPublicPeers + ", using default " + Nxt.maxNumberOfConnectedPublicPeers);
             }
 
             String connectTimeout = servletConfig.getInitParameter("connectTimeout");
-            logMessage("\"connectTimeout\" = \"" + connectTimeout + "\"");
+            Logger.logMessage("\"connectTimeout\" = \"" + connectTimeout + "\"");
             try {
 
                 Nxt.connectTimeout = Integer.parseInt(connectTimeout);
@@ -5662,11 +337,11 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.connectTimeout = 1000;
-                logMessage("Invalid value for connectTimeout " + connectTimeout + ", using default " + Nxt.connectTimeout);
+                Logger.logMessage("Invalid value for connectTimeout " + connectTimeout + ", using default " + Nxt.connectTimeout);
             }
 
             String readTimeout = servletConfig.getInitParameter("readTimeout");
-            logMessage("\"readTimeout\" = \"" + readTimeout + "\"");
+            Logger.logMessage("\"readTimeout\" = \"" + readTimeout + "\"");
             try {
 
                 Nxt.readTimeout = Integer.parseInt(readTimeout);
@@ -5674,15 +349,15 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.readTimeout = 1000;
-                logMessage("Invalid value for readTimeout " + readTimeout + ", using default " + Nxt.readTimeout);
+                Logger.logMessage("Invalid value for readTimeout " + readTimeout + ", using default " + Nxt.readTimeout);
             }
 
             String enableHallmarkProtection = servletConfig.getInitParameter("enableHallmarkProtection");
-            logMessage("\"enableHallmarkProtection\" = \"" + enableHallmarkProtection + "\"");
+            Logger.logMessage("\"enableHallmarkProtection\" = \"" + enableHallmarkProtection + "\"");
             Nxt.enableHallmarkProtection = Boolean.parseBoolean(enableHallmarkProtection);
 
             String pushThreshold = servletConfig.getInitParameter("pushThreshold");
-            logMessage("\"pushThreshold\" = \"" + pushThreshold + "\"");
+            Logger.logMessage("\"pushThreshold\" = \"" + pushThreshold + "\"");
             try {
 
                 Nxt.pushThreshold = Integer.parseInt(pushThreshold);
@@ -5690,11 +365,11 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.pushThreshold = 0;
-                logMessage("Invalid value for pushThreshold " + pushThreshold + ", using default " + Nxt.pushThreshold);
+                Logger.logMessage("Invalid value for pushThreshold " + pushThreshold + ", using default " + Nxt.pushThreshold);
             }
 
             String pullThreshold = servletConfig.getInitParameter("pullThreshold");
-            logMessage("\"pullThreshold\" = \"" + pullThreshold + "\"");
+            Logger.logMessage("\"pullThreshold\" = \"" + pullThreshold + "\"");
             try {
 
                 Nxt.pullThreshold = Integer.parseInt(pullThreshold);
@@ -5702,12 +377,12 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.pullThreshold = 0;
-                logMessage("Invalid value for pullThreshold " + pullThreshold + ", using default " + Nxt.pullThreshold);
+                Logger.logMessage("Invalid value for pullThreshold " + pullThreshold + ", using default " + Nxt.pullThreshold);
 
             }
 
             String allowedUserHosts = servletConfig.getInitParameter("allowedUserHosts");
-            logMessage("\"allowedUserHosts\" = \"" + allowedUserHosts + "\"");
+            Logger.logMessage("\"allowedUserHosts\" = \"" + allowedUserHosts + "\"");
             if (allowedUserHosts != null) {
 
                 if (!allowedUserHosts.trim().equals("*")) {
@@ -5730,7 +405,7 @@ public class Nxt extends HttpServlet {
             }
 
             String allowedBotHosts = servletConfig.getInitParameter("allowedBotHosts");
-            logMessage("\"allowedBotHosts\" = \"" + allowedBotHosts + "\"");
+            Logger.logMessage("\"allowedBotHosts\" = \"" + allowedBotHosts + "\"");
             if (allowedBotHosts != null) {
 
                 if (!allowedBotHosts.trim().equals("*")) {
@@ -5752,7 +427,7 @@ public class Nxt extends HttpServlet {
             }
 
             String blacklistingPeriod = servletConfig.getInitParameter("blacklistingPeriod");
-            logMessage("\"blacklistingPeriod\" = \"" + blacklistingPeriod + "\"");
+            Logger.logMessage("\"blacklistingPeriod\" = \"" + blacklistingPeriod + "\"");
             try {
 
                 Nxt.blacklistingPeriod = Integer.parseInt(blacklistingPeriod);
@@ -5760,39 +435,39 @@ public class Nxt extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 Nxt.blacklistingPeriod = 300000;
-                logMessage("Invalid value for blacklistingPeriod " + blacklistingPeriod + ", using default " + Nxt.blacklistingPeriod);
+                Logger.logMessage("Invalid value for blacklistingPeriod " + blacklistingPeriod + ", using default " + Nxt.blacklistingPeriod);
 
             }
 
             String communicationLoggingMask = servletConfig.getInitParameter("communicationLoggingMask");
-            logMessage("\"communicationLoggingMask\" = \"" + communicationLoggingMask + "\"");
+            Logger.logMessage("\"communicationLoggingMask\" = \"" + communicationLoggingMask + "\"");
             try {
 
                 Nxt.communicationLoggingMask = Integer.parseInt(communicationLoggingMask);
 
             } catch (NumberFormatException e) {
-                logMessage("Invalid value for communicationLogginMask " + communicationLoggingMask + ", using default 0");
+                Logger.logMessage("Invalid value for communicationLogginMask " + communicationLoggingMask + ", using default 0");
             }
 
             String sendToPeersLimit = servletConfig.getInitParameter("sendToPeersLimit");
-            logMessage("\"sendToPeersLimit\" = \"" + sendToPeersLimit + "\"");
+            Logger.logMessage("\"sendToPeersLimit\" = \"" + sendToPeersLimit + "\"");
             try {
 
                 Nxt.sendToPeersLimit = Integer.parseInt(sendToPeersLimit);
 
             } catch (NumberFormatException e) {
                 Nxt.sendToPeersLimit = 10;
-                logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
+                Logger.logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
             }
 
             try {
 
-                logMessage("Loading transactions...");
+                Logger.logMessage("Loading transactions...");
                 Transaction.loadTransactions("transactions.nxt");
-                logMessage("...Done");
+                Logger.logMessage("...Done");
 
             } catch (FileNotFoundException e) {
-                logMessage("transactions.nxt not found, starting from scratch");
+                Logger.logMessage("transactions.nxt not found, starting from scratch");
                 transactions.clear();
 
                 long[] recipients = {(new BigInteger("163918645372308887")).longValue(),
@@ -6029,18 +704,18 @@ public class Nxt extends HttpServlet {
 
                 }
 
-                Transaction.saveTransactions("transactions.nxt");
+                nxt.Transaction.saveTransactions("transactions.nxt");
 
             }
 
             try {
 
-                logMessage("Loading blocks...");
+                Logger.logMessage("Loading blocks...");
                 Block.loadBlocks("blocks.nxt");
-                logMessage("...Done");
+                Logger.logMessage("...Done");
 
             } catch (FileNotFoundException e) {
-                logMessage("blocks.nxt not found, starting from scratch");
+                Logger.logMessage("blocks.nxt not found, starting from scratch");
                 blocks.clear();
 
                 Block block = new Block(-1, 0, 0, transactions.size(), 1000000000, 0, transactions.size() * 128, null, CREATOR_PUBLIC_KEY, new byte[64], new byte[]{105, -44, 38, -60, -104, -73, 10, -58, -47, 103, -127, -128, 53, 101, 39, -63, -2, -32, 48, -83, 115, 47, -65, 118, 114, -62, 38, 109, 22, 106, 76, 8, -49, -113, -34, -76, 82, 79, -47, -76, -106, -69, -54, -85, 3, -6, 110, 103, 118, 15, 109, -92, 82, 37, 20, 2, 36, -112, 21, 72, 108, 72, 114, 17});
@@ -6054,7 +729,7 @@ public class Nxt extends HttpServlet {
 
                 }
                 Arrays.sort(block.transactions);
-                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                MessageDigest digest = Crypto.getMessageDigest("SHA-256");
                 for (i = 0; i < block.transactions.length; i++) {
                     Transaction transaction = transactions.get(block.transactions[i]);
                     digest.update(transaction.getBytes());
@@ -6070,7 +745,7 @@ public class Nxt extends HttpServlet {
 
             }
 
-            logMessage("Scanning blockchain...");
+            Logger.logMessage("Scanning blockchain...");
             Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
             blocks.clear();
             long curBlockId = GENESIS_BLOCK_ID;
@@ -6079,7 +754,7 @@ public class Nxt extends HttpServlet {
                 curBlock.analyze();
                 curBlockId = curBlock.nextBlock;
             }
-            logMessage("...Done");
+            Logger.logMessage("...Done");
 
             scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
 
@@ -6100,9 +775,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error connecting to peer", e);
+                        Logger.logDebugMessage("Error connecting to peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6131,9 +806,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error un-blacklisting peer", e);
+                        Logger.logDebugMessage("Error un-blacklisting peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6177,9 +852,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error requesting peers from a peer", e);
+                        Logger.logDebugMessage("Error requesting peers from a peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6213,9 +888,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error processing unconfirmed transactions from peer", e);
+                        Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6269,9 +944,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error removing unconfirmed transactions", e);
+                        Logger.logDebugMessage("Error removing unconfirmed transactions", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6319,7 +994,7 @@ public class Nxt extends HttpServlet {
                                         JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
                                         for (Object milestoneBlockId : milestoneBlockIds) {
 
-                                            long blockId = parseUnsignedLong((String) milestoneBlockId);
+                                            long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
                                             Block block = blocks.get(blockId);
                                             if (block != null) {
 
@@ -6336,7 +1011,7 @@ public class Nxt extends HttpServlet {
 
                                             JSONObject request = new JSONObject();
                                             request.put("requestType", "getNextBlockIds");
-                                            request.put("blockId", convert(commonBlockId));
+                                            request.put("blockId", Convert.convert(commonBlockId));
                                             response = peer.send(request);
                                             if (response == null) {
 
@@ -6355,7 +1030,7 @@ public class Nxt extends HttpServlet {
                                                     long blockId;
                                                     for (i = 0; i < numberOfBlocks; i++) {
 
-                                                        blockId = parseUnsignedLong((String) nextBlockIds.get(i));
+                                                        blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
                                                         if (blocks.get(blockId) == null) {
 
                                                             break;
@@ -6382,7 +1057,7 @@ public class Nxt extends HttpServlet {
 
                                                 JSONObject request = new JSONObject();
                                                 request.put("requestType", "getNextBlocks");
-                                                request.put("blockId", convert(curBlockId));
+                                                request.put("blockId", Convert.convert(curBlockId));
                                                 response = peer.send(request);
                                                 if (response == null) {
 
@@ -6521,7 +1196,7 @@ public class Nxt extends HttpServlet {
                                                         Nxt.unconfirmedTransactions.clear();
                                                         Nxt.doubleSpendingTransactions.clear();
                                                         //TODO: clean this up
-                                                        logMessage("Re-scanning blockchain...");
+                                                        Logger.logMessage("Re-scanning blockchain...");
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
                                                         blocks.clear();
                                                         long currentBlockId = GENESIS_BLOCK_ID;
@@ -6530,7 +1205,7 @@ public class Nxt extends HttpServlet {
                                                             currentBlock.analyze();
                                                             currentBlockId = currentBlock.nextBlock;
                                                         }
-                                                        logMessage("...Done");
+                                                        Logger.logMessage("...Done");
 
 
                                                     }
@@ -6555,9 +1230,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error in milestone blocks processing thread", e);
+                        Logger.logDebugMessage("Error in milestone blocks processing thread", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6604,7 +1279,7 @@ public class Nxt extends HttpServlet {
                                 if (effectiveBalance <= 0) {
                                     continue;
                                 }
-                                MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                                MessageDigest digest = Crypto.getMessageDigest("SHA-256");
                                 byte[] generationSignatureHash;
                                 if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
 
@@ -6645,9 +1320,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error in block generation thread", e);
+                        Logger.logDebugMessage("Error in block generation thread", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6690,9 +1365,9 @@ public class Nxt extends HttpServlet {
                         }
 
                     } catch (Exception e) {
-                        logDebugMessage("Error in transaction re-broadcasting thread", e);
+                        Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
                     } catch (Throwable t) {
-                        logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                         t.printStackTrace();
                         System.exit(1);
                     }
@@ -6701,11 +1376,11 @@ public class Nxt extends HttpServlet {
 
             }, 0, 60, TimeUnit.SECONDS);
 
-            logMessage("NRS " + Nxt.VERSION + " started successfully.");
+            Logger.logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
         } catch (Exception e) {
 
-            logMessage("Error initializing Nxt servlet", e);
+            Logger.logMessage("Error initializing Nxt servlet", e);
             System.exit(1);
 
         }
@@ -6795,7 +1470,7 @@ public class Nxt extends HttpServlet {
                                         int i;
                                         for (i = 0; i < normalizedAlias.length(); i++) {
 
-                                            if (alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+                                            if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
 
                                                 break;
 
@@ -6837,7 +1512,7 @@ public class Nxt extends HttpServlet {
 
                                                         }
 
-                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                                                         long accountId = Account.getId(publicKey);
@@ -6926,7 +1601,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        ByteBuffer buffer = ByteBuffer.wrap(convert(transactionBytes));
+                                        ByteBuffer buffer = ByteBuffer.wrap(Convert.convert(transactionBytes));
                                         buffer.order(ByteOrder.LITTLE_ENDIAN);
                                         Transaction transaction = Transaction.getTransaction(buffer);
 
@@ -6965,7 +1640,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        byte[] hallmark = convert(hallmarkValue);
+                                        byte[] hallmark = Convert.convert(hallmarkValue);
 
                                         ByteBuffer buffer = ByteBuffer.wrap(hallmark);
                                         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -6982,7 +1657,7 @@ public class Nxt extends HttpServlet {
                                         byte[] signature = new byte[64];
                                         buffer.get(signature);
 
-                                        response.put("account", convert(Account.getId(publicKey)));
+                                        response.put("account", Convert.convert(Account.getId(publicKey)));
                                         response.put("host", host);
                                         response.put("weight", weight);
                                         int year = date / 10000;
@@ -7058,7 +1733,7 @@ public class Nxt extends HttpServlet {
                                         System.arraycopy(tokenBytes, 0, data, websiteBytes.length, 36);
                                         boolean valid = Crypto.verify(signature, data, publicKey);
 
-                                        response.put("account", convert(Account.getId(publicKey)));
+                                        response.put("account", Convert.convert(Account.getId(publicKey)));
                                         response.put("timestamp", timestamp);
                                         response.put("valid", valid);
 
@@ -7088,7 +1763,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("errorCode", 5);
@@ -7154,7 +1829,7 @@ public class Nxt extends HttpServlet {
 
                                 } else {
 
-                                    byte[] publicKeyHash = Nxt.getMessageDigest("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
+                                    byte[] publicKeyHash = Crypto.getMessageDigest("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
                                     BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
                                     response.put("accountId", bigInteger.toString());
 
@@ -7176,7 +1851,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("errorCode", 5);
@@ -7186,7 +1861,7 @@ public class Nxt extends HttpServlet {
 
                                             if (accountData.publicKey.get() != null) {
 
-                                                response.put("publicKey", convert(accountData.publicKey.get()));
+                                                response.put("publicKey", Convert.convert(accountData.publicKey.get()));
 
                                             }
 
@@ -7223,7 +1898,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("errorCode", 5);
@@ -7307,7 +1982,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Alias aliasData = aliasIdToAliasMappings.get(parseUnsignedLong(alias));
+                                        Alias aliasData = aliasIdToAliasMappings.get(Convert.parseUnsignedLong(alias));
                                         if (aliasData == null) {
 
                                             response.put("errorCode", 5);
@@ -7315,7 +1990,7 @@ public class Nxt extends HttpServlet {
 
                                         } else {
 
-                                            response.put("account", convert(aliasData.account.id));
+                                            response.put("account", Convert.convert(aliasData.account.id));
                                             response.put("alias", aliasData.alias);
                                             if (aliasData.uri.length() > 0) {
 
@@ -7357,7 +2032,7 @@ public class Nxt extends HttpServlet {
 
                                     } else {
 
-                                        response.put("id", convert(aliasData.id));
+                                        response.put("id", Convert.convert(aliasData.id));
 
                                     }
 
@@ -7391,7 +2066,7 @@ public class Nxt extends HttpServlet {
 
                                             if (aliasEntry.getValue().timestamp >= timestamp) {
 
-                                                aliasIds.add(convert(aliasEntry.getKey()));
+                                                aliasIds.add(Convert.convert(aliasEntry.getKey()));
 
                                             }
 
@@ -7462,7 +2137,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("balance", 0);
@@ -7506,7 +2181,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Block blockData = blocks.get(parseUnsignedLong(block));
+                                        Block blockData = blocks.get(Convert.parseUnsignedLong(block));
                                         if (blockData == null) {
 
                                             response.put("errorCode", 5);
@@ -7515,36 +2190,36 @@ public class Nxt extends HttpServlet {
                                         } else {
 
                                             response.put("height", blockData.height);
-                                            response.put("generator", convert(blockData.getGeneratorAccountId()));
+                                            response.put("generator", Convert.convert(blockData.getGeneratorAccountId()));
                                             response.put("timestamp", blockData.timestamp);
                                             response.put("numberOfTransactions", blockData.transactions.length);
                                             response.put("totalAmount", blockData.totalAmount);
                                             response.put("totalFee", blockData.totalFee);
                                             response.put("payloadLength", blockData.payloadLength);
                                             response.put("version", blockData.version);
-                                            response.put("baseTarget", convert(blockData.baseTarget));
+                                            response.put("baseTarget", Convert.convert(blockData.baseTarget));
                                             if (blockData.previousBlock != 0) {
 
-                                                response.put("previousBlock", convert(blockData.previousBlock));
+                                                response.put("previousBlock", Convert.convert(blockData.previousBlock));
 
                                             }
                                             if (blockData.nextBlock != 0) {
 
-                                                response.put("nextBlock", convert(blockData.nextBlock));
+                                                response.put("nextBlock", Convert.convert(blockData.nextBlock));
 
                                             }
-                                            response.put("payloadHash", convert(blockData.payloadHash));
-                                            response.put("generationSignature", convert(blockData.generationSignature));
+                                            response.put("payloadHash", Convert.convert(blockData.payloadHash));
+                                            response.put("generationSignature", Convert.convert(blockData.generationSignature));
                                             if (blockData.version > 1) {
 
-                                                response.put("previousBlockHash", convert(blockData.previousBlockHash));
+                                                response.put("previousBlockHash", Convert.convert(blockData.previousBlockHash));
 
                                             }
-                                            response.put("blockSignature", convert(blockData.blockSignature));
+                                            response.put("blockSignature", Convert.convert(blockData.blockSignature));
                                             JSONArray transactions = new JSONArray();
                                             for (long transactionId : blockData.transactions) {
 
-                                                transactions.add(convert(transactionId));
+                                                transactions.add(Convert.convert(transactionId));
 
                                             }
                                             response.put("transactions", transactions);
@@ -7567,8 +2242,8 @@ public class Nxt extends HttpServlet {
                             case "getConstants":
                             {
 
-                                response.put("genesisBlockId", convert(GENESIS_BLOCK_ID));
-                                response.put("genesisAccountId", convert(CREATOR_ID));
+                                response.put("genesisBlockId", Convert.convert(GENESIS_BLOCK_ID));
+                                response.put("genesisAccountId", Convert.convert(CREATOR_ID));
                                 response.put("maxBlockPayloadLength", MAX_PAYLOAD_LENGTH);
                                 response.put("maxArbitraryMessageLength", MAX_ARBITRARY_MESSAGE_LENGTH);
 
@@ -7666,7 +2341,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("guaranteedBalance", 0);
@@ -7817,7 +2492,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long transactionId = parseUnsignedLong(transaction);
+                                        long transactionId = Convert.parseUnsignedLong(transaction);
                                         Transaction transactionData = transactions.get(transactionId);
                                         if (transactionData == null) {
 
@@ -7830,7 +2505,7 @@ public class Nxt extends HttpServlet {
                                             } else {
 
                                                 response = transactionData.getJSONObject();
-                                                response.put("sender", convert(transactionData.getSenderAccountId()));
+                                                response.put("sender", Convert.convert(transactionData.getSenderAccountId()));
 
                                             }
 
@@ -7838,7 +2513,7 @@ public class Nxt extends HttpServlet {
 
                                             response = transactionData.getJSONObject();
 
-                                            response.put("sender", convert(transactionData.getSenderAccountId()));
+                                            response.put("sender", Convert.convert(transactionData.getSenderAccountId()));
                                             Block block = blocks.get(transactionData.block);
                                             response.put("block", block.getStringId());
                                             response.put("confirmations", lastBlock.get().height - block.height + 1);
@@ -7870,7 +2545,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long transactionId = parseUnsignedLong(transaction);
+                                        long transactionId = Convert.parseUnsignedLong(transaction);
                                         Transaction transactionData = transactions.get(transactionId);
                                         if (transactionData == null) {
 
@@ -7882,13 +2557,13 @@ public class Nxt extends HttpServlet {
 
                                             } else {
 
-                                                response.put("bytes", convert(transactionData.getBytes()));
+                                                response.put("bytes", Convert.convert(transactionData.getBytes()));
 
                                             }
 
                                         } else {
 
-                                            response.put("bytes", convert(transactionData.getBytes()));
+                                            response.put("bytes", Convert.convert(transactionData.getBytes()));
                                             Block block = blocks.get(transactionData.block);
                                             response.put("confirmations", lastBlock.get().height - block.height + 1);
 
@@ -7921,7 +2596,7 @@ public class Nxt extends HttpServlet {
                             break;
 
                             //TODO: uncomment, review and clean up code, comment out again
-/*
+
                         case "issueAsset":
                             {
 
@@ -7964,7 +2639,7 @@ public class Nxt extends HttpServlet {
                                         int i;
                                         for (i = 0; i < normalizedName.length(); i++) {
 
-                                            if (alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+                                            if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
 
                                                 break;
 
@@ -8109,7 +2784,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long order = parseUnsignedLong(orderValue);
+                                        long order = Convert.parseUnsignedLong(orderValue);
 
                                         try {
 
@@ -8129,7 +2804,7 @@ public class Nxt extends HttpServlet {
 
                                                 }
 
-                                                long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                                                 long accountId = Account.getId(publicKey);
@@ -8239,7 +2914,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long order = parseUnsignedLong(orderValue);
+                                        long order = Convert.parseUnsignedLong(orderValue);
 
                                         try {
 
@@ -8259,7 +2934,7 @@ public class Nxt extends HttpServlet {
 
                                                 }
 
-                                                long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                                                 long accountId = Account.getId(publicKey);
@@ -8350,7 +3025,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Asset assetData = assets.get(parseUnsignedLong(asset));
+                                        Asset assetData = assets.get(Convert.parseUnsignedLong(asset));
                                         if (assetData == null) {
 
                                             response.put("errorCode", 5);
@@ -8358,7 +3033,7 @@ public class Nxt extends HttpServlet {
 
                                         } else {
 
-                                            response.put("account", convert(assetData.accountId));
+                                            response.put("account", Convert.convert(assetData.accountId));
                                             response.put("name", assetData.name);
                                             if (assetData.description.length() > 0) {
 
@@ -8387,7 +3062,7 @@ public class Nxt extends HttpServlet {
                                 JSONArray assetIds = new JSONArray();
                                 for (Long assetId : assets.keySet()) {
 
-                                    assetIds.add(convert(assetId));
+                                    assetIds.add(Convert.convert(assetId));
 
                                 }
                                 response.put("assetIds", assetIds);
@@ -8439,11 +3114,11 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long recipient = parseUnsignedLong(recipientValue);
+                                        long recipient = Convert.parseUnsignedLong(recipientValue);
 
                                         try {
 
-                                            long asset = parseUnsignedLong(assetValue);
+                                            long asset = Convert.parseUnsignedLong(assetValue);
 
                                             try {
 
@@ -8472,7 +3147,7 @@ public class Nxt extends HttpServlet {
 
                                                         }
 
-                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
@@ -8616,7 +3291,7 @@ public class Nxt extends HttpServlet {
 
                                         try {
 
-                                            long asset = parseUnsignedLong(assetValue);
+                                            long asset = Convert.parseUnsignedLong(assetValue);
 
                                             try {
 
@@ -8645,7 +3320,7 @@ public class Nxt extends HttpServlet {
 
                                                         }
 
-                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
@@ -8789,7 +3464,7 @@ public class Nxt extends HttpServlet {
 
                                         try {
 
-                                            long asset = parseUnsignedLong(assetValue);
+                                            long asset = Convert.parseUnsignedLong(assetValue);
 
                                             try {
 
@@ -8818,7 +3493,7 @@ public class Nxt extends HttpServlet {
 
                                                         }
 
-                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
@@ -8898,7 +3573,7 @@ public class Nxt extends HttpServlet {
 
                             }
                             break;
-*/
+
                             // TODO: comment ends here
 
                             case "getAccountCurrentAskOrderIds":
@@ -8914,7 +3589,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("errorCode", 5);
@@ -8926,7 +3601,7 @@ public class Nxt extends HttpServlet {
                                             long assetId;
                                             try {
 
-                                                assetId = parseUnsignedLong(req.getParameter("asset"));
+                                                assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
                                                 assetIsNotUsed = false;
 
                                             } catch (Exception e) {
@@ -8941,7 +3616,7 @@ public class Nxt extends HttpServlet {
 
                                                 if ((assetIsNotUsed || askOrder.asset == assetId) && askOrder.account == accountData) {
 
-                                                    orderIds.add(convert(askOrder.id));
+                                                    orderIds.add(Convert.convert(askOrder.id));
 
                                                 }
 
@@ -8975,7 +3650,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        Account accountData = accounts.get(parseUnsignedLong(account));
+                                        Account accountData = accounts.get(Convert.parseUnsignedLong(account));
                                         if (accountData == null) {
 
                                             response.put("errorCode", 5);
@@ -8987,7 +3662,7 @@ public class Nxt extends HttpServlet {
                                             long assetId;
                                             try {
 
-                                                assetId = parseUnsignedLong(req.getParameter("asset"));
+                                                assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
                                                 assetIsNotUsed = false;
 
                                             } catch (Exception e) {
@@ -9002,7 +3677,7 @@ public class Nxt extends HttpServlet {
 
                                                 if ((assetIsNotUsed || bidOrder.asset == assetId) && bidOrder.account == accountData) {
 
-                                                    orderIds.add(convert(bidOrder.id));
+                                                    orderIds.add(Convert.convert(bidOrder.id));
 
                                                 }
 
@@ -9036,7 +3711,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        AskOrder orderData = askOrders.get(parseUnsignedLong(order));
+                                        AskOrder orderData = askOrders.get(Convert.parseUnsignedLong(order));
                                         if (orderData == null) {
 
                                             response.put("errorCode", 5);
@@ -9044,8 +3719,8 @@ public class Nxt extends HttpServlet {
 
                                         } else {
 
-                                            response.put("account", convert(orderData.account.id));
-                                            response.put("asset", convert(orderData.asset));
+                                            response.put("account", Convert.convert(orderData.account.id));
+                                            response.put("asset", Convert.convert(orderData.asset));
                                             response.put("quantity", orderData.quantity);
                                             response.put("price", orderData.price);
 
@@ -9069,7 +3744,7 @@ public class Nxt extends HttpServlet {
                                 JSONArray orderIds = new JSONArray();
                                 for (Long orderId : askOrders.keySet()) {
 
-                                    orderIds.add(convert(orderId));
+                                    orderIds.add(Convert.convert(orderId));
 
                                 }
                                 response.put("askOrderIds", orderIds);
@@ -9090,7 +3765,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        BidOrder orderData = bidOrders.get(parseUnsignedLong(order));
+                                        BidOrder orderData = bidOrders.get(Convert.parseUnsignedLong(order));
                                         if (orderData == null) {
 
                                             response.put("errorCode", 5);
@@ -9098,8 +3773,8 @@ public class Nxt extends HttpServlet {
 
                                         } else {
 
-                                            response.put("account", convert(orderData.account.id));
-                                            response.put("asset", convert(orderData.asset));
+                                            response.put("account", Convert.convert(orderData.account.id));
+                                            response.put("asset", Convert.convert(orderData.asset));
                                             response.put("quantity", orderData.quantity);
                                             response.put("price", orderData.price);
 
@@ -9123,7 +3798,7 @@ public class Nxt extends HttpServlet {
                                 JSONArray orderIds = new JSONArray();
                                 for (Long orderId : bidOrders.keySet()) {
 
-                                    orderIds.add(convert(orderId));
+                                    orderIds.add(Convert.convert(orderId));
 
                                 }
                                 response.put("bidOrderIds", orderIds);
@@ -9144,7 +3819,7 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long accountId = parseUnsignedLong(account);
+                                        long accountId = Convert.parseUnsignedLong(account);
                                         Account accountData = accounts.get(accountId);
                                         if (accountData == null) {
 
@@ -9249,7 +3924,7 @@ public class Nxt extends HttpServlet {
                                                     signature = Crypto.sign(data, secretPhrase);
                                                 } while (!Crypto.verify(signature, data, publicKey));
 
-                                                response.put("hallmark", convert(data) + convert(signature));
+                                                response.put("hallmark", Convert.convert(data) + Convert.convert(signature));
 
                                             } catch (Exception e) {
 
@@ -9310,11 +3985,11 @@ public class Nxt extends HttpServlet {
 
                                     try {
 
-                                        long recipient = parseUnsignedLong(recipientValue);
+                                        long recipient = Convert.parseUnsignedLong(recipientValue);
 
                                         try {
 
-                                            byte[] message = convert(messageValue);
+                                            byte[] message = Convert.convert(messageValue);
                                             if (message.length > MAX_ARBITRARY_MESSAGE_LENGTH) {
 
                                                 response.put("errorCode", 4);
@@ -9340,7 +4015,7 @@ public class Nxt extends HttpServlet {
 
                                                         }
 
-                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                        long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
@@ -9367,7 +4042,7 @@ public class Nxt extends HttpServlet {
                                                             Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
-                                                            response.put("bytes", convert(transaction.getBytes()));
+                                                            response.put("bytes", Convert.convert(transaction.getBytes()));
 
                                                             nonBroadcastedTransactions.put(transaction.id, transaction);
 
@@ -9456,7 +4131,7 @@ public class Nxt extends HttpServlet {
                                     //TODO: fix ugly error handling
                                     try {
 
-                                        long recipient = parseUnsignedLong(recipientValue);
+                                        long recipient = Convert.parseUnsignedLong(recipientValue);
 
                                         try {
 
@@ -9485,7 +4160,7 @@ public class Nxt extends HttpServlet {
 
                                                     }
 
-                                                    long referencedTransaction = referencedTransactionValue == null ? 0 : parseUnsignedLong(referencedTransactionValue);
+                                                    long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                                     byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
@@ -9516,7 +4191,7 @@ public class Nxt extends HttpServlet {
                                                             Peer.sendToSomePeers(peerRequest);
 
                                                             response.put("transaction", transaction.getStringId());
-                                                            response.put("bytes", convert(transaction.getBytes()));
+                                                            response.put("bytes", Convert.convert(transaction.getBytes()));
 
                                                             nonBroadcastedTransactions.put(transaction.id, transaction);
 
@@ -9702,10 +4377,10 @@ public class Nxt extends HttpServlet {
                         unconfirmedTransaction.put("index", transaction.index);
                         unconfirmedTransaction.put("timestamp", transaction.timestamp);
                         unconfirmedTransaction.put("deadline", transaction.deadline);
-                        unconfirmedTransaction.put("recipient", convert(transaction.recipient));
+                        unconfirmedTransaction.put("recipient", Convert.convert(transaction.recipient));
                         unconfirmedTransaction.put("amount", transaction.amount);
                         unconfirmedTransaction.put("fee", transaction.fee);
-                        unconfirmedTransaction.put("sender", convert(transaction.getSenderAccountId()));
+                        unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
 
                         unconfirmedTransactions.add(unconfirmedTransaction);
 
@@ -9805,7 +4480,7 @@ public class Nxt extends HttpServlet {
                         recentBlock.put("totalAmount", block.totalAmount);
                         recentBlock.put("totalFee", block.totalFee);
                         recentBlock.put("payloadLength", block.payloadLength);
-                        recentBlock.put("generator", convert(block.getGeneratorAccountId()));
+                        recentBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
                         recentBlock.put("height", block.height);
                         recentBlock.put("version", block.version);
                         recentBlock.put("block", block.getStringId());
@@ -9988,7 +4663,7 @@ public class Nxt extends HttpServlet {
 
                         try {
 
-                            recipient = parseUnsignedLong(recipientValue);
+                            recipient = Convert.parseUnsignedLong(recipientValue);
                             amount = Integer.parseInt(amountValue.trim());
                             fee = Integer.parseInt(feeValue.trim());
                             deadline = (short)(Double.parseDouble(deadlineValue) * 60);
@@ -10150,7 +4825,7 @@ public class Nxt extends HttpServlet {
                             response2.put("response", "setBlockGenerationDeadline");
 
                             Block lastBlock = Nxt.lastBlock.get();
-                            MessageDigest digest = Nxt.getMessageDigest("SHA-256");
+                            MessageDigest digest = Crypto.getMessageDigest("SHA-256");
                             byte[] generationSignatureHash;
                             if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
 
@@ -10180,7 +4855,7 @@ public class Nxt extends HttpServlet {
                                 myTransaction.put("index", transaction.index);
                                 myTransaction.put("transactionTimestamp", transaction.timestamp);
                                 myTransaction.put("deadline", transaction.deadline);
-                                myTransaction.put("account", convert(transaction.recipient));
+                                myTransaction.put("account", Convert.convert(transaction.recipient));
                                 myTransaction.put("sentAmount", transaction.amount);
                                 if (transaction.recipient == accountId) {
 
@@ -10199,7 +4874,7 @@ public class Nxt extends HttpServlet {
                                 myTransaction.put("index", transaction.index);
                                 myTransaction.put("transactionTimestamp", transaction.timestamp);
                                 myTransaction.put("deadline", transaction.deadline);
-                                myTransaction.put("account", convert(transaction.getSenderAccountId()));
+                                myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
                                 myTransaction.put("receivedAmount", transaction.amount);
                                 myTransaction.put("fee", transaction.fee);
                                 myTransaction.put("numberOfConfirmations", 0);
@@ -10239,7 +4914,7 @@ public class Nxt extends HttpServlet {
                                     myTransaction.put("index", transaction.index);
                                     myTransaction.put("blockTimestamp", block.timestamp);
                                     myTransaction.put("transactionTimestamp", transaction.timestamp);
-                                    myTransaction.put("account", convert(transaction.recipient));
+                                    myTransaction.put("account", Convert.convert(transaction.recipient));
                                     myTransaction.put("sentAmount", transaction.amount);
                                     if (transaction.recipient == accountId) {
 
@@ -10258,7 +4933,7 @@ public class Nxt extends HttpServlet {
                                     myTransaction.put("index", transaction.index);
                                     myTransaction.put("blockTimestamp", block.timestamp);
                                     myTransaction.put("transactionTimestamp", transaction.timestamp);
-                                    myTransaction.put("account", convert(transaction.getSenderAccountId()));
+                                    myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
                                     myTransaction.put("receivedAmount", transaction.amount);
                                     myTransaction.put("fee", transaction.fee);
                                     myTransaction.put("numberOfConfirmations", numberOfConfirmations);
@@ -10315,7 +4990,7 @@ public class Nxt extends HttpServlet {
 
             if (user != null) {
 
-                logMessage("Error processing GET request", e);
+                Logger.logMessage("Error processing GET request", e);
 
                 JSONObject response = new JSONObject();
                 response.put("response", "showMessage");
@@ -10325,7 +5000,7 @@ public class Nxt extends HttpServlet {
 
             } else {
 
-                logDebugMessage("Error processing GET request", e);
+                Logger.logDebugMessage("Error processing GET request", e);
 
             }
 
@@ -10357,7 +5032,7 @@ public class Nxt extends HttpServlet {
                         }
                         user.asyncContext.complete();
                         user.asyncContext = req.startAsync();
-                        user.asyncContext.addListener(new UserAsyncListener(user));
+                        user.asyncContext.addListener(user.new UserAsyncListener());
                         user.asyncContext.setTimeout(5000);
 
                     } else {
@@ -10385,7 +5060,7 @@ public class Nxt extends HttpServlet {
                     }
 
                     user.asyncContext = req.startAsync();
-                    user.asyncContext.addListener(new UserAsyncListener(user));
+                    user.asyncContext.addListener(user.new UserAsyncListener());
                     user.asyncContext.setTimeout(5000);
 
                 }
@@ -10555,7 +5230,7 @@ public class Nxt extends HttpServlet {
                     {
 
                         JSONArray nextBlockIds = new JSONArray();
-                        Block block = blocks.get(parseUnsignedLong((String)request.get("blockId")));
+                        Block block = blocks.get(Convert.parseUnsignedLong((String) request.get("blockId")));
                         while (block != null && nextBlockIds.size() < 1440) {
 
                             block = blocks.get(block.nextBlock);
@@ -10576,7 +5251,7 @@ public class Nxt extends HttpServlet {
 
                         List<Block> nextBlocks = new ArrayList<>();
                         int totalLength = 0;
-                        Block block = blocks.get(parseUnsignedLong((String)request.get("blockId")));
+                        Block block = blocks.get(Convert.parseUnsignedLong((String) request.get("blockId")));
                         while (block != null) {
 
                             block = blocks.get(block.nextBlock);
@@ -10694,13 +5369,13 @@ public class Nxt extends HttpServlet {
 
             } else {
 
-                logDebugMessage("Unsupported protocol " + request.get("protocol"));
+                Logger.logDebugMessage("Unsupported protocol " + request.get("protocol"));
                 response.put("error", "Unsupported protocol!");
 
             }
 
         } catch (RuntimeException e) {
-            logDebugMessage("Error processing POST request", e);
+            Logger.logDebugMessage("Error processing POST request", e);
             response.put("error", e.toString());
         }
 
@@ -10717,67 +5392,6 @@ public class Nxt extends HttpServlet {
 
     }
 
-    static class CountingOutputStream extends FilterOutputStream {
-
-        private long count;
-
-        public CountingOutputStream(OutputStream out) {
-            super(out);
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            count += 1;
-            super.write(b);
-        }
-
-        public long getCount() {
-            return count;
-        }
-
-    }
-
-    static class CountingInputStream extends FilterInputStream {
-
-        private long count;
-
-        public CountingInputStream(InputStream in) {
-            super(in);
-        }
-
-        @Override
-        public int read() throws IOException {
-            int read = super.read();
-            if (read >= 0) {
-                count += 1;
-            }
-            return read;
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            int read = super.read(b, off, len);
-            if (read >= 0) {
-                count += 1;
-            }
-            return read;
-        }
-
-        @Override
-        public long skip(long n) throws IOException {
-            long skipped = super.skip(n);
-            if (skipped >= 0) {
-                count += skipped;
-            }
-            return skipped;
-        }
-
-        public long getCount() {
-            return count;
-        }
-
-    }
-
     @Override
     public void destroy() {
 
@@ -10786,16 +5400,16 @@ public class Nxt extends HttpServlet {
 
         try {
             Block.saveBlocks("blocks.nxt", true);
-            logMessage("Saved blocks.nxt");
+            Logger.logMessage("Saved blocks.nxt");
         } catch (RuntimeException e) {
-            logMessage("Error saving blocks", e);
+            Logger.logMessage("Error saving blocks", e);
         }
 
         try {
             Transaction.saveTransactions("transactions.nxt");
-            logMessage("Saved transactions.nxt");
+            Logger.logMessage("Saved transactions.nxt");
         } catch (RuntimeException e) {
-            logMessage("Error saving transactions", e);
+            Logger.logMessage("Error saving transactions", e);
         }
 
         /* no longer used
@@ -10806,7 +5420,7 @@ public class Nxt extends HttpServlet {
         } catch (Exception e) { }
         */
 
-        logMessage("NRS " + Nxt.VERSION + " stopped.");
+        Logger.logMessage("NRS " + Nxt.VERSION + " stopped.");
 
     }
 
@@ -10818,7 +5432,7 @@ public class Nxt extends HttpServlet {
             Thread.currentThread().interrupt();
         }
         if (! executor.isTerminated()) {
-            logMessage("some threads didn't terminate, forcing shutdown");
+            Logger.logMessage("some threads didn't terminate, forcing shutdown");
             executor.shutdownNow();
         }
     }
