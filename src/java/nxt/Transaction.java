@@ -3,7 +3,6 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.FileInputStream;
@@ -17,11 +16,9 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.PriorityQueue;
 
 public class Transaction implements Comparable<Transaction>, Serializable {
 
@@ -59,7 +56,13 @@ public class Transaction implements Comparable<Transaction>, Serializable {
     public long block;
     public int height;
 
-    public Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient, int amount, int fee, long referencedTransaction, byte[] signature) {
+    public Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient,
+                       int amount, int fee, long referencedTransaction) {
+        this(type, subtype, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, null);
+    }
+
+    public Transaction(byte type, byte subtype, int timestamp, short deadline, byte[] senderPublicKey, long recipient,
+                       int amount, int fee, long referencedTransaction, byte[] signature) {
 
         this.type = type;
         this.subtype = subtype;
@@ -196,8 +199,8 @@ public class Transaction implements Comparable<Transaction>, Serializable {
         byte[] hash = Crypto.getMessageDigest("SHA-256").digest(getBytes());
         BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
         id = bigInteger.longValue();
-        stringId = bigInteger.toString();
         senderAccountId = Account.getId(senderPublicKey);
+        stringId = bigInteger.toString();
     }
 
 
@@ -534,187 +537,6 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static void processTransactions(JSONObject request, String parameterName) {
-
-        JSONArray transactionsData = (JSONArray)request.get(parameterName);
-        JSONArray validTransactionsData = new JSONArray();
-
-        for (Object transactionData : transactionsData) {
-
-            Transaction transaction = Transaction.getTransaction((JSONObject) transactionData);
-
-            try {
-
-                int curTime = Nxt.getEpochTime(System.currentTimeMillis());
-                if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || transaction.timestamp + transaction.deadline * 60 < curTime || transaction.fee <= 0 || !transaction.validateAttachment()) {
-
-                    continue;
-
-                }
-
-                long senderId;
-                boolean doubleSpendingTransaction;
-
-                synchronized (Nxt.blocksAndTransactionsLock) {
-
-                    long id = transaction.getId();
-                    if (Nxt.transactions.get(id) != null || Nxt.unconfirmedTransactions.get(id) != null || Nxt.doubleSpendingTransactions.get(id) != null || !transaction.verify()) {
-
-                        continue;
-
-                    }
-
-                    senderId = transaction.getSenderAccountId();
-                    Account account = Nxt.accounts.get(senderId);
-                    if (account == null) {
-
-                        doubleSpendingTransaction = true;
-
-                    } else {
-
-                        int amount = transaction.amount + transaction.fee;
-                        synchronized (account) {
-
-                            if (account.getUnconfirmedBalance() < amount * 100L) {
-
-                                doubleSpendingTransaction = true;
-
-                            } else {
-
-                                doubleSpendingTransaction = false;
-
-                                account.addToUnconfirmedBalance(- amount * 100L);
-
-                                if (transaction.type == Transaction.TYPE_COLORED_COINS) {
-
-                                    if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                                        Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                                        Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                        if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
-
-                                            doubleSpendingTransaction = true;
-
-                                            account.addToUnconfirmedBalance(amount * 100L);
-
-                                        } else {
-
-                                            account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-
-                                        }
-
-                                    } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                                        Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                                        Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                        if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
-
-                                            doubleSpendingTransaction = true;
-
-                                            account.addToUnconfirmedBalance(amount * 100L);
-
-                                        } else {
-
-                                            account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-
-                                        }
-
-                                    } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                                        Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                                        if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
-
-                                            doubleSpendingTransaction = true;
-
-                                            account.addToUnconfirmedBalance(amount * 100L);
-
-                                        } else {
-
-                                            account.addToUnconfirmedBalance(- attachment.quantity * attachment.price);
-
-                                        }
-
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    transaction.index = Nxt.transactionCounter.incrementAndGet();
-
-                    if (doubleSpendingTransaction) {
-
-                        Nxt.doubleSpendingTransactions.put(transaction.getId(), transaction);
-
-                    } else {
-
-                        Nxt.unconfirmedTransactions.put(transaction.getId(), transaction);
-
-                        if (parameterName.equals("transactions")) {
-
-                            validTransactionsData.add(transactionData);
-
-                        }
-
-                    }
-
-                }
-
-                JSONObject response = new JSONObject();
-                response.put("response", "processNewData");
-
-                JSONArray newTransactions = new JSONArray();
-                JSONObject newTransaction = new JSONObject();
-                newTransaction.put("index", transaction.index);
-                newTransaction.put("timestamp", transaction.timestamp);
-                newTransaction.put("deadline", transaction.deadline);
-                newTransaction.put("recipient", Convert.convert(transaction.recipient));
-                newTransaction.put("amount", transaction.amount);
-                newTransaction.put("fee", transaction.fee);
-                newTransaction.put("sender", Convert.convert(senderId));
-                newTransaction.put("id", transaction.getStringId());
-                newTransactions.add(newTransaction);
-
-                if (doubleSpendingTransaction) {
-
-                    response.put("addedDoubleSpendingTransactions", newTransactions);
-
-                } else {
-
-                    response.put("addedUnconfirmedTransactions", newTransactions);
-
-                }
-
-                for (User user : Nxt.users.values()) {
-
-                    user.send(response);
-
-                }
-
-            } catch (RuntimeException e) {
-
-                Logger.logMessage("Error processing transaction", e);
-
-            }
-
-        }
-
-        if (validTransactionsData.size() > 0) {
-
-            JSONObject peerRequest = new JSONObject();
-            peerRequest.put("requestType", "processTransactions");
-            peerRequest.put("transactions", validTransactionsData);
-
-            Peer.sendToSomePeers(peerRequest);
-
-        }
-
-    }
-
     static void saveTransactions(String fileName) {
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
@@ -732,6 +554,10 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     void sign(String secretPhrase) {
 
+        if (signature != null) {
+            throw new IllegalStateException("Transaction already signed");
+        }
+
         signature = Crypto.sign(getBytes(), secretPhrase);
 
         try {
@@ -740,7 +566,6 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                 timestamp++;
                 // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
-                signature = new byte[64];
                 signature = Crypto.sign(getBytes(), secretPhrase);
 
             }
@@ -992,25 +817,6 @@ public class Transaction implements Comparable<Transaction>, Serializable {
         return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
 
 
-    }
-
-    public static byte[] calculateTransactionsChecksum() {
-        synchronized (Nxt.blocksAndTransactionsLock) {
-            PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(Nxt.transactions.size(), new Comparator<Transaction>() {
-                @Override
-                public int compare(Transaction o1, Transaction o2) {
-                    long id1 = o1.getId();
-                    long id2 = o2.getId();
-                    return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
-                }
-            });
-            sortedTransactions.addAll(Nxt.transactions.values());
-            MessageDigest digest = Crypto.getMessageDigest("SHA-256");
-            while (! sortedTransactions.isEmpty()) {
-                digest.update(sortedTransactions.poll().getBytes());
-            }
-            return digest.digest();
-        }
     }
 
 }

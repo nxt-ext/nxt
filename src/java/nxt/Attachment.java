@@ -511,7 +511,7 @@ public interface Attachment {
         @Override
         public long getSenderDeltaBalance() {
 
-            BidOrder bidOrder = Nxt.bidOrders.get(order);
+            BidOrder bidOrder = Blockchain.bidOrders.get(order);
             if (bidOrder == null) {
 
                 return 0;

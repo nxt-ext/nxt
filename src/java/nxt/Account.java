@@ -296,7 +296,7 @@ class Account {
     long getGuaranteedBalance(int numberOfConfirmations) {
 
         long guaranteedBalance = getBalance();
-        ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
+        ArrayList<Block> lastBlocks = Blockchain.getLastBlocks(numberOfConfirmations - 1);
         byte[] accountPublicKey = publicKey.get();
         for (Block block : lastBlocks) {
 

@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -119,8 +118,6 @@ public final class Nxt extends HttpServlet {
     static final AtomicInteger peerCounter = new AtomicInteger();
     static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
 
-    static final Object blocksAndTransactionsLock = new Object();
-
     static final AtomicInteger blockCounter = new AtomicInteger();
     static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
     static final AtomicReference<Block> lastBlock = new AtomicReference<>();
@@ -134,11 +131,6 @@ public final class Nxt extends HttpServlet {
     static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
     static final ConcurrentMap<String, Long> assetNameToIdMappings = new ConcurrentHashMap<>();
 
-    static final ConcurrentMap<Long, AskOrder> askOrders = new ConcurrentHashMap<>();
-    static final ConcurrentMap<Long, BidOrder> bidOrders = new ConcurrentHashMap<>();
-    static final ConcurrentMap<Long, TreeSet<AskOrder>> sortedAskOrders = new ConcurrentHashMap<>();
-    static final ConcurrentMap<Long, TreeSet<BidOrder>> sortedBidOrders = new ConcurrentHashMap<>();
-
     static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
     private static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
@@ -149,48 +141,6 @@ public final class Nxt extends HttpServlet {
     static int getEpochTime(long time) {
 
         return (int)((time - epochBeginning + 500) / 1000);
-
-    }
-
-    // this is called within block.analyze only, which is already inside the big blocksAndTransactions lock
-    static void matchOrders(long assetId) {
-
-        TreeSet<AskOrder> sortedAskOrders = Nxt.sortedAskOrders.get(assetId);
-        TreeSet<BidOrder> sortedBidOrders = Nxt.sortedBidOrders.get(assetId);
-
-        while (!sortedAskOrders.isEmpty() && !sortedBidOrders.isEmpty()) {
-
-            AskOrder askOrder = sortedAskOrders.first();
-            BidOrder bidOrder = sortedBidOrders.first();
-
-            if (askOrder.price > bidOrder.price) {
-
-                break;
-
-            }
-
-            int quantity = askOrder.quantity < bidOrder.quantity ? askOrder.quantity : bidOrder.quantity;
-            long price = askOrder.height < bidOrder.height || (askOrder.height == bidOrder.height && askOrder.id < bidOrder.id) ? askOrder.price : bidOrder.price;
-
-            if ((askOrder.quantity -= quantity) == 0) {
-
-                askOrders.remove(askOrder.id);
-                sortedAskOrders.remove(askOrder);
-
-            }
-
-            askOrder.account.addToBalanceAndUnconfirmedBalance(quantity * price);
-
-            if ((bidOrder.quantity -= quantity) == 0) {
-
-                bidOrders.remove(bidOrder.id);
-                sortedBidOrders.remove(bidOrder);
-
-            }
-
-            bidOrder.account.addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
-
-        }
 
     }
 
@@ -725,14 +675,7 @@ public final class Nxt extends HttpServlet {
             }
 
             Logger.logMessage("Scanning blockchain...");
-            Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
-            blocks.clear();
-            long curBlockId = GENESIS_BLOCK_ID;
-            Block curBlock;
-            while ((curBlock = loadedBlocks.get(curBlockId)) != null) {
-                curBlock.analyze();
-                curBlockId = curBlock.nextBlock;
-            }
+            Blockchain.scan();
             Logger.logMessage("...Done");
 
             scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
@@ -860,7 +803,7 @@ public final class Nxt extends HttpServlet {
                             JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
                             if (response != null) {
 
-                                Transaction.processTransactions(response, "unconfirmedTransactions");
+                                Blockchain.processTransactions(response, "unconfirmedTransactions");
 
                             }
 
@@ -1052,7 +995,7 @@ public final class Nxt extends HttpServlet {
 
                                                     } else {
 
-                                                        synchronized (blocksAndTransactionsLock) {
+                                                        synchronized (Blockchain.class) {
                                                             for (i = 0; i < numberOfBlocks; i++) {
 
                                                                 JSONObject blockData = (JSONObject)nextBlocks.get(i);
@@ -1083,7 +1026,7 @@ public final class Nxt extends HttpServlet {
 
                                                                     }
 
-                                                                    if (Block.pushBlock(buffer, false)) {
+                                                                    if (Blockchain.pushBlock(buffer, false)) {
 
                                                                         alreadyPushed = true;
 
@@ -1125,14 +1068,14 @@ public final class Nxt extends HttpServlet {
 
                                             if (!futureBlocks.isEmpty() && lastBlock.get().height - blocks.get(commonBlockId).height < 720) {
 
-                                                synchronized (blocksAndTransactionsLock) {
+                                                synchronized (Blockchain.class) {
 
                                                     Block.saveBlocks("blocks.nxt.bak", true);
                                                     Transaction.saveTransactions("transactions.nxt.bak");
 
                                                     curCumulativeDifficulty = lastBlock.get().cumulativeDifficulty;
 
-                                                    while (lastBlock.get().getId() != commonBlockId && Block.popLastBlock()) {}
+                                                    while (lastBlock.get().getId() != commonBlockId && Blockchain.popLastBlock()) {}
 
                                                     if (lastBlock.get().getId() == commonBlockId) {
 
@@ -1150,7 +1093,7 @@ public final class Nxt extends HttpServlet {
 
                                                                 }
 
-                                                                if (!Block.pushBlock(buffer, false)) {
+                                                                if (!Blockchain.pushBlock(buffer, false)) {
 
                                                                     break;
 
@@ -1176,14 +1119,7 @@ public final class Nxt extends HttpServlet {
                                                         Nxt.doubleSpendingTransactions.clear();
                                                         //TODO: clean this up
                                                         Logger.logMessage("Re-scanning blockchain...");
-                                                        Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
-                                                        blocks.clear();
-                                                        long currentBlockId = GENESIS_BLOCK_ID;
-                                                        Block currentBlock;
-                                                        while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
-                                                            currentBlock.analyze();
-                                                            currentBlockId = currentBlock.nextBlock;
-                                                        }
+                                                        Blockchain.scan();
                                                         Logger.logMessage("...Done");
 
 
@@ -1193,7 +1129,7 @@ public final class Nxt extends HttpServlet {
 
                                             }
 
-                                            synchronized (blocksAndTransactionsLock) {
+                                            synchronized (Blockchain.class) {
                                                 Block.saveBlocks("blocks.nxt", false);
                                                 Transaction.saveTransactions("transactions.nxt");
                                             }
@@ -1520,7 +1456,7 @@ public final class Nxt extends HttpServlet {
 
                                                                     int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                                    Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
+                                                                    Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                                     transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
                                                                     transaction.sign(secretPhrase);
 
@@ -2437,7 +2373,7 @@ public final class Nxt extends HttpServlet {
                                 response.put("numberOfTransactions", transactions.size());
                                 response.put("numberOfAccounts", accounts.size());
                                 response.put("numberOfAssets", assets.size());
-                                response.put("numberOfOrders", askOrders.size() + bidOrders.size());
+                                response.put("numberOfOrders", Blockchain.askOrders.size() + Blockchain.bidOrders.size());
                                 response.put("numberOfAliases", aliases.size());
                                 response.put("numberOfPeers", peers.size());
                                 response.put("numberOfUsers", users.size());
@@ -2682,7 +2618,7 @@ public final class Nxt extends HttpServlet {
 
                                                                         int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                                        Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE, timestamp, (short)1440, publicKey, CREATOR_ID, 0, fee, 0, new byte[64]);
+                                                                        Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE, timestamp, (short)1440, publicKey, CREATOR_ID, 0, fee, 0);
                                                                         transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
                                                                         transaction.sign(secretPhrase);
 
@@ -2788,7 +2724,7 @@ public final class Nxt extends HttpServlet {
                                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                                                 long accountId = Account.getId(publicKey);
 
-                                                AskOrder orderData = askOrders.get(order);
+                                                AskOrder orderData = Blockchain.askOrders.get(order);
                                                 if (orderData == null || orderData.account.id != accountId) {
 
                                                     response.put("errorCode", 5);
@@ -2813,7 +2749,7 @@ public final class Nxt extends HttpServlet {
 
                                                             int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                            Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
+                                                            Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                             transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
                                                             transaction.sign(secretPhrase);
 
@@ -2918,7 +2854,7 @@ public final class Nxt extends HttpServlet {
                                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                                                 long accountId = Account.getId(publicKey);
 
-                                                BidOrder orderData = bidOrders.get(order);
+                                                BidOrder orderData = Blockchain.bidOrders.get(order);
                                                 if (orderData == null || orderData.account.id != accountId) {
 
                                                     response.put("errorCode", 5);
@@ -2943,7 +2879,7 @@ public final class Nxt extends HttpServlet {
 
                                                             int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                            Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
+                                                            Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                             transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
                                                             transaction.sign(secretPhrase);
 
@@ -3155,7 +3091,7 @@ public final class Nxt extends HttpServlet {
 
                                                                     int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                                    Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction, new byte[64]);
+                                                                    Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
                                                                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
                                                                     transaction.sign(secretPhrase);
 
@@ -3328,7 +3264,7 @@ public final class Nxt extends HttpServlet {
 
                                                                     int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                                    Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
+                                                                    Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                                     transaction.attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
                                                                     transaction.sign(secretPhrase);
 
@@ -3493,7 +3429,7 @@ public final class Nxt extends HttpServlet {
 
                                                                 int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                                Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
+                                                                Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                                 transaction.attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
                                                                 transaction.sign(secretPhrase);
 
@@ -3591,7 +3527,7 @@ public final class Nxt extends HttpServlet {
                                             }
 
                                             JSONArray orderIds = new JSONArray();
-                                            for (AskOrder askOrder : askOrders.values()) {
+                                            for (AskOrder askOrder : Blockchain.askOrders.values()) {
 
                                                 if ((assetIsNotUsed || askOrder.asset == assetId) && askOrder.account == accountData) {
 
@@ -3652,7 +3588,7 @@ public final class Nxt extends HttpServlet {
                                             }
 
                                             JSONArray orderIds = new JSONArray();
-                                            for (BidOrder bidOrder : bidOrders.values()) {
+                                            for (BidOrder bidOrder : Blockchain.bidOrders.values()) {
 
                                                 if ((assetIsNotUsed || bidOrder.asset == assetId) && bidOrder.account == accountData) {
 
@@ -3690,7 +3626,7 @@ public final class Nxt extends HttpServlet {
 
                                     try {
 
-                                        AskOrder orderData = askOrders.get(Convert.parseUnsignedLong(order));
+                                        AskOrder orderData = Blockchain.askOrders.get(Convert.parseUnsignedLong(order));
                                         if (orderData == null) {
 
                                             response.put("errorCode", 5);
@@ -3721,7 +3657,7 @@ public final class Nxt extends HttpServlet {
                             {
 
                                 JSONArray orderIds = new JSONArray();
-                                for (Long orderId : askOrders.keySet()) {
+                                for (Long orderId : Blockchain.askOrders.keySet()) {
 
                                     orderIds.add(Convert.convert(orderId));
 
@@ -3744,7 +3680,7 @@ public final class Nxt extends HttpServlet {
 
                                     try {
 
-                                        BidOrder orderData = bidOrders.get(Convert.parseUnsignedLong(order));
+                                        BidOrder orderData = Blockchain.bidOrders.get(Convert.parseUnsignedLong(order));
                                         if (orderData == null) {
 
                                             response.put("errorCode", 5);
@@ -3775,7 +3711,7 @@ public final class Nxt extends HttpServlet {
                             {
 
                                 JSONArray orderIds = new JSONArray();
-                                for (Long orderId : bidOrders.keySet()) {
+                                for (Long orderId : Blockchain.bidOrders.keySet()) {
 
                                     orderIds.add(Convert.convert(orderId));
 
@@ -4008,7 +3944,7 @@ public final class Nxt extends HttpServlet {
 
                                                             int timestamp = getEpochTime(System.currentTimeMillis());
 
-                                                            Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction, new byte[64]);
+                                                            Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
                                                             transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
                                                             transaction.sign(secretPhrase);
 
@@ -4158,7 +4094,7 @@ public final class Nxt extends HttpServlet {
 
                                                         } else {
 
-                                                            Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, publicKey, recipient, amount, fee, referencedTransaction, new byte[64]);
+                                                            Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, publicKey, recipient, amount, fee, referencedTransaction);
                                                             transaction.sign(secretPhrase);
 
                                                             JSONObject peerRequest = new JSONObject();
@@ -4728,7 +4664,7 @@ public final class Nxt extends HttpServlet {
 
                             } else {
 
-                                final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, user.publicKey, recipient, amount, fee, 0, new byte[64]);
+                                final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, user.publicKey, recipient, amount, fee, 0);
                                 transaction.sign(user.secretPhrase);
 
                                 JSONObject peerRequest = new JSONObject();
@@ -5321,7 +5257,7 @@ public final class Nxt extends HttpServlet {
 
                             }
 
-                            accepted = Block.pushBlock(buffer, true);
+                            accepted = Blockchain.pushBlock(buffer, true);
 
                         }
                         response.put("accepted", accepted);
@@ -5332,7 +5268,7 @@ public final class Nxt extends HttpServlet {
                     case "processTransactions":
                     {
 
-                        Transaction.processTransactions(request, "transactions");
+                        Blockchain.processTransactions(request, "transactions");
 
                     }
                     break;
