@@ -6,6 +6,7 @@ import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public final class Blockchain {
 
+    private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
     static final ConcurrentMap<Long, AskOrder> askOrders = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, BidOrder> bidOrders = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, TreeSet<AskOrder>> sortedAskOrders = new ConcurrentHashMap<>();
@@ -156,7 +158,7 @@ public final class Blockchain {
                             response = peer.send(getMilestoneBlockIdsRequest);
                             if (response != null) {
 
-                                long commonBlockId = Nxt.GENESIS_BLOCK_ID;
+                                long commonBlockId = Genesis.GENESIS_BLOCK_ID;
 
                                 JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
                                 for (Object milestoneBlockId : milestoneBlockIds) {
@@ -768,7 +770,7 @@ public final class Blockchain {
 
                 block = Nxt.lastBlock.get();
 
-                if (block.getId() == Nxt.GENESIS_BLOCK_ID) {
+                if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
                     return false;
                 }
 
@@ -874,9 +876,9 @@ public final class Blockchain {
                 if (previousLastBlock.height == Nxt.TRANSPARENT_FORGING_BLOCK) {
 
                     byte[] checksum = calculateTransactionsChecksum();
-                    if (Nxt.CHECKSUM_TRANSPARENT_FORGING == null) {
+                    if (CHECKSUM_TRANSPARENT_FORGING == null) {
                         System.out.println(Arrays.toString(checksum));
-                    } else if (!Arrays.equals(checksum, Nxt.CHECKSUM_TRANSPARENT_FORGING)) {
+                    } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
                         Logger.logMessage("Checksum failed at block " + Nxt.TRANSPARENT_FORGING_BLOCK);
                         return false;
                     } else {
@@ -1258,10 +1260,10 @@ public final class Blockchain {
 
             block.baseTarget = Nxt.initialBaseTarget;
             block.cumulativeDifficulty = BigInteger.ZERO;
-            Nxt.blocks.put(Nxt.GENESIS_BLOCK_ID, block);
+            Nxt.blocks.put(Genesis.GENESIS_BLOCK_ID, block);
             Nxt.lastBlock.set(block);
 
-            Account.addAccount(Nxt.CREATOR_ID);
+            Account.addAccount(Genesis.CREATOR_ID);
 
         } else {
 
@@ -1458,11 +1460,11 @@ public final class Blockchain {
 
     }
 
-    static void scan() {
+    private static void scan() {
         synchronized (Blockchain.class) {
             Map<Long,Block> loadedBlocks = new HashMap<>(Nxt.blocks);
             Nxt.blocks.clear();
-            long currentBlockId = Nxt.GENESIS_BLOCK_ID;
+            long currentBlockId = Genesis.GENESIS_BLOCK_ID;
             Block currentBlock;
             while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
                 Blockchain.analyze(currentBlock);
@@ -1474,7 +1476,7 @@ public final class Blockchain {
 
     private static long calculateBaseTarget(Block block) {
 
-        if (block.getId() == Nxt.GENESIS_BLOCK_ID) {
+        if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
 
             return Nxt.initialBaseTarget;
 
@@ -1709,4 +1711,80 @@ public final class Blockchain {
         }
 
     }
+
+    static void init() {
+
+        try {
+
+            Logger.logMessage("Loading transactions...");
+            Transaction.loadTransactions("transactions.nxt");
+            Logger.logMessage("...Done");
+
+        } catch (FileNotFoundException e) {
+            Logger.logMessage("transactions.nxt not found, starting from scratch");
+            Nxt.transactions.clear();
+
+            for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
+
+                Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT,
+                        0, (short)0, Genesis.CREATOR_PUBLIC_KEY, Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i],
+                        0, 0, Genesis.GENESIS_SIGNATURES[i]);
+
+                Nxt.transactions.put(transaction.getId(), transaction);
+
+            }
+
+            for (Transaction transaction : Nxt.transactions.values()) {
+                transaction.index = Nxt.transactionCounter.incrementAndGet();
+                transaction.block = Genesis.GENESIS_BLOCK_ID;
+
+            }
+
+            nxt.Transaction.saveTransactions("transactions.nxt");
+
+        }
+
+        try {
+
+            Logger.logMessage("Loading blocks...");
+            Block.loadBlocks("blocks.nxt");
+            Logger.logMessage("...Done");
+
+        } catch (FileNotFoundException e) {
+            Logger.logMessage("blocks.nxt not found, starting from scratch");
+            Nxt.blocks.clear();
+
+            Block block = new Block(-1, 0, 0, Nxt.transactions.size(), 1000000000, 0, Nxt.transactions.size() * 128, null,
+                    Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
+            block.index = Nxt.blockCounter.incrementAndGet();
+            Nxt.blocks.put(Genesis.GENESIS_BLOCK_ID, block);
+
+            int i = 0;
+            for (long transaction : Nxt.transactions.keySet()) {
+
+                block.transactions[i++] = transaction;
+
+            }
+            Arrays.sort(block.transactions);
+            MessageDigest digest = Crypto.sha256();
+            for (i = 0; i < block.transactions.length; i++) {
+                Transaction transaction = Nxt.transactions.get(block.transactions[i]);
+                digest.update(transaction.getBytes());
+                block.blockTransactions[i] = transaction;
+            }
+            block.payloadHash = digest.digest();
+
+            block.baseTarget = Nxt.initialBaseTarget;
+            block.cumulativeDifficulty = BigInteger.ZERO;
+            Nxt.lastBlock.set(block);
+
+            Block.saveBlocks("blocks.nxt", false);
+
+        }
+
+        Logger.logMessage("Scanning blockchain...");
+        Blockchain.scan();
+        Logger.logMessage("...Done");
+    }
+
 }

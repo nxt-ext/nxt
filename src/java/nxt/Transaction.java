@@ -651,7 +651,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         try {
 
                             Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)this.attachment;
-                            if (recipient != Nxt.CREATOR_ID || amount != 0 || attachment.alias.length() == 0 || attachment.alias.length() > 100 || attachment.uri.length() > 1000) {
+                            if (recipient != Genesis.CREATOR_ID || amount != 0 || attachment.alias.length() == 0 || attachment.alias.length() > 100 || attachment.uri.length() > 1000) {
 
                                 return false;
 
@@ -707,7 +707,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         try {
 
                             Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)this.attachment;
-                            if (recipient != Nxt.CREATOR_ID || amount != 0 || fee < ASSET_ISSUANCE_FEE || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
+                            if (recipient != Genesis.CREATOR_ID || amount != 0 || fee < ASSET_ISSUANCE_FEE || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
 
                                 return false;
 
@@ -748,7 +748,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                     {
 
                         Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)this.attachment;
-                        return recipient == Nxt.CREATOR_ID && amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
+                        return recipient == Genesis.CREATOR_ID && amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
 
                     }
 
@@ -756,21 +756,21 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                     {
 
                         Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)this.attachment;
-                        return recipient == Nxt.CREATOR_ID && amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
+                        return recipient == Genesis.CREATOR_ID && amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
 
                     }
 
                 case SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
                     {
 
-                        return recipient == Nxt.CREATOR_ID && amount == 0;
+                        return recipient == Genesis.CREATOR_ID && amount == 0;
 
                     }
 
                 case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                     {
 
-                        return recipient == Nxt.CREATOR_ID && amount == 0;
+                        return recipient == Genesis.CREATOR_ID && amount == 0;
 
                     }
 
