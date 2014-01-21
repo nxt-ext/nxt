@@ -30,17 +30,18 @@ public class Block implements Serializable {
     static final long[] emptyLong = new long[0];
     static final Transaction[] emptyTransactions = new Transaction[0];
 
-    final int version;
-    final int timestamp;
-    final long previousBlock;
-    int totalAmount, totalFee;
-    int payloadLength;
-    byte[] payloadHash;
-    final byte[] generatorPublicKey;
-    byte[] generationSignature;
-    byte[] blockSignature;
+    public final int version;
+    public final int timestamp;
+    public final long previousBlock;
+    public int totalAmount;
+    public int totalFee;
+    public int payloadLength;
+    public byte[] payloadHash;
+    public final byte[] generatorPublicKey;
+    public byte[] generationSignature;
+    public byte[] blockSignature;
 
-    final byte[] previousBlockHash;
+    public final byte[] previousBlockHash;
 
     public int index;
     public final long[] transactions;
@@ -158,12 +159,12 @@ public class Block implements Serializable {
     }
 
 
-    String getStringId() {
+    public String getStringId() {
         calculateIds();
         return stringId;
     }
 
-    long getGeneratorAccountId() {
+    public long getGeneratorAccountId() {
         calculateIds();
         return generatorAccountId;
     }

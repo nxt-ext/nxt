@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
-class Peer implements Comparable<Peer> {
+public class Peer implements Comparable<Peer> {
 
     static final int STATE_NONCONNECTED = 0;
     static final int STATE_CONNECTED = 1;
@@ -153,18 +153,20 @@ class Peer implements Comparable<Peer> {
     };
 
     final int index;
-    String platform;
-    String announcedAddress;
+    public String platform;
+    public String announcedAddress;
     boolean shareAddress;
-    String hallmark;
+    public String hallmark;
     long accountId;
     int weight, date;
     long adjustedWeight;
-    String application, version;
+    public String application;
+    public String version;
 
     long blacklistingTime;
-    int state;
-    long downloadedVolume, uploadedVolume;
+    public int state;
+    public long downloadedVolume;
+    public long uploadedVolume;
 
     Peer(String announcedAddress, int index) {
 
@@ -569,7 +571,7 @@ class Peer implements Comparable<Peer> {
 
     }
 
-    int getWeight() {
+    public int getWeight() {
 
         if (accountId == 0) {
 
@@ -658,7 +660,7 @@ class Peer implements Comparable<Peer> {
 
     }
 
-    static void sendToSomePeers(final JSONObject request) {
+    public static void sendToSomePeers(final JSONObject request) {
         request.put("protocol", 1);
         final JSONStreamAware jsonStreamAware = new JSONStreamAware() {
             final char[] jsonChars = request.toJSONString().toCharArray();

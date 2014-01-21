@@ -28,8 +28,8 @@ import java.util.concurrent.ConcurrentMap;
 public final class Blockchain {
 
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
-    static final ConcurrentMap<Long, AskOrder> askOrders = new ConcurrentHashMap<>();
-    static final ConcurrentMap<Long, BidOrder> bidOrders = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<Long, AskOrder> askOrders = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<Long, BidOrder> bidOrders = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, TreeSet<AskOrder>> sortedAskOrders = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, TreeSet<BidOrder>> sortedBidOrders = new ConcurrentHashMap<>();
 

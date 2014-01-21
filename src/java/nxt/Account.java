@@ -9,13 +9,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-class Account {
+public class Account {
 
-    final long id;
+    public final long id;
     private long balance;
     final int height;
 
-    final AtomicReference<byte[]> publicKey = new AtomicReference<>();
+    public final AtomicReference<byte[]> publicKey = new AtomicReference<>();
 
     private final Map<Long, Integer> assetBalances = new HashMap<>();
 
@@ -48,7 +48,7 @@ class Account {
 
     }
 
-    int getEffectiveBalance() {
+    public int getEffectiveBalance() {
 
         Block lastBlock = Nxt.lastBlock.get();
         if (height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
@@ -86,7 +86,7 @@ class Account {
 
     }
 
-    static long getId(byte[] publicKey) {
+    public static long getId(byte[] publicKey) {
 
         byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
         BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
@@ -98,7 +98,7 @@ class Account {
         return assetBalances.get(assetId);
     }
 
-    synchronized Integer getUnconfirmedAssetBalance(Long assetId) {
+    public synchronized Integer getUnconfirmedAssetBalance(Long assetId) {
         return unconfirmedAssetBalances.get(assetId);
     }
 
@@ -137,11 +137,11 @@ class Account {
 
     }
 
-    synchronized long getBalance() {
+    public synchronized long getBalance() {
         return balance;
     }
 
-    long getGuaranteedBalance(int numberOfConfirmations) {
+    public long getGuaranteedBalance(int numberOfConfirmations) {
 
         long guaranteedBalance = getBalance();
         ArrayList<Block> lastBlocks = Blockchain.getLastBlocks(numberOfConfirmations - 1);
@@ -198,7 +198,7 @@ class Account {
 
     }
 
-    synchronized long getUnconfirmedBalance() {
+    public synchronized long getUnconfirmedBalance() {
         return unconfirmedBalance;
     }
 

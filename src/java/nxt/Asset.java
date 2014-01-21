@@ -1,11 +1,11 @@
 package nxt;
 
-class Asset {
+public class Asset {
 
-    final long accountId;
-    final String name;
-    final String description;
-    final int quantity;
+    public final long accountId;
+    public final String name;
+    public final String description;
+    public final int quantity;
 
     Asset(long accountId, String name, String description, int quantity) {
 

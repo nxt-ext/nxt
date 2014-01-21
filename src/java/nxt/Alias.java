@@ -2,11 +2,11 @@ package nxt;
 
 public final class Alias {
 
-    final Account account;
-    final long id;
-    final String alias;
-    volatile String uri;
-    volatile int timestamp;
+    public final Account account;
+    public final long id;
+    public final String alias;
+    public volatile String uri;
+    public volatile int timestamp;
 
     Alias(Account account, long id, String alias, String uri, int timestamp) {
 

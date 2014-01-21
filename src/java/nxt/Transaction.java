@@ -24,29 +24,30 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     static final long serialVersionUID = 0;
 
-    static final byte TYPE_PAYMENT = 0;
-    static final byte TYPE_MESSAGING = 1;
-    static final byte TYPE_COLORED_COINS = 2;
+    public static final byte TYPE_PAYMENT = 0;
+    public static final byte TYPE_MESSAGING = 1;
+    public static final byte TYPE_COLORED_COINS = 2;
 
-    static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
+    public static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
-    static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
-    static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
+    public static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
+    public static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
 
-    static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
-    static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
-    static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
-    static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
-    static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
-    static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+    public static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
+    public static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
+    public static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
+    public static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
+    public static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
+    public static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 
-    static final int ASSET_ISSUANCE_FEE = 1000;
+    public static final int ASSET_ISSUANCE_FEE = 1000;
 
-    final byte type, subtype;
+    public final byte type;
+    public final byte subtype;
     int timestamp;
     final short deadline;
-    final byte[] senderPublicKey;
-    final long recipient;
+    public final byte[] senderPublicKey;
+    public final long recipient;
     final int amount, fee;
     final long referencedTransaction;
     byte[] signature;
@@ -148,7 +149,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
         return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
     }
 
-    byte[] getBytes() {
+    public byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(getSize());
         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -172,7 +173,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    transient volatile long id;
+    public transient volatile long id;
     transient volatile String stringId = null;
     transient volatile long senderAccountId;
 
@@ -182,12 +183,12 @@ public class Transaction implements Comparable<Transaction>, Serializable {
     }
 
 
-    String getStringId() {
+    public String getStringId() {
         calculateIds();
         return stringId;
     }
 
-    long getSenderAccountId() {
+    public long getSenderAccountId() {
         calculateIds();
         return senderAccountId;
     }
@@ -204,7 +205,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
     }
 
 
-    JSONObject getJSONObject() {
+    public JSONObject getJSONObject() {
 
         JSONObject transaction = new JSONObject();
 
@@ -240,7 +241,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static Transaction getTransaction(ByteBuffer buffer) {
+    public static Transaction getTransaction(ByteBuffer buffer) {
 
         byte type = buffer.get();
         byte subtype = buffer.get();
@@ -552,7 +553,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    void sign(String secretPhrase) {
+    public void sign(String secretPhrase) {
 
         if (signature != null) {
             throw new IllegalStateException("Transaction already signed");

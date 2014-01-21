@@ -1,14 +1,14 @@
 package nxt;
 
-class BidOrder implements Comparable<BidOrder> {
+public class BidOrder implements Comparable<BidOrder> {
 
-    final long id;
+    public final long id;
     final long height;
-    final Account account;
-    final long asset;
+    public final Account account;
+    public final long asset;
     // writes protected by blocksAndTransactions lock
-    volatile int quantity;
-    final long price;
+    public volatile int quantity;
+    public final long price;
 
     BidOrder(long id, Account account, long asset, int quantity, long price) {
 
