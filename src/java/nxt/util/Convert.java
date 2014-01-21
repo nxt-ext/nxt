@@ -1,5 +1,7 @@
 package nxt.util;
 
+import nxt.Nxt;
+
 import java.math.BigInteger;
 
 public final class Convert {
@@ -53,4 +55,9 @@ public final class Convert {
 
     }
 
+    public static int getEpochTime() {
+
+        return (int)((System.currentTimeMillis() - Nxt.epochBeginning + 500) / 1000);
+
+    }
 }

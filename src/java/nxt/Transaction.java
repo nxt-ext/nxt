@@ -196,7 +196,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
         if (stringId != null) {
             return;
         }
-        byte[] hash = Crypto.getMessageDigest("SHA-256").digest(getBytes());
+        byte[] hash = Crypto.sha256().digest(getBytes());
         BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
         id = bigInteger.longValue();
         senderAccountId = Account.getId(senderPublicKey);

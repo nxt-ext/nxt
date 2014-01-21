@@ -21,12 +21,16 @@ public final class Crypto {
         }
     }
 
+    public static MessageDigest sha256() {
+        return getMessageDigest("SHA-256");
+    }
+
     public static byte[] getPublicKey(String secretPhrase) {
 
         try {
 
             byte[] publicKey = new byte[32];
-            Curve25519.keygen(publicKey, null, Crypto.getMessageDigest("SHA-256").digest(secretPhrase.getBytes("UTF-8")));
+            Curve25519.keygen(publicKey, null, Crypto.sha256().digest(secretPhrase.getBytes("UTF-8")));
 
             return publicKey;
 
@@ -43,7 +47,7 @@ public final class Crypto {
 
             byte[] P = new byte[32];
             byte[] s = new byte[32];
-            MessageDigest digest = Crypto.getMessageDigest("SHA-256");
+            MessageDigest digest = Crypto.sha256();
             Curve25519.keygen(P, s, digest.digest(secretPhrase.getBytes("UTF-8")));
 
             byte[] m = digest.digest(message);
@@ -84,7 +88,7 @@ public final class Crypto {
             System.arraycopy(signature, 32, h, 0, 32);
             Curve25519.verify(Y, v, h, publicKey);
 
-            MessageDigest digest = Crypto.getMessageDigest("SHA-256");
+            MessageDigest digest = Crypto.sha256();
             byte[] m = digest.digest(message);
             digest.update(m);
             byte[] h2 = digest.digest(Y);

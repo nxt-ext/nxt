@@ -11,6 +11,7 @@ import javax.servlet.AsyncListener;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 class User {
@@ -28,6 +29,24 @@ class User {
 
     }
 
+    static void updateUserUnconfirmedBalance(Account account) {
+
+        JSONObject response = new JSONObject();
+        response.put("response", "setBalance");
+        response.put("balance", account.getUnconfirmedBalance());
+        byte[] accountPublicKey = account.publicKey.get();
+        for (User user : Nxt.users.values()) {
+
+            if (user.secretPhrase != null && Arrays.equals(user.publicKey, accountPublicKey)) {
+
+                user.send(response);
+
+            }
+
+        }
+
+    }
+
     void deinitializeKeyPair() {
 
         secretPhrase = null;
@@ -39,7 +58,7 @@ class User {
 
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.secretPhrase = secretPhrase;
-        byte[] publicKeyHash = Crypto.getMessageDigest("SHA-256").digest(publicKey);
+        byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
         return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
 
     }

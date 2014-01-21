@@ -45,6 +45,113 @@ class Peer implements Comparable<Peer> {
     static final int STATE_CONNECTED = 1;
     static final int STATE_DISCONNECTED = 2;
 
+    static final Runnable peerConnectingThread = new Runnable() {
+
+        @Override
+        public void run() {
+
+            try {
+
+                if (Peer.getNumberOfConnectedPublicPeers() < Nxt.maxNumberOfConnectedPublicPeers) {
+
+                    Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.STATE_NONCONNECTED : Peer.STATE_DISCONNECTED, false);
+                    if (peer != null) {
+
+                        peer.connect();
+
+                    }
+
+                }
+
+            } catch (Exception e) {
+                Logger.logDebugMessage("Error connecting to peer", e);
+            } catch (Throwable t) {
+                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                t.printStackTrace();
+                System.exit(1);
+            }
+
+        }
+
+    };
+
+    static final Runnable peerUnBlacklistingThread = new Runnable() {
+
+        @Override
+        public void run() {
+
+            try {
+
+                long curTime = System.currentTimeMillis();
+
+                for (Peer peer : Nxt.peers.values()) {
+
+                    if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
+
+                        peer.removeBlacklistedStatus();
+
+                    }
+
+                }
+
+            } catch (Exception e) {
+                Logger.logDebugMessage("Error un-blacklisting peer", e);
+            } catch (Throwable t) {
+                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                t.printStackTrace();
+                System.exit(1);
+            }
+
+        }
+
+    };
+
+    static final Runnable getMorePeersThread = new Runnable() {
+
+        private final JSONObject getPeersRequest = new JSONObject();
+        {
+            getPeersRequest.put("requestType", "getPeers");
+        }
+
+        @Override
+        public void run() {
+
+            try {
+
+                Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
+                if (peer != null) {
+                    JSONObject response = peer.send(getPeersRequest);
+                    if (response != null) {
+
+                        JSONArray peers = (JSONArray)response.get("peers");
+                        for (Object peerAddress : peers) {
+
+                            String address = ((String)peerAddress).trim();
+                            if (address.length() > 0) {
+                                //TODO: can a rogue peer fill the peer pool with zombie addresses?
+                                //consider an option to trust only highly-hallmarked peers
+                                Peer.addPeer(address, address);
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            } catch (Exception e) {
+                Logger.logDebugMessage("Error requesting peers from a peer", e);
+            } catch (Throwable t) {
+                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                t.printStackTrace();
+                System.exit(1);
+            }
+
+        }
+
+    };
+
     final int index;
     String platform;
     String announcedAddress;
@@ -110,6 +217,20 @@ class Peer implements Comparable<Peer> {
         }
 
         return peer;
+
+    }
+
+    static void updatePeerWeights(Account account) {
+
+        for (Peer peer : Nxt.peers.values()) {
+
+            if (peer.accountId == account.id && peer.adjustedWeight > 0) {
+
+                peer.updateWeight();
+
+            }
+
+        }
 
     }
 
@@ -285,7 +406,7 @@ class Peer implements Comparable<Peer> {
 
     }
 
-    void connect() {
+    private void connect() {
 
         JSONObject request = new JSONObject();
         request.put("requestType", "getInfo");
@@ -371,7 +492,7 @@ class Peer implements Comparable<Peer> {
 
     }
 
-    void disconnect() {
+    private void disconnect() {
 
         setState(STATE_DISCONNECTED);
 
@@ -430,7 +551,7 @@ class Peer implements Comparable<Peer> {
 
     }
 
-    static int getNumberOfConnectedPublicPeers() {
+    private static int getNumberOfConnectedPublicPeers() {
 
         int numberOfConnectedPeers = 0;
 
@@ -556,7 +677,7 @@ class Peer implements Comparable<Peer> {
             }
 
             if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-                Future<JSONObject> futureResponse = Nxt.sendToPeersService.submit(new Callable<JSONObject>() {
+                Future<JSONObject> futureResponse = ThreadPools.sendToPeers(new Callable<JSONObject>() {
                     @Override
                     public JSONObject call() {
                         return peer.send(jsonStreamAware);
@@ -852,7 +973,7 @@ class Peer implements Comparable<Peer> {
 
     }
 
-    void updateWeight() {
+    private void updateWeight() {
 
         JSONObject response = new JSONObject();
         response.put("response", "processNewData");

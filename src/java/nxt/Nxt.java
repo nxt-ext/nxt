@@ -31,21 +31,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -94,7 +87,7 @@ public final class Nxt extends HttpServlet {
     static /*final*/ int myPort;
     static /*final*/ boolean shareMyAddress;
     private static /*final*/ Set<String> allowedUserHosts, allowedBotHosts;
-    private static /*final*/ int blacklistingPeriod;
+    static /*final*/ int blacklistingPeriod;
 
     static final int LOGGING_MASK_EXCEPTIONS = 1;
     static final int LOGGING_MASK_NON200_RESPONSES = 2;
@@ -105,10 +98,10 @@ public final class Nxt extends HttpServlet {
     static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
+    static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
 
     static /*final*/ Set<String> wellKnownPeers;
-    private static /*final*/ int maxNumberOfConnectedPublicPeers;
+    static /*final*/ int maxNumberOfConnectedPublicPeers;
     static /*final*/ int connectTimeout;
     static int readTimeout;
     static /*final*/ boolean enableHallmarkProtection;
@@ -121,7 +114,7 @@ public final class Nxt extends HttpServlet {
     static final AtomicInteger blockCounter = new AtomicInteger();
     static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
     static final AtomicReference<Block> lastBlock = new AtomicReference<>();
-    private static volatile Peer lastBlockchainFeeder;
+    static volatile Peer lastBlockchainFeeder;
 
     static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
 
@@ -132,17 +125,6 @@ public final class Nxt extends HttpServlet {
     static final ConcurrentMap<String, Long> assetNameToIdMappings = new ConcurrentHashMap<>();
 
     static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
-
-    private static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
-
-    static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
-
-
-    static int getEpochTime(long time) {
-
-        return (int)((time - epochBeginning + 500) / 1000);
-
-    }
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -658,7 +640,7 @@ public final class Nxt extends HttpServlet {
 
                 }
                 Arrays.sort(block.transactions);
-                MessageDigest digest = Crypto.getMessageDigest("SHA-256");
+                MessageDigest digest = Crypto.sha256();
                 for (i = 0; i < block.transactions.length; i++) {
                     Transaction transaction = transactions.get(block.transactions[i]);
                     digest.update(transaction.getBytes());
@@ -678,618 +660,7 @@ public final class Nxt extends HttpServlet {
             Blockchain.scan();
             Logger.logMessage("...Done");
 
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        if (Peer.getNumberOfConnectedPublicPeers() < Nxt.maxNumberOfConnectedPublicPeers) {
-
-                            Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.STATE_NONCONNECTED : Peer.STATE_DISCONNECTED, false);
-                            if (peer != null) {
-
-                                peer.connect();
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error connecting to peer", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 5, TimeUnit.SECONDS);
-
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        long curTime = System.currentTimeMillis();
-
-                        for (Peer peer : Nxt.peers.values()) {
-
-                            if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
-
-                                peer.removeBlacklistedStatus();
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error un-blacklisting peer", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 1, TimeUnit.SECONDS);
-
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                private final JSONObject getPeersRequest = new JSONObject();
-                {
-                    getPeersRequest.put("requestType", "getPeers");
-                }
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
-                        if (peer != null) {
-                            JSONObject response = peer.send(getPeersRequest);
-                            if (response != null) {
-
-                                JSONArray peers = (JSONArray)response.get("peers");
-                                for (Object peerAddress : peers) {
-
-                                    String address = ((String)peerAddress).trim();
-                                    if (address.length() > 0) {
-                                        //TODO: can a rogue peer fill the peer pool with zombie addresses?
-                                        //consider an option to trust only highly-hallmarked peers
-                                        Peer.addPeer(address, address);
-
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error requesting peers from a peer", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 5, TimeUnit.SECONDS);
-
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                private final JSONObject getUnconfirmedTransactionsRequest = new JSONObject();
-                {
-                    getUnconfirmedTransactionsRequest.put("requestType", "getUnconfirmedTransactions");
-                }
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
-                        if (peer != null) {
-
-                            JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
-                            if (response != null) {
-
-                                Blockchain.processTransactions(response, "unconfirmedTransactions");
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 5, TimeUnit.SECONDS);
-
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        int curTime = getEpochTime(System.currentTimeMillis());
-                        JSONArray removedUnconfirmedTransactions = new JSONArray();
-
-                        Iterator<Transaction> iterator = unconfirmedTransactions.values().iterator();
-                        while (iterator.hasNext()) {
-
-                            Transaction transaction = iterator.next();
-                            if (transaction.timestamp + transaction.deadline * 60 < curTime || !transaction.validateAttachment()) {
-
-                                iterator.remove();
-
-                                Account account = accounts.get(transaction.getSenderAccountId());
-                                account.addToUnconfirmedBalance((transaction.amount + transaction.fee) * 100L);
-
-                                JSONObject removedUnconfirmedTransaction = new JSONObject();
-                                removedUnconfirmedTransaction.put("index", transaction.index);
-                                removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
-
-                            }
-
-                        }
-
-                        if (removedUnconfirmedTransactions.size() > 0) {
-
-                            JSONObject response = new JSONObject();
-                            response.put("response", "processNewData");
-
-                            response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
-
-                            for (User user : users.values()) {
-
-                                user.send(response);
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error removing unconfirmed transactions", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 1, TimeUnit.SECONDS);
-
-            //TODO: figure out what this thread is actually doing
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                private final JSONObject getCumulativeDifficultyRequest = new JSONObject();
-                private final JSONObject getMilestoneBlockIdsRequest = new JSONObject();
-                {
-                    getCumulativeDifficultyRequest.put("requestType", "getCumulativeDifficulty");
-                    getMilestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
-                }
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
-                        if (peer != null) {
-
-                            lastBlockchainFeeder = peer;
-
-                            JSONObject response = peer.send(getCumulativeDifficultyRequest);
-                            if (response != null) {
-
-                                BigInteger curCumulativeDifficulty = lastBlock.get().cumulativeDifficulty;
-                                String peerCumulativeDifficulty = (String)response.get("cumulativeDifficulty");
-                                if (peerCumulativeDifficulty == null) {
-                                    return;
-                                }
-                                BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
-                                if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) > 0) {
-
-                                    response = peer.send(getMilestoneBlockIdsRequest);
-                                    if (response != null) {
-
-                                        long commonBlockId = GENESIS_BLOCK_ID;
-
-                                        JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
-                                        for (Object milestoneBlockId : milestoneBlockIds) {
-
-                                            long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
-                                            Block block = blocks.get(blockId);
-                                            if (block != null) {
-
-                                                commonBlockId = blockId;
-
-                                                break;
-
-                                            }
-
-                                        }
-
-                                        int i, numberOfBlocks;
-                                        do {
-
-                                            JSONObject request = new JSONObject();
-                                            request.put("requestType", "getNextBlockIds");
-                                            request.put("blockId", Convert.convert(commonBlockId));
-                                            response = peer.send(request);
-                                            if (response == null) {
-
-                                                return;
-
-                                            } else {
-
-                                                JSONArray nextBlockIds = (JSONArray)response.get("nextBlockIds");
-                                                numberOfBlocks = nextBlockIds.size();
-                                                if (numberOfBlocks == 0) {
-
-                                                    return;
-
-                                                } else {
-
-                                                    long blockId;
-                                                    for (i = 0; i < numberOfBlocks; i++) {
-
-                                                        blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
-                                                        if (blocks.get(blockId) == null) {
-
-                                                            break;
-
-                                                        }
-
-                                                        commonBlockId = blockId;
-
-                                                    }
-
-                                                }
-
-                                            }
-
-                                        } while (i == numberOfBlocks);
-
-                                        if (lastBlock.get().height - blocks.get(commonBlockId).height < 720) {
-
-                                            long curBlockId = commonBlockId;
-                                            LinkedList<Block> futureBlocks = new LinkedList<>();
-                                            HashMap<Long, Transaction> futureTransactions = new HashMap<>();
-
-                                            do {
-
-                                                JSONObject request = new JSONObject();
-                                                request.put("requestType", "getNextBlocks");
-                                                request.put("blockId", Convert.convert(curBlockId));
-                                                response = peer.send(request);
-                                                if (response == null) {
-
-                                                    break;
-
-                                                } else {
-
-                                                    JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
-                                                    numberOfBlocks = nextBlocks.size();
-                                                    if (numberOfBlocks == 0) {
-
-                                                        break;
-
-                                                    } else {
-
-                                                        synchronized (Blockchain.class) {
-                                                            for (i = 0; i < numberOfBlocks; i++) {
-
-                                                                JSONObject blockData = (JSONObject)nextBlocks.get(i);
-                                                                Block block = Block.getBlock(blockData);
-                                                                if (block == null) {
-
-                                                                    // peer tried to send us invalid transactions length or payload parameters
-                                                                    peer.blacklist();
-                                                                    return;
-
-                                                                }
-
-                                                                curBlockId = block.getId();
-
-                                                                //synchronized (blocksAndTransactionsLock) {
-
-                                                                boolean alreadyPushed = false;
-                                                                if (block.previousBlock == lastBlock.get().getId()) {
-
-                                                                    ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
-                                                                    buffer.order(ByteOrder.LITTLE_ENDIAN);
-                                                                    buffer.put(block.getBytes());
-
-                                                                    JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-                                                                    for (Object transaction : transactionsData) {
-
-                                                                        buffer.put(Transaction.getTransaction((JSONObject)transaction).getBytes());
-
-                                                                    }
-
-                                                                    if (Blockchain.pushBlock(buffer, false)) {
-
-                                                                        alreadyPushed = true;
-
-                                                                    } else {
-
-                                                                        peer.blacklist();
-
-                                                                        return;
-
-                                                                    }
-
-                                                                }
-                                                                if (!alreadyPushed && blocks.get(block.getId()) == null && block.transactions.length <= MAX_NUMBER_OF_TRANSACTIONS) {
-
-                                                                    futureBlocks.add(block);
-
-                                                                    JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-                                                                    for (int j = 0; j < block.transactions.length; j++) {
-
-                                                                        Transaction transaction = Transaction.getTransaction((JSONObject)transactionsData.get(j));
-                                                                        block.transactions[j] = transaction.getId();
-                                                                        block.blockTransactions[j] = transaction;
-                                                                        futureTransactions.put(block.transactions[j], transaction);
-
-                                                                    }
-
-                                                                }
-
-                                                                //}
-
-                                                            }
-
-                                                        } //synchronized
-                                                    }
-
-                                                }
-
-                                            } while (true);
-
-                                            if (!futureBlocks.isEmpty() && lastBlock.get().height - blocks.get(commonBlockId).height < 720) {
-
-                                                synchronized (Blockchain.class) {
-
-                                                    Block.saveBlocks("blocks.nxt.bak", true);
-                                                    Transaction.saveTransactions("transactions.nxt.bak");
-
-                                                    curCumulativeDifficulty = lastBlock.get().cumulativeDifficulty;
-
-                                                    while (lastBlock.get().getId() != commonBlockId && Blockchain.popLastBlock()) {}
-
-                                                    if (lastBlock.get().getId() == commonBlockId) {
-
-                                                        for (Block block : futureBlocks) {
-
-                                                            if (block.previousBlock == lastBlock.get().getId()) {
-
-                                                                ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + block.payloadLength);
-                                                                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                                                                buffer.put(block.getBytes());
-
-                                                                for (Transaction transaction : block.blockTransactions) {
-
-                                                                    buffer.put(transaction.getBytes());
-
-                                                                }
-
-                                                                if (!Blockchain.pushBlock(buffer, false)) {
-
-                                                                    break;
-
-                                                                }
-
-                                                            }
-
-                                                        }
-
-                                                    }
-
-                                                    if (lastBlock.get().cumulativeDifficulty.compareTo(curCumulativeDifficulty) < 0) {
-
-                                                        Block.loadBlocks("blocks.nxt.bak");
-                                                        Transaction.loadTransactions("transactions.nxt.bak");
-
-                                                        peer.blacklist();
-
-                                                        Nxt.accounts.clear();
-                                                        Nxt.aliases.clear();
-                                                        Nxt.aliasIdToAliasMappings.clear();
-                                                        Nxt.unconfirmedTransactions.clear();
-                                                        Nxt.doubleSpendingTransactions.clear();
-                                                        //TODO: clean this up
-                                                        Logger.logMessage("Re-scanning blockchain...");
-                                                        Blockchain.scan();
-                                                        Logger.logMessage("...Done");
-
-
-                                                    }
-
-                                                }
-
-                                            }
-
-                                            synchronized (Blockchain.class) {
-                                                Block.saveBlocks("blocks.nxt", false);
-                                                Transaction.saveTransactions("transactions.nxt");
-                                            }
-
-                                        }
-
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error in milestone blocks processing thread", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 1, TimeUnit.SECONDS);
-
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                private final ConcurrentMap<Account, Block> lastBlocks = new ConcurrentHashMap<>();
-                private final ConcurrentMap<Account, BigInteger> hits = new ConcurrentHashMap<>();
-
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        HashMap<Account, User> unlockedAccounts = new HashMap<>();
-                        for (User user : users.values()) {
-
-                            if (user.secretPhrase != null) {
-
-                                Account account = accounts.get(Account.getId(user.publicKey));
-                                if (account != null && account.getEffectiveBalance() > 0) {
-
-                                    unlockedAccounts.put(account, user);
-
-                                }
-
-                            }
-
-                        }
-
-                        for (Map.Entry<Account, User> unlockedAccountEntry : unlockedAccounts.entrySet()) {
-
-                            Account account = unlockedAccountEntry.getKey();
-                            User user = unlockedAccountEntry.getValue();
-                            Block lastBlock = Nxt.lastBlock.get();
-                            if (lastBlocks.get(account) != lastBlock) {
-
-                                long effectiveBalance = account.getEffectiveBalance();
-                                if (effectiveBalance <= 0) {
-                                    continue;
-                                }
-                                MessageDigest digest = Crypto.getMessageDigest("SHA-256");
-                                byte[] generationSignatureHash;
-                                if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
-
-                                    byte[] generationSignature = Crypto.sign(lastBlock.generationSignature, user.secretPhrase);
-                                    generationSignatureHash = digest.digest(generationSignature);
-
-                                } else {
-
-                                    digest.update(lastBlock.generationSignature);
-                                    generationSignatureHash = digest.digest(user.publicKey);
-
-                                }
-                                BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-
-                                lastBlocks.put(account, lastBlock);
-                                hits.put(account, hit);
-
-                                JSONObject response = new JSONObject();
-                                response.put("response", "setBlockGenerationDeadline");
-                                response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
-
-                                user.send(response);
-
-                            }
-
-                            int elapsedTime = getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp;
-                            if (elapsedTime > 0) {
-
-                                BigInteger target = BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
-                                if (hits.get(account).compareTo(target) < 0) {
-
-                                    account.generateBlock(user.secretPhrase);
-
-                                }
-
-                            }
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error in block generation thread", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 1, TimeUnit.SECONDS);
-
-            scheduledThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-                @Override
-                public void run() {
-
-                    try {
-
-                        JSONArray transactionsData = new JSONArray();
-
-                        for (Transaction transaction : nonBroadcastedTransactions.values()) {
-
-                            if (unconfirmedTransactions.get(transaction.id) == null && transactions.get(transaction.id) == null) {
-
-                                transactionsData.add(transaction.getJSONObject());
-
-                            } else {
-
-                                nonBroadcastedTransactions.remove(transaction.id);
-
-                            }
-
-                        }
-
-                        if (transactionsData.size() > 0) {
-
-                            JSONObject peerRequest = new JSONObject();
-                            peerRequest.put("requestType", "processTransactions");
-                            peerRequest.put("transactions", transactionsData);
-
-                            Peer.sendToSomePeers(peerRequest);
-
-                        }
-
-                    } catch (Exception e) {
-                        Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
-                    } catch (Throwable t) {
-                        Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                        t.printStackTrace();
-                        System.exit(1);
-                    }
-
-                }
-
-            }, 0, 60, TimeUnit.SECONDS);
+            ThreadPools.start();
 
             Logger.logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
@@ -1454,7 +825,7 @@ public final class Nxt extends HttpServlet {
 
                                                                 } else {
 
-                                                                    int timestamp = getEpochTime(System.currentTimeMillis());
+                                                                    int timestamp = Convert.getEpochTime();
 
                                                                     Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                                     transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
@@ -1744,7 +1115,7 @@ public final class Nxt extends HttpServlet {
 
                                 } else {
 
-                                    byte[] publicKeyHash = Crypto.getMessageDigest("SHA-256").digest(Crypto.getPublicKey(secretPhrase));
+                                    byte[] publicKeyHash = Crypto.sha256().digest(Crypto.getPublicKey(secretPhrase));
                                     BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
                                     response.put("accountId", bigInteger.toString());
 
@@ -2352,7 +1723,7 @@ public final class Nxt extends HttpServlet {
                             {
 
                                 response.put("version", VERSION);
-                                response.put("time", getEpochTime(System.currentTimeMillis()));
+                                response.put("time", Convert.getEpochTime());
                                 response.put("lastBlock", lastBlock.get().getStringId());
                                 response.put("cumulativeDifficulty", lastBlock.get().cumulativeDifficulty.toString());
 
@@ -2389,7 +1760,7 @@ public final class Nxt extends HttpServlet {
                             case "getTime":
                             {
 
-                                response.put("time", getEpochTime(System.currentTimeMillis()));
+                                response.put("time", Convert.getEpochTime());
 
                             }
                             break;
@@ -2616,7 +1987,7 @@ public final class Nxt extends HttpServlet {
 
                                                                     } else {
 
-                                                                        int timestamp = getEpochTime(System.currentTimeMillis());
+                                                                        int timestamp = Convert.getEpochTime();
 
                                                                         Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE, timestamp, (short)1440, publicKey, CREATOR_ID, 0, fee, 0);
                                                                         transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
@@ -2747,7 +2118,7 @@ public final class Nxt extends HttpServlet {
 
                                                         } else {
 
-                                                            int timestamp = getEpochTime(System.currentTimeMillis());
+                                                            int timestamp = Convert.getEpochTime();
 
                                                             Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                             transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
@@ -2877,7 +2248,7 @@ public final class Nxt extends HttpServlet {
 
                                                         } else {
 
-                                                            int timestamp = getEpochTime(System.currentTimeMillis());
+                                                            int timestamp = Convert.getEpochTime();
 
                                                             Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                             transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
@@ -3089,7 +2460,7 @@ public final class Nxt extends HttpServlet {
 
                                                                 } else {
 
-                                                                    int timestamp = getEpochTime(System.currentTimeMillis());
+                                                                    int timestamp = Convert.getEpochTime();
 
                                                                     Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
                                                                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
@@ -3262,7 +2633,7 @@ public final class Nxt extends HttpServlet {
 
                                                                 } else {
 
-                                                                    int timestamp = getEpochTime(System.currentTimeMillis());
+                                                                    int timestamp = Convert.getEpochTime();
 
                                                                     Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                                     transaction.attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
@@ -3427,7 +2798,7 @@ public final class Nxt extends HttpServlet {
 
                                                             } else {
 
-                                                                int timestamp = getEpochTime(System.currentTimeMillis());
+                                                                int timestamp = Convert.getEpochTime();
 
                                                                 Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction);
                                                                 transaction.attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
@@ -3942,7 +3313,7 @@ public final class Nxt extends HttpServlet {
 
                                                         } else {
 
-                                                            int timestamp = getEpochTime(System.currentTimeMillis());
+                                                            int timestamp = Convert.getEpochTime();
 
                                                             Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
                                                             transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
@@ -4094,7 +3465,7 @@ public final class Nxt extends HttpServlet {
 
                                                         } else {
 
-                                                            Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, publicKey, recipient, amount, fee, referencedTransaction);
+                                                            Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, Convert.getEpochTime(), deadline, publicKey, recipient, amount, fee, referencedTransaction);
                                                             transaction.sign(secretPhrase);
 
                                                             JSONObject peerRequest = new JSONObject();
@@ -4224,7 +3595,7 @@ public final class Nxt extends HttpServlet {
                     byte[] data = new byte[website.length + 32 + 4];
                     System.arraycopy(website, 0, data, 0, website.length);
                     System.arraycopy(user.publicKey, 0, data, website.length, 32);
-                    int timestamp = getEpochTime(System.currentTimeMillis());
+                    int timestamp = Convert.getEpochTime();
                     data[website.length + 32] = (byte)timestamp;
                     data[website.length + 32 + 1] = (byte)(timestamp >> 8);
                     data[website.length + 32 + 2] = (byte)(timestamp >> 16);
@@ -4664,7 +4035,7 @@ public final class Nxt extends HttpServlet {
 
                             } else {
 
-                                final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, getEpochTime(System.currentTimeMillis()), deadline, user.publicKey, recipient, amount, fee, 0);
+                                final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, Convert.getEpochTime(), deadline, user.publicKey, recipient, amount, fee, 0);
                                 transaction.sign(user.secretPhrase);
 
                                 JSONObject peerRequest = new JSONObject();
@@ -4740,7 +4111,7 @@ public final class Nxt extends HttpServlet {
                             response2.put("response", "setBlockGenerationDeadline");
 
                             Block lastBlock = Nxt.lastBlock.get();
-                            MessageDigest digest = Crypto.getMessageDigest("SHA-256");
+                            MessageDigest digest = Crypto.sha256();
                             byte[] generationSignatureHash;
                             if (lastBlock.height < TRANSPARENT_FORGING_BLOCK) {
 
@@ -4754,7 +4125,7 @@ public final class Nxt extends HttpServlet {
 
                             }
                             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-                            response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (getEpochTime(System.currentTimeMillis()) - lastBlock.timestamp));
+                            response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.timestamp));
 
                             user.pendingResponses.offer(response2);
 
@@ -5310,8 +4681,7 @@ public final class Nxt extends HttpServlet {
     @Override
     public void destroy() {
 
-        shutdownExecutor(scheduledThreadPool);
-        shutdownExecutor(sendToPeersService);
+        ThreadPools.shutdown();
 
         try {
             Block.saveBlocks("blocks.nxt", true);
@@ -5337,19 +4707,6 @@ public final class Nxt extends HttpServlet {
 
         Logger.logMessage("NRS " + Nxt.VERSION + " stopped.");
 
-    }
-
-    private static void shutdownExecutor(ExecutorService executor) {
-        executor.shutdown();
-        try {
-            executor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        if (! executor.isTerminated()) {
-            Logger.logMessage("some threads didn't terminate, forcing shutdown");
-            executor.shutdownNow();
-        }
     }
 
 }
