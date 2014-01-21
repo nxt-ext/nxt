@@ -181,7 +181,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                             {
 
-                                Transaction.MessagingAliasAssignmentAttachment attachment = (Transaction.MessagingAliasAssignmentAttachment)transaction.attachment;
+                                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
 
                                 String normalizedAlias = attachment.alias.toLowerCase();
 
@@ -216,7 +216,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
                             {
 
-                                Transaction.ColoredCoinsAssetIssuanceAttachment attachment = (Transaction.ColoredCoinsAssetIssuanceAttachment)transaction.attachment;
+                                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
 
                                 long assetId = transaction.getId();
                                 Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
@@ -232,7 +232,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
                             {
 
-                                Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
+                                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
 
                                 senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
                                 recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, attachment.quantity);
@@ -243,7 +243,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
                             {
 
-                                Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
+                                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
 
                                 AskOrder order = new AskOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
                                 senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
@@ -257,7 +257,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
                             {
 
-                                Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
+                                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
 
                                 BidOrder order = new BidOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
 
@@ -274,7 +274,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
                             {
 
-                                Transaction.ColoredCoinsAskOrderCancellationAttachment attachment = (Transaction.ColoredCoinsAskOrderCancellationAttachment)transaction.attachment;
+                                Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
 
                                 AskOrder order;
                                 order = Nxt.askOrders.remove(attachment.order);
@@ -287,7 +287,7 @@ public class Block implements Serializable {
                             case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                             {
 
-                                Transaction.ColoredCoinsBidOrderCancellationAttachment attachment = (Transaction.ColoredCoinsBidOrderCancellationAttachment)transaction.attachment;
+                                Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
 
                                 BidOrder order;
                                 order = Nxt.bidOrders.remove(attachment.order);
@@ -747,7 +747,7 @@ public class Block implements Serializable {
                                 case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                                 {
 
-                                    if (!blockAliases.add(((Transaction.MessagingAliasAssignmentAttachment)transaction.attachment).alias.toLowerCase())) {
+                                    if (!blockAliases.add(((Attachment.MessagingAliasAssignment)transaction.attachment).alias.toLowerCase())) {
 
                                         return false;
 
@@ -814,7 +814,7 @@ public class Block implements Serializable {
 
                         if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
 
-                            Transaction.ColoredCoinsAssetTransferAttachment attachment = (Transaction.ColoredCoinsAssetTransferAttachment)transaction.attachment;
+                            Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
                             HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
                             if (accountAccumulatedAssetQuantities == null) {
 
@@ -832,7 +832,7 @@ public class Block implements Serializable {
 
                         } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
 
-                            Transaction.ColoredCoinsAskOrderPlacementAttachment attachment = (Transaction.ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
+                            Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
                             HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
                             if (accountAccumulatedAssetQuantities == null) {
 
@@ -850,7 +850,7 @@ public class Block implements Serializable {
 
                         } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
 
-                            Transaction.ColoredCoinsBidOrderPlacementAttachment attachment = (Transaction.ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
+                            Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
                             accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
 
                         } else if (transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {

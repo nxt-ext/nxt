@@ -1521,7 +1521,7 @@ public final class Nxt extends HttpServlet {
                                                                     int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                                     Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
-                                                                    transaction.attachment = new Transaction.MessagingAliasAssignmentAttachment(alias, uri);
+                                                                    transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
                                                                     transaction.sign(secretPhrase);
 
                                                                     JSONObject peerRequest = new JSONObject();
@@ -2683,7 +2683,7 @@ public final class Nxt extends HttpServlet {
                                                                         int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                                         Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE, timestamp, (short)1440, publicKey, CREATOR_ID, 0, fee, 0, new byte[64]);
-                                                                        transaction.attachment = new Transaction.ColoredCoinsAssetIssuanceAttachment(name, description, quantity);
+                                                                        transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
                                                                         transaction.sign(secretPhrase);
 
                                                                         JSONObject peerRequest = new JSONObject();
@@ -2814,7 +2814,7 @@ public final class Nxt extends HttpServlet {
                                                             int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                             Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
-                                                            transaction.attachment = new Transaction.ColoredCoinsAskOrderCancellationAttachment(order);
+                                                            transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
                                                             transaction.sign(secretPhrase);
 
                                                             JSONObject peerRequest = new JSONObject();
@@ -2944,7 +2944,7 @@ public final class Nxt extends HttpServlet {
                                                             int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                             Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
-                                                            transaction.attachment = new Transaction.ColoredCoinsBidOrderCancellationAttachment(order);
+                                                            transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
                                                             transaction.sign(secretPhrase);
 
                                                             JSONObject peerRequest = new JSONObject();
@@ -3156,7 +3156,7 @@ public final class Nxt extends HttpServlet {
                                                                     int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                                     Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction, new byte[64]);
-                                                                    transaction.attachment = new Transaction.ColoredCoinsAssetTransferAttachment(asset, quantity);
+                                                                    transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
                                                                     transaction.sign(secretPhrase);
 
                                                                     JSONObject peerRequest = new JSONObject();
@@ -3329,7 +3329,7 @@ public final class Nxt extends HttpServlet {
                                                                     int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                                     Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
-                                                                    transaction.attachment = new Transaction.ColoredCoinsAskOrderPlacementAttachment(asset, quantity, price);
+                                                                    transaction.attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
                                                                     transaction.sign(secretPhrase);
 
                                                                     JSONObject peerRequest = new JSONObject();
@@ -3494,7 +3494,7 @@ public final class Nxt extends HttpServlet {
                                                                 int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                                 Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT, timestamp, deadline, publicKey, CREATOR_ID, 0, fee, referencedTransaction, new byte[64]);
-                                                                transaction.attachment = new Transaction.ColoredCoinsBidOrderPlacementAttachment(asset, quantity, price);
+                                                                transaction.attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
                                                                 transaction.sign(secretPhrase);
 
                                                                 JSONObject peerRequest = new JSONObject();
@@ -4009,7 +4009,7 @@ public final class Nxt extends HttpServlet {
                                                             int timestamp = getEpochTime(System.currentTimeMillis());
 
                                                             Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction, new byte[64]);
-                                                            transaction.attachment = new Transaction.MessagingArbitraryMessageAttachment(message);
+                                                            transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
                                                             transaction.sign(secretPhrase);
 
                                                             JSONObject peerRequest = new JSONObject();

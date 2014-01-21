@@ -103,7 +103,7 @@ class Account {
                                     case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                                     {
 
-                                        if (!newAliases.add(((Transaction.MessagingAliasAssignmentAttachment)transaction.attachment).alias.toLowerCase())) {
+                                        if (!newAliases.add(((Attachment.MessagingAliasAssignment)transaction.attachment).alias.toLowerCase())) {
 
                                             continue;
 

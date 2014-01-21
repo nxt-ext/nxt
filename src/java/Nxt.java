@@ -1,4 +1,3 @@
-
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -18,7 +17,7 @@ final class Nxt {
         int amount, fee;
         long referencedTransaction;
         byte[] signature;
-        nxt.Transaction.Attachment attachment;
+        nxt.Attachment attachment;
 
         int index;
         long block;
@@ -46,7 +45,7 @@ final class Nxt {
             byte[] message;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.MessagingArbitraryMessageAttachment(message);
+                return new nxt.Attachment.MessagingArbitraryMessage(message);
             }
 
         }
@@ -59,7 +58,7 @@ final class Nxt {
             String uri;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.MessagingAliasAssignmentAttachment(alias, uri);
+                return new nxt.Attachment.MessagingAliasAssignment(alias, uri);
             }
         }
 
@@ -72,7 +71,7 @@ final class Nxt {
             int quantity;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.ColoredCoinsAssetIssuanceAttachment(name, description, quantity);
+                return new nxt.Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
             }
 
 
@@ -86,7 +85,7 @@ final class Nxt {
             int quantity;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.ColoredCoinsAssetTransferAttachment(asset, quantity);
+                return new nxt.Attachment.ColoredCoinsAssetTransfer(asset, quantity);
             }
 
 
@@ -101,7 +100,7 @@ final class Nxt {
             long price;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.ColoredCoinsAskOrderPlacementAttachment(asset, quantity, price);
+                return new nxt.Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
             }
 
 
@@ -116,7 +115,7 @@ final class Nxt {
             long price;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.ColoredCoinsBidOrderPlacementAttachment(asset, quantity, price);
+                return new nxt.Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
             }
 
 
@@ -129,7 +128,7 @@ final class Nxt {
             long order;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.ColoredCoinsAskOrderCancellationAttachment(order);
+                return new nxt.Attachment.ColoredCoinsAskOrderCancellation(order);
             }
 
 
@@ -142,7 +141,7 @@ final class Nxt {
             long order;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Transaction.ColoredCoinsBidOrderCancellationAttachment(order);
+                return new nxt.Attachment.ColoredCoinsBidOrderCancellation(order);
             }
 
 

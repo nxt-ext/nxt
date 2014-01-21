@@ -270,7 +270,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                             byte[] message = new byte[messageLength];
                             buffer.get(message);
 
-                            transaction.attachment = new MessagingArbitraryMessageAttachment(message);
+                            transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
 
                         }
 
@@ -289,7 +289,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         try {
 
-                            transaction.attachment = new MessagingAliasAssignmentAttachment(new String(alias, "UTF-8").intern(), new String(uri, "UTF-8").intern());
+                            transaction.attachment = new Attachment.MessagingAliasAssignment(new String(alias, "UTF-8").intern(), new String(uri, "UTF-8").intern());
 
                         } catch (RuntimeException|UnsupportedEncodingException e) {
                             Logger.logDebugMessage("Error parsing alias assignment", e);
@@ -321,7 +321,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         try {
 
-                            transaction.attachment = new ColoredCoinsAssetIssuanceAttachment(new String(name, "UTF-8").intern(), new String(description, "UTF-8").intern(), quantity);
+                            transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(new String(name, "UTF-8").intern(), new String(description, "UTF-8").intern(), quantity);
 
                         } catch (RuntimeException|UnsupportedEncodingException e) {
                             Logger.logDebugMessage("Error in asset issuance", e);
@@ -336,7 +336,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         long asset = buffer.getLong();
                         int quantity = buffer.getInt();
 
-                        transaction.attachment = new ColoredCoinsAssetTransferAttachment(asset, quantity);
+                        transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
 
                     }
                     break;
@@ -348,7 +348,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         int quantity = buffer.getInt();
                         long price = buffer.getLong();
 
-                        transaction.attachment = new ColoredCoinsAskOrderPlacementAttachment(asset, quantity, price);
+                        transaction.attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
 
                     }
                     break;
@@ -360,7 +360,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         int quantity = buffer.getInt();
                         long price = buffer.getLong();
 
-                        transaction.attachment = new ColoredCoinsBidOrderPlacementAttachment(asset, quantity, price);
+                        transaction.attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
 
                     }
                     break;
@@ -370,7 +370,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         long order = buffer.getLong();
 
-                        transaction.attachment = new ColoredCoinsAskOrderCancellationAttachment(order);
+                        transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
 
                     }
                     break;
@@ -380,7 +380,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         long order = buffer.getLong();
 
-                        transaction.attachment = new ColoredCoinsBidOrderCancellationAttachment(order);
+                        transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
 
                     }
                     break;
@@ -423,7 +423,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                     {
 
                         String message = (String)attachmentData.get("message");
-                        transaction.attachment = new MessagingArbitraryMessageAttachment(Convert.convert(message));
+                        transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.convert(message));
 
                     }
                     break;
@@ -433,7 +433,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         String alias = (String)attachmentData.get("alias");
                         String uri = (String)attachmentData.get("uri");
-                        transaction.attachment = new MessagingAliasAssignmentAttachment(alias.trim(), uri.trim());
+                        transaction.attachment = new Attachment.MessagingAliasAssignment(alias.trim(), uri.trim());
 
                     }
                     break;
@@ -454,7 +454,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         String name = (String)attachmentData.get("name");
                         String description = (String)attachmentData.get("description");
                         int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                        transaction.attachment = new ColoredCoinsAssetIssuanceAttachment(name.trim(), description.trim(), quantity);
+                        transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name.trim(), description.trim(), quantity);
 
                     }
                     break;
@@ -464,7 +464,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                         int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                        transaction.attachment = new ColoredCoinsAssetTransferAttachment(asset, quantity);
+                        transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
 
                     }
                     break;
@@ -475,7 +475,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                         int quantity = ((Long)attachmentData.get("quantity")).intValue();
                         long price = (Long)attachmentData.get("price");
-                        transaction.attachment = new ColoredCoinsAskOrderPlacementAttachment(asset, quantity, price);
+                        transaction.attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
 
                     }
                     break;
@@ -486,7 +486,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                         long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                         int quantity = ((Long)attachmentData.get("quantity")).intValue();
                         long price = (Long)attachmentData.get("price");
-                        transaction.attachment = new ColoredCoinsBidOrderPlacementAttachment(asset, quantity, price);
+                        transaction.attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
 
                     }
                     break;
@@ -494,7 +494,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                     case SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
                     {
 
-                        transaction.attachment = new ColoredCoinsAskOrderCancellationAttachment(Convert.parseUnsignedLong((String) attachmentData.get("order")));
+                        transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
 
                     }
                     break;
@@ -502,7 +502,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                     case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                     {
 
-                        transaction.attachment = new ColoredCoinsBidOrderCancellationAttachment(Convert.parseUnsignedLong((String) attachmentData.get("order")));
+                        transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
 
                     }
                     break;
@@ -589,7 +589,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                                     if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
 
-                                        ColoredCoinsAssetTransferAttachment attachment = (ColoredCoinsAssetTransferAttachment)transaction.attachment;
+                                        Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
                                         Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
                                         if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
 
@@ -605,7 +605,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                                     } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
 
-                                        ColoredCoinsAskOrderPlacementAttachment attachment = (ColoredCoinsAskOrderPlacementAttachment)transaction.attachment;
+                                        Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
                                         Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
                                         if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
 
@@ -621,7 +621,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                                     } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
 
-                                        ColoredCoinsBidOrderPlacementAttachment attachment = (ColoredCoinsBidOrderPlacementAttachment)transaction.attachment;
+                                        Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
                                         if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
 
                                             doubleSpendingTransaction = true;
@@ -802,7 +802,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         try {
 
-                            MessagingArbitraryMessageAttachment attachment = (MessagingArbitraryMessageAttachment)this.attachment;
+                            Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)this.attachment;
                             return amount == 0 && attachment.message.length <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH;
 
                         } catch (RuntimeException e) {
@@ -825,7 +825,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         try {
 
-                            MessagingAliasAssignmentAttachment attachment = (MessagingAliasAssignmentAttachment)this.attachment;
+                            Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)this.attachment;
                             if (recipient != Nxt.CREATOR_ID || amount != 0 || attachment.alias.length() == 0 || attachment.alias.length() > 100 || attachment.uri.length() > 1000) {
 
                                 return false;
@@ -881,7 +881,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                         try {
 
-                            ColoredCoinsAssetIssuanceAttachment attachment = (ColoredCoinsAssetIssuanceAttachment)this.attachment;
+                            Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)this.attachment;
                             if (recipient != Nxt.CREATOR_ID || amount != 0 || fee < ASSET_ISSUANCE_FEE || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
 
                                 return false;
@@ -898,13 +898,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                                     }
 
                                 }
-                                if (Nxt.assetNameToIdMappings.get(normalizedName) != null) {
-
-                                    return false;
-
-                                }
-
-                                return true;
+                                return Nxt.assetNameToIdMappings.get(normalizedName) == null;
 
                             }
 
@@ -920,78 +914,38 @@ public class Transaction implements Comparable<Transaction>, Serializable {
                 case SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
                     {
 
-                        ColoredCoinsAssetTransferAttachment attachment = (ColoredCoinsAssetTransferAttachment)this.attachment;
-                        if (amount != 0 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
-
-                            return false;
-
-                        } else {
-
-                            return true;
-
-                        }
+                        Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)this.attachment;
+                        return amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY;
 
                     }
 
                 case SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
                     {
 
-                        ColoredCoinsAskOrderPlacementAttachment attachment = (ColoredCoinsAskOrderPlacementAttachment)this.attachment;
-                        if (recipient != Nxt.CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY || attachment.price <= 0 || attachment.price > Nxt.MAX_BALANCE * 100L) {
-
-                            return false;
-
-                        } else {
-
-                            return true;
-
-                        }
+                        Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)this.attachment;
+                        return recipient == Nxt.CREATOR_ID && amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
 
                     }
 
                 case SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
                     {
 
-                        ColoredCoinsBidOrderPlacementAttachment attachment = (ColoredCoinsBidOrderPlacementAttachment)this.attachment;
-                        if (recipient != Nxt.CREATOR_ID || amount != 0 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY || attachment.price <= 0 || attachment.price > Nxt.MAX_BALANCE * 100L) {
-
-                            return false;
-
-                        } else {
-
-                            return true;
-
-                        }
+                        Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)this.attachment;
+                        return recipient == Nxt.CREATOR_ID && amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
 
                     }
 
                 case SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
                     {
 
-                        if (recipient != Nxt.CREATOR_ID || amount != 0) {
-
-                            return false;
-
-                        } else {
-
-                            return true;
-
-                        }
+                        return recipient == Nxt.CREATOR_ID && amount == 0;
 
                     }
 
                 case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                     {
 
-                        if (recipient != Nxt.CREATOR_ID || amount != 0) {
-
-                            return false;
-
-                        } else {
-
-                            return true;
-
-                        }
+                        return recipient == Nxt.CREATOR_ID && amount == 0;
 
                     }
 
@@ -1057,522 +1011,6 @@ public class Transaction implements Comparable<Transaction>, Serializable {
             }
             return digest.digest();
         }
-    }
-
-    public static interface Attachment {
-
-        int getSize();
-        byte[] getBytes();
-        JSONObject getJSONObject();
-
-        long getRecipientDeltaBalance();
-        long getSenderDeltaBalance();
-
-    }
-
-    public static class MessagingArbitraryMessageAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        final byte[] message;
-
-        public MessagingArbitraryMessageAttachment(byte[] message) {
-
-            this.message = message;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 4 + message.length;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putInt(message.length);
-            buffer.put(message);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("message", Convert.convert(message));
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
-        }
-
-    }
-
-    public static class MessagingAliasAssignmentAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        final String alias;
-        final String uri;
-
-        public MessagingAliasAssignmentAttachment(String alias, String uri) {
-
-            this.alias = alias;
-            this.uri = uri;
-
-        }
-
-        @Override
-        public int getSize() {
-            try {
-                return 1 + alias.getBytes("UTF-8").length + 2 + uri.getBytes("UTF-8").length;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            try {
-
-                byte[] alias = this.alias.getBytes("UTF-8");
-                byte[] uri = this.uri.getBytes("UTF-8");
-
-                ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)alias.length);
-                buffer.put(alias);
-                buffer.putShort((short)uri.length);
-                buffer.put(uri);
-
-                return buffer.array();
-
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-
-            }
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("alias", alias);
-            attachment.put("uri", uri);
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
-        }
-
-    }
-
-    public static class ColoredCoinsAssetIssuanceAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        String name;
-        String description;
-        int quantity;
-
-        public ColoredCoinsAssetIssuanceAttachment(String name, String description, int quantity) {
-
-            this.name = name;
-            this.description = description == null ? "" : description;
-            this.quantity = quantity;
-
-        }
-
-        @Override
-        public int getSize() {
-            try {
-                return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 4;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            try {
-                byte[] name = this.name.getBytes("UTF-8");
-                byte[] description = this.description.getBytes("UTF-8");
-
-                ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 4);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)name.length);
-                buffer.put(name);
-                buffer.putShort((short)description.length);
-                buffer.put(description);
-                buffer.putInt(quantity);
-
-                return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("name", name);
-            attachment.put("description", description);
-            attachment.put("quantity", quantity);
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
-        }
-
-    }
-
-    public static class ColoredCoinsAssetTransferAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        long asset;
-        int quantity;
-
-        public ColoredCoinsAssetTransferAttachment(long asset, int quantity) {
-
-            this.asset = asset;
-            this.quantity = quantity;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8 + 4;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
-            buffer.putInt(quantity);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
-            attachment.put("quantity", quantity);
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
-        }
-
-    }
-
-    public static class ColoredCoinsAskOrderPlacementAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        long asset;
-        int quantity;
-        long price;
-
-        public ColoredCoinsAskOrderPlacementAttachment(long asset, int quantity, long price) {
-
-            this.asset = asset;
-            this.quantity = quantity;
-            this.price = price;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8 + 4 + 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
-            buffer.putInt(quantity);
-            buffer.putLong(price);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
-            attachment.put("quantity", quantity);
-            attachment.put("price", price);
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
-        }
-
-    }
-
-    public static class ColoredCoinsBidOrderPlacementAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        long asset;
-        int quantity;
-        long price;
-
-        public ColoredCoinsBidOrderPlacementAttachment(long asset, int quantity, long price) {
-
-            this.asset = asset;
-            this.quantity = quantity;
-            this.price = price;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8 + 4 + 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
-            buffer.putInt(quantity);
-            buffer.putLong(price);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
-            attachment.put("quantity", quantity);
-            attachment.put("price", price);
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return -quantity * price;
-
-        }
-
-    }
-
-    public static class ColoredCoinsAskOrderCancellationAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        long order;
-
-        public ColoredCoinsAskOrderCancellationAttachment(long order) {
-
-            this.order = order;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(order);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(order));
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
-        }
-
-    }
-
-    public static class ColoredCoinsBidOrderCancellationAttachment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
-
-        long order;
-
-        public ColoredCoinsBidOrderCancellationAttachment(long order) {
-
-            this.order = order;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(order);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(order));
-
-            return attachment;
-
-        }
-
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            BidOrder bidOrder = Nxt.bidOrders.get(order);
-            if (bidOrder == null) {
-
-                return 0;
-
-            }
-
-            return bidOrder.quantity * bidOrder.price;
-
-        }
-
     }
 
 }
