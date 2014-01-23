@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.9";
+    static final String VERSION = "0.5.10";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
