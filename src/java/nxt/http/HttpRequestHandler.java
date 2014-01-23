@@ -1,15 +1,20 @@
 package nxt.http;
 
+import nxt.Nxt;
 import org.json.simple.JSONObject;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class HttpRequestHandler {
 
-    private static final Map<String,HttpRequestHandler> handlers;
+    private static final Map<String,HttpRequestHandler> httpGetHandlers;
 
     static {
 
@@ -60,13 +65,52 @@ public abstract class HttpRequestHandler {
         //map.put("placeAskOrder", PlaceAskOrder.instance);
         //map.put("placeBidOrder", PlaceBidOrder.instance);
 
-        handlers = Collections.unmodifiableMap(map);
+        httpGetHandlers = Collections.unmodifiableMap(map);
     }
 
-    public static HttpRequestHandler getHandler(String requestType) {
-        return handlers.get(requestType);
+    public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        JSONObject response;
+
+        if (Nxt.allowedBotHosts != null && !Nxt.allowedBotHosts.contains(req.getRemoteHost())) {
+
+            response = new JSONObject();
+            response.put("errorCode", 7);
+            response.put("errorDescription", "Not allowed");
+
+        } else {
+
+            String requestType = req.getParameter("requestType");
+            if (requestType == null) {
+
+                response = new JSONObject();
+                response.put("errorCode", 1);
+                response.put("errorDescription", "Incorrect request");
+
+            } else {
+
+                HttpRequestHandler requestHandler = httpGetHandlers.get(requestType);
+                if (requestHandler != null) {
+                    response = requestHandler.processRequest(req);
+                } else {
+                    response = new JSONObject();
+                    response.put("errorCode", 1);
+                    response.put("errorDescription", "Incorrect request");
+
+                }
+
+            }
+
+        }
+
+        resp.setContentType("text/plain; charset=UTF-8");
+
+        try (Writer writer = resp.getWriter()) {
+            response.writeJSONString(writer);
+        }
+
     }
 
-    public abstract JSONObject processRequest(HttpServletRequest request);
+    abstract JSONObject processRequest(HttpServletRequest request) throws IOException;
 
 }

@@ -50,7 +50,7 @@ public class Block implements Serializable {
     public volatile long nextBlock;
     public BigInteger cumulativeDifficulty;
 
-    transient Transaction[] blockTransactions;
+    public transient Transaction[] blockTransactions;
 
     Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee,
           int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
@@ -93,7 +93,7 @@ public class Block implements Serializable {
         this.blockTransactions = transactions.length == 0 ? emptyTransactions : new Transaction[transactions.length];
     }
 
-    static Block getBlock(JSONObject blockData) {
+    public static Block getBlock(JSONObject blockData) {
 
         try {
             int version = ((Long)blockData.get("version")).intValue();
@@ -124,7 +124,7 @@ public class Block implements Serializable {
         }
     }
 
-    byte[] getBytes() {
+    public byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -153,7 +153,7 @@ public class Block implements Serializable {
     transient volatile String stringId = null;
     transient volatile long generatorAccountId;
 
-    long getId() {
+    public long getId() {
         calculateIds();
         return id;
     }
@@ -215,7 +215,7 @@ public class Block implements Serializable {
 
     private transient SoftReference<JSONStreamAware> jsonRef;
 
-    synchronized JSONStreamAware getJSONStreamAware() {
+    public synchronized JSONStreamAware getJSONStreamAware() {
         JSONStreamAware json;
         if (jsonRef != null) {
             json = jsonRef.get();

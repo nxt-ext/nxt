@@ -1,6 +1,8 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.peer.Peer;
+import nxt.user.User;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

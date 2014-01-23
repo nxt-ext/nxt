@@ -44,11 +44,12 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     public final byte type;
     public final byte subtype;
-    int timestamp;
-    final short deadline;
+    public int timestamp;
+    public final short deadline;
     public final byte[] senderPublicKey;
     public final long recipient;
-    final int amount, fee;
+    public final int amount;
+    public final int fee;
     final long referencedTransaction;
     byte[] signature;
     public Attachment attachment;
@@ -162,7 +163,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
         buffer.putInt(amount);
         buffer.putInt(fee);
         buffer.putLong(referencedTransaction);
-        buffer.put(signature);
+        buffer.put(signature == null ? new byte[64] : signature);
         if (attachment != null) {
 
             buffer.put(attachment.getBytes());
@@ -400,7 +401,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
     }
 
-    static Transaction getTransaction(JSONObject transactionData) {
+    public static Transaction getTransaction(JSONObject transactionData) {
 
         byte type = ((Long)transactionData.get("type")).byteValue();
         byte subtype = ((Long)transactionData.get("subtype")).byteValue();

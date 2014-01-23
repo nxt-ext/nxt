@@ -2,9 +2,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Nxt;
-import nxt.Peer;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
+import nxt.peer.Peer;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

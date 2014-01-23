@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Nxt;
-import nxt.Peer;
+import nxt.peer.Peer;
 import org.json.simple.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;

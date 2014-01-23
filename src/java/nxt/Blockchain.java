@@ -1,6 +1,8 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.peer.Peer;
+import nxt.user.User;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -538,7 +540,7 @@ public final class Blockchain {
 
     };
 
-    static void processTransactions(JSONObject request, String parameterName) {
+    public static void processTransactions(JSONObject request, String parameterName) {
 
         JSONArray transactionsData = (JSONArray)request.get(parameterName);
         JSONArray validTransactionsData = new JSONArray();
@@ -853,7 +855,7 @@ public final class Blockchain {
 
     }
 
-    static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
+    public static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
 
         Block block;
         JSONArray addedConfirmedTransactions;

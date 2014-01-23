@@ -1,6 +1,10 @@
-package nxt;
+package nxt.peer;
 
+import nxt.Account;
+import nxt.Nxt;
+import nxt.ThreadPools;
 import nxt.crypto.Crypto;
+import nxt.user.User;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
@@ -20,10 +24,8 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -41,11 +43,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Peer implements Comparable<Peer> {
 
-    static final int STATE_NONCONNECTED = 0;
-    static final int STATE_CONNECTED = 1;
-    static final int STATE_DISCONNECTED = 2;
+    public static final int STATE_NONCONNECTED = 0;
+    public static final int STATE_CONNECTED = 1;
+    public static final int STATE_DISCONNECTED = 2;
 
-    static final Runnable peerConnectingThread = new Runnable() {
+    public static final Runnable peerConnectingThread = new Runnable() {
 
         @Override
         public void run() {
@@ -75,7 +77,7 @@ public class Peer implements Comparable<Peer> {
 
     };
 
-    static final Runnable peerUnBlacklistingThread = new Runnable() {
+    public static final Runnable peerUnBlacklistingThread = new Runnable() {
 
         @Override
         public void run() {
@@ -106,7 +108,7 @@ public class Peer implements Comparable<Peer> {
 
     };
 
-    static final Runnable getMorePeersThread = new Runnable() {
+    public static final Runnable getMorePeersThread = new Runnable() {
 
         private final JSONObject getPeersRequest = new JSONObject();
         {
@@ -152,18 +154,19 @@ public class Peer implements Comparable<Peer> {
 
     };
 
-    final int index;
+    public final int index;
     public String platform;
     public String announcedAddress;
-    boolean shareAddress;
+    public boolean shareAddress;
     public String hallmark;
     long accountId;
-    int weight, date;
+    int weight;
+    int date;
     long adjustedWeight;
     public String application;
     public String version;
 
-    long blacklistingTime;
+    public long blacklistingTime;
     public int state;
     public long downloadedVolume;
     public long uploadedVolume;
@@ -175,7 +178,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    static Peer addPeer(String address, String announcedAddress) {
+    public static Peer addPeer(String address, String announcedAddress) {
 
         try {
 
@@ -222,7 +225,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    static void updatePeerWeights(Account account) {
+    public static void updatePeerWeights(Account account) {
 
         for (Peer peer : Nxt.peers.values()) {
 
@@ -238,7 +241,13 @@ public class Peer implements Comparable<Peer> {
 
     boolean analyzeHallmark(String realHost, String hallmark) {
 
-        if (hallmark == null) {
+        if (hallmark == null && this.hallmark == null) {
+
+            return true;
+
+        }
+
+        if (hallmark != null && hallmark.equals(this.hallmark)) {
 
             return true;
 
@@ -287,14 +296,6 @@ public class Peer implements Comparable<Peer> {
                 this.hallmark = hallmark;
 
                 long accountId = Account.getId(publicKey);
-                /*
-                Account account = accounts.get(accountId);
-                if (account == null) {
-
-                    return false;
-
-                }
-                */
                 LinkedList<Peer> groupedPeers = new LinkedList<>();
                 int validDate = 0;
 
@@ -349,7 +350,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    void blacklist() {
+    public void blacklist() {
 
         blacklistingTime = System.currentTimeMillis();
 
@@ -446,7 +447,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    void deactivate() {
+    public void deactivate() {
 
         if (state == STATE_CONNECTED) {
 
@@ -500,7 +501,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    static Peer getAnyPeer(int state, boolean applyPullThreshold) {
+    public static Peer getAnyPeer(int state, boolean applyPullThreshold) {
 
         List<Peer> selectedPeers = new ArrayList<Peer>();
 
@@ -589,7 +590,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    String getSoftware() {
+    public String getSoftware() {
         StringBuilder buf = new StringBuilder();
         buf.append(application == null ? "?" : application.substring(0, Math.min(application.length(), 10)));
         buf.append(" (");
@@ -599,7 +600,7 @@ public class Peer implements Comparable<Peer> {
         return buf.toString();
     }
 
-    void removeBlacklistedStatus() {
+    public void removeBlacklistedStatus() {
 
         setState(STATE_NONCONNECTED);
         blacklistingTime = 0;
@@ -639,7 +640,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    void removePeer() {
+    public void removePeer() {
 
         Nxt.peers.values().remove(this);
 
@@ -712,7 +713,7 @@ public class Peer implements Comparable<Peer> {
     }
 
     //TODO: replace usage of this method with send(JSONStreamAware) for requests that are constant
-    JSONObject send(final JSONObject request) {
+    public JSONObject send(final JSONObject request) {
         request.put("protocol", 1);
         return send(new JSONStreamAware() {
             @Override
@@ -801,8 +802,7 @@ public class Peer implements Comparable<Peer> {
 
         } catch (RuntimeException|IOException e) {
 
-            if (! (e instanceof ConnectException || e instanceof UnknownHostException || e instanceof NoRouteToHostException
-                    || e instanceof SocketTimeoutException || e instanceof SocketException)) {
+            if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
                 Logger.logDebugMessage("Error sending JSON request", e);
             }
 
@@ -843,7 +843,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    void setState(int state) {
+    public void setState(int state) {
 
         if (this.state == STATE_NONCONNECTED && state != STATE_NONCONNECTED) {
 
@@ -931,7 +931,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    void updateDownloadedVolume(long volume) {
+    public void updateDownloadedVolume(long volume) {
 
         downloadedVolume += volume;
 
@@ -953,7 +953,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    void updateUploadedVolume(long volume) {
+    public void updateUploadedVolume(long volume) {
 
         uploadedVolume += volume;
 

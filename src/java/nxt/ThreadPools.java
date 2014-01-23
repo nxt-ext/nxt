@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.peer.Peer;
 import nxt.util.Logger;
 
 import java.util.concurrent.Callable;
@@ -39,7 +40,7 @@ public final class ThreadPools {
         shutdownExecutor(sendToPeersService);
     }
 
-    static <T> Future<T> sendToPeers(Callable<T> callable) {
+    public static <T> Future<T> sendToPeers(Callable<T> callable) {
         return sendToPeersService.submit(callable);
     }
 
