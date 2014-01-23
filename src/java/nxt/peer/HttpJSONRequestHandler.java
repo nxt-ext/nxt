@@ -1,9 +1,11 @@
 package nxt.peer;
 
+import nxt.util.JSON;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
 import javax.servlet.ServletException;
@@ -41,10 +43,24 @@ public abstract class HttpJSONRequestHandler {
         jsonRequestHandlers = Collections.unmodifiableMap(map);
     }
 
+    private static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", "Unsupported request type!");
+        UNSUPPORTED_REQUEST_TYPE = JSON.getJSONStreamAware(response);
+    }
+
+    private static final JSONStreamAware UNSUPPORTED_PROTOCOL;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", "Unsupported protocol!");
+        UNSUPPORTED_PROTOCOL = JSON.getJSONStreamAware(response);
+    }
+
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         Peer peer = null;
-        JSONObject response = null;
+        JSONStreamAware response = null;
 
         try {
             JSONObject request;
@@ -72,22 +88,18 @@ public abstract class HttpJSONRequestHandler {
                 if (jsonRequestHandler != null) {
                     response = jsonRequestHandler.processJSONRequest(request, peer);
                 } else {
-                    response = new JSONObject();
-                    response.put("error", "Unsupported request type!");
+                    response = UNSUPPORTED_REQUEST_TYPE;
                 }
             } else {
-                response = new JSONObject();
                 Logger.logDebugMessage("Unsupported protocol " + request.get("protocol"));
-                response.put("error", "Unsupported protocol!");
-
+                response = UNSUPPORTED_PROTOCOL;
             }
 
         } catch (RuntimeException e) {
             Logger.logDebugMessage("Error processing POST request", e);
-            if (response == null) {
-                response = new JSONObject();
-            }
-            response.put("error", e.toString());
+            JSONObject json = new JSONObject();
+            json.put("error", e.toString());
+            response = json;
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
@@ -101,6 +113,6 @@ public abstract class HttpJSONRequestHandler {
         }
     }
 
-    abstract JSONObject processJSONRequest(JSONObject request, Peer peer);
+    abstract JSONStreamAware processJSONRequest(JSONObject request, Peer peer);
 
 }

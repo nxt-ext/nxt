@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Account;
+import nxt.util.JSON;
 import nxt.Nxt;
 import nxt.ThreadPools;
 import nxt.crypto.Crypto;
@@ -110,9 +111,12 @@ public class Peer implements Comparable<Peer> {
 
     public static final Runnable getMorePeersThread = new Runnable() {
 
-        private final JSONObject getPeersRequest = new JSONObject();
+        private final JSONStreamAware getPeersRequest;
         {
-            getPeersRequest.put("requestType", "getPeers");
+            JSONObject request = new JSONObject();
+            request.put("requestType", "getPeers");
+            request.put("protocol", 1);
+            getPeersRequest = JSON.getJSONStreamAware(request);
         }
 
         @Override
@@ -723,7 +727,7 @@ public class Peer implements Comparable<Peer> {
         });
     }
 
-    JSONObject send(final JSONStreamAware request) {
+    public JSONObject send(final JSONStreamAware request) {
 
         JSONObject response;
 

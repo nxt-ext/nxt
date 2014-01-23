@@ -1,7 +1,9 @@
 package nxt.http;
 
+import nxt.util.JSON;
 import nxt.Nxt;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -68,35 +70,40 @@ public abstract class HttpRequestHandler {
         httpGetHandlers = Collections.unmodifiableMap(map);
     }
 
+    private static final JSONStreamAware ERROR_NOT_ALLOWED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 7);
+        response.put("errorDescription", "Not allowed");
+        ERROR_NOT_ALLOWED = JSON.getJSONStreamAware(response);
+    }
+
+    private static final JSONStreamAware ERROR_INCORRECT_REQUEST;
+    static {
+        JSONObject response  = new JSONObject();
+        response.put("errorCode", 1);
+        response.put("errorDescription", "Incorrect request");
+        ERROR_INCORRECT_REQUEST = JSON.getJSONStreamAware(response);
+    }
+
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        JSONObject response;
+        JSONStreamAware response;
 
         if (Nxt.allowedBotHosts != null && !Nxt.allowedBotHosts.contains(req.getRemoteHost())) {
-
-            response = new JSONObject();
-            response.put("errorCode", 7);
-            response.put("errorDescription", "Not allowed");
-
+            response = ERROR_NOT_ALLOWED;
         } else {
 
             String requestType = req.getParameter("requestType");
             if (requestType == null) {
-
-                response = new JSONObject();
-                response.put("errorCode", 1);
-                response.put("errorDescription", "Incorrect request");
-
+                response = ERROR_INCORRECT_REQUEST;
             } else {
 
                 HttpRequestHandler requestHandler = httpGetHandlers.get(requestType);
                 if (requestHandler != null) {
                     response = requestHandler.processRequest(req);
                 } else {
-                    response = new JSONObject();
-                    response.put("errorCode", 1);
-                    response.put("errorDescription", "Incorrect request");
-
+                    response = ERROR_INCORRECT_REQUEST;
                 }
 
             }
@@ -111,6 +118,6 @@ public abstract class HttpRequestHandler {
 
     }
 
-    abstract JSONObject processRequest(HttpServletRequest request) throws IOException;
+    abstract JSONStreamAware processRequest(HttpServletRequest request) throws IOException;
 
 }

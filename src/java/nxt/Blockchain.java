@@ -4,9 +4,11 @@ import nxt.crypto.Crypto;
 import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.util.Convert;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
@@ -37,9 +39,12 @@ public final class Blockchain {
 
     static final Runnable processTransactionsThread = new Runnable() {
 
-        private final JSONObject getUnconfirmedTransactionsRequest = new JSONObject();
+        private final JSONStreamAware getUnconfirmedTransactionsRequest;
         {
-            getUnconfirmedTransactionsRequest.put("requestType", "getUnconfirmedTransactions");
+            JSONObject request = new JSONObject();
+            request.put("requestType", "getUnconfirmedTransactions");
+            request.put("protocol", 1);
+            getUnconfirmedTransactionsRequest = JSON.getJSONStreamAware(request);
         }
 
         @Override
@@ -129,11 +134,20 @@ public final class Blockchain {
 
     static final Runnable getMoreBlocksThread = new Runnable() {
 
-        private final JSONObject getCumulativeDifficultyRequest = new JSONObject();
-        private final JSONObject getMilestoneBlockIdsRequest = new JSONObject();
+        private final JSONStreamAware getCumulativeDifficultyRequest;
         {
-            getCumulativeDifficultyRequest.put("requestType", "getCumulativeDifficulty");
-            getMilestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
+            JSONObject request = new JSONObject();
+            request.put("requestType", "getCumulativeDifficulty");
+            request.put("protocol", 1);
+            getCumulativeDifficultyRequest = JSON.getJSONStreamAware(request);
+        }
+
+        private final JSONStreamAware getMilestoneBlockIdsRequest;
+        {
+            JSONObject request = new JSONObject();
+            request.put("requestType", "getMilestoneBlockIds");
+            request.put("protocol", 1);
+            getMilestoneBlockIdsRequest = JSON.getJSONStreamAware(request);
         }
 
         @Override

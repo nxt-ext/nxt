@@ -1,7 +1,9 @@
 package nxt.peer;
 
 import nxt.Blockchain;
+import nxt.util.JSON;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 final class ProcessTransactions extends HttpJSONRequestHandler {
 
@@ -11,13 +13,11 @@ final class ProcessTransactions extends HttpJSONRequestHandler {
 
 
     @Override
-    public JSONObject processJSONRequest(JSONObject request, Peer peer) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         Blockchain.processTransactions(request, "transactions");
 
-        return response;
+        return JSON.emptyJSON;
     }
 
 }

@@ -2,10 +2,12 @@ package nxt.peer;
 
 import nxt.Block;
 import nxt.Blockchain;
+import nxt.util.JSON;
 import nxt.Nxt;
 import nxt.Transaction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,11 +18,22 @@ final class ProcessBlock extends HttpJSONRequestHandler {
 
     private ProcessBlock() {}
 
+    private static final JSONStreamAware ACCEPTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("accepted", true);
+        ACCEPTED = JSON.getJSONStreamAware(response);
+    }
+
+    private static final JSONStreamAware NOT_ACCEPTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("accepted", false);
+        NOT_ACCEPTED = JSON.getJSONStreamAware(response);
+    }
 
     @Override
-    public JSONObject processJSONRequest(JSONObject request, Peer peer) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         boolean accepted;
 
@@ -50,9 +63,8 @@ final class ProcessBlock extends HttpJSONRequestHandler {
             accepted = Blockchain.pushBlock(buffer, true);
 
         }
-        response.put("accepted", accepted);
 
-        return response;
+        return accepted ? ACCEPTED : NOT_ACCEPTED;
     }
 
 }

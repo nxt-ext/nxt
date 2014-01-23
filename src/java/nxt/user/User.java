@@ -1,6 +1,7 @@
 package nxt.user;
 
 import nxt.Account;
+import nxt.util.JSON;
 import nxt.Nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Logger;
@@ -145,7 +146,7 @@ public class User {
             if (asyncContext != null) {
                 asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
                 try (Writer writer = asyncContext.getResponse().getWriter()) {
-                    new JSONObject().writeJSONString(writer);
+                    JSON.emptyJSON.writeJSONString(writer);
                 }
                 asyncContext.complete();
             }
@@ -167,7 +168,7 @@ public class User {
                 asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
                 try (Writer writer = asyncContext.getResponse().getWriter()) {
-                    new JSONObject().writeJSONString(writer);
+                    JSON.emptyJSON.writeJSONString(writer);
                 }
 
                 asyncContext.complete();
@@ -186,7 +187,7 @@ public class User {
                 asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
 
                 try (Writer writer = asyncContext.getResponse().getWriter()) {
-                    new JSONObject().writeJSONString(writer);
+                    JSON.emptyJSON.writeJSONString(writer);
                 }
 
                 asyncContext.complete();

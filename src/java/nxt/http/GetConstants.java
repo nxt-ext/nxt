@@ -1,11 +1,13 @@
 package nxt.http;
 
 import nxt.Genesis;
+import nxt.util.JSON;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -13,13 +15,11 @@ final class GetConstants extends HttpRequestHandler {
 
     static final GetConstants instance = new GetConstants();
 
-    private GetConstants() {}
+    private static final JSONStreamAware CONSTANTS;
 
-    @Override
-    public JSONObject processRequest(HttpServletRequest req) {
+    static {
 
         JSONObject response = new JSONObject();
-
         response.put("genesisBlockId", Convert.convert(Genesis.GENESIS_BLOCK_ID));
         response.put("genesisAccountId", Convert.convert(Genesis.CREATOR_ID));
         response.put("maxBlockPayloadLength", Nxt.MAX_PAYLOAD_LENGTH);
@@ -97,7 +97,15 @@ final class GetConstants extends HttpRequestHandler {
         peerStates.add(peerState);
         response.put("peerStates", peerStates);
 
-        return response;
+        CONSTANTS = JSON.getJSONStreamAware(response);
+
+    }
+
+    private GetConstants() {}
+
+    @Override
+    public JSONStreamAware processRequest(HttpServletRequest req) {
+        return CONSTANTS;
     }
 
 }
