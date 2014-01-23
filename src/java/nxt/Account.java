@@ -53,37 +53,24 @@ public class Account {
     public int getEffectiveBalance() {
 
         Block lastBlock = Nxt.lastBlock.get();
-        if (height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
+        if (lastBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
 
-            if (height == 0) {
-
+            if (this.height == 0) {
                 return (int)(getBalance() / 100);
-
             }
-
-            if (lastBlock.height - height < 1440) {
-
+            if (lastBlock.height - this.height < 1440) {
                 return 0;
-
             }
-
-            int amount = 0;
+            int receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.blockTransactions) {
-
                 if (transaction.recipient == id) {
-
-                    amount += transaction.amount;
-
+                    receivedInlastBlock += transaction.amount;
                 }
-
             }
-
-            return (int)(getBalance() / 100) - amount;
+            return (int)(getBalance() / 100) - receivedInlastBlock;
 
         } else {
-
             return (int)(getGuaranteedBalance(1440) / 100);
-
         }
 
     }
