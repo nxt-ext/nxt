@@ -121,10 +121,6 @@ public final class Nxt extends HttpServlet {
 
         try {
 
-            //String blockchainStoragePath = servletConfig.getInitParameter("blockchainStoragePath");
-            //logMessage("\"blockchainStoragePath\" = \"" + blockchainStoragePath + "\"");
-            //blockchainChannel = FileChannel.open(Paths.get(blockchainStoragePath), StandardOpenOption.READ, StandardOpenOption.WRITE);
-
             myPlatform = servletConfig.getInitParameter("myPlatform");
             Logger.logMessage("\"myPlatform\" = \"" + myPlatform + "\"");
             if (myPlatform == null) {
@@ -433,7 +429,7 @@ public final class Nxt extends HttpServlet {
         ThreadPools.shutdown();
 
         try {
-            Block.saveBlocks("blocks.nxt", true);
+            Block.saveBlocks("blocks.nxt");
             Logger.logMessage("Saved blocks.nxt");
         } catch (RuntimeException e) {
             Logger.logMessage("Error saving blocks", e);
@@ -445,14 +441,6 @@ public final class Nxt extends HttpServlet {
         } catch (RuntimeException e) {
             Logger.logMessage("Error saving transactions", e);
         }
-
-        /* no longer used
-        try {
-
-            blockchainChannel.close();
-
-        } catch (Exception e) { }
-        */
 
         Logger.logMessage("NRS " + Nxt.VERSION + " stopped.");
 

@@ -259,8 +259,6 @@ public final class Blockchain {
 
                                                         curBlockId = block.getId();
 
-                                                        //synchronized (blocksAndTransactionsLock) {
-
                                                         boolean alreadyPushed = false;
                                                         if (block.previousBlock == Nxt.lastBlock.get().getId()) {
 
@@ -304,8 +302,6 @@ public final class Blockchain {
 
                                                         }
 
-                                                        //}
-
                                                     }
 
                                                 } //synchronized
@@ -319,7 +315,7 @@ public final class Blockchain {
 
                                         synchronized (Blockchain.class) {
 
-                                            Block.saveBlocks("blocks.nxt.bak", true);
+                                            Block.saveBlocks("blocks.nxt.bak");
                                             Transaction.saveTransactions("transactions.nxt.bak");
 
                                             curCumulativeDifficulty = Nxt.lastBlock.get().cumulativeDifficulty;
@@ -366,7 +362,6 @@ public final class Blockchain {
                                                 Nxt.aliasIdToAliasMappings.clear();
                                                 Nxt.unconfirmedTransactions.clear();
                                                 Nxt.doubleSpendingTransactions.clear();
-                                                //TODO: clean this up
                                                 Logger.logMessage("Re-scanning blockchain...");
                                                 Blockchain.scan();
                                                 Logger.logMessage("...Done");
@@ -379,7 +374,7 @@ public final class Blockchain {
                                     }
 
                                     synchronized (Blockchain.class) {
-                                        Block.saveBlocks("blocks.nxt", false);
+                                        Block.saveBlocks("blocks.nxt");
                                         Transaction.saveTransactions("transactions.nxt");
                                     }
 
@@ -721,23 +716,21 @@ public final class Blockchain {
 
     }
 
-    private static byte[] calculateTransactionsChecksum() {
-        synchronized (Blockchain.class) {
-            PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(Nxt.transactions.size(), new Comparator<Transaction>() {
-                @Override
-                public int compare(Transaction o1, Transaction o2) {
-                    long id1 = o1.getId();
-                    long id2 = o2.getId();
-                    return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
-                }
-            });
-            sortedTransactions.addAll(Nxt.transactions.values());
-            MessageDigest digest = Crypto.sha256();
-            while (! sortedTransactions.isEmpty()) {
-                digest.update(sortedTransactions.poll().getBytes());
+    private synchronized static byte[] calculateTransactionsChecksum() {
+        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(Nxt.transactions.size(), new Comparator<Transaction>() {
+            @Override
+            public int compare(Transaction o1, Transaction o2) {
+                long id1 = o1.getId();
+                long id2 = o2.getId();
+                return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
             }
-            return digest.digest();
+        });
+        sortedTransactions.addAll(Nxt.transactions.values());
+        MessageDigest digest = Crypto.sha256();
+        while (! sortedTransactions.isEmpty()) {
+            digest.update(sortedTransactions.poll().getBytes());
         }
+        return digest.digest();
     }
 
     static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
@@ -1104,8 +1097,6 @@ public final class Blockchain {
 
                 }
 
-                //synchronized (blocksAndTransactionsLock) {
-
                 for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
 
                     Account senderAccount = Nxt.accounts.get(accumulatedAmountEntry.getKey());
@@ -1184,19 +1175,11 @@ public final class Blockchain {
                     // TODO: Remove from double-spending transactions
 
                 }
-                /*
-                long blockId = block.getId();
-                for (long transactionId : block.transactions) {
-
-                    Nxt.transactions.get(transactionId).block = blockId;
-
-                }
-                */
 
                 if (savingFlag) {
 
                     Transaction.saveTransactions("transactions.nxt");
-                    Block.saveBlocks("blocks.nxt", false);
+                    Block.saveBlocks("blocks.nxt");
 
                 }
 
@@ -1250,7 +1233,7 @@ public final class Blockchain {
 
     }
 
-    private static void analyze(Block block) {
+    private synchronized static void analyze(Block block) {
 
         for (int i = 0; i < block.transactions.length; i++) {
             block.blockTransactions[i] = Nxt.transactions.get(block.transactions[i]);
@@ -1462,16 +1445,14 @@ public final class Blockchain {
 
     }
 
-    private static void scan() {
-        synchronized (Blockchain.class) {
-            Map<Long,Block> loadedBlocks = new HashMap<>(Nxt.blocks);
-            Nxt.blocks.clear();
-            long currentBlockId = Genesis.GENESIS_BLOCK_ID;
-            Block currentBlock;
-            while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
-                Blockchain.analyze(currentBlock);
-                currentBlockId = currentBlock.nextBlock;
-            }
+    private synchronized static void scan() {
+        Map<Long,Block> loadedBlocks = new HashMap<>(Nxt.blocks);
+        Nxt.blocks.clear();
+        long currentBlockId = Genesis.GENESIS_BLOCK_ID;
+        Block currentBlock;
+        while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
+            Blockchain.analyze(currentBlock);
+            currentBlockId = currentBlock.nextBlock;
         }
     }
 
@@ -1522,8 +1503,7 @@ public final class Blockchain {
 
     }
 
-    // this is called within block.analyze only, which is already inside the big blocksAndTransactions lock
-    private static void matchOrders(long assetId) {
+    private synchronized static void matchOrders(long assetId) {
 
         TreeSet<AskOrder> sortedAssetAskOrders = Blockchain.sortedAskOrders.get(assetId);
         TreeSet<BidOrder> sortedAssetBidOrders = Blockchain.sortedBidOrders.get(assetId);
@@ -1780,7 +1760,7 @@ public final class Blockchain {
             block.cumulativeDifficulty = BigInteger.ZERO;
             Nxt.lastBlock.set(block);
 
-            Block.saveBlocks("blocks.nxt", false);
+            Block.saveBlocks("blocks.nxt");
 
         }
 

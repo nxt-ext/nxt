@@ -258,7 +258,7 @@ public class Block implements Serializable {
 
     }
 
-    static void saveBlocks(String fileName, boolean flag) {
+    static void saveBlocks(String fileName) {
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
@@ -269,41 +269,6 @@ public class Block implements Serializable {
             Logger.logMessage("Error saving blocks to " + fileName, e);
             throw new RuntimeException(e);
         }
-
-            /*if (flag) {
-
-                ByteBuffer buffer = ByteBuffer.allocate(BLOCK_HEADER_LENGTH + MAX_PAYLOAD_LENGTH);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-                long curBlockId = GENESIS_BLOCK_ID;
-                long prevBlockPtr = -1, curBlockPtr = 0;
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                do {
-
-                    Block block = blocks.get(curBlockId);
-                    buffer.clear();
-                    buffer.putLong(prevBlockPtr);
-                    buffer.put(block.getBytes());
-                    for (int i = 0; i < block.numberOfTransactions; i++) {
-
-                        buffer.put(Nxt.transactions.get(block.transactions[i]).getBytes());
-
-                    }
-                    buffer.flip();
-                    byte[] rawBytes = new byte[buffer.limit()];
-                    buffer.get(rawBytes);
-
-                    MappedByteBuffer window = blockchainChannel.map(FileChannel.MapMode.READ_WRITE, curBlockPtr, 32 + rawBytes.length);
-                    window.put(digest.digest(rawBytes));
-                    window.put(rawBytes);
-
-                    prevBlockPtr = curBlockPtr;
-                    curBlockPtr += 32 + rawBytes.length;
-                    curBlockId = block.nextBlock;
-
-                } while (curBlockId != 0);
-
-            }*/
 
     }
 
