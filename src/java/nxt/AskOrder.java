@@ -1,24 +1,9 @@
 package nxt;
 
-public class AskOrder implements Comparable<AskOrder> {
-
-    public final long id;
-    final long height;
-    public final Account account;
-    public final long asset;
-    // writes protected by blocksAndTransactions lock
-    public volatile int quantity;
-    public final long price;
+public class AskOrder extends Order implements Comparable<AskOrder> {
 
     AskOrder(long id, Account account, long asset, int quantity, long price) {
-
-        this.id = id;
-        this.height = Nxt.lastBlock.get().height;
-        this.account = account;
-        this.asset = asset;
-        this.quantity = quantity;
-        this.price = price;
-
+        super(id, account, asset, quantity, price);
     }
 
     @Override
@@ -34,31 +19,7 @@ public class AskOrder implements Comparable<AskOrder> {
 
         } else {
 
-            if (height < o.height) {
-
-                return -1;
-
-            } else if (height > o.height) {
-
-                return 1;
-
-            } else {
-
-                if (id < o.id) {
-
-                    return -1;
-
-                } else if (id > o.id) {
-
-                    return 1;
-
-                } else {
-
-                    return 0;
-
-                }
-
-            }
+            return super.compareTo(o);
 
         }
 

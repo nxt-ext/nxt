@@ -285,87 +285,107 @@ public interface Attachment {
 
     }
 
-    public static class ColoredCoinsAskOrderPlacement implements Attachment, Serializable {
+    abstract static class ColoredCoinsOrderPlacement implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         final long asset;
         final int quantity;
         final long price;
+
+        private ColoredCoinsOrderPlacement(long asset, int quantity, long price) {
+
+            this.asset = asset;
+            this.quantity = quantity;
+            this.price = price;
+
+        }
+
+        @Override
+        public int getSize() {
+            return 8 + 4 + 8;
+        }
+
+        @Override
+        public byte[] getBytes() {
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putLong(asset);
+            buffer.putInt(quantity);
+            buffer.putLong(price);
+
+            return buffer.array();
+
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+
+            JSONObject attachment = new JSONObject();
+            attachment.put("asset", Convert.convert(asset));
+            attachment.put("quantity", quantity);
+            attachment.put("price", price);
+
+            return attachment;
+
+        }
+
+    }
+
+    public static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
+
+        static final long serialVersionUID = 0;
 
         public ColoredCoinsAskOrderPlacement(long asset, int quantity, long price) {
-
-            this.asset = asset;
-            this.quantity = quantity;
-            this.price = price;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8 + 4 + 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
-            buffer.putInt(quantity);
-            buffer.putLong(price);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
-            attachment.put("quantity", quantity);
-            attachment.put("price", price);
-
-            return attachment;
-
+            super(asset, quantity, price);
         }
 
         @Override
         public long getRecipientDeltaBalance() {
-
             return 0;
-
         }
 
         @Override
         public long getSenderDeltaBalance() {
-
             return 0;
-
         }
 
     }
 
-    public static class ColoredCoinsBidOrderPlacement implements Attachment, Serializable {
+    public static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
         static final long serialVersionUID = 0;
-
-        final long asset;
-        final int quantity;
-        final long price;
 
         public ColoredCoinsBidOrderPlacement(long asset, int quantity, long price) {
+            super(asset, quantity, price);
+        }
 
-            this.asset = asset;
-            this.quantity = quantity;
-            this.price = price;
+        @Override
+        public long getRecipientDeltaBalance() {
+            return 0;
+        }
 
+        @Override
+        public long getSenderDeltaBalance() {
+            return -quantity * price;
+        }
+
+    }
+
+    abstract static class ColoredCoinsOrderCancellation implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        final long order;
+
+        private ColoredCoinsOrderCancellation(long order) {
+            this.order = order;
         }
 
         @Override
         public int getSize() {
-            return 8 + 4 + 8;
+            return 8;
         }
 
         @Override
@@ -373,9 +393,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
-            buffer.putInt(quantity);
-            buffer.putLong(price);
+            buffer.putLong(order);
 
             return buffer.array();
 
@@ -385,127 +403,45 @@ public interface Attachment {
         public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
-            attachment.put("quantity", quantity);
-            attachment.put("price", price);
+            attachment.put("order", Convert.convert(order));
 
             return attachment;
 
         }
 
-        @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return -quantity * price;
-
-        }
-
     }
 
-    public static class ColoredCoinsAskOrderCancellation implements Attachment, Serializable {
+    public static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
         static final long serialVersionUID = 0;
-
-        final long order;
 
         public ColoredCoinsAskOrderCancellation(long order) {
-
-            this.order = order;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(order);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(order));
-
-            return attachment;
-
+            super(order);
         }
 
         @Override
         public long getRecipientDeltaBalance() {
-
             return 0;
-
         }
 
         @Override
         public long getSenderDeltaBalance() {
-
             return 0;
-
         }
 
     }
 
-    public static class ColoredCoinsBidOrderCancellation implements Attachment, Serializable {
+    public static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
         static final long serialVersionUID = 0;
 
-        final long order;
-
         public ColoredCoinsBidOrderCancellation(long order) {
-
-            this.order = order;
-
-        }
-
-        @Override
-        public int getSize() {
-            return 8;
-        }
-
-        @Override
-        public byte[] getBytes() {
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(order);
-
-            return buffer.array();
-
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(order));
-
-            return attachment;
-
+            super(order);
         }
 
         @Override
         public long getRecipientDeltaBalance() {
-
             return 0;
-
         }
 
         @Override
@@ -513,11 +449,8 @@ public interface Attachment {
 
             BidOrder bidOrder = Blockchain.bidOrders.get(order);
             if (bidOrder == null) {
-
                 return 0;
-
             }
-
             return bidOrder.quantity * bidOrder.price;
 
         }
