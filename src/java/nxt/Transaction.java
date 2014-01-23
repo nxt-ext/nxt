@@ -163,7 +163,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
         buffer.putInt(amount);
         buffer.putInt(fee);
         buffer.putLong(referencedTransaction);
-        buffer.put(signature == null ? new byte[64] : signature);
+        buffer.put(signature);
         if (attachment != null) {
 
             buffer.put(attachment.getBytes());
@@ -560,6 +560,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
             throw new IllegalStateException("Transaction already signed");
         }
 
+        signature = new byte[64]; // ugly but signature is needed by getBytes()
         signature = Crypto.sign(getBytes(), secretPhrase);
 
         try {
@@ -568,6 +569,7 @@ public class Transaction implements Comparable<Transaction>, Serializable {
 
                 timestamp++;
                 // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
+                signature = new byte[64];
                 signature = Crypto.sign(getBytes(), secretPhrase);
 
             }
