@@ -75,7 +75,7 @@ public abstract class HttpRequestHandler {
         JSONObject response = new JSONObject();
         response.put("errorCode", 7);
         response.put("errorDescription", "Not allowed");
-        ERROR_NOT_ALLOWED = JSON.getJSONStreamAware(response);
+        ERROR_NOT_ALLOWED = JSON.prepare(response);
     }
 
     private static final JSONStreamAware ERROR_INCORRECT_REQUEST;
@@ -83,7 +83,7 @@ public abstract class HttpRequestHandler {
         JSONObject response  = new JSONObject();
         response.put("errorCode", 1);
         response.put("errorDescription", "Incorrect request");
-        ERROR_INCORRECT_REQUEST = JSON.getJSONStreamAware(response);
+        ERROR_INCORRECT_REQUEST = JSON.prepare(response);
     }
 
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

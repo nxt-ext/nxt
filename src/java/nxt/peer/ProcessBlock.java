@@ -22,14 +22,14 @@ final class ProcessBlock extends HttpJSONRequestHandler {
     static {
         JSONObject response = new JSONObject();
         response.put("accepted", true);
-        ACCEPTED = JSON.getJSONStreamAware(response);
+        ACCEPTED = JSON.prepare(response);
     }
 
     private static final JSONStreamAware NOT_ACCEPTED;
     static {
         JSONObject response = new JSONObject();
         response.put("accepted", false);
-        NOT_ACCEPTED = JSON.getJSONStreamAware(response);
+        NOT_ACCEPTED = JSON.prepare(response);
     }
 
     @Override

@@ -10,9 +10,9 @@ public final class JSON {
 
     private JSON() {} //never
 
-    public final static JSONStreamAware emptyJSON = getJSONStreamAware(new JSONObject());
+    public final static JSONStreamAware emptyJSON = prepare(new JSONObject());
 
-    public static JSONStreamAware getJSONStreamAware(final JSONObject json) {
+    public static JSONStreamAware prepare(final JSONObject json) {
         return new JSONStreamAware() {
             private final char[] jsonChars = json.toJSONString().toCharArray();
             @Override
@@ -20,6 +20,11 @@ public final class JSON {
                 out.write(jsonChars);
             }
         };
+    }
+
+    public static JSONStreamAware prepareRequest(final JSONObject json) {
+        json.put("protocol", 1);
+        return prepare(json);
     }
 
 }

@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -223,13 +223,7 @@ public class Block implements Serializable {
                 return json;
             }
         }
-        json = new JSONStreamAware() {
-            private char[] jsonChars = getJSONObject().toJSONString().toCharArray();
-            @Override
-            public void writeJSONString(Writer out) throws IOException {
-                out.write(jsonChars);
-            }
-        };
+        json = JSON.prepare(getJSONObject());
         jsonRef = new SoftReference<>(json);
         return json;
     }

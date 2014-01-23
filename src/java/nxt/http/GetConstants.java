@@ -97,7 +97,7 @@ final class GetConstants extends HttpRequestHandler {
         peerStates.add(peerState);
         response.put("peerStates", peerStates);
 
-        CONSTANTS = JSON.getJSONStreamAware(response);
+        CONSTANTS = JSON.prepare(response);
 
     }
 

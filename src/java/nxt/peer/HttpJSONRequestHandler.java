@@ -47,14 +47,14 @@ public abstract class HttpJSONRequestHandler {
     static {
         JSONObject response = new JSONObject();
         response.put("error", "Unsupported request type!");
-        UNSUPPORTED_REQUEST_TYPE = JSON.getJSONStreamAware(response);
+        UNSUPPORTED_REQUEST_TYPE = JSON.prepare(response);
     }
 
     private static final JSONStreamAware UNSUPPORTED_PROTOCOL;
     static {
         JSONObject response = new JSONObject();
         response.put("error", "Unsupported protocol!");
-        UNSUPPORTED_PROTOCOL = JSON.getJSONStreamAware(response);
+        UNSUPPORTED_PROTOCOL = JSON.prepare(response);
     }
 
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

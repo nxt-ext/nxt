@@ -43,8 +43,7 @@ public final class Blockchain {
         {
             JSONObject request = new JSONObject();
             request.put("requestType", "getUnconfirmedTransactions");
-            request.put("protocol", 1);
-            getUnconfirmedTransactionsRequest = JSON.getJSONStreamAware(request);
+            getUnconfirmedTransactionsRequest = JSON.prepareRequest(request);
         }
 
         @Override
@@ -138,16 +137,14 @@ public final class Blockchain {
         {
             JSONObject request = new JSONObject();
             request.put("requestType", "getCumulativeDifficulty");
-            request.put("protocol", 1);
-            getCumulativeDifficultyRequest = JSON.getJSONStreamAware(request);
+            getCumulativeDifficultyRequest = JSON.prepareRequest(request);
         }
 
         private final JSONStreamAware getMilestoneBlockIdsRequest;
         {
             JSONObject request = new JSONObject();
             request.put("requestType", "getMilestoneBlockIds");
-            request.put("protocol", 1);
-            getMilestoneBlockIdsRequest = JSON.getJSONStreamAware(request);
+            getMilestoneBlockIdsRequest = JSON.prepareRequest(request);
         }
 
         @Override
@@ -197,7 +194,7 @@ public final class Blockchain {
                                     JSONObject request = new JSONObject();
                                     request.put("requestType", "getNextBlockIds");
                                     request.put("blockId", Convert.convert(commonBlockId));
-                                    response = peer.send(request);
+                                    response = peer.send(JSON.prepareRequest(request));
                                     if (response == null) {
 
                                         return;
@@ -243,7 +240,7 @@ public final class Blockchain {
                                         JSONObject request = new JSONObject();
                                         request.put("requestType", "getNextBlocks");
                                         request.put("blockId", Convert.convert(curBlockId));
-                                        response = peer.send(request);
+                                        response = peer.send(JSON.prepareRequest(request));
                                         if (response == null) {
 
                                             break;

@@ -115,8 +115,7 @@ public class Peer implements Comparable<Peer> {
         {
             JSONObject request = new JSONObject();
             request.put("requestType", "getPeers");
-            request.put("protocol", 1);
-            getPeersRequest = JSON.getJSONStreamAware(request);
+            getPeersRequest = JSON.prepareRequest(request);
         }
 
         @Override
@@ -433,7 +432,7 @@ public class Peer implements Comparable<Peer> {
         request.put("scheme", Nxt.myScheme);
         request.put("port", Nxt.myPort);
         request.put("shareAddress", Nxt.shareMyAddress);
-        JSONObject response = send(request);
+        JSONObject response = send(JSON.prepareRequest(request));
         if (response != null) {
 
             application = (String)response.get("application");
@@ -666,14 +665,8 @@ public class Peer implements Comparable<Peer> {
     }
 
     public static void sendToSomePeers(final JSONObject request) {
-        request.put("protocol", 1);
-        final JSONStreamAware jsonStreamAware = new JSONStreamAware() {
-            final char[] jsonChars = request.toJSONString().toCharArray();
-            @Override
-            public void writeJSONString(Writer out) throws IOException {
-                out.write(jsonChars);
-            }
-        };
+
+        final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
 
         int successful = 0;
         List<Future<JSONObject>> expectedResponses = new ArrayList<>();
@@ -687,7 +680,7 @@ public class Peer implements Comparable<Peer> {
                 Future<JSONObject> futureResponse = ThreadPools.sendToPeers(new Callable<JSONObject>() {
                     @Override
                     public JSONObject call() {
-                        return peer.send(jsonStreamAware);
+                        return peer.send(jsonRequest);
                     }
                 });
                 expectedResponses.add(futureResponse);
@@ -714,17 +707,6 @@ public class Peer implements Comparable<Peer> {
 
         }
 
-    }
-
-    //TODO: replace usage of this method with send(JSONStreamAware) for requests that are constant
-    public JSONObject send(final JSONObject request) {
-        request.put("protocol", 1);
-        return send(new JSONStreamAware() {
-            @Override
-            public void writeJSONString(Writer out) throws IOException {
-                request.writeJSONString(out);
-            }
-        });
     }
 
     public JSONObject send(final JSONStreamAware request) {
