@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.9";
+    static final String VERSION = "0.5.10";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -91,6 +91,7 @@ public class Nxt extends HttpServlet {
     static final int TRANSPARENT_FORGING_BLOCK = 30000;
     static final int ARBITRARY_MESSAGES_BLOCK = 40000;
     static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
+    static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
     static final long MAX_BALANCE = 1000000000;
@@ -495,37 +496,24 @@ public class Nxt extends HttpServlet {
         int getEffectiveBalance() {
 
             Block lastBlock = Nxt.lastBlock.get();
-            if (height < TRANSPARENT_FORGING_BLOCK_2) {
+            if (lastBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
 
-                if (height == 0) {
-
+                if (this.height == 0) {
                     return (int)(getBalance() / 100);
-
                 }
-
-                if (lastBlock.height - height < 1440) {
-
+                if (lastBlock.height - this.height < 1440) {
                     return 0;
-
                 }
-
-                int amount = 0;
+                int receivedInlastBlock = 0;
                 for (Transaction transaction : lastBlock.blockTransactions) {
-
                     if (transaction.recipient == id) {
-
-                        amount += transaction.amount;
-
+                        receivedInlastBlock += transaction.amount;
                     }
-
                 }
-
-                return (int)(getBalance() / 100) - amount;
+                return (int)(getBalance() / 100) - receivedInlastBlock;
 
             } else {
-
                 return (int)(getGuaranteedBalance(1440) / 100);
-
             }
 
         }
@@ -960,6 +948,9 @@ public class Nxt extends HttpServlet {
             synchronized (blocksAndTransactionsLock) {
                 for (int i = 0; i < this.transactions.length; i++) {
                     this.blockTransactions[i] = Nxt.transactions.get(this.transactions[i]);
+                    if (this.blockTransactions[i] == null) {
+                        throw new IllegalStateException("Missing transaction " + convert(this.transactions[i]));
+                    }
                 }
                 if (previousBlock == 0) {
 
@@ -3164,8 +3155,7 @@ public class Nxt extends HttpServlet {
 
                         } else {
 
-                            peer.adjustedWeight = 0;
-                            peer.updateWeight();
+                            peer.weight = 0;
 
                         }
 
