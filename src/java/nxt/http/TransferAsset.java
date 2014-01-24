@@ -126,7 +126,7 @@ final class TransferAsset extends HttpRequestHandler {
 
                                             int timestamp = Convert.getEpochTime();
 
-                                            Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
+                                            Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
                                             transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
                                             transaction.sign(secretPhrase);
 
@@ -140,7 +140,7 @@ final class TransferAsset extends HttpRequestHandler {
 
                                             response.put("transaction", transaction.getStringId());
 
-                                            Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                                            Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
                                         }
 

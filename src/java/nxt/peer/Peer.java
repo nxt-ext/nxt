@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.HttpURLConnection;
@@ -722,7 +723,9 @@ public class Peer implements Comparable<Peer> {
 
             if (Nxt.communicationLoggingMask != 0) {
 
-                log = "\"" + announcedAddress + "\": " + request.toString();
+                StringWriter stringWriter = new StringWriter();
+                request.writeJSONString(stringWriter);
+                log = "\"" + announcedAddress + "\": " + stringWriter.toString();
 
             }
 

@@ -132,7 +132,7 @@ final class PlaceAskOrder extends HttpRequestHandler {
 
                                             int timestamp = Convert.getEpochTime();
 
-                                            Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS,
+                                            Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS,
                                                     Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT, timestamp, deadline,
                                                     publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
                                             transaction.attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
@@ -148,7 +148,7 @@ final class PlaceAskOrder extends HttpRequestHandler {
 
                                             response.put("transaction", transaction.getStringId());
 
-                                            Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                                            Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
                                         }
 

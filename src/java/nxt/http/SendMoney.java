@@ -106,7 +106,7 @@ final class SendMoney extends HttpRequestHandler {
 
                                 } else {
 
-                                    Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, Convert.getEpochTime(), deadline, publicKey, recipient, amount, fee, referencedTransaction);
+                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, Convert.getEpochTime(), deadline, publicKey, recipient, amount, fee, referencedTransaction);
                                     transaction.sign(secretPhrase);
 
                                     JSONObject peerRequest = new JSONObject();
@@ -120,7 +120,7 @@ final class SendMoney extends HttpRequestHandler {
                                     response.put("transaction", transaction.getStringId());
                                     response.put("bytes", Convert.convert(transaction.getBytes()));
 
-                                    Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
                                 }
 

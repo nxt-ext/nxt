@@ -105,7 +105,7 @@ final class CancelAskOrder extends HttpRequestHandler {
 
                                     int timestamp = Convert.getEpochTime();
 
-                                    Transaction transaction = new Transaction(Transaction.TYPE_COLORED_COINS,
+                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS,
                                             Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION, timestamp, deadline,
                                             publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
                                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
@@ -121,7 +121,7 @@ final class CancelAskOrder extends HttpRequestHandler {
 
                                     response.put("transaction", transaction.getStringId());
 
-                                    Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
                                 }
 

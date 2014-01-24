@@ -102,7 +102,7 @@ final class SendMessage extends HttpRequestHandler {
 
                                     int timestamp = Convert.getEpochTime();
 
-                                    Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
+                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
                                     transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
                                     transaction.sign(secretPhrase);
 
@@ -117,7 +117,7 @@ final class SendMessage extends HttpRequestHandler {
                                     response.put("transaction", transaction.getStringId());
                                     response.put("bytes", Convert.convert(transaction.getBytes()));
 
-                                    Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
                                 }
 

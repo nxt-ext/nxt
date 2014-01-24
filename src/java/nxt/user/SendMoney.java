@@ -117,7 +117,7 @@ final class SendMoney extends UserRequestHandler {
 
                 } else {
 
-                    final Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT,
+                    final Transaction transaction = Transaction.newTransaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT,
                             Convert.getEpochTime(), deadline, user.publicKey, recipient, amount, fee, 0);
                     transaction.sign(user.secretPhrase);
 
@@ -132,7 +132,7 @@ final class SendMoney extends UserRequestHandler {
                     JSONObject response = new JSONObject();
                     response.put("response", "notifyOfAcceptedTransaction");
 
-                    Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
                     return response;
 
                 }

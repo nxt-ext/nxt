@@ -142,7 +142,7 @@ final class AssignAlias extends HttpRequestHandler {
 
                                             int timestamp = Convert.getEpochTime();
 
-                                            Transaction transaction = new Transaction(Transaction.TYPE_MESSAGING,
+                                            Transaction transaction = Transaction.newTransaction(Transaction.TYPE_MESSAGING,
                                                     Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT, timestamp, deadline,
                                                     publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
                                             transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
@@ -158,7 +158,7 @@ final class AssignAlias extends HttpRequestHandler {
 
                                             response.put("transaction", transaction.getStringId());
 
-                                            Nxt.nonBroadcastedTransactions.put(transaction.id, transaction);
+                                            Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
                                         }
 

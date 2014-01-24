@@ -512,13 +512,13 @@ public final class Blockchain {
 
                 for (Transaction transaction : Nxt.nonBroadcastedTransactions.values()) {
 
-                    if (Nxt.unconfirmedTransactions.get(transaction.id) == null && Nxt.transactions.get(transaction.id) == null) {
+                    if (Nxt.unconfirmedTransactions.get(transaction.getId()) == null && Nxt.transactions.get(transaction.getId()) == null) {
 
                         transactionsData.add(transaction.getJSONObject());
 
                     } else {
 
-                        Nxt.nonBroadcastedTransactions.remove(transaction.id);
+                        Nxt.nonBroadcastedTransactions.remove(transaction.getId());
 
                     }
 
@@ -595,11 +595,12 @@ public final class Blockchain {
 
                                 doubleSpendingTransaction = false;
 
+                                //TODO: replace type/subtype switch with Transaction.applyToSenderAccount(account)
                                 account.addToUnconfirmedBalance(- amount * 100L);
 
-                                if (transaction.type == Transaction.TYPE_COLORED_COINS) {
+                                if (transaction.getType().getType() == Transaction.TYPE_COLORED_COINS) {
 
-                                    if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
+                                    if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
 
                                         Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
                                         Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
@@ -615,37 +616,41 @@ public final class Blockchain {
 
                                         }
 
-                                    } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
+                                    } else {
+                                        if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
 
-                                        Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                                        Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                        if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
+                                            Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
+                                            Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
+                                            if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
 
-                                            doubleSpendingTransaction = true;
+                                                doubleSpendingTransaction = true;
 
-                                            account.addToUnconfirmedBalance(amount * 100L);
+                                                account.addToUnconfirmedBalance(amount * 100L);
 
-                                        } else {
+                                            } else {
 
-                                            account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
+                                                account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
 
-                                        }
-
-                                    } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                                        Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                                        if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
-
-                                            doubleSpendingTransaction = true;
-
-                                            account.addToUnconfirmedBalance(amount * 100L);
+                                            }
 
                                         } else {
+                                            if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
 
-                                            account.addToUnconfirmedBalance(- attachment.quantity * attachment.price);
+                                                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
+                                                if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
 
+                                                    doubleSpendingTransaction = true;
+
+                                                    account.addToUnconfirmedBalance(amount * 100L);
+
+                                                } else {
+
+                                                    account.addToUnconfirmedBalance(-attachment.quantity * attachment.price);
+
+                                                }
+
+                                            }
                                         }
-
                                     }
 
                                 }
@@ -963,30 +968,10 @@ public final class Blockchain {
 
                     }
 
-                    switch (transaction.type) {
-
-                        case Transaction.TYPE_MESSAGING:
-                        {
-
-                            switch (transaction.subtype) {
-
-                                case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                                {
-
-                                    if (!blockAliases.add(((Attachment.MessagingAliasAssignment)transaction.attachment).alias.toLowerCase())) {
-
-                                        return false;
-
-                                    }
-
-                                }
-                                break;
-
-                            }
-
+                    if (transaction.getType() == Transaction.Type.Messaging.ALIAS_ASSIGNMENT) {
+                        if (!blockAliases.add(((Attachment.MessagingAliasAssignment)transaction.attachment).alias.toLowerCase())) {
+                            return false;
                         }
-                        break;
-
                     }
 
                 }
@@ -1016,9 +1001,10 @@ public final class Blockchain {
 
                     }
                     accumulatedAmounts.put(sender, accumulatedAmount + (transaction.amount + transaction.fee) * 100L);
-                    if (transaction.type == Transaction.TYPE_PAYMENT) {
+                    //TODO: replace type/subtype switch
+                    if (transaction.getType().getType() == Transaction.TYPE_PAYMENT) {
 
-                        if (transaction.subtype == Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
+                        if (transaction.getType().getSubtype() == Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
 
                             calculatedTotalAmount += transaction.amount;
 
@@ -1028,67 +1014,80 @@ public final class Blockchain {
 
                         }
 
-                    } else if (transaction.type == Transaction.TYPE_MESSAGING) {
-
-                        if (transaction.subtype != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE && transaction.subtype != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
-
-                            break;
-
-                        }
-
-                    } else if (transaction.type == Transaction.TYPE_COLORED_COINS) {
-
-                        if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                            Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                            HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                            if (accountAccumulatedAssetQuantities == null) {
-
-                                accountAccumulatedAssetQuantities = new HashMap<>();
-                                accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                            }
-                            Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                            if (assetAccumulatedAssetQuantities == null) {
-
-                                assetAccumulatedAssetQuantities = 0L;
-
-                            }
-                            accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                        } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                            Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                            HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                            if (accountAccumulatedAssetQuantities == null) {
-
-                                accountAccumulatedAssetQuantities = new HashMap<>();
-                                accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                            }
-                            Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                            if (assetAccumulatedAssetQuantities == null) {
-
-                                assetAccumulatedAssetQuantities = 0L;
-
-                            }
-                            accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                        } else if (transaction.subtype == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                            Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                            accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
-
-                        } else if (transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION && transaction.subtype != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {
-
-                            break;
-
-                        }
-
                     } else {
+                        if (transaction.getType().getType() == Transaction.TYPE_MESSAGING) {
 
-                        break;
+                            if (transaction.getType().getSubtype() != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE
+                                    && transaction.getType().getSubtype() != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
 
+                                break;
+
+                            }
+
+                        } else {
+                            if (transaction.getType().getType() == Transaction.TYPE_COLORED_COINS) {
+
+                                if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
+
+                                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.attachment;
+                                    HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
+                                    if (accountAccumulatedAssetQuantities == null) {
+
+                                        accountAccumulatedAssetQuantities = new HashMap<>();
+                                        accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
+
+                                    }
+                                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
+                                    if (assetAccumulatedAssetQuantities == null) {
+
+                                        assetAccumulatedAssetQuantities = 0L;
+
+                                    }
+                                    accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
+
+                                } else {
+                                    if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
+
+                                        Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.attachment;
+                                        HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
+                                        if (accountAccumulatedAssetQuantities == null) {
+
+                                            accountAccumulatedAssetQuantities = new HashMap<>();
+                                            accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
+
+                                        }
+                                        Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
+                                        if (assetAccumulatedAssetQuantities == null) {
+
+                                            assetAccumulatedAssetQuantities = 0L;
+
+                                        }
+                                        accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
+
+                                    } else {
+                                        if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
+
+                                            Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
+                                            accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
+
+                                        } else {
+                                            if (transaction.getType().getSubtype() != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE
+                                                    && transaction.getType().getSubtype() != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION
+                                                    && transaction.getType().getSubtype() != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {
+
+                                                break;
+
+                                            }
+                                        }
+                                    }
+                                }
+
+                            } else {
+
+                                break;
+
+                            }
+                        }
                     }
                     calculatedTotalFee += transaction.fee;
 
@@ -1300,13 +1299,13 @@ public final class Blockchain {
 
             }
 
-            //TODO: refactor, don't use switch but create e.g. transaction handler class for each case
-            switch (transaction.type) {
+            //TODO: replace with Transaction.analyze()
+            switch (transaction.getType().getType()) {
 
                 case Transaction.TYPE_PAYMENT:
                 {
 
-                    switch (transaction.subtype) {
+                    switch (transaction.getType().getSubtype()) {
 
                         case Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
                         {
@@ -1324,7 +1323,7 @@ public final class Blockchain {
                 case Transaction.TYPE_MESSAGING:
                 {
 
-                    switch (transaction.subtype) {
+                    switch (transaction.getType().getSubtype()) {
 
                         case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                         {
@@ -1359,7 +1358,7 @@ public final class Blockchain {
                 case Transaction.TYPE_COLORED_COINS:
                 {
 
-                    switch (transaction.subtype) {
+                    switch (transaction.getType().getSubtype()) {
 
                         case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
                         {
@@ -1594,30 +1593,10 @@ public final class Blockchain {
                     long amount = (transaction.amount + transaction.fee) * 100L;
                     if (accumulatedAmount + amount <= Nxt.accounts.get(sender).getBalance() && transaction.validateAttachment()) {
 
-                        switch (transaction.type) {
-
-                            case Transaction.TYPE_MESSAGING:
-                            {
-
-                                switch (transaction.subtype) {
-
-                                    case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                                    {
-
-                                        if (!newAliases.add(((Attachment.MessagingAliasAssignment)transaction.attachment).alias.toLowerCase())) {
-
-                                            continue;
-
-                                        }
-
-                                    }
-                                    break;
-
-                                }
-
+                        if (transaction.getType() == Transaction.Type.Messaging.ALIAS_ASSIGNMENT) {
+                            if (!newAliases.add(((Attachment.MessagingAliasAssignment)transaction.attachment).alias.toLowerCase())) {
+                                continue;
                             }
-                            break;
-
                         }
 
                         accumulatedAmounts.put(sender, accumulatedAmount + amount);
@@ -1719,7 +1698,7 @@ public final class Blockchain {
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
 
-                Transaction transaction = new Transaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT,
+                Transaction transaction = Transaction.newTransaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT,
                         0, (short)0, Genesis.CREATOR_PUBLIC_KEY, Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i],
                         0, 0, Genesis.GENESIS_SIGNATURES[i]);
 

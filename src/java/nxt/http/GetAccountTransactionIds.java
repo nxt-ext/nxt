@@ -79,7 +79,7 @@ final class GetAccountTransactionIds extends HttpRequestHandler {
                         byte[] accountPublicKey = accountData.publicKey.get();
                         for (Transaction transaction : Nxt.transactions.values()) {
                             if ((transaction.recipient == accountData.id || Arrays.equals(transaction.senderPublicKey, accountPublicKey))
-                                    && (type < 0 || transaction.type == type) && (subtype < 0 || transaction.subtype == subtype)
+                                    && (type < 0 || transaction.getType().getType() == type) && (subtype < 0 || transaction.getType().getSubtype() == subtype)
                                     && Nxt.blocks.get(transaction.block).timestamp >= timestamp) {
                                 sortedTransactions.offer(transaction);
                             }
