@@ -105,8 +105,9 @@ final class CancelBidOrder extends HttpRequestHandler {
 
                                     int timestamp = Convert.getEpochTime();
 
-                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION, timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
-                                    transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
+                                    Attachment attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
+                                    Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+                                            Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
                                     transaction.sign(secretPhrase);
 
                                     JSONObject peerRequest = new JSONObject();

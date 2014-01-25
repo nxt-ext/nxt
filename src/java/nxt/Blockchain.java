@@ -34,8 +34,8 @@ public final class Blockchain {
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
     public static final ConcurrentMap<Long, AskOrder> askOrders = new ConcurrentHashMap<>();
     public static final ConcurrentMap<Long, BidOrder> bidOrders = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, TreeSet<AskOrder>> sortedAskOrders = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, TreeSet<BidOrder>> sortedBidOrders = new ConcurrentHashMap<>();
+    static final ConcurrentMap<Long, TreeSet<AskOrder>> sortedAskOrders = new ConcurrentHashMap<>();
+    static final ConcurrentMap<Long, TreeSet<BidOrder>> sortedBidOrders = new ConcurrentHashMap<>();
 
     static final Runnable processTransactionsThread = new Runnable() {
 
@@ -564,112 +564,27 @@ public final class Blockchain {
 
                 }
 
-                long senderId;
                 boolean doubleSpendingTransaction;
 
                 synchronized (Blockchain.class) {
 
-                    long id = transaction.getId();
-                    if (Nxt.transactions.get(id) != null || Nxt.unconfirmedTransactions.get(id) != null || Nxt.doubleSpendingTransactions.get(id) != null || !transaction.verify()) {
-
+                    Long id = transaction.getId();
+                    if (Nxt.transactions.containsKey(id) || Nxt.unconfirmedTransactions.containsKey(id)
+                            || Nxt.doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
                         continue;
-
                     }
 
-                    senderId = transaction.getSenderAccountId();
-                    Account account = Nxt.accounts.get(senderId);
-                    if (account == null) {
-
-                        doubleSpendingTransaction = true;
-
-                    } else {
-
-                        int amount = transaction.amount + transaction.fee;
-                        synchronized (account) {
-
-                            if (account.getUnconfirmedBalance() < amount * 100L) {
-
-                                doubleSpendingTransaction = true;
-
-                            } else {
-
-                                doubleSpendingTransaction = false;
-
-                                //TODO: replace type/subtype switch with Transaction.applyToSenderAccount(account)
-                                account.addToUnconfirmedBalance(- amount * 100L);
-
-                                if (transaction.getType().getType() == Transaction.TYPE_COLORED_COINS) {
-
-                                    if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                                        Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                                        Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                        if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
-
-                                            doubleSpendingTransaction = true;
-
-                                            account.addToUnconfirmedBalance(amount * 100L);
-
-                                        } else {
-
-                                            account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-
-                                        }
-
-                                    } else {
-                                        if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                                            Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                                            Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                                            if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
-
-                                                doubleSpendingTransaction = true;
-
-                                                account.addToUnconfirmedBalance(amount * 100L);
-
-                                            } else {
-
-                                                account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-
-                                            }
-
-                                        } else {
-                                            if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                                                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
-                                                if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
-
-                                                    doubleSpendingTransaction = true;
-
-                                                    account.addToUnconfirmedBalance(amount * 100L);
-
-                                                } else {
-
-                                                    account.addToUnconfirmedBalance(-attachment.quantity * attachment.price);
-
-                                                }
-
-                                            }
-                                        }
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                    }
+                    doubleSpendingTransaction = transaction.preProcess();
 
                     transaction.index = Nxt.transactionCounter.incrementAndGet();
 
                     if (doubleSpendingTransaction) {
 
-                        Nxt.doubleSpendingTransactions.put(transaction.getId(), transaction);
+                        Nxt.doubleSpendingTransactions.put(id, transaction);
 
                     } else {
 
-                        Nxt.unconfirmedTransactions.put(transaction.getId(), transaction);
+                        Nxt.unconfirmedTransactions.put(id, transaction);
 
                         if (parameterName.equals("transactions")) {
 
@@ -692,7 +607,7 @@ public final class Blockchain {
                 newTransaction.put("recipient", Convert.convert(transaction.recipient));
                 newTransaction.put("amount", transaction.amount);
                 newTransaction.put("fee", transaction.fee);
-                newTransaction.put("sender", Convert.convert(senderId));
+                newTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
                 newTransaction.put("id", transaction.getStringId());
                 newTransactions.add(newTransaction);
 
@@ -977,8 +892,8 @@ public final class Blockchain {
                 }
                 Arrays.sort(block.transactions);
 
-                HashMap<Long, Long> accumulatedAmounts = new HashMap<>();
-                HashMap<Long, HashMap<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
+                Map<Long, Long> accumulatedAmounts = new HashMap<>();
+                Map<Long, Map<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
                 int calculatedTotalAmount = 0, calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
                 int i;
@@ -993,102 +908,10 @@ public final class Blockchain {
 
                     }
 
-                    long sender = transaction.getSenderAccountId();
-                    Long accumulatedAmount = accumulatedAmounts.get(sender);
-                    if (accumulatedAmount == null) {
+                    calculatedTotalAmount += transaction.amount;
 
-                        accumulatedAmount = 0L;
+                    transaction.updateTotals(accumulatedAmounts, accumulatedAssetQuantities);
 
-                    }
-                    accumulatedAmounts.put(sender, accumulatedAmount + (transaction.amount + transaction.fee) * 100L);
-                    //TODO: replace type/subtype switch
-                    if (transaction.getType().getType() == Transaction.TYPE_PAYMENT) {
-
-                        if (transaction.getType().getSubtype() == Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
-
-                            calculatedTotalAmount += transaction.amount;
-
-                        } else {
-
-                            break;
-
-                        }
-
-                    } else {
-                        if (transaction.getType().getType() == Transaction.TYPE_MESSAGING) {
-
-                            if (transaction.getType().getSubtype() != Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE
-                                    && transaction.getType().getSubtype() != Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT) {
-
-                                break;
-
-                            }
-
-                        } else {
-                            if (transaction.getType().getType() == Transaction.TYPE_COLORED_COINS) {
-
-                                if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER) {
-
-                                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.attachment;
-                                    HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                                    if (accountAccumulatedAssetQuantities == null) {
-
-                                        accountAccumulatedAssetQuantities = new HashMap<>();
-                                        accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                                    }
-                                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                                    if (assetAccumulatedAssetQuantities == null) {
-
-                                        assetAccumulatedAssetQuantities = 0L;
-
-                                    }
-                                    accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                                } else {
-                                    if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT) {
-
-                                        Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.attachment;
-                                        HashMap<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(sender);
-                                        if (accountAccumulatedAssetQuantities == null) {
-
-                                            accountAccumulatedAssetQuantities = new HashMap<>();
-                                            accumulatedAssetQuantities.put(sender, accountAccumulatedAssetQuantities);
-
-                                        }
-                                        Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
-                                        if (assetAccumulatedAssetQuantities == null) {
-
-                                            assetAccumulatedAssetQuantities = 0L;
-
-                                        }
-                                        accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
-
-                                    } else {
-                                        if (transaction.getType().getSubtype() == Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT) {
-
-                                            Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
-                                            accumulatedAmounts.put(sender, accumulatedAmount + attachment.quantity * attachment.price);
-
-                                        } else {
-                                            if (transaction.getType().getSubtype() != Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE
-                                                    && transaction.getType().getSubtype() != Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION
-                                                    && transaction.getType().getSubtype() != Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION) {
-
-                                                break;
-
-                                            }
-                                        }
-                                    }
-                                }
-
-                            } else {
-
-                                break;
-
-                            }
-                        }
-                    }
                     calculatedTotalFee += transaction.fee;
 
                     digest.update(transaction.getBytes());
@@ -1118,7 +941,7 @@ public final class Blockchain {
 
                 }
 
-                for (Map.Entry<Long, HashMap<Long, Long>> accumulatedAssetQuantitiesEntry : accumulatedAssetQuantities.entrySet()) {
+                for (Map.Entry<Long, Map<Long, Long>> accumulatedAssetQuantitiesEntry : accumulatedAssetQuantities.entrySet()) {
 
                     Account senderAccount = Nxt.accounts.get(accumulatedAssetQuantitiesEntry.getKey());
                     for (Map.Entry<Long, Long> accountAccumulatedAssetQuantitiesEntry : accumulatedAssetQuantitiesEntry.getValue().entrySet()) {
@@ -1282,174 +1105,7 @@ public final class Blockchain {
 
             transaction.height = block.height;
 
-            long sender = transaction.getSenderAccountId();
-            Account senderAccount = Nxt.accounts.get(sender);
-            if (! senderAccount.setOrVerify(transaction.senderPublicKey)) {
-
-                throw new RuntimeException("sender public key mismatch");
-                // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
-
-            }
-            senderAccount.addToBalanceAndUnconfirmedBalance(- (transaction.amount + transaction.fee) * 100L);
-
-            Account recipientAccount = Nxt.accounts.get(transaction.recipient);
-            if (recipientAccount == null) {
-
-                recipientAccount = Account.addAccount(transaction.recipient);
-
-            }
-
-            //TODO: replace with Transaction.analyze()
-            switch (transaction.getType().getType()) {
-
-                case Transaction.TYPE_PAYMENT:
-                {
-
-                    switch (transaction.getType().getSubtype()) {
-
-                        case Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
-                        {
-
-                            recipientAccount.addToBalanceAndUnconfirmedBalance(transaction.amount * 100L);
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-                case Transaction.TYPE_MESSAGING:
-                {
-
-                    switch (transaction.getType().getSubtype()) {
-
-                        case Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
-                        {
-
-                            Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-
-                            String normalizedAlias = attachment.alias.toLowerCase();
-
-                            Alias alias = Nxt.aliases.get(normalizedAlias);
-                            if (alias == null) {
-
-                                long aliasId = transaction.getId();
-                                alias = new Alias(senderAccount, aliasId, attachment.alias, attachment.uri, block.timestamp);
-                                Nxt.aliases.put(normalizedAlias, alias);
-                                Nxt.aliasIdToAliasMappings.put(aliasId, alias);
-
-                            } else {
-
-                                alias.uri = attachment.uri;
-                                alias.timestamp = block.timestamp;
-
-                            }
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-                case Transaction.TYPE_COLORED_COINS:
-                {
-
-                    switch (transaction.getType().getSubtype()) {
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
-                        {
-
-                            Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
-
-                            long assetId = transaction.getId();
-                            Asset asset = new Asset(sender, attachment.name, attachment.description, attachment.quantity);
-                            Nxt.assets.put(assetId, asset);
-                            Nxt.assetNameToIdMappings.put(attachment.name.toLowerCase(), assetId);
-                            sortedAskOrders.put(assetId, new TreeSet<AskOrder>());
-                            sortedBidOrders.put(assetId, new TreeSet<BidOrder>());
-                            senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.quantity);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
-                        {
-
-                            Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-
-                            senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                            recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, attachment.quantity);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
-                        {
-
-                            Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-
-                            AskOrder order = new AskOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-                            senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                            askOrders.put(order.id, order);
-                            sortedAskOrders.get(attachment.asset).add(order);
-                            matchOrders(attachment.asset);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
-                        {
-
-                            Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-
-                            BidOrder order = new BidOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-
-                            senderAccount.addToBalanceAndUnconfirmedBalance(- attachment.quantity * attachment.price);
-
-                            bidOrders.put(order.id, order);
-                            sortedBidOrders.get(attachment.asset).add(order);
-
-                            matchOrders(attachment.asset);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
-                        {
-
-                            Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
-
-                            AskOrder order;
-                            order = askOrders.remove(attachment.order);
-                            sortedAskOrders.get(order.asset).remove(order);
-                            senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.quantity);
-
-                        }
-                        break;
-
-                        case Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
-                        {
-
-                            Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
-
-                            BidOrder order;
-                            order = bidOrders.remove(attachment.order);
-                            sortedBidOrders.get(order.asset).remove(order);
-                            senderAccount.addToBalanceAndUnconfirmedBalance(order.quantity * order.price);
-
-                        }
-                        break;
-
-                    }
-
-                }
-                break;
-
-            }
+            transaction.apply();
 
         }
 
@@ -1513,7 +1169,7 @@ public final class Blockchain {
 
     }
 
-    private synchronized static void matchOrders(long assetId) {
+    synchronized static void matchOrders(long assetId) {
 
         TreeSet<AskOrder> sortedAssetAskOrders = Blockchain.sortedAskOrders.get(assetId);
         TreeSet<BidOrder> sortedAssetBidOrders = Blockchain.sortedBidOrders.get(assetId);
@@ -1698,9 +1354,8 @@ public final class Blockchain {
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
 
-                Transaction transaction = Transaction.newTransaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT,
-                        0, (short)0, Genesis.CREATOR_PUBLIC_KEY, Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i],
-                        0, 0, Genesis.GENESIS_SIGNATURES[i]);
+                Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
+                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, 0, Genesis.GENESIS_SIGNATURES[i]);
 
                 Nxt.transactions.put(transaction.getId(), transaction);
 

@@ -105,10 +105,9 @@ final class CancelAskOrder extends HttpRequestHandler {
 
                                     int timestamp = Convert.getEpochTime();
 
-                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS,
-                                            Transaction.SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION, timestamp, deadline,
-                                            publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
-                                    transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
+                                    Attachment attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
+                                    Transaction transaction = Transaction.newTransaction(timestamp, deadline,
+                                            publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
                                     transaction.sign(secretPhrase);
 
                                     JSONObject peerRequest = new JSONObject();

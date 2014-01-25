@@ -106,7 +106,7 @@ final class SendMoney extends HttpRequestHandler {
 
                                 } else {
 
-                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_PAYMENT, Transaction.SUBTYPE_PAYMENT_ORDINARY_PAYMENT, Convert.getEpochTime(), deadline, publicKey, recipient, amount, fee, referencedTransaction);
+                                    Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, publicKey, recipient, amount, fee, referencedTransaction);
                                     transaction.sign(secretPhrase);
 
                                     JSONObject peerRequest = new JSONObject();

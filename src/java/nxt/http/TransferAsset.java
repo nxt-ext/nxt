@@ -126,8 +126,9 @@ final class TransferAsset extends HttpRequestHandler {
 
                                             int timestamp = Convert.getEpochTime();
 
-                                            Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_ASSET_TRANSFER, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
-                                            transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
+                                            Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
+                                            Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+                                                    recipient, 0, fee, referencedTransaction, attachment);
                                             transaction.sign(secretPhrase);
 
                                             JSONObject peerRequest = new JSONObject();

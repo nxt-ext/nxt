@@ -142,10 +142,9 @@ final class AssignAlias extends HttpRequestHandler {
 
                                             int timestamp = Convert.getEpochTime();
 
-                                            Transaction transaction = Transaction.newTransaction(Transaction.TYPE_MESSAGING,
-                                                    Transaction.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT, timestamp, deadline,
-                                                    publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
-                                            transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
+                                            Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
+                                            Transaction transaction = Transaction.newTransaction(timestamp, deadline,
+                                                    publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
                                             transaction.sign(secretPhrase);
 
                                             JSONObject peerRequest = new JSONObject();

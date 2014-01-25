@@ -15,8 +15,7 @@ public interface Attachment {
     public byte[] getBytes();
     public JSONObject getJSONObject();
 
-    public long getRecipientDeltaBalance();
-    public long getSenderDeltaBalance();
+    Transaction.Type getTransactionType();
 
 
     public static class MessagingArbitraryMessage implements Attachment, Serializable {
@@ -59,17 +58,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.Messaging.ARBITRARY_MESSAGE;
         }
 
     }
@@ -135,17 +125,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.Messaging.ALIAS_ASSIGNMENT;
         }
 
     }
@@ -212,17 +193,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.ColoredCoins.ASSET_ISSUANCE;
         }
 
     }
@@ -270,17 +242,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-
-            return 0;
-
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            return 0;
-
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.ColoredCoins.ASSET_TRANSFER;
         }
 
     }
@@ -342,13 +305,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-            return 0;
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-            return 0;
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.ColoredCoins.ASK_ORDER_PLACEMENT;
         }
 
     }
@@ -362,13 +320,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-            return 0;
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-            return -quantity * price;
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.ColoredCoins.BID_ORDER_PLACEMENT;
         }
 
     }
@@ -420,13 +373,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-            return 0;
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-            return 0;
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.ColoredCoins.ASK_ORDER_CANCELLATION;
         }
 
     }
@@ -440,19 +388,8 @@ public interface Attachment {
         }
 
         @Override
-        public long getRecipientDeltaBalance() {
-            return 0;
-        }
-
-        @Override
-        public long getSenderDeltaBalance() {
-
-            BidOrder bidOrder = Blockchain.bidOrders.get(order);
-            if (bidOrder == null) {
-                return 0;
-            }
-            return bidOrder.quantity * bidOrder.price;
-
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.ColoredCoins.BID_ORDER_CANCELLATION;
         }
 
     }

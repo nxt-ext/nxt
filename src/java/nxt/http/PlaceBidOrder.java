@@ -124,8 +124,9 @@ final class PlaceBidOrder extends HttpRequestHandler {
 
                                         int timestamp = Convert.getEpochTime();
 
-                                        Transaction transaction = Transaction.newTransaction(Transaction.TYPE_COLORED_COINS, Transaction.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT, timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction);
-                                        transaction.attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
+                                        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
+                                        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+                                                Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
                                         transaction.sign(secretPhrase);
 
                                         JSONObject peerRequest = new JSONObject();

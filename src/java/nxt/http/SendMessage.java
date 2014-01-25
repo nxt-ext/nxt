@@ -102,8 +102,9 @@ final class SendMessage extends HttpRequestHandler {
 
                                     int timestamp = Convert.getEpochTime();
 
-                                    Transaction transaction = Transaction.newTransaction(Transaction.TYPE_MESSAGING, Transaction.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE, timestamp, deadline, publicKey, recipient, 0, fee, referencedTransaction);
-                                    transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
+                                    Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
+                                    Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+                                            recipient, 0, fee, referencedTransaction, attachment);
                                     transaction.sign(secretPhrase);
 
                                     JSONObject peerRequest = new JSONObject();

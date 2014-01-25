@@ -25,8 +25,12 @@ final class Nxt {
 
         public Object readResolve() throws ObjectStreamException {
 
-            nxt.Transaction transaction = nxt.Transaction.newTransaction(type, subtype, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
-            transaction.attachment = attachment;
+            nxt.Transaction transaction = attachment != null
+                            ? nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
+                            amount, fee, referencedTransaction, attachment)
+                            : nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
+                            amount, fee, referencedTransaction);
+            transaction.signature = signature;
             transaction.index = index;
             transaction.block = block;
             transaction.height = height;
