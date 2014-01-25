@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Block;
+import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -57,7 +58,7 @@ final class GetAccountBlockIds extends HttpRequestHandler {
 
                         PriorityQueue<Block> sortedBlocks = new PriorityQueue<>(11, Block.heightComparator);
                         byte[] accountPublicKey = accountData.publicKey.get();
-                        for (Block block : Nxt.blocks.values()) {
+                        for (Block block : Blockchain.allBlocks) {
 
                             if (block.timestamp >= timestamp && Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
 

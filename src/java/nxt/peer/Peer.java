@@ -39,15 +39,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Peer implements Comparable<Peer> {
 
     public static final int STATE_NONCONNECTED = 0;
     public static final int STATE_CONNECTED = 1;
     public static final int STATE_DISCONNECTED = 2;
+
+    public static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
+    private static final AtomicInteger peerCounter = new AtomicInteger();
 
     public static final Runnable peerConnectingThread = new Runnable() {
 
@@ -88,7 +94,7 @@ public class Peer implements Comparable<Peer> {
 
                 long curTime = System.currentTimeMillis();
 
-                for (Peer peer : Nxt.peers.values()) {
+                for (Peer peer : peers.values()) {
 
                     if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
 
@@ -215,13 +221,13 @@ public class Peer implements Comparable<Peer> {
 
         }
 
-        Peer peer = Nxt.peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
+        Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
         if (peer == null) {
 
             //TODO: Check addresses
 
-            peer = new Peer(announcedAddress, Nxt.peerCounter.incrementAndGet());
-            Nxt.peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
+            peer = new Peer(announcedAddress, peerCounter.incrementAndGet());
+            peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
 
         }
 
@@ -231,7 +237,7 @@ public class Peer implements Comparable<Peer> {
 
     public static void updatePeerWeights(Account account) {
 
-        for (Peer peer : Nxt.peers.values()) {
+        for (Peer peer : peers.values()) {
 
             if (peer.accountId == account.id && peer.adjustedWeight > 0) {
 
@@ -307,7 +313,7 @@ public class Peer implements Comparable<Peer> {
                 this.weight = weight;
                 this.date = date;
 
-                for (Peer peer : Nxt.peers.values()) {
+                for (Peer peer : peers.values()) {
 
                     if (peer.accountId == accountId) {
 
@@ -385,11 +391,7 @@ public class Peer implements Comparable<Peer> {
         addedBlacklistedPeers.add(addedBlacklistedPeer);
         response.put("addedBlacklistedPeers", addedBlacklistedPeers);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 
@@ -491,11 +493,7 @@ public class Peer implements Comparable<Peer> {
 
         }
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 
@@ -509,7 +507,7 @@ public class Peer implements Comparable<Peer> {
 
         List<Peer> selectedPeers = new ArrayList<Peer>();
 
-        for (Peer peer : Nxt.peers.values()) {
+        for (Peer peer : peers.values()) {
 
             if (peer.blacklistingTime <= 0 && peer.state == state && peer.announcedAddress.length() > 0
                     && (!applyPullThreshold || !Nxt.enableHallmarkProtection || peer.getWeight() >= Nxt.pullThreshold)) {
@@ -562,7 +560,7 @@ public class Peer implements Comparable<Peer> {
 
         int numberOfConnectedPeers = 0;
 
-        for (Peer peer : Nxt.peers.values()) {
+        for (Peer peer : peers.values()) {
 
             if (peer.state == STATE_CONNECTED && peer.announcedAddress.length() > 0) {
 
@@ -636,17 +634,13 @@ public class Peer implements Comparable<Peer> {
         addedKnownPeers.add(addedKnownPeer);
         response.put("addedKnownPeers", addedKnownPeers);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 
     public void removePeer() {
 
-        Nxt.peers.values().remove(this);
+        peers.values().remove(this);
 
         JSONObject response = new JSONObject();
         response.put("response", "processNewData");
@@ -657,11 +651,7 @@ public class Peer implements Comparable<Peer> {
         removedKnownPeers.add(removedKnownPeer);
         response.put("removedKnownPeers", removedKnownPeers);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 
@@ -671,7 +661,7 @@ public class Peer implements Comparable<Peer> {
 
         int successful = 0;
         List<Future<JSONObject>> expectedResponses = new ArrayList<>();
-        for (final Peer peer : Nxt.peers.values()) {
+        for (final Peer peer : peers.values()) {
 
             if (Nxt.enableHallmarkProtection && peer.getWeight() < Nxt.pushThreshold) {
                 continue;
@@ -860,7 +850,7 @@ public class Peer implements Comparable<Peer> {
 
             //TODO: there must be a better way
             // cfb: This will be removed after we get a better client
-            for (Map.Entry<String, Peer> peerEntry : Nxt.peers.entrySet()) {
+            for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
 
                 if (peerEntry.getValue() == this) {
 
@@ -890,11 +880,7 @@ public class Peer implements Comparable<Peer> {
             addedActivePeers.add(addedActivePeer);
             response.put("addedActivePeers", addedActivePeers);
 
-            for (User user : Nxt.users.values()) {
-
-                user.send(response);
-
-            }
+            User.sendToAll(response);
 
         } else if (this.state != STATE_NONCONNECTED && state != STATE_NONCONNECTED) {
 
@@ -908,11 +894,7 @@ public class Peer implements Comparable<Peer> {
             changedActivePeers.add(changedActivePeer);
             response.put("changedActivePeers", changedActivePeers);
 
-            for (User user : Nxt.users.values()) {
-
-                user.send(response);
-
-            }
+            User.sendToAll(response);
 
         }
 
@@ -934,11 +916,7 @@ public class Peer implements Comparable<Peer> {
         changedActivePeers.add(changedActivePeer);
         response.put("changedActivePeers", changedActivePeers);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 
@@ -956,11 +934,7 @@ public class Peer implements Comparable<Peer> {
         changedActivePeers.add(changedActivePeer);
         response.put("changedActivePeers", changedActivePeers);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 
@@ -976,11 +950,7 @@ public class Peer implements Comparable<Peer> {
         changedActivePeers.add(changedActivePeer);
         response.put("changedActivePeers", changedActivePeers);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
     }
 

@@ -1,6 +1,5 @@
 package nxt.user;
 
-import nxt.Nxt;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
@@ -33,10 +32,10 @@ public abstract class UserRequestHandler {
     }
 
     public static User getUser(String userPasscode) {
-        User user = Nxt.users.get(userPasscode);
+        User user = User.users.get(userPasscode);
         if (user == null) {
             user = new User();
-            User oldUser = Nxt.users.putIfAbsent(userPasscode, user);
+            User oldUser = User.users.putIfAbsent(userPasscode, user);
             if (oldUser != null) {
                 user = oldUser;
                 user.isInactive = false;

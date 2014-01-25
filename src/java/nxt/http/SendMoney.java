@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -120,7 +121,7 @@ final class SendMoney extends HttpRequestHandler {
                                     response.put("transaction", transaction.getStringId());
                                     response.put("bytes", Convert.convert(transaction.getBytes()));
 
-                                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
+                                    Blockchain.broadcast(transaction);
 
                                 }
 

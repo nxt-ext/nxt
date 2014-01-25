@@ -1,5 +1,6 @@
 package nxt.peer;
 
+import nxt.Blockchain;
 import nxt.Nxt;
 import org.json.simple.JSONObject;
 
@@ -90,7 +91,7 @@ final class GetInfo extends HttpJSONRequestHandler {
         response.put("platform", Nxt.myPlatform);
         response.put("shareAddress", Nxt.shareMyAddress);
 
-        response.put("cumulativeDifficulty", Nxt.lastBlock.get().cumulativeDifficulty.toString());
+        response.put("cumulativeDifficulty", Blockchain.getLastBlock().cumulativeDifficulty.toString());
 
         return response;
     }

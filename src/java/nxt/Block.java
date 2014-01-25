@@ -235,37 +235,6 @@ public class Block implements Serializable {
         }
     };
 
-    static void loadBlocks(String fileName) throws FileNotFoundException {
-
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
-        ) {
-            Nxt.blockCounter.set(objectInputStream.readInt());
-            Nxt.blocks.clear();
-            Nxt.blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException|ClassNotFoundException e) {
-            Logger.logMessage("Error loading blocks from " + fileName, e);
-            System.exit(1);
-        }
-
-    }
-
-    static void saveBlocks(String fileName) {
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-        ) {
-            objectOutputStream.writeInt(Nxt.blockCounter.get());
-            objectOutputStream.writeObject(new HashMap<>(Nxt.blocks));
-        } catch (IOException e) {
-            Logger.logMessage("Error saving blocks to " + fileName, e);
-            throw new RuntimeException(e);
-        }
-
-    }
-
     boolean verifyBlockSignature() {
 
         Account account = Nxt.accounts.get(getGeneratorAccountId());
@@ -287,7 +256,7 @@ public class Block implements Serializable {
 
         try {
 
-            Block previousBlock = Nxt.blocks.get(this.previousBlock);
+            Block previousBlock = Blockchain.getBlock(this.previousBlock);
             if (previousBlock == null) {
 
                 return false;
@@ -308,7 +277,7 @@ public class Block implements Serializable {
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
-            BigInteger target = BigInteger.valueOf(Nxt.lastBlock.get().baseTarget).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+            BigInteger target = BigInteger.valueOf(Blockchain.getLastBlock().baseTarget).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;

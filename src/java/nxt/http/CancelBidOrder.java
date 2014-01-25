@@ -120,7 +120,7 @@ final class CancelBidOrder extends HttpRequestHandler {
 
                                     response.put("transaction", transaction.getStringId());
 
-                                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
+                                    Blockchain.broadcast(transaction);
 
                                 }
 

@@ -2,6 +2,7 @@ package nxt.user;
 
 import nxt.Account;
 import nxt.Block;
+import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
@@ -26,7 +27,7 @@ final class UnlockAccount extends UserRequestHandler {
     public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
         // lock all other instances of this account being unlocked
-        for (User u : Nxt.users.values()) {
+        for (User u : User.allUsers) {
             if (secretPhrase.equals(u.secretPhrase)) {
                 u.deinitializeKeyPair();
                 if (! u.isInactive) {
@@ -69,7 +70,7 @@ final class UnlockAccount extends UserRequestHandler {
                 JSONObject response2 = new JSONObject();
                 response2.put("response", "setBlockGenerationDeadline");
 
-                Block lastBlock = Nxt.lastBlock.get();
+                Block lastBlock = Blockchain.getLastBlock();
                 MessageDigest digest = Crypto.sha256();
                 byte[] generationSignatureHash;
                 if (lastBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK) {
@@ -92,7 +93,7 @@ final class UnlockAccount extends UserRequestHandler {
 
             JSONArray myTransactions = new JSONArray();
             byte[] accountPublicKey = account.publicKey.get();
-            for (Transaction transaction : Nxt.unconfirmedTransactions.values()) {
+            for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
 
                 if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
@@ -131,11 +132,11 @@ final class UnlockAccount extends UserRequestHandler {
 
             }
 
-            long blockId = Nxt.lastBlock.get().getId();
+            long blockId = Blockchain.getLastBlock().getId();
             int numberOfConfirmations = 1;
             while (myTransactions.size() < 1000) {
 
-                Block block = Nxt.blocks.get(blockId);
+                Block block = Blockchain.getBlock(blockId);
 
                 if (block.totalFee > 0 && Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
 

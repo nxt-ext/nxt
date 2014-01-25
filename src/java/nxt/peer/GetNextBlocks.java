@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Block;
+import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -23,10 +24,10 @@ final class GetNextBlocks extends HttpJSONRequestHandler {
 
         List<Block> nextBlocks = new ArrayList<>();
         int totalLength = 0;
-        Block block = Nxt.blocks.get(Convert.parseUnsignedLong((String) request.get("blockId")));
+        Block block = Blockchain.getBlock(Convert.parseUnsignedLong((String) request.get("blockId")));
         while (block != null) {
 
-            block = Nxt.blocks.get(block.nextBlock);
+            block = Blockchain.getBlock(block.nextBlock);
             if (block != null) {
 
                 int length = Nxt.BLOCK_HEADER_LENGTH + block.payloadLength;

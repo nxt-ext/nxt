@@ -1,6 +1,5 @@
 package nxt.http;
 
-import nxt.Nxt;
 import nxt.peer.Peer;
 import org.json.simple.JSONObject;
 
@@ -25,7 +24,7 @@ final class GetPeer extends HttpRequestHandler {
 
         } else {
 
-            Peer peerData = Nxt.peers.get(peer);
+            Peer peerData = Peer.peers.get(peer);
             if (peerData == null) {
 
                 response.put("errorCode", 5);

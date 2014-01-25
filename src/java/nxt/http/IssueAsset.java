@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
+import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
@@ -142,7 +143,7 @@ final class IssueAsset extends HttpRequestHandler {
 
                                                 response.put("transaction", transaction.getStringId());
 
-                                                Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
+                                                Blockchain.broadcast(transaction);
 
                                             }
 

@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Nxt;
+import nxt.peer.Peer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -18,7 +18,7 @@ final class GetPeers extends HttpRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray peers = new JSONArray();
-        peers.addAll(Nxt.peers.keySet());
+        peers.addAll(Peer.peers.keySet());
         response.put("peers", peers);
 
         return response;

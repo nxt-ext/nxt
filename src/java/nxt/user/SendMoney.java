@@ -1,6 +1,7 @@
 package nxt.user;
 
 import nxt.Account;
+import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.peer.Peer;
@@ -131,7 +132,7 @@ final class SendMoney extends UserRequestHandler {
                     JSONObject response = new JSONObject();
                     response.put("response", "notifyOfAcceptedTransaction");
 
-                    Nxt.nonBroadcastedTransactions.put(transaction.getId(), transaction);
+                    Blockchain.broadcast(transaction);
                     return response;
 
                 }

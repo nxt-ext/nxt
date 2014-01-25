@@ -23,7 +23,7 @@ final class RemoveActivePeer extends UserRequestHandler {
             return response;
         } else {
             int index = Integer.parseInt(req.getParameter("peer"));
-            for (Peer peer : Nxt.peers.values()) {
+            for (Peer peer : Peer.peers.values()) {
                 if (peer.index == index) {
                     if (peer.blacklistingTime == 0 && peer.state != Peer.STATE_NONCONNECTED) {
                         peer.deactivate();

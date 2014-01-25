@@ -1,8 +1,8 @@
 package nxt.user;
 
 import nxt.Account;
-import nxt.util.JSON;
 import nxt.Nxt;
+import nxt.util.JSON;
 import nxt.crypto.Crypto;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -18,10 +18,18 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 public class User {
 
+    static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
+    public static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
     final ConcurrentLinkedQueue<JSONObject> pendingResponses;
     private AsyncContext asyncContext;
     volatile boolean isInactive;
@@ -30,9 +38,13 @@ public class User {
     public volatile byte[] publicKey;
 
     User() {
-
         pendingResponses = new ConcurrentLinkedQueue<>();
+    }
 
+    public static void sendToAll(JSONObject response) {
+        for (User user : User.users.values()) {
+            user.send(response);
+        }
     }
 
     public static void updateUserUnconfirmedBalance(Account account) {
@@ -41,7 +53,7 @@ public class User {
         response.put("response", "setBalance");
         response.put("balance", account.getUnconfirmedBalance());
         byte[] accountPublicKey = account.publicKey.get();
-        for (User user : Nxt.users.values()) {
+        for (User user : users.values()) {
 
             if (user.secretPhrase != null && Arrays.equals(user.publicKey, accountPublicKey)) {
 
@@ -82,7 +94,7 @@ public class User {
                 isInactive = true;
                 if (secretPhrase == null) {
                     // but only completely remove users that don't have unlocked accounts
-                    Nxt.users.values().remove(this);
+                    users.values().remove(this);
                 }
                 return;
             }

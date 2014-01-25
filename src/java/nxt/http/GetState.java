@@ -3,6 +3,8 @@ package nxt.http;
 import nxt.Account;
 import nxt.Blockchain;
 import nxt.Nxt;
+import nxt.peer.Peer;
+import nxt.user.User;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -21,8 +23,8 @@ final class GetState extends HttpRequestHandler {
 
         response.put("version", Nxt.VERSION);
         response.put("time", Convert.getEpochTime());
-        response.put("lastBlock", Nxt.lastBlock.get().getStringId());
-        response.put("cumulativeDifficulty", Nxt.lastBlock.get().cumulativeDifficulty.toString());
+        response.put("lastBlock", Blockchain.getLastBlock().getStringId());
+        response.put("cumulativeDifficulty", Blockchain.getLastBlock().cumulativeDifficulty.toString());
 
         long totalEffectiveBalance = 0;
         for (Account account : Nxt.accounts.values()) {
@@ -37,14 +39,14 @@ final class GetState extends HttpRequestHandler {
         }
         response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
 
-        response.put("numberOfBlocks", Nxt.blocks.size());
-        response.put("numberOfTransactions", Nxt.transactions.size());
+        response.put("numberOfBlocks", Blockchain.allBlocks.size());
+        response.put("numberOfTransactions", Blockchain.allTransactions.size());
         response.put("numberOfAccounts", Nxt.accounts.size());
         response.put("numberOfAssets", Nxt.assets.size());
         response.put("numberOfOrders", Blockchain.askOrders.size() + Blockchain.bidOrders.size());
         response.put("numberOfAliases", Nxt.aliases.size());
-        response.put("numberOfPeers", Nxt.peers.size());
-        response.put("numberOfUsers", Nxt.users.size());
+        response.put("numberOfPeers", Peer.peers.size());
+        response.put("numberOfUsers", User.allUsers.size());
         response.put("lastBlockchainFeeder", Nxt.lastBlockchainFeeder == null ? null : Nxt.lastBlockchainFeeder.announcedAddress);
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());

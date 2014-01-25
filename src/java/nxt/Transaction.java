@@ -5,9 +5,6 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,21 +23,21 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     static final long serialVersionUID = 0;
 
-    public static final byte TYPE_PAYMENT = 0;
-    public static final byte TYPE_MESSAGING = 1;
-    public static final byte TYPE_COLORED_COINS = 2;
+    private static final byte TYPE_PAYMENT = 0;
+    private static final byte TYPE_MESSAGING = 1;
+    private static final byte TYPE_COLORED_COINS = 2;
 
-    public static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
+    private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
-    public static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
-    public static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
+    private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
+    private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
 
-    public static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
-    public static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
-    public static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
-    public static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
-    public static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
-    public static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+    private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
+    private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
+    private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
+    private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
+    private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
+    private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 
     public static final int ASSET_ISSUANCE_FEE = 1000;
 
@@ -52,7 +49,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     public final int fee;
     final long referencedTransaction;
     public byte[] signature;
-    public Attachment attachment;
+    Attachment attachment;
     private transient Type type;
 
     public int index;
@@ -328,37 +325,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return transaction;
     }
 
-    static void loadTransactions(String fileName) throws FileNotFoundException {
-
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            Nxt.transactionCounter.set(objectInputStream.readInt());
-            Nxt.transactions.clear();
-            Nxt.transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException |ClassNotFoundException e) {
-            Logger.logMessage("Error loading transactions from " + fileName, e);
-            System.exit(1);
-        }
-
-    }
-
-    static void saveTransactions(String fileName) {
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-        ) {
-            objectOutputStream.writeInt(Nxt.transactionCounter.get());
-            objectOutputStream.writeObject(new HashMap(Nxt.transactions));
-            objectOutputStream.close();
-        } catch (IOException e) {
-            Logger.logMessage("Error saving transactions to " + fileName, e);
-            throw new RuntimeException(e);
-        }
-
-    }
-
     public final void sign(String secretPhrase) {
 
         if (signature != null) {
@@ -610,7 +576,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
                 @Override
                 boolean doValidateAttachment(Transaction transaction) {
-                    if (Nxt.lastBlock.get().height < Nxt.ARBITRARY_MESSAGES_BLOCK) {
+                    if (Blockchain.getLastBlock().height < Nxt.ARBITRARY_MESSAGES_BLOCK) {
                         return false;
                     }
                     try {
@@ -659,7 +625,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
                 @Override
                 boolean doValidateAttachment(Transaction transaction) {
-                    if (Nxt.lastBlock.get().height < Nxt.ALIAS_SYSTEM_BLOCK) {
+                    if (Blockchain.getLastBlock().height < Nxt.ALIAS_SYSTEM_BLOCK) {
                         return false;
                     }
                     try {
@@ -688,7 +654,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
                     String normalizedAlias = attachment.alias.toLowerCase();
                     Alias alias = Nxt.aliases.get(normalizedAlias);
-                    Block block = Nxt.blocks.get(transaction.block);
+                    Block block = Blockchain.getBlock(transaction.block);
                     if (alias == null) {
                         long aliasId = transaction.getId();
                         alias = new Alias(senderAccount, aliasId, attachment.alias, attachment.uri, block.timestamp);

@@ -1,6 +1,6 @@
 package nxt.peer;
 
-import nxt.Nxt;
+import nxt.Blockchain;
 import nxt.Transaction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -18,7 +18,7 @@ final class GetUnconfirmedTransactions extends HttpJSONRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray transactionsData = new JSONArray();
-        for (Transaction transaction : Nxt.unconfirmedTransactions.values()) {
+        for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
 
             transactionsData.add(transaction.getJSONObject());
 

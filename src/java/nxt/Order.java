@@ -15,7 +15,7 @@ abstract class Order {
         this.asset = asset;
         this.quantity = quantity;
         this.price = price;
-        this.height = Nxt.lastBlock.get().height;
+        this.height = Blockchain.getLastBlock().height;
     }
 
     protected int compareTo(Order o) {

@@ -1,6 +1,7 @@
 package nxt.user;
 
 import nxt.Block;
+import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
@@ -27,7 +28,7 @@ final class GetInitialData extends UserRequestHandler {
         JSONArray activePeers = new JSONArray(), knownPeers = new JSONArray(), blacklistedPeers = new JSONArray();
         JSONArray recentBlocks = new JSONArray();
 
-        for (Transaction transaction : Nxt.unconfirmedTransactions.values()) {
+        for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
             unconfirmedTransaction.put("index", transaction.index);
@@ -42,7 +43,7 @@ final class GetInitialData extends UserRequestHandler {
 
         }
 
-        for (Map.Entry<String, Peer> peerEntry : Nxt.peers.entrySet()) {
+        for (Map.Entry<String, Peer> peerEntry : Peer.peers.entrySet()) {
 
             String address = peerEntry.getKey();
             Peer peer = peerEntry.getValue();
@@ -98,13 +99,13 @@ final class GetInitialData extends UserRequestHandler {
             }
         }
 
-        long blockId = Nxt.lastBlock.get().getId();
+        long blockId = Blockchain.getLastBlock().getId();
         int numberOfBlocks = 0;
         while (numberOfBlocks < 60) {
 
             numberOfBlocks++;
 
-            Block block = Nxt.blocks.get(blockId);
+            Block block = Blockchain.getBlock(blockId);
             JSONObject recentBlock = new JSONObject();
             recentBlock.put("index", block.index);
             recentBlock.put("timestamp", block.timestamp);

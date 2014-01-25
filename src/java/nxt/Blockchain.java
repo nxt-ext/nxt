@@ -10,13 +10,20 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +35,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class Blockchain {
 
@@ -36,6 +45,20 @@ public final class Blockchain {
     public static final ConcurrentMap<Long, BidOrder> bidOrders = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, TreeSet<AskOrder>> sortedAskOrders = new ConcurrentHashMap<>();
     static final ConcurrentMap<Long, TreeSet<BidOrder>> sortedBidOrders = new ConcurrentHashMap<>();
+
+    private static final AtomicInteger blockCounter = new AtomicInteger();
+    private static final AtomicReference<Block> lastBlock = new AtomicReference<>();
+    private static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
+
+    private static final AtomicInteger transactionCounter = new AtomicInteger();
+    private static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
+
+    public static final Collection<Block> allBlocks = Collections.unmodifiableCollection(blocks.values());
+    public static final Collection<Transaction> allTransactions = Collections.unmodifiableCollection(transactions.values());
+    public static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
 
     static final Runnable processTransactionsThread = new Runnable() {
 
@@ -85,7 +108,7 @@ public final class Blockchain {
                 int curTime = Convert.getEpochTime();
                 JSONArray removedUnconfirmedTransactions = new JSONArray();
 
-                Iterator<Transaction> iterator = Nxt.unconfirmedTransactions.values().iterator();
+                Iterator<Transaction> iterator = unconfirmedTransactions.values().iterator();
                 while (iterator.hasNext()) {
 
                     Transaction transaction = iterator.next();
@@ -111,11 +134,8 @@ public final class Blockchain {
 
                     response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
 
-                    for (User user : Nxt.users.values()) {
 
-                        user.send(response);
-
-                    }
+                    User.sendToAll(response);
 
                 }
 
@@ -160,7 +180,7 @@ public final class Blockchain {
                     JSONObject response = peer.send(getCumulativeDifficultyRequest);
                     if (response != null) {
 
-                        BigInteger curCumulativeDifficulty = Nxt.lastBlock.get().cumulativeDifficulty;
+                        BigInteger curCumulativeDifficulty = lastBlock.get().cumulativeDifficulty;
                         String peerCumulativeDifficulty = (String)response.get("cumulativeDifficulty");
                         if (peerCumulativeDifficulty == null) {
                             return;
@@ -177,7 +197,7 @@ public final class Blockchain {
                                 for (Object milestoneBlockId : milestoneBlockIds) {
 
                                     long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
-                                    Block block = Nxt.blocks.get(blockId);
+                                    Block block = blocks.get(blockId);
                                     if (block != null) {
 
                                         commonBlockId = blockId;
@@ -213,7 +233,7 @@ public final class Blockchain {
                                             for (i = 0; i < numberOfBlocks; i++) {
 
                                                 blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
-                                                if (Nxt.blocks.get(blockId) == null) {
+                                                if (blocks.get(blockId) == null) {
 
                                                     break;
 
@@ -229,7 +249,7 @@ public final class Blockchain {
 
                                 } while (i == numberOfBlocks);
 
-                                if (Nxt.lastBlock.get().height - Nxt.blocks.get(commonBlockId).height < 720) {
+                                if (lastBlock.get().height - blocks.get(commonBlockId).height < 720) {
 
                                     long curBlockId = commonBlockId;
                                     LinkedList<Block> futureBlocks = new LinkedList<>();
@@ -271,7 +291,7 @@ public final class Blockchain {
                                                         curBlockId = block.getId();
 
                                                         boolean alreadyPushed = false;
-                                                        if (block.previousBlock == Nxt.lastBlock.get().getId()) {
+                                                        if (block.previousBlock == lastBlock.get().getId()) {
 
                                                             ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.payloadLength);
                                                             buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -297,7 +317,7 @@ public final class Blockchain {
                                                             }
 
                                                         }
-                                                        if (!alreadyPushed && Nxt.blocks.get(block.getId()) == null && block.transactions.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+                                                        if (!alreadyPushed && blocks.get(block.getId()) == null && block.transactions.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
 
                                                             futureBlocks.add(block);
 
@@ -322,22 +342,22 @@ public final class Blockchain {
 
                                     } while (true);
 
-                                    if (!futureBlocks.isEmpty() && Nxt.lastBlock.get().height - Nxt.blocks.get(commonBlockId).height < 720) {
+                                    if (!futureBlocks.isEmpty() && lastBlock.get().height - blocks.get(commonBlockId).height < 720) {
 
                                         synchronized (Blockchain.class) {
 
-                                            Block.saveBlocks("blocks.nxt.bak");
-                                            Transaction.saveTransactions("transactions.nxt.bak");
+                                            saveBlocks("blocks.nxt.bak");
+                                            saveTransactions("transactions.nxt.bak");
 
-                                            curCumulativeDifficulty = Nxt.lastBlock.get().cumulativeDifficulty;
+                                            curCumulativeDifficulty = lastBlock.get().cumulativeDifficulty;
 
-                                            while (Nxt.lastBlock.get().getId() != commonBlockId && Blockchain.popLastBlock()) {}
+                                            while (lastBlock.get().getId() != commonBlockId && Blockchain.popLastBlock()) {}
 
-                                            if (Nxt.lastBlock.get().getId() == commonBlockId) {
+                                            if (lastBlock.get().getId() == commonBlockId) {
 
                                                 for (Block block : futureBlocks) {
 
-                                                    if (block.previousBlock == Nxt.lastBlock.get().getId()) {
+                                                    if (block.previousBlock == lastBlock.get().getId()) {
 
                                                         ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.payloadLength);
                                                         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -361,18 +381,18 @@ public final class Blockchain {
 
                                             }
 
-                                            if (Nxt.lastBlock.get().cumulativeDifficulty.compareTo(curCumulativeDifficulty) < 0) {
+                                            if (lastBlock.get().cumulativeDifficulty.compareTo(curCumulativeDifficulty) < 0) {
 
-                                                Block.loadBlocks("blocks.nxt.bak");
-                                                Transaction.loadTransactions("transactions.nxt.bak");
+                                                loadBlocks("blocks.nxt.bak");
+                                                loadTransactions("transactions.nxt.bak");
 
                                                 peer.blacklist();
 
                                                 Nxt.accounts.clear();
                                                 Nxt.aliases.clear();
                                                 Nxt.aliasIdToAliasMappings.clear();
-                                                Nxt.unconfirmedTransactions.clear();
-                                                Nxt.doubleSpendingTransactions.clear();
+                                                unconfirmedTransactions.clear();
+                                                doubleSpendingTransactions.clear();
                                                 Logger.logMessage("Re-scanning blockchain...");
                                                 Blockchain.scan();
                                                 Logger.logMessage("...Done");
@@ -385,8 +405,8 @@ public final class Blockchain {
                                     }
 
                                     synchronized (Blockchain.class) {
-                                        Block.saveBlocks("blocks.nxt");
-                                        Transaction.saveTransactions("transactions.nxt");
+                                        saveBlocks("blocks.nxt");
+                                        saveTransactions("transactions.nxt");
                                     }
 
                                 }
@@ -422,27 +442,21 @@ public final class Blockchain {
 
             try {
 
-                HashMap<Account, User> unlockedAccounts = new HashMap<>();
-                for (User user : Nxt.users.values()) {
-
+                Map<Account,User> unlockedAccounts = new HashMap<>();
+                for (User user : User.allUsers) {
                     if (user.secretPhrase != null) {
-
                         Account account = Nxt.accounts.get(Account.getId(user.publicKey));
                         if (account != null && account.getEffectiveBalance() > 0) {
-
                             unlockedAccounts.put(account, user);
-
                         }
-
                     }
-
                 }
 
                 for (Map.Entry<Account, User> unlockedAccountEntry : unlockedAccounts.entrySet()) {
 
                     Account account = unlockedAccountEntry.getKey();
                     User user = unlockedAccountEntry.getValue();
-                    Block lastBlock = Nxt.lastBlock.get();
+                    Block lastBlock = Blockchain.lastBlock.get();
                     if (lastBlocks.get(account) != lastBlock) {
 
                         long effectiveBalance = account.getEffectiveBalance();
@@ -510,15 +524,15 @@ public final class Blockchain {
 
                 JSONArray transactionsData = new JSONArray();
 
-                for (Transaction transaction : Nxt.nonBroadcastedTransactions.values()) {
+                for (Transaction transaction : nonBroadcastedTransactions.values()) {
 
-                    if (Nxt.unconfirmedTransactions.get(transaction.getId()) == null && Nxt.transactions.get(transaction.getId()) == null) {
+                    if (unconfirmedTransactions.get(transaction.getId()) == null && transactions.get(transaction.getId()) == null) {
 
                         transactionsData.add(transaction.getJSONObject());
 
                     } else {
 
-                        Nxt.nonBroadcastedTransactions.remove(transaction.getId());
+                        nonBroadcastedTransactions.remove(transaction.getId());
 
                     }
 
@@ -546,6 +560,26 @@ public final class Blockchain {
 
     };
 
+    public static Block getLastBlock() {
+        return lastBlock.get();
+    }
+
+    public static Block getBlock(long id) {
+        return blocks.get(id);
+    }
+
+    public static Transaction getTransaction(long transactionId) {
+        return transactions.get(transactionId);
+    }
+
+    public static Transaction getUnconfirmedTransaction(long transactionId) {
+        return unconfirmedTransactions.get(transactionId);
+    }
+
+    public static void broadcast(Transaction transaction) {
+        nonBroadcastedTransactions.put(transaction.getId(), transaction);
+    }
+
     public static void processTransactions(JSONObject request, String parameterName) {
 
         JSONArray transactionsData = (JSONArray)request.get(parameterName);
@@ -569,22 +603,22 @@ public final class Blockchain {
                 synchronized (Blockchain.class) {
 
                     Long id = transaction.getId();
-                    if (Nxt.transactions.containsKey(id) || Nxt.unconfirmedTransactions.containsKey(id)
-                            || Nxt.doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
+                    if (transactions.containsKey(id) || unconfirmedTransactions.containsKey(id)
+                            || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
                         continue;
                     }
 
                     doubleSpendingTransaction = transaction.preProcess();
 
-                    transaction.index = Nxt.transactionCounter.incrementAndGet();
+                    transaction.index = transactionCounter.incrementAndGet();
 
                     if (doubleSpendingTransaction) {
 
-                        Nxt.doubleSpendingTransactions.put(id, transaction);
+                        doubleSpendingTransactions.put(id, transaction);
 
                     } else {
 
-                        Nxt.unconfirmedTransactions.put(id, transaction);
+                        unconfirmedTransactions.put(id, transaction);
 
                         if (parameterName.equals("transactions")) {
 
@@ -621,11 +655,7 @@ public final class Blockchain {
 
                 }
 
-                for (User user : Nxt.users.values()) {
-
-                    user.send(response);
-
-                }
+                User.sendToAll(response);
 
             } catch (RuntimeException e) {
 
@@ -648,7 +678,7 @@ public final class Blockchain {
     }
 
     private synchronized static byte[] calculateTransactionsChecksum() {
-        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(Nxt.transactions.size(), new Comparator<Transaction>() {
+        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(transactions.size(), new Comparator<Transaction>() {
             @Override
             public int compare(Transaction o1, Transaction o2) {
                 long id1 = o1.getId();
@@ -656,7 +686,7 @@ public final class Blockchain {
                 return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0)));
             }
         });
-        sortedTransactions.addAll(Nxt.transactions.values());
+        sortedTransactions.addAll(transactions.values());
         MessageDigest digest = Crypto.sha256();
         while (! sortedTransactions.isEmpty()) {
             digest.update(sortedTransactions.poll().getBytes());
@@ -668,10 +698,10 @@ public final class Blockchain {
 
         ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
 
-        long curBlock = Nxt.lastBlock.get().getId();
+        long curBlock = lastBlock.get().getId();
         do {
 
-            Block block = Nxt.blocks.get(curBlock);
+            Block block = blocks.get(curBlock);
             lastBlocks.add(block);
             curBlock = block.previousBlock;
 
@@ -694,18 +724,18 @@ public final class Blockchain {
 
             synchronized (Blockchain.class) {
 
-                block = Nxt.lastBlock.get();
+                block = lastBlock.get();
 
                 if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
                     return false;
                 }
 
-                Block previousBlock = Nxt.blocks.get(block.previousBlock);
+                Block previousBlock = blocks.get(block.previousBlock);
                 if (previousBlock == null) {
                     Logger.logMessage("Previous block is null");
                     throw new IllegalStateException();
                 }
-                if (! Nxt.lastBlock.compareAndSet(block, previousBlock)) {
+                if (! lastBlock.compareAndSet(block, previousBlock)) {
                     Logger.logMessage("This block is no longer last block");
                     throw new IllegalStateException();
                 }
@@ -715,8 +745,8 @@ public final class Blockchain {
 
                 for (long transactionId : block.transactions) {
 
-                    Transaction transaction = Nxt.transactions.remove(transactionId);
-                    Nxt.unconfirmedTransactions.put(transactionId, transaction);
+                    Transaction transaction = transactions.remove(transactionId);
+                    unconfirmedTransactions.put(transactionId, transaction);
 
                     Account senderAccount = Nxt.accounts.get(transaction.getSenderAccountId());
                     senderAccount.addToBalance((transaction.amount + transaction.fee) * 100L);
@@ -761,11 +791,7 @@ public final class Blockchain {
 
             }
 
-            for (User user : Nxt.users.values()) {
-
-                user.send(response);
-
-            }
+            User.sendToAll(response);
 
         } catch (RuntimeException e) {
 
@@ -789,7 +815,7 @@ public final class Blockchain {
         synchronized (Blockchain.class) {
             try {
 
-                Block previousLastBlock = Nxt.lastBlock.get();
+                Block previousLastBlock = lastBlock.get();
                 buffer.flip();
 
                 int version = buffer.getInt();
@@ -862,20 +888,20 @@ public final class Blockchain {
 
                 block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
-                if (block.transactions.length > Nxt.MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || block.getId() == 0L || Nxt.blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+                if (block.transactions.length > Nxt.MAX_NUMBER_OF_TRANSACTIONS || block.previousBlock != previousLastBlock.getId() || block.getId() == 0L || blocks.get(block.getId()) != null || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
                     return false;
 
                 }
 
-                block.index = Nxt.blockCounter.incrementAndGet();
+                block.index = blockCounter.incrementAndGet();
 
                 HashMap<Long, Transaction> blockTransactions = new HashMap<>();
                 HashSet<String> blockAliases = new HashSet<>();
                 for (int i = 0; i < block.transactions.length; i++) {
 
                     Transaction transaction = Transaction.getTransaction(buffer);
-                    transaction.index = Nxt.transactionCounter.incrementAndGet();
+                    transaction.index = transactionCounter.incrementAndGet();
 
                     if (blockTransactions.put(block.transactions[i] = transaction.getId(), transaction) != null) {
 
@@ -902,7 +928,7 @@ public final class Blockchain {
                     Transaction transaction = blockTransactions.get(block.transactions[i]);
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     //TODO: similar transaction validation is done in several places, refactor common code out
-                    if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && previousLastBlock.height > 303) || transaction.fee <= 0 || transaction.fee > Nxt.MAX_BALANCE || transaction.amount < 0 || transaction.amount > Nxt.MAX_BALANCE || !transaction.validateAttachment() || Nxt.transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && Nxt.transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (Nxt.unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
+                    if (transaction.timestamp > curTime + 15 || transaction.deadline < 1 || (transaction.timestamp + transaction.deadline * 60 < blockTimestamp && previousLastBlock.height > 303) || transaction.fee <= 0 || transaction.fee > Nxt.MAX_BALANCE || transaction.amount < 0 || transaction.amount > Nxt.MAX_BALANCE || !transaction.validateAttachment() || transactions.get(block.transactions[i]) != null || (transaction.referencedTransaction != 0 && transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null) || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())) {
 
                         break;
 
@@ -966,7 +992,7 @@ public final class Blockchain {
                     transaction.height = block.height;
                     transaction.block = block.getId();
 
-                    if (Nxt.transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
+                    if (transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
                         Logger.logMessage("duplicate transaction id " + transactionEntry.getKey());
                         return false;
                     }
@@ -993,7 +1019,7 @@ public final class Blockchain {
                     addedConfirmedTransaction.put("id", transaction.getStringId());
                     addedConfirmedTransactions.add(addedConfirmedTransaction);
 
-                    Transaction removedTransaction = Nxt.unconfirmedTransactions.remove(transactionEntry.getKey());
+                    Transaction removedTransaction = unconfirmedTransactions.remove(transactionEntry.getKey());
                     if (removedTransaction != null) {
 
                         JSONObject removedUnconfirmedTransaction = new JSONObject();
@@ -1011,8 +1037,8 @@ public final class Blockchain {
 
                 if (savingFlag) {
 
-                    Transaction.saveTransactions("transactions.nxt");
-                    Block.saveBlocks("blocks.nxt");
+                    saveTransactions("transactions.nxt");
+                    saveBlocks("blocks.nxt");
 
                 }
 
@@ -1055,11 +1081,7 @@ public final class Blockchain {
         }
         response.put("addedRecentBlocks", addedRecentBlocks);
 
-        for (User user : Nxt.users.values()) {
-
-            user.send(response);
-
-        }
+        User.sendToAll(response);
 
         return true;
 
@@ -1069,7 +1091,7 @@ public final class Blockchain {
     private synchronized static void analyze(Block block) {
 
         for (int i = 0; i < block.transactions.length; i++) {
-            block.blockTransactions[i] = Nxt.transactions.get(block.transactions[i]);
+            block.blockTransactions[i] = transactions.get(block.transactions[i]);
             if (block.blockTransactions[i] == null) {
                 throw new IllegalStateException("Missing transaction " + Convert.convert(block.transactions[i]));
             }
@@ -1078,25 +1100,25 @@ public final class Blockchain {
 
             block.baseTarget = Nxt.initialBaseTarget;
             block.cumulativeDifficulty = BigInteger.ZERO;
-            Nxt.blocks.put(Genesis.GENESIS_BLOCK_ID, block);
-            Nxt.lastBlock.set(block);
+            blocks.put(Genesis.GENESIS_BLOCK_ID, block);
+            lastBlock.set(block);
 
             Account.addAccount(Genesis.CREATOR_ID);
 
         } else {
 
-            Block previousLastBlock = Nxt.lastBlock.get();
+            Block previousLastBlock = lastBlock.get();
 
             previousLastBlock.nextBlock = block.getId();
             block.height = previousLastBlock.height + 1;
             block.baseTarget = calculateBaseTarget(block);
             block.cumulativeDifficulty = previousLastBlock.cumulativeDifficulty.add(Convert.two64.divide(BigInteger.valueOf(block.baseTarget)));
-            if (! (previousLastBlock.getId() == block.previousBlock && Nxt.lastBlock.compareAndSet(previousLastBlock, block))) {
+            if (! (previousLastBlock.getId() == block.previousBlock && lastBlock.compareAndSet(previousLastBlock, block))) {
                 throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
             }
             Account generatorAccount = Nxt.accounts.get(block.getGeneratorAccountId());
             generatorAccount.addToBalanceAndUnconfirmedBalance(block.totalFee * 100L);
-            if (Nxt.blocks.putIfAbsent(block.getId(), block) != null) {
+            if (blocks.putIfAbsent(block.getId(), block) != null) {
                 throw new IllegalStateException("duplicate block id: " + block.getId()); // shouldn't happen
             }
         }
@@ -1112,8 +1134,8 @@ public final class Blockchain {
     }
 
     private synchronized static void scan() {
-        Map<Long,Block> loadedBlocks = new HashMap<>(Nxt.blocks);
-        Nxt.blocks.clear();
+        Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
+        blocks.clear();
         long currentBlockId = Genesis.GENESIS_BLOCK_ID;
         Block currentBlock;
         while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
@@ -1131,7 +1153,7 @@ public final class Blockchain {
 
         }
 
-        Block previousBlock = Nxt.blocks.get(block.previousBlock);
+        Block previousBlock = blocks.get(block.previousBlock);
         long curBaseTarget = previousBlock.baseTarget;
         long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                 .multiply(BigInteger.valueOf(block.timestamp - previousBlock.timestamp))
@@ -1214,9 +1236,9 @@ public final class Blockchain {
 
         Set<Transaction> sortedTransactions = new TreeSet<>();
 
-        for (Transaction transaction : Nxt.unconfirmedTransactions.values()) {
+        for (Transaction transaction : unconfirmedTransactions.values()) {
 
-            if (transaction.referencedTransaction == 0 || Nxt.transactions.get(transaction.referencedTransaction) != null) {
+            if (transaction.referencedTransaction == 0 || transactions.get(transaction.referencedTransaction) != null) {
 
                 sortedTransactions.add(transaction);
 
@@ -1277,7 +1299,7 @@ public final class Blockchain {
         final byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
         Block block;
-        Block previousBlock = Nxt.lastBlock.get();
+        Block previousBlock = lastBlock.get();
         if (previousBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK) {
 
             block = new Block(1, Convert.getEpochTime(), previousBlock.getId(), newTransactions.size(),
@@ -1345,49 +1367,49 @@ public final class Blockchain {
         try {
 
             Logger.logMessage("Loading transactions...");
-            Transaction.loadTransactions("transactions.nxt");
+            loadTransactions("transactions.nxt");
             Logger.logMessage("...Done");
 
         } catch (FileNotFoundException e) {
             Logger.logMessage("transactions.nxt not found, starting from scratch");
-            Nxt.transactions.clear();
+            transactions.clear();
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
 
                 Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
                         Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, 0, Genesis.GENESIS_SIGNATURES[i]);
 
-                Nxt.transactions.put(transaction.getId(), transaction);
+                transactions.put(transaction.getId(), transaction);
 
             }
 
-            for (Transaction transaction : Nxt.transactions.values()) {
-                transaction.index = Nxt.transactionCounter.incrementAndGet();
+            for (Transaction transaction : transactions.values()) {
+                transaction.index = transactionCounter.incrementAndGet();
                 transaction.block = Genesis.GENESIS_BLOCK_ID;
 
             }
 
-            nxt.Transaction.saveTransactions("transactions.nxt");
+            saveTransactions("transactions.nxt");
 
         }
 
         try {
 
             Logger.logMessage("Loading blocks...");
-            Block.loadBlocks("blocks.nxt");
+            loadBlocks("blocks.nxt");
             Logger.logMessage("...Done");
 
         } catch (FileNotFoundException e) {
             Logger.logMessage("blocks.nxt not found, starting from scratch");
-            Nxt.blocks.clear();
+            blocks.clear();
 
-            Block block = new Block(-1, 0, 0, Nxt.transactions.size(), 1000000000, 0, Nxt.transactions.size() * 128, null,
+            Block block = new Block(-1, 0, 0, transactions.size(), 1000000000, 0, transactions.size() * 128, null,
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
-            block.index = Nxt.blockCounter.incrementAndGet();
-            Nxt.blocks.put(Genesis.GENESIS_BLOCK_ID, block);
+            block.index = blockCounter.incrementAndGet();
+            blocks.put(Genesis.GENESIS_BLOCK_ID, block);
 
             int i = 0;
-            for (long transaction : Nxt.transactions.keySet()) {
+            for (long transaction : transactions.keySet()) {
 
                 block.transactions[i++] = transaction;
 
@@ -1395,7 +1417,7 @@ public final class Blockchain {
             Arrays.sort(block.transactions);
             MessageDigest digest = Crypto.sha256();
             for (i = 0; i < block.transactions.length; i++) {
-                Transaction transaction = Nxt.transactions.get(block.transactions[i]);
+                Transaction transaction = transactions.get(block.transactions[i]);
                 digest.update(transaction.getBytes());
                 block.blockTransactions[i] = transaction;
             }
@@ -1403,15 +1425,93 @@ public final class Blockchain {
 
             block.baseTarget = Nxt.initialBaseTarget;
             block.cumulativeDifficulty = BigInteger.ZERO;
-            Nxt.lastBlock.set(block);
+            lastBlock.set(block);
 
-            Block.saveBlocks("blocks.nxt");
+            saveBlocks("blocks.nxt");
 
         }
 
         Logger.logMessage("Scanning blockchain...");
         Blockchain.scan();
         Logger.logMessage("...Done");
+    }
+
+    static void shutdown() {
+        try {
+            saveBlocks("blocks.nxt");
+            Logger.logMessage("Saved blocks.nxt");
+        } catch (RuntimeException e) {
+            Logger.logMessage("Error saving blocks", e);
+        }
+
+        try {
+            saveTransactions("transactions.nxt");
+            Logger.logMessage("Saved transactions.nxt");
+        } catch (RuntimeException e) {
+            Logger.logMessage("Error saving transactions", e);
+        }
+    }
+
+    private static void loadTransactions(String fileName) throws FileNotFoundException {
+
+        try (FileInputStream fileInputStream = new FileInputStream(fileName);
+             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+            transactionCounter.set(objectInputStream.readInt());
+            transactions.clear();
+            transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
+        } catch (FileNotFoundException e) {
+            throw e;
+        } catch (IOException |ClassNotFoundException e) {
+            Logger.logMessage("Error loading transactions from " + fileName, e);
+            System.exit(1);
+        }
+
+    }
+
+    private static void saveTransactions(String fileName) {
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
+        ) {
+            objectOutputStream.writeInt(transactionCounter.get());
+            objectOutputStream.writeObject(new HashMap(transactions));
+            objectOutputStream.close();
+        } catch (IOException e) {
+            Logger.logMessage("Error saving transactions to " + fileName, e);
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private static void loadBlocks(String fileName) throws FileNotFoundException {
+
+        try (FileInputStream fileInputStream = new FileInputStream(fileName);
+             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
+        ) {
+            blockCounter.set(objectInputStream.readInt());
+            blocks.clear();
+            blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
+        } catch (FileNotFoundException e) {
+            throw e;
+        } catch (IOException|ClassNotFoundException e) {
+            Logger.logMessage("Error loading blocks from " + fileName, e);
+            System.exit(1);
+        }
+
+    }
+
+    private static void saveBlocks(String fileName) {
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
+        ) {
+            objectOutputStream.writeInt(blockCounter.get());
+            objectOutputStream.writeObject(new HashMap<>(blocks));
+        } catch (IOException e) {
+            Logger.logMessage("Error saving blocks to " + fileName, e);
+            throw new RuntimeException(e);
+        }
+
     }
 
 }

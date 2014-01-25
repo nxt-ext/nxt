@@ -27,7 +27,7 @@ public class Account {
     Account(long id) {
 
         this.id = id;
-        this.height = Nxt.lastBlock.get().height;
+        this.height = Blockchain.getLastBlock().height;
 
     }
 
@@ -52,7 +52,7 @@ public class Account {
 
     public int getEffectiveBalance() {
 
-        Block lastBlock = Nxt.lastBlock.get();
+        Block lastBlock = Blockchain.getLastBlock();
         if (lastBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {

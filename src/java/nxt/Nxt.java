@@ -23,8 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class Nxt extends HttpServlet {
 
@@ -76,12 +74,6 @@ public final class Nxt extends HttpServlet {
     public static final int LOGGING_MASK_200_RESPONSES = 4;
     public static /*final*/ int communicationLoggingMask;
 
-    static final AtomicInteger transactionCounter = new AtomicInteger();
-    public static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
-    public static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
-    static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
-    public static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-
     public static /*final*/ Set<String> wellKnownPeers;
     public static /*final*/ int maxNumberOfConnectedPublicPeers;
     public static /*final*/ int connectTimeout;
@@ -90,12 +82,7 @@ public final class Nxt extends HttpServlet {
     public static /*final*/ int pushThreshold;
     public static int pullThreshold;
     public static /*final*/ int sendToPeersLimit;
-    public static final AtomicInteger peerCounter = new AtomicInteger();
-    public static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
 
-    static final AtomicInteger blockCounter = new AtomicInteger();
-    public static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
-    public static final AtomicReference<Block> lastBlock = new AtomicReference<>();
     public static volatile Peer lastBlockchainFeeder;
 
     public static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
@@ -105,8 +92,6 @@ public final class Nxt extends HttpServlet {
 
     public static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
     public static final ConcurrentMap<String, Long> assetNameToIdMappings = new ConcurrentHashMap<>();
-
-    public static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -428,19 +413,7 @@ public final class Nxt extends HttpServlet {
 
         ThreadPools.shutdown();
 
-        try {
-            Block.saveBlocks("blocks.nxt");
-            Logger.logMessage("Saved blocks.nxt");
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error saving blocks", e);
-        }
-
-        try {
-            Transaction.saveTransactions("transactions.nxt");
-            Logger.logMessage("Saved transactions.nxt");
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error saving transactions", e);
-        }
+        Blockchain.shutdown();
 
         Logger.logMessage("NRS " + Nxt.VERSION + " stopped.");
 

@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Block;
-import nxt.Nxt;
+import nxt.Blockchain;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -30,10 +30,10 @@ final class GetTransaction extends HttpRequestHandler {
             try {
 
                 long transactionId = Convert.parseUnsignedLong(transaction);
-                Transaction transactionData = Nxt.transactions.get(transactionId);
+                Transaction transactionData = Blockchain.getTransaction(transactionId);
                 if (transactionData == null) {
 
-                    transactionData = Nxt.unconfirmedTransactions.get(transactionId);
+                    transactionData = Blockchain.getUnconfirmedTransaction(transactionId);
                     if (transactionData == null) {
 
                         response.put("errorCode", 5);
@@ -51,9 +51,9 @@ final class GetTransaction extends HttpRequestHandler {
                     response = transactionData.getJSONObject();
 
                     response.put("sender", Convert.convert(transactionData.getSenderAccountId()));
-                    Block block = Nxt.blocks.get(transactionData.block);
+                    Block block = Blockchain.getBlock(transactionData.block);
                     response.put("block", block.getStringId());
-                    response.put("confirmations", Nxt.lastBlock.get().height - block.height + 1);
+                    response.put("confirmations", Blockchain.getLastBlock().height - block.height + 1);
 
                 }
 

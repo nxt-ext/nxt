@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Nxt;
+import nxt.Blockchain;
 import nxt.Transaction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,7 +19,7 @@ final class GetUnconfirmedTransactionIds extends HttpRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray transactionIds = new JSONArray();
-        for (Transaction transaction : Nxt.unconfirmedTransactions.values()) {
+        for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
 
             transactionIds.add(transaction.getStringId());
 
