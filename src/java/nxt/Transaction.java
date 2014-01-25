@@ -59,6 +59,10 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, long recipient,
                        int amount, int fee, long referencedTransaction, byte[] signature) {
 
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid transaction type or subtype");
+        }
+
         this.timestamp = timestamp;
         this.deadline = deadline;
         this.senderPublicKey = senderPublicKey;
