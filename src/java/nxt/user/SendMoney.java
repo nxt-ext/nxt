@@ -20,7 +20,7 @@ final class SendMoney extends UserRequestHandler {
 
     @Override
     public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
-        if (user.secretPhrase != null) {
+        if (user.getSecretPhrase() != null) {
 
             String recipientValue = req.getParameter("recipient");
             String amountValue = req.getParameter("amount");
@@ -54,7 +54,7 @@ final class SendMoney extends UserRequestHandler {
 
             }
 
-            if (! user.secretPhrase.equals(secretPhrase)) {
+            if (! user.getSecretPhrase().equals(secretPhrase)) {
 
                 JSONObject response = new JSONObject();
                 response.put("response", "notifyOfIncorrectTransaction");
@@ -104,7 +104,7 @@ final class SendMoney extends UserRequestHandler {
 
             } else {
 
-                Account account = Account.getAccount(user.publicKey);
+                Account account = Account.getAccount(user.getPublicKey());
                 if (account == null || (amount + fee) * 100L > account.getUnconfirmedBalance()) {
 
                     JSONObject response = new JSONObject();
@@ -119,8 +119,8 @@ final class SendMoney extends UserRequestHandler {
 
                 } else {
 
-                    final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.publicKey, recipient, amount, fee, null);
-                    transaction.sign(user.secretPhrase);
+                    final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
+                    transaction.sign(user.getSecretPhrase());
 
                     JSONObject peerRequest = new JSONObject();
                     peerRequest.put("requestType", "processTransactions");

@@ -47,8 +47,9 @@ public final class Account {
     }
 
     public final Long id;
-    public final AtomicReference<byte[]> publicKey = new AtomicReference<>();
-    final int height;
+
+    private final int height;
+    private final AtomicReference<byte[]> publicKey = new AtomicReference<>();
     private long balance;
     private long unconfirmedBalance;
 
@@ -57,7 +58,11 @@ public final class Account {
 
     private Account(Long id) {
         this.id = id;
-        this.height = Blockchain.getLastBlock().height;
+        this.height = Blockchain.getLastBlock().getHeight();
+    }
+
+    public byte[] getPublicKey() {
+        return publicKey.get();
     }
 
     public synchronized long getBalance() {
@@ -80,8 +85,9 @@ public final class Account {
                 }
             }
 
-            for (int i = block.blockTransactions.length; i-- > 0; ) {
-                Transaction transaction = block.blockTransactions[i];
+            Transaction[] blockTransactions = block.getBlockTransactions();
+            for (int i = blockTransactions.length; i-- > 0; ) {
+                Transaction transaction = blockTransactions[i];
                 if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
                     long deltaBalance = transaction.getSenderDeltaBalance();
                     if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
@@ -106,16 +112,16 @@ public final class Account {
     public int getEffectiveBalance() {
 
         Block lastBlock = Blockchain.getLastBlock();
-        if (lastBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
+        if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
                 return (int)(getBalance() / 100);
             }
-            if (lastBlock.height - this.height < 1440) {
+            if (lastBlock.getHeight() - this.height < 1440) {
                 return 0;
             }
             int receivedInlastBlock = 0;
-            for (Transaction transaction : lastBlock.blockTransactions) {
+            for (Transaction transaction : lastBlock.getBlockTransactions()) {
                 if (transaction.recipient.equals(id)) {
                     receivedInlastBlock += transaction.amount;
                 }

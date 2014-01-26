@@ -27,7 +27,7 @@ final class GetState extends HttpRequestHandler {
         response.put("version", Nxt.VERSION);
         response.put("time", Convert.getEpochTime());
         response.put("lastBlock", Blockchain.getLastBlock().getStringId());
-        response.put("cumulativeDifficulty", Blockchain.getLastBlock().cumulativeDifficulty.toString());
+        response.put("cumulativeDifficulty", Blockchain.getLastBlock().getCumulativeDifficulty().toString());
 
         long totalEffectiveBalance = 0;
         for (Account account : Account.allAccounts) {
@@ -51,7 +51,7 @@ final class GetState extends HttpRequestHandler {
         response.put("numberOfPeers", Peer.allPeers.size());
         response.put("numberOfUsers", User.allUsers.size());
         Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
-        response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.announcedAddress);
+        response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());

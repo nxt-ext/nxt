@@ -32,9 +32,9 @@ final class GetAliasURI extends HttpRequestHandler {
 
             } else {
 
-                if (aliasData.uri.length() > 0) {
+                if (aliasData.getURI().length() > 0) {
 
-                    response.put("uri", aliasData.uri);
+                    response.put("uri", aliasData.getURI());
 
                 }
 

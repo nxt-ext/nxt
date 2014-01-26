@@ -22,7 +22,7 @@ final class GetInfo extends HttpJSONRequestHandler {
                 announcedAddress = announcedAddress.trim();
                 if (announcedAddress.length() > 0) {
 
-                    peer.announcedAddress = announcedAddress;
+                    peer.setAnnouncedAddress(announcedAddress);
 
                 }
             }
@@ -41,7 +41,7 @@ final class GetInfo extends HttpJSONRequestHandler {
                 }
 
             }
-            peer.application = application;
+            peer.setApplication(application);
 
             String version = (String)request.get("version");
             if (version == null) {
@@ -58,7 +58,7 @@ final class GetInfo extends HttpJSONRequestHandler {
                 }
 
             }
-            peer.version = version;
+            peer.setVersion(version);
 
             String platform = (String)request.get("platform");
             if (platform == null) {
@@ -75,9 +75,9 @@ final class GetInfo extends HttpJSONRequestHandler {
                 }
 
             }
-            peer.platform = platform;
+            peer.setPlatform(platform);
 
-            peer.shareAddress = Boolean.TRUE.equals(request.get("shareAddress"));
+            peer.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
 
         }
 
@@ -91,7 +91,7 @@ final class GetInfo extends HttpJSONRequestHandler {
         response.put("platform", Nxt.myPlatform);
         response.put("shareAddress", Nxt.shareMyAddress);
 
-        response.put("cumulativeDifficulty", Blockchain.getLastBlock().cumulativeDifficulty.toString());
+        response.put("cumulativeDifficulty", Blockchain.getLastBlock().getCumulativeDifficulty().toString());
 
         return response;
     }

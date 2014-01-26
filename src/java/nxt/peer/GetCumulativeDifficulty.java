@@ -15,7 +15,7 @@ final class GetCumulativeDifficulty extends HttpJSONRequestHandler {
 
         JSONObject response = new JSONObject();
 
-        response.put("cumulativeDifficulty", Blockchain.getLastBlock().cumulativeDifficulty.toString());
+        response.put("cumulativeDifficulty", Blockchain.getLastBlock().getCumulativeDifficulty().toString());
 
         return response;
     }

@@ -9,11 +9,6 @@ import java.util.concurrent.ConcurrentMap;
 
 public abstract class Order {
 
-    static void addAsset(Long assetId) {
-        Order.Ask.sortedAskOrders.put(assetId, new TreeSet<Order.Ask>());
-        Order.Bid.sortedBidOrders.put(assetId, new TreeSet<Order.Bid>());
-    }
-
     // called only from Blockchain.apply(Block) which is already synchronized on Blockchain.class
     private static void matchOrders(Long assetId) {
 
@@ -31,10 +26,10 @@ public abstract class Order {
 
             }
 
-            int quantity = askOrder.quantity < bidOrder.quantity ? askOrder.quantity : bidOrder.quantity;
+            int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
             long price = askOrder.height < bidOrder.height || (askOrder.height == bidOrder.height && askOrder.id < bidOrder.id) ? askOrder.price : bidOrder.price;
 
-            if ((askOrder.quantity -= quantity) == 0) {
+            if ((((Order)askOrder).quantity -= quantity) == 0) {
 
                 Ask.removeOrder(askOrder.id);
 
@@ -42,7 +37,7 @@ public abstract class Order {
 
             askOrder.account.addToBalanceAndUnconfirmedBalance(quantity * price);
 
-            if ((bidOrder.quantity -= quantity) == 0) {
+            if ((((Order)bidOrder).quantity -= quantity) == 0) {
 
                 Bid.removeOrder(bidOrder.id);
 
@@ -58,17 +53,22 @@ public abstract class Order {
     public final Account account;
     public final Long asset;
     public final long price;
-    public final long height;
-    // writes protected by Blockchain lock
-    public volatile int quantity;
 
-    private Order(Long id, Account account, Long asset, int quantity, long price) {
+    final long height;
+
+    private volatile int quantity;
+
+    private Order(Long id, Account account, Long assetId, int quantity, long price) {
         this.id = id;
         this.account = account;
-        this.asset = asset;
+        this.asset = assetId;
         this.quantity = quantity;
         this.price = price;
-        this.height = Blockchain.getLastBlock().height;
+        this.height = Blockchain.getLastBlock().getHeight();
+    }
+
+    public final int getQuantity() {
+        return quantity;
     }
 
     private int compareTo(Order o) {
@@ -108,29 +108,34 @@ public abstract class Order {
 
         public static final Collection<Ask> allAskOrders = Collections.unmodifiableCollection(askOrders.values());
 
-        public static Ask getAskOrder(Long id) {
-            return askOrders.get(id);
+        public static Ask getAskOrder(Long orderId) {
+            return askOrders.get(orderId);
         }
 
         public static SortedSet<Ask> getSortedOrders(Long assetId) {
             return sortedAskOrders.get(assetId);
         }
 
-        static void addOrder(Long transactionId, Account senderAccount, Long asset, int quantity, long price) {
-            Ask order = new Ask(transactionId, senderAccount, asset, quantity, price);
+        static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
+            Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
             askOrders.put(order.id, order);
-            sortedAskOrders.get(asset).add(order);
-            matchOrders(asset);
+            SortedSet<Ask> sortedAssetAskOrders = sortedAskOrders.get(assetId);
+            if (sortedAssetAskOrders == null) {
+                sortedAssetAskOrders = new TreeSet<>();
+                sortedAskOrders.put(assetId,sortedAssetAskOrders);
+            }
+            sortedAssetAskOrders.add(order);
+            matchOrders(assetId);
         }
 
-        static Ask removeOrder(Long id) {
-            Ask askOrder = askOrders.remove(id);
+        static Ask removeOrder(Long orderId) {
+            Ask askOrder = askOrders.remove(orderId);
             sortedAskOrders.get(askOrder.asset).remove(askOrder);
             return askOrder;
         }
 
-        private Ask(Long id, Account account, Long asset, int quantity, long price) {
-            super(id, account, asset, quantity, price);
+        private Ask(Long orderId, Account account, Long assetId, int quantity, long price) {
+            super(orderId, account, assetId, quantity, price);
         }
 
         @Override
@@ -160,30 +165,34 @@ public abstract class Order {
 
         public static final Collection<Bid> allBidOrders = Collections.unmodifiableCollection(bidOrders.values());
 
-        public static Bid getBidOrder(Long id) {
-            return bidOrders.get(id);
+        public static Bid getBidOrder(Long orderId) {
+            return bidOrders.get(orderId);
         }
 
         public static SortedSet<Bid> getSortedOrders(Long assetId) {
             return sortedBidOrders.get(assetId);
         }
 
-        static void addOrder(Long transactionId, Account senderAccount, Long asset, int quantity, long price) {
-            Bid order = new Bid(transactionId, senderAccount, asset, quantity, price);
+        static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
+            Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
             senderAccount.addToBalanceAndUnconfirmedBalance(- quantity * price);
             bidOrders.put(order.id, order);
-            sortedBidOrders.get(asset).add(order);
-            matchOrders(asset);
+            SortedSet<Bid> sortedAssetBidOrders = sortedBidOrders.get(assetId);
+            if (sortedAssetBidOrders == null) {
+                sortedAssetBidOrders = new TreeSet<>();
+                sortedBidOrders.put(assetId,sortedAssetBidOrders);
+            }
+            matchOrders(assetId);
         }
 
-        static Bid removeOrder(Long id) {
-            Bid bidOrder = bidOrders.remove(id);
+        static Bid removeOrder(Long orderId) {
+            Bid bidOrder = bidOrders.remove(orderId);
             sortedBidOrders.get(bidOrder.asset).remove(bidOrder);
             return bidOrder;
         }
 
-        private Bid(Long id, Account account, Long asset, int quantity, long price) {
-            super(id, account, asset, quantity, price);
+        private Bid(Long orderId, Account account, Long assetId, int quantity, long price) {
+            super(orderId, account, assetId, quantity, price);
         }
 
         @Override

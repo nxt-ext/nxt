@@ -37,12 +37,12 @@ final class GetAlias extends HttpRequestHandler {
 
                     response.put("account", Convert.convert(aliasData.account.id));
                     response.put("alias", aliasData.alias);
-                    if (aliasData.uri.length() > 0) {
+                    if (aliasData.getURI().length() > 0) {
 
-                        response.put("uri", aliasData.uri);
+                        response.put("uri", aliasData.getURI());
 
                     }
-                    response.put("timestamp", aliasData.timestamp);
+                    response.put("timestamp", aliasData.getTimestamp());
 
                 }
 

@@ -110,27 +110,76 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
     }
 
-    public int timestamp;
     public final short deadline;
     public final byte[] senderPublicKey;
     public final Long recipient;
     public final int amount;
     public final int fee;
-    final Long referencedTransaction;
-    public byte[] signature;
-    Attachment attachment;
+    public final Long referencedTransaction;
 
+    /*private after 0.6.0*/
     public int index;
-    public Long block;
     public int height;
-
+    public Long block;
+    public byte[] signature;
+    /**/
+    private int timestamp;
     private transient Type type;
+    private Attachment attachment;
     private transient volatile Long id;
     private transient volatile String stringId = null;
     private transient volatile Long senderAccountId;
 
+    private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                        int amount, int fee, Long referencedTransaction, byte[] signature) {
+
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid transaction type or subtype");
+        }
+
+        this.timestamp = timestamp;
+        this.deadline = deadline;
+        this.senderPublicKey = senderPublicKey;
+        this.recipient = recipient;
+        this.amount = amount;
+        this.fee = fee;
+        this.referencedTransaction = referencedTransaction;
+        this.signature = signature;
+        this.type = type;
+        this.height = Integer.MAX_VALUE;
+
+    }
+
     public final Type getType() {
         return type;
+    }
+
+    public Block getBlock() {
+        return Blockchain.getBlock(block);
+    }
+
+    void setBlock(Long blockId) {
+        this.block = blockId;
+    }
+
+    void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    void setIndex(int index) {
+        this.index = index;
+    }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+    public Attachment getAttachment() {
+        return attachment;
     }
 
     public final Long getId() {
@@ -367,26 +416,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         stringId = bigInteger.toString();
     }
 
-    private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
-                        int amount, int fee, Long referencedTransaction, byte[] signature) {
-
-        if (type == null) {
-            throw new IllegalArgumentException("Invalid transaction type or subtype");
-        }
-
-        this.timestamp = timestamp;
-        this.deadline = deadline;
-        this.senderPublicKey = senderPublicKey;
-        this.recipient = recipient;
-        this.amount = amount;
-        this.fee = fee;
-        this.referencedTransaction = referencedTransaction;
-        this.signature = signature;
-        this.type = type;
-        height = Integer.MAX_VALUE;
-
-    }
-
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
         out.write(type.getType());
@@ -578,7 +607,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
                 @Override
                 boolean doValidateAttachment(Transaction transaction) {
-                    if (Blockchain.getLastBlock().height < Nxt.ARBITRARY_MESSAGES_BLOCK) {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
                         return false;
                     }
                     try {
@@ -633,7 +662,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
                 @Override
                 boolean doValidateAttachment(Transaction transaction) {
-                    if (Blockchain.getLastBlock().height < Nxt.ALIAS_SYSTEM_BLOCK) {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
                         return false;
                     }
                     try {
@@ -649,7 +678,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                                 }
                             }
                             Alias alias = Alias.getAlias(normalizedAlias);
-                            return alias == null || Arrays.equals(alias.account.publicKey.get(), transaction.senderPublicKey);
+                            return alias == null || Arrays.equals(alias.account.getPublicKey(), transaction.senderPublicKey);
                         }
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error in alias assignment validation", e);
@@ -660,7 +689,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                    Block block = Blockchain.getBlock(transaction.block);
+                    Block block = transaction.getBlock();
                     Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.alias, attachment.uri, block.timestamp);
                 }
             };
@@ -745,7 +774,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
                     Long assetId = transaction.getId();
                     Asset.addAsset(assetId, transaction.getSenderAccountId(), attachment.name, attachment.description, attachment.quantity);
-                    Order.addAsset(assetId);
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.quantity);
 
                 }
@@ -1016,7 +1044,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
                     Order order = Order.Ask.removeOrder(attachment.order);
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.quantity);
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.getQuantity());
                 }
 
                 @Override
@@ -1051,7 +1079,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
                     Order order = Order.Bid.removeOrder(attachment.order);
-                    senderAccount.addToBalanceAndUnconfirmedBalance(order.quantity * order.price);
+                    senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.price);
                 }
 
                 @Override
@@ -1066,7 +1094,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     if (bidOrder == null) {
                         return 0;
                     }
-                    return bidOrder.quantity * bidOrder.price;
+                    return bidOrder.getQuantity() * bidOrder.price;
                 }
             };
         }

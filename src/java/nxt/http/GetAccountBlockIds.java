@@ -56,7 +56,7 @@ final class GetAccountBlockIds extends HttpRequestHandler {
                         }
 
                         PriorityQueue<Block> sortedBlocks = new PriorityQueue<>(11, Block.heightComparator);
-                        byte[] accountPublicKey = accountData.publicKey.get();
+                        byte[] accountPublicKey = accountData.getPublicKey();
                         for (Block block : Blockchain.allBlocks) {
 
                             if (block.timestamp >= timestamp && Arrays.equals(block.generatorPublicKey, accountPublicKey)) {

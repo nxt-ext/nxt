@@ -37,7 +37,7 @@ final class GetBidOrder extends HttpRequestHandler {
 
                     response.put("account", Convert.convert(orderData.account.id));
                     response.put("asset", Convert.convert(orderData.asset));
-                    response.put("quantity", orderData.quantity);
+                    response.put("quantity", orderData.getQuantity());
                     response.put("price", orderData.price);
 
                 }

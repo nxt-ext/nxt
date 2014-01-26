@@ -51,9 +51,9 @@ final class GetTransaction extends HttpRequestHandler {
                     response = transactionData.getJSONObject();
 
                     response.put("sender", Convert.convert(transactionData.getSenderAccountId()));
-                    Block block = Blockchain.getBlock(transactionData.block);
+                    Block block = transactionData.getBlock();
                     response.put("block", block.getStringId());
-                    response.put("confirmations", Blockchain.getLastBlock().height - block.height + 1);
+                    response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
 
                 }
 

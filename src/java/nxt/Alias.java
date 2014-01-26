@@ -43,8 +43,9 @@ public final class Alias {
     public final Account account;
     public final Long id;
     public final String alias;
-    public volatile String uri;
-    public volatile int timestamp;
+
+    private volatile String uri;
+    private volatile int timestamp;
 
     private Alias(Account account, Long id, String alias, String uri, int timestamp) {
 
@@ -56,4 +57,11 @@ public final class Alias {
 
     }
 
+    public String getURI() {
+        return uri;
+    }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
 }

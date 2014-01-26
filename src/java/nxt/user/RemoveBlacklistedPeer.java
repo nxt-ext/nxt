@@ -25,7 +25,7 @@ final class RemoveBlacklistedPeer extends UserRequestHandler {
             int index = Integer.parseInt(req.getParameter("peer"));
             for (Peer peer : Peer.allPeers) {
                 if (peer.index == index) {
-                    if (peer.blacklistingTime > 0) {
+                    if (peer.getBlacklistingTime() > 0) {
                         peer.removeBlacklistedStatus();
                     }
                     break;

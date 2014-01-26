@@ -35,9 +35,9 @@ final class GetAccountPublicKey extends HttpRequestHandler {
 
                 } else {
 
-                    if (accountData.publicKey.get() != null) {
+                    if (accountData.getPublicKey() != null) {
 
-                        response.put("publicKey", Convert.convert(accountData.publicKey.get()));
+                        response.put("publicKey", Convert.convert(accountData.getPublicKey()));
 
                     }
 

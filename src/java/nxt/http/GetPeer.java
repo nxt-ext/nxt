@@ -32,19 +32,19 @@ final class GetPeer extends HttpRequestHandler {
 
             } else {
 
-                response.put("state", peerData.state);
-                response.put("announcedAddress", peerData.announcedAddress);
-                if (peerData.hallmark != null) {
+                response.put("state", peerData.getState().ordinal());
+                response.put("announcedAddress", peerData.getAnnouncedAddress());
+                if (peerData.getHallmark() != null) {
 
-                    response.put("hallmark", peerData.hallmark);
+                    response.put("hallmark", peerData.getHallmark());
 
                 }
                 response.put("weight", peerData.getWeight());
-                response.put("downloadedVolume", peerData.downloadedVolume);
-                response.put("uploadedVolume", peerData.uploadedVolume);
-                response.put("application", peerData.application);
-                response.put("version", peerData.version);
-                response.put("platform", peerData.platform);
+                response.put("downloadedVolume", peerData.getDownloadedVolume());
+                response.put("uploadedVolume", peerData.getUploadedVolume());
+                response.put("application", peerData.getApplication());
+                response.put("version", peerData.getVersion());
+                response.put("platform", peerData.getPlatform());
 
             }
 

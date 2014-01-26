@@ -74,7 +74,7 @@ public abstract class HttpJSONRequestHandler {
 
             peer = Peer.addPeer(req.getRemoteHost(), "");
             if (peer != null) {
-                if (peer.state == Peer.State.DISCONNECTED) {
+                if (peer.getState() == Peer.State.DISCONNECTED) {
                     peer.setState(Peer.State.CONNECTED);
                 }
                 peer.updateDownloadedVolume(cis.getCount());

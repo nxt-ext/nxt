@@ -53,7 +53,7 @@ public final class User {
         JSONObject response = new JSONObject();
         response.put("response", "setBalance");
         response.put("balance", account.getUnconfirmedBalance());
-        byte[] accountPublicKey = account.publicKey.get();
+        byte[] accountPublicKey = account.getPublicKey();
         for (User user : users.values()) {
             if (user.secretPhrase != null && Arrays.equals(user.publicKey, accountPublicKey)) {
                 user.send(response);
@@ -61,14 +61,25 @@ public final class User {
         }
     }
 
-    public volatile String secretPhrase;
-    public volatile byte[] publicKey;
-    volatile boolean isInactive;
-
+    private volatile String secretPhrase;
+    private volatile byte[] publicKey;
+    private volatile boolean isInactive;
     private final ConcurrentLinkedQueue<JSONObject> pendingResponses = new ConcurrentLinkedQueue<>();
     private AsyncContext asyncContext;
 
     User() {}
+
+    public String getSecretPhrase() {
+        return secretPhrase;
+    }
+
+    public byte[] getPublicKey() {
+        return publicKey;
+    }
+
+    boolean isInactive() {
+        return isInactive;
+    }
 
     public synchronized void send(JSONObject response) {
         if (asyncContext == null) {

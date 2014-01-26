@@ -30,8 +30,8 @@ final class GetInitialData extends UserRequestHandler {
         for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
-            unconfirmedTransaction.put("index", transaction.index);
-            unconfirmedTransaction.put("timestamp", transaction.timestamp);
+            unconfirmedTransaction.put("index", transaction.getIndex());
+            unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
             unconfirmedTransaction.put("deadline", transaction.deadline);
             unconfirmedTransaction.put("recipient", Convert.convert(transaction.recipient));
             unconfirmedTransaction.put("amount", transaction.amount);
@@ -46,28 +46,28 @@ final class GetInitialData extends UserRequestHandler {
 
             String address = peer.peerAddress;
 
-            if (peer.blacklistingTime > 0) {
+            if (peer.getBlacklistingTime() > 0) {
 
                 JSONObject blacklistedPeer = new JSONObject();
                 blacklistedPeer.put("index", peer.index);
-                blacklistedPeer.put("announcedAddress", peer.announcedAddress.length() > 0
-                        ? (peer.announcedAddress.length() > 30
-                        ? (peer.announcedAddress.substring(0, 30) + "...")
-                        : peer.announcedAddress)
+                blacklistedPeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 0
+                        ? (peer.getAnnouncedAddress().length() > 30
+                        ? (peer.getAnnouncedAddress().substring(0, 30) + "...")
+                        : peer.getAnnouncedAddress())
                         : address);
-                if (Nxt.wellKnownPeers.contains(peer.announcedAddress)) {
+                if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
                     blacklistedPeer.put("wellKnown", true);
                 }
                 blacklistedPeers.add(blacklistedPeer);
 
-            } else if (peer.state == Peer.State.NON_CONNECTED) {
+            } else if (peer.getState() == Peer.State.NON_CONNECTED) {
 
-                if (peer.announcedAddress.length() > 0) {
+                if (peer.getAnnouncedAddress().length() > 0) {
 
                     JSONObject knownPeer = new JSONObject();
                     knownPeer.put("index", peer.index);
-                    knownPeer.put("announcedAddress", peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress);
-                    if (Nxt.wellKnownPeers.contains(peer.announcedAddress)) {
+                    knownPeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 30 ? (peer.getAnnouncedAddress().substring(0, 30) + "...") : peer.getAnnouncedAddress());
+                    if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
                         knownPeer.put("wellKnown", true);
                     }
 
@@ -79,18 +79,18 @@ final class GetInitialData extends UserRequestHandler {
 
                 JSONObject activePeer = new JSONObject();
                 activePeer.put("index", peer.index);
-                if (peer.state == Peer.State.DISCONNECTED) {
+                if (peer.getState() == Peer.State.DISCONNECTED) {
 
                     activePeer.put("disconnected", true);
 
                 }
                 activePeer.put("address", address.length() > 30 ? (address.substring(0, 30) + "...") : address);
-                activePeer.put("announcedAddress", peer.announcedAddress.length() > 30 ? (peer.announcedAddress.substring(0, 30) + "...") : peer.announcedAddress);
+                activePeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 30 ? (peer.getAnnouncedAddress().substring(0, 30) + "...") : peer.getAnnouncedAddress());
                 activePeer.put("weight", peer.getWeight());
-                activePeer.put("downloaded", peer.downloadedVolume);
-                activePeer.put("uploaded", peer.uploadedVolume);
+                activePeer.put("downloaded", peer.getDownloadedVolume());
+                activePeer.put("uploaded", peer.getUploadedVolume());
                 activePeer.put("software", peer.getSoftware());
-                if (Nxt.wellKnownPeers.contains(peer.announcedAddress)) {
+                if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
                     activePeer.put("wellKnown", true);
                 }
                 activePeers.add(activePeer);
@@ -105,17 +105,17 @@ final class GetInitialData extends UserRequestHandler {
 
             Block block = Blockchain.getBlock(blockId);
             JSONObject recentBlock = new JSONObject();
-            recentBlock.put("index", block.index);
+            recentBlock.put("index", block.getIndex());
             recentBlock.put("timestamp", block.timestamp);
             recentBlock.put("numberOfTransactions", block.transactions.length);
             recentBlock.put("totalAmount", block.totalAmount);
             recentBlock.put("totalFee", block.totalFee);
             recentBlock.put("payloadLength", block.payloadLength);
             recentBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
-            recentBlock.put("height", block.height);
+            recentBlock.put("height", block.getHeight());
             recentBlock.put("version", block.version);
             recentBlock.put("block", block.getStringId());
-            recentBlock.put("baseTarget", BigInteger.valueOf(block.baseTarget).multiply(BigInteger.valueOf(100000))
+            recentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000))
                     .divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
 
             recentBlocks.add(recentBlock);

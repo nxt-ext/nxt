@@ -28,9 +28,9 @@ final class UnlockAccount extends UserRequestHandler {
         String secretPhrase = req.getParameter("secretPhrase");
         // lock all other instances of this account being unlocked
         for (User u : User.allUsers) {
-            if (secretPhrase.equals(u.secretPhrase)) {
+            if (secretPhrase.equals(u.getSecretPhrase())) {
                 u.deinitializeKeyPair();
-                if (! u.isInactive) {
+                if (! u.isInactive()) {
                     JSONObject response = new JSONObject();
                     response.put("response", "lockAccount");
                     u.enqueue(response);
@@ -73,33 +73,33 @@ final class UnlockAccount extends UserRequestHandler {
                 Block lastBlock = Blockchain.getLastBlock();
                 MessageDigest digest = Crypto.sha256();
                 byte[] generationSignatureHash;
-                if (lastBlock.height < Nxt.TRANSPARENT_FORGING_BLOCK) {
+                if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
 
-                    byte[] generationSignature = Crypto.sign(lastBlock.generationSignature, user.secretPhrase);
+                    byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), user.getSecretPhrase());
                     generationSignatureHash = digest.digest(generationSignature);
 
                 } else {
 
-                    digest.update(lastBlock.generationSignature);
-                    generationSignatureHash = digest.digest(user.publicKey);
+                    digest.update(lastBlock.getGenerationSignature());
+                    generationSignatureHash = digest.digest(user.getPublicKey());
 
                 }
                 BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-                response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.timestamp));
+                response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.timestamp));
 
                 user.enqueue(response2);
 
             }
 
             JSONArray myTransactions = new JSONArray();
-            byte[] accountPublicKey = account.publicKey.get();
+            byte[] accountPublicKey = account.getPublicKey();
             for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
 
                 if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", transaction.index);
-                    myTransaction.put("transactionTimestamp", transaction.timestamp);
+                    myTransaction.put("index", transaction.getIndex());
+                    myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.deadline);
                     myTransaction.put("account", Convert.convert(transaction.recipient));
                     myTransaction.put("sentAmount", transaction.amount);
@@ -117,8 +117,8 @@ final class UnlockAccount extends UserRequestHandler {
                 } else if (accountId.equals(transaction.recipient)) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", transaction.index);
-                    myTransaction.put("transactionTimestamp", transaction.timestamp);
+                    myTransaction.put("index", transaction.getIndex());
+                    myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.deadline);
                     myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
                     myTransaction.put("receivedAmount", transaction.amount);
@@ -152,14 +152,14 @@ final class UnlockAccount extends UserRequestHandler {
 
                 }
 
-                for (Transaction transaction : block.blockTransactions) {
+                for (Transaction transaction : block.getBlockTransactions()) {
 
                     if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
 
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", transaction.index);
+                        myTransaction.put("index", transaction.getIndex());
                         myTransaction.put("blockTimestamp", block.timestamp);
-                        myTransaction.put("transactionTimestamp", transaction.timestamp);
+                        myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.convert(transaction.recipient));
                         myTransaction.put("sentAmount", transaction.amount);
                         if (accountId.equals(transaction.recipient)) {
@@ -176,9 +176,9 @@ final class UnlockAccount extends UserRequestHandler {
                     } else if (accountId.equals(transaction.recipient)) {
 
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", transaction.index);
+                        myTransaction.put("index", transaction.getIndex());
                         myTransaction.put("blockTimestamp", block.timestamp);
-                        myTransaction.put("transactionTimestamp", transaction.timestamp);
+                        myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
                         myTransaction.put("receivedAmount", transaction.amount);
                         myTransaction.put("fee", transaction.fee);

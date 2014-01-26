@@ -15,6 +15,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
+import javax.jnlp.DownloadService;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -304,22 +305,22 @@ public final class Peer implements Comparable<Peer> {
 
 
     public final int index;
-    public String platform;
-    public String announcedAddress;
     public final String peerAddress;
-    public boolean shareAddress;
-    public String hallmark;
-    private Long accountId;
-    int weight;
-    int date;
-    private long adjustedWeight;
-    public String application;
-    public String version;
 
-    public volatile long blacklistingTime;
-    public volatile State state;
-    public volatile long downloadedVolume;
-    public volatile long uploadedVolume;
+    private String announcedAddress;
+    private boolean shareAddress;
+    private String hallmark;
+    private String platform;
+    private String application;
+    private String version;
+    private int weight;
+    private int date;
+    private Long accountId;
+    private long adjustedWeight;
+    private volatile long blacklistingTime;
+    private volatile State state;
+    private volatile long downloadedVolume;
+    private volatile long uploadedVolume;
 
     private Peer(String peerAddress, String announcedAddress) {
 
@@ -327,6 +328,70 @@ public final class Peer implements Comparable<Peer> {
         this.announcedAddress = announcedAddress;
         this.index = peerCounter.incrementAndGet();
         this.state = State.NON_CONNECTED;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public long getBlacklistingTime() {
+        return blacklistingTime;
+    }
+
+    public long getDownloadedVolume() {
+        return downloadedVolume;
+    }
+
+    public long getUploadedVolume() {
+        return uploadedVolume;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getApplication() {
+        return application;
+    }
+
+    void setApplication(String application) {
+        this.application = application;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public String getHallmark() {
+        return hallmark;
+    }
+
+    void setHallmark(String hallmark) {
+        this.hallmark = hallmark;
+    }
+
+    public boolean shareAddress() {
+        return shareAddress;
+    }
+
+    void setShareAddress(boolean shareAddress) {
+        this.shareAddress = shareAddress;
+    }
+
+    public String getAnnouncedAddress() {
+        return announcedAddress;
+    }
+
+    void setAnnouncedAddress(String announcedAddress) {
+        this.announcedAddress = announcedAddress;
     }
 
     @Override

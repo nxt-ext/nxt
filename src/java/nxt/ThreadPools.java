@@ -57,4 +57,6 @@ public final class ThreadPools {
         }
     }
 
+    private ThreadPools() {} //never
+
 }

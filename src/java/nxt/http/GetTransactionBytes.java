@@ -48,8 +48,8 @@ final class GetTransactionBytes extends HttpRequestHandler {
                 } else {
 
                     response.put("bytes", Convert.convert(transactionData.getBytes()));
-                    Block block = Blockchain.getBlock(transactionData.block);
-                    response.put("confirmations", Blockchain.getLastBlock().height - block.height + 1);
+                    Block block = transactionData.getBlock();
+                    response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
 
                 }
 

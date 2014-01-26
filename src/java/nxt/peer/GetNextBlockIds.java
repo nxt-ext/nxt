@@ -20,9 +20,9 @@ final class GetNextBlockIds extends HttpJSONRequestHandler {
 
         JSONArray nextBlockIds = new JSONArray();
         Block block = Blockchain.getBlock(Convert.parseUnsignedLong((String) request.get("blockId")));
-        while (block != null && block.nextBlock != null && nextBlockIds.size() < 1440) {
+        while (block != null && block.getNextBlock() != null && nextBlockIds.size() < 1440) {
 
-            block = Blockchain.getBlock(block.nextBlock);
+            block = Blockchain.getBlock(block.getNextBlock());
             if (block != null) {
 
                 nextBlockIds.add(block.getStringId());

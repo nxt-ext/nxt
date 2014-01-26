@@ -67,25 +67,25 @@ public final class Block implements Serializable {
     public final int version;
     public final int timestamp;
     public final Long previousBlock;
-    public int totalAmount;
-    public int totalFee;
-    public int payloadLength;
-    public byte[] payloadHash;
     public final byte[] generatorPublicKey;
-    public byte[] generationSignature;
-    public byte[] blockSignature;
-
     public final byte[] previousBlockHash;
-
-    public int index;
+    public final int totalAmount;
+    public final int totalFee;
+    public final int payloadLength;
     public final Long[] transactions;
-    public long baseTarget;
-    public int height;
-    public volatile Long nextBlock;
+
+    transient Transaction[] blockTransactions;
+
+    /*private after 0.6.0*/
     public BigInteger cumulativeDifficulty;
-
-    public transient Transaction[] blockTransactions;
-
+    public long baseTarget;
+    public volatile Long nextBlock;
+    public int index;
+    public int height;
+    /**/
+    private byte[] generationSignature;
+    private byte[] blockSignature;
+    private byte[] payloadHash;
     private transient volatile Long id;
     private transient volatile String stringId = null;
     private transient volatile Long generatorAccountId;
@@ -127,7 +127,6 @@ public final class Block implements Serializable {
 
     }
 
-
     public byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
@@ -147,6 +146,62 @@ public final class Block implements Serializable {
         }
         buffer.put(blockSignature);
         return buffer.array();
+    }
+
+    public byte[] getPayloadHash() {
+        return payloadHash;
+    }
+
+    void setPayloadHash(byte[] payloadHash) {
+        this.payloadHash = payloadHash;
+    }
+
+    public byte[] getGenerationSignature() {
+        return generationSignature;
+    }
+
+    void setGenerationSignature(byte[] generationSignature) {
+        this.generationSignature = generationSignature;
+    }
+
+    public byte[] getBlockSignature() {
+        return blockSignature;
+    }
+
+    void setBlockSignature(byte[] blockSignature) {
+        this.blockSignature = blockSignature;
+    }
+
+    public Transaction[] getBlockTransactions() {
+        return blockTransactions;
+    }
+
+    public long getBaseTarget() {
+        return baseTarget;
+    }
+
+    public BigInteger getCumulativeDifficulty() {
+        return cumulativeDifficulty;
+    }
+
+    public Long getNextBlock() {
+        return nextBlock;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    void setIndex(int index) {
+        this.index = index;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    void setHeight(int height) {
+        this.height = height;
     }
 
     public Long getId() {
@@ -283,6 +338,75 @@ public final class Block implements Serializable {
 
         }
 
+    }
+
+    void apply() {
+
+        for (int i = 0; i < transactions.length; i++) {
+            blockTransactions[i] = Blockchain.getTransaction(transactions[i]);
+            if (blockTransactions[i] == null) {
+                throw new IllegalStateException("Missing transaction " + Convert.convert(transactions[i]));
+            }
+        }
+        if (previousBlock == null && getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+
+            calculateBaseTarget();
+            Blockchain.addBlock(this);
+
+            Account.addOrGetAccount(Genesis.CREATOR_ID);
+
+        } else {
+
+            Block previousLastBlock = Blockchain.getLastBlock();
+
+            previousLastBlock.nextBlock = getId();
+            height = previousLastBlock.height + 1;
+            calculateBaseTarget();
+            Blockchain.addBlock(this);
+
+            Account generatorAccount = Account.getAccount(getGeneratorAccountId());
+            generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
+        }
+
+        for (Transaction transaction : blockTransactions) {
+
+            transaction.setHeight(height);
+            transaction.apply();
+
+        }
+
+    }
+
+    private void calculateBaseTarget() {
+
+        if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlock == null) {
+            baseTarget = Nxt.initialBaseTarget;
+            cumulativeDifficulty = BigInteger.ZERO;
+        } else {
+            Block previousBlock = Blockchain.getBlock(this.previousBlock);
+            long curBaseTarget = previousBlock.baseTarget;
+            long newBaseTarget = BigInteger.valueOf(curBaseTarget)
+                    .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
+                    .divide(BigInteger.valueOf(60)).longValue();
+            if (newBaseTarget < 0 || newBaseTarget > Nxt.maxBaseTarget) {
+                newBaseTarget = Nxt.maxBaseTarget;
+            }
+            if (newBaseTarget < curBaseTarget / 2) {
+                newBaseTarget = curBaseTarget / 2;
+            }
+            if (newBaseTarget == 0) {
+                newBaseTarget = 1;
+            }
+            long twofoldCurBaseTarget = curBaseTarget * 2;
+            if (twofoldCurBaseTarget < 0) {
+                twofoldCurBaseTarget = Nxt.maxBaseTarget;
+            }
+            if (newBaseTarget > twofoldCurBaseTarget) {
+                newBaseTarget = twofoldCurBaseTarget;
+            }
+            baseTarget = newBaseTarget;
+            cumulativeDifficulty = previousBlock.cumulativeDifficulty.add(Convert.two64.divide(BigInteger.valueOf(baseTarget)));
+        }
     }
 
     private void calculateIds() {

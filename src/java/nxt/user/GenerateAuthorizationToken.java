@@ -16,7 +16,7 @@ final class GenerateAuthorizationToken extends UserRequestHandler {
     @Override
     public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
-        if (! user.secretPhrase.equals(secretPhrase)) {
+        if (! user.getSecretPhrase().equals(secretPhrase)) {
             JSONObject response = new JSONObject();
             response.put("response", "showMessage");
             response.put("message", "Invalid secret phrase!");
@@ -25,7 +25,7 @@ final class GenerateAuthorizationToken extends UserRequestHandler {
         byte[] website = req.getParameter("website").trim().getBytes("UTF-8");
         byte[] data = new byte[website.length + 32 + 4];
         System.arraycopy(website, 0, data, 0, website.length);
-        System.arraycopy(user.publicKey, 0, data, website.length, 32);
+        System.arraycopy(user.getPublicKey(), 0, data, website.length, 32);
         int timestamp = Convert.getEpochTime();
         data[website.length + 32] = (byte)timestamp;
         data[website.length + 32 + 1] = (byte)(timestamp >> 8);
@@ -34,7 +34,7 @@ final class GenerateAuthorizationToken extends UserRequestHandler {
 
         byte[] token = new byte[100];
         System.arraycopy(data, website.length, token, 0, 32 + 4);
-        System.arraycopy(Crypto.sign(data, user.secretPhrase), 0, token, 32 + 4, 64);
+        System.arraycopy(Crypto.sign(data, user.getSecretPhrase()), 0, token, 32 + 4, 64);
         String tokenString = "";
         for (int ptr = 0; ptr < 100; ptr += 5) {
 
