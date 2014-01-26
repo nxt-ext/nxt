@@ -21,8 +21,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public final class Nxt extends HttpServlet {
 
@@ -82,16 +80,6 @@ public final class Nxt extends HttpServlet {
     public static /*final*/ int pushThreshold;
     public static int pullThreshold;
     public static /*final*/ int sendToPeersLimit;
-
-    public static volatile Peer lastBlockchainFeeder;
-
-    public static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
-
-    public static final ConcurrentMap<String, Alias> aliases = new ConcurrentHashMap<>();
-    public static final ConcurrentMap<Long, Alias> aliasIdToAliasMappings = new ConcurrentHashMap<>();
-
-    public static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
-    public static final ConcurrentMap<String, Long> assetNameToIdMappings = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
@@ -383,7 +371,7 @@ public final class Nxt extends HttpServlet {
                     return;
                 }
 
-                user = UserRequestHandler.getUser(userPasscode);
+                user = User.getUser(userPasscode);
                 UserRequestHandler.process(req, user);
 
             }

@@ -75,7 +75,7 @@ final class PlaceBidOrder extends HttpRequestHandler {
 
                 try {
 
-                    long asset = Convert.parseUnsignedLong(assetValue);
+                    Long asset = Convert.parseUnsignedLong(assetValue);
 
                     try {
 
@@ -104,11 +104,11 @@ final class PlaceBidOrder extends HttpRequestHandler {
 
                                 }
 
-                                long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
+                                Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
-                                Account account = Nxt.accounts.get(Account.getId(publicKey));
+                                Account account = Account.getAccount(publicKey);
                                 if (account == null) {
 
                                     response.put("errorCode", 6);

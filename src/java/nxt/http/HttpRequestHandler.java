@@ -1,7 +1,7 @@
 package nxt.http;
 
-import nxt.util.JSON;
 import nxt.Nxt;
+import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 

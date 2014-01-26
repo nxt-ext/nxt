@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Asset;
-import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -28,7 +27,7 @@ final class GetAsset extends HttpRequestHandler {
 
             try {
 
-                Asset assetData = Nxt.assets.get(Convert.parseUnsignedLong(asset));
+                Asset assetData = Asset.getAsset(Convert.parseUnsignedLong(asset));
                 if (assetData == null) {
 
                     response.put("errorCode", 5);

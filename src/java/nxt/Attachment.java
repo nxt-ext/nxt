@@ -203,10 +203,10 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        final long asset;
+        final Long asset;
         final int quantity;
 
-        public ColoredCoinsAssetTransfer(long asset, int quantity) {
+        public ColoredCoinsAssetTransfer(Long asset, int quantity) {
 
             this.asset = asset;
             this.quantity = quantity;
@@ -223,7 +223,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
+            buffer.putLong(Convert.nullToZero(asset));
             buffer.putInt(quantity);
 
             return buffer.array();
@@ -252,11 +252,11 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        final long asset;
+        final Long asset;
         final int quantity;
         final long price;
 
-        private ColoredCoinsOrderPlacement(long asset, int quantity, long price) {
+        private ColoredCoinsOrderPlacement(Long asset, int quantity, long price) {
 
             this.asset = asset;
             this.quantity = quantity;
@@ -274,7 +274,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(asset);
+            buffer.putLong(Convert.nullToZero(asset));
             buffer.putInt(quantity);
             buffer.putLong(price);
 
@@ -300,7 +300,7 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsAskOrderPlacement(long asset, int quantity, long price) {
+        public ColoredCoinsAskOrderPlacement(Long asset, int quantity, long price) {
             super(asset, quantity, price);
         }
 
@@ -315,7 +315,7 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsBidOrderPlacement(long asset, int quantity, long price) {
+        public ColoredCoinsBidOrderPlacement(Long asset, int quantity, long price) {
             super(asset, quantity, price);
         }
 
@@ -330,9 +330,9 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        final long order;
+        final Long order;
 
-        private ColoredCoinsOrderCancellation(long order) {
+        private ColoredCoinsOrderCancellation(Long order) {
             this.order = order;
         }
 
@@ -346,7 +346,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(order);
+            buffer.putLong(Convert.nullToZero(order));
 
             return buffer.array();
 
@@ -368,7 +368,7 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsAskOrderCancellation(long order) {
+        public ColoredCoinsAskOrderCancellation(Long order) {
             super(order);
         }
 
@@ -383,7 +383,7 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsBidOrderCancellation(long order) {
+        public ColoredCoinsBidOrderCancellation(Long order) {
             super(order);
         }
 

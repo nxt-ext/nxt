@@ -23,9 +23,9 @@ final class RemoveActivePeer extends UserRequestHandler {
             return response;
         } else {
             int index = Integer.parseInt(req.getParameter("peer"));
-            for (Peer peer : Peer.peers.values()) {
+            for (Peer peer : Peer.allPeers) {
                 if (peer.index == index) {
-                    if (peer.blacklistingTime == 0 && peer.state != Peer.STATE_NONCONNECTED) {
+                    if (peer.blacklistingTime == 0 && peer.state != Peer.State.NON_CONNECTED) {
                         peer.deactivate();
                     }
                     break;

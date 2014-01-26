@@ -18,7 +18,9 @@ final class GetPeers extends HttpRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray peers = new JSONArray();
-        peers.addAll(Peer.peers.keySet());
+        for (Peer peer : Peer.allPeers) {
+            peers.add(peer.peerAddress);
+        }
         response.put("peers", peers);
 
         return response;

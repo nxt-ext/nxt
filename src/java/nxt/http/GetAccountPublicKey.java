@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -28,7 +27,7 @@ final class GetAccountPublicKey extends HttpRequestHandler {
 
             try {
 
-                Account accountData = Nxt.accounts.get(Convert.parseUnsignedLong(account));
+                Account accountData = Account.getAccount(Convert.parseUnsignedLong(account));
                 if (accountData == null) {
 
                     response.put("errorCode", 5);

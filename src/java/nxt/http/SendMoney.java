@@ -34,7 +34,7 @@ final class SendMoney extends HttpRequestHandler {
             response.put("errorCode", 3);
             response.put("errorDescription", "\"secretPhrase\" not specified");
 
-        } else if (recipientValue == null) {
+        } else if (recipientValue == null || "0".equals(recipientValue)) {
 
             response.put("errorCode", 3);
             response.put("errorDescription", "\"recipient\" not specified");
@@ -59,7 +59,7 @@ final class SendMoney extends HttpRequestHandler {
             //TODO: fix ugly error handling
             try {
 
-                long recipient = Convert.parseUnsignedLong(recipientValue);
+                Long recipient = Convert.parseUnsignedLong(recipientValue);
 
                 try {
 
@@ -88,11 +88,11 @@ final class SendMoney extends HttpRequestHandler {
 
                             }
 
-                            long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
+                            Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
 
                             byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
-                            Account account = Nxt.accounts.get(Account.getId(publicKey));
+                            Account account = Account.getAccount(publicKey);
                             if (account == null) {
 
                                 response.put("errorCode", 6);
@@ -107,7 +107,8 @@ final class SendMoney extends HttpRequestHandler {
 
                                 } else {
 
-                                    Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, publicKey, recipient, amount, fee, referencedTransaction);
+                                    Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, publicKey,
+                                            recipient, amount, fee, referencedTransaction);
                                     transaction.sign(secretPhrase);
 
                                     JSONObject peerRequest = new JSONObject();

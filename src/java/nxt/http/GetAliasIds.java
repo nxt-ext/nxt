@@ -1,13 +1,11 @@
 package nxt.http;
 
 import nxt.Alias;
-import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 final class GetAliasIds extends HttpRequestHandler {
 
@@ -38,15 +36,12 @@ final class GetAliasIds extends HttpRequestHandler {
                 }
 
                 JSONArray aliasIds = new JSONArray();
-                for (Map.Entry<Long, Alias> aliasEntry : Nxt.aliasIdToAliasMappings.entrySet()) {
-
-                    if (aliasEntry.getValue().timestamp >= timestamp) {
-
-                        aliasIds.add(Convert.convert(aliasEntry.getKey()));
-
+                for (Alias alias : Alias.allAliases) {
+                    if (alias.timestamp >= timestamp) {
+                        aliasIds.add(Convert.convert(alias.id));
                     }
-
                 }
+
                 response.put("aliasIds", aliasIds);
 
             } catch (Exception e) {

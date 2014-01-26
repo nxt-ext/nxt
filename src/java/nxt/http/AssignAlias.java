@@ -61,7 +61,7 @@ final class AssignAlias extends HttpRequestHandler {
         } else {
 
             alias = alias.trim();
-            if (alias.length() == 0 || alias.length() > 100) {
+            if (alias.length() == 0 || alias.length() > Alias.MAX_ALIAS_LENGTH) {
 
                 response.put("errorCode", 4);
                 response.put("errorDescription", "Incorrect \"alias\" (length must be in [1..100] range)");
@@ -87,7 +87,7 @@ final class AssignAlias extends HttpRequestHandler {
                 } else {
 
                     uri = uri.trim();
-                    if (uri.length() > 1000) {
+                    if (uri.length() > Alias.MAX_URI_LENGTH) {
 
                         response.put("errorCode", 4);
                         response.put("errorDescription", "Incorrect \"uri\" (length must be not longer than 1000 characters)");
@@ -114,11 +114,10 @@ final class AssignAlias extends HttpRequestHandler {
 
                                 }
 
-                                long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
+                                Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-                                long accountId = Account.getId(publicKey);
-                                Account account = Nxt.accounts.get(accountId);
+                                Account account = Account.getAccount(publicKey);
                                 if (account == null) {
 
                                     response.put("errorCode", 6);
@@ -133,7 +132,7 @@ final class AssignAlias extends HttpRequestHandler {
 
                                     } else {
 
-                                        Alias aliasData = Nxt.aliases.get(normalizedAlias);
+                                        Alias aliasData = Alias.getAlias(normalizedAlias);
                                         if (aliasData != null && aliasData.account != account) {
 
                                             response.put("errorCode", 8);

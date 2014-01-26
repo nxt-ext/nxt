@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Blockchain;
+import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,9 +19,9 @@ final class GetAskOrderIds extends HttpRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray orderIds = new JSONArray();
-        for (Long orderId : Blockchain.askOrders.keySet()) {
+        for (Order.Ask order : Order.Ask.allAskOrders) {
 
-            orderIds.add(Convert.convert(orderId));
+            orderIds.add(Convert.convert(order.id));
 
         }
         response.put("askOrderIds", orderIds);

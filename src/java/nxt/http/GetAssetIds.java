@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Nxt;
+import nxt.Asset;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,9 +19,9 @@ final class GetAssetIds extends HttpRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray assetIds = new JSONArray();
-        for (Long assetId : Nxt.assets.keySet()) {
+        for (Asset asset : Asset.allAssets) {
 
-            assetIds.add(Convert.convert(assetId));
+            assetIds.add(Convert.convert(asset.assetId));
 
         }
         response.put("assetIds", assetIds);

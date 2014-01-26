@@ -1,9 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.AskOrder;
-import nxt.Blockchain;
-import nxt.Nxt;
+import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -31,7 +29,7 @@ final class GetAccountCurrentAskOrderIds extends HttpRequestHandler {
 
             try {
 
-                Account accountData = Nxt.accounts.get(Convert.parseUnsignedLong(account));
+                Account accountData = Account.getAccount(Convert.parseUnsignedLong(account));
                 if (accountData == null) {
 
                     response.put("errorCode", 5);
@@ -39,24 +37,22 @@ final class GetAccountCurrentAskOrderIds extends HttpRequestHandler {
 
                 } else {
 
-                    boolean assetIsNotUsed;
-                    long assetId;
+                    boolean assetIsNotUsed = false;
+                    Long assetId = null;
                     try {
 
                         assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
-                        assetIsNotUsed = false;
 
                     } catch (Exception e) {
-
-                        assetId = 0;
+                        //TODO: why not just return an error?
                         assetIsNotUsed = true;
 
                     }
 
                     JSONArray orderIds = new JSONArray();
-                    for (AskOrder askOrder : Blockchain.askOrders.values()) {
+                    for (Order.Ask askOrder : Order.Ask.allAskOrders) {
 
-                        if ((assetIsNotUsed || askOrder.asset == assetId) && askOrder.account == accountData) {
+                        if ((assetIsNotUsed || askOrder.asset.equals(assetId)) && askOrder.account == accountData) {
 
                             orderIds.add(Convert.convert(askOrder.id));
 

@@ -2,10 +2,10 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.BidOrder;
 import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
+import nxt.Order;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.peer.Peer;
@@ -55,7 +55,7 @@ final class CancelBidOrder extends HttpRequestHandler {
 
             try {
 
-                long order = Convert.parseUnsignedLong(orderValue);
+                Long order = Convert.parseUnsignedLong(orderValue);
 
                 try {
 
@@ -75,20 +75,20 @@ final class CancelBidOrder extends HttpRequestHandler {
 
                         }
 
-                        long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
+                        Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
 
                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-                        long accountId = Account.getId(publicKey);
+                        Long accountId = Account.getId(publicKey);
 
-                        BidOrder orderData = Blockchain.bidOrders.get(order);
-                        if (orderData == null || orderData.account.id != accountId) {
+                        Order.Bid orderData = Order.Bid.getBidOrder(order);
+                        if (orderData == null || !orderData.account.id.equals(accountId)) {
 
                             response.put("errorCode", 5);
                             response.put("errorDescription", "Unknown order");
 
                         } else {
 
-                            Account account = Nxt.accounts.get(accountId);
+                            Account account = Account.getAccount(accountId);
                             if (account == null) {
 
                                 response.put("errorCode", 6);

@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Alias;
-import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -30,8 +29,8 @@ final class ListAccountAliases extends HttpRequestHandler {
 
             try {
 
-                long accountId = Convert.parseUnsignedLong(account);
-                Account accountData = Nxt.accounts.get(accountId);
+                Long accountId = Convert.parseUnsignedLong(account);
+                Account accountData = Account.getAccount(accountId);
                 if (accountData == null) {
 
                     response.put("errorCode", 5);
@@ -40,9 +39,9 @@ final class ListAccountAliases extends HttpRequestHandler {
                 } else {
 
                     JSONArray aliases = new JSONArray();
-                    for (Alias alias : Nxt.aliases.values()) {
+                    for (Alias alias : Alias.allAliases) {
 
-                        if (alias.account.id == accountId) {
+                        if (alias.account.id.equals(accountId)) {
 
                             JSONObject aliasData = new JSONObject();
                             aliasData.put("alias", alias.alias);

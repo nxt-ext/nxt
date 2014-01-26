@@ -28,13 +28,14 @@ final class SendMoney extends UserRequestHandler {
             String deadlineValue = req.getParameter("deadline");
             String secretPhrase = req.getParameter("secretPhrase");
 
-            long recipient;
+            Long recipient;
             int amount = 0, fee = 0;
             short deadline = 0;
 
             try {
 
                 recipient = Convert.parseUnsignedLong(recipientValue);
+                if (recipient == null) throw new IllegalArgumentException("invalid recipient");
                 amount = Integer.parseInt(amountValue.trim());
                 fee = Integer.parseInt(feeValue.trim());
                 deadline = (short)(Double.parseDouble(deadlineValue) * 60);
@@ -103,7 +104,7 @@ final class SendMoney extends UserRequestHandler {
 
             } else {
 
-                Account account = Nxt.accounts.get(Account.getId(user.publicKey));
+                Account account = Account.getAccount(user.publicKey);
                 if (account == null || (amount + fee) * 100L > account.getUnconfirmedBalance()) {
 
                     JSONObject response = new JSONObject();
@@ -118,7 +119,7 @@ final class SendMoney extends UserRequestHandler {
 
                 } else {
 
-                    final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.publicKey, recipient, amount, fee, 0);
+                    final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.publicKey, recipient, amount, fee, null);
                     transaction.sign(user.secretPhrase);
 
                     JSONObject peerRequest = new JSONObject();

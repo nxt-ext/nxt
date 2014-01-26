@@ -20,7 +20,7 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
         JSONArray milestoneBlockIds = new JSONArray();
         Block block = Blockchain.getLastBlock();
         int jumpLength = block.height * 4 / 1461 + 1;
-        while (block.height > 0) {
+        while (block != null && block.height > 0) {
 
             milestoneBlockIds.add(block.getStringId());
             for (int i = 0; i < jumpLength && block.height > 0; i++) {

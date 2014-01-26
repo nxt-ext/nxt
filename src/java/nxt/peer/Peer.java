@@ -1,7 +1,6 @@
 package nxt.peer;
 
 import nxt.Account;
-import nxt.util.JSON;
 import nxt.Nxt;
 import nxt.ThreadPools;
 import nxt.crypto.Crypto;
@@ -9,6 +8,7 @@ import nxt.user.User;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -35,9 +35,10 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -46,14 +47,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Peer implements Comparable<Peer> {
+public final class Peer implements Comparable<Peer> {
 
-    public static final int STATE_NONCONNECTED = 0;
-    public static final int STATE_CONNECTED = 1;
-    public static final int STATE_DISCONNECTED = 2;
+    public static enum State {
+        NON_CONNECTED, CONNECTED, DISCONNECTED
+    }
 
-    public static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
     private static final AtomicInteger peerCounter = new AtomicInteger();
+    private static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
+    public static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
 
     public static final Runnable peerConnectingThread = new Runnable() {
 
@@ -64,7 +66,7 @@ public class Peer implements Comparable<Peer> {
 
                 if (Peer.getNumberOfConnectedPublicPeers() < Nxt.maxNumberOfConnectedPublicPeers) {
 
-                    Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.STATE_NONCONNECTED : Peer.STATE_DISCONNECTED, false);
+                    Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? State.NON_CONNECTED : State.DISCONNECTED, false);
                     if (peer != null) {
 
                         peer.connect();
@@ -130,7 +132,7 @@ public class Peer implements Comparable<Peer> {
 
             try {
 
-                Peer peer = Peer.getAnyPeer(Peer.STATE_CONNECTED, true);
+                Peer peer = Peer.getAnyPeer(State.CONNECTED, true);
                 if (peer != null) {
                     JSONObject response = peer.send(getPeersRequest);
                     if (response != null) {
@@ -164,200 +166,179 @@ public class Peer implements Comparable<Peer> {
 
     };
 
-    public final int index;
-    public String platform;
-    public String announcedAddress;
-    public boolean shareAddress;
-    public String hallmark;
-    long accountId;
-    int weight;
-    int date;
-    long adjustedWeight;
-    public String application;
-    public String version;
-
-    public long blacklistingTime;
-    public int state;
-    public long downloadedVolume;
-    public long uploadedVolume;
-
-    Peer(String announcedAddress, int index) {
-
-        this.announcedAddress = announcedAddress;
-        this.index = index;
-
+    public static Peer getPeer(String peerAddress) {
+        return peers.get(peerAddress);
     }
 
     public static Peer addPeer(String address, String announcedAddress) {
 
         try {
-
             new URL("http://" + address);
-
         } catch (MalformedURLException e) {
             Logger.logDebugMessage("malformed peer address " + address, e);
             return null;
-
         }
+
         try {
-
             new URL("http://" + announcedAddress);
-
         } catch (MalformedURLException e) {
             Logger.logDebugMessage("malformed peer announced address " + announcedAddress, e);
             announcedAddress = "";
-
         }
 
         if (address.equals("localhost") || address.equals("127.0.0.1") || address.equals("0:0:0:0:0:0:0:1")) {
-
             return null;
-
         }
 
         if (Nxt.myAddress != null && Nxt.myAddress.length() > 0 && Nxt.myAddress.equals(announcedAddress)) {
-
             return null;
-
         }
 
         Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
         if (peer == null) {
-
             //TODO: Check addresses
-
-            peer = new Peer(announcedAddress, peerCounter.incrementAndGet());
-            peers.put(announcedAddress.length() > 0 ? announcedAddress : address, peer);
-
+            String peerAddress = announcedAddress.length() > 0 ? announcedAddress : address;
+            peer = new Peer(peerAddress, announcedAddress);
+            peers.put(peerAddress, peer);
         }
 
         return peer;
-
     }
 
     public static void updatePeerWeights(Account account) {
-
         for (Peer peer : peers.values()) {
-
-            if (peer.accountId == account.id && peer.adjustedWeight > 0) {
-
+            if (account.id.equals(peer.accountId) && peer.adjustedWeight > 0) {
                 peer.updateWeight();
+            }
+        }
+    }
 
+    public static void sendToSomePeers(final JSONObject request) {
+
+        final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
+
+        int successful = 0;
+        List<Future<JSONObject>> expectedResponses = new ArrayList<>();
+        for (final Peer peer : peers.values()) {
+
+            if (Nxt.enableHallmarkProtection && peer.getWeight() < Nxt.pushThreshold) {
+                continue;
+            }
+
+            if (peer.blacklistingTime == 0 && peer.state == State.CONNECTED && peer.announcedAddress.length() > 0) {
+                Future<JSONObject> futureResponse = ThreadPools.sendToPeers(new Callable<JSONObject>() {
+                    @Override
+                    public JSONObject call() {
+                        return peer.send(jsonRequest);
+                    }
+                });
+                expectedResponses.add(futureResponse);
+            }
+            if (expectedResponses.size() >= Nxt.sendToPeersLimit - successful) {
+                for (Future<JSONObject> future : expectedResponses) {
+                    try {
+                        JSONObject response = future.get();
+                        if (response != null && response.get("error") == null) {
+                            successful += 1;
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        Logger.logDebugMessage("Error in sendToSomePeers", e);
+                    }
+
+                }
+                expectedResponses.clear();
+            }
+            if (successful >= Nxt.sendToPeersLimit) {
+                return;
             }
 
         }
 
     }
 
-    boolean analyzeHallmark(String realHost, String hallmark) {
+    public static Peer getAnyPeer(State state, boolean applyPullThreshold) {
 
-        if (hallmark == null && this.hallmark == null) {
-
-            return true;
-
+        List<Peer> selectedPeers = new ArrayList<Peer>();
+        for (Peer peer : peers.values()) {
+            if (peer.blacklistingTime <= 0 && peer.state == state && peer.announcedAddress.length() > 0
+                    && (!applyPullThreshold || !Nxt.enableHallmarkProtection || peer.getWeight() >= Nxt.pullThreshold)) {
+                selectedPeers.add(peer);
+            }
         }
 
-        if (hallmark != null && hallmark.equals(this.hallmark)) {
+        if (selectedPeers.size() > 0) {
+            long totalWeight = 0;
+            for (Peer peer : selectedPeers) {
+                long weight = peer.getWeight();
+                if (weight == 0) {
+                    weight = 1;
+                }
+                totalWeight += weight;
+            }
 
-            return true;
-
+            long hit = ThreadLocalRandom.current().nextLong(totalWeight);
+            for (Peer peer : selectedPeers) {
+                long weight = peer.getWeight();
+                if (weight == 0) {
+                    weight = 1;
+                }
+                if ((hit -= weight) < 0) {
+                    return peer;
+                }
+            }
         }
+        return null;
+    }
 
-        try {
-
-            byte[] hallmarkBytes;
-
-            try {
-                hallmarkBytes = Convert.convert(hallmark);
-            } catch (NumberFormatException e) {
-                return false;
+    private static int getNumberOfConnectedPublicPeers() {
+        int numberOfConnectedPeers = 0;
+        for (Peer peer : peers.values()) {
+            if (peer.state == State.CONNECTED && peer.announcedAddress.length() > 0) {
+                numberOfConnectedPeers++;
             }
-
-            ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            byte[] publicKey = new byte[32];
-            buffer.get(publicKey);
-            int hostLength = buffer.getShort();
-            byte[] hostBytes = new byte[hostLength];
-            buffer.get(hostBytes);
-            String host = new String(hostBytes, "UTF-8");
-            if (host.length() > 100 || !host.equals(realHost)) {
-
-                return false;
-
-            }
-            int weight = buffer.getInt();
-            if (weight <= 0 || weight > Nxt.MAX_BALANCE) {
-
-                return false;
-
-            }
-            int date = buffer.getInt();
-            buffer.get();
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-
-            byte[] data = new byte[hallmarkBytes.length - 64];
-            System.arraycopy(hallmarkBytes, 0, data, 0, data.length);
-
-            if (Crypto.verify(signature, data, publicKey)) {
-
-                this.hallmark = hallmark;
-
-                long accountId = Account.getId(publicKey);
-                LinkedList<Peer> groupedPeers = new LinkedList<>();
-                int validDate = 0;
-
-                this.accountId = accountId;
-                this.weight = weight;
-                this.date = date;
-
-                for (Peer peer : peers.values()) {
-
-                    if (peer.accountId == accountId) {
-
-                        groupedPeers.add(peer);
-                        if (peer.date > validDate) {
-
-                            validDate = peer.date;
-
-                        }
-
-                    }
-
-                }
-
-                long totalWeight = 0;
-                for (Peer peer : groupedPeers) {
-
-                    if (peer.date == validDate) {
-
-                        totalWeight += peer.weight;
-
-                    } else {
-
-                        peer.weight = 0;
-
-                    }
-
-                }
-
-                for (Peer peer : groupedPeers) {
-
-                    peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
-                    peer.updateWeight();
-
-                }
-
-                return true;
-
-            }
-        } catch (RuntimeException|UnsupportedEncodingException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
         }
-        return false;
+        return numberOfConnectedPeers;
+    }
 
+
+    public final int index;
+    public String platform;
+    public String announcedAddress;
+    public final String peerAddress;
+    public boolean shareAddress;
+    public String hallmark;
+    private Long accountId;
+    int weight;
+    int date;
+    private long adjustedWeight;
+    public String application;
+    public String version;
+
+    public volatile long blacklistingTime;
+    public volatile State state;
+    public volatile long downloadedVolume;
+    public volatile long uploadedVolume;
+
+    private Peer(String peerAddress, String announcedAddress) {
+
+        this.peerAddress = peerAddress;
+        this.announcedAddress = announcedAddress;
+        this.index = peerCounter.incrementAndGet();
+        this.state = State.NON_CONNECTED;
+    }
+
+    @Override
+    public int compareTo(Peer o) {
+        long weight = getWeight(), weight2 = o.getWeight();
+        if (weight > weight2) {
+            return -1;
+        } else if (weight < weight2) {
+            return 1;
+        } else {
+            return index - o.index;
+        }
     }
 
     public void blacklist() {
@@ -377,16 +358,8 @@ public class Peer implements Comparable<Peer> {
         JSONObject addedBlacklistedPeer = new JSONObject();
         addedBlacklistedPeer.put("index", index);
         addedBlacklistedPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-        for (String wellKnownPeer : Nxt.wellKnownPeers) {
-
-            if (announcedAddress.equals(wellKnownPeer)) {
-
-                addedBlacklistedPeer.put("wellKnown", true);
-
-                break;
-
-            }
-
+        if (Nxt.wellKnownPeers.contains(announcedAddress)) {
+            addedBlacklistedPeer.put("wellKnown", true);
         }
         addedBlacklistedPeers.add(addedBlacklistedPeer);
         response.put("addedBlacklistedPeers", addedBlacklistedPeers);
@@ -395,72 +368,11 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    @Override
-    public int compareTo(Peer o) {
-
-        long weight = getWeight(), weight2 = o.getWeight();
-        if (weight > weight2) {
-
-            return -1;
-
-        } else if (weight < weight2) {
-
-            return 1;
-
-        } else {
-
-            return index - o.index;
-
-        }
-
-    }
-
-    private void connect() {
-
-        JSONObject request = new JSONObject();
-        request.put("requestType", "getInfo");
-        if (Nxt.myAddress != null && Nxt.myAddress.length() > 0) {
-
-            request.put("announcedAddress", Nxt.myAddress);
-
-        }
-        if (Nxt.myHallmark != null && Nxt.myHallmark.length() > 0) {
-
-            request.put("hallmark", Nxt.myHallmark);
-
-        }
-        request.put("application", "NRS");
-        request.put("version", Nxt.VERSION);
-        request.put("platform", Nxt.myPlatform);
-        request.put("scheme", Nxt.myScheme);
-        request.put("port", Nxt.myPort);
-        request.put("shareAddress", Nxt.shareMyAddress);
-        JSONObject response = send(JSON.prepareRequest(request));
-        if (response != null) {
-
-            application = (String)response.get("application");
-            version = (String)response.get("version");
-            platform = (String)response.get("platform");
-            shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
-
-            if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
-
-                setState(STATE_CONNECTED);
-
-            }
-
-        }
-
-    }
-
     public void deactivate() {
-
-        if (state == STATE_CONNECTED) {
-
-            disconnect();
-
+        if (state == State.CONNECTED) {
+            setState(State.DISCONNECTED);
         }
-        setState(STATE_NONCONNECTED);
+        setState(State.NON_CONNECTED);
 
         JSONObject response = new JSONObject();
         response.put("response", "processNewData");
@@ -472,124 +384,30 @@ public class Peer implements Comparable<Peer> {
         response.put("removedActivePeers", removedActivePeers);
 
         if (announcedAddress.length() > 0) {
-
             JSONArray addedKnownPeers = new JSONArray();
             JSONObject addedKnownPeer = new JSONObject();
             addedKnownPeer.put("index", index);
             addedKnownPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-            for (String wellKnownPeer : Nxt.wellKnownPeers) {
-
-                if (announcedAddress.equals(wellKnownPeer)) {
-
-                    addedKnownPeer.put("wellKnown", true);
-
-                    break;
-
-                }
-
+            if (Nxt.wellKnownPeers.contains(announcedAddress)) {
+                addedKnownPeer.put("wellKnown", true);
             }
             addedKnownPeers.add(addedKnownPeer);
             response.put("addedKnownPeers", addedKnownPeers);
-
         }
 
         User.sendToAll(response);
 
     }
 
-    private void disconnect() {
-
-        setState(STATE_DISCONNECTED);
-
-    }
-
-    public static Peer getAnyPeer(int state, boolean applyPullThreshold) {
-
-        List<Peer> selectedPeers = new ArrayList<Peer>();
-
-        for (Peer peer : peers.values()) {
-
-            if (peer.blacklistingTime <= 0 && peer.state == state && peer.announcedAddress.length() > 0
-                    && (!applyPullThreshold || !Nxt.enableHallmarkProtection || peer.getWeight() >= Nxt.pullThreshold)) {
-
-                selectedPeers.add(peer);
-
-            }
-
-        }
-
-        if (selectedPeers.size() > 0) {
-
-            long totalWeight = 0;
-            for (Peer peer : selectedPeers) {
-
-                long weight = peer.getWeight();
-                if (weight == 0) {
-
-                    weight = 1;
-
-                }
-                totalWeight += weight;
-
-            }
-
-            long hit = ThreadLocalRandom.current().nextLong(totalWeight);
-            for (Peer peer : selectedPeers) {
-
-                long weight = peer.getWeight();
-                if (weight == 0) {
-
-                    weight = 1;
-
-                }
-                if ((hit -= weight) < 0) {
-
-                    return peer;
-
-                }
-
-            }
-
-        }
-
-        return null;
-
-    }
-
-    private static int getNumberOfConnectedPublicPeers() {
-
-        int numberOfConnectedPeers = 0;
-
-        for (Peer peer : peers.values()) {
-
-            if (peer.state == STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-
-                numberOfConnectedPeers++;
-
-            }
-
-        }
-
-        return numberOfConnectedPeers;
-
-    }
-
     public int getWeight() {
-
-        if (accountId == 0) {
-
+        if (accountId == null) {
             return 0;
-
         }
-        Account account = Nxt.accounts.get(accountId);
+        Account account = Account.getAccount(accountId);
         if (account == null) {
-
             return 0;
-
         }
-
         return (int)(adjustedWeight * (account.getBalance() / 100) / Nxt.MAX_BALANCE);
-
     }
 
     public String getSoftware() {
@@ -604,7 +422,7 @@ public class Peer implements Comparable<Peer> {
 
     public void removeBlacklistedStatus() {
 
-        setState(STATE_NONCONNECTED);
+        setState(State.NON_CONNECTED);
         blacklistingTime = 0;
 
         JSONObject response = new JSONObject();
@@ -652,51 +470,6 @@ public class Peer implements Comparable<Peer> {
         response.put("removedKnownPeers", removedKnownPeers);
 
         User.sendToAll(response);
-
-    }
-
-    public static void sendToSomePeers(final JSONObject request) {
-
-        final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
-
-        int successful = 0;
-        List<Future<JSONObject>> expectedResponses = new ArrayList<>();
-        for (final Peer peer : peers.values()) {
-
-            if (Nxt.enableHallmarkProtection && peer.getWeight() < Nxt.pushThreshold) {
-                continue;
-            }
-
-            if (peer.blacklistingTime == 0 && peer.state == Peer.STATE_CONNECTED && peer.announcedAddress.length() > 0) {
-                Future<JSONObject> futureResponse = ThreadPools.sendToPeers(new Callable<JSONObject>() {
-                    @Override
-                    public JSONObject call() {
-                        return peer.send(jsonRequest);
-                    }
-                });
-                expectedResponses.add(futureResponse);
-            }
-            if (expectedResponses.size() >= Nxt.sendToPeersLimit - successful) {
-                for (Future<JSONObject> future : expectedResponses) {
-                    try {
-                        JSONObject response = future.get();
-                        if (response != null && response.get("error") == null) {
-                            successful += 1;
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } catch (ExecutionException e) {
-                        Logger.logDebugMessage("Error in sendToSomePeers", e);
-                    }
-
-                }
-                expectedResponses.clear();
-            }
-            if (successful >= Nxt.sendToPeersLimit) {
-                return;
-            }
-
-        }
 
     }
 
@@ -773,7 +546,7 @@ public class Peer implements Comparable<Peer> {
 
                 }
 
-                disconnect();
+                setState(State.DISCONNECTED);
 
                 response = null;
 
@@ -792,13 +565,13 @@ public class Peer implements Comparable<Peer> {
 
             }
 
-            if (state == STATE_NONCONNECTED) {
+            if (state == State.NON_CONNECTED) {
 
                 blacklist();
 
             } else {
 
-                disconnect();
+                setState(State.DISCONNECTED);
 
             }
 
@@ -822,9 +595,92 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    public void setState(int state) {
+    boolean analyzeHallmark(String realHost, String hallmark) {
 
-        if (this.state == STATE_NONCONNECTED && state != STATE_NONCONNECTED) {
+        if (hallmark == null && this.hallmark == null) {
+            return true;
+        }
+
+        if (hallmark != null && hallmark.equals(this.hallmark)) {
+            return true;
+        }
+
+        try {
+            byte[] hallmarkBytes;
+            try {
+                hallmarkBytes = Convert.convert(hallmark);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+            ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            byte[] publicKey = new byte[32];
+            buffer.get(publicKey);
+            int hostLength = buffer.getShort();
+            if (hostLength > 300) {
+                return false;
+            }
+            byte[] hostBytes = new byte[hostLength];
+            buffer.get(hostBytes);
+            String host = new String(hostBytes, "UTF-8");
+            if (host.length() > 100 || !host.equals(realHost)) {
+                return false;
+            }
+            int weight = buffer.getInt();
+            if (weight <= 0 || weight > Nxt.MAX_BALANCE) {
+                return false;
+            }
+            int date = buffer.getInt();
+            buffer.get();
+            byte[] signature = new byte[64];
+            buffer.get(signature);
+
+            byte[] data = new byte[hallmarkBytes.length - 64];
+            System.arraycopy(hallmarkBytes, 0, data, 0, data.length);
+
+            if (Crypto.verify(signature, data, publicKey)) {
+                this.hallmark = hallmark;
+                Long accountId = Account.getId(publicKey);
+                LinkedList<Peer> groupedPeers = new LinkedList<>();
+                int validDate = 0;
+                this.accountId = accountId;
+                this.weight = weight;
+                this.date = date;
+                for (Peer peer : peers.values()) {
+                    if (accountId.equals(peer.accountId)) {
+                        groupedPeers.add(peer);
+                        if (peer.date > validDate) {
+                            validDate = peer.date;
+                        }
+                    }
+                }
+
+                long totalWeight = 0;
+                for (Peer peer : groupedPeers) {
+                    if (peer.date == validDate) {
+                        totalWeight += peer.weight;
+                    } else {
+                        peer.weight = 0;
+                    }
+                }
+
+                for (Peer peer : groupedPeers) {
+                    peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
+                    peer.updateWeight();
+                }
+
+                return true;
+            }
+        } catch (RuntimeException|UnsupportedEncodingException e) {
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
+        }
+        return false;
+
+    }
+
+    void setState(State state) {
+
+        if (this.state == State.NON_CONNECTED && state != State.NON_CONNECTED) {
 
             JSONObject response = new JSONObject();
             response.put("response", "processNewData");
@@ -842,25 +698,14 @@ public class Peer implements Comparable<Peer> {
             JSONArray addedActivePeers = new JSONArray();
             JSONObject addedActivePeer = new JSONObject();
             addedActivePeer.put("index", index);
-            if (state == STATE_DISCONNECTED) {
+            if (state == State.DISCONNECTED) {
 
                 addedActivePeer.put("disconnected", true);
 
             }
 
-            //TODO: there must be a better way
-            // cfb: This will be removed after we get a better client
-            for (Map.Entry<String, Peer> peerEntry : peers.entrySet()) {
 
-                if (peerEntry.getValue() == this) {
-
-                    addedActivePeer.put("address", peerEntry.getKey().length() > 30 ? (peerEntry.getKey().substring(0, 30) + "...") : peerEntry.getKey());
-
-                    break;
-
-                }
-
-            }
+            addedActivePeer.put("address", peerAddress.length() > 30 ? (peerAddress.substring(0, 30) + "...") : peerAddress);
             addedActivePeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
             addedActivePeer.put("weight", getWeight());
             addedActivePeer.put("downloaded", downloadedVolume);
@@ -882,7 +727,7 @@ public class Peer implements Comparable<Peer> {
 
             User.sendToAll(response);
 
-        } else if (this.state != STATE_NONCONNECTED && state != STATE_NONCONNECTED) {
+        } else if (this.state != State.NON_CONNECTED && state != State.NON_CONNECTED) {
 
             JSONObject response = new JSONObject();
             response.put("response", "processNewData");
@@ -890,7 +735,7 @@ public class Peer implements Comparable<Peer> {
             JSONArray changedActivePeers = new JSONArray();
             JSONObject changedActivePeer = new JSONObject();
             changedActivePeer.put("index", index);
-            changedActivePeer.put(state == STATE_CONNECTED ? "connected" : "disconnected", true);
+            changedActivePeer.put(state == State.CONNECTED ? "connected" : "disconnected", true);
             changedActivePeers.add(changedActivePeer);
             response.put("changedActivePeers", changedActivePeers);
 
@@ -902,7 +747,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    public void updateDownloadedVolume(long volume) {
+    void updateDownloadedVolume(long volume) {
 
         downloadedVolume += volume;
 
@@ -920,7 +765,7 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    public void updateUploadedVolume(long volume) {
+    void updateUploadedVolume(long volume) {
 
         uploadedVolume += volume;
 
@@ -936,6 +781,35 @@ public class Peer implements Comparable<Peer> {
 
         User.sendToAll(response);
 
+    }
+
+    private void connect() {
+        JSONObject request = new JSONObject();
+        request.put("requestType", "getInfo");
+        if (Nxt.myAddress != null && Nxt.myAddress.length() > 0) {
+            request.put("announcedAddress", Nxt.myAddress);
+        }
+        if (Nxt.myHallmark != null && Nxt.myHallmark.length() > 0) {
+            request.put("hallmark", Nxt.myHallmark);
+        }
+        request.put("application", "NRS");
+        request.put("version", Nxt.VERSION);
+        request.put("platform", Nxt.myPlatform);
+        request.put("scheme", Nxt.myScheme);
+        request.put("port", Nxt.myPort);
+        request.put("shareAddress", Nxt.shareMyAddress);
+        JSONObject response = send(JSON.prepareRequest(request));
+
+        if (response != null) {
+            application = (String)response.get("application");
+            version = (String)response.get("version");
+            platform = (String)response.get("platform");
+            shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
+
+            if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
+                setState(State.CONNECTED);
+            }
+        }
     }
 
     private void updateWeight() {

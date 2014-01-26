@@ -33,13 +33,13 @@ final class UnlockAccount extends UserRequestHandler {
                 if (! u.isInactive) {
                     JSONObject response = new JSONObject();
                     response.put("response", "lockAccount");
-                    u.pendingResponses.offer(response);
+                    u.enqueue(response);
                 }
             }
         }
 
         BigInteger bigInt = user.initializeKeyPair(secretPhrase);
-        long accountId = bigInt.longValue();
+        Long accountId = bigInt.longValue();
 
         JSONObject response = new JSONObject();
         response.put("response", "unlockAccount");
@@ -55,7 +55,7 @@ final class UnlockAccount extends UserRequestHandler {
 
         }
 
-        Account account = Nxt.accounts.get(accountId);
+        Account account = Account.getAccount(accountId);
         if (account == null) {
 
             response.put("balance", 0);
@@ -87,7 +87,7 @@ final class UnlockAccount extends UserRequestHandler {
                 BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
                 response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.timestamp));
 
-                user.pendingResponses.offer(response2);
+                user.enqueue(response2);
 
             }
 
@@ -103,7 +103,7 @@ final class UnlockAccount extends UserRequestHandler {
                     myTransaction.put("deadline", transaction.deadline);
                     myTransaction.put("account", Convert.convert(transaction.recipient));
                     myTransaction.put("sentAmount", transaction.amount);
-                    if (transaction.recipient == accountId) {
+                    if (accountId.equals(transaction.recipient)) {
 
                         myTransaction.put("receivedAmount", transaction.amount);
 
@@ -114,7 +114,7 @@ final class UnlockAccount extends UserRequestHandler {
 
                     myTransactions.add(myTransaction);
 
-                } else if (transaction.recipient == accountId) {
+                } else if (accountId.equals(transaction.recipient)) {
 
                     JSONObject myTransaction = new JSONObject();
                     myTransaction.put("index", transaction.index);
@@ -132,7 +132,7 @@ final class UnlockAccount extends UserRequestHandler {
 
             }
 
-            long blockId = Blockchain.getLastBlock().getId();
+            Long blockId = Blockchain.getLastBlock().getId();
             int numberOfConfirmations = 1;
             while (myTransactions.size() < 1000) {
 
@@ -162,7 +162,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransaction.put("transactionTimestamp", transaction.timestamp);
                         myTransaction.put("account", Convert.convert(transaction.recipient));
                         myTransaction.put("sentAmount", transaction.amount);
-                        if (transaction.recipient == accountId) {
+                        if (accountId.equals(transaction.recipient)) {
 
                             myTransaction.put("receivedAmount", transaction.amount);
 
@@ -173,7 +173,7 @@ final class UnlockAccount extends UserRequestHandler {
 
                         myTransactions.add(myTransaction);
 
-                    } else if (transaction.recipient == accountId) {
+                    } else if (accountId.equals(transaction.recipient)) {
 
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", transaction.index);
@@ -188,7 +188,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransactions.add(myTransaction);
                     }
                 }
-                if (blockId == Genesis.GENESIS_BLOCK_ID) {
+                if (blockId.equals(Genesis.GENESIS_BLOCK_ID)) {
                     break;
                 }
                 blockId = block.previousBlock;
@@ -198,7 +198,7 @@ final class UnlockAccount extends UserRequestHandler {
                 JSONObject response2 = new JSONObject();
                 response2.put("response", "processNewData");
                 response2.put("addedMyTransactions", myTransactions);
-                user.pendingResponses.offer(response2);
+                user.enqueue(response2);
             }
         }
         return response;

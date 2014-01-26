@@ -24,7 +24,7 @@ final class GetPeer extends HttpRequestHandler {
 
         } else {
 
-            Peer peerData = Peer.peers.get(peer);
+            Peer peerData = Peer.getPeer(peer);
             if (peerData == null) {
 
                 response.put("errorCode", 5);

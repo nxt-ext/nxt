@@ -2,9 +2,9 @@ package nxt.peer;
 
 import nxt.Block;
 import nxt.Blockchain;
-import nxt.util.JSON;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.util.JSON;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;

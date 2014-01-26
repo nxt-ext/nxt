@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Alias;
-import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -26,7 +25,7 @@ final class GetAliasId extends HttpRequestHandler {
 
         } else {
 
-            Alias aliasData = Nxt.aliases.get(alias.toLowerCase());
+            Alias aliasData = Alias.getAlias(alias.toLowerCase());
             if (aliasData == null) {
 
                 response.put("errorCode", 5);

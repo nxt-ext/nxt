@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeSet;
 
 public final class Transaction implements Comparable<Transaction>, Serializable {
 
@@ -41,54 +40,112 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     public static final int ASSET_ISSUANCE_FEE = 1000;
 
+    public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
+        @Override
+        public int compare(Transaction o1, Transaction o2) {
+            return o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0);
+        }
+    };
+
+    public static Transaction getTransaction(ByteBuffer buffer) {
+
+        byte type = buffer.get();
+        byte subtype = buffer.get();
+        int timestamp = buffer.getInt();
+        short deadline = buffer.getShort();
+        byte[] senderPublicKey = new byte[32];
+        buffer.get(senderPublicKey);
+        Long recipient = buffer.getLong();
+        int amount = buffer.getInt();
+        int fee = buffer.getInt();
+        Long referencedTransaction = Convert.zeroToNull(buffer.getLong());
+        byte[] signature = new byte[64];
+        buffer.get(signature);
+
+        Transaction transaction = new Transaction(findTransactionType(type, subtype), timestamp, deadline, senderPublicKey, recipient, amount,
+                fee, referencedTransaction, signature);
+        transaction.loadAttachment(buffer);
+
+        return transaction;
+    }
+
+    public static Transaction getTransaction(JSONObject transactionData) {
+
+        byte type = ((Long)transactionData.get("type")).byteValue();
+        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
+        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
+        short deadline = ((Long)transactionData.get("deadline")).shortValue();
+        byte[] senderPublicKey = Convert.convert((String) transactionData.get("senderPublicKey"));
+        Long recipient = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
+        if (recipient == null) recipient = 0L; // ugly
+        int amount = ((Long)transactionData.get("amount")).intValue();
+        int fee = ((Long)transactionData.get("fee")).intValue();
+        Long referencedTransaction = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
+        byte[] signature = Convert.convert((String) transactionData.get("signature"));
+
+        Transaction transaction = new Transaction(findTransactionType(type, subtype), timestamp, deadline, senderPublicKey, recipient, amount, fee,
+                referencedTransaction, signature);
+
+        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
+        transaction.loadAttachment(attachmentData);
+
+        return transaction;
+    }
+
+    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                                             int amount, int fee, Long referencedTransaction) {
+        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, null);
+    }
+
+    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                                             int amount, int fee, Long referencedTransaction, Attachment attachment) {
+        Transaction transaction = new Transaction(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipient, amount, fee,
+                referencedTransaction, null);
+        transaction.attachment = attachment;
+        return transaction;
+    }
+
+    static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                                      int amount, int fee, Long referencedTransaction, byte[] signature) {
+        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
+    }
+
     public int timestamp;
     public final short deadline;
     public final byte[] senderPublicKey;
-    public final long recipient;
+    public final Long recipient;
     public final int amount;
     public final int fee;
-    final long referencedTransaction;
+    final Long referencedTransaction;
     public byte[] signature;
     Attachment attachment;
-    private transient Type type;
 
     public int index;
-    public long block;
+    public Long block;
     public int height;
 
-    private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, long recipient,
-                       int amount, int fee, long referencedTransaction, byte[] signature) {
+    private transient Type type;
+    private transient volatile Long id;
+    private transient volatile String stringId = null;
+    private transient volatile Long senderAccountId;
 
-        if (type == null) {
-            throw new IllegalArgumentException("Invalid transaction type or subtype");
-        }
-
-        this.timestamp = timestamp;
-        this.deadline = deadline;
-        this.senderPublicKey = senderPublicKey;
-        this.recipient = recipient;
-        this.amount = amount;
-        this.fee = fee;
-        this.referencedTransaction = referencedTransaction;
-        this.signature = signature;
-        this.type = type;
-        height = Integer.MAX_VALUE;
-
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.write(type.getType());
-        out.write(type.getSubtype());
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        this.type = findTransactionType(in.readByte(), in.readByte());
-    }
-
-    public Type getType() {
+    public final Type getType() {
         return type;
+    }
+
+    public final Long getId() {
+        calculateIds();
+        return id;
+    }
+
+    public final String getStringId() {
+        calculateIds();
+        return stringId;
+    }
+
+    public final Long getSenderAccountId() {
+        calculateIds();
+        return senderAccountId;
     }
 
     @Override
@@ -147,62 +204,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     }
 
-    final void loadAttachment(ByteBuffer buffer) {
-        type.loadAttachment(this, buffer);
-    }
-
-    final void loadAttachment(JSONObject attachmentData) {
-        type.loadAttachment(this, attachmentData);
-    }
-
-    // returns true iff double spending
-    final boolean preProcess() {
-        Account senderAccount = Nxt.accounts.get(getSenderAccountId());
-        if (senderAccount == null) {
-            return true;
-        }
-        synchronized(senderAccount) {
-            return type.preProcess(this, senderAccount, this.amount + this.fee);
-        }
-    }
-
-    final void apply() {
-        Account senderAccount = Nxt.accounts.get(getSenderAccountId());
-        if (! senderAccount.setOrVerify(senderPublicKey)) {
-            throw new RuntimeException("sender public key mismatch");
-            // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
-        }
-        Account recipientAccount = Nxt.accounts.get(recipient);
-        if (recipientAccount == null) {
-            recipientAccount = Account.addAccount(recipient);
-        }
-        senderAccount.addToBalanceAndUnconfirmedBalance(- (amount + fee) * 100L);
-        type.apply(this, senderAccount, recipientAccount);
-    }
-
-    final void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
-        long sender = getSenderAccountId();
-        Long accumulatedAmount = accumulatedAmounts.get(sender);
-        if (accumulatedAmount == null) {
-            accumulatedAmount = 0L;
-        }
-        accumulatedAmounts.put(sender, accumulatedAmount + (amount + fee) * 100L);
-        type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
-    }
-
-    public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
-        @Override
-        public int compare(Transaction o1, Transaction o2) {
-            return o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0);
-        }
-    };
-
-    private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
-
-    final int getSize() {
-        return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
-    }
-
     public final byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(getSize());
@@ -212,10 +213,10 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         buffer.putInt(timestamp);
         buffer.putShort(deadline);
         buffer.put(senderPublicKey);
-        buffer.putLong(recipient);
+        buffer.putLong(Convert.nullToZero(recipient));
         buffer.putInt(amount);
         buffer.putInt(fee);
-        buffer.putLong(referencedTransaction);
+        buffer.putLong(Convert.nullToZero(referencedTransaction));
         buffer.put(signature);
         if (attachment != null) {
             buffer.put(attachment.getBytes());
@@ -223,38 +224,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return buffer.array();
 
     }
-
-    private transient volatile long id;
-    private transient volatile String stringId = null;
-    private transient volatile long senderAccountId;
-
-    public final long getId() {
-        calculateIds();
-        return id;
-    }
-
-
-    public final String getStringId() {
-        calculateIds();
-        return stringId;
-    }
-
-    public final long getSenderAccountId() {
-        calculateIds();
-        return senderAccountId;
-    }
-
-    private void calculateIds() {
-        if (stringId != null) {
-            return;
-        }
-        byte[] hash = Crypto.sha256().digest(getBytes());
-        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-        id = bigInteger.longValue();
-        senderAccountId = Account.getId(senderPublicKey);
-        stringId = bigInteger.toString();
-    }
-
 
     public final JSONObject getJSONObject() {
 
@@ -273,58 +242,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         if (attachment != null) {
             transaction.put("attachment", attachment.getJSONObject());
         }
-
-        return transaction;
-    }
-
-    final long getRecipientDeltaBalance() {
-        return amount * 100L + type.getRecipientDeltaBalance(this);
-    }
-
-    final long getSenderDeltaBalance() {
-        return -(amount + fee) * 100L + type.getSenderDeltaBalance(this);
-    }
-
-    public static Transaction getTransaction(ByteBuffer buffer) {
-
-        byte type = buffer.get();
-        byte subtype = buffer.get();
-        int timestamp = buffer.getInt();
-        short deadline = buffer.getShort();
-        byte[] senderPublicKey = new byte[32];
-        buffer.get(senderPublicKey);
-        long recipient = buffer.getLong();
-        int amount = buffer.getInt();
-        int fee = buffer.getInt();
-        long referencedTransaction = buffer.getLong();
-        byte[] signature = new byte[64];
-        buffer.get(signature);
-
-        Transaction transaction = new Transaction(findTransactionType(type, subtype), timestamp, deadline, senderPublicKey, recipient, amount,
-                fee, referencedTransaction, signature);
-        transaction.loadAttachment(buffer);
-
-        return transaction;
-    }
-
-    public static Transaction getTransaction(JSONObject transactionData) {
-
-        byte type = ((Long)transactionData.get("type")).byteValue();
-        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-        short deadline = ((Long)transactionData.get("deadline")).shortValue();
-        byte[] senderPublicKey = Convert.convert((String) transactionData.get("senderPublicKey"));
-        long recipient = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-        int amount = ((Long)transactionData.get("amount")).intValue();
-        int fee = ((Long)transactionData.get("fee")).intValue();
-        long referencedTransaction = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-        byte[] signature = Convert.convert((String) transactionData.get("signature"));
-
-        Transaction transaction = new Transaction(findTransactionType(type, subtype), timestamp, deadline, senderPublicKey, recipient, amount, fee,
-                referencedTransaction, signature);
-
-        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-        transaction.loadAttachment(attachmentData);
 
         return transaction;
     }
@@ -363,7 +280,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     final boolean verify() {
 
-        Account account = Nxt.accounts.get(getSenderAccountId());
+        Account account = Account.getAccount(getSenderAccountId());
         if (account == null) {
 
             return false;
@@ -382,22 +299,103 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     }
 
-    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, long recipient,
-                                             int amount, int fee, long referencedTransaction) {
-        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, null);
+    final void loadAttachment(ByteBuffer buffer) {
+        type.loadAttachment(this, buffer);
     }
 
-    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, long recipient,
-                                                   int amount, int fee, long referencedTransaction, Attachment attachment) {
-        Transaction transaction = new Transaction(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipient, amount, fee,
-                referencedTransaction, null);
-        transaction.attachment = attachment;
-        return transaction;
+    final void loadAttachment(JSONObject attachmentData) {
+        type.loadAttachment(this, attachmentData);
     }
 
-    static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, long recipient,
-                                             int amount, int fee, long referencedTransaction, byte[] signature) {
-        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
+    final long getRecipientDeltaBalance() {
+        return amount * 100L + type.getRecipientDeltaBalance(this);
+    }
+
+    final long getSenderDeltaBalance() {
+        return -(amount + fee) * 100L + type.getSenderDeltaBalance(this);
+    }
+
+    // returns true iff double spending
+    final boolean preProcess() {
+        Account senderAccount = Account.getAccount(getSenderAccountId());
+        if (senderAccount == null) {
+            return true;
+        }
+        synchronized(senderAccount) {
+            return type.preProcess(this, senderAccount, this.amount + this.fee);
+        }
+    }
+
+    final void apply() {
+        Account senderAccount = Account.getAccount(getSenderAccountId());
+        if (! senderAccount.setOrVerify(senderPublicKey)) {
+            throw new RuntimeException("sender public key mismatch");
+            // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
+        }
+        Account recipientAccount = Account.getAccount(recipient);
+        if (recipientAccount == null) {
+            recipientAccount = Account.addOrGetAccount(recipient);
+        }
+        senderAccount.addToBalanceAndUnconfirmedBalance(- (amount + fee) * 100L);
+        type.apply(this, senderAccount, recipientAccount);
+    }
+
+    final void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
+        Long sender = getSenderAccountId();
+        Long accumulatedAmount = accumulatedAmounts.get(sender);
+        if (accumulatedAmount == null) {
+            accumulatedAmount = 0L;
+        }
+        accumulatedAmounts.put(sender, accumulatedAmount + (amount + fee) * 100L);
+        type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
+    }
+
+    private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
+
+    final int getSize() {
+        return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
+    }
+
+    private void calculateIds() {
+        if (stringId != null) {
+            return;
+        }
+        byte[] hash = Crypto.sha256().digest(getBytes());
+        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+        id = bigInteger.longValue();
+        senderAccountId = Account.getId(senderPublicKey);
+        stringId = bigInteger.toString();
+    }
+
+    private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                        int amount, int fee, Long referencedTransaction, byte[] signature) {
+
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid transaction type or subtype");
+        }
+
+        this.timestamp = timestamp;
+        this.deadline = deadline;
+        this.senderPublicKey = senderPublicKey;
+        this.recipient = recipient;
+        this.amount = amount;
+        this.fee = fee;
+        this.referencedTransaction = referencedTransaction;
+        this.signature = signature;
+        this.type = type;
+        height = Integer.MAX_VALUE;
+
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.write(type.getType());
+        out.write(type.getSubtype());
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.type = findTransactionType(in.readByte(), in.readByte());
     }
 
     private static Type findTransactionType(byte type, byte subtype) {
@@ -485,10 +483,10 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             }
 
             @Override
-            protected final void loadAttachment(Transaction transaction, ByteBuffer buffer) {}
+            final void loadAttachment(Transaction transaction, ByteBuffer buffer) {}
 
             @Override
-            protected final void loadAttachment(Transaction transaction, JSONObject attachmentData) {}
+            final void loadAttachment(Transaction transaction, JSONObject attachmentData) {}
 
             @Override
             final long getRecipientDeltaBalance(Transaction transaction) {
@@ -563,7 +561,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int messageLength = buffer.getInt();
                     if (messageLength <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
                         byte[] message = new byte[messageLength];
@@ -573,7 +571,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     String message = (String)attachmentData.get("message");
                     transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.convert(message));
                 }
@@ -605,11 +603,17 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int aliasLength = buffer.get();
+                    if (aliasLength > Alias.MAX_ALIAS_LENGTH * 3) {
+                        throw new IllegalArgumentException("Max alias length exceeded");
+                    }
                     byte[] alias = new byte[aliasLength];
                     buffer.get(alias);
                     int uriLength = buffer.getShort();
+                    if (uriLength > Alias.MAX_URI_LENGTH * 3) {
+                        throw new IllegalArgumentException("Max alias URI length exceeded");
+                    }
                     byte[] uri = new byte[uriLength];
                     buffer.get(uri);
                     try {
@@ -621,7 +625,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     String alias = (String)attachmentData.get("alias");
                     String uri = (String)attachmentData.get("uri");
                     transaction.attachment = new Attachment.MessagingAliasAssignment(alias.trim(), uri.trim());
@@ -634,7 +638,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     }
                     try {
                         Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                        if (transaction.recipient != Genesis.CREATOR_ID || transaction.amount != 0 || attachment.alias.length() == 0
+                        if (! Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || attachment.alias.length() == 0
                                 || attachment.alias.length() > 100 || attachment.uri.length() > 1000) {
                             return false;
                         } else {
@@ -644,7 +648,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                                     return false;
                                 }
                             }
-                            Alias alias = Nxt.aliases.get(normalizedAlias);
+                            Alias alias = Alias.getAlias(normalizedAlias);
                             return alias == null || Arrays.equals(alias.account.publicKey.get(), transaction.senderPublicKey);
                         }
                     } catch (RuntimeException e) {
@@ -656,18 +660,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                    String normalizedAlias = attachment.alias.toLowerCase();
-                    Alias alias = Nxt.aliases.get(normalizedAlias);
                     Block block = Blockchain.getBlock(transaction.block);
-                    if (alias == null) {
-                        long aliasId = transaction.getId();
-                        alias = new Alias(senderAccount, aliasId, attachment.alias, attachment.uri, block.timestamp);
-                        Nxt.aliases.put(normalizedAlias, alias);
-                        Nxt.aliasIdToAliasMappings.put(aliasId, alias);
-                    } else {
-                        alias.uri = attachment.uri;
-                        alias.timestamp = block.timestamp;
-                    }
+                    Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.alias, attachment.uri, block.timestamp);
                 }
             };
         }
@@ -687,11 +681,17 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int nameLength = buffer.get();
+                    if (nameLength > 30) {
+                        throw new IllegalArgumentException("Max asset name length exceeded");
+                    }
                     byte[] name = new byte[nameLength];
                     buffer.get(name);
                     int descriptionLength = buffer.getShort();
+                    if (descriptionLength > 300) {
+                        throw new IllegalArgumentException("Max asset description length exceeded");
+                    }
                     byte[] description = new byte[descriptionLength];
                     buffer.get(description);
                     int quantity = buffer.getInt();
@@ -704,7 +704,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     String name = (String)attachmentData.get("name");
                     String description = (String)attachmentData.get("description");
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
@@ -715,7 +715,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 boolean doValidateAttachment(Transaction transaction) {
                     try {
                         Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
-                        if (transaction.recipient != Genesis.CREATOR_ID || transaction.amount != 0 || transaction.fee < ASSET_ISSUANCE_FEE
+                        if (!Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || transaction.fee < ASSET_ISSUANCE_FEE
                                 || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000
                                 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
                             return false;
@@ -726,7 +726,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                                     return false;
                                 }
                             }
-                            return Nxt.assetNameToIdMappings.get(normalizedName) == null;
+                            return Asset.getAsset(normalizedName) == null;
                         }
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error validating colored coins asset issuance", e);
@@ -743,12 +743,9 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
 
                     Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
-                    long assetId = transaction.getId();
-                    Asset asset = new Asset(transaction.getSenderAccountId(), attachment.name, attachment.description, attachment.quantity);
-                    Nxt.assets.put(assetId, asset);
-                    Nxt.assetNameToIdMappings.put(attachment.name.toLowerCase(), assetId);
-                    Blockchain.sortedAskOrders.put(assetId, new TreeSet<AskOrder>());
-                    Blockchain.sortedBidOrders.put(assetId, new TreeSet<BidOrder>());
+                    Long assetId = transaction.getId();
+                    Asset.addAsset(assetId, transaction.getSenderAccountId(), attachment.name, attachment.description, attachment.quantity);
+                    Order.addAsset(assetId);
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.quantity);
 
                 }
@@ -776,15 +773,15 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, ByteBuffer buffer) {
-                    long asset = buffer.getLong();
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    Long asset = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, JSONObject attachmentData) {
-                    long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    Long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
                 }
@@ -844,19 +841,19 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
             abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
 
-                protected abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(long asset, int quantity, long price);
+                abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price);
 
                 @Override
-                protected final void loadAttachment(Transaction transaction, ByteBuffer buffer) {
-                    long asset = buffer.getLong();
+                final void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    Long asset = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     long price = buffer.getLong();
                     transaction.attachment = makeAttachment(asset, quantity, price);
                 }
 
                 @Override
-                protected final void loadAttachment(Transaction transaction, JSONObject attachmentData) {
-                    long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
+                final void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    Long asset = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     long price = (Long)attachmentData.get("price");
                     transaction.attachment = makeAttachment(asset, quantity, price);
@@ -865,7 +862,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 final boolean doValidateAttachment(Transaction transaction) {
                     Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.attachment;
-                    return transaction.recipient == Genesis.CREATOR_ID && transaction.amount == 0
+                    return Genesis.CREATOR_ID.equals(transaction.recipient) && transaction.amount == 0
                             && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY
                             && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
                 }
@@ -879,7 +876,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     return SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT;
                 }
 
-                protected final Attachment.ColoredCoinsOrderPlacement makeAttachment(long asset, int quantity, long price) {
+                final Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price) {
                     return new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
                 }
 
@@ -899,11 +896,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                    AskOrder order = new AskOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                    Blockchain.askOrders.put(order.id, order);
-                    Blockchain.sortedAskOrders.get(attachment.asset).add(order);
-                    Blockchain.matchOrders(attachment.asset);
+                    Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
                 }
 
                 @Override
@@ -940,7 +934,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     return SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT;
                 }
 
-                protected final Attachment.ColoredCoinsOrderPlacement makeAttachment(long asset, int quantity, long price) {
+                final Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price) {
                     return new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
                 }
 
@@ -959,11 +953,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                    BidOrder order = new BidOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
-                    senderAccount.addToBalanceAndUnconfirmedBalance(- attachment.quantity * attachment.price);
-                    Blockchain.bidOrders.put(order.id, order);
-                    Blockchain.sortedBidOrders.get(attachment.asset).add(order);
-                    Blockchain.matchOrders(attachment.asset);
+                    senderAccount.addToBalanceAndUnconfirmedBalance(-attachment.quantity * attachment.price);
+                    Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
                 }
 
                 @Override
@@ -989,7 +980,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
                 @Override
                 final boolean doValidateAttachment(Transaction transaction) {
-                    return transaction.recipient == Genesis.CREATOR_ID && transaction.amount == 0;
+                    return Genesis.CREATOR_ID.equals(transaction.recipient) && transaction.amount == 0;
                 }
 
                 @Override
@@ -1011,12 +1002,12 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, ByteBuffer buffer) {
-                    transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(buffer.getLong());
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.zeroToNull(buffer.getLong()));
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
                 }
 
@@ -1024,8 +1015,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
-                    AskOrder order = Blockchain.askOrders.remove(attachment.order);
-                    Blockchain.sortedAskOrders.get(order.asset).remove(order);
+                    Order order = Order.Ask.removeOrder(attachment.order);
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.quantity);
                 }
 
@@ -1048,20 +1038,19 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, ByteBuffer buffer) {
-                    transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(buffer.getLong());
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.zeroToNull(buffer.getLong()));
                 }
 
                 @Override
-                protected void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
                 }
 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
-                    BidOrder order = Blockchain.bidOrders.remove(attachment.order);
-                    Blockchain.sortedBidOrders.get(order.asset).remove(order);
+                    Order order = Order.Bid.removeOrder(attachment.order);
                     senderAccount.addToBalanceAndUnconfirmedBalance(order.quantity * order.price);
                 }
 
@@ -1073,7 +1062,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 final long getSenderDeltaBalance(Transaction transaction) {
                     Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
-                    BidOrder bidOrder = Blockchain.bidOrders.get(attachment.order);
+                    Order.Bid bidOrder = Order.Bid.getBidOrder(attachment.order);
                     if (bidOrder == null) {
                         return 0;
                     }

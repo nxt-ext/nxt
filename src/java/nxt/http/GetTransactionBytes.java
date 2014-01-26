@@ -29,7 +29,7 @@ final class GetTransactionBytes extends HttpRequestHandler {
 
             try {
 
-                long transactionId = Convert.parseUnsignedLong(transaction);
+                Long transactionId = Convert.parseUnsignedLong(transaction);
                 Transaction transactionData = Blockchain.getTransaction(transactionId);
                 if (transactionData == null) {
 

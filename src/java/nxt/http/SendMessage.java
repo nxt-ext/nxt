@@ -35,7 +35,7 @@ final class SendMessage extends HttpRequestHandler {
             response.put("errorCode", 3);
             response.put("errorDescription", "\"secretPhrase\" not specified");
 
-        } else if (recipientValue == null) {
+        } else if (recipientValue == null || "0".equals(recipientValue)) {
 
             response.put("errorCode", 3);
             response.put("errorDescription", "\"recipient\" not specified");
@@ -59,7 +59,7 @@ final class SendMessage extends HttpRequestHandler {
 
             try {
 
-                long recipient = Convert.parseUnsignedLong(recipientValue);
+                Long recipient = Convert.parseUnsignedLong(recipientValue);
 
                 try {
 
@@ -89,11 +89,11 @@ final class SendMessage extends HttpRequestHandler {
 
                                 }
 
-                                long referencedTransaction = referencedTransactionValue == null ? 0 : Convert.parseUnsignedLong(referencedTransactionValue);
+                                Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
 
                                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
-                                Account account = Nxt.accounts.get(Account.getId(publicKey));
+                                Account account = Account.getAccount(publicKey);
                                 if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
 
                                     response.put("errorCode", 6);

@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Asset;
 import nxt.Attachment;
 import nxt.Blockchain;
 import nxt.Genesis;
@@ -76,7 +77,7 @@ final class IssueAsset extends HttpRequestHandler {
                     response.put("errorCode", 4);
                     response.put("errorDescription", "Incorrect \"name\" (must contain only digits and latin letters)");
 
-                } else if (Nxt.assetNameToIdMappings.get(normalizedName) != null) {
+                } else if (Asset.getAsset(normalizedName) != null) {
 
                     response.put("errorCode", 8);
                     response.put("errorDescription", "\"" + name + "\" is already used");
@@ -111,7 +112,7 @@ final class IssueAsset extends HttpRequestHandler {
                                     } else {
 
                                         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-                                        Account account = Nxt.accounts.get(Account.getId(publicKey));
+                                        Account account = Account.getAccount(publicKey);
                                         if (account == null) {
 
                                             response.put("errorCode", 6);
@@ -130,7 +131,7 @@ final class IssueAsset extends HttpRequestHandler {
 
                                                 Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
                                                 Transaction transaction = Transaction.newTransaction(timestamp, (short)1440, publicKey,
-                                                        Genesis.CREATOR_ID, 0, fee, 0, attachment);
+                                                        Genesis.CREATOR_ID, 0, fee, null, attachment);
                                                 transaction.sign(secretPhrase);
 
                                                 JSONObject peerRequest = new JSONObject();

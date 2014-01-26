@@ -46,12 +46,12 @@ final class GetBlock extends HttpRequestHandler {
                     response.put("payloadLength", blockData.payloadLength);
                     response.put("version", blockData.version);
                     response.put("baseTarget", Convert.convert(blockData.baseTarget));
-                    if (blockData.previousBlock != 0) {
+                    if (blockData.previousBlock != null) {
 
                         response.put("previousBlock", Convert.convert(blockData.previousBlock));
 
                     }
-                    if (blockData.nextBlock != 0) {
+                    if (blockData.nextBlock != null) {
 
                         response.put("nextBlock", Convert.convert(blockData.nextBlock));
 
@@ -65,7 +65,7 @@ final class GetBlock extends HttpRequestHandler {
                     }
                     response.put("blockSignature", Convert.convert(blockData.blockSignature));
                     JSONArray transactions = new JSONArray();
-                    for (long transactionId : blockData.transactions) {
+                    for (Long transactionId : blockData.transactions) {
 
                         transactions.add(Convert.convert(transactionId));
 

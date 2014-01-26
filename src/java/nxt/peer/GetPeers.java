@@ -16,10 +16,10 @@ final class GetPeers extends HttpJSONRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray peers = new JSONArray();
-        for (Peer otherPeer : Peer.peers.values()) {
+        for (Peer otherPeer : Peer.allPeers) {
 
             if (otherPeer.blacklistingTime == 0 && otherPeer.announcedAddress.length() > 0
-                    && otherPeer.state == Peer.STATE_CONNECTED && otherPeer.shareAddress) {
+                    && otherPeer.state == Peer.State.CONNECTED && otherPeer.shareAddress) {
 
                 peers.add(otherPeer.announcedAddress);
 

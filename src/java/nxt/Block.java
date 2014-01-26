@@ -8,12 +8,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
@@ -22,83 +18,26 @@ import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 
-public class Block implements Serializable {
+public final class Block implements Serializable {
 
     static final long serialVersionUID = 0;
-    static final long[] emptyLong = new long[0];
+    static final Long[] emptyLong = new Long[0];
     static final Transaction[] emptyTransactions = new Transaction[0];
 
-    public final int version;
-    public final int timestamp;
-    public final long previousBlock;
-    public int totalAmount;
-    public int totalFee;
-    public int payloadLength;
-    public byte[] payloadHash;
-    public final byte[] generatorPublicKey;
-    public byte[] generationSignature;
-    public byte[] blockSignature;
-
-    public final byte[] previousBlockHash;
-
-    public int index;
-    public final long[] transactions;
-    public long baseTarget;
-    public int height;
-    public volatile long nextBlock;
-    public BigInteger cumulativeDifficulty;
-
-    public transient Transaction[] blockTransactions;
-
-    Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee,
-          int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
-
-        this(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
-                generatorPublicKey, generationSignature, blockSignature, null);
-
-    }
-
-    public Block(int version, int timestamp, long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
-                 byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
-
-        if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
-            throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
+    public static final Comparator<Block> heightComparator = new Comparator<Block>() {
+        @Override
+        public int compare(Block o1, Block o2) {
+            return o1.height < o2.height ? -1 : (o1.height > o2.height ? 1 : 0);
         }
-
-        if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
-            throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
-        }
-
-        this.version = version;
-        this.timestamp = timestamp;
-        this.previousBlock = previousBlock;
-        this.totalAmount = totalAmount;
-        this.totalFee = totalFee;
-        this.payloadLength = payloadLength;
-        this.payloadHash = payloadHash;
-        this.generatorPublicKey = generatorPublicKey;
-        this.generationSignature = generationSignature;
-        this.blockSignature = blockSignature;
-
-        this.previousBlockHash = previousBlockHash;
-        this.transactions = numberOfTransactions == 0 ? emptyLong : new long[numberOfTransactions];
-        this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
-
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        this.blockTransactions = transactions.length == 0 ? emptyTransactions : new Transaction[transactions.length];
-    }
+    };
 
     public static Block getBlock(JSONObject blockData) {
 
         try {
             int version = ((Long)blockData.get("version")).intValue();
             int timestamp = ((Long)blockData.get("timestamp")).intValue();
-            long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
+            Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
             int numberOfTransactions = ((Long)blockData.get("numberOfTransactions")).intValue();
             int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
             int totalFee = ((Long)blockData.get("totalFee")).intValue();
@@ -124,14 +63,79 @@ public class Block implements Serializable {
         }
     }
 
+
+    public final int version;
+    public final int timestamp;
+    public final Long previousBlock;
+    public int totalAmount;
+    public int totalFee;
+    public int payloadLength;
+    public byte[] payloadHash;
+    public final byte[] generatorPublicKey;
+    public byte[] generationSignature;
+    public byte[] blockSignature;
+
+    public final byte[] previousBlockHash;
+
+    public int index;
+    public final Long[] transactions;
+    public long baseTarget;
+    public int height;
+    public volatile Long nextBlock;
+    public BigInteger cumulativeDifficulty;
+
+    public transient Transaction[] blockTransactions;
+
+    private transient volatile Long id;
+    private transient volatile String stringId = null;
+    private transient volatile Long generatorAccountId;
+    private transient SoftReference<JSONStreamAware> jsonRef;
+
+    Block(int version, int timestamp, Long previousBlock, int numberOfTransactions, int totalAmount, int totalFee,
+          int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
+
+        this(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
+                generatorPublicKey, generationSignature, blockSignature, null);
+
+    }
+
+    public Block(int version, int timestamp, Long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
+                 byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
+
+        if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
+            throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
+        }
+
+        if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
+            throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
+        }
+
+        this.version = version;
+        this.timestamp = timestamp;
+        this.previousBlock = previousBlock;
+        this.totalAmount = totalAmount;
+        this.totalFee = totalFee;
+        this.payloadLength = payloadLength;
+        this.payloadHash = payloadHash;
+        this.generatorPublicKey = generatorPublicKey;
+        this.generationSignature = generationSignature;
+        this.blockSignature = blockSignature;
+
+        this.previousBlockHash = previousBlockHash;
+        this.transactions = numberOfTransactions == 0 ? emptyLong : new Long[numberOfTransactions];
+        this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
+
+    }
+
+
     public byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(version);
         buffer.putInt(timestamp);
-        buffer.putLong(previousBlock);
-        buffer.putInt(this.transactions.length);
+        buffer.putLong(Convert.nullToZero(previousBlock));
+        buffer.putInt(transactions.length);
         buffer.putInt(totalAmount);
         buffer.putInt(totalFee);
         buffer.putInt(payloadLength);
@@ -139,45 +143,38 @@ public class Block implements Serializable {
         buffer.put(generatorPublicKey);
         buffer.put(generationSignature);
         if (version > 1) {
-
             buffer.put(previousBlockHash);
-
         }
         buffer.put(blockSignature);
-
         return buffer.array();
-
     }
 
-    transient volatile long id;
-    transient volatile String stringId = null;
-    transient volatile long generatorAccountId;
-
-    public long getId() {
+    public Long getId() {
         calculateIds();
         return id;
     }
-
 
     public String getStringId() {
         calculateIds();
         return stringId;
     }
 
-    public long getGeneratorAccountId() {
+    public Long getGeneratorAccountId() {
         calculateIds();
         return generatorAccountId;
     }
 
-    private void calculateIds() {
-        if (stringId != null) {
-            return;
+    public synchronized JSONStreamAware getJSONStreamAware() {
+        JSONStreamAware json;
+        if (jsonRef != null) {
+            json = jsonRef.get();
+            if (json != null) {
+                return json;
+            }
         }
-        byte[] hash = Crypto.sha256().digest(getBytes());
-        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-        id = bigInteger.longValue();
-        stringId = bigInteger.toString();
-        generatorAccountId = Account.getId(generatorPublicKey);
+        json = JSON.prepare(getJSONObject());
+        jsonRef = new SoftReference<>(json);
+        return json;
     }
 
     JSONObject getJSONObject() {
@@ -187,7 +184,7 @@ public class Block implements Serializable {
         block.put("version", version);
         block.put("timestamp", timestamp);
         block.put("previousBlock", Convert.convert(previousBlock));
-        block.put("numberOfTransactions", this.transactions.length);
+        block.put("numberOfTransactions", transactions.length);
         block.put("totalAmount", totalAmount);
         block.put("totalFee", totalFee);
         block.put("payloadLength", payloadLength);
@@ -213,31 +210,9 @@ public class Block implements Serializable {
 
     }
 
-    private transient SoftReference<JSONStreamAware> jsonRef;
-
-    public synchronized JSONStreamAware getJSONStreamAware() {
-        JSONStreamAware json;
-        if (jsonRef != null) {
-            json = jsonRef.get();
-            if (json != null) {
-                return json;
-            }
-        }
-        json = JSON.prepare(getJSONObject());
-        jsonRef = new SoftReference<>(json);
-        return json;
-    }
-
-    public static final Comparator<Block> heightComparator = new Comparator<Block>() {
-        @Override
-        public int compare(Block o1, Block o2) {
-            return o1.height < o2.height ? -1 : (o1.height > o2.height ? 1 : 0);
-        }
-    };
-
     boolean verifyBlockSignature() {
 
-        Account account = Nxt.accounts.get(getGeneratorAccountId());
+        Account account = Account.getAccount(getGeneratorAccountId());
         if (account == null) {
 
             return false;
@@ -269,7 +244,7 @@ public class Block implements Serializable {
 
             }
 
-            Account account = Nxt.accounts.get(getGeneratorAccountId());
+            Account account = Account.getAccount(getGeneratorAccountId());
             if (account == null || account.getEffectiveBalance() <= 0) {
 
                 return false;
@@ -308,6 +283,22 @@ public class Block implements Serializable {
 
         }
 
+    }
+
+    private void calculateIds() {
+        if (stringId != null) {
+            return;
+        }
+        byte[] hash = Crypto.sha256().digest(getBytes());
+        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+        id = bigInteger.longValue();
+        stringId = bigInteger.toString();
+        generatorAccountId = Account.getId(generatorPublicKey);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.blockTransactions = transactions.length == 0 ? emptyTransactions : new Transaction[transactions.length];
     }
 
 }

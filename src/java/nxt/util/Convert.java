@@ -42,7 +42,11 @@ public final class Convert {
 
     }
 
-    public static long parseUnsignedLong(String number) {
+    public static String convert(Long objectId) {
+        return convert(nullToZero(objectId));
+    }
+
+    public static Long parseUnsignedLong(String number) {
 
         if (number == null) {
             throw new IllegalArgumentException("trying to parse null");
@@ -51,7 +55,7 @@ public final class Convert {
         if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
             throw new IllegalArgumentException("overflow: " + number);
         }
-        return bigInt.longValue();
+        return zeroToNull(bigInt.longValue());
 
     }
 
@@ -59,5 +63,13 @@ public final class Convert {
 
         return (int)((System.currentTimeMillis() - Nxt.epochBeginning + 500) / 1000);
 
+    }
+
+    public static Long zeroToNull(long l) {
+        return l == 0 ? null : l;
+    }
+
+    public static long nullToZero(Long l) {
+        return l == null ? 0 : l;
     }
 }

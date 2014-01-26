@@ -1,7 +1,6 @@
 package nxt.http;
 
-import nxt.AskOrder;
-import nxt.Blockchain;
+import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -28,7 +27,7 @@ final class GetAskOrder extends HttpRequestHandler {
 
             try {
 
-                AskOrder orderData = Blockchain.askOrders.get(Convert.parseUnsignedLong(order));
+                Order.Ask orderData = Order.Ask.getAskOrder(Convert.parseUnsignedLong(order));
                 if (orderData == null) {
 
                     response.put("errorCode", 5);

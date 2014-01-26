@@ -13,7 +13,6 @@ import org.json.simple.JSONObject;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Map;
 
 final class GetInitialData extends UserRequestHandler {
 
@@ -43,10 +42,9 @@ final class GetInitialData extends UserRequestHandler {
 
         }
 
-        for (Map.Entry<String, Peer> peerEntry : Peer.peers.entrySet()) {
+        for (Peer peer : Peer.allPeers) {
 
-            String address = peerEntry.getKey();
-            Peer peer = peerEntry.getValue();
+            String address = peer.peerAddress;
 
             if (peer.blacklistingTime > 0) {
 
@@ -62,7 +60,7 @@ final class GetInitialData extends UserRequestHandler {
                 }
                 blacklistedPeers.add(blacklistedPeer);
 
-            } else if (peer.state == Peer.STATE_NONCONNECTED) {
+            } else if (peer.state == Peer.State.NON_CONNECTED) {
 
                 if (peer.announcedAddress.length() > 0) {
 
@@ -81,7 +79,7 @@ final class GetInitialData extends UserRequestHandler {
 
                 JSONObject activePeer = new JSONObject();
                 activePeer.put("index", peer.index);
-                if (peer.state == peer.STATE_DISCONNECTED) {
+                if (peer.state == Peer.State.DISCONNECTED) {
 
                     activePeer.put("disconnected", true);
 
@@ -99,7 +97,7 @@ final class GetInitialData extends UserRequestHandler {
             }
         }
 
-        long blockId = Blockchain.getLastBlock().getId();
+        Long blockId = Blockchain.getLastBlock().getId();
         int numberOfBlocks = 0;
         while (numberOfBlocks < 60) {
 
@@ -122,7 +120,7 @@ final class GetInitialData extends UserRequestHandler {
 
             recentBlocks.add(recentBlock);
 
-            if (blockId == Genesis.GENESIS_BLOCK_ID) {
+            if (blockId.equals(Genesis.GENESIS_BLOCK_ID)) {
                 break;
             }
 

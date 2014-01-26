@@ -1,3 +1,5 @@
+import nxt.util.Convert;
+
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -27,12 +29,12 @@ final class Nxt {
 
             nxt.Transaction transaction = attachment != null
                             ? nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
-                            amount, fee, referencedTransaction, attachment)
+                            amount, fee, Convert.zeroToNull(referencedTransaction), attachment)
                             : nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
-                            amount, fee, referencedTransaction);
+                            amount, fee, Convert.zeroToNull(referencedTransaction));
             transaction.signature = signature;
             transaction.index = index;
-            transaction.block = block;
+            transaction.block = Convert.zeroToNull(block);
             transaction.height = height;
             return transaction;
         }
@@ -89,7 +91,7 @@ final class Nxt {
             int quantity;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Attachment.ColoredCoinsAssetTransfer(asset, quantity);
+                return new nxt.Attachment.ColoredCoinsAssetTransfer(Convert.zeroToNull(asset), quantity);
             }
 
 
@@ -104,7 +106,7 @@ final class Nxt {
             long price;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
+                return new nxt.Attachment.ColoredCoinsAskOrderPlacement(Convert.zeroToNull(asset), quantity, price);
             }
 
 
@@ -119,7 +121,7 @@ final class Nxt {
             long price;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
+                return new nxt.Attachment.ColoredCoinsBidOrderPlacement(Convert.zeroToNull(asset), quantity, price);
             }
 
 
@@ -132,7 +134,7 @@ final class Nxt {
             long order;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Attachment.ColoredCoinsAskOrderCancellation(order);
+                return new nxt.Attachment.ColoredCoinsAskOrderCancellation(Convert.zeroToNull(order));
             }
 
 
@@ -145,7 +147,7 @@ final class Nxt {
             long order;
 
             public Object readResolve() throws ObjectStreamException {
-                return new nxt.Attachment.ColoredCoinsBidOrderCancellation(order);
+                return new nxt.Attachment.ColoredCoinsBidOrderCancellation(Convert.zeroToNull(order));
             }
 
 
@@ -178,12 +180,15 @@ final class Nxt {
 
         public Object readResolve() throws ObjectStreamException {
 
-            nxt.Block block = new nxt.Block(version, timestamp, previousBlock, transactions.length, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+            nxt.Block block = new nxt.Block(version, timestamp, Convert.zeroToNull(previousBlock), transactions.length,
+                    totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
             block.index = index;
-            System.arraycopy(transactions, 0, block.transactions, 0, transactions.length);
+            for (int i = 0 ; i < transactions.length; i++) {
+                block.transactions[i] = transactions[i];
+            }
             block.baseTarget = baseTarget;
             block.height = height;
-            block.nextBlock = nextBlock;
+            block.nextBlock = Convert.zeroToNull(nextBlock);
             block.cumulativeDifficulty = cumulativeDifficulty;
             return block;
         }

@@ -39,6 +39,9 @@ final class DecodeHallmark extends HttpRequestHandler {
                 byte[] publicKey = new byte[32];
                 buffer.get(publicKey);
                 int hostLength = buffer.getShort();
+                if (hostLength > 300) {
+                    throw new IllegalArgumentException("Invalid host length");
+                }
                 byte[] hostBytes = new byte[hostLength];
                 buffer.get(hostBytes);
                 String host = new String(hostBytes, "UTF-8");

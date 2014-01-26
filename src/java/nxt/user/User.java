@@ -1,9 +1,8 @@
 package nxt.user;
 
 import nxt.Account;
-import nxt.Nxt;
-import nxt.util.JSON;
 import nxt.crypto.Crypto;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -20,25 +19,28 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
-public class User {
+public final class User {
 
-    static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     public static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
-    final ConcurrentLinkedQueue<JSONObject> pendingResponses;
-    private AsyncContext asyncContext;
-    volatile boolean isInactive;
 
-    public volatile String secretPhrase;
-    public volatile byte[] publicKey;
-
-    User() {
-        pendingResponses = new ConcurrentLinkedQueue<>();
+    public static User getUser(String userPasscode) {
+        User user = users.get(userPasscode);
+        if (user == null) {
+            user = new User();
+            User oldUser = users.putIfAbsent(userPasscode, user);
+            if (oldUser != null) {
+                user = oldUser;
+                user.isInactive = false;
+            }
+        } else {
+            user.isInactive = false;
+        }
+        return user;
     }
 
     public static void sendToAll(JSONObject response) {
@@ -48,38 +50,25 @@ public class User {
     }
 
     public static void updateUserUnconfirmedBalance(Account account) {
-
         JSONObject response = new JSONObject();
         response.put("response", "setBalance");
         response.put("balance", account.getUnconfirmedBalance());
         byte[] accountPublicKey = account.publicKey.get();
         for (User user : users.values()) {
-
             if (user.secretPhrase != null && Arrays.equals(user.publicKey, accountPublicKey)) {
-
                 user.send(response);
-
             }
-
         }
-
     }
 
-    void deinitializeKeyPair() {
+    public volatile String secretPhrase;
+    public volatile byte[] publicKey;
+    volatile boolean isInactive;
 
-        secretPhrase = null;
-        publicKey = null;
+    private final ConcurrentLinkedQueue<JSONObject> pendingResponses = new ConcurrentLinkedQueue<>();
+    private AsyncContext asyncContext;
 
-    }
-
-    BigInteger initializeKeyPair(String secretPhrase) {
-
-        this.publicKey = Crypto.getPublicKey(secretPhrase);
-        this.secretPhrase = secretPhrase;
-        byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
-        return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
-
-    }
+    User() {}
 
     public synchronized void send(JSONObject response) {
         if (asyncContext == null) {
@@ -167,6 +156,24 @@ public class User {
             asyncContext.setTimeout(5000);
         }
     }
+
+    void enqueue(JSONObject response) {
+        pendingResponses.offer(response);
+    }
+
+    void deinitializeKeyPair() {
+        secretPhrase = null;
+        publicKey = null;
+    }
+
+    BigInteger initializeKeyPair(String secretPhrase) {
+        this.publicKey = Crypto.getPublicKey(secretPhrase);
+        this.secretPhrase = secretPhrase;
+        byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
+        return new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5], publicKeyHash[4],
+                publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
+    }
+
 
     private final class UserAsyncListener implements AsyncListener {
 

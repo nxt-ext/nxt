@@ -1,8 +1,11 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Alias;
+import nxt.Asset;
 import nxt.Blockchain;
 import nxt.Nxt;
+import nxt.Order;
 import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.util.Convert;
@@ -27,7 +30,7 @@ final class GetState extends HttpRequestHandler {
         response.put("cumulativeDifficulty", Blockchain.getLastBlock().cumulativeDifficulty.toString());
 
         long totalEffectiveBalance = 0;
-        for (Account account : Nxt.accounts.values()) {
+        for (Account account : Account.allAccounts) {
 
             long effectiveBalance = account.getEffectiveBalance();
             if (effectiveBalance > 0) {
@@ -41,13 +44,14 @@ final class GetState extends HttpRequestHandler {
 
         response.put("numberOfBlocks", Blockchain.allBlocks.size());
         response.put("numberOfTransactions", Blockchain.allTransactions.size());
-        response.put("numberOfAccounts", Nxt.accounts.size());
-        response.put("numberOfAssets", Nxt.assets.size());
-        response.put("numberOfOrders", Blockchain.askOrders.size() + Blockchain.bidOrders.size());
-        response.put("numberOfAliases", Nxt.aliases.size());
-        response.put("numberOfPeers", Peer.peers.size());
+        response.put("numberOfAccounts", Account.allAccounts.size());
+        response.put("numberOfAssets", Asset.allAssets.size());
+        response.put("numberOfOrders", Order.Ask.allAskOrders.size() + Order.Bid.allBidOrders.size());
+        response.put("numberOfAliases", Alias.allAliases.size());
+        response.put("numberOfPeers", Peer.allPeers.size());
         response.put("numberOfUsers", User.allUsers.size());
-        response.put("lastBlockchainFeeder", Nxt.lastBlockchainFeeder == null ? null : Nxt.lastBlockchainFeeder.announcedAddress);
+        Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
+        response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.announcedAddress);
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());

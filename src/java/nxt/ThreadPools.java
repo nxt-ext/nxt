@@ -15,6 +15,10 @@ public final class ThreadPools {
     private static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
     private static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
+    public static <T> Future<T> sendToPeers(Callable<T> callable) {
+        return sendToPeersService.submit(callable);
+    }
+
     static void start() {
 
         scheduledThreadPool.scheduleWithFixedDelay(Peer.peerConnectingThread, 0, 5, TimeUnit.SECONDS);
@@ -38,10 +42,6 @@ public final class ThreadPools {
     static void shutdown() {
         shutdownExecutor(scheduledThreadPool);
         shutdownExecutor(sendToPeersService);
-    }
-
-    public static <T> Future<T> sendToPeers(Callable<T> callable) {
-        return sendToPeersService.submit(callable);
     }
 
     private static void shutdownExecutor(ExecutorService executor) {

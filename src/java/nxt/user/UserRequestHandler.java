@@ -31,21 +31,6 @@ public abstract class UserRequestHandler {
         userRequestHandlers = Collections.unmodifiableMap(map);
     }
 
-    public static User getUser(String userPasscode) {
-        User user = User.users.get(userPasscode);
-        if (user == null) {
-            user = new User();
-            User oldUser = User.users.putIfAbsent(userPasscode, user);
-            if (oldUser != null) {
-                user = oldUser;
-                user.isInactive = false;
-            }
-        } else {
-            user.isInactive = false;
-        }
-        return user;
-    }
-
     public static void process(HttpServletRequest req, User user) throws ServletException, IOException {
 
         try {
@@ -56,7 +41,7 @@ public abstract class UserRequestHandler {
                 if (userRequestHandler != null) {
                     JSONObject response = userRequestHandler.processRequest(req, user);
                     if (response != null) {
-                        user.pendingResponses.offer(response);
+                        user.enqueue(response);
                     }
                     return;
                 }
@@ -64,14 +49,14 @@ public abstract class UserRequestHandler {
             JSONObject response = new JSONObject();
             response.put("response", "showMessage");
             response.put("message", "Incorrect request!");
-            user.pendingResponses.offer(response);
+            user.enqueue(response);
 
         } catch (Exception e) {
             Logger.logMessage("Error processing GET request", e);
             JSONObject response = new JSONObject();
             response.put("response", "showMessage");
             response.put("message", e.toString());
-            user.pendingResponses.offer(response);
+            user.enqueue(response);
         }
 
     }

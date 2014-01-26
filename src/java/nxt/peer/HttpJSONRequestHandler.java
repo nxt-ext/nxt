@@ -1,8 +1,8 @@
 package nxt.peer;
 
-import nxt.util.JSON;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -74,12 +74,12 @@ public abstract class HttpJSONRequestHandler {
 
             peer = Peer.addPeer(req.getRemoteHost(), "");
             if (peer != null) {
-                if (peer.state == Peer.STATE_DISCONNECTED) {
-                    peer.setState(Peer.STATE_CONNECTED);
+                if (peer.state == Peer.State.DISCONNECTED) {
+                    peer.setState(Peer.State.CONNECTED);
                 }
                 peer.updateDownloadedVolume(cis.getCount());
                 if (peer.analyzeHallmark(req.getRemoteHost(), (String)request.get("hallmark"))) {
-                    peer.setState(Peer.STATE_CONNECTED);
+                    peer.setState(Peer.State.CONNECTED);
                 }
             }
 
