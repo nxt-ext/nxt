@@ -597,11 +597,7 @@ public final class Peer implements Comparable<Peer> {
 
     boolean analyzeHallmark(String realHost, String hallmark) {
 
-        if (hallmark == null && this.hallmark == null) {
-            return true;
-        }
-
-        if (hallmark != null && hallmark.equals(this.hallmark)) {
+        if (hallmark == null || hallmark.equals(this.hallmark)) {
             return true;
         }
 
@@ -699,9 +695,7 @@ public final class Peer implements Comparable<Peer> {
             JSONObject addedActivePeer = new JSONObject();
             addedActivePeer.put("index", index);
             if (state == State.DISCONNECTED) {
-
                 addedActivePeer.put("disconnected", true);
-
             }
 
 
@@ -711,16 +705,8 @@ public final class Peer implements Comparable<Peer> {
             addedActivePeer.put("downloaded", downloadedVolume);
             addedActivePeer.put("uploaded", uploadedVolume);
             addedActivePeer.put("software", getSoftware());
-            for (String wellKnownPeer : Nxt.wellKnownPeers) {
-
-                if (announcedAddress.equals(wellKnownPeer)) {
-
-                    addedActivePeer.put("wellKnown", true);
-
-                    break;
-
-                }
-
+            if (Nxt.wellKnownPeers.contains(announcedAddress)) {
+                addedActivePeer.put("wellKnown", true);
             }
             addedActivePeers.add(addedActivePeer);
             response.put("addedActivePeers", addedActivePeers);
