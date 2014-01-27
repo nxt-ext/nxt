@@ -1065,7 +1065,8 @@ public final class Blockchain {
             }
             block.setPayloadHash(digest.digest());
 
-            block.apply();
+            blocks.put(Genesis.GENESIS_BLOCK_ID, block);
+            lastBlock.set(block);
 
             saveBlocks("blocks.nxt");
 

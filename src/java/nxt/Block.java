@@ -77,8 +77,8 @@ public final class Block implements Serializable {
     transient Transaction[] blockTransactions;
 
     /*private after 0.6.0*/
-    public BigInteger cumulativeDifficulty;
-    public long baseTarget;
+    public BigInteger cumulativeDifficulty = BigInteger.ZERO;
+    public long baseTarget = Nxt.initialBaseTarget;
     public volatile Long nextBlock;
     public int index;
     public int height;
