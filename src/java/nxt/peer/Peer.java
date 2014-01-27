@@ -373,10 +373,6 @@ public final class Peer implements Comparable<Peer> {
         return hallmark;
     }
 
-    void setHallmark(String hallmark) {
-        this.hallmark = hallmark;
-    }
-
     public boolean shareAddress() {
         return shareAddress;
     }
@@ -502,16 +498,8 @@ public final class Peer implements Comparable<Peer> {
         JSONObject addedKnownPeer = new JSONObject();
         addedKnownPeer.put("index", index);
         addedKnownPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
-        for (String wellKnownPeer : Nxt.wellKnownPeers) {
-
-            if (announcedAddress.equals(wellKnownPeer)) {
-
-                addedKnownPeer.put("wellKnown", true);
-
-                break;
-
-            }
-
+        if (Nxt.wellKnownPeers.contains(announcedAddress)) {
+            addedKnownPeer.put("wellKnown", true);
         }
         addedKnownPeers.add(addedKnownPeer);
         response.put("addedKnownPeers", addedKnownPeers);
