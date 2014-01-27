@@ -104,7 +104,7 @@ final class IssueAsset extends HttpRequestHandler {
                                 try {
 
                                     int fee = Integer.parseInt(feeValue);
-                                    if (fee < Transaction.ASSET_ISSUANCE_FEE) {
+                                    if (fee < Nxt.ASSET_ISSUANCE_FEE) {
 
                                         response.put("errorCode", 4);
                                         response.put("errorDescription", "Incorrect \"fee\" (must be not less than 1'000)");

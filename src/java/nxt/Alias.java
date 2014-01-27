@@ -12,9 +12,6 @@ public final class Alias {
 
     public static final Collection<Alias> allAliases = Collections.unmodifiableCollection(aliases.values());
 
-    public static final int MAX_URI_LENGTH = 1000;
-    public static final int MAX_ALIAS_LENGTH = 100;
-
     public static Alias getAlias(String alias) {
         return aliases.get(alias);
     }

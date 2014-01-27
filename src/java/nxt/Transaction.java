@@ -38,8 +38,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 
-    public static final int ASSET_ISSUANCE_FEE = 1000;
-
     public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
         @Override
         public int compare(Transaction o1, Transaction o2) {
@@ -634,13 +632,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int aliasLength = buffer.get();
-                    if (aliasLength > Alias.MAX_ALIAS_LENGTH * 3) {
+                    if (aliasLength > Nxt.MAX_ALIAS_LENGTH * 3) {
                         throw new IllegalArgumentException("Max alias length exceeded");
                     }
                     byte[] alias = new byte[aliasLength];
                     buffer.get(alias);
                     int uriLength = buffer.getShort();
-                    if (uriLength > Alias.MAX_URI_LENGTH * 3) {
+                    if (uriLength > Nxt.MAX_ALIAS_URI_LENGTH * 3) {
                         throw new IllegalArgumentException("Max alias URI length exceeded");
                     }
                     byte[] uri = new byte[uriLength];
@@ -744,7 +742,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 boolean doValidateAttachment(Transaction transaction) {
                     try {
                         Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
-                        if (!Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || transaction.fee < ASSET_ISSUANCE_FEE
+                        if (!Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
                                 || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000
                                 || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
                             return false;

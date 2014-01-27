@@ -61,7 +61,7 @@ final class AssignAlias extends HttpRequestHandler {
         } else {
 
             alias = alias.trim();
-            if (alias.length() == 0 || alias.length() > Alias.MAX_ALIAS_LENGTH) {
+            if (alias.length() == 0 || alias.length() > Nxt.MAX_ALIAS_LENGTH) {
 
                 response.put("errorCode", 4);
                 response.put("errorDescription", "Incorrect \"alias\" (length must be in [1..100] range)");
@@ -87,7 +87,7 @@ final class AssignAlias extends HttpRequestHandler {
                 } else {
 
                     uri = uri.trim();
-                    if (uri.length() > Alias.MAX_URI_LENGTH) {
+                    if (uri.length() > Nxt.MAX_ALIAS_URI_LENGTH) {
 
                         response.put("errorCode", 4);
                         response.put("errorDescription", "Incorrect \"uri\" (length must be not longer than 1000 characters)");

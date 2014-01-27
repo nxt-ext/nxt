@@ -41,6 +41,9 @@ public final class Nxt extends HttpServlet {
     public static final long initialBaseTarget = 153722867;
     public static final long maxBaseTarget = MAX_BALANCE * initialBaseTarget;
     public static final long MAX_ASSET_QUANTITY = 1000000000;
+    public static final int ASSET_ISSUANCE_FEE = 1000;
+    public static final int MAX_ALIAS_URI_LENGTH = 1000;
+    public static final int MAX_ALIAS_LENGTH = 100;
 
     public static final long epochBeginning;
     static {
@@ -58,13 +61,13 @@ public final class Nxt extends HttpServlet {
 
     // /*final*/ variables are set in the init() and are to be treated as final
     public static /*final*/ String myPlatform;
-    public static String myScheme;
-    public static String myAddress;
-    public static String myHallmark;
+    public static /*final*/ String myScheme;
+    public static /*final*/ String myAddress;
+    public static /*final*/ String myHallmark;
     public static /*final*/ int myPort;
     public static /*final*/ boolean shareMyAddress;
     public static /*final*/ Set<String> allowedUserHosts;
-    public static Set<String> allowedBotHosts;
+    public static /*final*/ Set<String> allowedBotHosts;
     public static /*final*/ int blacklistingPeriod;
 
     public static final int LOGGING_MASK_EXCEPTIONS = 1;
@@ -75,10 +78,10 @@ public final class Nxt extends HttpServlet {
     public static /*final*/ Set<String> wellKnownPeers;
     public static /*final*/ int maxNumberOfConnectedPublicPeers;
     public static /*final*/ int connectTimeout;
-    public static int readTimeout;
+    public static /*final*/ int readTimeout;
     public static /*final*/ boolean enableHallmarkProtection;
     public static /*final*/ int pushThreshold;
-    public static int pullThreshold;
+    public static /*final*/ int pullThreshold;
     public static /*final*/ int sendToPeersLimit;
 
     @Override

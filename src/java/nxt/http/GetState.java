@@ -50,6 +50,13 @@ final class GetState extends HttpRequestHandler {
         response.put("numberOfAliases", Alias.allAliases.size());
         response.put("numberOfPeers", Peer.allPeers.size());
         response.put("numberOfUsers", User.allUsers.size());
+        int unlockedAccounts = 0;
+        for (User user : User.allUsers) {
+            if (user.getSecretPhrase() != null) {
+                unlockedAccounts += 1;
+            }
+        }
+        response.put("numberOfUnlockedAccounts", unlockedAccounts);
         Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
