@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -611,7 +610,7 @@ public final class Blockchain {
                         continue;
                     }
 
-                    doubleSpendingTransaction = transaction.preProcess();
+                    doubleSpendingTransaction = transaction.isDoubleSpending();
 
                     transaction.setIndex(transactionCounter.incrementAndGet());
 
@@ -755,7 +754,8 @@ public final class Blockchain {
 
                 }
 
-                if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || Nxt.BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity() || numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+                if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || Nxt.BLOCK_HEADER_LENGTH + payloadLength != buffer.capacity()
+                        || numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
 
                     return false;
 
@@ -765,7 +765,8 @@ public final class Blockchain {
                         payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
                 if (block.transactions.length > Nxt.MAX_NUMBER_OF_TRANSACTIONS || !previousLastBlock.getId().equals(block.previousBlock)
-                        || block.getId().equals(Long.valueOf(0L)) || blocks.containsKey(block.getId()) || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
+                        || block.getId().equals(Long.valueOf(0L)) || blocks.containsKey(block.getId())
+                        || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
                     return false;
 
@@ -773,8 +774,8 @@ public final class Blockchain {
 
                 block.setIndex(blockCounter.incrementAndGet());
 
-                HashMap<Long, Transaction> blockTransactions = new HashMap<>();
-                HashSet<String> blockAliases = new HashSet<>();
+                Map<Long, Transaction> blockTransactions = new HashMap<>();
+                Map<Transaction.Type, Set<String>> duplicates = new HashMap<>();
                 for (int i = 0; i < block.transactions.length; i++) {
 
                     Transaction transaction = Transaction.getTransaction(buffer);
@@ -786,10 +787,8 @@ public final class Blockchain {
 
                     }
 
-                    if (transaction.getType() == Transaction.Type.Messaging.ALIAS_ASSIGNMENT) {
-                        if (!blockAliases.add(((Attachment.MessagingAliasAssignment)transaction.getAttachment()).alias.toLowerCase())) {
-                            return false;
-                        }
+                    if (transaction.isDuplicate(duplicates)) {
+                        return false;
                     }
 
                 }
@@ -1230,7 +1229,7 @@ public final class Blockchain {
         }
 
         Map<Long, Transaction> newTransactions = new HashMap<>();
-        Set<String> newAliases = new HashSet<>();
+        Map<Transaction.Type, Set<String>> duplicates = new HashMap<>();
         Map<Long, Long> accumulatedAmounts = new HashMap<>();
 
         int totalAmount = 0;
@@ -1257,10 +1256,8 @@ public final class Blockchain {
                     long amount = (transaction.amount + transaction.fee) * 100L;
                     if (accumulatedAmount + amount <= Account.getAccount(sender).getBalance() && transaction.validateAttachment()) {
 
-                        if (transaction.getType() == Transaction.Type.Messaging.ALIAS_ASSIGNMENT) {
-                            if (!newAliases.add(((Attachment.MessagingAliasAssignment)transaction.getAttachment()).alias.toLowerCase())) {
-                                continue;
-                            }
+                        if (transaction.isDuplicate(duplicates)) {
+                            continue;
                         }
 
                         accumulatedAmounts.put(sender, accumulatedAmount + amount);

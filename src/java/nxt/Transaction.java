@@ -16,7 +16,9 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class Transaction implements Comparable<Transaction>, Serializable {
 
@@ -363,13 +365,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     // returns true iff double spending
-    final boolean preProcess() {
+    final boolean isDoubleSpending() {
         Account senderAccount = Account.getAccount(getSenderAccountId());
         if (senderAccount == null) {
             return true;
         }
         synchronized(senderAccount) {
-            return type.preProcess(this, senderAccount, this.amount + this.fee);
+            return type.isDoubleSpending(this, senderAccount, this.amount + this.fee);
         }
     }
 
@@ -395,6 +397,10 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         }
         accumulatedAmounts.put(sender, accumulatedAmount + (amount + fee) * 100L);
         type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
+    }
+
+    final boolean isDuplicate(Map<Type, Set<String>> duplicates) {
+        return type.isDuplicate(this, duplicates);
     }
 
     private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
@@ -483,20 +489,24 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         abstract boolean doValidateAttachment(Transaction transaction);
 
         // return true iff double spending
-        final boolean preProcess(Transaction transaction, Account senderAccount, int totalAmount) {
+        final boolean isDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
             if (senderAccount.getUnconfirmedBalance() < totalAmount * 100L) {
                 return true;
             }
             senderAccount.addToUnconfirmedBalance(- totalAmount * 100L);
-            return doPreProcess(transaction, senderAccount, totalAmount);
+            return checkDoubleSpending(transaction, senderAccount, totalAmount);
         }
 
-        abstract boolean doPreProcess(Transaction transaction, Account senderAccount, int totalAmount);
+        abstract boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount);
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
         abstract void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                    Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount);
+
+        boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
+            return false;
+        }
 
         abstract long getRecipientDeltaBalance(Transaction transaction);
 
@@ -547,7 +557,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                                   Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
                 @Override
-                boolean doPreProcess(Transaction transaction, Account senderAccount, int totalAmount) {
+                boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
                     return false;
                 }
 
@@ -562,7 +572,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             }
 
             @Override
-            boolean doPreProcess(Transaction transaction, Account senderAccount, int totalAmount) {
+            boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
                 return false;
             }
 
@@ -690,6 +700,17 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     Block block = transaction.getBlock();
                     Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.alias, attachment.uri, block.timestamp);
                 }
+
+                @Override
+                boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
+                    Set<String> myDuplicates = duplicates.get(this);
+                    if (myDuplicates == null) {
+                        myDuplicates = new HashSet<>();
+                        duplicates.put(this, myDuplicates);
+                    }
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                    return ! myDuplicates.add(attachment.alias.toLowerCase());
+                }
             };
         }
 
@@ -762,7 +783,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean doPreProcess(Transaction transaction, Account senderAccount, int totalAmount) {
+                boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
                     return false;
                 }
 
@@ -819,7 +840,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean doPreProcess(Transaction transaction, Account account, int totalAmount) {
+                boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
                     Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
                     if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
@@ -907,7 +928,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean doPreProcess(Transaction transaction, Account account, int totalAmount) {
+                boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
                     Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
                     if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
@@ -965,7 +986,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean doPreProcess(Transaction transaction, Account account, int totalAmount) {
+                boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
                     if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
                         account.addToUnconfirmedBalance(totalAmount * 100L);
@@ -1010,7 +1031,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                final boolean doPreProcess(Transaction transaction, Account senderAccount, int totalAmount) {
+                final boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
                     return false;
                 }
 
