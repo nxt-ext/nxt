@@ -348,12 +348,11 @@ public final class Block implements Serializable {
                 throw new IllegalStateException("Missing transaction " + Convert.convert(transactions[i]));
             }
         }
+
         if (previousBlock == null && getId().equals(Genesis.GENESIS_BLOCK_ID)) {
 
             calculateBaseTarget();
             Blockchain.addBlock(this);
-
-            Account.addOrGetAccount(Genesis.CREATOR_ID);
 
         } else {
 
@@ -364,9 +363,13 @@ public final class Block implements Serializable {
             calculateBaseTarget();
             Blockchain.addBlock(this);
 
-            Account generatorAccount = Account.getAccount(getGeneratorAccountId());
-            generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
         }
+
+        Account generatorAccount = Account.addOrGetAccount(getGeneratorAccountId());
+        if (! generatorAccount.setOrVerify(generatorPublicKey)) {
+            throw new IllegalStateException("Generator public key mismatch");
+        }
+        generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
         for (Transaction transaction : blockTransactions) {
 
