@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.10";
+    static final String VERSION = "0.5.11";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -959,7 +959,10 @@ public class Nxt extends HttpServlet {
                     blocks.put(GENESIS_BLOCK_ID, this);
                     lastBlock.set(this);
 
-                    Account.addAccount(CREATOR_ID);
+                    Account generatorAccount = Account.addAccount(CREATOR_ID);
+                    if (! generatorAccount.setOrVerify(CREATOR_PUBLIC_KEY)) {
+                        throw new IllegalStateException("Creator public key mismatch");
+                    }
 
                 } else {
 
@@ -969,14 +972,17 @@ public class Nxt extends HttpServlet {
                     height = previousLastBlock.height + 1;
                     baseTarget = calculateBaseTarget();
                     cumulativeDifficulty = previousLastBlock.cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
+                    Account generatorAccount = accounts.get(getGeneratorAccountId());
+                    if (! generatorAccount.setOrVerify(generatorPublicKey)) {
+                        throw new IllegalStateException("Block generator public key mismatch");
+                    }
                     if (! (previousLastBlock.getId() == previousBlock && lastBlock.compareAndSet(previousLastBlock, this))) {
                         throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
                     }
-                    Account generatorAccount = accounts.get(getGeneratorAccountId());
-                    generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
                     if (blocks.putIfAbsent(getId(), this) != null) {
                         throw new IllegalStateException("duplicate block id: " + getId()); // shouldn't happen
                     }
+                    generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
                 }
 
                 for (Transaction transaction : this.blockTransactions) {
@@ -1344,16 +1350,12 @@ public class Nxt extends HttpServlet {
         static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
 
             ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
-
             long curBlock = lastBlock.get().getId();
-            do {
-
+            while (lastBlocks.size() < numberOfBlocks && curBlock != 0) {
                 Block block = blocks.get(curBlock);
                 lastBlocks.add(block);
                 curBlock = block.previousBlock;
-
-            } while (lastBlocks.size() < numberOfBlocks && curBlock != 0);
-
+            }
             return lastBlocks;
 
         }
@@ -3089,6 +3091,9 @@ public class Nxt extends HttpServlet {
                 byte[] publicKey = new byte[32];
                 buffer.get(publicKey);
                 int hostLength = buffer.getShort();
+                if (hostLength > 300) {
+                    return false;
+                }
                 byte[] hostBytes = new byte[hostLength];
                 buffer.get(hostBytes);
                 String host = new String(hostBytes, "UTF-8");
@@ -4084,9 +4089,15 @@ public class Nxt extends HttpServlet {
                         {
 
                             int aliasLength = buffer.get();
+                            if (aliasLength > 300) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] alias = new byte[aliasLength];
                             buffer.get(alias);
                             int uriLength = buffer.getShort();
+                            if (uriLength > 5000) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] uri = new byte[uriLength];
                             buffer.get(uri);
 
@@ -4115,9 +4126,15 @@ public class Nxt extends HttpServlet {
                         {
 
                             int nameLength = buffer.get();
+                            if (nameLength > 300) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] name = new byte[nameLength];
                             buffer.get(name);
                             int descriptionLength = buffer.getShort();
+                            if (descriptionLength > 5000) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] description = new byte[descriptionLength];
                             buffer.get(description);
                             int quantity = buffer.getInt();
@@ -6506,8 +6523,15 @@ public class Nxt extends HttpServlet {
                                                         Nxt.accounts.clear();
                                                         Nxt.aliases.clear();
                                                         Nxt.aliasIdToAliasMappings.clear();
+                                                        Nxt.assets.clear();
+                                                        Nxt.assetNameToIdMappings.clear();
+                                                        Nxt.askOrders.clear();
+                                                        Nxt.bidOrders.clear();
+                                                        Nxt.sortedAskOrders.clear();
+                                                        Nxt.sortedBidOrders.clear();
                                                         Nxt.unconfirmedTransactions.clear();
                                                         Nxt.doubleSpendingTransactions.clear();
+                                                        Nxt.nonBroadcastedTransactions.clear();
                                                         //TODO: clean this up
                                                         logMessage("Re-scanning blockchain...");
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
@@ -6961,6 +6985,9 @@ public class Nxt extends HttpServlet {
                                         byte[] publicKey = new byte[32];
                                         buffer.get(publicKey);
                                         int hostLength = buffer.getShort();
+                                        if (hostLength > 300) {
+                                            throw new IllegalArgumentException();
+                                        }
                                         byte[] hostBytes = new byte[hostLength];
                                         buffer.get(hostBytes);
                                         String host = new String(hostBytes, "UTF-8");
