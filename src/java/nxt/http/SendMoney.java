@@ -111,18 +111,10 @@ final class SendMoney extends HttpRequestHandler {
                                             recipient, amount, fee, referencedTransaction);
                                     transaction.sign(secretPhrase);
 
-                                    JSONObject peerRequest = new JSONObject();
-                                    peerRequest.put("requestType", "processTransactions");
-                                    JSONArray transactionsData = new JSONArray();
-                                    transactionsData.add(transaction.getJSONObject());
-                                    peerRequest.put("transactions", transactionsData);
-
-                                    Peer.sendToSomePeers(peerRequest);
+                                    Blockchain.broadcast(transaction);
 
                                     response.put("transaction", transaction.getStringId());
                                     response.put("bytes", Convert.convert(transaction.getBytes()));
-
-                                    Blockchain.broadcast(transaction);
 
                                 }
 

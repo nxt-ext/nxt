@@ -26,6 +26,11 @@ public class Asset {
         Asset.assetNameToAssetMappings.put(name.toLowerCase(), asset);
     }
 
+    static void clear() {
+        assets.clear();
+        assetNameToAssetMappings.clear();
+    }
+
     public final Long assetId;
     public final Long accountId;
     public final String name;

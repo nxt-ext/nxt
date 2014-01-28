@@ -134,17 +134,9 @@ final class IssueAsset extends HttpRequestHandler {
                                                         Genesis.CREATOR_ID, 0, fee, null, attachment);
                                                 transaction.sign(secretPhrase);
 
-                                                JSONObject peerRequest = new JSONObject();
-                                                peerRequest.put("requestType", "processTransactions");
-                                                JSONArray transactionsData = new JSONArray();
-                                                transactionsData.add(transaction.getJSONObject());
-                                                peerRequest.put("transactions", transactionsData);
-
-                                                Peer.sendToSomePeers(peerRequest);
+                                                Blockchain.broadcast(transaction);
 
                                                 response.put("transaction", transaction.getStringId());
-
-                                                Blockchain.broadcast(transaction);
 
                                             }
 

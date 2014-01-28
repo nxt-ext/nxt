@@ -122,18 +122,10 @@ final class SendMoney extends UserRequestHandler {
                     final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
                     transaction.sign(user.getSecretPhrase());
 
-                    JSONObject peerRequest = new JSONObject();
-                    peerRequest.put("requestType", "processTransactions");
-                    JSONArray transactionsData = new JSONArray();
-                    transactionsData.add(transaction.getJSONObject());
-                    peerRequest.put("transactions", transactionsData);
-
-                    Peer.sendToSomePeers(peerRequest);
+                    Blockchain.broadcast(transaction);
 
                     JSONObject response = new JSONObject();
                     response.put("response", "notifyOfAcceptedTransaction");
-
-                    Blockchain.broadcast(transaction);
                     return response;
 
                 }

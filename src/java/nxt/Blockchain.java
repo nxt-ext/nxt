@@ -387,8 +387,11 @@ public final class Blockchain {
 
                                                 Account.clear();
                                                 Alias.clear();
+                                                Asset.clear();
+                                                Order.clear();
                                                 unconfirmedTransactions.clear();
                                                 doubleSpendingTransactions.clear();
+                                                nonBroadcastedTransactions.clear();
                                                 Logger.logMessage("Re-scanning blockchain...");
                                                 Blockchain.scan();
                                                 Logger.logMessage("...Done");
@@ -573,6 +576,15 @@ public final class Blockchain {
     }
 
     public static void broadcast(Transaction transaction) {
+
+        JSONObject peerRequest = new JSONObject();
+        peerRequest.put("requestType", "processTransactions");
+        JSONArray transactionsData = new JSONArray();
+        transactionsData.add(transaction.getJSONObject());
+        peerRequest.put("transactions", transactionsData);
+
+        Peer.sendToSomePeers(peerRequest);
+
         nonBroadcastedTransactions.put(transaction.getId(), transaction);
     }
 

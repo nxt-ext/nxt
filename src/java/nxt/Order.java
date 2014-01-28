@@ -9,6 +9,13 @@ import java.util.concurrent.ConcurrentMap;
 
 public abstract class Order {
 
+    static void clear() {
+        Ask.askOrders.clear();
+        Ask.sortedAskOrders.clear();
+        Bid.bidOrders.clear();
+        Bid.sortedBidOrders.clear();
+    }
+
     // called only from Blockchain.apply(Block) which is already synchronized on Blockchain.class
     private static void matchOrders(Long assetId) {
 
