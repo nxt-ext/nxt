@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -17,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public final class Account {
 
+    private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
 
     public static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
@@ -52,6 +55,7 @@ public final class Account {
     private final AtomicReference<byte[]> publicKey = new AtomicReference<>();
     private long balance;
     private long unconfirmedBalance;
+    private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
     private final Map<Long, Integer> assetBalances = new HashMap<>();
     private final Map<Long, Integer> unconfirmedAssetBalances = new HashMap<>();
@@ -71,42 +75,6 @@ public final class Account {
 
     public synchronized long getUnconfirmedBalance() {
         return unconfirmedBalance;
-    }
-
-    public long getGuaranteedBalance(int numberOfConfirmations) {
-
-        long guaranteedBalance = getBalance();
-        ArrayList<Block> lastBlocks = Blockchain.getLastBlocks(numberOfConfirmations - 1);
-        byte[] accountPublicKey = publicKey.get();
-        for (Block block : lastBlocks) {
-            if (Arrays.equals(block.generatorPublicKey, accountPublicKey)) {
-                if ((guaranteedBalance -= block.totalFee * 100L) <= 0) {
-                    return 0;
-                }
-            }
-
-            Transaction[] blockTransactions = block.getBlockTransactions();
-            for (int i = blockTransactions.length; i-- > 0; ) {
-                Transaction transaction = blockTransactions[i];
-                if (Arrays.equals(transaction.senderPublicKey, accountPublicKey)) {
-                    long deltaBalance = transaction.getSenderDeltaBalance();
-                    if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
-                        return 0;
-                    } else if (deltaBalance < 0 && (guaranteedBalance += deltaBalance) <= 0) {
-                        return 0;
-                    }
-                }
-                if (transaction.recipient.equals(id)) {
-                    long deltaBalance = transaction.getRecipientDeltaBalance();
-                    if (deltaBalance > 0 && (guaranteedBalance -= deltaBalance) <= 0) {
-                        return 0;
-                    } else if (deltaBalance < 0 && (guaranteedBalance += deltaBalance) <= 0) {
-                        return 0;
-                    }
-                }
-            }
-        }
-        return guaranteedBalance;
     }
 
     public int getEffectiveBalance() {
@@ -131,6 +99,31 @@ public final class Account {
         } else {
             return (int)(getGuaranteedBalance(1440) / 100);
         }
+
+    }
+
+    public synchronized long getGuaranteedBalance(final int numberOfConfirmations) {
+        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations >= Blockchain.getLastBlock().getHeight() || numberOfConfirmations < 0) {
+            throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
+        }
+        if (guaranteedBalances.isEmpty()) {
+            return 0;
+        }
+        int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(Blockchain.getLastBlock().getHeight() - numberOfConfirmations, 0));
+        if (i == -1) {
+            return 0;
+        }
+        if (i < -1) {
+            i = -i - 2;
+        }
+        if (i > guaranteedBalances.size() - 1) {
+            i = guaranteedBalances.size() - 1;
+        }
+        GuaranteedBalance result;
+        while ((result = guaranteedBalances.get(i)).ignore && i > 0) {
+            i--;
+        }
+        return result.ignore ? 0 : result.balance;
 
     }
 
@@ -182,6 +175,7 @@ public final class Account {
     void addToBalance(long amount) {
         synchronized (this) {
             this.balance += amount;
+            addToGuaranteedBalance(amount);
         }
         Peer.updatePeerWeights(this);
     }
@@ -197,9 +191,88 @@ public final class Account {
         synchronized (this) {
             this.balance += amount;
             this.unconfirmedBalance += amount;
+            addToGuaranteedBalance(amount);
         }
         Peer.updatePeerWeights(this);
         User.updateUserUnconfirmedBalance(this);
+    }
+
+    private synchronized void addToGuaranteedBalance(long amount) {
+        int blockchainHeight = Blockchain.getLastBlock().getHeight();
+        GuaranteedBalance last = null;
+        if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
+            // this only happens while last block is being popped off
+            if (amount > 0) {
+                // this is a reversal of a withdrawal or a fee, so previous gb records need to be corrected
+                Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
+                while (iter.hasNext()) {
+                    GuaranteedBalance gb = iter.next();
+                    gb.balance += amount;
+                }
+            } // deposits don't need to be reversed as they have never been applied to old gb records to begin with
+            last.ignore = true; // set dirty flag
+            return; // block popped off, no further processing
+        }
+        int trimTo = 0;
+        for (int i = 0; i < guaranteedBalances.size(); i++) {
+            GuaranteedBalance gb = guaranteedBalances.get(i);
+            if (gb.height < blockchainHeight - maxTrackedBalanceConfirmations
+                    && i < guaranteedBalances.size() - 1
+                    && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
+                trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
+            } else if (amount < 0) {
+                gb.balance += amount; // subtract current block withdrawals from all previous gb records
+            }
+            // ignore deposits when updating previous gb records
+        }
+        if (trimTo > 0) {
+            Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
+            while (iter.hasNext() && trimTo > 0) {
+                iter.next();
+                iter.remove();
+                trimTo--;
+            }
+        }
+        if (guaranteedBalances.size() == 0 || last.height < blockchainHeight) {
+            // this is the first transaction affecting this account in a newly added block
+            guaranteedBalances.add(new GuaranteedBalance(blockchainHeight, balance));
+        } else if (last.height == blockchainHeight) {
+            // following transactions for same account in a newly added block
+            // for the current block, guaranteedBalance (0 confirmations) must be same as balance
+            last.balance = balance;
+            last.ignore = false;
+        } else {
+            // should have been handled in the block popped off case
+            throw new IllegalStateException("last guaranteed balance height exceeds blockchain height");
+        }
+    }
+
+    private static class GuaranteedBalance implements Comparable<GuaranteedBalance> {
+
+        final int height;
+        long balance;
+        boolean ignore;
+
+        private GuaranteedBalance(int height, long balance) {
+            this.height = height;
+            this.balance = balance;
+            this.ignore = false;
+        }
+
+        @Override
+        public int compareTo(GuaranteedBalance o) {
+            if (this.height < o.height) {
+                return -1;
+            } else if (this.height > o.height) {
+                return 1;
+            }
+            return 0;
+        }
+
+        @Override
+        public String toString() {
+            return "height: " + height + ", guaranteed: " + balance;
+        }
     }
 
 }
