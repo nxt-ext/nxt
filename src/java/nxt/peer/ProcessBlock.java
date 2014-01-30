@@ -1,16 +1,9 @@
 package nxt.peer;
 
-import nxt.Block;
 import nxt.Blockchain;
-import nxt.Nxt;
-import nxt.Transaction;
 import nxt.util.JSON;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 final class ProcessBlock extends HttpJSONRequestHandler {
 
@@ -35,36 +28,17 @@ final class ProcessBlock extends HttpJSONRequestHandler {
     @Override
     public JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
-        boolean accepted;
+        try {
 
-        Block block = Block.getBlock(request);
+            return Blockchain.pushBlock(request) ? ACCEPTED : NOT_ACCEPTED;
 
-        if (block == null) {
-
-            accepted = false;
+        } catch (IllegalArgumentException e) {
             if (peer != null) {
                 peer.blacklist();
             }
-
-        } else {
-
-            ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            buffer.put(block.getBytes());
-
-            JSONArray transactionsData = (JSONArray)request.get("transactions");
-            for (Object transaction : transactionsData) {
-
-                buffer.put(Transaction.getTransaction((JSONObject) transaction).getBytes());
-
-            }
-
-            accepted = Blockchain.pushBlock(buffer, true);
-
+            return NOT_ACCEPTED;
         }
 
-        return accepted ? ACCEPTED : NOT_ACCEPTED;
     }
 
 }

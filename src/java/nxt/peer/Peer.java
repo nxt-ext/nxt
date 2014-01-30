@@ -39,7 +39,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -230,12 +229,7 @@ public final class Peer implements Comparable<Peer> {
             }
 
             if (peer.blacklistingTime == 0 && peer.state == State.CONNECTED && peer.announcedAddress.length() > 0) {
-                Future<JSONObject> futureResponse = ThreadPools.sendToPeers(new Callable<JSONObject>() {
-                    @Override
-                    public JSONObject call() {
-                        return peer.send(jsonRequest);
-                    }
-                });
+                Future<JSONObject> futureResponse = ThreadPools.sendInParallel(peer, jsonRequest);
                 expectedResponses.add(futureResponse);
             }
             if (expectedResponses.size() >= Nxt.sendToPeersLimit - successful) {

@@ -76,7 +76,7 @@ public final class Blockchain {
                     JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
                     if (response != null) {
 
-                        Blockchain.processTransactions(response, "unconfirmedTransactions");
+                        Blockchain.processUnconfirmedTransactions(response);
 
                     }
 
@@ -275,15 +275,13 @@ public final class Blockchain {
                                                     for (i = 0; i < numberOfBlocks; i++) {
 
                                                         JSONObject blockData = (JSONObject)nextBlocks.get(i);
-                                                        Block block = Block.getBlock(blockData);
-                                                        if (block == null) {
-
-                                                            // peer tried to send us invalid transactions length or payload parameters
+                                                        Block block;
+                                                        try {
+                                                            block = Block.getBlock(blockData);
+                                                        } catch (IllegalArgumentException e) {
                                                             peer.blacklist();
                                                             return;
-
                                                         }
-
                                                         curBlockId = block.getId();
 
                                                         boolean alreadyPushed = false;
@@ -603,9 +601,134 @@ public final class Blockchain {
         return lastBlockchainFeeder;
     }
 
-    public static void processTransactions(JSONObject request, String parameterName) {
+    public static void processTransactions(JSONObject request) {
+        JSONArray transactionsData = (JSONArray)request.get("transactions");
+        processTransactions(transactionsData, false);
+    }
 
-        JSONArray transactionsData = (JSONArray)request.get(parameterName);
+    public static boolean pushBlock(JSONObject request) {
+
+        Block block = Block.getBlock(request);
+        ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength());
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.put(block.getBytes());
+        JSONArray transactionsData = (JSONArray)request.get("transactions");
+        for (Object transaction : transactionsData) {
+            buffer.put(Transaction.getTransaction((JSONObject) transaction).getBytes());
+        }
+        return pushBlock(buffer, true);
+
+    }
+
+    static void addBlock(Block block) {
+        if (block.getPreviousBlock() == null) {
+            blocks.put(block.getId(), block);
+            lastBlock.set(block);
+        } else {
+            if (! lastBlock.compareAndSet(blocks.get(block.getPreviousBlock()), block)) {
+                throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
+            }
+            if (blocks.putIfAbsent(block.getId(), block) != null) {
+                throw new IllegalStateException("duplicate block id: " + block.getId()); // shouldn't happen
+            }
+        }
+    }
+
+    static void init() {
+
+        try {
+
+            Logger.logMessage("Loading transactions...");
+            loadTransactions("transactions.nxt");
+            Logger.logMessage("...Done");
+
+        } catch (FileNotFoundException e) {
+            Logger.logMessage("transactions.nxt not found, starting from scratch");
+            transactions.clear();
+
+            for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
+
+                Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
+                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
+
+                transactions.put(transaction.getId(), transaction);
+
+            }
+
+            for (Transaction transaction : transactions.values()) {
+                transaction.setIndex(transactionCounter.incrementAndGet());
+                transaction.setBlock(Genesis.GENESIS_BLOCK_ID);
+
+            }
+
+            saveTransactions("transactions.nxt");
+
+        }
+
+        try {
+
+            Logger.logMessage("Loading blocks...");
+            loadBlocks("blocks.nxt");
+            Logger.logMessage("...Done");
+
+        } catch (FileNotFoundException e) {
+            Logger.logMessage("blocks.nxt not found, starting from scratch");
+            blocks.clear();
+
+            Block block = new Block(-1, 0, null, transactions.size(), 1000000000, 0, transactions.size() * 128, null,
+                    Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
+            block.setIndex(blockCounter.incrementAndGet());
+
+            int i = 0;
+            for (Long transactionId : transactions.keySet()) {
+
+                block.transactions[i++] = transactionId;
+
+            }
+            Arrays.sort(block.transactions);
+            MessageDigest digest = Crypto.sha256();
+            for (i = 0; i < block.transactions.length; i++) {
+                Transaction transaction = transactions.get(block.transactions[i]);
+                digest.update(transaction.getBytes());
+                block.blockTransactions[i] = transaction;
+            }
+            block.setPayloadHash(digest.digest());
+
+            blocks.put(Genesis.GENESIS_BLOCK_ID, block);
+            lastBlock.set(block);
+
+            saveBlocks("blocks.nxt");
+
+        }
+
+        Logger.logMessage("Scanning blockchain...");
+        Blockchain.scan();
+        Logger.logMessage("...Done");
+    }
+
+    static void shutdown() {
+        try {
+            saveBlocks("blocks.nxt");
+            Logger.logMessage("Saved blocks.nxt");
+        } catch (RuntimeException e) {
+            Logger.logMessage("Error saving blocks", e);
+        }
+
+        try {
+            saveTransactions("transactions.nxt");
+            Logger.logMessage("Saved transactions.nxt");
+        } catch (RuntimeException e) {
+            Logger.logMessage("Error saving transactions", e);
+        }
+    }
+
+    private static void processUnconfirmedTransactions(JSONObject request) {
+        JSONArray transactionsData = (JSONArray)request.get("unconfirmedTransactions");
+        processTransactions(transactionsData, true);
+    }
+
+    private static void processTransactions(JSONArray transactionsData, final boolean unconfirmed) {
+
         JSONArray validTransactionsData = new JSONArray();
 
         for (Object transactionData : transactionsData) {
@@ -645,7 +768,7 @@ public final class Blockchain {
 
                         unconfirmedTransactions.put(id, transaction);
 
-                        if (parameterName.equals("transactions")) {
+                        if (! unconfirmed) {
 
                             validTransactionsData.add(transactionData);
 
@@ -702,7 +825,25 @@ public final class Blockchain {
 
     }
 
-    public static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
+    private synchronized static byte[] calculateTransactionsChecksum() {
+        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(transactions.size(), new Comparator<Transaction>() {
+            @Override
+            public int compare(Transaction o1, Transaction o2) {
+                long id1 = o1.getId();
+                long id2 = o2.getId();
+                return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.getTimestamp() < o2.getTimestamp() ? -1 : (o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)));
+            }
+        });
+        sortedTransactions.addAll(transactions.values());
+        MessageDigest digest = Crypto.sha256();
+        while (! sortedTransactions.isEmpty()) {
+            digest.update(sortedTransactions.poll().getBytes());
+        }
+        return digest.digest();
+    }
+
+    //TODO: elminate the ByteBuffer intermediate
+    private static boolean pushBlock(ByteBuffer buffer, boolean savingFlag) {
 
         Block block;
         JSONArray addedConfirmedTransactions;
@@ -991,125 +1132,6 @@ public final class Blockchain {
         return true;
 
 
-    }
-
-    static void addBlock(Block block) {
-        if (block.getPreviousBlock() == null) {
-            blocks.put(block.getId(), block);
-            lastBlock.set(block);
-        } else {
-            if (! lastBlock.compareAndSet(blocks.get(block.getPreviousBlock()), block)) {
-                throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
-            }
-            if (blocks.putIfAbsent(block.getId(), block) != null) {
-                throw new IllegalStateException("duplicate block id: " + block.getId()); // shouldn't happen
-            }
-        }
-    }
-
-    static void init() {
-
-        try {
-
-            Logger.logMessage("Loading transactions...");
-            loadTransactions("transactions.nxt");
-            Logger.logMessage("...Done");
-
-        } catch (FileNotFoundException e) {
-            Logger.logMessage("transactions.nxt not found, starting from scratch");
-            transactions.clear();
-
-            for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-
-                Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
-                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
-
-                transactions.put(transaction.getId(), transaction);
-
-            }
-
-            for (Transaction transaction : transactions.values()) {
-                transaction.setIndex(transactionCounter.incrementAndGet());
-                transaction.setBlock(Genesis.GENESIS_BLOCK_ID);
-
-            }
-
-            saveTransactions("transactions.nxt");
-
-        }
-
-        try {
-
-            Logger.logMessage("Loading blocks...");
-            loadBlocks("blocks.nxt");
-            Logger.logMessage("...Done");
-
-        } catch (FileNotFoundException e) {
-            Logger.logMessage("blocks.nxt not found, starting from scratch");
-            blocks.clear();
-
-            Block block = new Block(-1, 0, null, transactions.size(), 1000000000, 0, transactions.size() * 128, null,
-                    Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
-            block.setIndex(blockCounter.incrementAndGet());
-
-            int i = 0;
-            for (Long transactionId : transactions.keySet()) {
-
-                block.transactions[i++] = transactionId;
-
-            }
-            Arrays.sort(block.transactions);
-            MessageDigest digest = Crypto.sha256();
-            for (i = 0; i < block.transactions.length; i++) {
-                Transaction transaction = transactions.get(block.transactions[i]);
-                digest.update(transaction.getBytes());
-                block.blockTransactions[i] = transaction;
-            }
-            block.setPayloadHash(digest.digest());
-
-            blocks.put(Genesis.GENESIS_BLOCK_ID, block);
-            lastBlock.set(block);
-
-            saveBlocks("blocks.nxt");
-
-        }
-
-        Logger.logMessage("Scanning blockchain...");
-        Blockchain.scan();
-        Logger.logMessage("...Done");
-    }
-
-    static void shutdown() {
-        try {
-            saveBlocks("blocks.nxt");
-            Logger.logMessage("Saved blocks.nxt");
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error saving blocks", e);
-        }
-
-        try {
-            saveTransactions("transactions.nxt");
-            Logger.logMessage("Saved transactions.nxt");
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error saving transactions", e);
-        }
-    }
-
-    private synchronized static byte[] calculateTransactionsChecksum() {
-        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(transactions.size(), new Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction o1, Transaction o2) {
-                long id1 = o1.getId();
-                long id2 = o2.getId();
-                return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.getTimestamp() < o2.getTimestamp() ? -1 : (o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)));
-            }
-        });
-        sortedTransactions.addAll(transactions.values());
-        MessageDigest digest = Crypto.sha256();
-        while (! sortedTransactions.isEmpty()) {
-            digest.update(sortedTransactions.poll().getBytes());
-        }
-        return digest.digest();
     }
 
     //TODO: handle Aliases, Assets, Messages, Orders on block pop off

@@ -48,7 +48,7 @@ public final class User {
         return user;
     }
 
-    public static void sendToAll(JSONObject response) {
+    public static void sendToAll(JSONStreamAware response) {
         for (User user : User.users.values()) {
             user.send(response);
         }
@@ -86,7 +86,7 @@ public final class User {
         return isInactive;
     }
 
-    public synchronized void send(JSONObject response) {
+    public synchronized void send(JSONStreamAware response) {
         if (asyncContext == null) {
 
             if (isInactive) {

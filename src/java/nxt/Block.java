@@ -32,7 +32,7 @@ public final class Block implements Serializable {
         }
     };
 
-    public static Block getBlock(JSONObject blockData) {
+    static Block getBlock(JSONObject blockData) {
 
         try {
             int version = ((Long)blockData.get("version")).intValue();
@@ -46,23 +46,21 @@ public final class Block implements Serializable {
             byte[] generatorPublicKey = Convert.convert((String) blockData.get("generatorPublicKey"));
             byte[] generationSignature = Convert.convert((String) blockData.get("generationSignature"));
             byte[] blockSignature = Convert.convert((String) blockData.get("blockSignature"));
-
             byte[] previousBlockHash = version == 1 ? null : Convert.convert((String) blockData.get("previousBlockHash"));
-
             if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || payloadLength > Nxt.MAX_PAYLOAD_LENGTH) {
-
-                return null;
-
+                throw new IllegalArgumentException("Invalid number of transactions or payload length");
             }
             return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength,
                     payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (RuntimeException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
             //logDebugMessage("Failed to parse JSON block data");
             //logDebugMessage(blockData.toJSONString());
-            return null;
         }
-    }
 
+    }
 
     private final int version;
     private final int timestamp;
@@ -99,6 +97,7 @@ public final class Block implements Serializable {
 
     }
 
+    /* not public after 0.6.0 */
     public Block(int version, int timestamp, Long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
                  byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
 
@@ -234,7 +233,20 @@ public final class Block implements Serializable {
         return generatorAccountId;
     }
 
-    public byte[] getBytes() {
+    public synchronized JSONStreamAware getJSON() {
+        JSONStreamAware json;
+        if (jsonRef != null) {
+            json = jsonRef.get();
+            if (json != null) {
+                return json;
+            }
+        }
+        json = JSON.prepare(getJSONObject());
+        jsonRef = new SoftReference<>(json);
+        return json;
+    }
+
+    byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -253,19 +265,6 @@ public final class Block implements Serializable {
         }
         buffer.put(blockSignature);
         return buffer.array();
-    }
-
-    public synchronized JSONStreamAware getJSONStreamAware() {
-        JSONStreamAware json;
-        if (jsonRef != null) {
-            json = jsonRef.get();
-            if (json != null) {
-                return json;
-            }
-        }
-        json = JSON.prepare(getJSONObject());
-        jsonRef = new SoftReference<>(json);
-        return json;
     }
 
     JSONObject getJSONObject() {

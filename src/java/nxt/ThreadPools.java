@@ -2,6 +2,8 @@ package nxt;
 
 import nxt.peer.Peer;
 import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -15,8 +17,13 @@ public final class ThreadPools {
     private static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
     private static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
 
-    public static <T> Future<T> sendToPeers(Callable<T> callable) {
-        return sendToPeersService.submit(callable);
+    public static Future<JSONObject> sendInParallel(final Peer peer, final JSONStreamAware jsonRequest) {
+        return sendToPeersService.submit(new Callable<JSONObject>() {
+            @Override
+            public JSONObject call() {
+                return peer.send(jsonRequest);
+            }
+        });
     }
 
     static void start() {

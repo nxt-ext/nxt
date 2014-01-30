@@ -69,7 +69,25 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return transaction;
     }
 
-    public static Transaction getTransaction(JSONObject transactionData) {
+    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                                             int amount, int fee, Long referencedTransaction) {
+        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, null);
+    }
+
+    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                                             int amount, int fee, Long referencedTransaction, Attachment attachment) {
+        Transaction transaction = new Transaction(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipient, amount, fee,
+                referencedTransaction, null);
+        transaction.attachment = attachment;
+        return transaction;
+    }
+
+    static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
+                                      int amount, int fee, Long referencedTransaction, byte[] signature) {
+        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
+    }
+
+    static Transaction getTransaction(JSONObject transactionData) {
 
         byte type = ((Long)transactionData.get("type")).byteValue();
         byte subtype = ((Long)transactionData.get("subtype")).byteValue();
@@ -90,24 +108,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         transaction.loadAttachment(attachmentData);
 
         return transaction;
-    }
-
-    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
-                                             int amount, int fee, Long referencedTransaction) {
-        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, null);
-    }
-
-    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
-                                             int amount, int fee, Long referencedTransaction, Attachment attachment) {
-        Transaction transaction = new Transaction(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipient, amount, fee,
-                referencedTransaction, null);
-        transaction.attachment = attachment;
-        return transaction;
-    }
-
-    static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipient,
-                                      int amount, int fee, Long referencedTransaction, byte[] signature) {
-        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
     }
 
     private final short deadline;
@@ -182,7 +182,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return signature;
     }
 
-    public final Type getType() {
+    public Type getType() {
         return type;
     }
 
@@ -214,23 +214,23 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return attachment;
     }
 
-    public final Long getId() {
+    public Long getId() {
         calculateIds();
         return id;
     }
 
-    public final String getStringId() {
+    public String getStringId() {
         calculateIds();
         return stringId;
     }
 
-    public final Long getSenderAccountId() {
+    public Long getSenderAccountId() {
         calculateIds();
         return senderAccountId;
     }
 
     @Override
-    public final int compareTo(Transaction o) {
+    public int compareTo(Transaction o) {
 
         if (height < o.height) {
 
@@ -285,7 +285,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     }
 
-    public final byte[] getBytes() {
+    public byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(getSize());
         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -306,7 +306,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     }
 
-    public final JSONObject getJSONObject() {
+    public JSONObject getJSONObject() {
 
         JSONObject transaction = new JSONObject();
 
@@ -321,13 +321,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         transaction.put("referencedTransaction", Convert.convert(referencedTransaction));
         transaction.put("signature", Convert.convert(signature));
         if (attachment != null) {
-            transaction.put("attachment", attachment.getJSONObject());
+            transaction.put("attachment", attachment.getJSON());
         }
 
         return transaction;
     }
 
-    public final void sign(String secretPhrase) {
+    public void sign(String secretPhrase) {
 
         if (signature != null) {
             throw new IllegalStateException("Transaction already signed");
@@ -355,11 +355,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     }
 
-    final boolean validateAttachment() {
+    boolean validateAttachment() {
         return type.validateAttachment(this);
     }
 
-    final boolean verify() {
+    boolean verify() {
 
         Account account = Account.getAccount(getSenderAccountId());
         if (account == null) {
@@ -380,26 +380,26 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     }
 
-    final void loadAttachment(ByteBuffer buffer) {
+    void loadAttachment(ByteBuffer buffer) {
         type.loadAttachment(this, buffer);
     }
 
-    final void loadAttachment(JSONObject attachmentData) {
+    void loadAttachment(JSONObject attachmentData) {
         type.loadAttachment(this, attachmentData);
     }
 
     /*
-    final long getRecipientDeltaBalance() {
+    long getRecipientDeltaBalance() {
         return amount * 100L + type.getRecipientDeltaBalance(this);
     }
 
-    final long getSenderDeltaBalance() {
+    long getSenderDeltaBalance() {
         return -(amount + fee) * 100L + type.getSenderDeltaBalance(this);
     }
     */
 
     // returns true iff double spending
-    final boolean isDoubleSpending() {
+    boolean isDoubleSpending() {
         Account senderAccount = Account.getAccount(getSenderAccountId());
         if (senderAccount == null) {
             return true;
@@ -409,7 +409,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         }
     }
 
-    final void apply() {
+    void apply() {
         Account senderAccount = Account.getAccount(getSenderAccountId());
         if (! senderAccount.setOrVerify(senderPublicKey)) {
             throw new RuntimeException("sender public key mismatch");
@@ -423,7 +423,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         type.apply(this, senderAccount, recipientAccount);
     }
 
-    final void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
+    void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
         Long sender = getSenderAccountId();
         Long accumulatedAmount = accumulatedAmounts.get(sender);
         if (accumulatedAmount == null) {
@@ -433,13 +433,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
     }
 
-    final boolean isDuplicate(Map<Type, Set<String>> duplicates) {
+    boolean isDuplicate(Map<Type, Set<String>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }
 
     private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
 
-    final int getSize() {
+    int getSize() {
         return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
     }
 

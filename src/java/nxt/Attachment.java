@@ -3,6 +3,7 @@ package nxt;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -13,7 +14,7 @@ public interface Attachment {
 
     public int getSize();
     public byte[] getBytes();
-    public JSONObject getJSONObject();
+    public JSONStreamAware getJSON();
 
     Transaction.Type getTransactionType();
 
@@ -48,7 +49,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONObject getJSONObject() {
+        public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("message", Convert.convert(message));
@@ -117,7 +118,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONObject getJSONObject() {
+        public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("alias", alias);
@@ -191,7 +192,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONObject getJSONObject() {
+        public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("name", name);
@@ -252,7 +253,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONObject getJSONObject() {
+        public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.convert(asset));
@@ -311,7 +312,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONObject getJSONObject() {
+        public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.convert(asset));
@@ -392,7 +393,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONObject getJSONObject() {
+        public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("order", Convert.convert(order));

@@ -15,7 +15,7 @@ final class ProcessTransactions extends HttpJSONRequestHandler {
     @Override
     public JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
-        Blockchain.processTransactions(request, "transactions");
+        Blockchain.processTransactions(request);
 
         return JSON.emptyJSON;
     }
