@@ -302,6 +302,10 @@ public final class Peer implements Comparable<Peer> {
         return numberOfConnectedPeers;
     }
 
+    private static String truncate(String s, int limit, boolean dots) {
+        return s == null ? "?" : s.length() > limit ? (s.substring(0, limit) + (dots ? "..." : "")) : s;
+    }
+    
 
     public final int index;
     public final String peerAddress;
@@ -417,7 +421,7 @@ public final class Peer implements Comparable<Peer> {
         JSONArray addedBlacklistedPeers = new JSONArray();
         JSONObject addedBlacklistedPeer = new JSONObject();
         addedBlacklistedPeer.put("index", index);
-        addedBlacklistedPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
+        addedBlacklistedPeer.put("announcedAddress", truncate(announcedAddress, 30, true));
         if (Nxt.wellKnownPeers.contains(announcedAddress)) {
             addedBlacklistedPeer.put("wellKnown", true);
         }
@@ -447,7 +451,7 @@ public final class Peer implements Comparable<Peer> {
             JSONArray addedKnownPeers = new JSONArray();
             JSONObject addedKnownPeer = new JSONObject();
             addedKnownPeer.put("index", index);
-            addedKnownPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
+            addedKnownPeer.put("announcedAddress", truncate(announcedAddress, 30, true));
             if (Nxt.wellKnownPeers.contains(announcedAddress)) {
                 addedKnownPeer.put("wellKnown", true);
             }
@@ -472,11 +476,11 @@ public final class Peer implements Comparable<Peer> {
 
     public String getSoftware() {
         StringBuilder buf = new StringBuilder();
-        buf.append(application == null ? "?" : application.substring(0, Math.min(application.length(), 10)));
+        buf.append(truncate(application, 10, false));
         buf.append(" (");
-        buf.append(version == null ? "?" : version.substring(0, Math.min(version.length(), 10)));
+        buf.append(truncate(version, 10, false));
         buf.append(")").append(" @ ");
-        buf.append(platform == null ? "?" : platform.substring(0, Math.min(platform.length(), 12)));
+        buf.append(truncate(platform, 10, false));
         return buf.toString();
     }
 
@@ -497,7 +501,7 @@ public final class Peer implements Comparable<Peer> {
         JSONArray addedKnownPeers = new JSONArray();
         JSONObject addedKnownPeer = new JSONObject();
         addedKnownPeer.put("index", index);
-        addedKnownPeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
+        addedKnownPeer.put("announcedAddress", truncate(announcedAddress, 30, true));
         if (Nxt.wellKnownPeers.contains(announcedAddress)) {
             addedKnownPeer.put("wellKnown", true);
         }
@@ -751,8 +755,8 @@ public final class Peer implements Comparable<Peer> {
             }
 
 
-            addedActivePeer.put("address", peerAddress.length() > 30 ? (peerAddress.substring(0, 30) + "...") : peerAddress);
-            addedActivePeer.put("announcedAddress", announcedAddress.length() > 30 ? (announcedAddress.substring(0, 30) + "...") : announcedAddress);
+            addedActivePeer.put("address", truncate(peerAddress, 30, true));
+            addedActivePeer.put("announcedAddress", truncate(announcedAddress, 30, true));
             addedActivePeer.put("weight", getWeight());
             addedActivePeer.put("downloaded", downloadedVolume);
             addedActivePeer.put("uploaded", uploadedVolume);

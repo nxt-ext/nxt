@@ -1101,6 +1101,7 @@ public final class Blockchain {
         return digest.digest();
     }
 
+    //TODO: handle Aliases, Assets, Messages, Orders on block pop off
     private static boolean popLastBlock() {
 
         try {
