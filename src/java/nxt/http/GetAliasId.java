@@ -3,8 +3,12 @@ package nxt.http;
 import nxt.Alias;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.MISSING_ALIAS;
+import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 
 final class GetAliasId extends HttpRequestHandler {
 
@@ -13,31 +17,20 @@ final class GetAliasId extends HttpRequestHandler {
     private GetAliasId() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String alias = req.getParameter("alias");
         if (alias == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"alias\" not specified");
-
-        } else {
-
-            Alias aliasData = Alias.getAlias(alias.toLowerCase());
-            if (aliasData == null) {
-
-                response.put("errorCode", 5);
-                response.put("errorDescription", "Unknown alias");
-
-            } else {
-
-                response.put("id", Convert.convert(aliasData.id));
-
-            }
-
+            return MISSING_ALIAS;
         }
+
+        Alias aliasData = Alias.getAlias(alias.toLowerCase());
+        if (aliasData == null) {
+            return UNKNOWN_ALIAS;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("id", Convert.convert(aliasData.id));
         return response;
     }
 

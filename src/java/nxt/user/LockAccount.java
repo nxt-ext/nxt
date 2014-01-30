@@ -1,9 +1,11 @@
 package nxt.user;
 
-import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+
+import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
 final class LockAccount extends UserRequestHandler {
 
@@ -12,13 +14,10 @@ final class LockAccount extends UserRequestHandler {
     private LockAccount() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
+    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
 
         user.deinitializeKeyPair();
 
-        JSONObject response = new JSONObject();
-        response.put("response", "lockAccount");
-
-        return response;
+        return LOCK_ACCOUNT;
     }
 }

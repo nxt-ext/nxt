@@ -1,8 +1,6 @@
 package nxt.http;
 
 import nxt.Nxt;
-import nxt.util.JSON;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
@@ -13,6 +11,9 @@ import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
+import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 
 public abstract class HttpRequestHandler {
 
@@ -68,22 +69,6 @@ public abstract class HttpRequestHandler {
         //map.put("placeBidOrder", PlaceBidOrder.instance);
 
         httpGetHandlers = Collections.unmodifiableMap(map);
-    }
-
-    private static final JSONStreamAware ERROR_NOT_ALLOWED;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 7);
-        response.put("errorDescription", "Not allowed");
-        ERROR_NOT_ALLOWED = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware ERROR_INCORRECT_REQUEST;
-    static {
-        JSONObject response  = new JSONObject();
-        response.put("errorCode", 1);
-        response.put("errorDescription", "Incorrect request");
-        ERROR_INCORRECT_REQUEST = JSON.prepare(response);
     }
 
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

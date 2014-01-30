@@ -9,108 +9,29 @@ import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
-import nxt.peer.Peer;
 import nxt.util.Convert;
-import nxt.util.JSON;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ALIAS;
+import static nxt.http.JSONResponses.INCORRECT_ALIAS_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_FEE;
+import static nxt.http.JSONResponses.INCORRECT_URI_LENGTH;
+import static nxt.http.JSONResponses.MISSING_ALIAS;
+import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.MISSING_URI;
+import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 final class AssignAlias extends HttpRequestHandler {
 
     static final AssignAlias instance = new AssignAlias();
 
     private AssignAlias() {}
-
-    private static final JSONStreamAware MISSING_SECRET_PHRASE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"secretPhrase\" not specified");
-        MISSING_SECRET_PHRASE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_ALIAS;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"alias\" not specified");
-        MISSING_ALIAS = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_URI;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"uri\" not specified");
-        MISSING_URI = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_FEE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"fee\" not specified");
-        MISSING_FEE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_DEADLINE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"deadline\" not specified");
-        MISSING_DEADLINE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_DEADLINE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"deadline\"");
-        INVALID_DEADLINE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_FEE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"fee\"");
-        INVALID_FEE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_ALIAS_LENGTH;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"alias\" (length must be in [1..100] range)");
-        INVALID_ALIAS_LENGTH = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_ALIAS;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"alias\" (must contain only digits and latin letters)");
-        INVALID_ALIAS = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_URI_LENGTH;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"uri\" (length must be not longer than 1000 characters)");
-        INVALID_URI_LENGTH = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware NOT_ENOUGH_FUNDS;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 6);
-        response.put("errorDescription", "Not enough funds");
-        NOT_ENOUGH_FUNDS = JSON.prepare(response);
-    }
 
     @Override
     public JSONStreamAware processRequest(HttpServletRequest req) {
@@ -135,39 +56,39 @@ final class AssignAlias extends HttpRequestHandler {
 
         alias = alias.trim();
         if (alias.length() == 0 || alias.length() > Nxt.MAX_ALIAS_LENGTH) {
-            return INVALID_ALIAS_LENGTH;
+            return INCORRECT_ALIAS_LENGTH;
         }
 
         String normalizedAlias = alias.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
             if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
-                return INVALID_ALIAS;
+                return INCORRECT_ALIAS;
             }
         }
 
         uri = uri.trim();
         if (uri.length() > Nxt.MAX_ALIAS_URI_LENGTH) {
-            return INVALID_URI_LENGTH;
+            return INCORRECT_URI_LENGTH;
         }
 
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
             if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
-                return INVALID_FEE;
+                return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
-            return INVALID_FEE;
+            return INCORRECT_FEE;
         }
 
         short deadline;
         try {
             deadline = Short.parseShort(deadlineValue);
             if (deadline < 1) {
-                return INVALID_DEADLINE;
+                return INCORRECT_DEADLINE;
             }
         } catch (NumberFormatException e) {
-            return INVALID_DEADLINE;
+            return INCORRECT_DEADLINE;
         }
 
         Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);

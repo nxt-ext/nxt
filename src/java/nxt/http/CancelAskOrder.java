@@ -8,92 +8,27 @@ import nxt.Nxt;
 import nxt.Order;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
-import nxt.peer.Peer;
 import nxt.util.Convert;
-import nxt.util.JSON;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_FEE;
+import static nxt.http.JSONResponses.INCORRECT_ORDER;
+import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.MISSING_ORDER;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
 final class CancelAskOrder extends HttpRequestHandler {
 
     static final CancelAskOrder instance = new CancelAskOrder();
 
     private CancelAskOrder() {}
-
-    private static final JSONStreamAware MISSING_SECRET_PHRASE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"secretPhrase\" not specified");
-        MISSING_SECRET_PHRASE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_FEE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"fee\" not specified");
-        MISSING_FEE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_FEE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"fee\"");
-        INVALID_FEE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_DEADLINE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"deadline\" not specified");
-        MISSING_DEADLINE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_DEADLINE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"deadline\"");
-        INVALID_DEADLINE = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware MISSING_ORDER;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"order\" not specified");
-        MISSING_ORDER = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_ORDER;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"order\"");
-        INVALID_ORDER = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware UNKNOWN_ORDER;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 5);
-        response.put("errorDescription", "Unknown order");
-        UNKNOWN_ORDER = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware NOT_ENOUGH_FUNDS;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 6);
-        response.put("errorDescription", "Not enough funds");
-        NOT_ENOUGH_FUNDS = JSON.prepare(response);
-    }
 
     @Override
     public JSONStreamAware processRequest(HttpServletRequest req) {
@@ -118,27 +53,27 @@ final class CancelAskOrder extends HttpRequestHandler {
         try {
             order = Convert.parseUnsignedLong(orderValue);
         } catch (RuntimeException e) {
-            return INVALID_ORDER;
+            return INCORRECT_ORDER;
         }
 
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
             if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
-                return INVALID_FEE;
+                return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
-            return INVALID_FEE;
+            return INCORRECT_FEE;
         }
 
         short deadline;
         try {
             deadline = Short.parseShort(deadlineValue);
             if (deadline < 1) {
-                return INVALID_DEADLINE;
+                return INCORRECT_DEADLINE;
             }
         } catch (NumberFormatException e) {
-            return INVALID_DEADLINE;
+            return INCORRECT_DEADLINE;
         }
 
         Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);

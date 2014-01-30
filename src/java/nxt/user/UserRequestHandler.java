@@ -2,6 +2,7 @@ package nxt.user;
 
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +40,7 @@ public abstract class UserRequestHandler {
             if (requestType != null) {
                 UserRequestHandler userRequestHandler = userRequestHandlers.get(requestType);
                 if (userRequestHandler != null) {
-                    JSONObject response = userRequestHandler.processRequest(req, user);
+                    JSONStreamAware response = userRequestHandler.processRequest(req, user);
                     if (response != null) {
                         user.enqueue(response);
                     }
@@ -61,6 +62,6 @@ public abstract class UserRequestHandler {
 
     }
 
-    abstract JSONObject processRequest(HttpServletRequest request, User user) throws IOException;
+    abstract JSONStreamAware processRequest(HttpServletRequest request, User user) throws IOException;
 
 }

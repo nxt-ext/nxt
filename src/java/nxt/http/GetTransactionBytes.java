@@ -5,8 +5,13 @@ import nxt.Blockchain;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION;
+import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
 final class GetTransactionBytes extends HttpRequestHandler {
 
@@ -15,50 +20,34 @@ final class GetTransactionBytes extends HttpRequestHandler {
     private GetTransactionBytes() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String transaction = req.getParameter("transaction");
         if (transaction == null) {
+            return MISSING_TRANSACTION;
+        }
 
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"transaction\" not specified");
+        Long transactionId;
+        Transaction transactionData;
+        try {
+            transactionId = Convert.parseUnsignedLong(transaction);
+            transactionData = Blockchain.getTransaction(transactionId);
+        } catch (RuntimeException e) {
+            return INCORRECT_TRANSACTION;
+        }
 
-        } else {
-
-            try {
-
-                Long transactionId = Convert.parseUnsignedLong(transaction);
-                Transaction transactionData = Blockchain.getTransaction(transactionId);
-                if (transactionData == null) {
-
-                    transactionData = Blockchain.getUnconfirmedTransaction(transactionId);
-                    if (transactionData == null) {
-
-                        response.put("errorCode", 5);
-                        response.put("errorDescription", "Unknown transaction");
-
-                    } else {
-
-                        response.put("bytes", Convert.convert(transactionData.getBytes()));
-
-                    }
-
-                } else {
-
-                    response.put("bytes", Convert.convert(transactionData.getBytes()));
-                    Block block = transactionData.getBlock();
-                    response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"transaction\"");
-
+        JSONObject response = new JSONObject();
+        if (transactionData == null) {
+            transactionData = Blockchain.getUnconfirmedTransaction(transactionId);
+            if (transactionData == null) {
+                return UNKNOWN_TRANSACTION;
+            } else {
+                response.put("bytes", Convert.convert(transactionData.getBytes()));
             }
+        } else {
+            response.put("bytes", Convert.convert(transactionData.getBytes()));
+            Block block = transactionData.getBlock();
+            response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
 
         }
         return response;

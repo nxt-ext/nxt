@@ -9,6 +9,7 @@ import nxt.peer.Peer;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -21,7 +22,7 @@ final class GetInitialData extends UserRequestHandler {
     private GetInitialData() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
+    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
 
         JSONArray unconfirmedTransactions = new JSONArray();
         JSONArray activePeers = new JSONArray(), knownPeers = new JSONArray(), blacklistedPeers = new JSONArray();

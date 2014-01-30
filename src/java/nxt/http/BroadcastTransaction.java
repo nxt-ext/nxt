@@ -2,10 +2,7 @@ package nxt.http;
 
 import nxt.Blockchain;
 import nxt.Transaction;
-import nxt.peer.Peer;
 import nxt.util.Convert;
-import nxt.util.JSON;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -13,27 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import static nxt.http.JSONResponses.INCORRECT_TRANSACTION_BYTES;
+import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES;
+
 final class BroadcastTransaction extends HttpRequestHandler {
 
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {}
-
-    private static final JSONStreamAware MISSING_TRANSACTION_BYTES;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "\"transactionBytes\" not specified");
-        MISSING_TRANSACTION_BYTES = JSON.prepare(response);
-    }
-
-    private static final JSONStreamAware INVALID_TRANSACTION_BYTES;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"transactionBytes\"");
-        INVALID_TRANSACTION_BYTES = JSON.prepare(response);
-    }
 
     @Override
     public JSONStreamAware processRequest(HttpServletRequest req) {
@@ -56,7 +40,7 @@ final class BroadcastTransaction extends HttpRequestHandler {
             return response;
 
         } catch (RuntimeException e) {
-            return INVALID_TRANSACTION_BYTES;
+            return INCORRECT_TRANSACTION_BYTES;
         }
     }
 

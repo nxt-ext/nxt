@@ -6,6 +6,7 @@ import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
@@ -64,7 +65,7 @@ public final class User {
     private volatile String secretPhrase;
     private volatile byte[] publicKey;
     private volatile boolean isInactive;
-    private final ConcurrentLinkedQueue<JSONObject> pendingResponses = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<JSONStreamAware> pendingResponses = new ConcurrentLinkedQueue<>();
     private AsyncContext asyncContext;
 
     User() {}
@@ -104,7 +105,7 @@ public final class User {
         } else {
 
             JSONArray responses = new JSONArray();
-            JSONObject pendingResponse;
+            JSONStreamAware pendingResponse;
             while ((pendingResponse = pendingResponses.poll()) != null) {
 
                 responses.add(pendingResponse);
@@ -132,7 +133,7 @@ public final class User {
 
     public synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         JSONArray responses = new JSONArray();
-        JSONObject pendingResponse;
+        JSONStreamAware pendingResponse;
         while ((pendingResponse = pendingResponses.poll()) != null) {
             responses.add(pendingResponse);
         }
@@ -168,7 +169,7 @@ public final class User {
         }
     }
 
-    void enqueue(JSONObject response) {
+    void enqueue(JSONStreamAware response) {
         pendingResponses.offer(response);
     }
 

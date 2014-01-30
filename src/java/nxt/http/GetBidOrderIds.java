@@ -4,6 +4,7 @@ import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,16 +15,14 @@ final class GetBidOrderIds extends HttpRequestHandler {
     private GetBidOrderIds() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray orderIds = new JSONArray();
         for (Order order : Order.Bid.allBidOrders) {
-
             orderIds.add(Convert.convert(order.id));
-
         }
+
+        JSONObject response = new JSONObject();
         response.put("bidOrderIds", orderIds);
         return response;
     }

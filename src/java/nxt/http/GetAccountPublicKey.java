@@ -2,9 +2,15 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.util.Convert;
+import nxt.util.JSON;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.MISSING_ACCOUNT;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 final class GetAccountPublicKey extends HttpRequestHandler {
 
@@ -13,45 +19,32 @@ final class GetAccountPublicKey extends HttpRequestHandler {
     private GetAccountPublicKey() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
-        JSONObject response = new JSONObject();
+        String accountId = req.getParameter("account");
+        if (accountId == null) {
+            return MISSING_ACCOUNT;
+        }
 
-        String account = req.getParameter("account");
+        Account account;
+        try {
+            account = Account.getAccount(Convert.parseUnsignedLong(accountId));
+        } catch (RuntimeException e) {
+            return INCORRECT_ACCOUNT;
+        }
         if (account == null) {
+            return UNKNOWN_ACCOUNT;
+        }
 
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"account\" not specified");
+        if (account.getPublicKey() != null) {
+
+            JSONObject response = new JSONObject();
+            response.put("publicKey", Convert.convert(account.getPublicKey()));
+            return response;
 
         } else {
-
-            try {
-
-                Account accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-                if (accountData == null) {
-
-                    response.put("errorCode", 5);
-                    response.put("errorDescription", "Unknown account");
-
-                } else {
-
-                    if (accountData.getPublicKey() != null) {
-
-                        response.put("publicKey", Convert.convert(accountData.getPublicKey()));
-
-                    }
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"account\"");
-
-            }
-
+            return JSON.emptyJSON;
         }
-        return response;
     }
 
 }

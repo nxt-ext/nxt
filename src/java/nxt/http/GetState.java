@@ -10,6 +10,7 @@ import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,7 +21,7 @@ final class GetState extends HttpRequestHandler {
     private GetState() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
 
@@ -31,14 +32,10 @@ final class GetState extends HttpRequestHandler {
 
         long totalEffectiveBalance = 0;
         for (Account account : Account.allAccounts) {
-
             long effectiveBalance = account.getEffectiveBalance();
             if (effectiveBalance > 0) {
-
                 totalEffectiveBalance += effectiveBalance;
-
             }
-
         }
         response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
 

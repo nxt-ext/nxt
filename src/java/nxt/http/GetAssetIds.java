@@ -4,6 +4,7 @@ import nxt.Asset;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,18 +15,15 @@ final class GetAssetIds extends HttpRequestHandler {
     private GetAssetIds() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray assetIds = new JSONArray();
         for (Asset asset : Asset.allAssets) {
-
             assetIds.add(Convert.convert(asset.assetId));
-
         }
-        response.put("assetIds", assetIds);
 
+        JSONObject response = new JSONObject();
+        response.put("assetIds", assetIds);
         return response;
     }
 

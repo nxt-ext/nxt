@@ -1,6 +1,7 @@
 package nxt.http;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -11,7 +12,7 @@ final class GetMyInfo extends HttpRequestHandler {
     private GetMyInfo() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
         response.put("host", req.getRemoteHost());

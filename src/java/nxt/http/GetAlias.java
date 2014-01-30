@@ -3,8 +3,13 @@ package nxt.http;
 import nxt.Alias;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ALIAS;
+import static nxt.http.JSONResponses.MISSING_ALIAS;
+import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 
 final class GetAlias extends HttpRequestHandler {
 
@@ -13,48 +18,30 @@ final class GetAlias extends HttpRequestHandler {
     private GetAlias() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String alias = req.getParameter("alias");
         if (alias == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"alias\" not specified");
-
-        } else {
-
-            try {
-
-                Alias aliasData = Alias.getAlias(Convert.parseUnsignedLong(alias));
-                if (aliasData == null) {
-
-                    response.put("errorCode", 5);
-                    response.put("errorDescription", "Unknown alias");
-
-                } else {
-
-                    response.put("account", Convert.convert(aliasData.account.id));
-                    response.put("alias", aliasData.alias);
-                    if (aliasData.getURI().length() > 0) {
-
-                        response.put("uri", aliasData.getURI());
-
-                    }
-                    response.put("timestamp", aliasData.getTimestamp());
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"alias\"");
-
-            }
-
+            return MISSING_ALIAS;
         }
 
+        Alias aliasData;
+        try {
+            aliasData = Alias.getAlias(Convert.parseUnsignedLong(alias));
+            if (aliasData == null) {
+                return UNKNOWN_ALIAS;
+            }
+        } catch (RuntimeException e) {
+            return INCORRECT_ALIAS;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("account", Convert.convert(aliasData.account.id));
+        response.put("alias", aliasData.alias);
+        if (aliasData.getURI().length() > 0) {
+            response.put("uri", aliasData.getURI());
+        }
+        response.put("timestamp", aliasData.getTimestamp());
         return response;
     }
 

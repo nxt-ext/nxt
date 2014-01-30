@@ -3,8 +3,14 @@ package nxt.http;
 import nxt.Account;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.INCORRECT_NUMBER_OF_CONFIRMATIONS;
+import static nxt.http.JSONResponses.MISSING_ACCOUNT;
+import static nxt.http.JSONResponses.MISSING_NUMBER_OF_CONFIRMATIONS;
 
 final class GetGuaranteedBalance extends HttpRequestHandler {
 
@@ -13,55 +19,35 @@ final class GetGuaranteedBalance extends HttpRequestHandler {
     private GetGuaranteedBalance() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String account = req.getParameter("account");
         String numberOfConfirmationsValue = req.getParameter("numberOfConfirmations");
         if (account == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"account\" not specified");
-
+            return MISSING_ACCOUNT;
         } else if (numberOfConfirmationsValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"numberOfConfirmations\" not specified");
-
-        } else {
-
-            try {
-
-                Account accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-                if (accountData == null) {
-
-                    response.put("guaranteedBalance", 0);
-
-                } else {
-
-                    try {
-
-                        int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
-                        response.put("guaranteedBalance", accountData.getGuaranteedBalance(numberOfConfirmations));
-
-                    } catch (Exception e) {
-
-                        response.put("errorCode", 4);
-                        response.put("errorDescription", "Incorrect \"numberOfConfirmations\"");
-
-                    }
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"account\"");
-
-            }
-
+            return MISSING_NUMBER_OF_CONFIRMATIONS;
         }
+
+        Account accountData;
+        try {
+            accountData = Account.getAccount(Convert.parseUnsignedLong(account));
+        } catch (RuntimeException e) {
+            return INCORRECT_ACCOUNT;
+        }
+
+        JSONObject response = new JSONObject();
+        if (accountData == null) {
+            response.put("guaranteedBalance", 0);
+        } else {
+            try {
+                int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
+                response.put("guaranteedBalance", accountData.getGuaranteedBalance(numberOfConfirmations));
+            } catch (NumberFormatException e) {
+                return INCORRECT_NUMBER_OF_CONFIRMATIONS;
+            }
+        }
+
         return response;
     }
 

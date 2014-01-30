@@ -5,8 +5,13 @@ import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.MISSING_ACCOUNT;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 final class GetAccountCurrentBidOrderIds extends HttpRequestHandler {
 
@@ -15,60 +20,39 @@ final class GetAccountCurrentBidOrderIds extends HttpRequestHandler {
     private GetAccountCurrentBidOrderIds() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
-        JSONObject response = new JSONObject();
-        String account = req.getParameter("account");
-        if (account == null) {
+        String accountId = req.getParameter("account");
+        if (accountId == null) {
+            return MISSING_ACCOUNT;
+        }
 
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"account\" not specified");
+        Account account;
+        try {
+            account = Account.getAccount(Convert.parseUnsignedLong(accountId));
+            if (account == null) {
+                return UNKNOWN_ACCOUNT;
+            }
+        } catch (RuntimeException e) {
+            return INCORRECT_ACCOUNT;
+        }
 
-        } else {
+        Long assetId = null;
+        try {
+            assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
+        } catch (Exception e) {
+            // ignored
+        }
 
-            try {
-
-                Account accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-                if (accountData == null) {
-
-                    response.put("errorCode", 5);
-                    response.put("errorDescription", "Unknown account");
-
-                } else {
-
-                    boolean assetIsNotUsed = false;
-                    Long assetId = null;
-                    try {
-
-                        assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
-
-                    } catch (Exception e) {
-
-                        assetIsNotUsed = true;
-
-                    }
-
-                    JSONArray orderIds = new JSONArray();
-                    for (Order.Bid bidOrder : Order.Bid.allBidOrders) {
-
-                        if ((assetIsNotUsed || bidOrder.asset.equals(assetId)) && bidOrder.account == accountData) {
-
-                            orderIds.add(Convert.convert(bidOrder.id));
-
-                        }
-
-                    }
-                    response.put("bidOrderIds", orderIds);
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"account\"");
-
+        JSONArray orderIds = new JSONArray();
+        for (Order.Bid bidOrder : Order.Bid.allBidOrders) {
+            if ((assetId == null || bidOrder.asset.equals(assetId)) && bidOrder.account.id.equals(account.id)) {
+                orderIds.add(Convert.convert(bidOrder.id));
             }
         }
+
+        JSONObject response = new JSONObject();
+        response.put("bidOrderIds", orderIds);
         return response;
     }
 

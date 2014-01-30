@@ -3,8 +3,13 @@ package nxt.http;
 import nxt.Asset;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.MISSING_ASSET;
+import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 final class GetAsset extends HttpRequestHandler {
 
@@ -13,47 +18,30 @@ final class GetAsset extends HttpRequestHandler {
     private GetAsset() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String asset = req.getParameter("asset");
         if (asset == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"asset\" not specified");
-
-        } else {
-
-            try {
-
-                Asset assetData = Asset.getAsset(Convert.parseUnsignedLong(asset));
-                if (assetData == null) {
-
-                    response.put("errorCode", 5);
-                    response.put("errorDescription", "Unknown asset");
-
-                } else {
-
-                    response.put("account", Convert.convert(assetData.accountId));
-                    response.put("name", assetData.name);
-                    if (assetData.description.length() > 0) {
-
-                        response.put("description", assetData.description);
-
-                    }
-                    response.put("quantity", assetData.quantity);
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"asset\"");
-
-            }
-
+            return MISSING_ASSET;
         }
+
+        Asset assetData;
+        try {
+            assetData = Asset.getAsset(Convert.parseUnsignedLong(asset));
+            if (assetData == null) {
+                return UNKNOWN_ASSET;
+            }
+        } catch (Exception e) {
+            return INCORRECT_ASSET;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("account", Convert.convert(assetData.accountId));
+        response.put("name", assetData.name);
+        if (assetData.description.length() > 0) {
+            response.put("description", assetData.description);
+        }
+        response.put("quantity", assetData.quantity);
 
         return response;
     }

@@ -10,12 +10,15 @@ import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Arrays;
+
+import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
 final class UnlockAccount extends UserRequestHandler {
 
@@ -24,16 +27,14 @@ final class UnlockAccount extends UserRequestHandler {
     private UnlockAccount() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
+    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
         // lock all other instances of this account being unlocked
         for (User u : User.allUsers) {
             if (secretPhrase.equals(u.getSecretPhrase())) {
                 u.deinitializeKeyPair();
                 if (! u.isInactive()) {
-                    JSONObject response = new JSONObject();
-                    response.put("response", "lockAccount");
-                    u.enqueue(response);
+                    u.enqueue(LOCK_ACCOUNT);
                 }
             }
         }

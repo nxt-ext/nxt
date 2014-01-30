@@ -4,8 +4,12 @@ import nxt.Alias;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
+import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 
 final class GetAliasIds extends HttpRequestHandler {
 
@@ -14,44 +18,33 @@ final class GetAliasIds extends HttpRequestHandler {
     private GetAliasIds() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String timestampValue = req.getParameter("timestamp");
         if (timestampValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"timestamp\" not specified");
-
-        } else {
-
-            try {
-
-                int timestamp = Integer.parseInt(timestampValue);
-                if (timestamp < 0) {
-
-                    throw new Exception();
-
-                }
-
-                JSONArray aliasIds = new JSONArray();
-                for (Alias alias : Alias.allAliases) {
-                    if (alias.getTimestamp() >= timestamp) {
-                        aliasIds.add(Convert.convert(alias.id));
-                    }
-                }
-
-                response.put("aliasIds", aliasIds);
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"timestamp\"");
-
-            }
-
+            return MISSING_TIMESTAMP;
         }
+
+        int timestamp;
+        try {
+            timestamp = Integer.parseInt(timestampValue);
+            if (timestamp < 0) {
+                return INCORRECT_TIMESTAMP;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_TIMESTAMP;
+        }
+
+        JSONArray aliasIds = new JSONArray();
+        for (Alias alias : Alias.allAliases) {
+            if (alias.getTimestamp() >= timestamp) {
+                aliasIds.add(Convert.convert(alias.id));
+            }
+        }
+
+        JSONObject response = new JSONObject();
+
+        response.put("aliasIds", aliasIds);
         return response;
     }
 

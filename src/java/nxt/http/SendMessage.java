@@ -6,12 +6,23 @@ import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
-import nxt.peer.Peer;
 import nxt.util.Convert;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
+import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_FEE;
+import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
+import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.MISSING_MESSAGE;
+import static nxt.http.JSONResponses.MISSING_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 final class SendMessage extends HttpRequestHandler {
 
@@ -20,9 +31,7 @@ final class SendMessage extends HttpRequestHandler {
     private SendMessage() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String recipientValue = req.getParameter("recipient");
@@ -31,121 +40,79 @@ final class SendMessage extends HttpRequestHandler {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionValue = req.getParameter("referencedTransaction");
         if (secretPhrase == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"secretPhrase\" not specified");
-
+            return MISSING_SECRET_PHRASE;
         } else if (recipientValue == null || "0".equals(recipientValue)) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"recipient\" not specified");
-
+            return MISSING_RECIPIENT;
         } else if (messageValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"message\" not specified");
-
+            return MISSING_MESSAGE;
         } else if (feeValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"fee\" not specified");
-
+            return MISSING_FEE;
         } else if (deadlineValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"deadline\" not specified");
-
-        } else {
-
-            try {
-
-                Long recipient = Convert.parseUnsignedLong(recipientValue);
-
-                try {
-
-                    byte[] message = Convert.convert(messageValue);
-                    if (message.length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
-
-                        response.put("errorCode", 4);
-                        response.put("errorDescription", "Incorrect \"message\" (length must be not longer than " + Nxt.MAX_ARBITRARY_MESSAGE_LENGTH + " bytes)");
-
-                    } else {
-
-                        try {
-
-                            int fee = Integer.parseInt(feeValue);
-                            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
-
-                                throw new Exception();
-
-                            }
-
-                            try {
-
-                                short deadline = Short.parseShort(deadlineValue);
-                                if (deadline < 1) {
-
-                                    throw new Exception();
-
-                                }
-
-                                Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
-
-                                byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-
-                                Account account = Account.getAccount(publicKey);
-                                if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
-
-                                    response.put("errorCode", 6);
-                                    response.put("errorDescription", "Not enough funds");
-
-                                } else {
-
-                                    int timestamp = Convert.getEpochTime();
-
-                                    Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
-                                    Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
-                                            recipient, 0, fee, referencedTransaction, attachment);
-                                    transaction.sign(secretPhrase);
-
-                                    Blockchain.broadcast(transaction);
-
-                                    response.put("transaction", transaction.getStringId());
-                                    response.put("bytes", Convert.convert(transaction.getBytes()));
-
-                                }
-
-                            } catch (Exception e) {
-
-                                response.put("errorCode", 4);
-                                response.put("errorDescription", "Incorrect \"deadline\"");
-
-                            }
-
-                        } catch (Exception e) {
-
-                            response.put("errorCode", 4);
-                            response.put("errorDescription", "Incorrect \"fee\"");
-
-                        }
-
-                    }
-
-                } catch (Exception e) {
-
-                    response.put("errorCode", 4);
-                    response.put("errorDescription", "Incorrect \"message\"");
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"recipient\"");
-
-            }
-
+            return MISSING_DEADLINE;
         }
+
+        Long recipient;
+        try {
+            recipient = Convert.parseUnsignedLong(recipientValue);
+        } catch (RuntimeException e) {
+            return INCORRECT_RECIPIENT;
+        }
+
+        byte[] message;
+        try {
+            message = Convert.convert(messageValue);
+        } catch (RuntimeException e) {
+            return INCORRECT_ARBITRARY_MESSAGE;
+        }
+        if (message.length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            return INCORRECT_ARBITRARY_MESSAGE;
+        }
+
+        int fee;
+        try {
+            fee = Integer.parseInt(feeValue);
+            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
+                return INCORRECT_FEE;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_FEE;
+        }
+
+        short deadline;
+        try {
+            deadline = Short.parseShort(deadlineValue);
+            if (deadline < 1) {
+                return INCORRECT_DEADLINE;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_DEADLINE;
+        }
+
+        Long referencedTransaction;
+        try {
+            referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
+        } catch (RuntimeException e) {
+            return INCORRECT_REFERENCED_TRANSACTION;
+        }
+
+        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+
+        Account account = Account.getAccount(publicKey);
+        if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
+            return NOT_ENOUGH_FUNDS;
+        }
+        int timestamp = Convert.getEpochTime();
+
+        Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
+        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+                recipient, 0, fee, referencedTransaction, attachment);
+        transaction.sign(secretPhrase);
+
+        Blockchain.broadcast(transaction);
+
+        JSONObject response = new JSONObject();
+        response.put("transaction", transaction.getStringId());
+        response.put("bytes", Convert.convert(transaction.getBytes()));
 
         return response;
     }

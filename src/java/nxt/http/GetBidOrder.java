@@ -3,8 +3,13 @@ package nxt.http;
 import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ORDER;
+import static nxt.http.JSONResponses.MISSING_ORDER;
+import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
 final class GetBidOrder extends HttpRequestHandler {
 
@@ -13,45 +18,31 @@ final class GetBidOrder extends HttpRequestHandler {
     private GetBidOrder() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String order = req.getParameter("order");
         if (order == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"order\" not specified");
-
-        } else {
-
-            try {
-
-                Order.Bid orderData = Order.Bid.getBidOrder(Convert.parseUnsignedLong(order));
-                if (orderData == null) {
-
-                    response.put("errorCode", 5);
-                    response.put("errorDescription", "Unknown bid order");
-
-                } else {
-
-                    response.put("account", Convert.convert(orderData.account.id));
-                    response.put("asset", Convert.convert(orderData.asset));
-                    response.put("quantity", orderData.getQuantity());
-                    response.put("price", orderData.price);
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"order\"");
-
-            }
-
+            return MISSING_ORDER;
         }
 
+        Order.Bid orderData;
+        try {
+            orderData = Order.Bid.getBidOrder(Convert.parseUnsignedLong(order));
+            if (orderData == null) {
+                return UNKNOWN_ORDER;
+            }
+        } catch (RuntimeException e) {
+            return INCORRECT_ORDER;
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("account", Convert.convert(orderData.account.id));
+        response.put("asset", Convert.convert(orderData.asset));
+        response.put("quantity", orderData.getQuantity());
+        response.put("price", orderData.price);
+
         return response;
+
     }
 
 }

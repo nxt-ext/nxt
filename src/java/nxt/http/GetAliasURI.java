@@ -1,9 +1,14 @@
 package nxt.http;
 
 import nxt.Alias;
+import nxt.util.JSON;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.MISSING_ALIAS;
+import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 
 final class GetAliasURI extends HttpRequestHandler {
 
@@ -12,36 +17,27 @@ final class GetAliasURI extends HttpRequestHandler {
     private GetAliasURI() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String alias = req.getParameter("alias");
         if (alias == null) {
+            return MISSING_ALIAS;
+        }
 
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"alias\" not specified");
+        Alias aliasData = Alias.getAlias(alias.toLowerCase());
+        if (aliasData == null) {
+            return UNKNOWN_ALIAS;
+        }
+
+        if (aliasData.getURI().length() > 0) {
+
+            JSONObject response = new JSONObject();
+            response.put("uri", aliasData.getURI());
+            return response;
 
         } else {
-
-            Alias aliasData = Alias.getAlias(alias.toLowerCase());
-            if (aliasData == null) {
-
-                response.put("errorCode", 5);
-                response.put("errorDescription", "Unknown alias");
-
-            } else {
-
-                if (aliasData.getURI().length() > 0) {
-
-                    response.put("uri", aliasData.getURI());
-
-                }
-
-            }
-
+            return JSON.emptyJSON;
         }
-        return response;
     }
 
 }

@@ -1,10 +1,14 @@
 package nxt.http;
 
+import nxt.Account;
 import nxt.crypto.Crypto;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.math.BigInteger;
+
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
 final class GetAccountId extends HttpRequestHandler {
 
@@ -13,24 +17,18 @@ final class GetAccountId extends HttpRequestHandler {
     private GetAccountId() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String secretPhrase = req.getParameter("secretPhrase");
         if (secretPhrase == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"secretPhrase\" not specified");
-
-        } else {
-
-            byte[] publicKeyHash = Crypto.sha256().digest(Crypto.getPublicKey(secretPhrase));
-            BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5],
-                    publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
-            response.put("accountId", bigInteger.toString());
-
+            return MISSING_SECRET_PHRASE;
         }
+
+        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+
+        JSONObject response = new JSONObject();
+        response.put("accountId", Convert.convert(Account.getId(publicKey)));
+
         return response;
     }
 

@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -12,10 +13,9 @@ final class GetTime extends HttpRequestHandler {
     private GetTime() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
-
         response.put("time", Convert.getEpochTime());
 
         return response;

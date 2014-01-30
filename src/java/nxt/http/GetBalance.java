@@ -3,8 +3,12 @@ package nxt.http;
 import nxt.Account;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 
 final class GetBalance extends HttpRequestHandler {
 
@@ -13,44 +17,33 @@ final class GetBalance extends HttpRequestHandler {
     private GetBalance() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String account = req.getParameter("account");
         if (account == null) {
+            return MISSING_ACCOUNT;
+        }
 
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"account\" not specified");
+        Account accountData;
+        try {
+            accountData = Account.getAccount(Convert.parseUnsignedLong(account));
+        } catch (RuntimeException e) {
+            return INCORRECT_ACCOUNT;
+        }
+
+        JSONObject response = new JSONObject();
+        if (accountData == null) {
+
+            response.put("balance", 0);
+            response.put("unconfirmedBalance", 0);
+            response.put("effectiveBalance", 0);
 
         } else {
 
-            try {
-
-                Account accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-                if (accountData == null) {
-
-                    response.put("balance", 0);
-                    response.put("unconfirmedBalance", 0);
-                    response.put("effectiveBalance", 0);
-
-                } else {
-
-                    synchronized (accountData) {
-
-                        response.put("balance", accountData.getBalance());
-                        response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
-                        response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
-
-                    }
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"account\"");
-
+            synchronized (accountData) {
+                response.put("balance", accountData.getBalance());
+                response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
+                response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
             }
 
         }

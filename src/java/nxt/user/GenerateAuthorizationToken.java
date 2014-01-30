@@ -3,9 +3,12 @@ package nxt.user;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+
+import static nxt.user.JSONResponses.INVALID_SECRET_PHRASE;
 
 final class GenerateAuthorizationToken extends UserRequestHandler {
 
@@ -14,13 +17,10 @@ final class GenerateAuthorizationToken extends UserRequestHandler {
     private GenerateAuthorizationToken() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req, User user) throws IOException {
+    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
         if (! user.getSecretPhrase().equals(secretPhrase)) {
-            JSONObject response = new JSONObject();
-            response.put("response", "showMessage");
-            response.put("message", "Invalid secret phrase!");
-            return response;
+            return INVALID_SECRET_PHRASE;
         }
         byte[] website = req.getParameter("website").trim().getBytes("UTF-8");
         byte[] data = new byte[website.length + 32 + 4];

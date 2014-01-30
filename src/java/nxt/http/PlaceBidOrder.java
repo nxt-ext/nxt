@@ -7,12 +7,25 @@ import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
-import nxt.peer.Peer;
 import nxt.util.Convert;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+
+import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_FEE;
+import static nxt.http.JSONResponses.INCORRECT_PRICE;
+import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
+import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
+import static nxt.http.JSONResponses.MISSING_ASSET;
+import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.MISSING_PRICE;
+import static nxt.http.JSONResponses.MISSING_QUANTITY;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 final class PlaceBidOrder extends HttpRequestHandler {
 
@@ -21,9 +34,7 @@ final class PlaceBidOrder extends HttpRequestHandler {
     private PlaceBidOrder() {}
 
     @Override
-    public JSONObject processRequest(HttpServletRequest req) {
-
-        JSONObject response = new JSONObject();
+    public JSONStreamAware processRequest(HttpServletRequest req) {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String assetValue = req.getParameter("asset");
@@ -33,147 +44,91 @@ final class PlaceBidOrder extends HttpRequestHandler {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionValue = req.getParameter("referencedTransaction");
         if (secretPhrase == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"secretPhrase\" not specified");
-
+            return MISSING_SECRET_PHRASE;
         } else if (assetValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"asset\" not specified");
-
+            return MISSING_ASSET;
         } else if (quantityValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"quantity\" not specified");
-
+            return MISSING_QUANTITY;
         } else if (priceValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"price\" not specified");
-
+            return MISSING_PRICE;
         } else if (feeValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"fee\" not specified");
-
+            return MISSING_FEE;
         } else if (deadlineValue == null) {
-
-            response.put("errorCode", 3);
-            response.put("errorDescription", "\"deadline\" not specified");
-
-        } else {
-
-            try {
-
-                long price = Long.parseLong(priceValue);
-                if (price <= 0 || price > Nxt.MAX_BALANCE * 100L) {
-
-                    throw new Exception();
-
-                }
-
-                try {
-
-                    Long asset = Convert.parseUnsignedLong(assetValue);
-
-                    try {
-
-                        int quantity = Integer.parseInt(quantityValue);
-                        if (quantity <= 0 || quantity >= Nxt.MAX_ASSET_QUANTITY) {
-
-                            throw new Exception();
-
-                        }
-
-                        try {
-
-                            int fee = Integer.parseInt(feeValue);
-                            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
-
-                                throw new Exception();
-
-                            }
-
-                            try {
-
-                                short deadline = Short.parseShort(deadlineValue);
-                                if (deadline < 1) {
-
-                                    throw new Exception();
-
-                                }
-
-                                Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
-
-                                byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-
-                                Account account = Account.getAccount(publicKey);
-                                if (account == null) {
-
-                                    response.put("errorCode", 6);
-                                    response.put("errorDescription", "Not enough funds");
-
-                                } else {
-
-                                    if (quantity * price + fee * 100L > account.getUnconfirmedBalance()) {
-
-                                        response.put("errorCode", 6);
-                                        response.put("errorDescription", "Not enough funds");
-
-                                    } else {
-
-                                        int timestamp = Convert.getEpochTime();
-
-                                        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
-                                        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
-                                                Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
-                                        transaction.sign(secretPhrase);
-
-                                        Blockchain.broadcast(transaction);
-
-                                        response.put("transaction", transaction.getStringId());
-
-                                    }
-
-                                }
-
-                            } catch (Exception e) {
-
-                                response.put("errorCode", 4);
-                                response.put("errorDescription", "Incorrect \"deadline\"");
-
-                            }
-
-                        } catch (Exception e) {
-
-                            response.put("errorCode", 4);
-                            response.put("errorDescription", "Incorrect \"fee\"");
-
-                        }
-
-                    } catch (Exception e) {
-
-                        response.put("errorCode", 4);
-                        response.put("errorDescription", "Incorrect \"quantity\"");
-
-                    }
-
-                } catch (Exception e) {
-
-                    response.put("errorCode", 4);
-                    response.put("errorDescription", "Incorrect \"asset\"");
-
-                }
-
-            } catch (Exception e) {
-
-                response.put("errorCode", 4);
-                response.put("errorDescription", "Incorrect \"price\"");
-
-            }
-
+            return MISSING_DEADLINE;
         }
+
+        long price;
+        try {
+            price = Long.parseLong(priceValue);
+            if (price <= 0 || price > Nxt.MAX_BALANCE * 100L) {
+                return INCORRECT_PRICE;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_PRICE;
+        }
+
+        Long asset;
+        try {
+            asset = Convert.parseUnsignedLong(assetValue);
+        } catch (NumberFormatException e) {
+            return INCORRECT_ASSET;
+        }
+
+        int quantity;
+        try {
+            quantity = Integer.parseInt(quantityValue);
+            if (quantity <= 0 || quantity >= Nxt.MAX_ASSET_QUANTITY) {
+                return INCORRECT_QUANTITY;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_QUANTITY;
+        }
+
+        int fee;
+        try {
+            fee = Integer.parseInt(feeValue);
+            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
+                return INCORRECT_FEE;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_FEE;
+        }
+
+        short deadline;
+        try {
+            deadline = Short.parseShort(deadlineValue);
+            if (deadline < 1) {
+                return INCORRECT_DEADLINE;
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_DEADLINE;
+        }
+
+        Long referencedTransaction;
+        try {
+            referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
+        } catch (RuntimeException e) {
+            return INCORRECT_REFERENCED_TRANSACTION;
+        }
+
+        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+
+        Account account = Account.getAccount(publicKey);
+        if (account == null || quantity * price + fee * 100L > account.getUnconfirmedBalance()) {
+            return NOT_ENOUGH_FUNDS;
+        }
+
+        int timestamp = Convert.getEpochTime();
+
+        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
+        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+                Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        transaction.sign(secretPhrase);
+
+        Blockchain.broadcast(transaction);
+
+        JSONObject response = new JSONObject();
+        response.put("transaction", transaction.getStringId());
         return response;
     }
 
