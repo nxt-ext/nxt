@@ -64,20 +64,20 @@ public final class Block implements Serializable {
 
     private final int version;
     private final int timestamp;
-    private final Long previousBlock;
+    private final Long previousBlockId;
     private final byte[] generatorPublicKey;
     private final byte[] previousBlockHash;
     private final int totalAmount;
     private final int totalFee;
     private final int payloadLength;
-    final Long[] transactions;
+    final Long[] transactionIds;
 
     transient Transaction[] blockTransactions;
 
     /*private after 0.6.0*/
     public BigInteger cumulativeDifficulty = BigInteger.ZERO;
     public long baseTarget = Nxt.initialBaseTarget;
-    public volatile Long nextBlock;
+    public volatile Long nextBlockId;
     public int index;
     public int height;
     /**/
@@ -89,16 +89,16 @@ public final class Block implements Serializable {
     private transient volatile Long generatorAccountId;
     private transient SoftReference<JSONStreamAware> jsonRef;
 
-    Block(int version, int timestamp, Long previousBlock, int numberOfTransactions, int totalAmount, int totalFee,
+    Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee,
           int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
 
-        this(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
+        this(version, timestamp, previousBlockId, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
                 generatorPublicKey, generationSignature, blockSignature, null);
 
     }
 
     /* not public after 0.6.0 */
-    public Block(int version, int timestamp, Long previousBlock, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
+    public Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
                  byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
 
         if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
@@ -111,7 +111,7 @@ public final class Block implements Serializable {
 
         this.version = version;
         this.timestamp = timestamp;
-        this.previousBlock = previousBlock;
+        this.previousBlockId = previousBlockId;
         this.totalAmount = totalAmount;
         this.totalFee = totalFee;
         this.payloadLength = payloadLength;
@@ -121,7 +121,7 @@ public final class Block implements Serializable {
         this.blockSignature = blockSignature;
 
         this.previousBlockHash = previousBlockHash;
-        this.transactions = numberOfTransactions == 0 ? emptyLong : new Long[numberOfTransactions];
+        this.transactionIds = numberOfTransactions == 0 ? emptyLong : new Long[numberOfTransactions];
         this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
 
     }
@@ -134,8 +134,8 @@ public final class Block implements Serializable {
         return timestamp;
     }
 
-    public Long getPreviousBlock() {
-        return previousBlock;
+    public Long getPreviousBlockId() {
+        return previousBlockId;
     }
 
     public byte[] getGeneratorPublicKey() {
@@ -158,8 +158,8 @@ public final class Block implements Serializable {
         return payloadLength;
     }
 
-    public Long[] getTransactions() {
-        return transactions;
+    public Long[] getTransactionIds() {
+        return transactionIds;
     }
 
     public byte[] getPayloadHash() {
@@ -186,7 +186,7 @@ public final class Block implements Serializable {
         this.blockSignature = blockSignature;
     }
 
-    public Transaction[] getBlockTransactions() {
+    public Transaction[] getTransactions() {
         return blockTransactions;
     }
 
@@ -198,8 +198,8 @@ public final class Block implements Serializable {
         return cumulativeDifficulty;
     }
 
-    public Long getNextBlock() {
-        return nextBlock;
+    public Long getNextBlockId() {
+        return nextBlockId;
     }
 
     public int getIndex() {
@@ -246,14 +246,24 @@ public final class Block implements Serializable {
         return json;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Block && this.getId().equals(((Block)o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
     byte[] getBytes() {
 
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(version);
         buffer.putInt(timestamp);
-        buffer.putLong(Convert.nullToZero(previousBlock));
-        buffer.putInt(transactions.length);
+        buffer.putLong(Convert.nullToZero(previousBlockId));
+        buffer.putInt(transactionIds.length);
         buffer.putInt(totalAmount);
         buffer.putInt(totalFee);
         buffer.putInt(payloadLength);
@@ -273,8 +283,8 @@ public final class Block implements Serializable {
 
         block.put("version", version);
         block.put("timestamp", timestamp);
-        block.put("previousBlock", Convert.convert(previousBlock));
-        block.put("numberOfTransactions", transactions.length);
+        block.put("previousBlock", Convert.convert(previousBlockId));
+        block.put("numberOfTransactions", transactionIds.length);
         block.put("totalAmount", totalAmount);
         block.put("totalFee", totalFee);
         block.put("payloadLength", payloadLength);
@@ -321,7 +331,7 @@ public final class Block implements Serializable {
 
         try {
 
-            Block previousBlock = Blockchain.getBlock(this.previousBlock);
+            Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             if (previousBlock == null) {
 
                 return false;
@@ -377,14 +387,14 @@ public final class Block implements Serializable {
 
     void apply() {
 
-        for (int i = 0; i < transactions.length; i++) {
-            blockTransactions[i] = Blockchain.getTransaction(transactions[i]);
+        for (int i = 0; i < transactionIds.length; i++) {
+            blockTransactions[i] = Blockchain.getTransaction(transactionIds[i]);
             if (blockTransactions[i] == null) {
-                throw new IllegalStateException("Missing transaction " + Convert.convert(transactions[i]));
+                throw new IllegalStateException("Missing transaction " + Convert.convert(transactionIds[i]));
             }
         }
 
-        if (previousBlock == null && getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+        if (previousBlockId == null && getId().equals(Genesis.GENESIS_BLOCK_ID)) {
 
             calculateBaseTarget();
             Blockchain.addBlock(this);
@@ -393,7 +403,7 @@ public final class Block implements Serializable {
 
             Block previousLastBlock = Blockchain.getLastBlock();
 
-            previousLastBlock.nextBlock = getId();
+            previousLastBlock.nextBlockId = getId();
             height = previousLastBlock.height + 1;
             calculateBaseTarget();
             Blockchain.addBlock(this);
@@ -417,11 +427,11 @@ public final class Block implements Serializable {
 
     private void calculateBaseTarget() {
 
-        if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlock == null) {
+        if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlockId == null) {
             baseTarget = Nxt.initialBaseTarget;
             cumulativeDifficulty = BigInteger.ZERO;
         } else {
-            Block previousBlock = Blockchain.getBlock(this.previousBlock);
+            Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
@@ -460,7 +470,7 @@ public final class Block implements Serializable {
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        this.blockTransactions = transactions.length == 0 ? emptyTransactions : new Transaction[transactions.length];
+        this.blockTransactions = transactionIds.length == 0 ? emptyTransactions : new Transaction[transactionIds.length];
     }
 
 }

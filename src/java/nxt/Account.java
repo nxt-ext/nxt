@@ -97,7 +97,7 @@ public final class Account {
             }
             int receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.blockTransactions) {
-                if (transaction.getRecipient().equals(id)) {
+                if (transaction.getRecipientId().equals(id)) {
                     receivedInlastBlock += transaction.getAmount();
                 }
             }
@@ -136,6 +136,16 @@ public final class Account {
 
     public synchronized Integer getUnconfirmedAssetBalance(Long assetId) {
         return unconfirmedAssetBalances.get(assetId);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Account && this.getId().equals(((Account)o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
     }
 
     // returns true iff:

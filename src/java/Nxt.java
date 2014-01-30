@@ -34,7 +34,7 @@ final class Nxt {
                             amount, fee, Convert.zeroToNull(referencedTransaction));
             transaction.signature = signature;
             transaction.index = index;
-            transaction.block = Convert.zeroToNull(block);
+            transaction.blockId = Convert.zeroToNull(block);
             transaction.height = height;
             return transaction;
         }
@@ -184,11 +184,11 @@ final class Nxt {
                     totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
             block.index = index;
             for (int i = 0 ; i < transactions.length; i++) {
-                block.getTransactions()[i] = transactions[i];
+                block.getTransactionIds()[i] = transactions[i];
             }
             block.baseTarget = baseTarget;
             block.height = height;
-            block.nextBlock = Convert.zeroToNull(nextBlock);
+            block.nextBlockId = Convert.zeroToNull(nextBlock);
             block.cumulativeDifficulty = cumulativeDifficulty;
             return block;
         }

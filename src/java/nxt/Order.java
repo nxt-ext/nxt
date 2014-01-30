@@ -58,7 +58,7 @@ public abstract class Order {
 
     private final Long id;
     private final Account account;
-    private final Long asset;
+    private final Long assetId;
     private final long price;
     private final long height;
 
@@ -67,7 +67,7 @@ public abstract class Order {
     private Order(Long id, Account account, Long assetId, int quantity, long price) {
         this.id = id;
         this.account = account;
-        this.asset = assetId;
+        this.assetId = assetId;
         this.quantity = quantity;
         this.price = price;
         this.height = Blockchain.getLastBlock().getHeight();
@@ -81,8 +81,8 @@ public abstract class Order {
         return account;
     }
 
-    public Long getAsset() {
-        return asset;
+    public Long getAssetId() {
+        return assetId;
     }
 
     public long getPrice() {
@@ -160,7 +160,7 @@ public abstract class Order {
 
         static Ask removeOrder(Long orderId) {
             Ask askOrder = askOrders.remove(orderId);
-            sortedAskOrders.get(askOrder.getAsset()).remove(askOrder);
+            sortedAskOrders.get(askOrder.getAssetId()).remove(askOrder);
             return askOrder;
         }
 
@@ -186,6 +186,17 @@ public abstract class Order {
             }
 
         }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Ask && this.getId().equals(((Ask)o).getId());
+        }
+
+        @Override
+        public int hashCode() {
+            return getId().hashCode();
+        }
+
     }
 
     public static final class Bid extends Order implements Comparable<Bid> {
@@ -221,7 +232,7 @@ public abstract class Order {
 
         static Bid removeOrder(Long orderId) {
             Bid bidOrder = bidOrders.remove(orderId);
-            sortedBidOrders.get(bidOrder.getAsset()).remove(bidOrder);
+            sortedBidOrders.get(bidOrder.getAssetId()).remove(bidOrder);
             return bidOrder;
         }
 
@@ -246,6 +257,16 @@ public abstract class Order {
 
             }
 
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Bid && this.getId().equals(((Bid)o).getId());
+        }
+
+        @Override
+        public int hashCode() {
+            return getId().hashCode();
         }
 
     }

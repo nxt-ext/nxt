@@ -15,22 +15,22 @@ public final class Alias {
         return allAliases;
     }
 
-    public static Alias getAlias(String alias) {
-        return aliases.get(alias);
+    public static Alias getAlias(String aliasName) {
+        return aliases.get(aliasName);
     }
 
     public static Alias getAlias(Long id) {
         return aliasIdToAliasMappings.get(id);
     }
 
-    static void addOrUpdateAlias(Account account, Long transactionId, String alias, String uri, int timestamp) {
-        String normalizedAlias = alias.toLowerCase();
-        Alias newAlias = new Alias(account, transactionId, alias, uri, timestamp);
+    static void addOrUpdateAlias(Account account, Long transactionId, String aliasName, String aliasURI, int timestamp) {
+        String normalizedAlias = aliasName.toLowerCase();
+        Alias newAlias = new Alias(account, transactionId, aliasName, aliasURI, timestamp);
         Alias oldAlias = aliases.putIfAbsent(normalizedAlias, newAlias);
         if (oldAlias == null) {
             aliasIdToAliasMappings.putIfAbsent(transactionId, newAlias);
         } else {
-            oldAlias.uri = uri;
+            oldAlias.aliasURI = aliasURI;
             oldAlias.timestamp = timestamp;
         }
     }
@@ -42,16 +42,16 @@ public final class Alias {
 
     private final Account account;
     private final Long id;
-    private final String alias;
-    private volatile String uri;
+    private final String aliasName;
+    private volatile String aliasURI;
     private volatile int timestamp;
 
-    private Alias(Account account, Long id, String alias, String uri, int timestamp) {
+    private Alias(Account account, Long id, String aliasName, String aliasURI, int timestamp) {
 
         this.account = account;
         this.id = id;
-        this.alias = alias;
-        this.uri = uri;
+        this.aliasName = aliasName;
+        this.aliasURI = aliasURI;
         this.timestamp = timestamp;
 
     }
@@ -60,12 +60,12 @@ public final class Alias {
         return id;
     }
 
-    public String getAlias() {
-        return alias;
+    public String getAliasName() {
+        return aliasName;
     }
 
     public String getURI() {
-        return uri;
+        return aliasURI;
     }
 
     public int getTimestamp() {
@@ -74,6 +74,16 @@ public final class Alias {
 
     public Account getAccount() {
         return account;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Alias && this.getId().equals(((Alias)o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
     }
 
 }

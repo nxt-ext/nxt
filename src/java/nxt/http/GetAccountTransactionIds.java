@@ -71,7 +71,7 @@ final class GetAccountTransactionIds extends HttpRequestHandler {
         PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(11, Transaction.timestampComparator);
         byte[] accountPublicKey = account.getPublicKey();
         for (Transaction transaction : Blockchain.getAllTransactions()) {
-            if ((transaction.getRecipient().equals(account.getId()) || Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey))
+            if ((transaction.getRecipientId().equals(account.getId()) || Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey))
                     && (type < 0 || transaction.getType().getType() == type) && (subtype < 0 || transaction.getType().getSubtype() == subtype)
                     && transaction.getBlock().getTimestamp() >= timestamp) {
                 sortedTransactions.offer(transaction);

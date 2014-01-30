@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class Asset {
+public final class Asset {
 
     private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, Asset> assetNameToAssetMappings = new ConcurrentHashMap<>();
@@ -48,7 +48,7 @@ public class Asset {
         this.quantity = quantity;
     }
 
-    public Long getAssetId() {
+    public Long getId() {
         return assetId;
     }
 
@@ -67,4 +67,15 @@ public class Asset {
     public int getQuantity() {
         return quantity;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Asset && this.getId().equals(((Asset) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
 }

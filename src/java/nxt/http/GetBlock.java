@@ -41,17 +41,17 @@ final class GetBlock extends HttpRequestHandler {
         response.put("height", blockData.getHeight());
         response.put("generator", Convert.convert(blockData.getGeneratorAccountId()));
         response.put("timestamp", blockData.getTimestamp());
-        response.put("numberOfTransactions", blockData.getTransactions().length);
+        response.put("numberOfTransactions", blockData.getTransactionIds().length);
         response.put("totalAmount", blockData.getTotalAmount());
         response.put("totalFee", blockData.getTotalFee());
         response.put("payloadLength", blockData.getPayloadLength());
         response.put("version", blockData.getVersion());
         response.put("baseTarget", Convert.convert(blockData.getBaseTarget()));
-        if (blockData.getPreviousBlock() != null) {
-            response.put("previousBlock", Convert.convert(blockData.getPreviousBlock()));
+        if (blockData.getPreviousBlockId() != null) {
+            response.put("previousBlock", Convert.convert(blockData.getPreviousBlockId()));
         }
-        if (blockData.getNextBlock() != null) {
-            response.put("nextBlock", Convert.convert(blockData.getNextBlock()));
+        if (blockData.getNextBlockId() != null) {
+            response.put("nextBlock", Convert.convert(blockData.getNextBlockId()));
         }
         response.put("payloadHash", Convert.convert(blockData.getPayloadHash()));
         response.put("generationSignature", Convert.convert(blockData.getGenerationSignature()));
@@ -60,7 +60,7 @@ final class GetBlock extends HttpRequestHandler {
         }
         response.put("blockSignature", Convert.convert(blockData.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Long transactionId : blockData.getTransactions()) {
+        for (Long transactionId : blockData.getTransactionIds()) {
             transactions.add(Convert.convert(transactionId));
         }
         response.put("transactions", transactions);

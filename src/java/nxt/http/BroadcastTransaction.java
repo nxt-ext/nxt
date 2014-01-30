@@ -7,8 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION_BYTES;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES;
@@ -29,9 +27,8 @@ final class BroadcastTransaction extends HttpRequestHandler {
 
         try {
 
-            ByteBuffer buffer = ByteBuffer.wrap(Convert.convert(transactionBytes));
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            Transaction transaction = Transaction.getTransaction(buffer);
+            byte[] bytes = Convert.convert(transactionBytes);
+            Transaction transaction = Transaction.getTransaction(bytes);
 
             Blockchain.broadcast(transaction);
 

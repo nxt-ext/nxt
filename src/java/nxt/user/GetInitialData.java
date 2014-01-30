@@ -34,7 +34,7 @@ final class GetInitialData extends UserRequestHandler {
             unconfirmedTransaction.put("index", transaction.getIndex());
             unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
             unconfirmedTransaction.put("deadline", transaction.getDeadline());
-            unconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipient()));
+            unconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
             unconfirmedTransaction.put("amount", transaction.getAmount());
             unconfirmedTransaction.put("fee", transaction.getFee());
             unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
@@ -108,7 +108,7 @@ final class GetInitialData extends UserRequestHandler {
             JSONObject recentBlock = new JSONObject();
             recentBlock.put("index", block.getIndex());
             recentBlock.put("timestamp", block.getTimestamp());
-            recentBlock.put("numberOfTransactions", block.getTransactions().length);
+            recentBlock.put("numberOfTransactions", block.getTransactionIds().length);
             recentBlock.put("totalAmount", block.getTotalAmount());
             recentBlock.put("totalFee", block.getTotalFee());
             recentBlock.put("payloadLength", block.getPayloadLength());
@@ -125,7 +125,7 @@ final class GetInitialData extends UserRequestHandler {
                 break;
             }
 
-            blockId = block.getPreviousBlock();
+            blockId = block.getPreviousBlockId();
 
         }
 

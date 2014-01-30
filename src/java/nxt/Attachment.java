@@ -72,20 +72,20 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        private final String alias;
-        private final String uri;
+        private final String aliasName;
+        private final String aliasURI;
 
-        public MessagingAliasAssignment(String alias, String uri) {
+        public MessagingAliasAssignment(String aliasName, String aliasURI) {
 
-            this.alias = alias;
-            this.uri = uri;
+            this.aliasName = aliasName;
+            this.aliasURI = aliasURI;
 
         }
 
         @Override
         public int getSize() {
             try {
-                return 1 + alias.getBytes("UTF-8").length + 2 + uri.getBytes("UTF-8").length;
+                return 1 + aliasName.getBytes("UTF-8").length + 2 + aliasURI.getBytes("UTF-8").length;
             } catch (RuntimeException|UnsupportedEncodingException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -97,8 +97,8 @@ public interface Attachment {
 
             try {
 
-                byte[] alias = this.alias.getBytes("UTF-8");
-                byte[] uri = this.uri.getBytes("UTF-8");
+                byte[] alias = this.aliasName.getBytes("UTF-8");
+                byte[] uri = this.aliasURI.getBytes("UTF-8");
 
                 ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -121,8 +121,8 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("alias", alias);
-            attachment.put("uri", uri);
+            attachment.put("alias", aliasName);
+            attachment.put("uri", aliasURI);
 
             return attachment;
 
@@ -133,12 +133,12 @@ public interface Attachment {
             return Transaction.Type.Messaging.ALIAS_ASSIGNMENT;
         }
 
-        public String getAlias() {
-            return alias;
+        public String getAliasName() {
+            return aliasName;
         }
 
-        public String getUri() {
-            return uri;
+        public String getAliasURI() {
+            return aliasURI;
         }
     }
 
@@ -225,12 +225,12 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        private final Long asset;
+        private final Long assetId;
         private final int quantity;
 
-        public ColoredCoinsAssetTransfer(Long asset, int quantity) {
+        public ColoredCoinsAssetTransfer(Long assetId, int quantity) {
 
-            this.asset = asset;
+            this.assetId = assetId;
             this.quantity = quantity;
 
         }
@@ -245,7 +245,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(Convert.nullToZero(asset));
+            buffer.putLong(Convert.nullToZero(assetId));
             buffer.putInt(quantity);
 
             return buffer.array();
@@ -256,7 +256,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
+            attachment.put("asset", Convert.convert(assetId));
             attachment.put("quantity", quantity);
 
             return attachment;
@@ -269,7 +269,7 @@ public interface Attachment {
         }
 
         public Long getAsset() {
-            return asset;
+            return assetId;
         }
 
         public int getQuantity() {
@@ -281,13 +281,13 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        private final Long asset;
+        private final Long assetId;
         private final int quantity;
         private final long price;
 
-        private ColoredCoinsOrderPlacement(Long asset, int quantity, long price) {
+        private ColoredCoinsOrderPlacement(Long assetId, int quantity, long price) {
 
-            this.asset = asset;
+            this.assetId = assetId;
             this.quantity = quantity;
             this.price = price;
 
@@ -303,7 +303,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(Convert.nullToZero(asset));
+            buffer.putLong(Convert.nullToZero(assetId));
             buffer.putInt(quantity);
             buffer.putLong(price);
 
@@ -315,7 +315,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(asset));
+            attachment.put("asset", Convert.convert(assetId));
             attachment.put("quantity", quantity);
             attachment.put("price", price);
 
@@ -324,7 +324,7 @@ public interface Attachment {
         }
 
         public Long getAsset() {
-            return asset;
+            return assetId;
         }
 
         public int getQuantity() {
@@ -340,8 +340,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsAskOrderPlacement(Long asset, int quantity, long price) {
-            super(asset, quantity, price);
+        public ColoredCoinsAskOrderPlacement(Long assetId, int quantity, long price) {
+            super(assetId, quantity, price);
         }
 
         @Override
@@ -355,8 +355,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsBidOrderPlacement(Long asset, int quantity, long price) {
-            super(asset, quantity, price);
+        public ColoredCoinsBidOrderPlacement(Long assetId, int quantity, long price) {
+            super(assetId, quantity, price);
         }
 
         @Override
@@ -370,10 +370,10 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        private final Long order;
+        private final Long orderId;
 
-        private ColoredCoinsOrderCancellation(Long order) {
-            this.order = order;
+        private ColoredCoinsOrderCancellation(Long orderId) {
+            this.orderId = orderId;
         }
 
         @Override
@@ -386,7 +386,7 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(Convert.nullToZero(order));
+            buffer.putLong(Convert.nullToZero(orderId));
 
             return buffer.array();
 
@@ -396,14 +396,14 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(order));
+            attachment.put("order", Convert.convert(orderId));
 
             return attachment;
 
         }
 
         public Long getOrder() {
-            return order;
+            return orderId;
         }
     }
 
@@ -411,8 +411,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsAskOrderCancellation(Long order) {
-            super(order);
+        public ColoredCoinsAskOrderCancellation(Long orderId) {
+            super(orderId);
         }
 
         @Override
@@ -426,8 +426,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsBidOrderCancellation(Long order) {
-            super(order);
+        public ColoredCoinsBidOrderCancellation(Long orderId) {
+            super(orderId);
         }
 
         @Override

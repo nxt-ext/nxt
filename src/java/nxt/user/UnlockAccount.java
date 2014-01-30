@@ -102,9 +102,9 @@ final class UnlockAccount extends UserRequestHandler {
                     myTransaction.put("index", transaction.getIndex());
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
-                    myTransaction.put("account", Convert.convert(transaction.getRecipient()));
+                    myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
                     myTransaction.put("sentAmount", transaction.getAmount());
-                    if (accountId.equals(transaction.getRecipient())) {
+                    if (accountId.equals(transaction.getRecipientId())) {
 
                         myTransaction.put("receivedAmount", transaction.getAmount());
 
@@ -115,7 +115,7 @@ final class UnlockAccount extends UserRequestHandler {
 
                     myTransactions.add(myTransaction);
 
-                } else if (accountId.equals(transaction.getRecipient())) {
+                } else if (accountId.equals(transaction.getRecipientId())) {
 
                     JSONObject myTransaction = new JSONObject();
                     myTransaction.put("index", transaction.getIndex());
@@ -153,7 +153,7 @@ final class UnlockAccount extends UserRequestHandler {
 
                 }
 
-                for (Transaction transaction : block.getBlockTransactions()) {
+                for (Transaction transaction : block.getTransactions()) {
 
                     if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
 
@@ -161,9 +161,9 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransaction.put("index", transaction.getIndex());
                         myTransaction.put("blockTimestamp", block.getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.convert(transaction.getRecipient()));
+                        myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
                         myTransaction.put("sentAmount", transaction.getAmount());
-                        if (accountId.equals(transaction.getRecipient())) {
+                        if (accountId.equals(transaction.getRecipientId())) {
 
                             myTransaction.put("receivedAmount", transaction.getAmount());
 
@@ -174,7 +174,7 @@ final class UnlockAccount extends UserRequestHandler {
 
                         myTransactions.add(myTransaction);
 
-                    } else if (accountId.equals(transaction.getRecipient())) {
+                    } else if (accountId.equals(transaction.getRecipientId())) {
 
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", transaction.getIndex());
@@ -192,7 +192,7 @@ final class UnlockAccount extends UserRequestHandler {
                 if (blockId.equals(Genesis.GENESIS_BLOCK_ID)) {
                     break;
                 }
-                blockId = block.getPreviousBlock();
+                blockId = block.getPreviousBlockId();
                 numberOfConfirmations++;
             }
             if (myTransactions.size() > 0) {
