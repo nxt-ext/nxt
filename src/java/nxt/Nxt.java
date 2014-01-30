@@ -340,7 +340,6 @@ public final class Nxt extends HttpServlet {
 
     }
 
-    //TODO: clean up Exception and error handling as part of the refactoring
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
@@ -352,32 +351,28 @@ public final class Nxt extends HttpServlet {
         try {
 
             String userPasscode = req.getParameter("user");
+
             if (userPasscode == null) {
-
                 HttpRequestHandler.process(req, resp);
-
                 return;
-
-            } else {
-
-                if (Nxt.allowedUserHosts != null && !Nxt.allowedUserHosts.contains(req.getRemoteHost())) {
-                    JSONObject response = new JSONObject();
-                    response.put("response", "denyAccess");
-                    JSONArray responses = new JSONArray();
-                    responses.add(response);
-                    JSONObject combinedResponse = new JSONObject();
-                    combinedResponse.put("responses", responses);
-                    resp.setContentType("text/plain; charset=UTF-8");
-                    try (Writer writer = resp.getWriter()) {
-                        combinedResponse.writeJSONString(writer);
-                    }
-                    return;
-                }
-
-                user = User.getUser(userPasscode);
-                UserRequestHandler.process(req, user);
-
             }
+
+            if (Nxt.allowedUserHosts != null && !Nxt.allowedUserHosts.contains(req.getRemoteHost())) {
+                JSONObject response = new JSONObject();
+                response.put("response", "denyAccess");
+                JSONArray responses = new JSONArray();
+                responses.add(response);
+                JSONObject combinedResponse = new JSONObject();
+                combinedResponse.put("responses", responses);
+                resp.setContentType("text/plain; charset=UTF-8");
+                try (Writer writer = resp.getWriter()) {
+                    combinedResponse.writeJSONString(writer);
+                }
+                return;
+            }
+
+            user = User.getUser(userPasscode);
+            UserRequestHandler.process(req, user);
 
         } catch (Exception e) {
             if (user != null) {

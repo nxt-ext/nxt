@@ -996,26 +996,6 @@ public final class Blockchain {
         }
     }
 
-    static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
-
-        ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
-
-        Long curBlock = lastBlock.get().getId();
-        do {
-
-            Block block = blocks.get(curBlock);
-            if (block == null) {
-                break;
-            }
-            lastBlocks.add(block);
-            curBlock = block.previousBlock;
-
-        } while (lastBlocks.size() < numberOfBlocks && curBlock != null);
-
-        return lastBlocks;
-
-    }
-
     static void init() {
 
         try {

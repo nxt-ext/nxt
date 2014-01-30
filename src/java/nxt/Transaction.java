@@ -356,6 +356,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         type.loadAttachment(this, attachmentData);
     }
 
+    /*
     final long getRecipientDeltaBalance() {
         return amount * 100L + type.getRecipientDeltaBalance(this);
     }
@@ -363,6 +364,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     final long getSenderDeltaBalance() {
         return -(amount + fee) * 100L + type.getSenderDeltaBalance(this);
     }
+    */
 
     // returns true iff double spending
     final boolean isDoubleSpending() {
@@ -508,10 +510,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             return false;
         }
 
-        abstract long getRecipientDeltaBalance(Transaction transaction);
-
-        abstract long getSenderDeltaBalance(Transaction transaction);
-
         public static abstract class Payment extends Type {
 
             @Override
@@ -524,16 +522,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
             @Override
             final void loadAttachment(Transaction transaction, JSONObject attachmentData) {}
-
-            @Override
-            final long getRecipientDeltaBalance(Transaction transaction) {
-                return 0;
-            }
-
-            @Override
-            final long getSenderDeltaBalance(Transaction transaction) {
-                return 0;
-            }
 
             public static final Type ORDINARY = new Payment() {
 
@@ -579,16 +567,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
-
-            @Override
-            final long getRecipientDeltaBalance(Transaction transaction) {
-                return 0;
-            }
-
-            @Override
-            final long getSenderDeltaBalance(Transaction transaction) {
-                return 0;
-            }
 
             public final static Type ARBITRARY_MESSAGE = new Messaging() {
 
@@ -801,15 +779,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
-                @Override
-                final long getRecipientDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
-
-                @Override
-                final long getSenderDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
             };
 
             public static final Type ASSET_TRANSFER = new ColoredCoins() {
@@ -875,15 +844,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
                 }
 
-                @Override
-                final long getRecipientDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
-
-                @Override
-                final long getSenderDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
             };
 
             abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
@@ -963,15 +923,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
                 }
 
-                @Override
-                final long getRecipientDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
-
-                @Override
-                final long getSenderDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
             };
 
             public final static Type BID_ORDER_PLACEMENT = new ColoredCoinsOrderPlacement() {
@@ -1011,6 +962,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     accumulatedAmounts.put(transaction.getSenderAccountId(), accumulatedAmount + attachment.quantity * attachment.price);
                 }
 
+                /*
                 @Override
                 final long getRecipientDeltaBalance(Transaction transaction) {
                     return 0;
@@ -1021,6 +973,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
                     return -attachment.quantity * attachment.price;
                 }
+                */
+
             };
 
             abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
@@ -1066,15 +1020,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.getQuantity());
                 }
 
-                @Override
-                final long getRecipientDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
-
-                @Override
-                final long getSenderDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
             };
 
             public static final Type BID_ORDER_CANCELLATION = new ColoredCoinsOrderCancellation() {
@@ -1101,6 +1046,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.price);
                 }
 
+                /*
                 @Override
                 final long getRecipientDeltaBalance(Transaction transaction) {
                     return 0;
@@ -1115,6 +1061,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     }
                     return bidOrder.getQuantity() * bidOrder.price;
                 }
+                */
+                
             };
         }
     }
