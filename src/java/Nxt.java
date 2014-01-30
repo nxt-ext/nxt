@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.10";
+    static final String VERSION = "0.5.11";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -573,10 +573,118 @@ public class Nxt extends HttpServlet {
             return balance;
         }
 
-        long getGuaranteedBalance(int numberOfConfirmations) {
+        static class GuaranteedBalance implements Comparable<GuaranteedBalance> {
+
+            final int height;
+            long balance;
+            boolean ignore;
+
+            GuaranteedBalance(int height, long balance) {
+                this.height = height;
+                this.balance = balance;
+                this.ignore = false;
+            }
+
+            @Override
+            public int compareTo(GuaranteedBalance o) {
+                if (this.height < o.height) {
+                    return -1;
+                } else if (this.height > o.height) {
+                    return 1;
+                }
+                return 0;
+            }
+
+            @Override
+            public String toString() {
+                return "height: " + height + ", guaranteed: " + balance;
+            }
+        }
+
+        private synchronized void addToGuaranteedBalance(long amount) {
+            int blockchainHeight = lastBlock.get().height;
+            GuaranteedBalance last = null;
+            if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
+                // this only happens while last block is being popped off
+                if (amount > 0) {
+                    // this is a reversal of a withdrawal or a fee, so previous gb records need to be corrected
+                    Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
+                    while (iter.hasNext()) {
+                        GuaranteedBalance gb = iter.next();
+                        gb.balance += amount;
+                    }
+                } // deposits don't need to be reversed as they have never been applied to old gb records to begin with
+                last.ignore = true; // set dirty flag
+                return; // block popped off, no further processing
+            }
+            int trimTo = 0;
+            for (int i = 0; i < guaranteedBalances.size(); i++) {
+                GuaranteedBalance gb = guaranteedBalances.get(i);
+                if (gb.height < blockchainHeight - maxNumberOfConfirmations
+                        && i < guaranteedBalances.size() - 1
+                        && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxNumberOfConfirmations) {
+                    trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxNumberOfConfirmations
+                } else if (amount < 0) {
+                    gb.balance += amount; // subtract current block withdrawals from all previous gb records
+                }
+                // ignore deposits when updating previous gb records
+            }
+            if (trimTo > 0) {
+                Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
+                while (iter.hasNext() && trimTo > 0) {
+                    iter.next();
+                    iter.remove();
+                    trimTo--;
+                }
+            }
+            if (guaranteedBalances.size() == 0 || last.height < blockchainHeight) {
+                // this is the first transaction affecting this account in a newly added block
+                guaranteedBalances.add(new GuaranteedBalance(blockchainHeight, balance));
+            } else if (last.height == blockchainHeight) {
+                // following transactions for same account in a newly added block
+                // for the current block, guaranteedBalance (0 confirmations) must be same as balance
+                last.balance = balance;
+                last.ignore = false;
+            } else {
+                // should have been handled in the block popped off case
+                throw new IllegalStateException("last guaranteed balance height exceeds blockchain height");
+            }
+        }
+
+        private static final int maxNumberOfConfirmations = 2881;
+
+        private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
+
+        synchronized long getGuaranteedBalance(final int numberOfConfirmations) {
+            if (numberOfConfirmations > maxNumberOfConfirmations || numberOfConfirmations >= lastBlock.get().height || numberOfConfirmations < 0) {
+                throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxNumberOfConfirmations);
+            }
+            if (guaranteedBalances.isEmpty()) {
+                return 0;
+            }
+            int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(lastBlock.get().height - numberOfConfirmations, 0));
+            if (i == -1) {
+                return 0;
+            }
+            if (i < -1) {
+                i = -i - 2;
+            }
+            if (i > guaranteedBalances.size() - 1) {
+                i = guaranteedBalances.size() - 1;
+            }
+            GuaranteedBalance result;
+            while ((result = guaranteedBalances.get(i)).ignore && i > 0) {
+                i--;
+            }
+            return result.ignore ? 0 : result.balance;
+
+        }
+
+/*
+        long getGuaranteedBalanceOLD(int numberOfConfirmations) {
 
             long guaranteedBalance = getBalance();
-            ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations - 1);
+            ArrayList<Block> lastBlocks = Block.getLastBlocks(numberOfConfirmations);
             byte[] accountPublicKey = publicKey.get();
             for (Block block : lastBlocks) {
 
@@ -629,6 +737,7 @@ public class Nxt extends HttpServlet {
             return guaranteedBalance;
 
         }
+*/
 
         synchronized long getUnconfirmedBalance() {
             return unconfirmedBalance;
@@ -639,6 +748,7 @@ public class Nxt extends HttpServlet {
             synchronized (this) {
 
                 this.balance += amount;
+                addToGuaranteedBalance(amount);
 
             }
 
@@ -664,6 +774,7 @@ public class Nxt extends HttpServlet {
 
                 this.balance += amount;
                 this.unconfirmedBalance += amount;
+                addToGuaranteedBalance(amount);
 
             }
 
@@ -959,7 +1070,10 @@ public class Nxt extends HttpServlet {
                     blocks.put(GENESIS_BLOCK_ID, this);
                     lastBlock.set(this);
 
-                    Account.addAccount(CREATOR_ID);
+                    Account generatorAccount = Account.addAccount(CREATOR_ID);
+                    if (! generatorAccount.setOrVerify(CREATOR_PUBLIC_KEY)) {
+                        throw new IllegalStateException("Creator public key mismatch");
+                    }
 
                 } else {
 
@@ -969,14 +1083,17 @@ public class Nxt extends HttpServlet {
                     height = previousLastBlock.height + 1;
                     baseTarget = calculateBaseTarget();
                     cumulativeDifficulty = previousLastBlock.cumulativeDifficulty.add(two64.divide(BigInteger.valueOf(baseTarget)));
+                    Account generatorAccount = accounts.get(getGeneratorAccountId());
+                    if (! generatorAccount.setOrVerify(generatorPublicKey)) {
+                        throw new IllegalStateException("Block generator public key mismatch");
+                    }
                     if (! (previousLastBlock.getId() == previousBlock && lastBlock.compareAndSet(previousLastBlock, this))) {
                         throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
                     }
-                    Account generatorAccount = accounts.get(getGeneratorAccountId());
-                    generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
                     if (blocks.putIfAbsent(getId(), this) != null) {
                         throw new IllegalStateException("duplicate block id: " + getId()); // shouldn't happen
                     }
+                    generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
                 }
 
                 for (Transaction transaction : this.blockTransactions) {
@@ -1341,22 +1458,20 @@ public class Nxt extends HttpServlet {
             return json;
         }
 
+        /*
         static ArrayList<Block> getLastBlocks(int numberOfBlocks) {
 
             ArrayList<Block> lastBlocks = new ArrayList<>(numberOfBlocks);
-
             long curBlock = lastBlock.get().getId();
-            do {
-
+            while (lastBlocks.size() < numberOfBlocks && curBlock != 0) {
                 Block block = blocks.get(curBlock);
                 lastBlocks.add(block);
                 curBlock = block.previousBlock;
-
-            } while (lastBlocks.size() < numberOfBlocks && curBlock != 0);
-
+            }
             return lastBlocks;
 
         }
+        */
 
         public static final Comparator<Block> heightComparator = new Comparator<Block>() {
             @Override
@@ -3089,6 +3204,9 @@ public class Nxt extends HttpServlet {
                 byte[] publicKey = new byte[32];
                 buffer.get(publicKey);
                 int hostLength = buffer.getShort();
+                if (hostLength > 300) {
+                    return false;
+                }
                 byte[] hostBytes = new byte[hostLength];
                 buffer.get(hostBytes);
                 String host = new String(hostBytes, "UTF-8");
@@ -4084,9 +4202,15 @@ public class Nxt extends HttpServlet {
                         {
 
                             int aliasLength = buffer.get();
+                            if (aliasLength > 300) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] alias = new byte[aliasLength];
                             buffer.get(alias);
                             int uriLength = buffer.getShort();
+                            if (uriLength > 5000) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] uri = new byte[uriLength];
                             buffer.get(uri);
 
@@ -4115,9 +4239,15 @@ public class Nxt extends HttpServlet {
                         {
 
                             int nameLength = buffer.get();
+                            if (nameLength > 300) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] name = new byte[nameLength];
                             buffer.get(name);
                             int descriptionLength = buffer.getShort();
+                            if (descriptionLength > 5000) {
+                                throw new IllegalArgumentException();
+                            }
                             byte[] description = new byte[descriptionLength];
                             buffer.get(description);
                             int quantity = buffer.getInt();
@@ -6506,8 +6636,15 @@ public class Nxt extends HttpServlet {
                                                         Nxt.accounts.clear();
                                                         Nxt.aliases.clear();
                                                         Nxt.aliasIdToAliasMappings.clear();
+                                                        Nxt.assets.clear();
+                                                        Nxt.assetNameToIdMappings.clear();
+                                                        Nxt.askOrders.clear();
+                                                        Nxt.bidOrders.clear();
+                                                        Nxt.sortedAskOrders.clear();
+                                                        Nxt.sortedBidOrders.clear();
                                                         Nxt.unconfirmedTransactions.clear();
                                                         Nxt.doubleSpendingTransactions.clear();
+                                                        Nxt.nonBroadcastedTransactions.clear();
                                                         //TODO: clean this up
                                                         logMessage("Re-scanning blockchain...");
                                                         Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
@@ -6961,6 +7098,9 @@ public class Nxt extends HttpServlet {
                                         byte[] publicKey = new byte[32];
                                         buffer.get(publicKey);
                                         int hostLength = buffer.getShort();
+                                        if (hostLength > 300) {
+                                            throw new IllegalArgumentException();
+                                        }
                                         byte[] hostBytes = new byte[hostLength];
                                         buffer.get(hostBytes);
                                         String host = new String(hostBytes, "UTF-8");
@@ -9051,7 +9191,7 @@ public class Nxt extends HttpServlet {
                             }
                             break;
 
-                        case "getAskOrderIds":
+                            case "getAskOrderIds":
                             {
 
                                 JSONArray orderIds = new JSONArray();
@@ -9065,7 +9205,7 @@ public class Nxt extends HttpServlet {
                             }
                             break;
 
-                        case "getBidOrder":
+                            case "getBidOrder":
                             {
 
                                 String order = req.getParameter("order");
@@ -9105,7 +9245,7 @@ public class Nxt extends HttpServlet {
                             }
                             break;
 
-                        case "getBidOrderIds":
+                            case "getBidOrderIds":
                             {
 
                                 JSONArray orderIds = new JSONArray();
