@@ -184,7 +184,7 @@ final class Nxt {
                     totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
             block.index = index;
             for (int i = 0 ; i < transactions.length; i++) {
-                block.transactions[i] = transactions[i];
+                block.getTransactions()[i] = transactions[i];
             }
             block.baseTarget = baseTarget;
             block.height = height;

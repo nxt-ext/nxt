@@ -37,10 +37,10 @@ final class GetAskOrder extends HttpRequestHandler {
 
         JSONObject response = new JSONObject();
 
-        response.put("account", Convert.convert(orderData.account.id));
-        response.put("asset", Convert.convert(orderData.asset));
+        response.put("account", Convert.convert(orderData.getAccount().getId()));
+        response.put("asset", Convert.convert(orderData.getAsset()));
         response.put("quantity", orderData.getQuantity());
-        response.put("price", orderData.price);
+        response.put("price", orderData.getPrice());
         return response;
     }
 

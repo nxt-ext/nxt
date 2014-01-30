@@ -45,9 +45,9 @@ final class GetAccountCurrentBidOrderIds extends HttpRequestHandler {
         }
 
         JSONArray orderIds = new JSONArray();
-        for (Order.Bid bidOrder : Order.Bid.allBidOrders) {
-            if ((assetId == null || bidOrder.asset.equals(assetId)) && bidOrder.account.id.equals(account.id)) {
-                orderIds.add(Convert.convert(bidOrder.id));
+        for (Order.Bid bidOrder : Order.Bid.getAllBidOrders()) {
+            if ((assetId == null || bidOrder.getAsset().equals(assetId)) && bidOrder.getAccount().getId().equals(account.getId())) {
+                orderIds.add(Convert.convert(bidOrder.getId()));
             }
         }
 

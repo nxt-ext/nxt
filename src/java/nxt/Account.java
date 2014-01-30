@@ -22,7 +22,11 @@ public final class Account {
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
 
-    public static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
+    private static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
+
+    public static Collection<Account> getAllAccounts() {
+        return allAccounts;
+    }
 
     public static Account getAccount(Long id) {
         return accounts.get(id);
@@ -49,8 +53,7 @@ public final class Account {
         accounts.clear();
     }
 
-    public final Long id;
-
+    private final Long id;
     private final int height;
     private final AtomicReference<byte[]> publicKey = new AtomicReference<>();
     private long balance;
@@ -63,6 +66,10 @@ public final class Account {
     private Account(Long id) {
         this.id = id;
         this.height = Blockchain.getLastBlock().getHeight();
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public byte[] getPublicKey() {
@@ -89,9 +96,9 @@ public final class Account {
                 return 0;
             }
             int receivedInlastBlock = 0;
-            for (Transaction transaction : lastBlock.getBlockTransactions()) {
-                if (transaction.recipient.equals(id)) {
-                    receivedInlastBlock += transaction.amount;
+            for (Transaction transaction : lastBlock.blockTransactions) {
+                if (transaction.getRecipient().equals(id)) {
+                    receivedInlastBlock += transaction.getAmount();
                 }
             }
             return (int)(getBalance() / 100) - receivedInlastBlock;

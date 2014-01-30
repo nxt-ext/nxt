@@ -18,8 +18,8 @@ final class GetAssetIds extends HttpRequestHandler {
     public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray assetIds = new JSONArray();
-        for (Asset asset : Asset.allAssets) {
-            assetIds.add(Convert.convert(asset.assetId));
+        for (Asset asset : Asset.getAllAssets()) {
+            assetIds.add(Convert.convert(asset.getAssetId()));
         }
 
         JSONObject response = new JSONObject();

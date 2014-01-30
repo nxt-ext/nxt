@@ -27,41 +27,40 @@ public abstract class Order {
             Ask askOrder = sortedAssetAskOrders.first();
             Bid bidOrder = sortedAssetBidOrders.first();
 
-            if (askOrder.price > bidOrder.price) {
+            if (askOrder.getPrice() > bidOrder.getPrice()) {
 
                 break;
 
             }
 
             int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
-            long price = askOrder.height < bidOrder.height || (askOrder.height == bidOrder.height && askOrder.id < bidOrder.id) ? askOrder.price : bidOrder.price;
+            long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
             if ((((Order)askOrder).quantity -= quantity) == 0) {
 
-                Ask.removeOrder(askOrder.id);
+                Ask.removeOrder(askOrder.getId());
 
             }
 
-            askOrder.account.addToBalanceAndUnconfirmedBalance(quantity * price);
+            askOrder.getAccount().addToBalanceAndUnconfirmedBalance(quantity * price);
 
             if ((((Order)bidOrder).quantity -= quantity) == 0) {
 
-                Bid.removeOrder(bidOrder.id);
+                Bid.removeOrder(bidOrder.getId());
 
             }
 
-            bidOrder.account.addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
+            bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
 
         }
 
     }
 
-    public final Long id;
-    public final Account account;
-    public final Long asset;
-    public final long price;
-
-    final long height;
+    private final Long id;
+    private final Account account;
+    private final Long asset;
+    private final long price;
+    private final long height;
 
     private volatile int quantity;
 
@@ -74,8 +73,28 @@ public abstract class Order {
         this.height = Blockchain.getLastBlock().getHeight();
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public Long getAsset() {
+        return asset;
+    }
+
+    public long getPrice() {
+        return price;
+    }
+
     public final int getQuantity() {
         return quantity;
+    }
+
+    public long getHeight() {
+        return height;
     }
 
     private int compareTo(Order o) {
@@ -113,7 +132,11 @@ public abstract class Order {
         private static final ConcurrentMap<Long, Ask> askOrders = new ConcurrentHashMap<>();
         private static final ConcurrentMap<Long, SortedSet<Ask>> sortedAskOrders = new ConcurrentHashMap<>();
 
-        public static final Collection<Ask> allAskOrders = Collections.unmodifiableCollection(askOrders.values());
+        private static final Collection<Ask> allAskOrders = Collections.unmodifiableCollection(askOrders.values());
+
+        public static Collection<Ask> getAllAskOrders() {
+            return allAskOrders;
+        }
 
         public static Ask getAskOrder(Long orderId) {
             return askOrders.get(orderId);
@@ -125,7 +148,7 @@ public abstract class Order {
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
-            askOrders.put(order.id, order);
+            askOrders.put(order.getId(), order);
             SortedSet<Ask> sortedAssetAskOrders = sortedAskOrders.get(assetId);
             if (sortedAssetAskOrders == null) {
                 sortedAssetAskOrders = new TreeSet<>();
@@ -137,7 +160,7 @@ public abstract class Order {
 
         static Ask removeOrder(Long orderId) {
             Ask askOrder = askOrders.remove(orderId);
-            sortedAskOrders.get(askOrder.asset).remove(askOrder);
+            sortedAskOrders.get(askOrder.getAsset()).remove(askOrder);
             return askOrder;
         }
 
@@ -148,11 +171,11 @@ public abstract class Order {
         @Override
         public int compareTo(Ask o) {
 
-            if (price < o.price) {
+            if (this.getPrice() < o.getPrice()) {
 
                 return -1;
 
-            } else if (price > o.price) {
+            } else if (this.getPrice() > o.getPrice()) {
 
                 return 1;
 
@@ -170,7 +193,11 @@ public abstract class Order {
         private static final ConcurrentMap<Long, Bid> bidOrders = new ConcurrentHashMap<>();
         private static final ConcurrentMap<Long, SortedSet<Bid>> sortedBidOrders = new ConcurrentHashMap<>();
 
-        public static final Collection<Bid> allBidOrders = Collections.unmodifiableCollection(bidOrders.values());
+        private static final Collection<Bid> allBidOrders = Collections.unmodifiableCollection(bidOrders.values());
+
+        public static Collection<Bid> getAllBidOrders() {
+            return allBidOrders;
+        }
 
         public static Bid getBidOrder(Long orderId) {
             return bidOrders.get(orderId);
@@ -183,7 +210,7 @@ public abstract class Order {
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
             senderAccount.addToBalanceAndUnconfirmedBalance(- quantity * price);
-            bidOrders.put(order.id, order);
+            bidOrders.put(order.getId(), order);
             SortedSet<Bid> sortedAssetBidOrders = sortedBidOrders.get(assetId);
             if (sortedAssetBidOrders == null) {
                 sortedAssetBidOrders = new TreeSet<>();
@@ -194,7 +221,7 @@ public abstract class Order {
 
         static Bid removeOrder(Long orderId) {
             Bid bidOrder = bidOrders.remove(orderId);
-            sortedBidOrders.get(bidOrder.asset).remove(bidOrder);
+            sortedBidOrders.get(bidOrder.getAsset()).remove(bidOrder);
             return bidOrder;
         }
 
@@ -205,11 +232,11 @@ public abstract class Order {
         @Override
         public int compareTo(Bid o) {
 
-            if (price > o.price) {
+            if (this.getPrice() > o.getPrice()) {
 
                 return -1;
 
-            } else if (price < o.price) {
+            } else if (this.getPrice() < o.getPrice()) {
 
                 return 1;
 

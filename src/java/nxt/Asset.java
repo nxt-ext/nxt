@@ -9,8 +9,11 @@ public class Asset {
 
     private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, Asset> assetNameToAssetMappings = new ConcurrentHashMap<>();
+    private static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
 
-    public static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
+    public static Collection<Asset> getAllAssets() {
+        return allAssets;
+    }
 
     public static Asset getAsset(Long id) {
         return assets.get(id);
@@ -31,11 +34,11 @@ public class Asset {
         assetNameToAssetMappings.clear();
     }
 
-    public final Long assetId;
-    public final Long accountId;
-    public final String name;
-    public final String description;
-    public final int quantity;
+    private final Long assetId;
+    private final Long accountId;
+    private final String name;
+    private final String description;
+    private final int quantity;
 
     private Asset(Long assetId, Long accountId, String name, String description, int quantity) {
         this.assetId = assetId;
@@ -45,4 +48,23 @@ public class Asset {
         this.quantity = quantity;
     }
 
+    public Long getAssetId() {
+        return assetId;
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
 }

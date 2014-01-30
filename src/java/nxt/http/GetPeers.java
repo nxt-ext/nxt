@@ -17,8 +17,8 @@ final class GetPeers extends HttpRequestHandler {
     public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray peers = new JSONArray();
-        for (Peer peer : Peer.allPeers) {
-            peers.add(peer.peerAddress);
+        for (Peer peer : Peer.getAllPeers()) {
+            peers.add(peer.getPeerAddress());
         }
 
         JSONObject response = new JSONObject();

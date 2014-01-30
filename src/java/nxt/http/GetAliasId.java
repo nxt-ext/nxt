@@ -30,7 +30,7 @@ final class GetAliasId extends HttpRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("id", Convert.convert(aliasData.id));
+        response.put("id", Convert.convert(aliasData.getId()));
         return response;
     }
 

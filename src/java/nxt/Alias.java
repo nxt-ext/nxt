@@ -9,8 +9,11 @@ public final class Alias {
 
     private static final ConcurrentMap<String, Alias> aliases = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Alias> aliasIdToAliasMappings = new ConcurrentHashMap<>();
+    private static final Collection<Alias> allAliases = Collections.unmodifiableCollection(aliases.values());
 
-    public static final Collection<Alias> allAliases = Collections.unmodifiableCollection(aliases.values());
+    public static Collection<Alias> getAllAliases() {
+        return allAliases;
+    }
 
     public static Alias getAlias(String alias) {
         return aliases.get(alias);
@@ -37,10 +40,9 @@ public final class Alias {
         aliasIdToAliasMappings.clear();
     }
 
-    public final Account account;
-    public final Long id;
-    public final String alias;
-
+    private final Account account;
+    private final Long id;
+    private final String alias;
     private volatile String uri;
     private volatile int timestamp;
 
@@ -54,6 +56,14 @@ public final class Alias {
 
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
     public String getURI() {
         return uri;
     }
@@ -61,4 +71,9 @@ public final class Alias {
     public int getTimestamp() {
         return timestamp;
     }
+
+    public Account getAccount() {
+        return account;
+    }
+
 }

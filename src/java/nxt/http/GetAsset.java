@@ -36,12 +36,12 @@ final class GetAsset extends HttpRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("account", Convert.convert(assetData.accountId));
-        response.put("name", assetData.name);
-        if (assetData.description.length() > 0) {
-            response.put("description", assetData.description);
+        response.put("account", Convert.convert(assetData.getAccountId()));
+        response.put("name", assetData.getName());
+        if (assetData.getDescription().length() > 0) {
+            response.put("description", assetData.getDescription());
         }
-        response.put("quantity", assetData.quantity);
+        response.put("quantity", assetData.getQuantity());
 
         return response;
     }

@@ -82,7 +82,7 @@ final class CancelAskOrder extends HttpRequestHandler {
         Long accountId = Account.getId(publicKey);
 
         Order.Ask orderData = Order.Ask.getAskOrder(order);
-        if (orderData == null || !orderData.account.id.equals(accountId)) {
+        if (orderData == null || !orderData.getAccount().getId().equals(accountId)) {
             return UNKNOWN_ORDER;
         }
 

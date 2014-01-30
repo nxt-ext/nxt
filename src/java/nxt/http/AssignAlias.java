@@ -100,7 +100,7 @@ final class AssignAlias extends HttpRequestHandler {
 
         Alias aliasData = Alias.getAlias(normalizedAlias);
         JSONObject response = new JSONObject();
-        if (aliasData != null && aliasData.account != account) {
+        if (aliasData != null && aliasData.getAccount() != account) {
 
             response.put("errorCode", 8);
             response.put("errorDescription", "\"" + alias + "\" is already used");

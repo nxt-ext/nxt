@@ -18,8 +18,8 @@ final class GetAskOrderIds extends HttpRequestHandler {
     public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray orderIds = new JSONArray();
-        for (Order.Ask order : Order.Ask.allAskOrders) {
-            orderIds.add(Convert.convert(order.id));
+        for (Order.Ask order : Order.Ask.getAllAskOrders()) {
+            orderIds.add(Convert.convert(order.getId()));
         }
 
         JSONObject response = new JSONObject();

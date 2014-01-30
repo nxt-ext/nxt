@@ -4,7 +4,7 @@ import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-public final class JSONResponses {
+final class JSONResponses {
 
     static final JSONStreamAware INVALID_SECRET_PHRASE;
     static {

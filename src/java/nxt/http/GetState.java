@@ -31,7 +31,7 @@ final class GetState extends HttpRequestHandler {
         response.put("cumulativeDifficulty", Blockchain.getLastBlock().getCumulativeDifficulty().toString());
 
         long totalEffectiveBalance = 0;
-        for (Account account : Account.allAccounts) {
+        for (Account account : Account.getAllAccounts()) {
             long effectiveBalance = account.getEffectiveBalance();
             if (effectiveBalance > 0) {
                 totalEffectiveBalance += effectiveBalance;
@@ -39,16 +39,16 @@ final class GetState extends HttpRequestHandler {
         }
         response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
 
-        response.put("numberOfBlocks", Blockchain.allBlocks.size());
-        response.put("numberOfTransactions", Blockchain.allTransactions.size());
-        response.put("numberOfAccounts", Account.allAccounts.size());
-        response.put("numberOfAssets", Asset.allAssets.size());
-        response.put("numberOfOrders", Order.Ask.allAskOrders.size() + Order.Bid.allBidOrders.size());
-        response.put("numberOfAliases", Alias.allAliases.size());
-        response.put("numberOfPeers", Peer.allPeers.size());
-        response.put("numberOfUsers", User.allUsers.size());
+        response.put("numberOfBlocks", Blockchain.getAllBlocks().size());
+        response.put("numberOfTransactions", Blockchain.getAllTransactions().size());
+        response.put("numberOfAccounts", Account.getAllAccounts().size());
+        response.put("numberOfAssets", Asset.getAllAssets().size());
+        response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
+        response.put("numberOfAliases", Alias.getAllAliases().size());
+        response.put("numberOfPeers", Peer.getAllPeers().size());
+        response.put("numberOfUsers", User.getAllUsers().size());
         int unlockedAccounts = 0;
-        for (User user : User.allUsers) {
+        for (User user : User.getAllUsers()) {
             if (user.getSecretPhrase() != null) {
                 unlockedAccounts += 1;
             }

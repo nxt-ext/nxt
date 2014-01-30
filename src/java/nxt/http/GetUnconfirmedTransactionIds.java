@@ -18,7 +18,7 @@ final class GetUnconfirmedTransactionIds extends HttpRequestHandler {
     public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray transactionIds = new JSONArray();
-        for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
+        for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
             transactionIds.add(transaction.getStringId());
         }
 

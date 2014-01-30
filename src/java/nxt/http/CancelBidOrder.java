@@ -82,7 +82,7 @@ final class CancelBidOrder extends HttpRequestHandler {
         Long accountId = Account.getId(publicKey);
 
         Order.Bid orderData = Order.Bid.getBidOrder(order);
-        if (orderData == null || !orderData.account.id.equals(accountId)) {
+        if (orderData == null || !orderData.getAccount().getId().equals(accountId)) {
             return UNKNOWN_ORDER;
         }
 

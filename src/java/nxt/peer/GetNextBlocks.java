@@ -30,7 +30,7 @@ final class GetNextBlocks extends HttpJSONRequestHandler {
             block = Blockchain.getBlock(block.getNextBlock());
             if (block != null) {
 
-                int length = Nxt.BLOCK_HEADER_LENGTH + block.payloadLength;
+                int length = Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength();
                 if (totalLength + length > 1048576) {
 
                     break;

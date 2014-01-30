@@ -110,12 +110,12 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipient, amount, fee, referencedTransaction, signature);
     }
 
-    public final short deadline;
-    public final byte[] senderPublicKey;
-    public final Long recipient;
-    public final int amount;
-    public final int fee;
-    public final Long referencedTransaction;
+    private final short deadline;
+    private final byte[] senderPublicKey;
+    private final Long recipient;
+    private final int amount;
+    private final int fee;
+    private final Long referencedTransaction;
 
     /*private after 0.6.0*/
     public int index;
@@ -148,6 +148,38 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         this.type = type;
         this.height = Integer.MAX_VALUE;
 
+    }
+
+    public short getDeadline() {
+        return deadline;
+    }
+
+    public byte[] getSenderPublicKey() {
+        return senderPublicKey;
+    }
+
+    public Long getRecipient() {
+        return recipient;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public int getFee() {
+        return fee;
+    }
+
+    public Long getReferencedTransaction() {
+        return referencedTransaction;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public byte[] getSignature() {
+        return signature;
     }
 
     public final Type getType() {
@@ -433,7 +465,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         this.type = findTransactionType(in.readByte(), in.readByte());
     }
 
-    private static Type findTransactionType(byte type, byte subtype) {
+    public static Type findTransactionType(byte type, byte subtype) {
         switch (type) {
             case TYPE_PAYMENT:
                 switch (subtype) {
@@ -598,7 +630,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     }
                     try {
                         Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.attachment;
-                        return transaction.amount == 0 && attachment.message.length <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH;
+                        return transaction.amount == 0 && attachment.getMessage().length <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH;
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error validating arbitrary message", e);
                         return false;
@@ -653,18 +685,18 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     }
                     try {
                         Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                        if (! Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || attachment.alias.length() == 0
-                                || attachment.alias.length() > 100 || attachment.uri.length() > 1000) {
+                        if (! Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || attachment.getAlias().length() == 0
+                                || attachment.getAlias().length() > 100 || attachment.getUri().length() > 1000) {
                             return false;
                         } else {
-                            String normalizedAlias = attachment.alias.toLowerCase();
+                            String normalizedAlias = attachment.getAlias().toLowerCase();
                             for (int i = 0; i < normalizedAlias.length(); i++) {
                                 if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
                                     return false;
                                 }
                             }
                             Alias alias = Alias.getAlias(normalizedAlias);
-                            return alias == null || Arrays.equals(alias.account.getPublicKey(), transaction.senderPublicKey);
+                            return alias == null || Arrays.equals(alias.getAccount().getPublicKey(), transaction.senderPublicKey);
                         }
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error in alias assignment validation", e);
@@ -676,7 +708,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
                     Block block = transaction.getBlock();
-                    Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.alias, attachment.uri, block.timestamp);
+                    Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAlias(), attachment.getUri(), block.getTimestamp());
                 }
 
                 @Override
@@ -687,7 +719,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                         duplicates.put(this, myDuplicates);
                     }
                     Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                    return ! myDuplicates.add(attachment.alias.toLowerCase());
+                    return ! myDuplicates.add(attachment.getAlias().toLowerCase());
                 }
             };
         }
@@ -742,11 +774,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     try {
                         Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
                         if (!Genesis.CREATOR_ID.equals(transaction.recipient) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
-                                || attachment.name.length() < 3 || attachment.name.length() > 10 || attachment.description.length() > 1000
-                                || attachment.quantity <= 0 || attachment.quantity > Nxt.MAX_ASSET_QUANTITY) {
+                                || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
+                                || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
                             return false;
                         } else {
-                            String normalizedName = attachment.name.toLowerCase();
+                            String normalizedName = attachment.getName().toLowerCase();
                             for (int i = 0; i < normalizedName.length(); i++) {
                                 if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
                                     return false;
@@ -770,8 +802,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
                     Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
                     Long assetId = transaction.getId();
-                    Asset.addAsset(assetId, transaction.getSenderAccountId(), attachment.name, attachment.description, attachment.quantity);
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.quantity);
+                    Asset.addAsset(assetId, transaction.getSenderAccountId(), attachment.getName(), attachment.getDescription(), attachment.getQuantity());
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.getQuantity());
 
                 }
 
@@ -805,18 +837,18 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 boolean doValidateAttachment(Transaction transaction) {
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                    return transaction.amount == 0 && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY;
+                    return transaction.amount == 0 && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY;
                 }
 
                 @Override
                 boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                    Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                    if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
+                    Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.getAsset());
+                    if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.getQuantity()) {
                         account.addToUnconfirmedBalance(totalAmount * 100L);
                         return true;
                     } else {
-                        account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
+                        account.addToUnconfirmedAssetBalance(attachment.getAsset(), -attachment.getQuantity());
                         return false;
                     }
                 }
@@ -824,8 +856,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                    recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, attachment.quantity);
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAsset(), -attachment.getQuantity());
+                    recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAsset(), attachment.getQuantity());
                 }
 
                 @Override
@@ -837,11 +869,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                         accountAccumulatedAssetQuantities = new HashMap<>();
                         accumulatedAssetQuantities.put(transaction.getSenderAccountId(), accountAccumulatedAssetQuantities);
                     }
-                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
+                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAsset());
                     if (assetAccumulatedAssetQuantities == null) {
                         assetAccumulatedAssetQuantities = 0L;
                     }
-                    accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
+                    accountAccumulatedAssetQuantities.put(attachment.getAsset(), assetAccumulatedAssetQuantities + attachment.getQuantity());
                 }
 
             };
@@ -870,8 +902,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 final boolean doValidateAttachment(Transaction transaction) {
                     Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.attachment;
                     return Genesis.CREATOR_ID.equals(transaction.recipient) && transaction.amount == 0
-                            && attachment.quantity > 0 && attachment.quantity <= Nxt.MAX_ASSET_QUANTITY
-                            && attachment.price > 0 && attachment.price <= Nxt.MAX_BALANCE * 100L;
+                            && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY
+                            && attachment.getPrice() > 0 && attachment.getPrice() <= Nxt.MAX_BALANCE * 100L;
                 }
 
             }
@@ -890,12 +922,12 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                    Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.asset);
-                    if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.quantity) {
+                    Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.getAsset());
+                    if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.getQuantity()) {
                         account.addToUnconfirmedBalance(totalAmount * 100L);
                         return true;
                     } else {
-                        account.addToUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
+                        account.addToUnconfirmedAssetBalance(attachment.getAsset(), -attachment.getQuantity());
                         return false;
                     }
                 }
@@ -903,8 +935,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.asset, -attachment.quantity);
-                    Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAsset(), -attachment.getQuantity());
+                    Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAsset(), attachment.getQuantity(), attachment.getPrice());
                 }
 
                 @Override
@@ -916,11 +948,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                         accountAccumulatedAssetQuantities = new HashMap<>();
                         accumulatedAssetQuantities.put(transaction.getSenderAccountId(), accountAccumulatedAssetQuantities);
                     }
-                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.asset);
+                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAsset());
                     if (assetAccumulatedAssetQuantities == null) {
                         assetAccumulatedAssetQuantities = 0L;
                     }
-                    accountAccumulatedAssetQuantities.put(attachment.asset, assetAccumulatedAssetQuantities + attachment.quantity);
+                    accountAccumulatedAssetQuantities.put(attachment.getAsset(), assetAccumulatedAssetQuantities + attachment.getQuantity());
                 }
 
             };
@@ -939,11 +971,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
-                    if (account.getUnconfirmedBalance() < attachment.quantity * attachment.price) {
+                    if (account.getUnconfirmedBalance() < attachment.getQuantity() * attachment.getPrice()) {
                         account.addToUnconfirmedBalance(totalAmount * 100L);
                         return true;
                     } else {
-                        account.addToUnconfirmedBalance(-attachment.quantity * attachment.price);
+                        account.addToUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
                         return false;
                     }
                 }
@@ -951,15 +983,15 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                    senderAccount.addToBalanceAndUnconfirmedBalance(-attachment.quantity * attachment.price);
-                    Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.asset, attachment.quantity, attachment.price);
+                    senderAccount.addToBalanceAndUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
+                    Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAsset(), attachment.getQuantity(), attachment.getPrice());
                 }
 
                 @Override
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
-                    accumulatedAmounts.put(transaction.getSenderAccountId(), accumulatedAmount + attachment.quantity * attachment.price);
+                    accumulatedAmounts.put(transaction.getSenderAccountId(), accumulatedAmount + attachment.getQuantity() * attachment.getPrice());
                 }
 
                 /*
@@ -1016,8 +1048,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
-                    Order order = Order.Ask.removeOrder(attachment.order);
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.asset, order.getQuantity());
+                    Order order = Order.Ask.removeOrder(attachment.getOrder());
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.getAsset(), order.getQuantity());
                 }
 
             };
@@ -1042,8 +1074,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
-                    Order order = Order.Bid.removeOrder(attachment.order);
-                    senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.price);
+                    Order order = Order.Bid.removeOrder(attachment.getOrder());
+                    senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.getPrice());
                 }
 
                 /*

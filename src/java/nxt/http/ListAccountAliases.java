@@ -40,10 +40,10 @@ final class ListAccountAliases extends HttpRequestHandler {
         }
 
         JSONArray aliases = new JSONArray();
-        for (Alias alias : Alias.allAliases) {
-            if (alias.account.id.equals(accountId)) {
+        for (Alias alias : Alias.getAllAliases()) {
+            if (alias.getAccount().getId().equals(accountId)) {
                 JSONObject aliasData = new JSONObject();
-                aliasData.put("alias", alias.alias);
+                aliasData.put("alias", alias.getAlias());
                 aliasData.put("uri", alias.getURI());
                 aliases.add(aliasData);
             }

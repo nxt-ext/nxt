@@ -20,7 +20,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,9 +52,9 @@ public final class Blockchain {
     private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
 
-    public static final Collection<Block> allBlocks = Collections.unmodifiableCollection(blocks.values());
-    public static final Collection<Transaction> allTransactions = Collections.unmodifiableCollection(transactions.values());
-    public static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
+    private static final Collection<Block> allBlocks = Collections.unmodifiableCollection(blocks.values());
+    private static final Collection<Transaction> allTransactions = Collections.unmodifiableCollection(transactions.values());
+    private static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
 
     static final Runnable processTransactionsThread = new Runnable() {
 
@@ -109,12 +108,12 @@ public final class Blockchain {
                 while (iterator.hasNext()) {
 
                     Transaction transaction = iterator.next();
-                    if (transaction.getTimestamp() + transaction.deadline * 60 < curTime || !transaction.validateAttachment()) {
+                    if (transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime || !transaction.validateAttachment()) {
 
                         iterator.remove();
 
                         Account account = Account.getAccount(transaction.getSenderAccountId());
-                        account.addToUnconfirmedBalance((transaction.amount + transaction.fee) * 100L);
+                        account.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
 
                         JSONObject removedUnconfirmedTransaction = new JSONObject();
                         removedUnconfirmedTransaction.put("index", transaction.getIndex());
@@ -288,9 +287,9 @@ public final class Blockchain {
                                                         curBlockId = block.getId();
 
                                                         boolean alreadyPushed = false;
-                                                        if (lastBlock.get().getId().equals(block.previousBlock)) {
+                                                        if (lastBlock.get().getId().equals(block.getPreviousBlock())) {
 
-                                                            ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.payloadLength);
+                                                            ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength());
                                                             buffer.order(ByteOrder.LITTLE_ENDIAN);
                                                             buffer.put(block.getBytes());
 
@@ -354,9 +353,9 @@ public final class Blockchain {
 
                                                 for (Block block : futureBlocks) {
 
-                                                    if (lastBlock.get().getId().equals(block.previousBlock)) {
+                                                    if (lastBlock.get().getId().equals(block.getPreviousBlock())) {
 
-                                                        ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.payloadLength);
+                                                        ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength());
                                                         buffer.order(ByteOrder.LITTLE_ENDIAN);
                                                         buffer.put(block.getBytes());
 
@@ -442,7 +441,7 @@ public final class Blockchain {
             try {
 
                 Map<Account,User> unlockedAccounts = new HashMap<>();
-                for (User user : User.allUsers) {
+                for (User user : User.getAllUsers()) {
                     if (user.getSecretPhrase() != null) {
                         Account account = Account.getAccount(user.getPublicKey());
                         if (account != null && account.getEffectiveBalance() > 0) {
@@ -482,13 +481,13 @@ public final class Blockchain {
 
                         JSONObject response = new JSONObject();
                         response.put("response", "setBlockGenerationDeadline");
-                        response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.baseTarget).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.timestamp));
+                        response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.getTimestamp()));
 
                         user.send(response);
 
                     }
 
-                    int elapsedTime = Convert.getEpochTime() - lastBlock.timestamp;
+                    int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
                     if (elapsedTime > 0) {
 
                         BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
@@ -559,6 +558,18 @@ public final class Blockchain {
 
     };
 
+    public static Collection<Block> getAllBlocks() {
+        return allBlocks;
+    }
+
+    public static Collection<Transaction> getAllTransactions() {
+        return allTransactions;
+    }
+
+    public static Collection<Transaction> getAllUnconfirmedTransactions() {
+        return allUnconfirmedTransactions;
+    }
+
     public static Block getLastBlock() {
         return lastBlock.get();
     }
@@ -604,9 +615,9 @@ public final class Blockchain {
             try {
 
                 int curTime = Convert.getEpochTime();
-                if (transaction.getTimestamp() > curTime + 15 || transaction.deadline < 1
-                        || transaction.getTimestamp() + transaction.deadline * 60 < curTime
-                        || transaction.fee <= 0 || !transaction.validateAttachment()) {
+                if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() < 1
+                        || transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime
+                        || transaction.getFee() <= 0 || !transaction.validateAttachment()) {
 
                     continue;
 
@@ -651,10 +662,10 @@ public final class Blockchain {
                 JSONObject newTransaction = new JSONObject();
                 newTransaction.put("index", transaction.getIndex());
                 newTransaction.put("timestamp", transaction.getTimestamp());
-                newTransaction.put("deadline", transaction.deadline);
-                newTransaction.put("recipient", Convert.convert(transaction.recipient));
-                newTransaction.put("amount", transaction.amount);
-                newTransaction.put("fee", transaction.fee);
+                newTransaction.put("deadline", transaction.getDeadline());
+                newTransaction.put("recipient", Convert.convert(transaction.getRecipient()));
+                newTransaction.put("amount", transaction.getAmount());
+                newTransaction.put("fee", transaction.getFee());
                 newTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
                 newTransaction.put("id", transaction.getStringId());
                 newTransactions.add(newTransaction);
@@ -760,7 +771,7 @@ public final class Blockchain {
                 byte[] blockSignature = new byte[64];
                 buffer.get(blockSignature);
 
-                if (blockTimestamp > curTime + 15 || blockTimestamp <= previousLastBlock.timestamp) {
+                if (blockTimestamp > curTime + 15 || blockTimestamp <= previousLastBlock.getTimestamp()) {
 
                     return false;
 
@@ -776,7 +787,7 @@ public final class Blockchain {
                 block = new Block(version, blockTimestamp, previousBlock, numberOfTransactions, totalAmount, totalFee,
                         payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
-                if (block.transactions.length > Nxt.MAX_NUMBER_OF_TRANSACTIONS || !previousLastBlock.getId().equals(block.previousBlock)
+                if (block.transactions.length > Nxt.MAX_NUMBER_OF_TRANSACTIONS || !previousLastBlock.getId().equals(block.getPreviousBlock())
                         || block.getId().equals(Long.valueOf(0L)) || blocks.containsKey(block.getId())
                         || !block.verifyGenerationSignature() || !block.verifyBlockSignature()) {
 
@@ -816,11 +827,11 @@ public final class Blockchain {
                     Transaction transaction = blockTransactions.get(block.transactions[i]);
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     //TODO: similar transaction validation is done in several places, refactor common code out
-                    if (transaction.getTimestamp() > curTime + 15 || transaction.deadline < 1
-                            || (transaction.getTimestamp() + transaction.deadline * 60 < blockTimestamp && previousLastBlock.getHeight() > 303)
-                            || transaction.fee <= 0 || transaction.fee > Nxt.MAX_BALANCE || transaction.amount < 0
-                            || transaction.amount > Nxt.MAX_BALANCE || !transaction.validateAttachment() || transactions.get(block.transactions[i]) != null
-                            || (transaction.referencedTransaction != null && transactions.get(transaction.referencedTransaction) == null && blockTransactions.get(transaction.referencedTransaction) == null)
+                    if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() < 1
+                            || (transaction.getTimestamp() + transaction.getDeadline() * 60 < blockTimestamp && previousLastBlock.getHeight() > 303)
+                            || transaction.getFee() <= 0 || transaction.getFee() > Nxt.MAX_BALANCE || transaction.getAmount() < 0
+                            || transaction.getAmount() > Nxt.MAX_BALANCE || !transaction.validateAttachment() || transactions.get(block.transactions[i]) != null
+                            || (transaction.getReferencedTransaction() != null && transactions.get(transaction.getReferencedTransaction()) == null && blockTransactions.get(transaction.getReferencedTransaction()) == null)
                             || (unconfirmedTransactions.get(block.transactions[i]) == null && !transaction.verify())
                             || transaction.getId().equals(Long.valueOf(0L))) {
 
@@ -828,17 +839,17 @@ public final class Blockchain {
 
                     }
 
-                    calculatedTotalAmount += transaction.amount;
+                    calculatedTotalAmount += transaction.getAmount();
 
                     transaction.updateTotals(accumulatedAmounts, accumulatedAssetQuantities);
 
-                    calculatedTotalFee += transaction.fee;
+                    calculatedTotalFee += transaction.getFee();
 
                     digest.update(transaction.getBytes());
 
                 }
 
-                if (i != block.transactions.length || calculatedTotalAmount != block.totalAmount || calculatedTotalFee != block.totalFee) {
+                if (i != block.transactions.length || calculatedTotalAmount != block.getTotalAmount() || calculatedTotalFee != block.getTotalFee()) {
 
                     return false;
 
@@ -904,12 +915,12 @@ public final class Blockchain {
 
                     JSONObject addedConfirmedTransaction = new JSONObject();
                     addedConfirmedTransaction.put("index", transaction.getIndex());
-                    addedConfirmedTransaction.put("blockTimestamp", block.timestamp);
+                    addedConfirmedTransaction.put("blockTimestamp", block.getTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     addedConfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
-                    addedConfirmedTransaction.put("recipient", Convert.convert(transaction.recipient));
-                    addedConfirmedTransaction.put("amount", transaction.amount);
-                    addedConfirmedTransaction.put("fee", transaction.fee);
+                    addedConfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipient()));
+                    addedConfirmedTransaction.put("amount", transaction.getAmount());
+                    addedConfirmedTransaction.put("fee", transaction.getFee());
                     addedConfirmedTransaction.put("id", transaction.getStringId());
                     addedConfirmedTransactions.add(addedConfirmedTransaction);
 
@@ -921,7 +932,7 @@ public final class Blockchain {
                         removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
 
                         Account senderAccount = Account.getAccount(removedTransaction.getSenderAccountId());
-                        senderAccount.addToUnconfirmedBalance((removedTransaction.amount + removedTransaction.fee) * 100L);
+                        senderAccount.addToUnconfirmedBalance((removedTransaction.getAmount() + removedTransaction.getFee()) * 100L);
 
                     }
 
@@ -941,7 +952,7 @@ public final class Blockchain {
                 return false;
             }
         } // synchronized
-        if (block.timestamp >= curTime - 15) {
+        if (block.getTimestamp() >= curTime - 15) {
 
             JSONObject request = block.getJSONObject();
             request.put("requestType", "processBlock");
@@ -953,14 +964,14 @@ public final class Blockchain {
         JSONArray addedRecentBlocks = new JSONArray();
         JSONObject addedRecentBlock = new JSONObject();
         addedRecentBlock.put("index", block.getIndex());
-        addedRecentBlock.put("timestamp", block.timestamp);
+        addedRecentBlock.put("timestamp", block.getTimestamp());
         addedRecentBlock.put("numberOfTransactions", block.transactions.length);
-        addedRecentBlock.put("totalAmount", block.totalAmount);
-        addedRecentBlock.put("totalFee", block.totalFee);
-        addedRecentBlock.put("payloadLength", block.payloadLength);
+        addedRecentBlock.put("totalAmount", block.getTotalAmount());
+        addedRecentBlock.put("totalFee", block.getTotalFee());
+        addedRecentBlock.put("payloadLength", block.getPayloadLength());
         addedRecentBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
         addedRecentBlock.put("height", block.getHeight());
-        addedRecentBlock.put("version", block.version);
+        addedRecentBlock.put("version", block.getVersion());
         addedRecentBlock.put("block", block.getStringId());
         addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
         addedRecentBlocks.add(addedRecentBlock);
@@ -983,11 +994,11 @@ public final class Blockchain {
     }
 
     static void addBlock(Block block) {
-        if (block.previousBlock == null) {
+        if (block.getPreviousBlock() == null) {
             blocks.put(block.getId(), block);
             lastBlock.set(block);
         } else {
-            if (! lastBlock.compareAndSet(blocks.get(block.previousBlock), block)) {
+            if (! lastBlock.compareAndSet(blocks.get(block.getPreviousBlock()), block)) {
                 throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
             }
             if (blocks.putIfAbsent(block.getId(), block) != null) {
@@ -1121,7 +1132,7 @@ public final class Blockchain {
                     return false;
                 }
 
-                Block previousBlock = blocks.get(block.previousBlock);
+                Block previousBlock = blocks.get(block.getPreviousBlock());
                 if (previousBlock == null) {
                     Logger.logMessage("Previous block is null");
                     throw new IllegalStateException();
@@ -1132,7 +1143,7 @@ public final class Blockchain {
                 }
 
                 Account generatorAccount = Account.getAccount(block.getGeneratorAccountId());
-                generatorAccount.addToBalanceAndUnconfirmedBalance(- block.totalFee * 100L);
+                generatorAccount.addToBalanceAndUnconfirmedBalance(-block.getTotalFee() * 100L);
 
                 for (Long transactionId : block.transactions) {
 
@@ -1140,18 +1151,18 @@ public final class Blockchain {
                     unconfirmedTransactions.put(transactionId, transaction);
 
                     Account senderAccount = Account.getAccount(transaction.getSenderAccountId());
-                    senderAccount.addToBalance((transaction.amount + transaction.fee) * 100L);
+                    senderAccount.addToBalance((transaction.getAmount() + transaction.getFee()) * 100L);
 
-                    Account recipientAccount = Account.getAccount(transaction.recipient);
-                    recipientAccount.addToBalanceAndUnconfirmedBalance(- transaction.amount * 100L);
+                    Account recipientAccount = Account.getAccount(transaction.getRecipient());
+                    recipientAccount.addToBalanceAndUnconfirmedBalance(-transaction.getAmount() * 100L);
 
                     JSONObject addedUnconfirmedTransaction = new JSONObject();
                     addedUnconfirmedTransaction.put("index", transaction.getIndex());
                     addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
-                    addedUnconfirmedTransaction.put("deadline", transaction.deadline);
-                    addedUnconfirmedTransaction.put("recipient", Convert.convert(transaction.recipient));
-                    addedUnconfirmedTransaction.put("amount", transaction.amount);
-                    addedUnconfirmedTransaction.put("fee", transaction.fee);
+                    addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
+                    addedUnconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipient()));
+                    addedUnconfirmedTransaction.put("amount", transaction.getAmount());
+                    addedUnconfirmedTransaction.put("fee", transaction.getFee());
                     addedUnconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
                     addedUnconfirmedTransaction.put("id", transaction.getStringId());
                     addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
@@ -1163,14 +1174,14 @@ public final class Blockchain {
             JSONArray addedOrphanedBlocks = new JSONArray();
             JSONObject addedOrphanedBlock = new JSONObject();
             addedOrphanedBlock.put("index", block.getIndex());
-            addedOrphanedBlock.put("timestamp", block.timestamp);
+            addedOrphanedBlock.put("timestamp", block.getTimestamp());
             addedOrphanedBlock.put("numberOfTransactions", block.transactions.length);
-            addedOrphanedBlock.put("totalAmount", block.totalAmount);
-            addedOrphanedBlock.put("totalFee", block.totalFee);
-            addedOrphanedBlock.put("payloadLength", block.payloadLength);
+            addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
+            addedOrphanedBlock.put("totalFee", block.getTotalFee());
+            addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
             addedOrphanedBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
             addedOrphanedBlock.put("height", block.getHeight());
-            addedOrphanedBlock.put("version", block.version);
+            addedOrphanedBlock.put("version", block.getVersion());
             addedOrphanedBlock.put("block", block.getStringId());
             addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
             addedOrphanedBlocks.add(addedOrphanedBlock);
@@ -1213,7 +1224,7 @@ public final class Blockchain {
 
         for (Transaction transaction : unconfirmedTransactions.values()) {
 
-            if (transaction.referencedTransaction == null || transactions.get(transaction.referencedTransaction) != null) {
+            if (transaction.getReferencedTransaction() == null || transactions.get(transaction.getReferencedTransaction()) != null) {
 
                 sortedTransactions.add(transaction);
 
@@ -1246,7 +1257,7 @@ public final class Blockchain {
 
                     }
 
-                    long amount = (transaction.amount + transaction.fee) * 100L;
+                    long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
                     if (accumulatedAmount + amount <= Account.getAccount(sender).getBalance() && transaction.validateAttachment()) {
 
                         if (transaction.isDuplicate(duplicates)) {
@@ -1257,8 +1268,8 @@ public final class Blockchain {
 
                         newTransactions.put(transaction.getId(), transaction);
                         payloadLength += transactionLength;
-                        totalAmount += transaction.amount;
-                        totalFee += transaction.fee;
+                        totalAmount += transaction.getAmount();
+                        totalFee += transaction.getFee();
 
                     }
 

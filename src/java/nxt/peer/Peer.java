@@ -55,7 +55,7 @@ public final class Peer implements Comparable<Peer> {
 
     private static final AtomicInteger peerCounter = new AtomicInteger();
     private static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
-    public static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
+    private static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
 
     public static final Runnable peerConnectingThread = new Runnable() {
 
@@ -166,6 +166,10 @@ public final class Peer implements Comparable<Peer> {
 
     };
 
+    public static Collection<Peer> getAllPeers() {
+        return allPeers;
+    }
+
     public static Peer getPeer(String peerAddress) {
         return peers.get(peerAddress);
     }
@@ -207,7 +211,7 @@ public final class Peer implements Comparable<Peer> {
 
     public static void updatePeerWeights(Account account) {
         for (Peer peer : peers.values()) {
-            if (account.id.equals(peer.accountId) && peer.adjustedWeight > 0) {
+            if (account.getId().equals(peer.accountId) && peer.adjustedWeight > 0) {
                 peer.updateWeight();
             }
         }
@@ -305,11 +309,10 @@ public final class Peer implements Comparable<Peer> {
     private static String truncate(String s, int limit, boolean dots) {
         return s == null ? "?" : s.length() > limit ? (s.substring(0, limit) + (dots ? "..." : "")) : s;
     }
-    
 
-    public final int index;
-    public final String peerAddress;
 
+    private final int index;
+    private final String peerAddress;
     private String announcedAddress;
     private boolean shareAddress;
     private String hallmark;
@@ -331,6 +334,14 @@ public final class Peer implements Comparable<Peer> {
         this.announcedAddress = announcedAddress;
         this.index = peerCounter.incrementAndGet();
         this.state = State.NON_CONNECTED;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public String getPeerAddress() {
+        return peerAddress;
     }
 
     public State getState() {

@@ -64,15 +64,15 @@ public final class Block implements Serializable {
     }
 
 
-    public final int version;
-    public final int timestamp;
-    public final Long previousBlock;
-    public final byte[] generatorPublicKey;
-    public final byte[] previousBlockHash;
-    public final int totalAmount;
-    public final int totalFee;
-    public final int payloadLength;
-    public final Long[] transactions;
+    private final int version;
+    private final int timestamp;
+    private final Long previousBlock;
+    private final byte[] generatorPublicKey;
+    private final byte[] previousBlockHash;
+    private final int totalAmount;
+    private final int totalFee;
+    private final int payloadLength;
+    final Long[] transactions;
 
     transient Transaction[] blockTransactions;
 
@@ -127,25 +127,40 @@ public final class Block implements Serializable {
 
     }
 
-    public byte[] getBytes() {
+    public int getVersion() {
+        return version;
+    }
 
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putInt(version);
-        buffer.putInt(timestamp);
-        buffer.putLong(Convert.nullToZero(previousBlock));
-        buffer.putInt(transactions.length);
-        buffer.putInt(totalAmount);
-        buffer.putInt(totalFee);
-        buffer.putInt(payloadLength);
-        buffer.put(payloadHash);
-        buffer.put(generatorPublicKey);
-        buffer.put(generationSignature);
-        if (version > 1) {
-            buffer.put(previousBlockHash);
-        }
-        buffer.put(blockSignature);
-        return buffer.array();
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+    public Long getPreviousBlock() {
+        return previousBlock;
+    }
+
+    public byte[] getGeneratorPublicKey() {
+        return generatorPublicKey;
+    }
+
+    public byte[] getPreviousBlockHash() {
+        return previousBlockHash;
+    }
+
+    public int getTotalAmount() {
+        return totalAmount;
+    }
+
+    public int getTotalFee() {
+        return totalFee;
+    }
+
+    public int getPayloadLength() {
+        return payloadLength;
+    }
+
+    public Long[] getTransactions() {
+        return transactions;
     }
 
     public byte[] getPayloadHash() {
@@ -217,6 +232,27 @@ public final class Block implements Serializable {
     public Long getGeneratorAccountId() {
         calculateIds();
         return generatorAccountId;
+    }
+
+    public byte[] getBytes() {
+
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putInt(version);
+        buffer.putInt(timestamp);
+        buffer.putLong(Convert.nullToZero(previousBlock));
+        buffer.putInt(transactions.length);
+        buffer.putInt(totalAmount);
+        buffer.putInt(totalFee);
+        buffer.putInt(payloadLength);
+        buffer.put(payloadHash);
+        buffer.put(generatorPublicKey);
+        buffer.put(generationSignature);
+        if (version > 1) {
+            buffer.put(previousBlockHash);
+        }
+        buffer.put(blockSignature);
+        return buffer.array();
     }
 
     public synchronized JSONStreamAware getJSONStreamAware() {

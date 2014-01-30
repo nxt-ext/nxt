@@ -27,7 +27,11 @@ import java.util.concurrent.ConcurrentMap;
 public final class User {
 
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
-    public static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
+    private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
+
+    public static Collection<User> getAllUsers() {
+        return allUsers;
+    }
 
     public static User getUser(String userPasscode) {
         User user = users.get(userPasscode);

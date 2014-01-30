@@ -48,7 +48,7 @@ final class ProcessBlock extends HttpJSONRequestHandler {
 
         } else {
 
-            ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.payloadLength);
+            ByteBuffer buffer = ByteBuffer.allocate(Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
             buffer.put(block.getBytes());

@@ -18,8 +18,8 @@ final class GetBidOrderIds extends HttpRequestHandler {
     public JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray orderIds = new JSONArray();
-        for (Order order : Order.Bid.allBidOrders) {
-            orderIds.add(Convert.convert(order.id));
+        for (Order order : Order.Bid.getAllBidOrders()) {
+            orderIds.add(Convert.convert(order.getId()));
         }
 
         JSONObject response = new JSONObject();

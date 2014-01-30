@@ -25,7 +25,7 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
             milestoneBlockIds.add(block.getStringId());
             for (int i = 0; i < jumpLength && block.getHeight() > 0; i++) {
 
-                block = Blockchain.getBlock(block.previousBlock);
+                block = Blockchain.getBlock(block.getPreviousBlock());
 
             }
 

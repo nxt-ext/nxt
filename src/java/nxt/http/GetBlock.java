@@ -40,27 +40,27 @@ final class GetBlock extends HttpRequestHandler {
         JSONObject response = new JSONObject();
         response.put("height", blockData.getHeight());
         response.put("generator", Convert.convert(blockData.getGeneratorAccountId()));
-        response.put("timestamp", blockData.timestamp);
-        response.put("numberOfTransactions", blockData.transactions.length);
-        response.put("totalAmount", blockData.totalAmount);
-        response.put("totalFee", blockData.totalFee);
-        response.put("payloadLength", blockData.payloadLength);
-        response.put("version", blockData.version);
+        response.put("timestamp", blockData.getTimestamp());
+        response.put("numberOfTransactions", blockData.getTransactions().length);
+        response.put("totalAmount", blockData.getTotalAmount());
+        response.put("totalFee", blockData.getTotalFee());
+        response.put("payloadLength", blockData.getPayloadLength());
+        response.put("version", blockData.getVersion());
         response.put("baseTarget", Convert.convert(blockData.getBaseTarget()));
-        if (blockData.previousBlock != null) {
-            response.put("previousBlock", Convert.convert(blockData.previousBlock));
+        if (blockData.getPreviousBlock() != null) {
+            response.put("previousBlock", Convert.convert(blockData.getPreviousBlock()));
         }
         if (blockData.getNextBlock() != null) {
             response.put("nextBlock", Convert.convert(blockData.getNextBlock()));
         }
         response.put("payloadHash", Convert.convert(blockData.getPayloadHash()));
         response.put("generationSignature", Convert.convert(blockData.getGenerationSignature()));
-        if (blockData.version > 1) {
-            response.put("previousBlockHash", Convert.convert(blockData.previousBlockHash));
+        if (blockData.getVersion() > 1) {
+            response.put("previousBlockHash", Convert.convert(blockData.getPreviousBlockHash()));
         }
         response.put("blockSignature", Convert.convert(blockData.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Long transactionId : blockData.transactions) {
+        for (Long transactionId : blockData.getTransactions()) {
             transactions.add(Convert.convert(transactionId));
         }
         response.put("transactions", transactions);

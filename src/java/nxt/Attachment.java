@@ -22,7 +22,7 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        final byte[] message;
+        private final byte[] message;
 
         public MessagingArbitraryMessage(byte[] message) {
 
@@ -62,14 +62,17 @@ public interface Attachment {
             return Transaction.Type.Messaging.ARBITRARY_MESSAGE;
         }
 
+        public byte[] getMessage() {
+            return message;
+        }
     }
 
     public static class MessagingAliasAssignment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
-        final String alias;
-        final String uri;
+        private final String alias;
+        private final String uri;
 
         public MessagingAliasAssignment(String alias, String uri) {
 
@@ -129,15 +132,22 @@ public interface Attachment {
             return Transaction.Type.Messaging.ALIAS_ASSIGNMENT;
         }
 
+        public String getAlias() {
+            return alias;
+        }
+
+        public String getUri() {
+            return uri;
+        }
     }
 
     public static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
-        final String name;
-        final String description;
-        final int quantity;
+        private final String name;
+        private final String description;
+        private final int quantity;
 
         public ColoredCoinsAssetIssuance(String name, String description, int quantity) {
 
@@ -197,14 +207,25 @@ public interface Attachment {
             return Transaction.Type.ColoredCoins.ASSET_ISSUANCE;
         }
 
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
     }
 
     public static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
-        final Long asset;
-        final int quantity;
+        private final Long asset;
+        private final int quantity;
 
         public ColoredCoinsAssetTransfer(Long asset, int quantity) {
 
@@ -246,15 +267,22 @@ public interface Attachment {
             return Transaction.Type.ColoredCoins.ASSET_TRANSFER;
         }
 
+        public Long getAsset() {
+            return asset;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
     }
 
     abstract static class ColoredCoinsOrderPlacement implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
-        final Long asset;
-        final int quantity;
-        final long price;
+        private final Long asset;
+        private final int quantity;
+        private final long price;
 
         private ColoredCoinsOrderPlacement(Long asset, int quantity, long price) {
 
@@ -294,6 +322,17 @@ public interface Attachment {
 
         }
 
+        public Long getAsset() {
+            return asset;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public long getPrice() {
+            return price;
+        }
     }
 
     public static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
@@ -330,7 +369,7 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        final Long order;
+        private final Long order;
 
         private ColoredCoinsOrderCancellation(Long order) {
             this.order = order;
@@ -362,6 +401,9 @@ public interface Attachment {
 
         }
 
+        public Long getOrder() {
+            return order;
+        }
     }
 
     public static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {

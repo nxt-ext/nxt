@@ -28,29 +28,29 @@ final class GetInitialData extends UserRequestHandler {
         JSONArray activePeers = new JSONArray(), knownPeers = new JSONArray(), blacklistedPeers = new JSONArray();
         JSONArray recentBlocks = new JSONArray();
 
-        for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
+        for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
             unconfirmedTransaction.put("index", transaction.getIndex());
             unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
-            unconfirmedTransaction.put("deadline", transaction.deadline);
-            unconfirmedTransaction.put("recipient", Convert.convert(transaction.recipient));
-            unconfirmedTransaction.put("amount", transaction.amount);
-            unconfirmedTransaction.put("fee", transaction.fee);
+            unconfirmedTransaction.put("deadline", transaction.getDeadline());
+            unconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipient()));
+            unconfirmedTransaction.put("amount", transaction.getAmount());
+            unconfirmedTransaction.put("fee", transaction.getFee());
             unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
 
             unconfirmedTransactions.add(unconfirmedTransaction);
 
         }
 
-        for (Peer peer : Peer.allPeers) {
+        for (Peer peer : Peer.getAllPeers()) {
 
-            String address = peer.peerAddress;
+            String address = peer.getPeerAddress();
 
             if (peer.getBlacklistingTime() > 0) {
 
                 JSONObject blacklistedPeer = new JSONObject();
-                blacklistedPeer.put("index", peer.index);
+                blacklistedPeer.put("index", peer.getIndex());
                 blacklistedPeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 0
                         ? (peer.getAnnouncedAddress().length() > 30
                         ? (peer.getAnnouncedAddress().substring(0, 30) + "...")
@@ -66,7 +66,7 @@ final class GetInitialData extends UserRequestHandler {
                 if (peer.getAnnouncedAddress().length() > 0) {
 
                     JSONObject knownPeer = new JSONObject();
-                    knownPeer.put("index", peer.index);
+                    knownPeer.put("index", peer.getIndex());
                     knownPeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 30 ? (peer.getAnnouncedAddress().substring(0, 30) + "...") : peer.getAnnouncedAddress());
                     if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
                         knownPeer.put("wellKnown", true);
@@ -79,7 +79,7 @@ final class GetInitialData extends UserRequestHandler {
             } else {
 
                 JSONObject activePeer = new JSONObject();
-                activePeer.put("index", peer.index);
+                activePeer.put("index", peer.getIndex());
                 if (peer.getState() == Peer.State.DISCONNECTED) {
 
                     activePeer.put("disconnected", true);
@@ -107,14 +107,14 @@ final class GetInitialData extends UserRequestHandler {
             Block block = Blockchain.getBlock(blockId);
             JSONObject recentBlock = new JSONObject();
             recentBlock.put("index", block.getIndex());
-            recentBlock.put("timestamp", block.timestamp);
-            recentBlock.put("numberOfTransactions", block.transactions.length);
-            recentBlock.put("totalAmount", block.totalAmount);
-            recentBlock.put("totalFee", block.totalFee);
-            recentBlock.put("payloadLength", block.payloadLength);
+            recentBlock.put("timestamp", block.getTimestamp());
+            recentBlock.put("numberOfTransactions", block.getTransactions().length);
+            recentBlock.put("totalAmount", block.getTotalAmount());
+            recentBlock.put("totalFee", block.getTotalFee());
+            recentBlock.put("payloadLength", block.getPayloadLength());
             recentBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
             recentBlock.put("height", block.getHeight());
-            recentBlock.put("version", block.version);
+            recentBlock.put("version", block.getVersion());
             recentBlock.put("block", block.getStringId());
             recentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000))
                     .divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
@@ -125,7 +125,7 @@ final class GetInitialData extends UserRequestHandler {
                 break;
             }
 
-            blockId = block.previousBlock;
+            blockId = block.getPreviousBlock();
 
         }
 

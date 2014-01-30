@@ -18,7 +18,7 @@ final class GetUnconfirmedTransactions extends HttpJSONRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray transactionsData = new JSONArray();
-        for (Transaction transaction : Blockchain.allUnconfirmedTransactions) {
+        for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
 
             transactionsData.add(transaction.getJSONObject());
 
