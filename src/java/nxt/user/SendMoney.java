@@ -3,6 +3,7 @@ package nxt.user;
 import nxt.Account;
 import nxt.Blockchain;
 import nxt.Nxt;
+import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -20,7 +21,7 @@ final class SendMoney extends UserRequestHandler {
     private SendMoney() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
+    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws NxtException.ValidationFailure, IOException {
         if (user.getSecretPhrase() == null) {
             return null;
         }

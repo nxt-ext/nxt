@@ -6,6 +6,7 @@ import nxt.Attachment;
 import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
+import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
@@ -35,7 +36,7 @@ final class IssueAsset extends HttpRequestHandler {
     private IssueAsset() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String name = req.getParameter("name");

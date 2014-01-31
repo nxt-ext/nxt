@@ -32,9 +32,10 @@ public final class Block implements Serializable {
         }
     };
 
-    static Block getBlock(JSONObject blockData) {
+    static Block getBlock(JSONObject blockData) throws NxtException.ValidationFailure {
 
         try {
+
             int version = ((Long)blockData.get("version")).intValue();
             int timestamp = ((Long)blockData.get("timestamp")).intValue();
             Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
@@ -48,16 +49,14 @@ public final class Block implements Serializable {
             byte[] blockSignature = Convert.convert((String) blockData.get("blockSignature"));
             byte[] previousBlockHash = version == 1 ? null : Convert.convert((String) blockData.get("previousBlockHash"));
             if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || payloadLength > Nxt.MAX_PAYLOAD_LENGTH) {
-                throw new IllegalArgumentException("Invalid number of transactions or payload length");
+                throw new NxtException.ValidationFailure("Invalid number of transactions or payload length");
             }
+
             return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength,
                     payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-        } catch (IllegalArgumentException e) {
-            throw e;
+
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException(e.getMessage(), e);
-            //logDebugMessage("Failed to parse JSON block data");
-            //logDebugMessage(blockData.toJSONString());
+            throw new NxtException.ValidationFailure(e.getMessage(), e);
         }
 
     }
@@ -90,7 +89,8 @@ public final class Block implements Serializable {
     private transient SoftReference<JSONStreamAware> jsonRef;
 
     Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee,
-          int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature) {
+          int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature)
+            throws NxtException.ValidationFailure {
 
         this(version, timestamp, previousBlockId, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
                 generatorPublicKey, generationSignature, blockSignature, null);
@@ -99,14 +99,15 @@ public final class Block implements Serializable {
 
     /* not public after 0.6.0 */
     public Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
-                 byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash) {
+                 byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash)
+            throws NxtException.ValidationFailure {
 
         if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
-            throw new IllegalArgumentException("attempted to create a block with " + numberOfTransactions + " transactions");
+            throw new NxtException.ValidationFailure("attempted to create a block with " + numberOfTransactions + " transactions");
         }
 
         if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
-            throw new IllegalArgumentException("attempted to create a block with payloadLength " + payloadLength);
+            throw new NxtException.ValidationFailure("attempted to create a block with payloadLength " + payloadLength);
         }
 
         this.version = version;

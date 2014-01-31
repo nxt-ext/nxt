@@ -1,3 +1,4 @@
+import nxt.NxtException;
 import nxt.util.Convert;
 
 import java.io.ObjectStreamException;
@@ -27,16 +28,20 @@ final class Nxt {
 
         public Object readResolve() throws ObjectStreamException {
 
-            nxt.Transaction transaction = attachment != null
-                            ? nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
-                            amount, fee, Convert.zeroToNull(referencedTransaction), attachment)
-                            : nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
-                            amount, fee, Convert.zeroToNull(referencedTransaction));
-            transaction.signature = signature;
-            transaction.index = index;
-            transaction.blockId = Convert.zeroToNull(block);
-            transaction.height = height;
-            return transaction;
+            try {
+                nxt.Transaction transaction = attachment != null
+                        ? nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
+                        amount, fee, Convert.zeroToNull(referencedTransaction), attachment)
+                        : nxt.Transaction.newTransaction(timestamp, deadline, senderPublicKey, recipient,
+                        amount, fee, Convert.zeroToNull(referencedTransaction));
+                transaction.signature = signature;
+                transaction.index = index;
+                transaction.blockId = Convert.zeroToNull(block);
+                transaction.height = height;
+                return transaction;
+            } catch (NxtException.ValidationFailure e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
         }
 
 
@@ -180,17 +185,21 @@ final class Nxt {
 
         public Object readResolve() throws ObjectStreamException {
 
-            nxt.Block block = new nxt.Block(version, timestamp, Convert.zeroToNull(previousBlock), transactions.length,
-                    totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-            block.index = index;
-            for (int i = 0 ; i < transactions.length; i++) {
-                block.getTransactionIds()[i] = transactions[i];
+            try {
+                nxt.Block block = new nxt.Block(version, timestamp, Convert.zeroToNull(previousBlock), transactions.length,
+                        totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+                block.index = index;
+                for (int i = 0 ; i < transactions.length; i++) {
+                    block.getTransactionIds()[i] = transactions[i];
+                }
+                block.baseTarget = baseTarget;
+                block.height = height;
+                block.nextBlockId = Convert.zeroToNull(nextBlock);
+                block.cumulativeDifficulty = cumulativeDifficulty;
+                return block;
+            } catch (NxtException.ValidationFailure e) {
+                throw new RuntimeException(e.getMessage(), e);
             }
-            block.baseTarget = baseTarget;
-            block.height = height;
-            block.nextBlockId = Convert.zeroToNull(nextBlock);
-            block.cumulativeDifficulty = cumulativeDifficulty;
-            return block;
         }
     }
 }

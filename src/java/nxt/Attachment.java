@@ -268,7 +268,7 @@ public interface Attachment {
             return Transaction.Type.ColoredCoins.ASSET_TRANSFER;
         }
 
-        public Long getAsset() {
+        public Long getAssetId() {
             return assetId;
         }
 
@@ -323,7 +323,7 @@ public interface Attachment {
 
         }
 
-        public Long getAsset() {
+        public Long getAssetId() {
             return assetId;
         }
 
@@ -402,7 +402,7 @@ public interface Attachment {
 
         }
 
-        public Long getOrder() {
+        public Long getOrderId() {
             return orderId;
         }
     }

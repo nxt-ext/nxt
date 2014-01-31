@@ -1,5 +1,6 @@
 package nxt.user;
 
+import nxt.NxtException;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -62,6 +63,6 @@ public abstract class UserRequestHandler {
 
     }
 
-    abstract JSONStreamAware processRequest(HttpServletRequest request, User user) throws IOException;
+    abstract JSONStreamAware processRequest(HttpServletRequest request, User user) throws NxtException, IOException;
 
 }

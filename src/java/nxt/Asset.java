@@ -29,9 +29,14 @@ public final class Asset {
         Asset.assetNameToAssetMappings.put(name.toLowerCase(), asset);
     }
 
+    static void removeAsset(Long assetId) {
+        Asset asset = Asset.assets.remove(assetId);
+        Asset.assetNameToAssetMappings.remove(asset.getName());
+    }
+
     static void clear() {
-        assets.clear();
-        assetNameToAssetMappings.clear();
+        Asset.assets.clear();
+        Asset.assetNameToAssetMappings.clear();
     }
 
     private final Long assetId;

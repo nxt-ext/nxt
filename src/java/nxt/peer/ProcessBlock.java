@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Blockchain;
+import nxt.NxtException;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -32,9 +33,9 @@ final class ProcessBlock extends HttpJSONRequestHandler {
 
             return Blockchain.pushBlock(request) ? ACCEPTED : NOT_ACCEPTED;
 
-        } catch (IllegalArgumentException e) {
+        } catch (NxtException.ValidationFailure e) {
             if (peer != null) {
-                peer.blacklist();
+                peer.blacklist(e);
             }
             return NOT_ACCEPTED;
         }

@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Nxt;
+import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
@@ -86,7 +87,11 @@ public abstract class HttpRequestHandler {
 
                 HttpRequestHandler requestHandler = httpGetHandlers.get(requestType);
                 if (requestHandler != null) {
-                    response = requestHandler.processRequest(req);
+                    try {
+                        response = requestHandler.processRequest(req);
+                    } catch (NxtException e) {
+                        response = ERROR_INCORRECT_REQUEST;
+                    }
                 } else {
                     response = ERROR_INCORRECT_REQUEST;
                 }
@@ -103,6 +108,6 @@ public abstract class HttpRequestHandler {
 
     }
 
-    abstract JSONStreamAware processRequest(HttpServletRequest request) throws IOException;
+    abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException, IOException;
 
 }

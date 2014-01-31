@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Blockchain;
+import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -18,7 +19,7 @@ final class BroadcastTransaction extends HttpRequestHandler {
     private BroadcastTransaction() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
 
         String transactionBytes = req.getParameter("transactionBytes");
         if (transactionBytes == null) {

@@ -5,6 +5,7 @@ import nxt.Attachment;
 import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
+import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
@@ -34,7 +35,7 @@ final class PlaceBidOrder extends HttpRequestHandler {
     private PlaceBidOrder() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String assetValue = req.getParameter("asset");

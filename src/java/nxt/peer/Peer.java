@@ -2,6 +2,7 @@ package nxt.peer;
 
 import nxt.Account;
 import nxt.Nxt;
+import nxt.NxtException;
 import nxt.ThreadPools;
 import nxt.crypto.Crypto;
 import nxt.user.User;
@@ -399,6 +400,11 @@ public final class Peer implements Comparable<Peer> {
         } else {
             return index - o.index;
         }
+    }
+
+    public void blacklist(NxtException.ValidationFailure cause) {
+        Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
+        blacklist();
     }
 
     public void blacklist() {
