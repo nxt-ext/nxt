@@ -77,7 +77,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             return transaction;
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationFailure(e.getMessage());
+            throw new NxtException.ValidationFailure(e.toString());
         }
     }
 
@@ -129,7 +129,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             return transaction;
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationFailure(e.getMessage());
+            throw new NxtException.ValidationFailure(e.toString());
         }
     }
 

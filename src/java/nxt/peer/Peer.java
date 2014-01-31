@@ -403,7 +403,7 @@ public final class Peer implements Comparable<Peer> {
     }
 
     public void blacklist(NxtException.ValidationFailure cause) {
-        Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
+        Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage(), cause);
         blacklist();
     }
 

@@ -56,7 +56,7 @@ public final class Block implements Serializable {
                     payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationFailure(e.getMessage(), e);
+            throw new NxtException.ValidationFailure(e.toString(), e);
         }
 
     }
