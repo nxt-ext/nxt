@@ -65,9 +65,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         byte[] signature = new byte[64];
         buffer.get(signature);
 
-        Transaction transaction = new Transaction(findTransactionType(type, subtype), timestamp, deadline, senderPublicKey, recipientId, amount,
+        Type transactionType = findTransactionType(type, subtype);
+        Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
                 fee, referencedTransactionId, signature);
-        transaction.loadAttachment(buffer);
+
+        if (! transactionType.loadAttachment(transaction, buffer)) {
+            throw new IllegalArgumentException("Invalid transaction attachment");
+        }
 
         return transaction;
     }
@@ -104,11 +108,15 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
         byte[] signature = Convert.convert((String) transactionData.get("signature"));
 
-        Transaction transaction = new Transaction(findTransactionType(type, subtype), timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+        Type transactionType = findTransactionType(type, subtype);
+        Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
                 referencedTransactionId, signature);
 
         JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-        transaction.loadAttachment(attachmentData);
+
+        if (! transactionType.loadAttachment(transaction, attachmentData)) {
+            throw new IllegalArgumentException("Invalid transaction attachment");
+        }
 
         return transaction;
     }
@@ -136,8 +144,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                         int amount, int fee, Long referencedTransactionId, byte[] signature) {
 
-        if (type == null) {
-            throw new IllegalArgumentException("Invalid transaction type or subtype");
+        if (type == null || deadline < 1 || fee <= 0 || fee > Nxt.MAX_BALANCE || amount < 0 || amount > Nxt.MAX_BALANCE) {
+            throw new IllegalArgumentException("Invalid transaction parameters");
         }
 
         this.timestamp = timestamp;
@@ -150,6 +158,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         this.signature = signature;
         this.type = type;
         this.height = Integer.MAX_VALUE;
+
 
     }
 
@@ -368,37 +377,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return getId().hashCode();
     }
 
-    boolean validateAttachment() {
-        return type.validateAttachment(this);
-    }
-
     boolean verify() {
-
         Account account = Account.getAccount(getSenderAccountId());
         if (account == null) {
-
             return false;
-
         }
-
         byte[] data = getBytes();
         for (int i = 64; i < 128; i++) {
-
             data[i] = 0;
-
         }
-
         return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
-
-
-    }
-
-    void loadAttachment(ByteBuffer buffer) {
-        type.loadAttachment(this, buffer);
-    }
-
-    void loadAttachment(JSONObject attachmentData) {
-        type.loadAttachment(this, attachmentData);
     }
 
     /*
@@ -524,16 +512,9 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
         public abstract byte getSubtype();
 
-        abstract void loadAttachment(Transaction transaction, ByteBuffer buffer);
+        abstract boolean loadAttachment(Transaction transaction, ByteBuffer buffer);
 
-        abstract void loadAttachment(Transaction transaction, JSONObject attachmentData);
-
-        final boolean validateAttachment(Transaction transaction) {
-            //TODO: this check may no longer be needed here now
-            return transaction.fee <= Nxt.MAX_BALANCE && doValidateAttachment(transaction);
-        }
-
-        abstract boolean doValidateAttachment(Transaction transaction);
+        abstract boolean loadAttachment(Transaction transaction, JSONObject attachmentData);
 
         // return true iff double spending
         final boolean isDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
@@ -562,12 +543,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 return TYPE_PAYMENT;
             }
 
-            @Override
-            final void loadAttachment(Transaction transaction, ByteBuffer buffer) {}
-
-            @Override
-            final void loadAttachment(Transaction transaction, JSONObject attachmentData) {}
-
             public static final Type ORDINARY = new Payment() {
 
                 @Override
@@ -576,8 +551,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean doValidateAttachment(Transaction transaction) {
-                    return transaction.amount > 0 && transaction.amount < Nxt.MAX_BALANCE;
+                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    return validateAttachment(transaction);
                 }
 
                 @Override
@@ -592,6 +572,10 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
                     return false;
+                }
+
+                private boolean validateAttachment(Transaction transaction) {
+                    return transaction.amount > 0 && transaction.amount < Nxt.MAX_BALANCE;
                 }
 
             };
@@ -621,23 +605,28 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int messageLength = buffer.getInt();
                     if (messageLength <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
                         byte[] message = new byte[messageLength];
                         buffer.get(message);
                         transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
+                        return validateAttachment(transaction);
                     }
+                    return false;
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     String message = (String)attachmentData.get("message");
                     transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.convert(message));
+                    return validateAttachment(transaction);
                 }
 
                 @Override
-                boolean doValidateAttachment(Transaction transaction) {
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+                private boolean validateAttachment(Transaction transaction) {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
                         return false;
                     }
@@ -650,9 +639,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     }
                 }
 
-                @Override
-                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
             };
 
             public static final Type ALIAS_ASSIGNMENT = new Messaging() {
@@ -663,7 +649,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int aliasLength = buffer.get();
                     if (aliasLength > Nxt.MAX_ALIAS_LENGTH * 3) {
                         throw new IllegalArgumentException("Max alias length exceeded");
@@ -679,20 +665,40 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     try {
                         transaction.attachment = new Attachment.MessagingAliasAssignment(new String(alias, "UTF-8").intern(),
                                 new String(uri, "UTF-8").intern());
+                        return validateAttachment(transaction);
                     } catch (RuntimeException|UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error parsing alias assignment", e);
                     }
+                    return false;
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     String alias = (String)attachmentData.get("alias");
                     String uri = (String)attachmentData.get("uri");
                     transaction.attachment = new Attachment.MessagingAliasAssignment(alias.trim(), uri.trim());
+                    return validateAttachment(transaction);
                 }
 
                 @Override
-                boolean doValidateAttachment(Transaction transaction) {
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                    Block block = transaction.getBlock();
+                    Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(), attachment.getAliasURI(), block.getTimestamp());
+                }
+
+                @Override
+                boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
+                    Set<String> myDuplicates = duplicates.get(this);
+                    if (myDuplicates == null) {
+                        myDuplicates = new HashSet<>();
+                        duplicates.put(this, myDuplicates);
+                    }
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                    return ! myDuplicates.add(attachment.getAliasName().toLowerCase());
+                }
+
+                private boolean validateAttachment(Transaction transaction) {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
                         return false;
                     }
@@ -717,23 +723,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     }
                 }
 
-                @Override
-                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                    Block block = transaction.getBlock();
-                    Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(), attachment.getAliasURI(), block.getTimestamp());
-                }
-
-                @Override
-                boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
-                    Set<String> myDuplicates = duplicates.get(this);
-                    if (myDuplicates == null) {
-                        myDuplicates = new HashSet<>();
-                        duplicates.put(this, myDuplicates);
-                    }
-                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                    return ! myDuplicates.add(attachment.getAliasName().toLowerCase());
-                }
             };
         }
 
@@ -752,7 +741,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     int nameLength = buffer.get();
                     if (nameLength > 30) {
                         throw new IllegalArgumentException("Max asset name length exceeded");
@@ -769,40 +758,20 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     try {
                         transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(new String(name, "UTF-8").intern(),
                                 new String(description, "UTF-8").intern(), quantity);
+                        return validateAttachment(transaction);
                     } catch (RuntimeException|UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error in asset issuance", e);
                     }
+                    return false;
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     String name = (String)attachmentData.get("name");
                     String description = (String)attachmentData.get("description");
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name.trim(), description.trim(), quantity);
-                }
-
-                @Override
-                boolean doValidateAttachment(Transaction transaction) {
-                    try {
-                        Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
-                        if (!Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
-                                || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
-                                || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
-                            return false;
-                        } else {
-                            String normalizedName = attachment.getName().toLowerCase();
-                            for (int i = 0; i < normalizedName.length(); i++) {
-                                if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
-                                    return false;
-                                }
-                            }
-                            return Asset.getAsset(normalizedName) == null;
-                        }
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error validating colored coins asset issuance", e);
-                        return false;
-                    }
+                    return validateAttachment(transaction);
                 }
 
                 @Override
@@ -824,6 +793,28 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
+                private boolean validateAttachment(Transaction transaction) {
+                    try {
+                        Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
+                        if (!Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
+                                || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
+                                || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
+                            return false;
+                        } else {
+                            String normalizedName = attachment.getName().toLowerCase();
+                            for (int i = 0; i < normalizedName.length(); i++) {
+                                if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+                                    return false;
+                                }
+                            }
+                            return Asset.getAsset(normalizedName) == null;
+                        }
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error validating colored coins asset issuance", e);
+                        return false;
+                    }
+                }
+
             };
 
             public static final Type ASSET_TRANSFER = new ColoredCoins() {
@@ -834,23 +825,19 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     Long assetId = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
+                    return validateAttachment(transaction);
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
-                }
-
-                @Override
-                boolean doValidateAttachment(Transaction transaction) {
-                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                    return transaction.amount == 0 && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY;
+                    return validateAttachment(transaction);
                 }
 
                 @Override
@@ -889,6 +876,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     accountAccumulatedAssetQuantities.put(attachment.getAsset(), assetAccumulatedAssetQuantities + attachment.getQuantity());
                 }
 
+                private boolean validateAttachment(Transaction transaction) {
+                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
+                    return transaction.amount == 0 && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY;
+                }
+
             };
 
             abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
@@ -896,23 +888,24 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price);
 
                 @Override
-                final void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     Long assetId = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     long price = buffer.getLong();
                     transaction.attachment = makeAttachment(assetId, quantity, price);
+                    return validateAttachment(transaction);
                 }
 
                 @Override
-                final void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     long price = (Long)attachmentData.get("price");
                     transaction.attachment = makeAttachment(assetId, quantity, price);
+                    return validateAttachment(transaction);
                 }
 
-                @Override
-                final boolean doValidateAttachment(Transaction transaction) {
+                private boolean validateAttachment(Transaction transaction) {
                     Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.attachment;
                     return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0
                             && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY
@@ -1024,8 +1017,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
             abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
 
-                @Override
-                final boolean doValidateAttachment(Transaction transaction) {
+                final boolean validateAttachment(Transaction transaction) {
                     return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0;
                 }
 
@@ -1048,15 +1040,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.zeroToNull(buffer.getLong()));
+                    return validateAttachment(transaction);
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
+                    return validateAttachment(transaction);
                 }
-
 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
@@ -1075,13 +1068,15 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.zeroToNull(buffer.getLong()));
+                    return validateAttachment(transaction);
                 }
 
                 @Override
-                void loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
+                    return validateAttachment(transaction);
                 }
 
                 @Override
@@ -1107,7 +1102,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     return bidOrder.getQuantity() * bidOrder.price;
                 }
                 */
-                
             };
         }
     }

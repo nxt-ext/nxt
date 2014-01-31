@@ -135,22 +135,14 @@ public final class Peer implements Comparable<Peer> {
                 if (peer != null) {
                     JSONObject response = peer.send(getPeersRequest);
                     if (response != null) {
-
                         JSONArray peers = (JSONArray)response.get("peers");
                         for (Object peerAddress : peers) {
-
                             String address = ((String)peerAddress).trim();
                             if (address.length() > 0) {
-                                //TODO: can a rogue peer fill the peer pool with zombie addresses?
-                                //consider an option to trust only highly-hallmarked peers
                                 Peer.addPeer(address, address);
-
                             }
-
                         }
-
                     }
-
                 }
 
             } catch (Exception e) {
@@ -193,13 +185,12 @@ public final class Peer implements Comparable<Peer> {
             return null;
         }
 
-        if (Nxt.myAddress != null && Nxt.myAddress.length() > 0 && Nxt.myAddress.equals(announcedAddress)) {
+        if (Nxt.myAddress != null && Nxt.myAddress.length() > 0 && Nxt.myAddress.equalsIgnoreCase(announcedAddress)) {
             return null;
         }
 
         Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
         if (peer == null) {
-            //TODO: Check addresses
             String peerAddress = announcedAddress.length() > 0 ? announcedAddress : address;
             peer = new Peer(peerAddress, announcedAddress);
             peers.put(peerAddress, peer);

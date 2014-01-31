@@ -106,7 +106,7 @@ public final class Blockchain {
                 while (iterator.hasNext()) {
 
                     Transaction transaction = iterator.next();
-                    if (transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime || !transaction.validateAttachment()) {
+                    if (transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime) {
 
                         iterator.remove();
 
@@ -266,12 +266,16 @@ public final class Blockchain {
                                                 if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
 
                                                     JSONArray transactionData = (JSONArray)blockData.get("transactions");
-                                                    Transaction[] transactions = new Transaction[transactionData.size()];
-                                                    for (int j = 0; j < transactions.length; j++) {
-                                                        transactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
-                                                    }
-
-                                                    if (! Blockchain.pushBlock(block, transactions, false)) {
+                                                    try {
+                                                        Transaction[] transactions = new Transaction[transactionData.size()];
+                                                        for (int j = 0; j < transactions.length; j++) {
+                                                            transactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
+                                                        }
+                                                        if (! Blockchain.pushBlock(block, transactions, false)) {
+                                                            peer.blacklist();
+                                                            return;
+                                                        }
+                                                    } catch (IllegalArgumentException e) {
                                                         peer.blacklist();
                                                         return;
                                                     }
@@ -677,17 +681,13 @@ public final class Blockchain {
 
         for (Object transactionData : transactionsData) {
 
-            Transaction transaction = Transaction.getTransaction((JSONObject) transactionData);
-
             try {
 
+                Transaction transaction = Transaction.getTransaction((JSONObject) transactionData);
+
                 int curTime = Convert.getEpochTime();
-                if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() < 1
-                        || transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime
-                        || transaction.getFee() <= 0 || !transaction.validateAttachment()) {
-
+                if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime) {
                     continue;
-
                 }
 
                 boolean doubleSpendingTransaction;
@@ -860,11 +860,9 @@ public final class Blockchain {
 
                     Transaction transaction = blockTransactions.get(transactionId);
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
-                    //TODO: similar transaction validation is done in several places, refactor common code out
-                    if (transaction.getTimestamp() > curTime + 15 || transaction.getDeadline() < 1
+                    if (transaction.getTimestamp() > curTime + 15
                             || (transaction.getTimestamp() + transaction.getDeadline() * 60 < block.getTimestamp() && previousLastBlock.getHeight() > 303)
-                            || transaction.getFee() <= 0 || transaction.getFee() > Nxt.MAX_BALANCE || transaction.getAmount() < 0
-                            || transaction.getAmount() > Nxt.MAX_BALANCE || !transaction.validateAttachment() || transactions.get(transactionId) != null
+                            || transactions.get(transactionId) != null
                             || (transaction.getReferencedTransactionId() != null && transactions.get(transaction.getReferencedTransactionId()) == null && blockTransactions.get(transaction.getReferencedTransactionId()) == null)
                             || (unconfirmedTransactions.get(transactionId) == null && !transaction.verify())
                             || transaction.getId().equals(Long.valueOf(0L))) {
@@ -1149,7 +1147,7 @@ public final class Blockchain {
                     }
 
                     long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
-                    if (accumulatedAmount + amount <= Account.getAccount(sender).getBalance() && transaction.validateAttachment()) {
+                    if (accumulatedAmount + amount <= Account.getAccount(sender).getBalance()) {
 
                         if (transaction.isDuplicate(duplicates)) {
                             continue;

@@ -41,7 +41,7 @@ final class GetAccountCurrentAskOrderIds extends HttpRequestHandler {
         try {
             assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
         } catch (RuntimeException e) {
-            //TODO: why not just return an error?
+            // ignore
         }
 
         JSONArray orderIds = new JSONArray();
