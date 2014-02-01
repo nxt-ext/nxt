@@ -1,0 +1,1201 @@
+package nxt;
+
+import nxt.crypto.Crypto;
+import nxt.util.Convert;
+import nxt.util.Logger;
+import org.json.simple.JSONObject;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+public final class Transaction implements Comparable<Transaction>, Serializable {
+
+    static final long serialVersionUID = 0;
+
+    private static final byte TYPE_PAYMENT = 0;
+    private static final byte TYPE_MESSAGING = 1;
+    private static final byte TYPE_COLORED_COINS = 2;
+
+    private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
+
+    private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
+    private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
+
+    private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
+    private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
+    private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
+    private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
+    private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
+    private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+
+    public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
+        @Override
+        public int compare(Transaction o1, Transaction o2) {
+            return o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0);
+        }
+    };
+
+    public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationFailure {
+
+        try {
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            byte type = buffer.get();
+            byte subtype = buffer.get();
+            int timestamp = buffer.getInt();
+            short deadline = buffer.getShort();
+            byte[] senderPublicKey = new byte[32];
+            buffer.get(senderPublicKey);
+            Long recipientId = buffer.getLong();
+            int amount = buffer.getInt();
+            int fee = buffer.getInt();
+            Long referencedTransactionId = Convert.zeroToNull(buffer.getLong());
+            byte[] signature = new byte[64];
+            buffer.get(signature);
+
+            Type transactionType = findTransactionType(type, subtype);
+            Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
+                    fee, referencedTransactionId, signature);
+
+            if (! transactionType.loadAttachment(transaction, buffer)) {
+                throw new NxtException.ValidationFailure("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
+            }
+
+            return transaction;
+
+        } catch (RuntimeException e) {
+            throw new NxtException.ValidationFailure(e.toString());
+        }
+    }
+
+    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+                                             int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationFailure {
+        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
+    }
+
+    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+                                             int amount, int fee, Long referencedTransactionId, Attachment attachment)
+            throws NxtException.ValidationFailure {
+        Transaction transaction = new Transaction(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+                referencedTransactionId, null);
+        transaction.attachment = attachment;
+        return transaction;
+    }
+
+    static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+                                      int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationFailure {
+        return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
+    }
+
+    static Transaction getTransaction(JSONObject transactionData) throws NxtException.ValidationFailure {
+
+        try {
+
+            byte type = ((Long)transactionData.get("type")).byteValue();
+            byte subtype = ((Long)transactionData.get("subtype")).byteValue();
+            int timestamp = ((Long)transactionData.get("timestamp")).intValue();
+            short deadline = ((Long)transactionData.get("deadline")).shortValue();
+            byte[] senderPublicKey = Convert.convert((String) transactionData.get("senderPublicKey"));
+            Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
+            if (recipientId == null) recipientId = 0L; // ugly
+            int amount = ((Long)transactionData.get("amount")).intValue();
+            int fee = ((Long)transactionData.get("fee")).intValue();
+            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
+            byte[] signature = Convert.convert((String) transactionData.get("signature"));
+
+            Type transactionType = findTransactionType(type, subtype);
+            Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+                    referencedTransactionId, signature);
+
+            JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
+
+            if (! transactionType.loadAttachment(transaction, attachmentData)) {
+                throw new NxtException.ValidationFailure("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+            }
+
+            return transaction;
+
+        } catch (RuntimeException e) {
+            throw new NxtException.ValidationFailure(e.toString());
+        }
+    }
+
+    private final short deadline;
+    private final byte[] senderPublicKey;
+    private final Long recipientId;
+    private final int amount;
+    private final int fee;
+    private final Long referencedTransactionId;
+
+    /*private after 0.6.0*/
+    public int index;
+    public int height;
+    public Long blockId;
+    public byte[] signature;
+    /**/
+    private int timestamp;
+    private transient Type type;
+    private Attachment attachment;
+    private transient volatile Long id;
+    private transient volatile String stringId = null;
+    private transient volatile Long senderAccountId;
+
+    private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+                        int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationFailure {
+
+        if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY)) ? (deadline != 0 || fee != 0) : (deadline < 1 || fee <= 0)
+                || fee > Nxt.MAX_BALANCE || amount < 0 || amount > Nxt.MAX_BALANCE || type == null) {
+            throw new NxtException.ValidationFailure("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
+                    + ", deadline: " + deadline + ", fee: " + fee + ", amount: " + amount);
+        }
+
+        this.timestamp = timestamp;
+        this.deadline = deadline;
+        this.senderPublicKey = senderPublicKey;
+        this.recipientId = recipientId;
+        this.amount = amount;
+        this.fee = fee;
+        this.referencedTransactionId = referencedTransactionId;
+        this.signature = signature;
+        this.type = type;
+        this.height = Integer.MAX_VALUE;
+
+
+    }
+
+    public short getDeadline() {
+        return deadline;
+    }
+
+    public byte[] getSenderPublicKey() {
+        return senderPublicKey;
+    }
+
+    public Long getRecipientId() {
+        return recipientId;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public int getFee() {
+        return fee;
+    }
+
+    public Long getReferencedTransactionId() {
+        return referencedTransactionId;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public Block getBlock() {
+        return Blockchain.getBlock(blockId);
+    }
+
+    void setBlockId(Long blockId) {
+        this.blockId = blockId;
+    }
+
+    void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    void setIndex(int index) {
+        this.index = index;
+    }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+    public Attachment getAttachment() {
+        return attachment;
+    }
+
+    public Long getId() {
+        calculateIds();
+        return id;
+    }
+
+    public String getStringId() {
+        calculateIds();
+        return stringId;
+    }
+
+    public Long getSenderAccountId() {
+        calculateIds();
+        return senderAccountId;
+    }
+
+    @Override
+    public int compareTo(Transaction o) {
+
+        if (height < o.height) {
+
+            return -1;
+
+        } else if (height > o.height) {
+
+            return 1;
+
+        } else {
+
+            // equivalent to: fee * 1048576L / getSize() > o.fee * 1048576L / o.getSize()
+            if (fee * o.getSize() > o.fee * getSize()) {
+
+                return -1;
+
+            } else if (fee * o.getSize() < o.fee * getSize()) {
+
+                return 1;
+
+            } else {
+
+                if (timestamp < o.timestamp) {
+
+                    return -1;
+
+                } else if (timestamp > o.timestamp) {
+
+                    return 1;
+
+                } else {
+
+                    if (index < o.index) {
+
+                        return -1;
+
+                    } else if (index > o.index) {
+
+                        return 1;
+
+                    } else {
+
+                        return 0;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+    public byte[] getBytes() {
+
+        ByteBuffer buffer = ByteBuffer.allocate(getSize());
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.put(type.getType());
+        buffer.put(type.getSubtype());
+        buffer.putInt(timestamp);
+        buffer.putShort(deadline);
+        buffer.put(senderPublicKey);
+        buffer.putLong(Convert.nullToZero(recipientId));
+        buffer.putInt(amount);
+        buffer.putInt(fee);
+        buffer.putLong(Convert.nullToZero(referencedTransactionId));
+        buffer.put(signature);
+        if (attachment != null) {
+            buffer.put(attachment.getBytes());
+        }
+        return buffer.array();
+
+    }
+
+    public JSONObject getJSONObject() {
+
+        JSONObject transaction = new JSONObject();
+
+        transaction.put("type", type.getType());
+        transaction.put("subtype", type.getSubtype());
+        transaction.put("timestamp", timestamp);
+        transaction.put("deadline", deadline);
+        transaction.put("senderPublicKey", Convert.convert(senderPublicKey));
+        transaction.put("recipient", Convert.convert(recipientId));
+        transaction.put("amount", amount);
+        transaction.put("fee", fee);
+        transaction.put("referencedTransaction", Convert.convert(referencedTransactionId));
+        transaction.put("signature", Convert.convert(signature));
+        if (attachment != null) {
+            transaction.put("attachment", attachment.getJSON());
+        }
+
+        return transaction;
+    }
+
+    public void sign(String secretPhrase) {
+
+        if (signature != null) {
+            throw new IllegalStateException("Transaction already signed");
+        }
+
+        signature = new byte[64]; // ugly but signature is needed by getBytes()
+        signature = Crypto.sign(getBytes(), secretPhrase);
+
+        try {
+
+            while (!verify()) {
+
+                timestamp++;
+                // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
+                signature = new byte[64];
+                signature = Crypto.sign(getBytes(), secretPhrase);
+
+            }
+
+        } catch (RuntimeException e) {
+
+            Logger.logMessage("Error signing transaction", e);
+
+        }
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Transaction && this.getId().equals(((Transaction)o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
+    boolean verify() {
+        Account account = Account.getAccount(getSenderAccountId());
+        if (account == null) {
+            return false;
+        }
+        byte[] data = getBytes();
+        for (int i = 64; i < 128; i++) {
+            data[i] = 0;
+        }
+        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
+    }
+
+    /*
+    long getRecipientDeltaBalance() {
+        return amount * 100L + type.getRecipientDeltaBalance(this);
+    }
+
+    long getSenderDeltaBalance() {
+        return -(amount + fee) * 100L + type.getSenderDeltaBalance(this);
+    }
+    */
+
+    // returns true iff double spending
+    boolean isDoubleSpending() {
+        Account senderAccount = Account.getAccount(getSenderAccountId());
+        if (senderAccount == null) {
+            return true;
+        }
+        synchronized(senderAccount) {
+            return type.isDoubleSpending(this, senderAccount, this.amount + this.fee);
+        }
+    }
+
+    void apply() {
+        Account senderAccount = Account.getAccount(getSenderAccountId());
+        if (! senderAccount.setOrVerify(senderPublicKey)) {
+            throw new RuntimeException("sender public key mismatch");
+            // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
+        }
+        Account recipientAccount = Account.getAccount(recipientId);
+        if (recipientAccount == null) {
+            recipientAccount = Account.addOrGetAccount(recipientId);
+        }
+        senderAccount.addToBalanceAndUnconfirmedBalance(- (amount + fee) * 100L);
+        type.apply(this, senderAccount, recipientAccount);
+    }
+
+    // NOTE: when undo is called, lastBlock has already been set to the previous block
+    void undo() throws UndoNotSupported {
+        Account senderAccount = Account.getAccount(senderAccountId);
+        senderAccount.addToBalance((amount + fee) * 100L);
+        Account recipientAccount = Account.getAccount(recipientId);
+        type.undo(this, senderAccount, recipientAccount);
+    }
+
+    void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
+        Long senderId = getSenderAccountId();
+        Long accumulatedAmount = accumulatedAmounts.get(senderId);
+        if (accumulatedAmount == null) {
+            accumulatedAmount = 0L;
+        }
+        accumulatedAmounts.put(senderId, accumulatedAmount + (amount + fee) * 100L);
+        type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
+    }
+
+    boolean isDuplicate(Map<Type, Set<String>> duplicates) {
+        return type.isDuplicate(this, duplicates);
+    }
+
+    private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
+
+    int getSize() {
+        return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
+    }
+
+    private void calculateIds() {
+        if (stringId != null) {
+            return;
+        }
+        byte[] hash = Crypto.sha256().digest(getBytes());
+        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+        id = bigInteger.longValue();
+        senderAccountId = Account.getId(senderPublicKey);
+        stringId = bigInteger.toString();
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.write(type.getType());
+        out.write(type.getSubtype());
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.type = findTransactionType(in.readByte(), in.readByte());
+    }
+
+    public static Type findTransactionType(byte type, byte subtype) {
+        switch (type) {
+            case TYPE_PAYMENT:
+                switch (subtype) {
+                    case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
+                        return Type.Payment.ORDINARY;
+                    default:
+                        return null;
+                }
+            case TYPE_MESSAGING:
+                switch (subtype) {
+                    case SUBTYPE_MESSAGING_ARBITRARY_MESSAGE:
+                        return Type.Messaging.ARBITRARY_MESSAGE;
+                    case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
+                        return Type.Messaging.ALIAS_ASSIGNMENT;
+                    default:
+                        return null;
+                }
+            case TYPE_COLORED_COINS:
+                switch (subtype) {
+                    case SUBTYPE_COLORED_COINS_ASSET_ISSUANCE:
+                        return Type.ColoredCoins.ASSET_ISSUANCE;
+                    case SUBTYPE_COLORED_COINS_ASSET_TRANSFER:
+                        return Type.ColoredCoins.ASSET_TRANSFER;
+                    case SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
+                        return Type.ColoredCoins.ASK_ORDER_PLACEMENT;
+                    case SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT:
+                        return Type.ColoredCoins.BID_ORDER_PLACEMENT;
+                    case SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION:
+                        return Type.ColoredCoins.ASK_ORDER_CANCELLATION;
+                    case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
+                        return Type.ColoredCoins.BID_ORDER_CANCELLATION;
+                    default:
+                        return null;
+                }
+            default:
+                return null;
+        }
+    }
+
+    public static abstract class Type {
+
+        public abstract byte getType();
+
+        public abstract byte getSubtype();
+
+        abstract boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationFailure;
+
+        abstract boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationFailure;
+
+        // return true iff double spending
+        final boolean isDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
+            if (senderAccount.getUnconfirmedBalance() < totalAmount * 100L) {
+                return true;
+            }
+            senderAccount.addToUnconfirmedBalance(- totalAmount * 100L);
+            return checkDoubleSpending(transaction, senderAccount, totalAmount);
+        }
+
+        abstract boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount);
+
+        abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
+
+        abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported;
+
+        abstract void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                   Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount);
+
+        boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
+            return false;
+        }
+
+        public static abstract class Payment extends Type {
+
+            @Override
+            public final byte getType() {
+                return TYPE_PAYMENT;
+            }
+
+            public static final Type ORDINARY = new Payment() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_PAYMENT_ORDINARY_PAYMENT;
+                }
+
+                @Override
+                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    recipientAccount.addToBalanceAndUnconfirmedBalance(transaction.amount * 100L);
+                }
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    recipientAccount.addToBalanceAndUnconfirmedBalance(-transaction.amount * 100L);
+                }
+
+                @Override
+                void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+                @Override
+                boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
+                    return false;
+                }
+
+                private boolean validateAttachment(Transaction transaction) {
+                    return transaction.amount > 0 && transaction.amount < Nxt.MAX_BALANCE;
+                }
+
+            };
+        }
+
+        public static abstract class Messaging extends Type {
+
+            @Override
+            public final byte getType() {
+                return TYPE_MESSAGING;
+            }
+
+            @Override
+            boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
+                return false;
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+            public final static Type ARBITRARY_MESSAGE = new Messaging() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_MESSAGING_ARBITRARY_MESSAGE;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    int messageLength = buffer.getInt();
+                    if (messageLength <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                        byte[] message = new byte[messageLength];
+                        buffer.get(message);
+                        transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
+                        return validateAttachment(transaction);
+                    }
+                    return false;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    String message = (String)attachmentData.get("message");
+                    transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.convert(message));
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+                private boolean validateAttachment(Transaction transaction) {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
+                        return false;
+                    }
+                    try {
+                        Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.attachment;
+                        return transaction.amount == 0 && attachment.getMessage().length <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH;
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error validating arbitrary message", e);
+                        return false;
+                    }
+                }
+
+            };
+
+            public static final Type ALIAS_ASSIGNMENT = new Messaging() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationFailure {
+                    int aliasLength = buffer.get();
+                    if (aliasLength > Nxt.MAX_ALIAS_LENGTH * 3) {
+                        throw new NxtException.ValidationFailure("Max alias length exceeded");
+                    }
+                    byte[] alias = new byte[aliasLength];
+                    buffer.get(alias);
+                    int uriLength = buffer.getShort();
+                    if (uriLength > Nxt.MAX_ALIAS_URI_LENGTH * 3) {
+                        throw new NxtException.ValidationFailure("Max alias URI length exceeded");
+                    }
+                    byte[] uri = new byte[uriLength];
+                    buffer.get(uri);
+                    try {
+                        transaction.attachment = new Attachment.MessagingAliasAssignment(new String(alias, "UTF-8").intern(),
+                                new String(uri, "UTF-8").intern());
+                        return validateAttachment(transaction);
+                    } catch (RuntimeException|UnsupportedEncodingException e) {
+                        Logger.logDebugMessage("Error parsing alias assignment", e);
+                    }
+                    return false;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    String alias = (String)attachmentData.get("alias");
+                    String uri = (String)attachmentData.get("uri");
+                    transaction.attachment = new Attachment.MessagingAliasAssignment(alias.trim(), uri.trim());
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                    Block block = transaction.getBlock();
+                    Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(), attachment.getAliasURI(), block.getTimestamp());
+                }
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                    // can't tell whether Alias existed before and what was its previous uri
+                    throw new UndoNotSupported(transaction, "Reversal of alias assignment not supported");
+                }
+
+                @Override
+                boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
+                    Set<String> myDuplicates = duplicates.get(this);
+                    if (myDuplicates == null) {
+                        myDuplicates = new HashSet<>();
+                        duplicates.put(this, myDuplicates);
+                    }
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                    return ! myDuplicates.add(attachment.getAliasName().toLowerCase());
+                }
+
+                private boolean validateAttachment(Transaction transaction) {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
+                        return false;
+                    }
+                    try {
+                        Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                        if (! Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || attachment.getAliasName().length() == 0
+                                || attachment.getAliasName().length() > 100 || attachment.getAliasURI().length() > 1000) {
+                            return false;
+                        } else {
+                            String normalizedAlias = attachment.getAliasName().toLowerCase();
+                            for (int i = 0; i < normalizedAlias.length(); i++) {
+                                if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+                                    return false;
+                                }
+                            }
+                            Alias alias = Alias.getAlias(normalizedAlias);
+                            return alias == null || Arrays.equals(alias.getAccount().getPublicKey(), transaction.senderPublicKey);
+                        }
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error in alias assignment validation", e);
+                        return false;
+                    }
+                }
+
+            };
+        }
+
+        public static abstract class ColoredCoins extends Type {
+
+            @Override
+            public final byte getType() {
+                return TYPE_COLORED_COINS;
+            }
+
+            public static final Type ASSET_ISSUANCE = new ColoredCoins() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_COLORED_COINS_ASSET_ISSUANCE;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationFailure {
+                    int nameLength = buffer.get();
+                    if (nameLength > 30) {
+                        throw new NxtException.ValidationFailure("Max asset name length exceeded");
+                    }
+                    byte[] name = new byte[nameLength];
+                    buffer.get(name);
+                    int descriptionLength = buffer.getShort();
+                    if (descriptionLength > 300) {
+                        throw new NxtException.ValidationFailure("Max asset description length exceeded");
+                    }
+                    byte[] description = new byte[descriptionLength];
+                    buffer.get(description);
+                    int quantity = buffer.getInt();
+                    try {
+                        transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(new String(name, "UTF-8").intern(),
+                                new String(description, "UTF-8").intern(), quantity);
+                        return validateAttachment(transaction);
+                    } catch (RuntimeException|UnsupportedEncodingException e) {
+                        Logger.logDebugMessage("Error in asset issuance", e);
+                    }
+                    return false;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    String name = (String)attachmentData.get("name");
+                    String description = (String)attachmentData.get("description");
+                    int quantity = ((Long)attachmentData.get("quantity")).intValue();
+                    transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name.trim(), description.trim(), quantity);
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
+                    return false;
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
+                    Long assetId = transaction.getId();
+                    Asset.addAsset(assetId, transaction.getSenderAccountId(), attachment.getName(), attachment.getDescription(), attachment.getQuantity());
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.getQuantity());
+                }
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
+                    Long assetId = transaction.getId();
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -attachment.getQuantity());
+                    Asset.removeAsset(assetId);
+                }
+
+                @Override
+                void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+                private boolean validateAttachment(Transaction transaction) {
+                    try {
+                        Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
+                        if (!Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
+                                || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
+                                || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
+                            return false;
+                        } else {
+                            String normalizedName = attachment.getName().toLowerCase();
+                            for (int i = 0; i < normalizedName.length(); i++) {
+                                if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+                                    return false;
+                                }
+                            }
+                            return Asset.getAsset(normalizedName) == null;
+                        }
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error validating colored coins asset issuance", e);
+                        return false;
+                    }
+                }
+
+            };
+
+            public static final Type ASSET_TRANSFER = new ColoredCoins() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_COLORED_COINS_ASSET_TRANSFER;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    Long assetId = Convert.zeroToNull(buffer.getLong());
+                    int quantity = buffer.getInt();
+                    transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
+                    int quantity = ((Long)attachmentData.get("quantity")).intValue();
+                    transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
+                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
+                    Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.getAssetId());
+                    if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.getQuantity()) {
+                        account.addToUnconfirmedBalance(totalAmount * 100L);
+                        return true;
+                    } else {
+                        account.addToUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
+                        return false;
+                    }
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
+                    recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+                }
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+                    recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
+                }
+
+                @Override
+                void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.attachment;
+                    Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderAccountId());
+                    if (accountAccumulatedAssetQuantities == null) {
+                        accountAccumulatedAssetQuantities = new HashMap<>();
+                        accumulatedAssetQuantities.put(transaction.getSenderAccountId(), accountAccumulatedAssetQuantities);
+                    }
+                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAssetId());
+                    if (assetAccumulatedAssetQuantities == null) {
+                        assetAccumulatedAssetQuantities = 0L;
+                    }
+                    accountAccumulatedAssetQuantities.put(attachment.getAssetId(), assetAccumulatedAssetQuantities + attachment.getQuantity());
+                }
+
+                private boolean validateAttachment(Transaction transaction) {
+                    Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
+                    return transaction.amount == 0 && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY;
+                }
+
+            };
+
+            abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
+
+                abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price);
+
+                @Override
+                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    Long assetId = Convert.zeroToNull(buffer.getLong());
+                    int quantity = buffer.getInt();
+                    long price = buffer.getLong();
+                    transaction.attachment = makeAttachment(assetId, quantity, price);
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
+                    int quantity = ((Long)attachmentData.get("quantity")).intValue();
+                    long price = (Long)attachmentData.get("price");
+                    transaction.attachment = makeAttachment(assetId, quantity, price);
+                    return validateAttachment(transaction);
+                }
+
+                private boolean validateAttachment(Transaction transaction) {
+                    Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.attachment;
+                    return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0
+                            && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY
+                            && attachment.getPrice() > 0 && attachment.getPrice() <= Nxt.MAX_BALANCE * 100L;
+                }
+
+            }
+
+            public static final Type ASK_ORDER_PLACEMENT = new ColoredCoinsOrderPlacement() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT;
+                }
+
+                final Attachment.ColoredCoinsOrderPlacement makeAttachment(Long assetId, int quantity, long price) {
+                    return new Attachment.ColoredCoinsAskOrderPlacement(assetId, quantity, price);
+                }
+
+                @Override
+                boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
+                    Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
+                    Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.getAssetId());
+                    if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.getQuantity()) {
+                        account.addToUnconfirmedBalance(totalAmount * 100L);
+                        return true;
+                    } else {
+                        account.addToUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
+                        return false;
+                    }
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
+                    Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
+                }
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                    Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
+                    Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
+                    if (askOrder == null || askOrder.getQuantity() != attachment.getQuantity() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
+                        //TODO: undoing of partially filled orders not supported yet
+                        throw new UndoNotSupported(transaction, "Ask order already filled");
+                    }
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+                }
+
+                @Override
+                void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+                    Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.attachment;
+                    Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderAccountId());
+                    if (accountAccumulatedAssetQuantities == null) {
+                        accountAccumulatedAssetQuantities = new HashMap<>();
+                        accumulatedAssetQuantities.put(transaction.getSenderAccountId(), accountAccumulatedAssetQuantities);
+                    }
+                    Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAssetId());
+                    if (assetAccumulatedAssetQuantities == null) {
+                        assetAccumulatedAssetQuantities = 0L;
+                    }
+                    accountAccumulatedAssetQuantities.put(attachment.getAssetId(), assetAccumulatedAssetQuantities + attachment.getQuantity());
+                }
+
+            };
+
+            public final static Type BID_ORDER_PLACEMENT = new ColoredCoinsOrderPlacement() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT;
+                }
+
+                final Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price) {
+                    return new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
+                }
+
+                @Override
+                boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
+                    Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
+                    if (account.getUnconfirmedBalance() < attachment.getQuantity() * attachment.getPrice()) {
+                        account.addToUnconfirmedBalance(totalAmount * 100L);
+                        return true;
+                    } else {
+                        account.addToUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
+                        return false;
+                    }
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
+                    senderAccount.addToBalanceAndUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
+                    Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
+                }
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                    Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
+                    Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
+                    if (bidOrder == null || bidOrder.getQuantity() != attachment.getQuantity() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
+                        //TODO: undoing of partially filled orders not supported yet
+                        throw new UndoNotSupported(transaction, "Bid order already filled");
+                    }
+                    senderAccount.addToBalanceAndUnconfirmedBalance(attachment.getQuantity() * attachment.getPrice());
+                }
+
+                @Override
+                void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+                    Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
+                    accumulatedAmounts.put(transaction.getSenderAccountId(), accumulatedAmount + attachment.getQuantity() * attachment.getPrice());
+                }
+
+                /*
+                @Override
+                final long getRecipientDeltaBalance(Transaction transaction) {
+                    return 0;
+                }
+
+                @Override
+                final long getSenderDeltaBalance(Transaction transaction) {
+                    Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
+                    return -attachment.quantity * attachment.price;
+                }
+                */
+
+            };
+
+            abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
+
+                final boolean validateAttachment(Transaction transaction) {
+                    return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0;
+                }
+
+                @Override
+                final boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
+                    return false;
+                }
+
+                @Override
+                final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+                @Override
+                final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                    throw new UndoNotSupported(transaction, "Reversal of order cancellation not supported");
+                }
+
+            }
+
+            public static final Type ASK_ORDER_CANCELLATION = new ColoredCoinsOrderCancellation() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.zeroToNull(buffer.getLong()));
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
+                    Order order = Order.Ask.removeOrder(attachment.getOrderId());
+                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.getAssetId(), order.getQuantity());
+                }
+
+            };
+
+            public static final Type BID_ORDER_CANCELLATION = new ColoredCoinsOrderCancellation() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                    transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.zeroToNull(buffer.getLong()));
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                    transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
+                    Order order = Order.Bid.removeOrder(attachment.getOrderId());
+                    senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.getPrice());
+                }
+
+                /*
+                @Override
+                final long getRecipientDeltaBalance(Transaction transaction) {
+                    return 0;
+                }
+
+                @Override
+                final long getSenderDeltaBalance(Transaction transaction) {
+                    Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
+                    Order.Bid bidOrder = Order.Bid.getBidOrder(attachment.order);
+                    if (bidOrder == null) {
+                        return 0;
+                    }
+                    return bidOrder.getQuantity() * bidOrder.price;
+                }
+                */
+            };
+        }
+    }
+
+    public static final class UndoNotSupported extends NxtException {
+
+        private final Transaction transaction;
+
+        public UndoNotSupported(Transaction transaction, String message) {
+            super(message);
+            this.transaction = transaction;
+        }
+
+        public Transaction getTransaction() {
+            return transaction;
+        }
+
+    }
+}
