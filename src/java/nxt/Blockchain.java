@@ -567,6 +567,11 @@ public final class Blockchain {
     public static boolean pushBlock(JSONObject request) throws NxtException.ValidationFailure {
 
         Block block = Block.getBlock(request);
+        if (!lastBlock.get().getId().equals(block.getPreviousBlockId())) {
+            // do this check first to avoid validation failures of future blocks and transactions
+            // when loading blockchain from scratch
+            return false;
+        }
         JSONArray transactionsData = (JSONArray)request.get("transactions");
         Transaction[] transactions = new Transaction[transactionsData.size()];
         for (int i = 0; i < transactions.length; i++) {
