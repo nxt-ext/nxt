@@ -12,13 +12,17 @@ public final class Convert {
     private Convert() {} //never
 
     public static byte[] convert(String string) {
-
         byte[] bytes = new byte[string.length() / 2];
         for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = (byte)Integer.parseInt(string.substring(i * 2, i * 2 + 2), 16);
+            int digit1 = alphabet.indexOf(string.charAt(i * 2));
+            int digit2 = alphabet.indexOf(string.charAt(i * 2 + 1));
+            if (digit1 < 0 || digit2 < 0 || digit1 > 15) {
+                throw new NumberFormatException("Invalid hex number: " + string);
+            }
+            bytes[i] = (byte)((digit1 << 4) + digit2);
+            //bytes[i] = (byte)Integer.parseInt(string.substring(i * 2, i * 2 + 2), 16);
         }
         return bytes;
-
     }
 
     public static String convert(byte[] bytes) {
