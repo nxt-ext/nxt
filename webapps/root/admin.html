@@ -276,5 +276,36 @@
     </table>
     <div class="result"></div>
 </form>
+<hr>
+<b>Send Money:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="sendMoney"/>
+    <table>
+        <tr>
+            <td>Recipient:</td>
+            <td><input type="text" name="recipient"/></td>
+        </tr>
+        <tr>
+            <td>Amount:</td>
+            <td><input type="text" name="amount"/></td>
+        </tr>
+        <tr>
+            <td>Fee:</td>
+            <td><input type="text" name="fee"/></td>
+        </tr>
+        <tr>
+            <td>Deadline:</td>
+            <td><input type="text" name="deadline"/></td>
+        </tr>
+        <tr>
+            <td>Secret phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
 </body>
 </html>
