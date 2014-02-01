@@ -40,7 +40,7 @@ final class GetAccountCurrentBidOrderIds extends HttpRequestHandler {
         Long assetId = null;
         try {
             assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // ignored
         }
 

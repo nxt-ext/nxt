@@ -73,9 +73,12 @@ public final class Blockchain {
 
                     JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
                     if (response != null) {
-
-                        Blockchain.processUnconfirmedTransactions(response);
-
+                        try {
+                            Blockchain.processUnconfirmedTransactions(response);
+                        } catch (NxtException.ValidationFailure e) {
+                            Logger.logDebugMessage("Invalid unconfirmed transaction received");
+                            peer.blacklist(e);
+                        }
                     }
 
                 }
@@ -202,32 +205,34 @@ public final class Blockchain {
 
                                 }
 
-                                int i, numberOfBlocks;
-                                do {
+                                {
+                                    int i, numberOfBlocks;
+                                    do {
 
-                                    JSONObject request = new JSONObject();
-                                    request.put("requestType", "getNextBlockIds");
-                                    request.put("blockId", Convert.convert(commonBlockId));
-                                    response = peer.send(JSON.prepareRequest(request));
-                                    if (response == null) {
-                                        return;
-                                    }
-
-                                    JSONArray nextBlockIds = (JSONArray)response.get("nextBlockIds");
-                                    if (nextBlockIds == null || (numberOfBlocks = nextBlockIds.size()) == 0) {
-                                        return;
-                                    }
-
-                                    Long blockId;
-                                    for (i = 0; i < numberOfBlocks; i++) {
-                                        blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
-                                        if (blocks.get(blockId) == null) {
-                                            break;
+                                        JSONObject request = new JSONObject();
+                                        request.put("requestType", "getNextBlockIds");
+                                        request.put("blockId", Convert.convert(commonBlockId));
+                                        response = peer.send(JSON.prepareRequest(request));
+                                        if (response == null) {
+                                            return;
                                         }
-                                        commonBlockId = blockId;
-                                    }
 
-                                } while (i == numberOfBlocks);
+                                        JSONArray nextBlockIds = (JSONArray)response.get("nextBlockIds");
+                                        if (nextBlockIds == null || (numberOfBlocks = nextBlockIds.size()) == 0) {
+                                            return;
+                                        }
+
+                                        Long blockId;
+                                        for (i = 0; i < numberOfBlocks; i++) {
+                                            blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
+                                            if (blocks.get(blockId) == null) {
+                                                break;
+                                            }
+                                            commonBlockId = blockId;
+                                        }
+
+                                    } while (i == numberOfBlocks);
+                                }
 
                                 if (lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
 
@@ -246,7 +251,7 @@ public final class Blockchain {
                                         }
 
                                         JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
-                                        if (nextBlocks == null || (numberOfBlocks = nextBlocks.size()) == 0) {
+                                        if (nextBlocks == null || nextBlocks.size() == 0) {
                                             break;
                                         }
 
@@ -286,15 +291,19 @@ public final class Blockchain {
                                                     futureBlocks.add(block);
 
                                                     JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-                                                    for (int j = 0; j < block.transactionIds.length; j++) {
+                                                    try {
+                                                        for (int j = 0; j < block.transactionIds.length; j++) {
 
-                                                        Transaction transaction = Transaction.getTransaction((JSONObject)transactionsData.get(j));
-                                                        block.transactionIds[j] = transaction.getId();
-                                                        block.blockTransactions[j] = transaction;
-                                                        futureTransactions.put(block.transactionIds[j], transaction);
+                                                            Transaction transaction = Transaction.getTransaction((JSONObject)transactionsData.get(j));
+                                                            block.transactionIds[j] = transaction.getId();
+                                                            block.blockTransactions[j] = transaction;
+                                                            futureTransactions.put(block.transactionIds[j], transaction);
 
+                                                        }
+                                                    } catch (NxtException.ValidationFailure e) {
+                                                        peer.blacklist(e);
+                                                        return;
                                                     }
-
                                                 }
 
                                             }

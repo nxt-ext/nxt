@@ -31,7 +31,7 @@ final class GetAsset extends HttpRequestHandler {
             if (assetData == null) {
                 return UNKNOWN_ASSET;
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return INCORRECT_ASSET;
         }
 

@@ -71,7 +71,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     fee, referencedTransactionId, signature);
 
             if (! transactionType.loadAttachment(transaction, buffer)) {
-                throw new NxtException.ValidationFailure("Invalid transaction attachment");
+                throw new NxtException.ValidationFailure("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
             }
 
             return transaction;
@@ -123,7 +123,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
             if (! transactionType.loadAttachment(transaction, attachmentData)) {
-                throw new NxtException.ValidationFailure("Invalid transaction attachment");
+                throw new NxtException.ValidationFailure("Invalid transaction attachment:\n" + attachmentData.toJSONString());
             }
 
             return transaction;
