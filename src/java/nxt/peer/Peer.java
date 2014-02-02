@@ -64,20 +64,22 @@ public final class Peer implements Comparable<Peer> {
         public void run() {
 
             try {
+                try {
 
-                if (Peer.getNumberOfConnectedPublicPeers() < Nxt.maxNumberOfConnectedPublicPeers) {
+                    if (Peer.getNumberOfConnectedPublicPeers() < Nxt.maxNumberOfConnectedPublicPeers) {
 
-                    Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? State.NON_CONNECTED : State.DISCONNECTED, false);
-                    if (peer != null) {
+                        Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? State.NON_CONNECTED : State.DISCONNECTED, false);
+                        if (peer != null) {
 
-                        peer.connect();
+                            peer.connect();
+
+                        }
 
                     }
 
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error connecting to peer", e);
                 }
-
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error connecting to peer", e);
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
@@ -94,21 +96,23 @@ public final class Peer implements Comparable<Peer> {
         public void run() {
 
             try {
+                try {
 
-                long curTime = System.currentTimeMillis();
+                    long curTime = System.currentTimeMillis();
 
-                for (Peer peer : peers.values()) {
+                    for (Peer peer : peers.values()) {
 
-                    if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
+                        if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
 
-                        peer.removeBlacklistedStatus();
+                            peer.removeBlacklistedStatus();
+
+                        }
 
                     }
 
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error un-blacklisting peer", e);
                 }
-
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error un-blacklisting peer", e);
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
@@ -132,23 +136,24 @@ public final class Peer implements Comparable<Peer> {
         public void run() {
 
             try {
-
-                Peer peer = Peer.getAnyPeer(State.CONNECTED, true);
-                if (peer != null) {
-                    JSONObject response = peer.send(getPeersRequest);
-                    if (response != null) {
-                        JSONArray peers = (JSONArray)response.get("peers");
-                        for (Object peerAddress : peers) {
-                            String address = ((String)peerAddress).trim();
-                            if (address.length() > 0) {
-                                Peer.addPeer(address, address);
+                try {
+                    Peer peer = Peer.getAnyPeer(State.CONNECTED, true);
+                    if (peer != null) {
+                        JSONObject response = peer.send(getPeersRequest);
+                        if (response != null) {
+                            JSONArray peers = (JSONArray)response.get("peers");
+                            for (Object peerAddress : peers) {
+                                String address = ((String)peerAddress).trim();
+                                if (address.length() > 0) {
+                                    Peer.addPeer(address, address);
+                                }
                             }
                         }
                     }
-                }
 
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error requesting peers from a peer", e);
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error requesting peers from a peer", e);
+                }
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();

@@ -67,24 +67,24 @@ public final class Blockchain {
         public void run() {
 
             try {
+                try {
+                    Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
+                    if (peer != null) {
 
-                Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
-                if (peer != null) {
-
-                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
-                    if (response != null) {
-                        try {
-                            Blockchain.processUnconfirmedTransactions(response);
-                        } catch (NxtException.ValidationException e) {
-                            Logger.logDebugMessage("Invalid unconfirmed transaction received");
-                            peer.blacklist(e);
+                        JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
+                        if (response != null) {
+                            try {
+                                Blockchain.processUnconfirmedTransactions(response);
+                            } catch (NxtException.ValidationException e) {
+                                peer.blacklist(e);
+                            }
                         }
+
                     }
 
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
-
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
@@ -101,43 +101,46 @@ public final class Blockchain {
         public void run() {
 
             try {
+                try {
 
-                int curTime = Convert.getEpochTime();
-                JSONArray removedUnconfirmedTransactions = new JSONArray();
+                    int curTime = Convert.getEpochTime();
+                    JSONArray removedUnconfirmedTransactions = new JSONArray();
 
-                Iterator<Transaction> iterator = unconfirmedTransactions.values().iterator();
-                while (iterator.hasNext()) {
+                    Iterator<Transaction> iterator = unconfirmedTransactions.values().iterator();
+                    while (iterator.hasNext()) {
 
-                    Transaction transaction = iterator.next();
-                    if (transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime) {
+                        Transaction transaction = iterator.next();
+                        if (transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime) {
 
-                        iterator.remove();
+                            iterator.remove();
 
-                        Account account = Account.getAccount(transaction.getSenderAccountId());
-                        account.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
+                            Account account = Account.getAccount(transaction.getSenderAccountId());
+                            account.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
 
-                        JSONObject removedUnconfirmedTransaction = new JSONObject();
-                        removedUnconfirmedTransaction.put("index", transaction.getIndex());
-                        removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
+                            JSONObject removedUnconfirmedTransaction = new JSONObject();
+                            removedUnconfirmedTransaction.put("index", transaction.getIndex());
+                            removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
+
+                        }
 
                     }
 
+                    if (removedUnconfirmedTransactions.size() > 0) {
+
+                        JSONObject response = new JSONObject();
+                        response.put("response", "processNewData");
+
+                        response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
+
+
+                        User.sendToAll(response);
+
+                    }
+
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error removing unconfirmed transactions", e);
+
                 }
-
-                if (removedUnconfirmedTransactions.size() > 0) {
-
-                    JSONObject response = new JSONObject();
-                    response.put("response", "processNewData");
-
-                    response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
-
-
-                    User.sendToAll(response);
-
-                }
-
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error removing unconfirmed transactions", e);
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
@@ -168,216 +171,217 @@ public final class Blockchain {
         public void run() {
 
             try {
+                try {
+                    Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
+                    if (peer != null) {
 
-                Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
-                if (peer != null) {
+                        lastBlockchainFeeder = peer;
 
-                    lastBlockchainFeeder = peer;
+                        JSONObject response = peer.send(getCumulativeDifficultyRequest);
+                        if (response != null) {
 
-                    JSONObject response = peer.send(getCumulativeDifficultyRequest);
-                    if (response != null) {
+                            BigInteger curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
+                            String peerCumulativeDifficulty = (String)response.get("cumulativeDifficulty");
+                            if (peerCumulativeDifficulty == null) {
+                                return;
+                            }
+                            BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
+                            if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) > 0) {
 
-                        BigInteger curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
-                        String peerCumulativeDifficulty = (String)response.get("cumulativeDifficulty");
-                        if (peerCumulativeDifficulty == null) {
-                            return;
-                        }
-                        BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
-                        if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) > 0) {
+                                response = peer.send(getMilestoneBlockIdsRequest);
+                                if (response != null) {
 
-                            response = peer.send(getMilestoneBlockIdsRequest);
-                            if (response != null) {
+                                    Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
 
-                                Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
+                                    JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
+                                    if (milestoneBlockIds == null) {
+                                        return;
+                                    }
+                                    for (Object milestoneBlockId : milestoneBlockIds) {
 
-                                JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
-                                if (milestoneBlockIds == null) {
-                                    return;
-                                }
-                                for (Object milestoneBlockId : milestoneBlockIds) {
+                                        Long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
+                                        Block block = blocks.get(blockId);
+                                        if (block != null) {
 
-                                    Long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
-                                    Block block = blocks.get(blockId);
-                                    if (block != null) {
+                                            commonBlockId = blockId;
 
-                                        commonBlockId = blockId;
+                                            break;
 
-                                        break;
+                                        }
 
                                     }
 
-                                }
+                                    {
+                                        int i, numberOfBlocks;
+                                        do {
 
-                                {
-                                    int i, numberOfBlocks;
-                                    do {
+                                            JSONObject request = new JSONObject();
+                                            request.put("requestType", "getNextBlockIds");
+                                            request.put("blockId", Convert.convert(commonBlockId));
+                                            response = peer.send(JSON.prepareRequest(request));
+                                            if (response == null) {
+                                                return;
+                                            }
 
-                                        JSONObject request = new JSONObject();
-                                        request.put("requestType", "getNextBlockIds");
-                                        request.put("blockId", Convert.convert(commonBlockId));
-                                        response = peer.send(JSON.prepareRequest(request));
-                                        if (response == null) {
-                                            return;
-                                        }
+                                            JSONArray nextBlockIds = (JSONArray)response.get("nextBlockIds");
+                                            if (nextBlockIds == null || (numberOfBlocks = nextBlockIds.size()) == 0) {
+                                                return;
+                                            }
 
-                                        JSONArray nextBlockIds = (JSONArray)response.get("nextBlockIds");
-                                        if (nextBlockIds == null || (numberOfBlocks = nextBlockIds.size()) == 0) {
-                                            return;
-                                        }
+                                            Long blockId;
+                                            for (i = 0; i < numberOfBlocks; i++) {
+                                                blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
+                                                if (blocks.get(blockId) == null) {
+                                                    break;
+                                                }
+                                                commonBlockId = blockId;
+                                            }
 
-                                        Long blockId;
-                                        for (i = 0; i < numberOfBlocks; i++) {
-                                            blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
-                                            if (blocks.get(blockId) == null) {
+                                        } while (i == numberOfBlocks);
+                                    }
+
+                                    if (lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
+
+                                        Long curBlockId = commonBlockId;
+                                        LinkedList<Block> futureBlocks = new LinkedList<>();
+                                        HashMap<Long, Transaction> futureTransactions = new HashMap<>();
+
+                                        do {
+
+                                            JSONObject request = new JSONObject();
+                                            request.put("requestType", "getNextBlocks");
+                                            request.put("blockId", Convert.convert(curBlockId));
+                                            response = peer.send(JSON.prepareRequest(request));
+                                            if (response == null) {
                                                 break;
                                             }
-                                            commonBlockId = blockId;
-                                        }
 
-                                    } while (i == numberOfBlocks);
-                                }
-
-                                if (lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
-
-                                    Long curBlockId = commonBlockId;
-                                    LinkedList<Block> futureBlocks = new LinkedList<>();
-                                    HashMap<Long, Transaction> futureTransactions = new HashMap<>();
-
-                                    do {
-
-                                        JSONObject request = new JSONObject();
-                                        request.put("requestType", "getNextBlocks");
-                                        request.put("blockId", Convert.convert(curBlockId));
-                                        response = peer.send(JSON.prepareRequest(request));
-                                        if (response == null) {
-                                            break;
-                                        }
-
-                                        JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
-                                        if (nextBlocks == null || nextBlocks.size() == 0) {
-                                            break;
-                                        }
-
-                                        synchronized (Blockchain.class) {
-
-                                            for (Object o : nextBlocks) {
-                                                JSONObject blockData = (JSONObject)o;
-                                                Block block;
-                                                try {
-                                                    block = Block.getBlock(blockData);
-                                                } catch (NxtException.ValidationException e) {
-                                                    peer.blacklist(e);
-                                                    return;
-                                                }
-                                                curBlockId = block.getId();
-
-                                                if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
-
-                                                    JSONArray transactionData = (JSONArray)blockData.get("transactions");
-                                                    try {
-                                                        Transaction[] transactions = new Transaction[transactionData.size()];
-                                                        for (int j = 0; j < transactions.length; j++) {
-                                                            transactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
-                                                        }
-                                                        if (! Blockchain.pushBlock(block, transactions, false)) {
-                                                            Logger.logDebugMessage("Failed to accept block received from " + peer.getPeerAddress()+ ", blacklisting");
-                                                            peer.blacklist();
-                                                            return;
-                                                        }
-                                                    } catch (NxtException.ValidationException e) {
-                                                        peer.blacklist(e);
-                                                        return;
-                                                    }
-
-                                                } else if (blocks.get(block.getId()) == null && block.transactionIds.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
-
-                                                    futureBlocks.add(block);
-
-                                                    JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-                                                    try {
-                                                        for (int j = 0; j < block.transactionIds.length; j++) {
-
-                                                            Transaction transaction = Transaction.getTransaction((JSONObject)transactionsData.get(j));
-                                                            block.transactionIds[j] = transaction.getId();
-                                                            block.blockTransactions[j] = transaction;
-                                                            futureTransactions.put(block.transactionIds[j], transaction);
-
-                                                        }
-                                                    } catch (NxtException.ValidationException e) {
-                                                        peer.blacklist(e);
-                                                        return;
-                                                    }
-                                                }
-
+                                            JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
+                                            if (nextBlocks == null || nextBlocks.size() == 0) {
+                                                break;
                                             }
 
-                                        } //synchronized
+                                            synchronized (Blockchain.class) {
 
-                                    } while (true);
+                                                for (Object o : nextBlocks) {
+                                                    JSONObject blockData = (JSONObject)o;
+                                                    Block block;
+                                                    try {
+                                                        block = Block.getBlock(blockData);
+                                                    } catch (NxtException.ValidationException e) {
+                                                        peer.blacklist(e);
+                                                        return;
+                                                    }
+                                                    curBlockId = block.getId();
 
-                                    if (!futureBlocks.isEmpty() && lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
+                                                    if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
 
-                                        synchronized (Blockchain.class) {
+                                                        JSONArray transactionData = (JSONArray)blockData.get("transactions");
+                                                        try {
+                                                            Transaction[] transactions = new Transaction[transactionData.size()];
+                                                            for (int j = 0; j < transactions.length; j++) {
+                                                                transactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
+                                                            }
+                                                            if (! Blockchain.pushBlock(block, transactions, false)) {
+                                                                Logger.logDebugMessage("Failed to accept block received from " + peer.getPeerAddress()+ ", blacklisting");
+                                                                peer.blacklist();
+                                                                return;
+                                                            }
+                                                        } catch (NxtException.ValidationException e) {
+                                                            peer.blacklist(e);
+                                                            return;
+                                                        }
 
-                                            saveBlocks("blocks.nxt.bak");
-                                            saveTransactions("transactions.nxt.bak");
+                                                    } else if (blocks.get(block.getId()) == null && block.transactionIds.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
 
-                                            curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
-                                            boolean needsRescan;
+                                                        futureBlocks.add(block);
 
-                                            try {
-                                                while (!lastBlock.get().getId().equals(commonBlockId) && Blockchain.popLastBlock()) {}
+                                                        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
+                                                        try {
+                                                            for (int j = 0; j < block.transactionIds.length; j++) {
 
-                                                if (lastBlock.get().getId().equals(commonBlockId)) {
-                                                    for (Block block : futureBlocks) {
-                                                        if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
-                                                            if (! Blockchain.pushBlock(block, block.blockTransactions, false)) {
-                                                                break;
+                                                                Transaction transaction = Transaction.getTransaction((JSONObject)transactionsData.get(j));
+                                                                block.transactionIds[j] = transaction.getId();
+                                                                block.blockTransactions[j] = transaction;
+                                                                futureTransactions.put(block.transactionIds[j], transaction);
+
+                                                            }
+                                                        } catch (NxtException.ValidationException e) {
+                                                            peer.blacklist(e);
+                                                            return;
+                                                        }
+                                                    }
+
+                                                }
+
+                                            } //synchronized
+
+                                        } while (true);
+
+                                        if (!futureBlocks.isEmpty() && lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
+
+                                            synchronized (Blockchain.class) {
+
+                                                saveBlocks("blocks.nxt.bak");
+                                                saveTransactions("transactions.nxt.bak");
+
+                                                curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
+                                                boolean needsRescan;
+
+                                                try {
+                                                    while (!lastBlock.get().getId().equals(commonBlockId) && Blockchain.popLastBlock()) {}
+
+                                                    if (lastBlock.get().getId().equals(commonBlockId)) {
+                                                        for (Block block : futureBlocks) {
+                                                            if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
+                                                                if (! Blockchain.pushBlock(block, block.blockTransactions, false)) {
+                                                                    break;
+                                                                }
                                                             }
                                                         }
                                                     }
+
+                                                    needsRescan = lastBlock.get().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0;
+                                                    if (needsRescan) {
+                                                        Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress()+ ", blacklisting");
+                                                        peer.blacklist();
+                                                    }
+                                                } catch (Transaction.UndoNotSupportedException e) {
+                                                    Logger.logDebugMessage(e.getMessage());
+                                                    Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
+                                                    needsRescan = true;
                                                 }
 
-                                                needsRescan = lastBlock.get().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0;
                                                 if (needsRescan) {
-                                                    Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress()+ ", blacklisting");
-                                                    peer.blacklist();
+                                                    loadBlocks("blocks.nxt.bak");
+                                                    loadTransactions("transactions.nxt.bak");
+                                                    Account.clear();
+                                                    Alias.clear();
+                                                    Asset.clear();
+                                                    Order.clear();
+                                                    unconfirmedTransactions.clear();
+                                                    doubleSpendingTransactions.clear();
+                                                    nonBroadcastedTransactions.clear();
+                                                    Logger.logMessage("Re-scanning blockchain...");
+                                                    Blockchain.scan();
+                                                    Logger.logMessage("...Done");
                                                 }
-                                            } catch (Transaction.UndoNotSupportedException e) {
-                                                Logger.logDebugMessage(e.getMessage());
-                                                Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-                                                needsRescan = true;
-                                            }
-
-                                            if (needsRescan) {
-                                                loadBlocks("blocks.nxt.bak");
-                                                loadTransactions("transactions.nxt.bak");
-                                                Account.clear();
-                                                Alias.clear();
-                                                Asset.clear();
-                                                Order.clear();
-                                                unconfirmedTransactions.clear();
-                                                doubleSpendingTransactions.clear();
-                                                nonBroadcastedTransactions.clear();
-                                                Logger.logMessage("Re-scanning blockchain...");
-                                                Blockchain.scan();
-                                                Logger.logMessage("...Done");
                                             }
                                         }
-                                    }
 
-                                    synchronized (Blockchain.class) {
-                                        saveBlocks("blocks.nxt");
-                                        saveTransactions("transactions.nxt");
+                                        synchronized (Blockchain.class) {
+                                            saveBlocks("blocks.nxt");
+                                            saveTransactions("transactions.nxt");
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error in milestone blocks processing thread", e);
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error in milestone blocks processing thread", e);
+                }
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
@@ -398,70 +402,71 @@ public final class Blockchain {
         public void run() {
 
             try {
-
-                Map<Account,User> unlockedAccounts = new HashMap<>();
-                for (User user : User.getAllUsers()) {
-                    if (user.getSecretPhrase() != null) {
-                        Account account = Account.getAccount(user.getPublicKey());
-                        if (account != null && account.getEffectiveBalance() > 0) {
-                            unlockedAccounts.put(account, user);
+                try {
+                    Map<Account,User> unlockedAccounts = new HashMap<>();
+                    for (User user : User.getAllUsers()) {
+                        if (user.getSecretPhrase() != null) {
+                            Account account = Account.getAccount(user.getPublicKey());
+                            if (account != null && account.getEffectiveBalance() > 0) {
+                                unlockedAccounts.put(account, user);
+                            }
                         }
                     }
+
+                    for (Map.Entry<Account, User> unlockedAccountEntry : unlockedAccounts.entrySet()) {
+
+                        Account account = unlockedAccountEntry.getKey();
+                        User user = unlockedAccountEntry.getValue();
+                        Block lastBlock = Blockchain.lastBlock.get();
+                        if (lastBlocks.get(account) != lastBlock) {
+
+                            long effectiveBalance = account.getEffectiveBalance();
+                            if (effectiveBalance <= 0) {
+                                continue;
+                            }
+                            MessageDigest digest = Crypto.sha256();
+                            byte[] generationSignatureHash;
+                            if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+
+                                byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), user.getSecretPhrase());
+                                generationSignatureHash = digest.digest(generationSignature);
+
+                            } else {
+
+                                digest.update(lastBlock.getGenerationSignature());
+                                generationSignatureHash = digest.digest(user.getPublicKey());
+
+                            }
+                            BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+
+                            lastBlocks.put(account, lastBlock);
+                            hits.put(account, hit);
+
+                            JSONObject response = new JSONObject();
+                            response.put("response", "setBlockGenerationDeadline");
+                            response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.getTimestamp()));
+
+                            user.send(response);
+
+                        }
+
+                        int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
+                        if (elapsedTime > 0) {
+
+                            BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+                            if (hits.get(account).compareTo(target) < 0) {
+
+                                Blockchain.generateBlock(user.getSecretPhrase());
+
+                            }
+
+                        }
+
+                    }
+
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error in block generation thread", e);
                 }
-
-                for (Map.Entry<Account, User> unlockedAccountEntry : unlockedAccounts.entrySet()) {
-
-                    Account account = unlockedAccountEntry.getKey();
-                    User user = unlockedAccountEntry.getValue();
-                    Block lastBlock = Blockchain.lastBlock.get();
-                    if (lastBlocks.get(account) != lastBlock) {
-
-                        long effectiveBalance = account.getEffectiveBalance();
-                        if (effectiveBalance <= 0) {
-                            continue;
-                        }
-                        MessageDigest digest = Crypto.sha256();
-                        byte[] generationSignatureHash;
-                        if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
-
-                            byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), user.getSecretPhrase());
-                            generationSignatureHash = digest.digest(generationSignature);
-
-                        } else {
-
-                            digest.update(lastBlock.getGenerationSignature());
-                            generationSignatureHash = digest.digest(user.getPublicKey());
-
-                        }
-                        BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-
-                        lastBlocks.put(account, lastBlock);
-                        hits.put(account, hit);
-
-                        JSONObject response = new JSONObject();
-                        response.put("response", "setBlockGenerationDeadline");
-                        response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.getTimestamp()));
-
-                        user.send(response);
-
-                    }
-
-                    int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
-                    if (elapsedTime > 0) {
-
-                        BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
-                        if (hits.get(account).compareTo(target) < 0) {
-
-                            Blockchain.generateBlock(user.getSecretPhrase());
-
-                        }
-
-                    }
-
-                }
-
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error in block generation thread", e);
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
@@ -478,35 +483,36 @@ public final class Blockchain {
         public void run() {
 
             try {
+                try {
+                    JSONArray transactionsData = new JSONArray();
 
-                JSONArray transactionsData = new JSONArray();
+                    for (Transaction transaction : nonBroadcastedTransactions.values()) {
 
-                for (Transaction transaction : nonBroadcastedTransactions.values()) {
+                        if (unconfirmedTransactions.get(transaction.getId()) == null && transactions.get(transaction.getId()) == null) {
 
-                    if (unconfirmedTransactions.get(transaction.getId()) == null && transactions.get(transaction.getId()) == null) {
+                            transactionsData.add(transaction.getJSONObject());
 
-                        transactionsData.add(transaction.getJSONObject());
+                        } else {
 
-                    } else {
+                            nonBroadcastedTransactions.remove(transaction.getId());
 
-                        nonBroadcastedTransactions.remove(transaction.getId());
+                        }
 
                     }
 
+                    if (transactionsData.size() > 0) {
+
+                        JSONObject peerRequest = new JSONObject();
+                        peerRequest.put("requestType", "processTransactions");
+                        peerRequest.put("transactions", transactionsData);
+
+                        Peer.sendToSomePeers(peerRequest);
+
+                    }
+
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
                 }
-
-                if (transactionsData.size() > 0) {
-
-                    JSONObject peerRequest = new JSONObject();
-                    peerRequest.put("requestType", "processTransactions");
-                    peerRequest.put("transactions", transactionsData);
-
-                    Peer.sendToSomePeers(peerRequest);
-
-                }
-
-            } catch (Exception e) {
-                Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
             } catch (Throwable t) {
                 Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
