@@ -32,7 +32,7 @@ final class CancelAskOrder extends HttpRequestHandler {
     private CancelAskOrder() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String orderValue = req.getParameter("order");

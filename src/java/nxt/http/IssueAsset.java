@@ -36,7 +36,7 @@ final class IssueAsset extends HttpRequestHandler {
     private IssueAsset() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String name = req.getParameter("name");

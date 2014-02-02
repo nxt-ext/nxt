@@ -18,13 +18,13 @@ public abstract class NxtException extends Exception {
         super(cause);
     }
 
-    public static final class ValidationFailure extends NxtException {
+    public static class ValidationException extends NxtException {
 
-        public ValidationFailure(String message) {
+        public ValidationException(String message) {
             super(message);
         }
 
-        public ValidationFailure(String message, Throwable cause) {
+        public ValidationException(String message, Throwable cause) {
             super(message, cause);
         }
 

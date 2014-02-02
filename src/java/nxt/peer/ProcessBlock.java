@@ -33,7 +33,7 @@ final class ProcessBlock extends HttpJSONRequestHandler {
 
             return Blockchain.pushBlock(request) ? ACCEPTED : NOT_ACCEPTED;
 
-        } catch (NxtException.ValidationFailure e) {
+        } catch (NxtException.ValidationException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }

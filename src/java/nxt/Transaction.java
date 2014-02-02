@@ -47,7 +47,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         }
     };
 
-    public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationFailure {
+    public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationException {
 
         try {
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -71,24 +71,24 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     fee, referencedTransactionId, signature);
 
             if (! transactionType.loadAttachment(transaction, buffer)) {
-                throw new NxtException.ValidationFailure("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
+                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
             }
 
             return transaction;
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationFailure(e.toString());
+            throw new NxtException.ValidationException(e.toString());
         }
     }
 
     public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                                             int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationFailure {
+                                             int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationException {
         return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
     }
 
     public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                                              int amount, int fee, Long referencedTransactionId, Attachment attachment)
-            throws NxtException.ValidationFailure {
+            throws NxtException.ValidationException {
         Transaction transaction = new Transaction(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipientId, amount, fee,
                 referencedTransactionId, null);
         transaction.attachment = attachment;
@@ -96,11 +96,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                                      int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationFailure {
+                                      int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
         return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
     }
 
-    static Transaction getTransaction(JSONObject transactionData) throws NxtException.ValidationFailure {
+    static Transaction getTransaction(JSONObject transactionData) throws NxtException.ValidationException {
 
         try {
 
@@ -123,13 +123,13 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
             if (! transactionType.loadAttachment(transaction, attachmentData)) {
-                throw new NxtException.ValidationFailure("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + attachmentData.toJSONString());
             }
 
             return transaction;
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationFailure(e.toString());
+            throw new NxtException.ValidationException(e.toString());
         }
     }
 
@@ -154,11 +154,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private transient volatile Long senderAccountId;
 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                        int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationFailure {
+                        int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY)) ? (deadline != 0 || fee != 0) : (deadline < 1 || fee <= 0)
                 || fee > Nxt.MAX_BALANCE || amount < 0 || amount > Nxt.MAX_BALANCE || type == null) {
-            throw new NxtException.ValidationFailure("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
+            throw new NxtException.ValidationException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
                     + ", deadline: " + deadline + ", fee: " + fee + ", amount: " + amount);
         }
 
@@ -439,7 +439,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     // NOTE: when undo is called, lastBlock has already been set to the previous block
-    void undo() throws UndoNotSupported {
+    void undo() throws UndoNotSupportedException {
         Account senderAccount = Account.getAccount(senderAccountId);
         senderAccount.addToBalance((amount + fee) * 100L);
         Account recipientAccount = Account.getAccount(recipientId);
@@ -534,9 +534,9 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
         public abstract byte getSubtype();
 
-        abstract boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationFailure;
+        abstract boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException;
 
-        abstract boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationFailure;
+        abstract boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException;
 
         // return true iff double spending
         final boolean isDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
@@ -551,7 +551,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-        abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported;
+        abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException;
 
         abstract void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                    Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount);
@@ -634,7 +634,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     int messageLength = buffer.getInt();
                     if (messageLength <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
                         byte[] message = new byte[messageLength];
@@ -646,7 +646,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String message = (String)attachmentData.get("message");
                     transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.convert(message));
                     return validateAttachment(transaction);
@@ -658,9 +658,9 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 @Override
                 void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
-                private boolean validateAttachment(Transaction transaction) {
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
-                        return false;
+                        throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
                     try {
                         Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.attachment;
@@ -681,16 +681,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationFailure {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     int aliasLength = buffer.get();
                     if (aliasLength > Nxt.MAX_ALIAS_LENGTH * 3) {
-                        throw new NxtException.ValidationFailure("Max alias length exceeded");
+                        throw new NxtException.ValidationException("Max alias length exceeded");
                     }
                     byte[] alias = new byte[aliasLength];
                     buffer.get(alias);
                     int uriLength = buffer.getShort();
                     if (uriLength > Nxt.MAX_ALIAS_URI_LENGTH * 3) {
-                        throw new NxtException.ValidationFailure("Max alias URI length exceeded");
+                        throw new NxtException.ValidationException("Max alias URI length exceeded");
                     }
                     byte[] uri = new byte[uriLength];
                     buffer.get(uri);
@@ -705,7 +705,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String alias = (String)attachmentData.get("alias");
                     String uri = (String)attachmentData.get("uri");
                     transaction.attachment = new Attachment.MessagingAliasAssignment(alias.trim(), uri.trim());
@@ -720,9 +720,9 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                     // can't tell whether Alias existed before and what was its previous uri
-                    throw new UndoNotSupported(transaction, "Reversal of alias assignment not supported");
+                    throw new UndoNotSupportedException(transaction, "Reversal of alias assignment not supported");
                 }
 
                 @Override
@@ -736,9 +736,9 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     return ! myDuplicates.add(attachment.getAliasName().toLowerCase());
                 }
 
-                private boolean validateAttachment(Transaction transaction) {
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
-                        return false;
+                        throw new NotYetEnabledException("Aliases not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
                     try {
                         Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
@@ -779,16 +779,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationFailure {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     int nameLength = buffer.get();
                     if (nameLength > 30) {
-                        throw new NxtException.ValidationFailure("Max asset name length exceeded");
+                        throw new NxtException.ValidationException("Max asset name length exceeded");
                     }
                     byte[] name = new byte[nameLength];
                     buffer.get(name);
                     int descriptionLength = buffer.getShort();
                     if (descriptionLength > 300) {
-                        throw new NxtException.ValidationFailure("Max asset description length exceeded");
+                        throw new NxtException.ValidationException("Max asset description length exceeded");
                     }
                     byte[] description = new byte[descriptionLength];
                     buffer.get(description);
@@ -997,12 +997,12 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
                     Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
                     if (askOrder == null || askOrder.getQuantity() != attachment.getQuantity() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
                         //TODO: undoing of partially filled orders not supported yet
-                        throw new UndoNotSupported(transaction, "Ask order already filled");
+                        throw new UndoNotSupportedException(transaction, "Ask order already filled");
                     }
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
                 }
@@ -1056,12 +1056,12 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                 }
 
                 @Override
-                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
                     Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
                     if (bidOrder == null || bidOrder.getQuantity() != attachment.getQuantity() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
                         //TODO: undoing of partially filled orders not supported yet
-                        throw new UndoNotSupported(transaction, "Bid order already filled");
+                        throw new UndoNotSupportedException(transaction, "Bid order already filled");
                     }
                     senderAccount.addToBalanceAndUnconfirmedBalance(attachment.getQuantity() * attachment.getPrice());
                 }
@@ -1104,8 +1104,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                                   Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
                 @Override
-                final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupported {
-                    throw new UndoNotSupported(transaction, "Reversal of order cancellation not supported");
+                final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                    throw new UndoNotSupportedException(transaction, "Reversal of order cancellation not supported");
                 }
 
             }
@@ -1184,11 +1184,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         }
     }
 
-    public static final class UndoNotSupported extends NxtException {
+    public static final class UndoNotSupportedException extends NxtException {
 
         private final Transaction transaction;
 
-        public UndoNotSupported(Transaction transaction, String message) {
+        public UndoNotSupportedException(Transaction transaction, String message) {
             super(message);
             this.transaction = transaction;
         }
@@ -1198,4 +1198,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         }
 
     }
+
+    public static final class NotYetEnabledException extends NxtException.ValidationException {
+
+        public NotYetEnabledException(String message) {
+            super(message);
+        }
+
+        public NotYetEnabledException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
 }

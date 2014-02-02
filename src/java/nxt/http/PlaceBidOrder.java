@@ -35,7 +35,7 @@ final class PlaceBidOrder extends HttpRequestHandler {
     private PlaceBidOrder() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String assetValue = req.getParameter("asset");

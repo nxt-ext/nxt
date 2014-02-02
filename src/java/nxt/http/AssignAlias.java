@@ -35,7 +35,7 @@ final class AssignAlias extends HttpRequestHandler {
     private AssignAlias() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
         String secretPhrase = req.getParameter("secretPhrase");
         String alias = req.getParameter("alias");
         String uri = req.getParameter("uri");

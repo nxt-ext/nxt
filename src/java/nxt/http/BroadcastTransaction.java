@@ -19,7 +19,7 @@ final class BroadcastTransaction extends HttpRequestHandler {
     private BroadcastTransaction() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationFailure {
+    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String transactionBytes = req.getParameter("transactionBytes");
         if (transactionBytes == null) {

@@ -20,7 +20,7 @@ final class ProcessTransactions extends HttpJSONRequestHandler {
 
             Blockchain.processTransactions(request);
 
-        } catch (NxtException.ValidationFailure e) {
+        } catch (NxtException.ValidationException e) {
             peer.blacklist(e);
         }
 

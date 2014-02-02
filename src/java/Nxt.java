@@ -39,7 +39,7 @@ final class Nxt {
                 transaction.blockId = Convert.zeroToNull(block);
                 transaction.height = height;
                 return transaction;
-            } catch (NxtException.ValidationFailure e) {
+            } catch (NxtException.ValidationException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
@@ -197,7 +197,7 @@ final class Nxt {
                 block.nextBlockId = Convert.zeroToNull(nextBlock);
                 block.cumulativeDifficulty = cumulativeDifficulty;
                 return block;
-            } catch (NxtException.ValidationFailure e) {
+            } catch (NxtException.ValidationException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }

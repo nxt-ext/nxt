@@ -21,7 +21,7 @@ final class SendMoney extends UserRequestHandler {
     private SendMoney() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws NxtException.ValidationFailure, IOException {
+    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws NxtException.ValidationException, IOException {
         if (user.getSecretPhrase() == null) {
             return null;
         }

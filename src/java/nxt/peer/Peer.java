@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.ThreadPools;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.user.User;
 import nxt.util.Convert;
@@ -402,7 +403,12 @@ public final class Peer implements Comparable<Peer> {
         }
     }
 
-    public void blacklist(NxtException.ValidationFailure cause) {
+    public void blacklist(NxtException.ValidationException cause) {
+        if (cause instanceof Transaction.NotYetEnabledException) {
+            // don't blacklist peers just because a feature is not yet enabled
+            // prevents erroneous blacklisting during loading of blockchain from scratch
+            return;
+        }
         Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage(), cause);
         blacklist();
     }

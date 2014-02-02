@@ -75,7 +75,7 @@ public final class Blockchain {
                     if (response != null) {
                         try {
                             Blockchain.processUnconfirmedTransactions(response);
-                        } catch (NxtException.ValidationFailure e) {
+                        } catch (NxtException.ValidationException e) {
                             Logger.logDebugMessage("Invalid unconfirmed transaction received");
                             peer.blacklist(e);
                         }
@@ -265,7 +265,7 @@ public final class Blockchain {
                                                 Block block;
                                                 try {
                                                     block = Block.getBlock(blockData);
-                                                } catch (NxtException.ValidationFailure e) {
+                                                } catch (NxtException.ValidationException e) {
                                                     peer.blacklist(e);
                                                     return;
                                                 }
@@ -284,7 +284,7 @@ public final class Blockchain {
                                                             peer.blacklist();
                                                             return;
                                                         }
-                                                    } catch (NxtException.ValidationFailure e) {
+                                                    } catch (NxtException.ValidationException e) {
                                                         peer.blacklist(e);
                                                         return;
                                                     }
@@ -303,7 +303,7 @@ public final class Blockchain {
                                                             futureTransactions.put(block.transactionIds[j], transaction);
 
                                                         }
-                                                    } catch (NxtException.ValidationFailure e) {
+                                                    } catch (NxtException.ValidationException e) {
                                                         peer.blacklist(e);
                                                         return;
                                                     }
@@ -343,7 +343,7 @@ public final class Blockchain {
                                                     Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress()+ ", blacklisting");
                                                     peer.blacklist();
                                                 }
-                                            } catch (Transaction.UndoNotSupported e) {
+                                            } catch (Transaction.UndoNotSupportedException e) {
                                                 Logger.logDebugMessage(e.getMessage());
                                                 Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
                                                 needsRescan = true;
@@ -562,12 +562,12 @@ public final class Blockchain {
         return lastBlockchainFeeder;
     }
 
-    public static void processTransactions(JSONObject request) throws NxtException.ValidationFailure {
+    public static void processTransactions(JSONObject request) throws NxtException.ValidationException {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
         processTransactions(transactionsData, false);
     }
 
-    public static boolean pushBlock(JSONObject request) throws NxtException.ValidationFailure {
+    public static boolean pushBlock(JSONObject request) throws NxtException.ValidationException {
 
         Block block = Block.getBlock(request);
         if (!lastBlock.get().getId().equals(block.getPreviousBlockId())) {
@@ -621,8 +621,8 @@ public final class Blockchain {
 
                 }
 
-            } catch (NxtException.ValidationFailure validationFailure) {
-                Logger.logMessage(validationFailure.getMessage());
+            } catch (NxtException.ValidationException validationException) {
+                Logger.logMessage(validationException.getMessage());
                 System.exit(1); // now this should never happen
             }
 
@@ -670,8 +670,8 @@ public final class Blockchain {
                 blocks.put(Genesis.GENESIS_BLOCK_ID, block);
                 lastBlock.set(block);
 
-            } catch (NxtException.ValidationFailure validationFailure) {
-                Logger.logMessage(validationFailure.getMessage());
+            } catch (NxtException.ValidationException validationException) {
+                Logger.logMessage(validationException.getMessage());
                 System.exit(1);
             }
 
@@ -700,12 +700,12 @@ public final class Blockchain {
         }
     }
 
-    private static void processUnconfirmedTransactions(JSONObject request) throws NxtException.ValidationFailure {
+    private static void processUnconfirmedTransactions(JSONObject request) throws NxtException.ValidationException {
         JSONArray transactionsData = (JSONArray)request.get("unconfirmedTransactions");
         processTransactions(transactionsData, true);
     }
 
-    private static void processTransactions(JSONArray transactionsData, final boolean unconfirmed) throws NxtException.ValidationFailure {
+    private static void processTransactions(JSONArray transactionsData, final boolean unconfirmed) throws NxtException.ValidationException {
 
         JSONArray validTransactionsData = new JSONArray();
 
@@ -1026,7 +1026,7 @@ public final class Blockchain {
 
     }
 
-    private static boolean popLastBlock() throws Transaction.UndoNotSupported {
+    private static boolean popLastBlock() throws Transaction.UndoNotSupportedException {
 
         try {
 
@@ -1205,7 +1205,7 @@ public final class Blockchain {
                         totalAmount, totalFee, payloadLength, null, publicKey, null, new byte[64], previousBlockHash);
 
             }
-        } catch (NxtException.ValidationFailure e) {
+        } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
             Logger.logMessage("Error generating block", e);
             return;
