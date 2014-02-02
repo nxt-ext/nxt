@@ -191,6 +191,9 @@ public final class Blockchain {
                                 Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
 
                                 JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
+                                if (milestoneBlockIds == null) {
+                                    return;
+                                }
                                 for (Object milestoneBlockId : milestoneBlockIds) {
 
                                     Long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
