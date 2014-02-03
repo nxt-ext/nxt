@@ -13,10 +13,16 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -132,6 +138,92 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             throw new NxtException.ValidationException(e.toString());
         }
     }
+
+    static Transaction getTransaction(ResultSet rs) throws NxtException.ValidationException {
+        try {
+
+            byte type = rs.getByte("type");
+            byte subtype = rs.getByte("subtype");
+            int timestamp = rs.getInt("timestamp");
+            short deadline = rs.getShort("deadline");
+            byte[] senderPublicKey = rs.getBytes("sender_public_key");
+            Long recipientId = rs.getLong("recipient_id");
+            int amount = rs.getInt("amount");
+            int fee = rs.getInt("fee");
+            Long referencedTransactionId = rs.getLong("referenced_transaction_id");
+            if (rs.wasNull()) {
+                referencedTransactionId = null;
+            }
+            byte[] signature = rs.getBytes("signature");
+
+            Type transactionType = findTransactionType(type, subtype);
+            Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+                    referencedTransactionId, signature);
+            transaction.blockId = rs.getLong("block_id");
+            transaction.index = rs.getInt("index");
+            transaction.height = rs.getInt("height");
+
+            JSONObject attachmentData = (JSONObject)rs.getObject("attachment");
+
+            if (! transactionType.loadAttachment(transaction, attachmentData)) {
+                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+            }
+
+            if (! transaction.getId().equals(rs.getLong("id"))) {
+                throw new NxtException.ValidationException("Invalid transaction id: " + transaction.getId() + ", database value is " + rs.getLong("id"));
+            }
+
+            return transaction;
+
+        } catch (SQLException e) {
+            throw new NxtException.ValidationException(e.toString());
+        }
+    }
+
+    static List<Transaction> getBlockTransactions(long blockId) throws NxtException.ValidationException {
+        try (Connection con = Db.getConnection()) {
+            List<Transaction> list = new ArrayList<>();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id");
+            pstmt.setLong(1, blockId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(getTransaction(rs));
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    static void saveTransactions(Connection con, Transaction... transactions) {
+        try {
+            for (Transaction transaction : transactions) {
+                PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
+                + "amount, fee, referenced_transaction_id, index, height, block_id, signature, timestamp, type, subtype, sender_account_id, attachment) "
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                pstmt.setLong(1, transaction.getId());
+                pstmt.setShort(2, transaction.deadline);
+                pstmt.setBytes(3, transaction.senderPublicKey);
+                pstmt.setLong(4, transaction.recipientId);
+                pstmt.setInt(5, transaction.amount);
+                pstmt.setInt(6, transaction.fee);
+                pstmt.setLong(7, transaction.referencedTransactionId);
+                pstmt.setInt(8, transaction.index);
+                pstmt.setInt(9, transaction.height);
+                pstmt.setLong(10, transaction.blockId);
+                pstmt.setBytes(11, transaction.signature);
+                pstmt.setInt(12, transaction.timestamp);
+                pstmt.setByte(13, transaction.type.getType());
+                pstmt.setByte(14, transaction.type.getSubtype());
+                pstmt.setLong(15, transaction.getSenderAccountId());
+                pstmt.setObject(16, transaction.attachment);
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
 
     private final short deadline;
     private final byte[] senderPublicKey;

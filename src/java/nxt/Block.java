@@ -16,8 +16,13 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 public final class Block implements Serializable {
 
@@ -60,6 +65,93 @@ public final class Block implements Serializable {
         }
 
     }
+
+    static Block getBlock(ResultSet rs) throws NxtException.ValidationException {
+        try {
+            int version = rs.getInt("version");
+            int timestamp = rs.getInt("timestamp");
+            Long previousBlockId = rs.getLong("previous_block_id");
+            if (rs.wasNull()) {
+                previousBlockId = null;
+            }
+            int totalAmount = rs.getInt("total_amount");
+            int totalFee = rs.getInt("total_fee");
+            int payloadLength = rs.getInt("payload_length");
+            byte[] generatorPublicKey = rs.getBytes("generator_public_key");
+            byte[] previousBlockHash = rs.getBytes("previous_block_hash");
+            BigInteger cumulativeDifficulty = new BigInteger(rs.getBytes("cumulative_difficulty"));
+            long baseTarget = rs.getLong("base_target");
+            Long nextBlockId = rs.getLong("next_block_id");
+            if (rs.wasNull()) {
+                nextBlockId = null;
+            }
+            int index = rs.getInt("index");
+            int height = rs.getInt("height");
+            byte[] generationSignature = rs.getBytes("generation_signature");
+            byte[] blockSignature = rs.getBytes("block_signature");
+            byte[] payloadHash = rs.getBytes("payload_hash");
+
+            Long id = rs.getLong("id");
+            List<Transaction> transactions = Transaction.getBlockTransactions(id);
+
+            Block block = new Block(version, timestamp, previousBlockId, transactions.size(), totalAmount, totalFee, payloadLength,
+                    payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+            for (int i = 0; i < transactions.size(); i++) {
+                Transaction transaction = transactions.get(i);
+                block.transactionIds[i] = transaction.getId();
+                block.blockTransactions[i] = transaction;
+            }
+
+            block.cumulativeDifficulty = cumulativeDifficulty;
+            block.baseTarget = baseTarget;
+            block.nextBlockId = nextBlockId;
+            block.index = index;
+            block.height = height;
+
+            if (! block.getId().equals(id)) {
+                throw new NxtException.ValidationException("Invalid block id: " + block.getId() + ", database value is " + id);
+            }
+
+            return block;
+
+        } catch (SQLException e) {
+            throw new NxtException.ValidationException(e.toString());
+        }
+    }
+
+    static void saveBlocks(Connection con, Block... blocks) {
+        try {
+            for (Block block : blocks) {
+                PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
+                        + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
+                        + "base_target, next_block_id, index, height, generation_signature, block_signature, payload_hash, generator_account_id) "
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                pstmt.setLong(1, block.getId());
+                pstmt.setInt(2, block.version);
+                pstmt.setInt(3, block.timestamp);
+                pstmt.setLong(4, block.previousBlockId);
+                pstmt.setInt(5, block.totalAmount);
+                pstmt.setInt(6, block.totalFee);
+                pstmt.setInt(7, block.payloadLength);
+                pstmt.setBytes(8, block.generatorPublicKey);
+                pstmt.setBytes(9, block.previousBlockHash);
+                pstmt.setBytes(10, block.cumulativeDifficulty.toByteArray());
+                pstmt.setLong(11, block.baseTarget);
+                pstmt.setLong(12, block.nextBlockId);
+                pstmt.setInt(13, block.index);
+                pstmt.setInt(14, block.height);
+                pstmt.setBytes(15, block.generationSignature);
+                pstmt.setBytes(16, block.blockSignature);
+                pstmt.setBytes(17, block.payloadHash);
+                pstmt.setLong(18, block.getGeneratorAccountId());
+                pstmt.executeUpdate();
+                Transaction.saveTransactions(con, block.blockTransactions);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
 
     private final int version;
     private final int timestamp;

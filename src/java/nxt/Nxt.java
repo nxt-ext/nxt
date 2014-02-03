@@ -325,6 +325,8 @@ public final class Nxt extends HttpServlet {
                 Logger.logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
             }
 
+            Db.init();
+
             Blockchain.init();
 
             ThreadPools.start();
@@ -400,6 +402,8 @@ public final class Nxt extends HttpServlet {
         ThreadPools.shutdown();
 
         Blockchain.shutdown();
+
+        Db.shutdown();
 
         Logger.logMessage("NRS " + Nxt.VERSION + " stopped.");
 
