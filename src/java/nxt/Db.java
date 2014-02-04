@@ -11,6 +11,7 @@ final class Db {
 
     static void init() {
         cp = JdbcConnectionPool.create("jdbc:h2:nxt_db/nxt", "sa", "sa");
+        cp.setMaxConnections(200);
         DbVersion.init();
     }
 

@@ -198,7 +198,8 @@ public final class Block implements Serializable {
 
     // relying on cascade triggers in the database to delete also all subsequent blocks, and the transactions for all deleted blocks
     static void deleteBlock(Long blockId) {
-        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("DELETE FROM block WHERE id = ?")) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("DELETE FROM block WHERE id = ?")) {
             try {
                 pstmt.setLong(1, blockId);
                 pstmt.executeUpdate();
