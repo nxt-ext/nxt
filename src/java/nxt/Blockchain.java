@@ -727,13 +727,16 @@ public final class Blockchain {
                 MessageDigest digest = Crypto.sha256();
                 for (int i = 0; i < transactions.length; i++) {
                     Transaction transaction = transactions[i];
-                    transaction.setBlock(genesisBlock);
                     genesisBlock.transactionIds[i] = transaction.getId();
                     genesisBlock.blockTransactions[i] = transaction;
                     digest.update(transaction.getBytes());
                 }
 
                 genesisBlock.setPayloadHash(digest.digest());
+                
+                for (Transaction transaction : genesisBlock.blockTransactions) {
+                    transaction.setBlock(genesisBlock);
+                }
 
                 addBlock(genesisBlock);
 
