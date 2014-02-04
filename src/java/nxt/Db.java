@@ -15,6 +15,7 @@ final class Db {
         Logger.logDebugMessage("Database cache size set to " + maxCacheSize + " kB");
         cp = JdbcConnectionPool.create("jdbc:h2:nxt_db/nxt;DB_CLOSE_DELAY=10;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize, "sa", "sa");
         cp.setMaxConnections(200);
+        cp.setLoginTimeout(70);
         DbVersion.init();
     }
 

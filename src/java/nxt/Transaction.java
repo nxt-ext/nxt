@@ -5,10 +5,6 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -27,9 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class Transaction implements Comparable<Transaction>, Serializable {
-
-    static final long serialVersionUID = 0;
+public final class Transaction implements Comparable<Transaction> {
 
     private static final byte TYPE_PAYMENT = 0;
     private static final byte TYPE_MESSAGING = 1;
@@ -192,21 +186,19 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             transaction.blockId = rs.getLong("block_id");
             transaction.index = rs.getInt("index");
             transaction.height = rs.getInt("height");
+            transaction.id = rs.getLong("id");
+            transaction.senderAccountId = rs.getLong("sender_account_id");
 
             transaction.attachment = (Attachment)rs.getObject("attachment");
-
-            if (! transaction.getId().equals(rs.getLong("id"))) {
-                throw new NxtException.ValidationException("Invalid transaction id: " + transaction.getId() + ", database value is " + rs.getLong("id"));
-            }
 
             return transaction;
 
         } catch (SQLException e) {
-            throw new NxtException.ValidationException(e.toString());
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
-    static List<Transaction> findBlockTransactions(long blockId) {
+    static List<Transaction> findBlockTransactions(Long blockId) {
         try (Connection con = Db.getConnection()) {
             List<Transaction> list = new ArrayList<>();
             try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
@@ -277,11 +269,11 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private volatile Block block;
     private byte[] signature;
     private int timestamp;
-    private transient Type type;
+    private final Type type;
     private Attachment attachment;
-    private transient volatile Long id;
-    private transient volatile String stringId = null;
-    private transient volatile Long senderAccountId;
+    private volatile Long id;
+    private volatile String stringId = null;
+    private volatile Long senderAccountId;
 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                         int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
@@ -302,7 +294,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         this.signature = signature;
         this.type = type;
         this.height = Integer.MAX_VALUE;
-
 
     }
 
@@ -376,17 +367,29 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     public Long getId() {
-        calculateIds();
+        if (id == null) {
+            byte[] hash = Crypto.sha256().digest(getBytes());
+            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            id = bigInteger.longValue();
+            stringId = bigInteger.toString();
+        }
         return id;
     }
 
     public String getStringId() {
-        calculateIds();
+        if (stringId == null) {
+            getId();
+            if (stringId == null) {
+                stringId = Convert.convert(id);
+            }
+        }
         return stringId;
     }
 
     public Long getSenderAccountId() {
-        calculateIds();
+        if (senderAccountId == null) {
+            senderAccountId = Account.getId(senderPublicKey);
+        }
         return senderAccountId;
     }
 
@@ -599,28 +602,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     int getSize() {
         return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
-    }
-
-    private void calculateIds() {
-        if (stringId != null) {
-            return;
-        }
-        byte[] hash = Crypto.sha256().digest(getBytes());
-        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-        id = bigInteger.longValue();
-        senderAccountId = Account.getId(senderPublicKey);
-        stringId = bigInteger.toString();
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.write(type.getType());
-        out.write(type.getSubtype());
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        this.type = findTransactionType(in.readByte(), in.readByte());
     }
 
     public static Type findTransactionType(byte type, byte subtype) {

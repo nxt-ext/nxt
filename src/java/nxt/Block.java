@@ -8,9 +8,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -25,9 +22,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-public final class Block implements Serializable {
+public final class Block {
 
-    static final long serialVersionUID = 0;
     static final Long[] emptyLong = new Long[0];
     static final Transaction[] emptyTransactions = new Transaction[0];
 
@@ -155,10 +151,7 @@ public final class Block implements Serializable {
             block.nextBlockId = nextBlockId;
             block.index = index;
             block.height = height;
-
-            if (! block.getId().equals(id)) {
-                throw new NxtException.ValidationException("Invalid block id: " + block.getId() + ", database value is " + id);
-            }
+            block.id = id;
 
             return block;
 
@@ -240,8 +233,7 @@ public final class Block implements Serializable {
     private final int totalFee;
     private final int payloadLength;
     final Long[] transactionIds;
-
-    transient Transaction[] blockTransactions;
+    final Transaction[] blockTransactions;
 
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
     private long baseTarget = Nxt.initialBaseTarget;
@@ -251,10 +243,10 @@ public final class Block implements Serializable {
     private byte[] generationSignature;
     private byte[] blockSignature;
     private byte[] payloadHash;
-    private transient volatile Long id;
-    private transient volatile String stringId = null;
-    private transient volatile Long generatorAccountId;
-    private transient SoftReference<JSONStreamAware> jsonRef;
+    private volatile Long id;
+    private volatile String stringId = null;
+    private volatile Long generatorAccountId;
+    private SoftReference<JSONStreamAware> jsonRef;
 
     Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee,
           int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature)
@@ -387,17 +379,29 @@ public final class Block implements Serializable {
     }
 
     public Long getId() {
-        calculateIds();
+        if (id == null) {
+            byte[] hash = Crypto.sha256().digest(getBytes());
+            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            id = bigInteger.longValue();
+            stringId = bigInteger.toString();
+        }
         return id;
     }
 
     public String getStringId() {
-        calculateIds();
+        if (stringId == null) {
+            getId();
+            if (stringId == null) {
+                stringId = Convert.convert(id);
+            }
+        }
         return stringId;
     }
 
     public Long getGeneratorAccountId() {
-        calculateIds();
+        if (generatorAccountId == null) {
+            generatorAccountId = Account.getId(generatorPublicKey);
+        }
         return generatorAccountId;
     }
 
@@ -597,22 +601,6 @@ public final class Block implements Serializable {
             baseTarget = newBaseTarget;
             cumulativeDifficulty = previousBlock.cumulativeDifficulty.add(Convert.two64.divide(BigInteger.valueOf(baseTarget)));
         }
-    }
-
-    private void calculateIds() {
-        if (stringId != null) {
-            return;
-        }
-        byte[] hash = Crypto.sha256().digest(getBytes());
-        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-        id = bigInteger.longValue();
-        stringId = bigInteger.toString();
-        generatorAccountId = Account.getId(generatorPublicKey);
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        this.blockTransactions = transactionIds.length == 0 ? emptyTransactions : new Transaction[transactionIds.length];
     }
 
 }

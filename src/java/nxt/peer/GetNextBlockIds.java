@@ -1,6 +1,5 @@
 package nxt.peer;
 
-import nxt.Block;
 import nxt.Blockchain;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;

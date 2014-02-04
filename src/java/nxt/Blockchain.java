@@ -45,16 +45,12 @@ public final class Blockchain {
 
     private static final AtomicInteger blockCounter = new AtomicInteger();
     private static final AtomicReference<Block> lastBlock = new AtomicReference<>();
-    //private static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
 
     private static final AtomicInteger transactionCounter = new AtomicInteger();
     private static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-    //private static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
 
-    //private static final Collection<Block> allBlocks = Collections.unmodifiableCollection(blocks.values());
-    //private static final Collection<Transaction> allTransactions = Collections.unmodifiableCollection(transactions.values());
     private static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
 
     static final Runnable processTransactionsThread = new Runnable() {
@@ -619,12 +615,12 @@ public final class Blockchain {
     }
 
     public static Block getBlockAtHeight(int height) {
-        int blockchainHeight = lastBlock.get().getHeight();
-        if (height > blockchainHeight) {
+        Block block = lastBlock.get();
+        if (height > block.getHeight()) {
             return null;
         }
-        if (height == blockchainHeight) {
-            return lastBlock.get();
+        if (height == block.getHeight()) {
+            return block;
         }
         return Block.findBlockAtHeight(height);
     }
@@ -733,7 +729,7 @@ public final class Blockchain {
                 }
 
                 genesisBlock.setPayloadHash(digest.digest());
-                
+
                 for (Transaction transaction : genesisBlock.blockTransactions) {
                     transaction.setBlock(genesisBlock);
                 }
