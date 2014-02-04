@@ -108,7 +108,7 @@ public final class Transaction implements Comparable<Transaction> {
             ResultSet rs = pstmt.executeQuery();
             Transaction transaction = null;
             if (rs.next()) {
-                transaction = getTransaction(rs);
+                transaction = getTransaction(con, rs);
             }
             rs.close();
             return transaction;
@@ -163,7 +163,7 @@ public final class Transaction implements Comparable<Transaction> {
         }
     }
 
-    static Transaction getTransaction(ResultSet rs) throws NxtException.ValidationException {
+    static Transaction getTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
 
             byte type = rs.getByte("type");
@@ -198,18 +198,16 @@ public final class Transaction implements Comparable<Transaction> {
         }
     }
 
-    static List<Transaction> findBlockTransactions(Long blockId) {
-        try (Connection con = Db.getConnection()) {
-            List<Transaction> list = new ArrayList<>();
-            try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
-                pstmt.setLong(1, blockId);
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    list.add(getTransaction(rs));
-                }
-                rs.close();
-                return list;
+    static List<Transaction> findBlockTransactions(Connection con, Long blockId) {
+        List<Transaction> list = new ArrayList<>();
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
+            pstmt.setLong(1, blockId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(getTransaction(con, rs));
             }
+            rs.close();
+            return list;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {

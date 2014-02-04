@@ -511,8 +511,8 @@ public final class Blockchain {
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
             return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Block>() {
                 @Override
-                public Block get(ResultSet rs) throws NxtException.ValidationException {
-                    return Block.getBlock(rs);
+                public Block get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Block.getBlock(con, rs);
                 }
             });
         } catch (SQLException e) {
@@ -538,8 +538,8 @@ public final class Blockchain {
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
             return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Transaction>() {
                 @Override
-                public Transaction get(ResultSet rs) throws NxtException.ValidationException {
-                    return Transaction.getTransaction(rs);
+                public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Transaction.getTransaction(con, rs);
                 }
             });
         } catch (SQLException e) {
@@ -605,7 +605,7 @@ public final class Blockchain {
             pstmt2.setLong(2, limit);
             rs = pstmt2.executeQuery();
             while (rs.next()) {
-                result.add(Block.getBlock(rs));
+                result.add(Block.getBlock(con, rs));
             }
             rs.close();
             return result;
@@ -1172,7 +1172,7 @@ public final class Blockchain {
             Block currentBlock;
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                currentBlock = Block.getBlock(rs);
+                currentBlock = Block.getBlock(con, rs);
                 if (! currentBlock.getId().equals(currentBlockId)) {
                     throw new NxtException.ValidationException("Database blocks in the wrong order!");
                 }

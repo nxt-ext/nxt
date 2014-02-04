@@ -19,7 +19,7 @@ public final class DbUtils {
     }
 
     public static interface ResultSetReader<T> {
-        public T get(ResultSet rs) throws Exception;
+        public T get(Connection con, ResultSet rs) throws Exception;
     }
 
     public static <T> Iterator<T> getDbIterator(final Connection con, final PreparedStatement pstmt, final ResultSetReader<T> rsReader) {
@@ -44,7 +44,7 @@ public final class DbUtils {
                         return null;
                     }
                     try {
-                        T result = rsReader.get(rs);
+                        T result = rsReader.get(con, rs);
                         hasNext = rs.next();
                         return result;
                     } catch (Exception e) {

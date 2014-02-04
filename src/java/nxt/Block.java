@@ -41,7 +41,7 @@ public final class Block {
             ResultSet rs = pstmt.executeQuery();
             Block block = null;
             if (rs.next()) {
-                block = getBlock(rs);
+                block = getBlock(con, rs);
             }
             rs.close();
             return block;
@@ -70,7 +70,7 @@ public final class Block {
             ResultSet rs = pstmt.executeQuery();
             Block block = null;
             if (rs.next()) {
-                block = getBlock(rs);
+                block = getBlock(con, rs);
             }
             rs.close();
             return block;
@@ -110,7 +110,7 @@ public final class Block {
 
     }
 
-    static Block getBlock(ResultSet rs) throws NxtException.ValidationException {
+    static Block getBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
@@ -136,7 +136,7 @@ public final class Block {
             byte[] payloadHash = rs.getBytes("payload_hash");
 
             Long id = rs.getLong("id");
-            List<Transaction> transactions = Transaction.findBlockTransactions(id);
+            List<Transaction> transactions = Transaction.findBlockTransactions(con, id);
 
             Block block = new Block(version, timestamp, previousBlockId, transactions.size(), totalAmount, totalFee, payloadLength,
                     payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
