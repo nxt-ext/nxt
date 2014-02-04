@@ -33,7 +33,7 @@ final class DbVersion {
             Logger.logMessage("Updated database is at level " + (nextUpdate - 1));
             con.commit();
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.toString(), e);
         }
 
     }
@@ -45,7 +45,6 @@ final class DbVersion {
                 stmt.executeUpdate(sql);
                 con.commit();
             } catch (SQLException e) {
-                Logger.logDebugMessage(e.getMessage(), e);
                 con.rollback();
                 throw e;
             }

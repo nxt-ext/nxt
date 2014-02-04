@@ -10,6 +10,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
@@ -57,7 +58,9 @@ final class GetAccountBlockIds extends HttpRequestHandler {
 
         PriorityQueue<Block> sortedBlocks = new PriorityQueue<>(11, Block.heightComparator);
         byte[] accountPublicKey = accountData.getPublicKey();
-        for (Block block : Blockchain.getAllBlocks()) {
+        Iterator<Block> iterator = Blockchain.getAllBlocks();
+        while (iterator.hasNext()) {
+            Block block = iterator.next();
             if (block.getTimestamp() >= timestamp && Arrays.equals(block.getGeneratorPublicKey(), accountPublicKey)) {
                 sortedBlocks.offer(block);
             }
