@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -560,6 +562,73 @@ public final class Blockchain {
         }
     }
 
+    public static List<Long> getBlockIdsAfter(Long blockId, int limit) {
+        if (limit > 1440) {
+            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
+        }
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
+             PreparedStatement pstmt2 = con.prepareStatement("SELECT id FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
+            pstmt1.setLong(1, blockId);
+            ResultSet rs = pstmt1.executeQuery();
+            if (! rs.next()) {
+                rs.close();
+                return Collections.emptyList();
+            }
+            List<Long> result = new ArrayList<>();
+            long dbId = rs.getLong("db_id");
+            pstmt2.setLong(1, dbId);
+            pstmt2.setLong(2, limit);
+            rs = pstmt2.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getLong("id"));
+            }
+            rs.close();
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static List<Block> getBlocksAfter(Long blockId, int limit) {
+        if (limit > 1440) {
+            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
+        }
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
+             PreparedStatement pstmt2 = con.prepareStatement("SELECT * FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
+            pstmt1.setLong(1, blockId);
+            ResultSet rs = pstmt1.executeQuery();
+            if (! rs.next()) {
+                rs.close();
+                return Collections.emptyList();
+            }
+            List<Block> result = new ArrayList<>();
+            long dbId = rs.getLong("db_id");
+            pstmt2.setLong(1, dbId);
+            pstmt2.setLong(2, limit);
+            rs = pstmt2.executeQuery();
+            while (rs.next()) {
+                result.add(Block.getBlock(rs));
+            }
+            rs.close();
+            return result;
+        } catch (NxtException.ValidationException|SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static Block getBlockAtHeight(int height) {
+        int blockchainHeight = lastBlock.get().getHeight();
+        if (height > blockchainHeight) {
+            return null;
+        }
+        if (height == blockchainHeight) {
+            return lastBlock.get();
+        }
+        return Block.findBlockAtHeight(height);
+    }
+
     public static Collection<Transaction> getAllUnconfirmedTransactions() {
         return allUnconfirmedTransactions;
     }
@@ -647,7 +716,6 @@ public final class Blockchain {
                     Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
                             Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
                     transaction.setIndex(transactionCounter.incrementAndGet());
-                    transaction.setBlockId(Genesis.GENESIS_BLOCK_ID);
                     transactionsMap.put(transaction.getId(), transaction);
                 }
 
@@ -659,6 +727,7 @@ public final class Blockchain {
                 MessageDigest digest = Crypto.sha256();
                 for (int i = 0; i < transactions.length; i++) {
                     Transaction transaction = transactions[i];
+                    transaction.setBlock(genesisBlock);
                     genesisBlock.transactionIds[i] = transaction.getId();
                     genesisBlock.blockTransactions[i] = transaction;
                     digest.update(transaction.getBytes());
@@ -922,8 +991,7 @@ public final class Blockchain {
                 block.setHeight(previousLastBlock.getHeight() + 1);
 
                 for (Transaction transaction : block.blockTransactions) {
-                    transaction.setHeight(block.getHeight());
-                    transaction.setBlockId(block.getId());
+                    transaction.setBlock(block);
                 }
 
                 block.calculateBaseTarget();

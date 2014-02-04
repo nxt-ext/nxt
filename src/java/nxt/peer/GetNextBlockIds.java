@@ -6,6 +6,8 @@ import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.List;
+
 final class GetNextBlockIds extends HttpJSONRequestHandler {
 
     static final GetNextBlockIds instance = new GetNextBlockIds();
@@ -19,17 +21,13 @@ final class GetNextBlockIds extends HttpJSONRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray nextBlockIds = new JSONArray();
-        Block block = Blockchain.getBlock(Convert.parseUnsignedLong((String) request.get("blockId")));
-        while (block != null && block.getNextBlockId() != null && nextBlockIds.size() < 1440) {
+        Long blockId = Convert.parseUnsignedLong((String) request.get("blockId"));
+        List<Long> ids = Blockchain.getBlockIdsAfter(blockId, 1440);
 
-            block = Blockchain.getBlock(block.getNextBlockId());
-            if (block != null) {
-
-                nextBlockIds.add(block.getStringId());
-
-            }
-
+        for (Long id : ids) {
+            nextBlockIds.add(Convert.convert(id));
         }
+
         response.put("nextBlockIds", nextBlockIds);
 
         return response;

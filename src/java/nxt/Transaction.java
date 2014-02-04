@@ -274,6 +274,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private int index;
     private int height;
     private Long blockId;
+    private volatile Block block;
     private byte[] signature;
     private int timestamp;
     private transient Type type;
@@ -342,11 +343,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     public Block getBlock() {
-        return Blockchain.getBlock(blockId);
+        if (block == null) {
+            block = Block.findBlock(blockId);
+        }
+        return block;
     }
 
-    void setBlockId(Long blockId) {
-        this.blockId = blockId;
+    void setBlock(Block block) {
+        this.block = block;
+        this.blockId = block.getId();
+        this.height = block.getHeight();
     }
 
     void setHeight(int height) {

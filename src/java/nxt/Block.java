@@ -67,6 +67,24 @@ public final class Block implements Serializable {
         }
     }
 
+    static Block findBlockAtHeight(int height) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height = ?")) {
+            pstmt.setLong(1, height);
+            ResultSet rs = pstmt.executeQuery();
+            Block block = null;
+            if (rs.next()) {
+                block = getBlock(rs);
+            }
+            rs.close();
+            return block;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Block already in database, height = " + height + ", does not pass validation!");
+        }
+    }
+
     static Block getBlock(JSONObject blockData) throws NxtException.ValidationException {
 
         try {
