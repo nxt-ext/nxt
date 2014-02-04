@@ -2,7 +2,6 @@ package nxt.user;
 
 import nxt.Block;
 import nxt.Blockchain;
-import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.peer.Peer;
@@ -14,6 +13,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 
 final class GetInitialData extends UserRequestHandler {
 
@@ -98,13 +98,11 @@ final class GetInitialData extends UserRequestHandler {
             }
         }
 
-        Long blockId = Blockchain.getLastBlock().getId();
-        int numberOfBlocks = 0;
-        while (numberOfBlocks < 60) {
+        int height = Blockchain.getLastBlock().getHeight();
+        List<Block> lastBlocks = Blockchain.getBlocksFromHeight(Math.max(0, height - 59));
 
-            numberOfBlocks++;
-
-            Block block = Blockchain.getBlock(blockId);
+        for (int i = lastBlocks.size() - 1; i >=0; i--) {
+            Block block = lastBlocks.get(i);
             JSONObject recentBlock = new JSONObject();
             recentBlock.put("index", block.getIndex());
             recentBlock.put("timestamp", block.getTimestamp());
@@ -120,13 +118,6 @@ final class GetInitialData extends UserRequestHandler {
                     .divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
 
             recentBlocks.add(recentBlock);
-
-            if (blockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                break;
-            }
-
-            blockId = block.getPreviousBlockId();
-
         }
 
         JSONObject response = new JSONObject();

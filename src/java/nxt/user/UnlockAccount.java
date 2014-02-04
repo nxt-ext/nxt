@@ -3,7 +3,6 @@ package nxt.user;
 import nxt.Account;
 import nxt.Block;
 import nxt.Blockchain;
-import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -17,6 +16,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
@@ -133,68 +135,60 @@ final class UnlockAccount extends UserRequestHandler {
 
             }
 
-            Long blockId = Blockchain.getLastBlock().getId();
-            int numberOfConfirmations = 1;
-            while (myTransactions.size() < 1000) {
+            SortedMap<Integer,JSONObject> myTransactionsMap = new TreeMap<>();
 
-                Block block = Blockchain.getBlock(blockId);
-
-                if (block.getTotalFee() > 0 && Arrays.equals(block.getGeneratorPublicKey(), accountPublicKey)) {
-
+            int blockchainHeight = Blockchain.getLastBlock().getHeight();
+            Iterator<Block> blockIterator = Blockchain.getAllBlocks(account, 0);
+            while (blockIterator.hasNext()) {
+                Block block = blockIterator.next();
+                if (block.getTotalFee() > 0) {
                     JSONObject myTransaction = new JSONObject();
                     myTransaction.put("index", block.getStringId()); // cfb: Generated fee transactions get an id equal to the block id
                     myTransaction.put("blockTimestamp", block.getTimestamp());
                     myTransaction.put("block", block.getStringId());
                     myTransaction.put("earnedAmount", block.getTotalFee());
-                    myTransaction.put("numberOfConfirmations", numberOfConfirmations);
+                    myTransaction.put("numberOfConfirmations", blockchainHeight - block.getHeight());
                     myTransaction.put("id", "-");
-
-                    myTransactions.add(myTransaction);
-
+                    myTransactionsMap.put(-block.getTimestamp(), myTransaction);
                 }
-
-                for (Transaction transaction : block.getTransactions()) {
-
-                    if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
-
-                        JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", transaction.getIndex());
-                        myTransaction.put("blockTimestamp", block.getTimestamp());
-                        myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
-                        myTransaction.put("sentAmount", transaction.getAmount());
-                        if (accountId.equals(transaction.getRecipientId())) {
-
-                            myTransaction.put("receivedAmount", transaction.getAmount());
-
-                        }
-                        myTransaction.put("fee", transaction.getFee());
-                        myTransaction.put("numberOfConfirmations", numberOfConfirmations);
-                        myTransaction.put("id", transaction.getStringId());
-
-                        myTransactions.add(myTransaction);
-
-                    } else if (accountId.equals(transaction.getRecipientId())) {
-
-                        JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", transaction.getIndex());
-                        myTransaction.put("blockTimestamp", block.getTimestamp());
-                        myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
-                        myTransaction.put("receivedAmount", transaction.getAmount());
-                        myTransaction.put("fee", transaction.getFee());
-                        myTransaction.put("numberOfConfirmations", numberOfConfirmations);
-                        myTransaction.put("id", transaction.getStringId());
-
-                        myTransactions.add(myTransaction);
-                    }
-                }
-                if (blockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                    break;
-                }
-                blockId = block.getPreviousBlockId();
-                numberOfConfirmations++;
             }
+
+            Iterator<Transaction> transactionIterator = Blockchain.getAllTransactions(account, (byte)-1, (byte)-1, 0);
+            while (transactionIterator.hasNext()) {
+                Transaction transaction = transactionIterator.next();
+                if (transaction.getSenderAccountId().equals(accountId)) {
+                    JSONObject myTransaction = new JSONObject();
+                    myTransaction.put("index", transaction.getIndex());
+                    myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                    myTransaction.put("transactionTimestamp", transaction.getTimestamp());
+                    myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
+                    myTransaction.put("sentAmount", transaction.getAmount());
+                    if (accountId.equals(transaction.getRecipientId())) {
+                        myTransaction.put("receivedAmount", transaction.getAmount());
+                    }
+                    myTransaction.put("fee", transaction.getFee());
+                    myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());
+                    myTransaction.put("id", transaction.getStringId());
+                    myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
+                } else if (transaction.getRecipientId().equals(accountId)) {
+                    JSONObject myTransaction = new JSONObject();
+                    myTransaction.put("index", transaction.getIndex());
+                    myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                    myTransaction.put("transactionTimestamp", transaction.getTimestamp());
+                    myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
+                    myTransaction.put("receivedAmount", transaction.getAmount());
+                    myTransaction.put("fee", transaction.getFee());
+                    myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());
+                    myTransaction.put("id", transaction.getStringId());
+                    myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
+                }
+            }
+
+            Iterator<JSONObject> iterator = myTransactionsMap.values().iterator();
+            while (myTransactions.size() < 1000 && iterator.hasNext()) {
+                myTransactions.add(iterator.next());
+            }
+
             if (myTransactions.size() > 0) {
                 JSONObject response2 = new JSONObject();
                 response2.put("response", "processNewData");

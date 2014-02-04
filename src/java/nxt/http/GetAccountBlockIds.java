@@ -9,9 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.PriorityQueue;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -56,19 +54,11 @@ final class GetAccountBlockIds extends HttpRequestHandler {
             return INCORRECT_TIMESTAMP;
         }
 
-        PriorityQueue<Block> sortedBlocks = new PriorityQueue<>(11, Block.heightComparator);
-        byte[] accountPublicKey = accountData.getPublicKey();
-        Iterator<Block> iterator = Blockchain.getAllBlocks();
+        JSONArray blockIds = new JSONArray();
+        Iterator<Block> iterator = Blockchain.getAllBlocks(accountData, timestamp);
         while (iterator.hasNext()) {
             Block block = iterator.next();
-            if (block.getTimestamp() >= timestamp && Arrays.equals(block.getGeneratorPublicKey(), accountPublicKey)) {
-                sortedBlocks.offer(block);
-            }
-        }
-
-        JSONArray blockIds = new JSONArray();
-        while (! sortedBlocks.isEmpty()) {
-            blockIds.add(sortedBlocks.poll().getStringId());
+            blockIds.add(block.getStringId());
         }
 
         JSONObject response = new JSONObject();

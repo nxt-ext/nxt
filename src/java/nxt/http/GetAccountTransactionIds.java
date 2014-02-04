@@ -9,9 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.PriorityQueue;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -56,33 +54,24 @@ final class GetAccountTransactionIds extends HttpRequestHandler {
             return INCORRECT_TIMESTAMP;
         }
 
-        int type;
-        int subtype;
+        byte type;
+        byte subtype;
         try {
-            type = Integer.parseInt(req.getParameter("type"));
+            type = Byte.parseByte(req.getParameter("type"));
         } catch (NumberFormatException e) {
             type = -1;
         }
         try {
-            subtype = Integer.parseInt(req.getParameter("subtype"));
+            subtype = Byte.parseByte(req.getParameter("subtype"));
         } catch (NumberFormatException e) {
             subtype = -1;
         }
 
-        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(11, Transaction.timestampComparator);
-        byte[] accountPublicKey = account.getPublicKey();
-        Iterator<Transaction> iterator = Blockchain.getAllTransactions();
+        JSONArray transactionIds = new JSONArray();
+        Iterator<Transaction> iterator = Blockchain.getAllTransactions(account, type, subtype, timestamp);
         while (iterator.hasNext()) {
             Transaction transaction = iterator.next();
-            if ((transaction.getRecipientId().equals(account.getId()) || Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey))
-                    && (type < 0 || transaction.getType().getType() == type) && (subtype < 0 || transaction.getType().getSubtype() == subtype)
-                    && transaction.getBlock().getTimestamp() >= timestamp) {
-                sortedTransactions.offer(transaction);
-            }
-        }
-        JSONArray transactionIds = new JSONArray();
-        while (! sortedTransactions.isEmpty()) {
-            transactionIds.add(sortedTransactions.poll().getStringId());
+            transactionIds.add(transaction.getStringId());
         }
 
         JSONObject response = new JSONObject();

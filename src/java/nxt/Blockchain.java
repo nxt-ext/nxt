@@ -521,6 +521,25 @@ public final class Blockchain {
         }
     }
 
+    public static Iterator<Block> getAllBlocks(Account account, int timestamp) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_public_key = ? ORDER BY db_id ASC");
+            pstmt.setInt(1, timestamp);
+            pstmt.setBytes(2, account.getPublicKey());
+            return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Block>() {
+                @Override
+                public Block get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Block.getBlock(con, rs);
+                }
+            });
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public static int getBlockCount() {
         try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block")) {
             ResultSet rs = pstmt.executeQuery();
@@ -536,6 +555,44 @@ public final class Blockchain {
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
+            return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Transaction>() {
+                @Override
+                public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Transaction.getTransaction(con, rs);
+                }
+            });
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static Iterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt;
+            if (type >= 0) {
+                if (subtype >= 0) {
+                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) AND type = ? AND subtype = ? ORDER BY timestamp ASC");
+                    pstmt.setInt(1, timestamp);
+                    pstmt.setLong(2, account.getId());
+                    pstmt.setLong(3, account.getId());
+                    pstmt.setByte(4, type);
+                    pstmt.setByte(5, subtype);
+                } else {
+                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) AND type = ? ORDER BY timestamp ASC");
+                    pstmt.setInt(1, timestamp);
+                    pstmt.setLong(2, account.getId());
+                    pstmt.setLong(3, account.getId());
+                    pstmt.setByte(4, type);
+                }
+            } else {
+                pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) ORDER BY timestamp ASC");
+                pstmt.setInt(1, timestamp);
+                pstmt.setLong(2, account.getId());
+                pstmt.setLong(3, account.getId());
+            }
             return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Transaction>() {
                 @Override
                 public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
@@ -623,6 +680,24 @@ public final class Blockchain {
             return block;
         }
         return Block.findBlockAtHeight(height);
+    }
+
+    public static List<Block> getBlocksFromHeight(int height) {
+        if (height < 0 || lastBlock.get().getHeight() - height > 1440) {
+            throw new IllegalArgumentException("Can't go back more than 1440 blocks");
+        }
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY height ASC")) {
+            pstmt.setLong(1, height);
+            ResultSet rs = pstmt.executeQuery();
+            List<Block> result = new ArrayList<>();
+            while (rs.next()) {
+                result.add(Block.getBlock(con, rs));
+            }
+            return result;
+        } catch (SQLException|NxtException.ValidationException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public static Collection<Transaction> getAllUnconfirmedTransactions() {
