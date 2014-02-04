@@ -108,7 +108,8 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     static Transaction findTransaction(Long transactionId) {
-        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             ResultSet rs = pstmt.executeQuery();
             Transaction transaction = null;
@@ -121,6 +122,17 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             throw new RuntimeException(e.getMessage(), e);
         } catch (NxtException.ValidationException e) {
             throw new RuntimeException("Block already in database, id = " + transactionId + ", does not pass validation!");
+        }
+    }
+
+    static boolean hasTransaction(Long transactionId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 

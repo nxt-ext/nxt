@@ -56,6 +56,17 @@ public final class Block implements Serializable {
         }
     }
 
+    static boolean hasBlock(Long blockId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
+            pstmt.setLong(1, blockId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     static Block getBlock(JSONObject blockData) throws NxtException.ValidationException {
 
         try {

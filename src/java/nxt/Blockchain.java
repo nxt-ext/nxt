@@ -198,18 +198,13 @@ public final class Blockchain {
                                     if (milestoneBlockIds == null) {
                                         return;
                                     }
+
                                     for (Object milestoneBlockId : milestoneBlockIds) {
-
                                         Long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
-                                        Block block = Block.findBlock(blockId);
-                                        if (block != null) {
-
+                                        if (Block.hasBlock(blockId)) {
                                             commonBlockId = blockId;
-
                                             break;
-
                                         }
-
                                     }
 
                                     {
@@ -232,7 +227,7 @@ public final class Blockchain {
                                             Long blockId;
                                             for (i = 0; i < numberOfBlocks; i++) {
                                                 blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
-                                                if (Block.findBlock(blockId) == null) {
+                                                if (! Block.hasBlock(blockId)) {
                                                     break;
                                                 }
                                                 commonBlockId = blockId;
@@ -294,7 +289,7 @@ public final class Blockchain {
                                                             return;
                                                         }
 
-                                                    } else if (Block.findBlock(block.getId()) == null && block.transactionIds.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+                                                    } else if (! Block.hasBlock(block.getId()) && block.transactionIds.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
 
                                                         futureBlocks.add(block);
 
@@ -476,7 +471,7 @@ public final class Blockchain {
 
                     for (Transaction transaction : nonBroadcastedTransactions.values()) {
 
-                        if (unconfirmedTransactions.get(transaction.getId()) == null && Transaction.findTransaction(transaction.getId()) == null) {
+                        if (unconfirmedTransactions.get(transaction.getId()) == null && ! Transaction.hasTransaction(transaction.getId())) {
 
                             transactionsData.add(transaction.getJSONObject());
 
@@ -641,8 +636,7 @@ public final class Blockchain {
 
     static void init() {
 
-        Block genesisBlock = Block.findBlock(Genesis.GENESIS_BLOCK_ID);
-        if (genesisBlock == null) {
+        if (! Block.hasBlock(Genesis.GENESIS_BLOCK_ID)) {
             Logger.logMessage("Genesis block not in database, starting from scratch");
 
             SortedMap<Long,Transaction> transactionsMap = new TreeMap<>();
@@ -657,7 +651,7 @@ public final class Blockchain {
                     transactionsMap.put(transaction.getId(), transaction);
                 }
 
-                genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, null,
+                Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, null,
                         Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
                 genesisBlock.setIndex(blockCounter.incrementAndGet());
 
@@ -710,7 +704,7 @@ public final class Blockchain {
                 synchronized (Blockchain.class) {
 
                     Long id = transaction.getId();
-                    if (Transaction.findTransaction(id) != null || unconfirmedTransactions.containsKey(id)
+                    if (Transaction.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
                             || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
                         continue;
                     }
@@ -842,7 +836,7 @@ public final class Blockchain {
                 }
 
                 if (! previousLastBlock.getId().equals(block.getPreviousBlockId())
-                        || block.getId().equals(Long.valueOf(0L)) || Block.findBlock(block.getId()) != null
+                        || block.getId().equals(Long.valueOf(0L)) || Block.hasBlock(block.getId())
                         || ! block.verifyGenerationSignature() || ! block.verifyBlockSignature()) {
                     return false;
                 }
@@ -878,9 +872,9 @@ public final class Blockchain {
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     if (transaction.getTimestamp() > curTime + 15
                             || (transaction.getTimestamp() + transaction.getDeadline() * 60 < block.getTimestamp() && previousLastBlock.getHeight() > 303)
-                            || Transaction.findTransaction(transactionId) != null
+                            || Transaction.hasTransaction(transactionId)
                             || (transaction.getReferencedTransactionId() != null
-                            && Transaction.findTransaction(transaction.getReferencedTransactionId()) == null
+                            &&  ! Transaction.hasTransaction(transaction.getReferencedTransactionId())
                             && blockTransactions.get(transaction.getReferencedTransactionId()) == null)
                             || (unconfirmedTransactions.get(transactionId) == null && !transaction.verify())
                             || transaction.getId().equals(Long.valueOf(0L))) {
@@ -1130,7 +1124,7 @@ public final class Blockchain {
 
         for (Transaction transaction : unconfirmedTransactions.values()) {
 
-            if (transaction.getReferencedTransactionId() == null || Transaction.findTransaction(transaction.getReferencedTransactionId()) != null) {
+            if (transaction.getReferencedTransactionId() == null || Transaction.hasTransaction(transaction.getReferencedTransactionId())) {
 
                 sortedTransactions.add(transaction);
 
