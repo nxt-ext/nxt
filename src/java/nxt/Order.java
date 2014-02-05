@@ -19,8 +19,8 @@ public abstract class Order {
     // called only from Blockchain.apply(Block) which is already synchronized on Blockchain.class
     private static void matchOrders(Long assetId) {
 
-        SortedSet<Ask> sortedAssetAskOrders = Ask.getSortedOrders(assetId);
-        SortedSet<Bid> sortedAssetBidOrders = Bid.getSortedOrders(assetId);
+        SortedSet<Ask> sortedAssetAskOrders = Ask.sortedAskOrders.get(assetId);
+        SortedSet<Bid> sortedAssetBidOrders = Bid.sortedBidOrders.get(assetId);
 
         while (!sortedAssetAskOrders.isEmpty() && !sortedAssetBidOrders.isEmpty()) {
 
@@ -143,7 +143,7 @@ public abstract class Order {
         }
 
         public static SortedSet<Ask> getSortedOrders(Long assetId) {
-            return sortedAskOrders.get(assetId);
+            return Collections.unmodifiableSortedSet(sortedAskOrders.get(assetId));
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
@@ -215,7 +215,7 @@ public abstract class Order {
         }
 
         public static SortedSet<Bid> getSortedOrders(Long assetId) {
-            return sortedBidOrders.get(assetId);
+            return Collections.unmodifiableSortedSet(sortedBidOrders.get(assetId));
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {

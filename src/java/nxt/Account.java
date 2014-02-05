@@ -138,6 +138,10 @@ public final class Account {
         return unconfirmedAssetBalances.get(assetId);
     }
 
+    public Map<Long, Integer> getAssetBalances() {
+        return Collections.unmodifiableMap(assetBalances);
+    }
+
     @Override
     public boolean equals(Object o) {
         return o instanceof Account && this.getId().equals(((Account)o).getId());
@@ -290,10 +294,6 @@ public final class Account {
         public String toString() {
             return "height: " + height + ", guaranteed: " + balance;
         }
-    }
-
-    public Map<Long, Integer> getAssetBalances() {
-        return assetBalances;
     }
 
 }
