@@ -30,7 +30,7 @@ public final class Alias {
         if (oldAlias == null) {
             aliasIdToAliasMappings.putIfAbsent(transactionId, newAlias);
         } else {
-            oldAlias.aliasURI = aliasURI;
+            oldAlias.aliasURI = aliasURI.intern();
             oldAlias.timestamp = timestamp;
         }
     }
@@ -50,8 +50,8 @@ public final class Alias {
 
         this.account = account;
         this.id = id;
-        this.aliasName = aliasName;
-        this.aliasURI = aliasURI;
+        this.aliasName = aliasName.intern();
+        this.aliasURI = aliasURI.intern();
         this.timestamp = timestamp;
 
     }
