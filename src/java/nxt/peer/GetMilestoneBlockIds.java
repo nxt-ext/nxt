@@ -2,6 +2,7 @@ package nxt.peer;
 
 import nxt.Block;
 import nxt.Blockchain;
+import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -19,19 +20,16 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
 
         JSONArray milestoneBlockIds = new JSONArray();
         Block block = Blockchain.getLastBlock();
-        int jumpLength = block.getHeight() * 4 / 1461 + 1;
-        while (block != null && block.getHeight() > 0) {
+        long blockId = block.getId();
+        int height = block.getHeight();
+        final int jumpLength = height * 4 / 1461 + 1;
 
-            milestoneBlockIds.add(block.getStringId());
-            int nextHeight = block.getHeight() - jumpLength;
-
-            if (nextHeight <= 0) {
-                break;
-            }
-
-            block = Blockchain.getBlockAtHeight(nextHeight);
-
+        while (height > 0) {
+            milestoneBlockIds.add(Convert.convert(blockId));
+            blockId = Blockchain.getBlockIdAtHeight(height);
+            height = height - jumpLength;
         }
+
         response.put("milestoneBlockIds", milestoneBlockIds);
 
         return response;

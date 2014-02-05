@@ -672,15 +672,15 @@ public final class Blockchain {
         }
     }
 
-    public static Block getBlockAtHeight(int height) {
+    public static long getBlockIdAtHeight(int height) {
         Block block = lastBlock.get();
         if (height > block.getHeight()) {
-            return null;
+            throw new IllegalArgumentException("Invalid height " + height + ", current blockchain is at " + block.getHeight());
         }
         if (height == block.getHeight()) {
-            return block;
+            return block.getId();
         }
-        return Block.findBlockAtHeight(height);
+        return Block.findBlockIdAtHeight(height);
     }
 
     public static List<Block> getBlocksFromHeight(int height) {

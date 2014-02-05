@@ -63,21 +63,20 @@ public final class Block {
         }
     }
 
-    static Block findBlockAtHeight(int height) {
+    static long findBlockIdAtHeight(int height) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
             pstmt.setLong(1, height);
             ResultSet rs = pstmt.executeQuery();
-            Block block = null;
-            if (rs.next()) {
-                block = getBlock(con, rs);
+            if (! rs.next()) {
+                rs.close();
+                throw new RuntimeException("Block at height " + height + " not found in database!");
             }
+            long id = rs.getLong("id");
             rs.close();
-            return block;
+            return id;
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
-        } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database, height = " + height + ", does not pass validation!");
         }
     }
 
