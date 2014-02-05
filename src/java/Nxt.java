@@ -1064,7 +1064,11 @@ public class Nxt extends HttpServlet {
                     if (this.blockTransactions[i] == null) {
                         throw new IllegalStateException("Missing transaction " + convert(this.transactions[i]));
                     }
+                    byte[] transactionSignature = blockTransactions[i].signature;
+                    Long lastBytes = new BigInteger(Arrays.copyOfRange(transactionSignature, transactionSignature.length - 8, transactionSignature.length)).longValue();
+                    signatureLastBytes.add(lastBytes);
                 }
+                
                 if (previousBlock == 0) {
 
                     baseTarget = initialBaseTarget;
