@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Nxt extends HttpServlet {
 
-    static final String VERSION = "0.5.11";
+    static final String VERSION = "0.5.12";
 
     static final long GENESIS_BLOCK_ID = 2680262203532249785L;
     static final long CREATOR_ID = 1739068987193023818L;
@@ -153,6 +153,8 @@ public class Nxt extends HttpServlet {
     static final ConcurrentMap<Long, TreeSet<BidOrder>> sortedBidOrders = new ConcurrentHashMap<>();
 
     static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
+
+    static final Set<Long> signatureLastBytes = Collections.synchronizedSet(new HashSet<Long>());
 
     static final ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(8);
 
@@ -1883,6 +1885,10 @@ public class Nxt extends HttpServlet {
                         transaction.height = block.height;
                         transaction.block = block.getId();
 
+                        Long lastBytes = new BigInteger(Arrays.copyOfRange(transaction.signature, transaction.signature.length - 8, transaction.signature.length)).longValue();
+                        if (! (signatureLastBytes.add(lastBytes) || transaction.height == 58294)) {
+                            return false;
+                        }
                         if (Nxt.transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
                             logMessage("duplicate transaction id " + transactionEntry.getKey());
                             return false;
