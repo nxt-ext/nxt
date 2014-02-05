@@ -4,12 +4,12 @@ import nxt.Account;
 import nxt.Blockchain;
 import nxt.Transaction;
 import nxt.util.Convert;
+import nxt.util.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Iterator;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -68,10 +68,11 @@ final class GetAccountTransactionIds extends HttpRequestHandler {
         }
 
         JSONArray transactionIds = new JSONArray();
-        Iterator<Transaction> iterator = Blockchain.getAllTransactions(account, type, subtype, timestamp);
-        while (iterator.hasNext()) {
-            Transaction transaction = iterator.next();
-            transactionIds.add(transaction.getStringId());
+        try (DbIterator<Transaction> iterator = Blockchain.getAllTransactions(account, type, subtype, timestamp)) {
+            while (iterator.hasNext()) {
+                Transaction transaction = iterator.next();
+                transactionIds.add(transaction.getStringId());
+            }
         }
 
         JSONObject response = new JSONObject();

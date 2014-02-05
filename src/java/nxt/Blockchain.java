@@ -4,6 +4,7 @@ import nxt.crypto.Crypto;
 import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.util.Convert;
+import nxt.util.DbIterator;
 import nxt.util.DbUtils;
 import nxt.util.JSON;
 import nxt.util.Logger;
@@ -504,12 +505,12 @@ public final class Blockchain {
 
     };
 
-    public static Iterator<Block> getAllBlocks() {
+    public static DbIterator<Block> getAllBlocks() {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
-            return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Block>() {
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Block>() {
                 @Override
                 public Block get(Connection con, ResultSet rs) throws NxtException.ValidationException {
                     return Block.getBlock(con, rs);
@@ -521,14 +522,14 @@ public final class Blockchain {
         }
     }
 
-    public static Iterator<Block> getAllBlocks(Account account, int timestamp) {
+    public static DbIterator<Block> getAllBlocks(Account account, int timestamp) {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_public_key = ? ORDER BY db_id ASC");
             pstmt.setInt(1, timestamp);
             pstmt.setBytes(2, account.getPublicKey());
-            return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Block>() {
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Block>() {
                 @Override
                 public Block get(Connection con, ResultSet rs) throws NxtException.ValidationException {
                     return Block.getBlock(con, rs);
@@ -550,12 +551,12 @@ public final class Blockchain {
         }
     }
 
-    public static Iterator<Transaction> getAllTransactions() {
+    public static DbIterator<Transaction> getAllTransactions() {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
-            return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Transaction>() {
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Transaction>() {
                 @Override
                 public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
                     return Transaction.getTransaction(con, rs);
@@ -567,7 +568,7 @@ public final class Blockchain {
         }
     }
 
-    public static Iterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
+    public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
         Connection con = null;
         try {
             con = Db.getConnection();
@@ -593,7 +594,7 @@ public final class Blockchain {
                 pstmt.setLong(2, account.getId());
                 pstmt.setLong(3, account.getId());
             }
-            return DbUtils.getDbIterator(con, pstmt, new DbUtils.ResultSetReader<Transaction>() {
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Transaction>() {
                 @Override
                 public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
                     return Transaction.getTransaction(con, rs);
@@ -930,9 +931,10 @@ public final class Blockchain {
                 return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.getTimestamp() < o2.getTimestamp() ? -1 : (o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)));
             }
         });
-        Iterator<Transaction> iterator = getAllTransactions();
-        while (iterator.hasNext()) {
-            sortedTransactions.add(iterator.next());
+        try (DbIterator<Transaction> iterator = getAllTransactions()) {
+            while (iterator.hasNext()) {
+                sortedTransactions.add(iterator.next());
+            }
         }
         MessageDigest digest = Crypto.sha256();
         while (! sortedTransactions.isEmpty()) {
