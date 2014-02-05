@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -53,6 +54,8 @@ public final class Blockchain {
     private static final Collection<Block> allBlocks = Collections.unmodifiableCollection(blocks.values());
     private static final Collection<Transaction> allTransactions = Collections.unmodifiableCollection(transactions.values());
     private static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
+
+    static final Set<Long> signatureLastBytes = Collections.synchronizedSet(new HashSet<Long>());
 
     static final Runnable processTransactionsThread = new Runnable() {
 
@@ -736,6 +739,11 @@ public final class Blockchain {
                         continue;
                     }
 
+                    Long lastBytes = transaction.getSignatureLastBytes();
+                    if (signatureLastBytes.contains(lastBytes)) {
+                        continue;
+                    }
+
                     doubleSpendingTransaction = transaction.isDoubleSpending();
 
                     transaction.setIndex(transactionCounter.incrementAndGet());
@@ -943,6 +951,12 @@ public final class Blockchain {
                     Transaction transaction = transactionEntry.getValue();
                     transaction.setHeight(block.getHeight());
                     transaction.setBlockId(block.getId());
+
+                    Long lastBytes = transaction.getSignatureLastBytes();
+                    if (! (signatureLastBytes.add(lastBytes) || transaction.height == 58294)) {
+                        return false;
+                    }
+
                     if (transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
                         Logger.logMessage("duplicate transaction id " + transactionEntry.getKey());
                         return false;

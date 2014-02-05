@@ -152,6 +152,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private transient volatile Long id;
     private transient volatile String stringId = null;
     private transient volatile Long senderAccountId;
+    private transient volatile Long lastBytes;
 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                         int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
@@ -172,7 +173,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         this.signature = signature;
         this.type = type;
         this.height = Integer.MAX_VALUE;
-
 
     }
 
@@ -403,15 +403,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
     }
 
-    /*
-    long getRecipientDeltaBalance() {
-        return amount * 100L + type.getRecipientDeltaBalance(this);
+    Long getSignatureLastBytes() {
+        if (lastBytes == null) {
+            long longValue = new BigInteger(Arrays.copyOfRange(signature, signature.length - 8, signature.length)).longValue();
+            if (longValue == 0) {
+                throw new IllegalStateException("Transaction not yet signed");
+            }
+            lastBytes = longValue;
+        }
+        return lastBytes;
     }
-
-    long getSenderDeltaBalance() {
-        return -(amount + fee) * 100L + type.getSenderDeltaBalance(this);
-    }
-    */
 
     // returns true iff double spending
     boolean isDoubleSpending() {
