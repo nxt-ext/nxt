@@ -725,7 +725,8 @@ public final class Blockchain {
                 Transaction transaction = Transaction.getTransaction((JSONObject) transactionData);
 
                 int curTime = Convert.getEpochTime();
-                if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime) {
+                if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime
+                        || transaction.getDeadline() > 1440) {
                     continue;
                 }
 
@@ -902,6 +903,7 @@ public final class Blockchain {
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     if (transaction.getTimestamp() > curTime + 15
                             || (transaction.getTimestamp() + transaction.getDeadline() * 60 < block.getTimestamp() && previousLastBlock.getHeight() > 303)
+                            || transaction.getDeadline() > 1440
                             || transactions.get(transactionId) != null
                             || (transaction.getReferencedTransactionId() != null && transactions.get(transaction.getReferencedTransactionId()) == null && blockTransactions.get(transaction.getReferencedTransactionId()) == null)
                             || (unconfirmedTransactions.get(transactionId) == null && !transaction.verify())

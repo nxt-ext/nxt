@@ -95,11 +95,11 @@ final class SendMoney extends UserRequestHandler {
 
             return response;
 
-        } else if (deadline < 1) {
+        } else if (deadline < 1 || deadline > 1440) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
-            response.put("message", "\"Deadline\" must be greater or equal to 1 minute!");
+            response.put("message", "\"Deadline\" must be greater or equal to 1 minute and less than 24 hours!");
             response.put("recipient", recipientValue);
             response.put("amount", amountValue);
             response.put("fee", feeValue);

@@ -70,7 +70,7 @@ final class CancelAskOrder extends HttpRequestHandler {
         short deadline;
         try {
             deadline = Short.parseShort(deadlineValue);
-            if (deadline < 1) {
+            if (deadline < 1 || deadline > 1440) {
                 return INCORRECT_DEADLINE;
             }
         } catch (NumberFormatException e) {
