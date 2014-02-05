@@ -193,6 +193,7 @@ public final class Blockchain {
 
                                     Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
 
+                                    //TODO: change to support getting only a few milestoneBlockIds at a time
                                     JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
                                     if (milestoneBlockIds == null) {
                                         return;

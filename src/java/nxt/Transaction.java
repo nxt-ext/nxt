@@ -1115,7 +1115,7 @@ public final class Transaction implements Comparable<Transaction> {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
                     Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
                     if (askOrder == null || askOrder.getQuantity() != attachment.getQuantity() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
-                        //TODO: undoing of partially filled orders not supported yet
+                        //undoing of partially filled orders not supported yet
                         throw new UndoNotSupportedException(transaction, "Ask order already filled");
                     }
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
@@ -1174,7 +1174,7 @@ public final class Transaction implements Comparable<Transaction> {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
                     Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
                     if (bidOrder == null || bidOrder.getQuantity() != attachment.getQuantity() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
-                        //TODO: undoing of partially filled orders not supported yet
+                        //undoing of partially filled orders not supported yet
                         throw new UndoNotSupportedException(transaction, "Bid order already filled");
                     }
                     senderAccount.addToBalanceAndUnconfirmedBalance(attachment.getQuantity() * attachment.getPrice());

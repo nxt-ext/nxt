@@ -18,6 +18,7 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
 
         JSONObject response = new JSONObject();
 
+        //TODO: add support for getting only a few milestoneBlockIds at a time
         JSONArray milestoneBlockIds = new JSONArray();
         Block block = Blockchain.getLastBlock();
         long blockId = block.getId();
