@@ -292,4 +292,8 @@ public final class Account {
         }
     }
 
+    public Map<Long, Integer> getAssetBalances() {
+        return assetBalances;
+    }
+
 }
