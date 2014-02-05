@@ -1068,7 +1068,7 @@ public class Nxt extends HttpServlet {
                     Long lastBytes = new BigInteger(Arrays.copyOfRange(transactionSignature, transactionSignature.length - 8, transactionSignature.length)).longValue();
                     signatureLastBytes.add(lastBytes);
                 }
-                
+
                 if (previousBlock == 0) {
 
                     baseTarget = initialBaseTarget;
@@ -4505,6 +4505,11 @@ public class Nxt extends HttpServlet {
 
                             continue;
 
+                        }
+
+                        Long lastBytes = new BigInteger(Arrays.copyOfRange(transaction.signature, transaction.signature.length - 8, transaction.signature.length)).longValue();
+                        if (signatureLastBytes.contains(lastBytes)) {
+                            continue;
                         }
 
                         senderId = transaction.getSenderAccountId();
