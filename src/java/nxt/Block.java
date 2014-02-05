@@ -66,7 +66,7 @@ public final class Block {
     static long findBlockIdAtHeight(int height) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
-            pstmt.setLong(1, height);
+            pstmt.setInt(1, height);
             ResultSet rs = pstmt.executeQuery();
             if (! rs.next()) {
                 rs.close();

@@ -630,9 +630,9 @@ public final class Blockchain {
                 return Collections.emptyList();
             }
             List<Long> result = new ArrayList<>();
-            long dbId = rs.getLong("db_id");
-            pstmt2.setLong(1, dbId);
-            pstmt2.setLong(2, limit);
+            int dbId = rs.getInt("db_id");
+            pstmt2.setInt(1, dbId);
+            pstmt2.setInt(2, limit);
             rs = pstmt2.executeQuery();
             while (rs.next()) {
                 result.add(rs.getLong("id"));
@@ -658,9 +658,9 @@ public final class Blockchain {
                 return Collections.emptyList();
             }
             List<Block> result = new ArrayList<>();
-            long dbId = rs.getLong("db_id");
-            pstmt2.setLong(1, dbId);
-            pstmt2.setLong(2, limit);
+            int dbId = rs.getInt("db_id");
+            pstmt2.setInt(1, dbId);
+            pstmt2.setInt(2, limit);
             rs = pstmt2.executeQuery();
             while (rs.next()) {
                 result.add(Block.getBlock(con, rs));
@@ -689,7 +689,7 @@ public final class Blockchain {
         }
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY height ASC")) {
-            pstmt.setLong(1, height);
+            pstmt.setInt(1, height);
             ResultSet rs = pstmt.executeQuery();
             List<Block> result = new ArrayList<>();
             while (rs.next()) {
