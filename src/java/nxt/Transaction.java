@@ -809,8 +809,8 @@ public final class Transaction implements Comparable<Transaction> {
                     byte[] uri = new byte[uriLength];
                     buffer.get(uri);
                     try {
-                        transaction.attachment = new Attachment.MessagingAliasAssignment(new String(alias, "UTF-8").intern(),
-                                new String(uri, "UTF-8").intern());
+                        transaction.attachment = new Attachment.MessagingAliasAssignment(new String(alias, "UTF-8"),
+                                new String(uri, "UTF-8"));
                         return validateAttachment(transaction);
                     } catch (RuntimeException|UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error parsing alias assignment", e);
@@ -822,7 +822,7 @@ public final class Transaction implements Comparable<Transaction> {
                 boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String alias = (String)attachmentData.get("alias");
                     String uri = (String)attachmentData.get("uri");
-                    transaction.attachment = new Attachment.MessagingAliasAssignment(alias.trim(), uri.trim());
+                    transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
                     return validateAttachment(transaction);
                 }
 
@@ -857,7 +857,7 @@ public final class Transaction implements Comparable<Transaction> {
                     try {
                         Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
                         if (! Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || attachment.getAliasName().length() == 0
-                                || attachment.getAliasName().length() > 100 || attachment.getAliasURI().length() > 1000) {
+                                || attachment.getAliasName().length() > Nxt.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Nxt.MAX_ALIAS_URI_LENGTH) {
                             return false;
                         } else {
                             String normalizedAlias = attachment.getAliasName().toLowerCase();
