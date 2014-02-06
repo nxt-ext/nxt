@@ -475,6 +475,9 @@ public final class Block implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         this.blockTransactions = transactionIds.length == 0 ? emptyTransactions : new Transaction[transactionIds.length];
+        for (int i = 0; i < transactionIds.length; i++) {
+            this.blockTransactions[i] = Blockchain.getTransaction(transactionIds[i]);
+        }
     }
 
 }

@@ -324,8 +324,8 @@ public final class Blockchain {
 
                                             synchronized (Blockchain.class) {
 
-                                                saveBlocks("blocks.nxt.bak");
                                                 saveTransactions("transactions.nxt.bak");
+                                                saveBlocks("blocks.nxt.bak");
 
                                                 curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
                                                 boolean needsRescan;
@@ -355,8 +355,8 @@ public final class Blockchain {
                                                 }
 
                                                 if (needsRescan) {
-                                                    loadBlocks("blocks.nxt.bak");
                                                     loadTransactions("transactions.nxt.bak");
+                                                    loadBlocks("blocks.nxt.bak");
                                                     Account.clear();
                                                     Alias.clear();
                                                     Asset.clear();
@@ -373,8 +373,8 @@ public final class Blockchain {
                                         }
 
                                         synchronized (Blockchain.class) {
-                                            saveBlocks("blocks.nxt");
                                             saveTransactions("transactions.nxt");
+                                            saveBlocks("blocks.nxt");
                                         }
                                     }
                                 }
