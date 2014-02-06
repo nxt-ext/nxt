@@ -28,6 +28,7 @@ public abstract class HttpRequestHandler {
         map.put("broadcastTransaction", BroadcastTransaction.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
+        map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountId", GetAccountId.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
@@ -36,6 +37,8 @@ public abstract class HttpRequestHandler {
         map.put("getAliasId", GetAliasId.instance);
         map.put("getAliasIds", GetAliasIds.instance);
         map.put("getAliasURI", GetAliasURI.instance);
+        map.put("getAsset", GetAsset.instance);
+        map.put("getAssetIds", GetAssetIds.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getConstants", GetConstants.instance);
@@ -63,8 +66,6 @@ public abstract class HttpRequestHandler {
         //map.put("issueAsset", IssueAsset.instance);
         //map.put("cancelAskOrder", CancelAskOrder.instance);
         //map.put("cancelBidOrder", CancelBidOrder.instance);
-        //map.put("getAsset", GetAsset.instance);
-        //map.put("getAssetIds", GetAssetIds.instance);
         //map.put("transferAsset", TransferAsset.instance);
         //map.put("placeAskOrder", PlaceAskOrder.instance);
         //map.put("placeBidOrder", PlaceBidOrder.instance);
