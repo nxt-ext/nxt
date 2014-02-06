@@ -1441,11 +1441,10 @@ public final class Blockchain {
 
     }
 
-    static void purgeExpiredHashes() {
-        int currentTime = Convert.getEpochTime();
+    static void purgeExpiredHashes(int blockTimestamp) {
         Iterator<Map.Entry<String, Transaction>> iterator = Blockchain.transactionHashes.entrySet().iterator();
         while (iterator.hasNext()) {
-            if (iterator.next().getValue().getExpiration() < currentTime) {
+            if (iterator.next().getValue().getExpiration() < blockTimestamp) {
                 iterator.remove();
             }
         }

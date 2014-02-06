@@ -568,7 +568,7 @@ public final class Block {
             transaction.apply();
         }
 
-        Blockchain.purgeExpiredHashes();
+        Blockchain.purgeExpiredHashes(this.timestamp);
 
     }
 
