@@ -995,8 +995,6 @@ public final class Blockchain {
 
                 block.apply();
 
-                purgeExpiredHashes();
-
                 addedConfirmedTransactions = new JSONArray();
                 removedUnconfirmedTransactions = new JSONArray();
 
@@ -1311,7 +1309,7 @@ public final class Blockchain {
 
     }
 
-    private static void purgeExpiredHashes() {
+    static void purgeExpiredHashes() {
         int currentTime = Convert.getEpochTime();
         Iterator<Map.Entry<String, Transaction>> iterator = Blockchain.transactionHashes.entrySet().iterator();
         while (iterator.hasNext()) {

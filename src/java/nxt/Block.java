@@ -420,9 +420,12 @@ public final class Block implements Serializable {
         for (Transaction transaction : blockTransactions) {
 
             transaction.setHeight(height);
+            transaction.setBlockId(this.getId());
             transaction.apply();
 
         }
+
+        Blockchain.purgeExpiredHashes();
 
     }
 
