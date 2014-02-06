@@ -77,8 +77,8 @@ public interface Attachment {
 
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
 
-            this.aliasName = aliasName;
-            this.aliasURI = aliasURI;
+            this.aliasName = aliasName.trim().intern();
+            this.aliasURI = aliasURI.trim().intern();
 
         }
 
