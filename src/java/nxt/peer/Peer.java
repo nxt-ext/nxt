@@ -196,9 +196,9 @@ public final class Peer implements Comparable<Peer> {
             return null;
         }
 
-        Peer peer = peers.get(announcedAddress.length() > 0 ? announcedAddress : address);
+        String peerAddress = announcedAddress.length() > 0 ? announcedAddress : address;
+        Peer peer = peers.get(peerAddress);
         if (peer == null) {
-            String peerAddress = announcedAddress.length() > 0 ? announcedAddress : address;
             peer = new Peer(peerAddress, announcedAddress);
             peers.put(peerAddress, peer);
         }
@@ -299,7 +299,7 @@ public final class Peer implements Comparable<Peer> {
     }
 
     private static String truncate(String s, int limit, boolean dots) {
-        return s == null ? "?" : s.length() > limit ? (s.substring(0, limit) + (dots ? "..." : "")) : s;
+        return s == null ? "?" : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }
 
 
@@ -393,6 +393,12 @@ public final class Peer implements Comparable<Peer> {
     }
 
     void setAnnouncedAddress(String announcedAddress) {
+        try {
+            new URL("http://" + announcedAddress);
+        } catch (MalformedURLException e) {
+            //Logger.logDebugMessage("malformed peer announced address " + announcedAddress, e);
+            announcedAddress = "";
+        }
         this.announcedAddress = announcedAddress;
     }
 
@@ -434,7 +440,7 @@ public final class Peer implements Comparable<Peer> {
         JSONArray addedBlacklistedPeers = new JSONArray();
         JSONObject addedBlacklistedPeer = new JSONObject();
         addedBlacklistedPeer.put("index", index);
-        addedBlacklistedPeer.put("announcedAddress", truncate(announcedAddress, 30, true));
+        addedBlacklistedPeer.put("announcedAddress", truncate(announcedAddress, 25, true));
         if (Nxt.wellKnownPeers.contains(announcedAddress)) {
             addedBlacklistedPeer.put("wellKnown", true);
         }
@@ -464,7 +470,7 @@ public final class Peer implements Comparable<Peer> {
             JSONArray addedKnownPeers = new JSONArray();
             JSONObject addedKnownPeer = new JSONObject();
             addedKnownPeer.put("index", index);
-            addedKnownPeer.put("announcedAddress", truncate(announcedAddress, 30, true));
+            addedKnownPeer.put("announcedAddress", truncate(announcedAddress, 25, true));
             if (Nxt.wellKnownPeers.contains(announcedAddress)) {
                 addedKnownPeer.put("wellKnown", true);
             }
@@ -514,7 +520,7 @@ public final class Peer implements Comparable<Peer> {
         JSONArray addedKnownPeers = new JSONArray();
         JSONObject addedKnownPeer = new JSONObject();
         addedKnownPeer.put("index", index);
-        addedKnownPeer.put("announcedAddress", truncate(announcedAddress, 30, true));
+        addedKnownPeer.put("announcedAddress", truncate(announcedAddress, 25, true));
         if (Nxt.wellKnownPeers.contains(announcedAddress)) {
             addedKnownPeer.put("wellKnown", true);
         }
@@ -768,8 +774,8 @@ public final class Peer implements Comparable<Peer> {
             }
 
 
-            addedActivePeer.put("address", truncate(peerAddress, 30, true));
-            addedActivePeer.put("announcedAddress", truncate(announcedAddress, 30, true));
+            addedActivePeer.put("address", truncate(peerAddress, 25, true));
+            addedActivePeer.put("announcedAddress", truncate(announcedAddress, 25, true));
             addedActivePeer.put("weight", getWeight());
             addedActivePeer.put("downloaded", downloadedVolume);
             addedActivePeer.put("uploaded", uploadedVolume);
