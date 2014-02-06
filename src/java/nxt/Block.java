@@ -568,6 +568,8 @@ public final class Block {
             transaction.apply();
         }
 
+        Blockchain.purgeExpiredHashes();
+
     }
 
     void calculateBaseTarget() {

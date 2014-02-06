@@ -54,6 +54,8 @@ public final class Blockchain {
 
     private static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
 
+    static final ConcurrentMap<String, Transaction> transactionHashes = new ConcurrentHashMap<>();
+
     static final Runnable processTransactionsThread = new Runnable() {
 
         private final JSONStreamAware getUnconfirmedTransactionsRequest;
@@ -110,7 +112,7 @@ public final class Blockchain {
                     while (iterator.hasNext()) {
 
                         Transaction transaction = iterator.next();
-                        if (transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime) {
+                        if (transaction.getExpiration() < curTime) {
 
                             iterator.remove();
 
@@ -840,7 +842,7 @@ public final class Blockchain {
                 Transaction transaction = Transaction.getTransaction((JSONObject) transactionData);
 
                 int curTime = Convert.getEpochTime();
-                if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() + transaction.getDeadline() * 60 < curTime
+                if (transaction.getTimestamp() > curTime + 15 || transaction.getExpiration() < curTime
                         || transaction.getDeadline() > 1440) {
                     continue;
                 }
@@ -852,6 +854,10 @@ public final class Blockchain {
                     Long id = transaction.getId();
                     if (Transaction.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
                             || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
+                        continue;
+                    }
+
+                    if (transactionHashes.containsKey(transaction.getHash())) {
                         continue;
                     }
 
@@ -957,6 +963,7 @@ public final class Blockchain {
                 Block previousLastBlock = lastBlock.get();
 
                 if (block.getVersion() != (previousLastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
+                    //Logger.logDebugMessage("1");
                     return false;
                 }
 
@@ -975,16 +982,19 @@ public final class Blockchain {
                 }
 
                 if (block.getVersion() != 1 && ! Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
+                    //Logger.logDebugMessage("2");
                     return false;
                 }
 
                 if (block.getTimestamp() > curTime + 15 || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
+                    //Logger.logDebugMessage("3");
                     return false;
                 }
 
                 if (! previousLastBlock.getId().equals(block.getPreviousBlockId())
                         || block.getId().equals(Long.valueOf(0L)) || Block.hasBlock(block.getId())
                         || ! block.verifyGenerationSignature() || ! block.verifyBlockSignature()) {
+                    //Logger.logDebugMessage("4");
                     return false;
                 }
 
@@ -998,10 +1008,12 @@ public final class Blockchain {
                     transaction.setIndex(transactionCounter.incrementAndGet());
 
                     if (blockTransactions.put(block.transactionIds[i] = transaction.getId(), transaction) != null) {
+                        //Logger.logDebugMessage("5");
                         return false;
                     }
 
                     if (transaction.isDuplicate(duplicates)) {
+                        //Logger.logDebugMessage("6");
                         return false;
                     }
                 }
@@ -1018,13 +1030,14 @@ public final class Blockchain {
                     Transaction transaction = blockTransactions.get(transactionId);
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     if (transaction.getTimestamp() > curTime + 15
-                            || (transaction.getTimestamp() + transaction.getDeadline() * 60 < block.getTimestamp() && previousLastBlock.getHeight() > 303)
+                            || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() > 303)
                             || Transaction.hasTransaction(transactionId)
                             || (transaction.getReferencedTransactionId() != null
                             &&  ! Transaction.hasTransaction(transaction.getReferencedTransactionId())
                             && blockTransactions.get(transaction.getReferencedTransactionId()) == null)
                             || (unconfirmedTransactions.get(transactionId) == null && !transaction.verify())
                             || transaction.getId().equals(Long.valueOf(0L))) {
+                        //Logger.logDebugMessage("7");
                         return false;
                     }
 
@@ -1041,16 +1054,19 @@ public final class Blockchain {
                 }
 
                 if (calculatedTotalAmount != block.getTotalAmount() || calculatedTotalFee != block.getTotalFee()) {
+                    //Logger.logDebugMessage("8");
                     return false;
                 }
 
                 if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
+                    //Logger.logDebugMessage("9");
                     return false;
                 }
 
                 for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
                     Account senderAccount = Account.getAccount(accumulatedAmountEntry.getKey());
                     if (senderAccount.getBalance() < accumulatedAmountEntry.getValue()) {
+                        //Logger.logDebugMessage("10");
                         return false;
                     }
                 }
@@ -1061,6 +1077,7 @@ public final class Blockchain {
                         long asset = accountAccumulatedAssetQuantitiesEntry.getKey();
                         long quantity = accountAccumulatedAssetQuantitiesEntry.getValue();
                         if (senderAccount.getAssetBalance(asset) < quantity) {
+                            //Logger.logDebugMessage("11");
                             return false;
                         }
                     }
@@ -1068,8 +1085,27 @@ public final class Blockchain {
 
                 block.setHeight(previousLastBlock.getHeight() + 1);
 
+                Transaction duplicateTransaction = null;
                 for (Transaction transaction : block.blockTransactions) {
                     transaction.setBlock(block);
+
+                    if (transactionHashes.putIfAbsent(transaction.getHash(), transaction) != null && block.getHeight() != 58294) {
+                        //Logger.logDebugMessage("12");
+                        duplicateTransaction = transaction;
+                        break;
+                    }
+                }
+
+                if (duplicateTransaction != null) {
+                    for (Transaction transaction : block.blockTransactions) {
+                        if (! transaction.equals(duplicateTransaction)) {
+                            Transaction hashTransaction = transactionHashes.get(transaction.getHash());
+                            if (hashTransaction != null && hashTransaction.equals(transaction)) {
+                                transactionHashes.remove(transaction.getHash());
+                            }
+                        }
+                    }
+                    return false;
                 }
 
                 block.calculateBaseTarget();
@@ -1188,6 +1224,11 @@ public final class Blockchain {
 
                 for (Transaction transaction : block.blockTransactions) {
 
+                    Transaction hashTransaction = transactionHashes.get(transaction.getHash());
+                    if (hashTransaction != null && hashTransaction.equals(transaction)) {
+                        transactionHashes.remove(transaction.getHash());
+                    }
+                    
                     unconfirmedTransactions.put(transaction.getId(), transaction);
 
                     transaction.undo();
@@ -1246,6 +1287,7 @@ public final class Blockchain {
         unconfirmedTransactions.clear();
         doubleSpendingTransactions.clear();
         nonBroadcastedTransactions.clear();
+        transactionHashes.clear();
         try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
             Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
             Block currentBlock;
@@ -1399,75 +1441,15 @@ public final class Blockchain {
 
     }
 
-    /*
-    private static void loadTransactions(String fileName) throws FileNotFoundException {
-
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            transactionCounter.set(objectInputStream.readInt());
-            transactions.clear();
-            transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException |ClassNotFoundException e) {
-            Logger.logMessage("Error loading transactions from " + fileName, e);
-            System.exit(1);
+    static void purgeExpiredHashes() {
+        int currentTime = Convert.getEpochTime();
+        Iterator<Map.Entry<String, Transaction>> iterator = Blockchain.transactionHashes.entrySet().iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getValue().getExpiration() < currentTime) {
+                iterator.remove();
+            }
         }
-
     }
-    */
-
-    /*
-    private static void saveTransactions(String fileName) {
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-        ) {
-            objectOutputStream.writeInt(transactionCounter.get());
-            objectOutputStream.writeObject(new HashMap(transactions));
-            objectOutputStream.close();
-        } catch (IOException e) {
-            Logger.logMessage("Error saving transactions to " + fileName, e);
-            throw new RuntimeException(e);
-        }
-
-    }
-    */
-
-    /*
-    private static void loadBlocks(String fileName) throws FileNotFoundException {
-
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
-        ) {
-            blockCounter.set(objectInputStream.readInt());
-            blocks.clear();
-            blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException|ClassNotFoundException e) {
-            Logger.logMessage("Error loading blocks from " + fileName, e);
-            System.exit(1);
-        }
-
-    }
-    */
-
-    /*
-    private static void saveBlocks(String fileName) {
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-        ) {
-            objectOutputStream.writeInt(blockCounter.get());
-            objectOutputStream.writeObject(new HashMap<>(blocks));
-        } catch (IOException e) {
-            Logger.logMessage("Error saving blocks to " + fileName, e);
-            throw new RuntimeException(e);
-        }
-
-    }
-    */
 
     private Blockchain() {} // never, yet
 
