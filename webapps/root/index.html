@@ -469,7 +469,7 @@
 			}
 			
 			function showAccountDialog() {
-				showDialog("Account", "<table style='margin-top: 50px;'><tr><td class='label'>Secret phrase</td></tr><tr><td class='input'><input type='password' id='input' onkeydown='if (event.keyCode == 13) unlockAccount(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td><button id='unlockAccount' onclick='unlockAccount();'>Unlock account</button></td></tr></table>");
+				showDialog("Account", "<table style='margin-top: 20px;'><tr><td class='label'>Secret phrase</td></tr><tr><td class='input'><input type='password' id='input' onkeydown='if (event.keyCode == 13) unlockAccount(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td><button id='unlockAccount' onclick='unlockAccount();'>Unlock account</button></td></tr><tr><td><b>If opening a new account, please note:</b><br /> A simple passphrase will certainly result in your NXT being stolen! Do not use any phrase that appears in any printed or online material, no matter how long or obscure. A secure passphrase will be at least 35 characters long and consist of random letters, numbers, and special characters, or a meaningless combination of 10 random words.</td></tr></table>");
 			}
 			
 			function showAuthorizationDialog() {
