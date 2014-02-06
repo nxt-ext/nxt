@@ -425,7 +425,7 @@ public final class Block implements Serializable {
 
         }
 
-        Blockchain.purgeExpiredHashes();
+        Blockchain.purgeExpiredHashes(this.timestamp);
 
     }
 
