@@ -152,7 +152,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private transient volatile Long id;
     private transient volatile String stringId = null;
     private transient volatile Long senderAccountId;
-    private transient volatile Long lastBytes;
+    private transient volatile String hash;
 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                         int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
@@ -234,6 +234,10 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     public int getTimestamp() {
         return timestamp;
+    }
+
+    public int getExpiration() {
+        return timestamp + deadline * 60;
     }
 
     public Attachment getAttachment() {
@@ -403,17 +407,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
     }
 
-    Long getSignatureLastBytes() {
-        if (lastBytes == null) {
-            long longValue = new BigInteger(Arrays.copyOfRange(signature, signature.length - 8, signature.length)).longValue();
-            if (longValue == 0) {
-                throw new IllegalStateException("Transaction not yet signed");
-            }
-            lastBytes = longValue;
-        }
-        return lastBytes;
-    }
-
     // returns true iff double spending
     boolean isDoubleSpending() {
         Account senderAccount = Account.getAccount(getSenderAccountId());
@@ -431,6 +424,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             throw new RuntimeException("sender public key mismatch");
             // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
         }
+        Blockchain.transactionHashes.put(getHash(), this);
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null) {
             recipientAccount = Account.addOrGetAccount(recipientId);
@@ -465,6 +459,17 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
 
     int getSize() {
         return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
+    }
+
+    String getHash() {
+        if (hash == null) {
+            byte[] data = getBytes();
+            for (int i = 64; i < 128; i++) {
+                data[i] = 0;
+            }
+            hash = Convert.convert(Crypto.sha256().digest(data));
+        }
+        return hash;
     }
 
     private void calculateIds() {

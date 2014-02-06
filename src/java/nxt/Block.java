@@ -393,7 +393,6 @@ public final class Block implements Serializable {
             if (blockTransactions[i] == null) {
                 throw new IllegalStateException("Missing transaction " + Convert.convert(transactionIds[i]));
             }
-            Blockchain.signatureLastBytes.add(blockTransactions[i].getSignatureLastBytes());
         }
 
         if (previousBlockId == null && getId().equals(Genesis.GENESIS_BLOCK_ID)) {
