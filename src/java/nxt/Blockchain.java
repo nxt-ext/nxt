@@ -324,8 +324,8 @@ public final class Blockchain {
 
                                             synchronized (Blockchain.class) {
 
-                                                saveBlocks("blocks.nxt.bak");
                                                 saveTransactions("transactions.nxt.bak");
+                                                saveBlocks("blocks.nxt.bak");
 
                                                 curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
                                                 boolean needsRescan;
@@ -355,8 +355,8 @@ public final class Blockchain {
                                                 }
 
                                                 if (needsRescan) {
-                                                    loadBlocks("blocks.nxt.bak");
                                                     loadTransactions("transactions.nxt.bak");
+                                                    loadBlocks("blocks.nxt.bak");
                                                     Account.clear();
                                                     Alias.clear();
                                                     Asset.clear();
@@ -373,8 +373,8 @@ public final class Blockchain {
                                         }
 
                                         synchronized (Blockchain.class) {
-                                            saveBlocks("blocks.nxt");
                                             saveTransactions("transactions.nxt");
+                                            saveBlocks("blocks.nxt");
                                         }
                                     }
                                 }
@@ -995,8 +995,6 @@ public final class Blockchain {
 
                 block.apply();
 
-                purgeExpiredHashes();
-
                 addedConfirmedTransactions = new JSONArray();
                 removedUnconfirmedTransactions = new JSONArray();
 
@@ -1311,11 +1309,10 @@ public final class Blockchain {
 
     }
 
-    private static void purgeExpiredHashes() {
-        int currentTime = Convert.getEpochTime();
+    static void purgeExpiredHashes(int blockTimestamp) {
         Iterator<Map.Entry<String, Transaction>> iterator = Blockchain.transactionHashes.entrySet().iterator();
         while (iterator.hasNext()) {
-            if (iterator.next().getValue().getExpiration() < currentTime) {
+            if (iterator.next().getValue().getExpiration() < blockTimestamp) {
                 iterator.remove();
             }
         }

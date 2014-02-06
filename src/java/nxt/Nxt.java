@@ -24,7 +24,7 @@ import java.util.Set;
 
 public final class Nxt extends HttpServlet {
 
-    public static final String VERSION = "0.6.0";
+    public static final String VERSION = "0.6.1";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
