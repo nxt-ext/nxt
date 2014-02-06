@@ -241,7 +241,8 @@ public final class Account {
                     && i < guaranteedBalances.size() - 1
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-            } else if (amount < 0) {
+            }
+            if (amount < 0) {
                 gb.balance += amount; // subtract current block withdrawals from all previous gb records
             }
             // ignore deposits when updating previous gb records
