@@ -424,7 +424,7 @@ public final class Peer implements Comparable<Peer> {
         }
     }
 
-    public void blacklist(NxtException.ValidationException cause) {
+    public void blacklist(NxtException cause) {
         if (cause instanceof Transaction.NotYetEnabledException) {
             // don't blacklist peers just because a feature is not yet enabled
             // prevents erroneous blacklisting during loading of blockchain from scratch
