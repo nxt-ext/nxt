@@ -286,9 +286,8 @@ public final class Blockchain {
                                                             } catch (BlockNotAcceptedException e) {
                                                                 Logger.logDebugMessage("Failed to accept block " + block.getStringId()
                                                                         + " at height " + lastBlock.get().getHeight()
-                                                                        + " received from " + peer.getPeerAddress()+ ", blacklisting");
-                                                                Logger.logDebugMessage("Reason: " + e.getMessage());
-                                                                peer.blacklist();
+                                                                        + " received from " + peer.getPeerAddress() + ", blacklisting");
+                                                                peer.blacklist(e);
                                                                 return;
                                                             }
                                                         } catch (NxtException.ValidationException e) {
@@ -337,8 +336,9 @@ public final class Blockchain {
                                                                 try {
                                                                     Blockchain.pushBlock(block, block.blockTransactions);
                                                                 } catch (BlockNotAcceptedException e) {
-                                                                    Logger.logDebugMessage("Failed to push future block " + block.getStringId());
-                                                                    Logger.logDebugMessage("Reasin: " + e.getMessage());
+                                                                    Logger.logDebugMessage("Failed to push future block " + block.getStringId()
+                                                                            + " received from " + peer.getPeerAddress() + ", blacklisting");
+                                                                    peer.blacklist(e);
                                                                     break;
                                                                 }
                                                             }
