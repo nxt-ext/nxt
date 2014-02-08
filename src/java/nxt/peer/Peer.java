@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Account;
+import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.ThreadPools;
@@ -217,7 +218,7 @@ public final class Peer implements Comparable<Peer> {
                 continue;
             }
 
-            if (peer.blacklistingTime == 0 && peer.state == State.CONNECTED && peer.announcedAddress != null) {
+            if (! peer.isBlacklisted() && peer.state == State.CONNECTED && peer.announcedAddress != null) {
                 Future<JSONObject> futureResponse = ThreadPools.sendInParallel(peer, jsonRequest);
                 expectedResponses.add(futureResponse);
             }
@@ -247,9 +248,9 @@ public final class Peer implements Comparable<Peer> {
 
     public static Peer getAnyPeer(State state, boolean applyPullThreshold) {
 
-        List<Peer> selectedPeers = new ArrayList<Peer>();
+        List<Peer> selectedPeers = new ArrayList<>();
         for (Peer peer : peers.values()) {
-            if (peer.blacklistingTime <= 0 && peer.state == state && peer.announcedAddress != null
+            if (! peer.isBlacklisted() && peer.state == state && peer.announcedAddress != null
                     && (!applyPullThreshold || !Nxt.enableHallmarkProtection || peer.getWeight() >= Nxt.pullThreshold)) {
                 selectedPeers.add(peer);
             }
@@ -346,10 +347,6 @@ public final class Peer implements Comparable<Peer> {
         return state;
     }
 
-    public long getBlacklistingTime() {
-        return blacklistingTime;
-    }
-
     public long getDownloadedVolume() {
         return downloadedVolume;
     }
@@ -412,6 +409,10 @@ public final class Peer implements Comparable<Peer> {
         return announcedAddress != null && Nxt.wellKnownPeers.contains(announcedAddress);
     }
 
+    public boolean isBlacklisted() {
+        return blacklistingTime > 0;
+    }
+
     @Override
     public int compareTo(Peer o) {
         long weight = getWeight(), weight2 = o.getWeight();
@@ -425,12 +426,14 @@ public final class Peer implements Comparable<Peer> {
     }
 
     public void blacklist(NxtException cause) {
-        if (cause instanceof Transaction.NotYetEnabledException) {
+        if (cause instanceof Transaction.NotYetEnabledException || cause instanceof Blockchain.BlockOutOfOrderException) {
             // don't blacklist peers just because a feature is not yet enabled
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
-        Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
+        if (! isBlacklisted()) {
+            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
+        }
         blacklist();
     }
 

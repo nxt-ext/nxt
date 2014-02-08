@@ -976,6 +976,10 @@ public final class Blockchain {
 
                 Block previousLastBlock = lastBlock.get();
 
+                if (! previousLastBlock.getId().equals(block.getPreviousBlockId())) {
+                    throw new BlockOutOfOrderException("Previous block id doesn't match");
+                }
+
                 if (block.getVersion() != (previousLastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
@@ -998,9 +1002,6 @@ public final class Blockchain {
                 if (block.getTimestamp() > curTime + 15 || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
                     throw new BlockNotAcceptedException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
-                }
-                if (! previousLastBlock.getId().equals(block.getPreviousBlockId())) {
-                    throw new BlockNotAcceptedException("Previous block id doesn't match");
                 }
                 if (block.getId().equals(Long.valueOf(0L)) || Block.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
@@ -1461,6 +1462,14 @@ public final class Blockchain {
     public static class BlockNotAcceptedException extends NxtException {
 
         private BlockNotAcceptedException(String message) {
+            super(message);
+        }
+
+    }
+
+    public static class BlockOutOfOrderException extends BlockNotAcceptedException {
+
+        private BlockOutOfOrderException(String message) {
             super(message);
         }
 

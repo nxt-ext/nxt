@@ -74,6 +74,9 @@ public abstract class HttpJSONRequestHandler {
 
             peer = Peer.addPeer(req.getRemoteHost(), "");
             if (peer != null) {
+                if (peer.isBlacklisted()) {
+                    return;
+                }
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     peer.setState(Peer.State.CONNECTED);
                 }
