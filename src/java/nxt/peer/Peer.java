@@ -5,7 +5,6 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.ThreadPools;
 import nxt.Transaction;
-import nxt.crypto.Crypto;
 import nxt.user.User;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
@@ -26,7 +25,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -37,8 +35,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -684,80 +680,51 @@ public final class Peer implements Comparable<Peer> {
 
     }
 
-    boolean analyzeHallmark(String realHost, String hallmark) {
+    boolean analyzeHallmark(final String realHost, final String hallmarkString) {
 
-        if (hallmark == null || hallmark.equals(this.hallmark)) {
+        if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
             return true;
         }
 
         try {
-            byte[] hallmarkBytes;
-            try {
-                hallmarkBytes = Convert.convert(hallmark);
-            } catch (NumberFormatException e) {
+            Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
+            if (! hallmark.isValid() || ! hallmark.getHost().equals(realHost)) {
                 return false;
             }
-            ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            byte[] publicKey = new byte[32];
-            buffer.get(publicKey);
-            int hostLength = buffer.getShort();
-            if (hostLength > 300) {
-                return false;
-            }
-            byte[] hostBytes = new byte[hostLength];
-            buffer.get(hostBytes);
-            String host = new String(hostBytes, "UTF-8");
-            if (host.length() > 100 || !host.equals(realHost)) {
-                return false;
-            }
-            int weight = buffer.getInt();
-            if (weight <= 0 || weight > Nxt.MAX_BALANCE) {
-                return false;
-            }
-            int date = buffer.getInt();
-            buffer.get();
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-
-            byte[] data = new byte[hallmarkBytes.length - 64];
-            System.arraycopy(hallmarkBytes, 0, data, 0, data.length);
-
-            if (Crypto.verify(signature, data, publicKey)) {
-                this.hallmark = hallmark;
-                Long accountId = Account.getId(publicKey);
-                LinkedList<Peer> groupedPeers = new LinkedList<>();
-                int validDate = 0;
-                this.accountId = accountId;
-                this.weight = weight;
-                this.date = date;
-                for (Peer peer : peers.values()) {
-                    if (accountId.equals(peer.accountId)) {
-                        groupedPeers.add(peer);
-                        if (peer.date > validDate) {
-                            validDate = peer.date;
-                        }
+            this.hallmark = hallmarkString;
+            Long accountId = Account.getId(hallmark.getPublicKey());
+            LinkedList<Peer> groupedPeers = new LinkedList<>();
+            int validDate = 0;
+            this.accountId = accountId;
+            this.weight = hallmark.getWeight();
+            this.date = hallmark.getDate();
+            for (Peer peer : peers.values()) {
+                if (accountId.equals(peer.accountId)) {
+                    groupedPeers.add(peer);
+                    if (peer.date > validDate) {
+                        validDate = peer.date;
                     }
                 }
-
-                long totalWeight = 0;
-                for (Peer peer : groupedPeers) {
-                    if (peer.date == validDate) {
-                        totalWeight += peer.weight;
-                    } else {
-                        peer.weight = 0;
-                    }
-                }
-
-                for (Peer peer : groupedPeers) {
-                    peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
-                    peer.updateWeight();
-                }
-
-                return true;
             }
-        } catch (RuntimeException|UnsupportedEncodingException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost, e);
+
+            long totalWeight = 0;
+            for (Peer peer : groupedPeers) {
+                if (peer.date == validDate) {
+                    totalWeight += peer.weight;
+                } else {
+                    peer.weight = 0;
+                }
+            }
+
+            for (Peer peer : groupedPeers) {
+                peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
+                peer.updateWeight();
+            }
+
+            return true;
+
+        } catch (RuntimeException e) {
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost + ", " + e.toString());
         }
         return false;
 
