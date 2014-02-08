@@ -287,7 +287,9 @@ public final class Blockchain {
                                                             try {
                                                                 Blockchain.pushBlock(block, transactions, false);
                                                             } catch (BlockNotAcceptedException e) {
-                                                                Logger.logDebugMessage("Failed to accept block " + block.getStringId() + " received from " + peer.getPeerAddress()+ ", blacklisting");
+                                                                Logger.logDebugMessage("Failed to accept block " + block.getStringId()
+                                                                        + " at height " + lastBlock.get().getHeight()
+                                                                        + " received from " + peer.getPeerAddress()+ ", blacklisting");
                                                                 Logger.logDebugMessage("Reason: " + e.getMessage());
                                                                 peer.blacklist();
                                                                 return;
@@ -1100,7 +1102,7 @@ public final class Blockchain {
 
                 block = lastBlock.get();
 
-                Logger.logDebugMessage("Will pop block " + block.getStringId());
+                Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
                 if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                     return false;
                 }
