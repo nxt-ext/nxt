@@ -430,7 +430,7 @@ public final class Peer implements Comparable<Peer> {
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
         }
-        Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage(), cause);
+        Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.getMessage());
         blacklist();
     }
 
