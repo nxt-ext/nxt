@@ -1,11 +1,11 @@
 package nxt;
 
 import nxt.http.HttpRequestHandler;
+import nxt.peer.Hallmark;
 import nxt.peer.HttpJSONRequestHandler;
 import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.user.UserRequestHandler;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -24,7 +24,7 @@ import java.util.Set;
 
 public final class Nxt extends HttpServlet {
 
-    public static final String VERSION = "0.6.1";
+    public static final String VERSION = "0.6.2";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -36,6 +36,7 @@ public final class Nxt extends HttpServlet {
     public static final int ARBITRARY_MESSAGES_BLOCK = 40000;
     public static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
+    public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
 
     public static final long MAX_BALANCE = 1000000000;
     public static final long initialBaseTarget = 153722867;
@@ -147,13 +148,14 @@ public final class Nxt extends HttpServlet {
 
             myHallmark = servletConfig.getInitParameter("myHallmark");
             Logger.logMessage("\"myHallmark\" = \"" + myHallmark + "\"");
-            if (myHallmark != null) {
-
-                myHallmark = myHallmark.trim();
+            if (myHallmark != null && (myHallmark = myHallmark.trim()).length() > 0) {
 
                 try {
-                    Convert.convert(myHallmark); // check for parsing exceptions
-                } catch (NumberFormatException e) {
+                    Hallmark hallmark = Hallmark.parseHallmark(myHallmark);
+                    if (! hallmark.isValid()) {
+                        throw new RuntimeException();
+                    }
+                } catch (RuntimeException e) {
                     Logger.logMessage("Your hallmark is invalid: " + myHallmark);
                     System.exit(1);
                 }

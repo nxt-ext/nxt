@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 
-final class GetBalance extends HttpRequestHandler {
+public final class GetBalance extends HttpRequestHandler {
 
     static final GetBalance instance = new GetBalance();
 
     private GetBalance() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String account = req.getParameter("account");
         if (account == null) {

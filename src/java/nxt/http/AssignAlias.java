@@ -28,14 +28,14 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_URI;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-final class AssignAlias extends HttpRequestHandler {
+public final class AssignAlias extends HttpRequestHandler {
 
     static final AssignAlias instance = new AssignAlias();
 
     private AssignAlias() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
         String secretPhrase = req.getParameter("secretPhrase");
         String alias = req.getParameter("alias");
         String uri = req.getParameter("uri");

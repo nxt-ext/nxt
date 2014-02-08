@@ -27,13 +27,14 @@ final class ProcessBlock extends HttpJSONRequestHandler {
     }
 
     @Override
-    public JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         try {
 
-            return Blockchain.pushBlock(request) ? ACCEPTED : NOT_ACCEPTED;
+            boolean accepted = Blockchain.pushBlock(request);
+            return accepted ? ACCEPTED : NOT_ACCEPTED;
 
-        } catch (NxtException.ValidationException e) {
+        } catch (NxtException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }

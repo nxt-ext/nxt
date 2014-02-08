@@ -12,7 +12,7 @@ final class GetNewData extends UserRequestHandler {
     private GetNewData() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
+    JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         return null;
     }
 }

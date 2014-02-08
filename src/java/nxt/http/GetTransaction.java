@@ -13,14 +13,14 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-final class GetTransaction extends HttpRequestHandler {
+public final class GetTransaction extends HttpRequestHandler {
 
     static final GetTransaction instance = new GetTransaction();
 
     private GetTransaction() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String transaction = req.getParameter("transaction");
         if (transaction == null) {

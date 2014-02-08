@@ -11,14 +11,14 @@ final class GetPeers extends HttpJSONRequestHandler {
 
 
     @Override
-    public JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONObject processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 
         JSONArray peers = new JSONArray();
         for (Peer otherPeer : Peer.getAllPeers()) {
 
-            if (otherPeer.getBlacklistingTime() == 0 && otherPeer.getAnnouncedAddress().length() > 0
+            if (! otherPeer.isBlacklisted() && otherPeer.getAnnouncedAddress() != null
                     && otherPeer.getState() == Peer.State.CONNECTED && otherPeer.shareAddress()) {
 
                 peers.add(otherPeer.getAnnouncedAddress());

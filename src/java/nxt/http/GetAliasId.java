@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 
-final class GetAliasId extends HttpRequestHandler {
+public final class GetAliasId extends HttpRequestHandler {
 
     static final GetAliasId instance = new GetAliasId();
 
     private GetAliasId() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String alias = req.getParameter("alias");
         if (alias == null) {

@@ -8,14 +8,14 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-final class GetAssetIds extends HttpRequestHandler {
+public final class GetAssetIds extends HttpRequestHandler {
 
     static final GetAssetIds instance = new GetAssetIds();
 
     private GetAssetIds() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray assetIds = new JSONArray();
         for (Asset asset : Asset.getAllAssets()) {

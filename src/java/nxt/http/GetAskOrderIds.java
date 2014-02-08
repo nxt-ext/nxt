@@ -14,14 +14,14 @@ import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
-final class GetAskOrderIds extends HttpRequestHandler {
+public final class GetAskOrderIds extends HttpRequestHandler {
 
     static final GetAskOrderIds instance = new GetAskOrderIds();
 
     private GetAskOrderIds() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String asset = req.getParameter("asset");
         if (asset == null) {

@@ -13,14 +13,14 @@ import static nxt.http.JSONResponses.INCORRECT_BLOCK;
 import static nxt.http.JSONResponses.MISSING_BLOCK;
 import static nxt.http.JSONResponses.UNKNOWN_BLOCK;
 
-final class GetBlock extends HttpRequestHandler {
+public final class GetBlock extends HttpRequestHandler {
 
     static final GetBlock instance = new GetBlock();
 
     private GetBlock() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String block = req.getParameter("block");
         if (block == null) {

@@ -160,7 +160,9 @@ public abstract class Order {
 
         static Ask removeOrder(Long orderId) {
             Ask askOrder = askOrders.remove(orderId);
-            sortedAskOrders.get(askOrder.getAssetId()).remove(askOrder);
+            if (askOrder != null) {
+                sortedAskOrders.get(askOrder.getAssetId()).remove(askOrder);
+            }
             return askOrder;
         }
 
@@ -232,7 +234,9 @@ public abstract class Order {
 
         static Bid removeOrder(Long orderId) {
             Bid bidOrder = bidOrders.remove(orderId);
-            sortedBidOrders.get(bidOrder.getAssetId()).remove(bidOrder);
+            if (bidOrder != null) {
+                sortedBidOrders.get(bidOrder.getAssetId()).remove(bidOrder);
+            }
             return bidOrder;
         }
 

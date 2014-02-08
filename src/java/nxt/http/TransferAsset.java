@@ -27,14 +27,14 @@ import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-final class TransferAsset extends HttpRequestHandler {
+public final class TransferAsset extends HttpRequestHandler {
 
     static final TransferAsset instance = new TransferAsset();
 
     private TransferAsset() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String recipientValue = req.getParameter("recipient");

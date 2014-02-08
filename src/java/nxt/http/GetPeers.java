@@ -7,14 +7,14 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-final class GetPeers extends HttpRequestHandler {
+public final class GetPeers extends HttpRequestHandler {
 
     static final GetPeers instance = new GetPeers();
 
     private GetPeers() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray peers = new JSONArray();
         for (Peer peer : Peer.getAllPeers()) {

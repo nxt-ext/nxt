@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
-final class GetAccountId extends HttpRequestHandler {
+public final class GetAccountId extends HttpRequestHandler {
 
     static final GetAccountId instance = new GetAccountId();
 
     private GetAccountId() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String secretPhrase = req.getParameter("secretPhrase");
         if (secretPhrase == null) {

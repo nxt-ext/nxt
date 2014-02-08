@@ -18,14 +18,14 @@ import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-final class GetAccountTransactionIds extends HttpRequestHandler {
+public final class GetAccountTransactionIds extends HttpRequestHandler {
 
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 
     private GetAccountTransactionIds() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String accountId = req.getParameter("account");
         String timestampValue = req.getParameter("timestamp");

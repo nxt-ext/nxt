@@ -109,6 +109,8 @@ public abstract class HttpRequestHandler {
 
     }
 
+    HttpRequestHandler() {}
+
     abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException, IOException;
 
 }
