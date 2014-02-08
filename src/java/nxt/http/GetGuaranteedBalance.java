@@ -12,14 +12,14 @@ import static nxt.http.JSONResponses.INCORRECT_NUMBER_OF_CONFIRMATIONS;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_NUMBER_OF_CONFIRMATIONS;
 
-final class GetGuaranteedBalance extends HttpRequestHandler {
+public final class GetGuaranteedBalance extends HttpRequestHandler {
 
     static final GetGuaranteedBalance instance = new GetGuaranteedBalance();
 
     private GetGuaranteedBalance() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String account = req.getParameter("account");
         String numberOfConfirmationsValue = req.getParameter("numberOfConfirmations");

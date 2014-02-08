@@ -11,14 +11,14 @@ import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
-final class GetAskOrder extends HttpRequestHandler {
+public final class GetAskOrder extends HttpRequestHandler {
 
     static final GetAskOrder instance = new GetAskOrder();
 
     private GetAskOrder() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String order = req.getParameter("order");
         if (order == null) {

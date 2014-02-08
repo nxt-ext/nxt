@@ -14,14 +14,14 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-final class GetState extends HttpRequestHandler {
+public final class GetState extends HttpRequestHandler {
 
     static final GetState instance = new GetState();
 
     private GetState() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
 

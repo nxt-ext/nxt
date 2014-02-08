@@ -14,7 +14,7 @@ import static nxt.http.JSONResponses.INCORRECT_WEBSITE;
 import static nxt.http.JSONResponses.MISSING_TOKEN;
 import static nxt.http.JSONResponses.MISSING_WEBSITE;
 
-final class DecodeToken extends HttpRequestHandler {
+public final class DecodeToken extends HttpRequestHandler {
 
     static final DecodeToken instance = new DecodeToken();
 

@@ -12,14 +12,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION_BYTES;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES;
 
-final class BroadcastTransaction extends HttpRequestHandler {
+public final class BroadcastTransaction extends HttpRequestHandler {
 
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String transactionBytes = req.getParameter("transactionBytes");
         if (transactionBytes == null) {

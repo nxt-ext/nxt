@@ -11,7 +11,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-final class GetConstants extends HttpRequestHandler {
+public final class GetConstants extends HttpRequestHandler {
 
     static final GetConstants instance = new GetConstants();
 
@@ -104,7 +104,7 @@ final class GetConstants extends HttpRequestHandler {
     private GetConstants() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
         return CONSTANTS;
     }
 
