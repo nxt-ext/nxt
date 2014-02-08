@@ -1,16 +1,11 @@
 package nxt.http;
 
 import nxt.Nxt;
-import nxt.crypto.Crypto;
-import nxt.util.Convert;
+import nxt.peer.Hallmark;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static nxt.http.JSONResponses.INCORRECT_DATE;
 import static nxt.http.JSONResponses.INCORRECT_HOST;
@@ -58,39 +53,16 @@ public final class MarkHost extends HttpRequestHandler {
             return INCORRECT_WEIGHT;
         }
 
-        int date;
-        try {
-            date = Integer.parseInt(dateValue.substring(0, 4)) * 10000 + Integer.parseInt(dateValue.substring(5, 7)) * 100 + Integer.parseInt(dateValue.substring(8, 10));
-        } catch (NumberFormatException e) {
-            return INCORRECT_DATE;
-        }
-
         try {
 
-            byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-            byte[] hostBytes = host.getBytes("UTF-8");
-
-            ByteBuffer buffer = ByteBuffer.allocate(32 + 2 + hostBytes.length + 4 + 4 + 1);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.put(publicKey);
-            buffer.putShort((short)hostBytes.length);
-            buffer.put(hostBytes);
-            buffer.putInt(weight);
-            buffer.putInt(date);
-
-            byte[] data = buffer.array();
-            byte[] signature;
-            do {
-                data[data.length - 1] = (byte) ThreadLocalRandom.current().nextInt();
-                signature = Crypto.sign(data, secretPhrase);
-            } while (!Crypto.verify(signature, data, publicKey));
+            String hallmark = Hallmark.generateHallmark(secretPhrase, host, weight, Hallmark.parseDate(dateValue));
 
             JSONObject response = new JSONObject();
-            response.put("hallmark", Convert.convert(data) + Convert.convert(signature));
+            response.put("hallmark", hallmark);
             return response;
 
-        } catch (RuntimeException|UnsupportedEncodingException e) {
-            return INCORRECT_HOST;
+        } catch (RuntimeException e) {
+            return INCORRECT_DATE;
         }
 
     }
