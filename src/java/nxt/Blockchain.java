@@ -280,12 +280,12 @@ public final class Blockchain {
 
                                                         JSONArray transactionData = (JSONArray)blockData.get("transactions");
                                                         try {
-                                                            Transaction[] transactions = new Transaction[transactionData.size()];
-                                                            for (int j = 0; j < transactions.length; j++) {
-                                                                transactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
+                                                            Transaction[] blockTransactions = new Transaction[transactionData.size()];
+                                                            for (int j = 0; j < blockTransactions.length; j++) {
+                                                                blockTransactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
                                                             }
                                                             try {
-                                                                Blockchain.pushBlock(block, transactions, false);
+                                                                Blockchain.pushBlock(block, blockTransactions, false);
                                                             } catch (BlockNotAcceptedException e) {
                                                                 Logger.logDebugMessage("Failed to accept block " + block.getStringId()
                                                                         + " at height " + lastBlock.get().getHeight()
@@ -585,7 +585,7 @@ public final class Blockchain {
         processTransactions(transactionsData, false);
     }
 
-    public static boolean pushBlock(JSONObject request) throws NxtException.ValidationException {
+    public static boolean pushBlock(JSONObject request) throws NxtException {
 
         Block block = Block.getBlock(request);
         if (!lastBlock.get().getId().equals(block.getPreviousBlockId())) {
@@ -603,7 +603,7 @@ public final class Blockchain {
             return true;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Block " + block.getStringId() + " not accepted: " + e.getMessage());
-            return false;
+            throw e;
         }
     }
 
@@ -1391,7 +1391,7 @@ public final class Blockchain {
         }
 	}
 	
-    private static class BlockNotAcceptedException extends NxtException {
+    public static class BlockNotAcceptedException extends NxtException {
 
         private BlockNotAcceptedException(String message) {
             super(message);
