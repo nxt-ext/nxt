@@ -47,7 +47,7 @@ final class GetInitialData extends UserRequestHandler {
 
             String address = peer.getPeerAddress();
 
-            if (peer.getBlacklistingTime() > 0) {
+            if (peer.isBlacklisted()) {
 
                 JSONObject blacklistedPeer = new JSONObject();
                 blacklistedPeer.put("index", peer.getIndex());
