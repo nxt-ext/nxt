@@ -21,61 +21,26 @@ final class GetInfo extends HttpJSONRequestHandler {
             if (announcedAddress != null) {
                 announcedAddress = announcedAddress.trim();
                 if (announcedAddress.length() > 0) {
-
                     peer.setAnnouncedAddress(announcedAddress);
-
                 }
             }
             String application = (String)request.get("application");
             if (application == null) {
-
                 application = "?";
-
-            } else {
-
-                application = application.trim();
-                if (application.length() > 20) {
-
-                    application = application.substring(0, 20) + "...";
-
-                }
-
             }
-            peer.setApplication(application);
+            peer.setApplication(application.trim());
 
             String version = (String)request.get("version");
             if (version == null) {
-
                 version = "?";
-
-            } else {
-
-                version = version.trim();
-                if (version.length() > 10) {
-
-                    version = version.substring(0, 10) + "...";
-
-                }
-
             }
-            peer.setVersion(version);
+            peer.setVersion(version.trim());
 
             String platform = (String)request.get("platform");
             if (platform == null) {
-
                 platform = "?";
-
-            } else {
-
-                platform = platform.trim();
-                if (platform.length() > 10) {
-
-                    platform = platform.substring(0, 10) + "...";
-
-                }
-
             }
-            peer.setPlatform(platform);
+            peer.setPlatform(platform.trim());
 
             peer.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
 

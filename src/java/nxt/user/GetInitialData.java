@@ -51,24 +51,20 @@ final class GetInitialData extends UserRequestHandler {
 
                 JSONObject blacklistedPeer = new JSONObject();
                 blacklistedPeer.put("index", peer.getIndex());
-                blacklistedPeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 0
-                        ? (peer.getAnnouncedAddress().length() > 30
-                        ? (peer.getAnnouncedAddress().substring(0, 30) + "...")
-                        : peer.getAnnouncedAddress())
-                        : address);
-                if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
+                blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), address, 25, true));
+                if (peer.isWellKnown()) {
                     blacklistedPeer.put("wellKnown", true);
                 }
                 blacklistedPeers.add(blacklistedPeer);
 
             } else if (peer.getState() == Peer.State.NON_CONNECTED) {
 
-                if (peer.getAnnouncedAddress().length() > 0) {
+                if (peer.getAnnouncedAddress() != null) {
 
                     JSONObject knownPeer = new JSONObject();
                     knownPeer.put("index", peer.getIndex());
-                    knownPeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 30 ? (peer.getAnnouncedAddress().substring(0, 30) + "...") : peer.getAnnouncedAddress());
-                    if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
+                    knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
+                    if (peer.isWellKnown()) {
                         knownPeer.put("wellKnown", true);
                     }
 
@@ -85,13 +81,13 @@ final class GetInitialData extends UserRequestHandler {
                     activePeer.put("disconnected", true);
 
                 }
-                activePeer.put("address", address.length() > 30 ? (address.substring(0, 30) + "...") : address);
-                activePeer.put("announcedAddress", peer.getAnnouncedAddress().length() > 30 ? (peer.getAnnouncedAddress().substring(0, 30) + "...") : peer.getAnnouncedAddress());
+                activePeer.put("address", Convert.truncate(address, "", 25, true));
+                activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
                 activePeer.put("weight", peer.getWeight());
                 activePeer.put("downloaded", peer.getDownloadedVolume());
                 activePeer.put("uploaded", peer.getUploadedVolume());
                 activePeer.put("software", peer.getSoftware());
-                if (Nxt.wellKnownPeers.contains(peer.getAnnouncedAddress())) {
+                if (peer.isWellKnown()) {
                     activePeer.put("wellKnown", true);
                 }
                 activePeers.add(activePeer);
