@@ -285,7 +285,7 @@ public final class Blockchain {
                                                                 transactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
                                                             }
                                                             if (! Blockchain.pushBlock(block, transactions, false)) {
-                                                                Logger.logDebugMessage("Failed to accept block received from " + peer.getPeerAddress()+ ", blacklisting");
+                                                                Logger.logDebugMessage("Failed to accept block " + block.getStringId() + " received from " + peer.getPeerAddress()+ ", blacklisting");
                                                                 peer.blacklist();
                                                                 return;
                                                             }

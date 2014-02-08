@@ -241,8 +241,10 @@ public final class Account {
                     && i < guaranteedBalances.size() - 1
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-            }
-            if (amount < 0) {
+                if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_4) {
+                    gb.balance += amount; // because of a bug which leads to a fork
+                }
+            } else if (amount < 0) {
                 gb.balance += amount; // subtract current block withdrawals from all previous gb records
             }
             // ignore deposits when updating previous gb records
