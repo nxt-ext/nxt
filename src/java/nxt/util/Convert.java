@@ -76,4 +76,9 @@ public final class Convert {
     public static long nullToZero(Long l) {
         return l == null ? 0 : l;
     }
+
+    public static String truncate(String s, String replaceNull, int limit, boolean dots) {
+        return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
+    }
+
 }

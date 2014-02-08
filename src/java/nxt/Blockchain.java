@@ -1205,6 +1205,7 @@ public final class Blockchain {
 
                 block = lastBlock.get();
 
+                Logger.logDebugMessage("Will pop block " + block.getStringId());
                 if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                     return false;
                 }
