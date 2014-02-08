@@ -872,7 +872,7 @@ public final class Blockchain {
                 }
 
                 if (block.getVersion() != 1 && ! Arrays.equals(Crypto.sha256().digest(previousLastBlock.getBytes()), block.getPreviousBlockHash())) {
-                    throw new BlockNotAcceptedException("Previos block hash doesn't match");
+                    throw new BlockNotAcceptedException("Previous block hash doesn't match");
                 }
                 if (block.getTimestamp() > curTime + 15 || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
                     throw new BlockNotAcceptedException("Invalid timestamp: " + block.getTimestamp()
