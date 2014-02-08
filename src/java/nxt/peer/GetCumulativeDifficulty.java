@@ -11,7 +11,7 @@ final class GetCumulativeDifficulty extends HttpJSONRequestHandler {
 
 
     @Override
-    public JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONObject processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 

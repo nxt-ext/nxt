@@ -14,7 +14,7 @@ final class ProcessTransactions extends HttpJSONRequestHandler {
 
 
     @Override
-    public JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         try {
 

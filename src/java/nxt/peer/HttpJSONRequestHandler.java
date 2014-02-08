@@ -60,7 +60,7 @@ public abstract class HttpJSONRequestHandler {
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         Peer peer = null;
-        JSONStreamAware response = null;
+        JSONStreamAware response;
 
         try {
             JSONObject request;
@@ -112,6 +112,8 @@ public abstract class HttpJSONRequestHandler {
             peer.updateUploadedVolume(cos.getCount());
         }
     }
+
+    HttpJSONRequestHandler() {}
 
     abstract JSONStreamAware processJSONRequest(JSONObject request, Peer peer);
 

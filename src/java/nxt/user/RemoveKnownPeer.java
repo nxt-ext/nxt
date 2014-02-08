@@ -17,7 +17,7 @@ final class RemoveKnownPeer extends UserRequestHandler {
     private RemoveKnownPeer() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
+    JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         if (Nxt.allowedUserHosts == null && !InetAddress.getByName(req.getRemoteAddr()).isLoopbackAddress()) {
             return LOCAL_USERS_ONLY;
         } else {
