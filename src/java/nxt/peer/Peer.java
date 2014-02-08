@@ -287,8 +287,11 @@ public final class Peer implements Comparable<Peer> {
         try {
             URI uri = new URI("http://" + address.trim());
             String host = uri.getHost();
-            InetAddress.getByName(host);
             if (host == null || host.equals("") || host.equals("localhost") || host.equals("127.0.0.1") || host.equals("0:0:0:0:0:0:0:1")) {
+                return null;
+            }
+            InetAddress inetAddress = InetAddress.getByName(host);
+            if (inetAddress.isAnyLocalAddress() || inetAddress.isLoopbackAddress() || inetAddress.isLinkLocalAddress()) {
                 return null;
             }
             int port = uri.getPort();
