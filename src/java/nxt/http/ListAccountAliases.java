@@ -13,14 +13,14 @@ import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-final class ListAccountAliases extends HttpRequestHandler {
+public final class ListAccountAliases extends HttpRequestHandler {
 
     static final ListAccountAliases instance = new ListAccountAliases();
 
     private ListAccountAliases() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String account = req.getParameter("account");
         if (account == null) {

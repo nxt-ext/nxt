@@ -21,14 +21,14 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_WEIGHT;
 
 
-final class MarkHost extends HttpRequestHandler {
+public final class MarkHost extends HttpRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 
     private MarkHost() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String host = req.getParameter("host");

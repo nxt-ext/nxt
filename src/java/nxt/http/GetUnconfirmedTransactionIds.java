@@ -8,14 +8,14 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-final class GetUnconfirmedTransactionIds extends HttpRequestHandler {
+public final class GetUnconfirmedTransactionIds extends HttpRequestHandler {
 
     static final GetUnconfirmedTransactionIds instance = new GetUnconfirmedTransactionIds();
 
     private GetUnconfirmedTransactionIds() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray transactionIds = new JSONArray();
         for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {

@@ -29,14 +29,14 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-final class IssueAsset extends HttpRequestHandler {
+public final class IssueAsset extends HttpRequestHandler {
 
     static final IssueAsset instance = new IssueAsset();
 
     private IssueAsset() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String name = req.getParameter("name");

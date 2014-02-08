@@ -25,14 +25,14 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
-final class CancelBidOrder extends HttpRequestHandler {
+public final class CancelBidOrder extends HttpRequestHandler {
 
     static final CancelBidOrder instance = new CancelBidOrder();
 
     private CancelBidOrder() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String orderValue = req.getParameter("order");

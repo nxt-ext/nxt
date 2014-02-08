@@ -9,14 +9,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.MISSING_PEER;
 import static nxt.http.JSONResponses.UNKNOWN_PEER;
 
-final class GetPeer extends HttpRequestHandler {
+public final class GetPeer extends HttpRequestHandler {
 
     static final GetPeer instance = new GetPeer();
 
     private GetPeer() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String peer = req.getParameter("peer");
         if (peer == null) {

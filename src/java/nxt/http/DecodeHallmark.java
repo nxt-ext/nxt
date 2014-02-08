@@ -15,14 +15,14 @@ import java.nio.ByteOrder;
 import static nxt.http.JSONResponses.INCORRECT_HALLMARK;
 import static nxt.http.JSONResponses.MISSING_HALLMARK;
 
-final class DecodeHallmark extends HttpRequestHandler {
+public final class DecodeHallmark extends HttpRequestHandler {
 
     static final DecodeHallmark instance = new DecodeHallmark();
 
     private DecodeHallmark() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String hallmarkValue = req.getParameter("hallmark");
         if (hallmarkValue == null) {

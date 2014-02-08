@@ -11,14 +11,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
 import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 
-final class GetAliasIds extends HttpRequestHandler {
+public final class GetAliasIds extends HttpRequestHandler {
 
     static final GetAliasIds instance = new GetAliasIds();
 
     private GetAliasIds() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) {
 
         String timestampValue = req.getParameter("timestamp");
         if (timestampValue == null) {
