@@ -1254,7 +1254,9 @@ public final class Transaction implements Comparable<Transaction> {
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.attachment;
                     Order order = Order.Ask.removeOrder(attachment.getOrderId());
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.getAssetId(), order.getQuantity());
+                    if (order != null) {
+                        senderAccount.addToAssetAndUnconfirmedAssetBalance(order.getAssetId(), order.getQuantity());
+                    }
                 }
 
             };
@@ -1282,7 +1284,9 @@ public final class Transaction implements Comparable<Transaction> {
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
                     Order order = Order.Bid.removeOrder(attachment.getOrderId());
-                    senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.getPrice());
+                    if (order != null) {
+                        senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.getPrice());
+                    }
                 }
 
                 /*
