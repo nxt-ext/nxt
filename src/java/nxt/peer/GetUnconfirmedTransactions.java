@@ -13,7 +13,7 @@ final class GetUnconfirmedTransactions extends HttpJSONRequestHandler {
 
 
     @Override
-    public JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONObject processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 

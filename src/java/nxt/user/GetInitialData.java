@@ -22,7 +22,7 @@ final class GetInitialData extends UserRequestHandler {
     private GetInitialData() {}
 
     @Override
-    public JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
+    JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
 
         JSONArray unconfirmedTransactions = new JSONArray();
         JSONArray activePeers = new JSONArray(), knownPeers = new JSONArray(), blacklistedPeers = new JSONArray();

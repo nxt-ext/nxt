@@ -63,6 +63,8 @@ public abstract class UserRequestHandler {
 
     }
 
+    UserRequestHandler() {}
+    
     abstract JSONStreamAware processRequest(HttpServletRequest request, User user) throws NxtException, IOException;
 
 }
