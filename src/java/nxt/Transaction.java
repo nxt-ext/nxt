@@ -5,24 +5,25 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class Transaction implements Comparable<Transaction>, Serializable {
-
-    static final long serialVersionUID = 0;
+public final class Transaction implements Comparable<Transaction> {
 
     private static final byte TYPE_PAYMENT = 0;
     private static final byte TYPE_MESSAGING = 1;
@@ -100,6 +101,35 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
     }
 
+    static Transaction findTransaction(Long transactionId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
+            ResultSet rs = pstmt.executeQuery();
+            Transaction transaction = null;
+            if (rs.next()) {
+                transaction = getTransaction(con, rs);
+            }
+            rs.close();
+            return transaction;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Block already in database, id = " + transactionId + ", does not pass validation!");
+        }
+    }
+
+    static boolean hasTransaction(Long transactionId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     static Transaction getTransaction(JSONObject transactionData) throws NxtException.ValidationException {
 
         try {
@@ -133,6 +163,97 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
         }
     }
 
+    static Transaction getTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+        try {
+
+            byte type = rs.getByte("type");
+            byte subtype = rs.getByte("subtype");
+            int timestamp = rs.getInt("timestamp");
+            short deadline = rs.getShort("deadline");
+            byte[] senderPublicKey = rs.getBytes("sender_public_key");
+            Long recipientId = rs.getLong("recipient_id");
+            int amount = rs.getInt("amount");
+            int fee = rs.getInt("fee");
+            Long referencedTransactionId = rs.getLong("referenced_transaction_id");
+            if (rs.wasNull()) {
+                referencedTransactionId = null;
+            }
+            byte[] signature = rs.getBytes("signature");
+
+            Type transactionType = findTransactionType(type, subtype);
+            Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+                    referencedTransactionId, signature);
+            transaction.blockId = rs.getLong("block_id");
+            transaction.index = rs.getInt("index");
+            transaction.height = rs.getInt("height");
+            transaction.id = rs.getLong("id");
+            transaction.senderAccountId = rs.getLong("sender_account_id");
+
+            transaction.attachment = (Attachment)rs.getObject("attachment");
+
+            return transaction;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static List<Transaction> findBlockTransactions(Connection con, Long blockId) {
+        List<Transaction> list = new ArrayList<>();
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
+            pstmt.setLong(1, blockId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(getTransaction(con, rs));
+            }
+            rs.close();
+            return list;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Transaction already in database for block_id = " + blockId + " does not pass validation!");
+        }
+    }
+
+    static void saveTransactions(Connection con, Transaction... transactions) {
+        try {
+            for (Transaction transaction : transactions) {
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
+                        + "amount, fee, referenced_transaction_id, index, height, block_id, signature, timestamp, type, subtype, sender_account_id, attachment) "
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    pstmt.setLong(1, transaction.getId());
+                    pstmt.setShort(2, transaction.deadline);
+                    pstmt.setBytes(3, transaction.senderPublicKey);
+                    pstmt.setLong(4, transaction.recipientId);
+                    pstmt.setInt(5, transaction.amount);
+                    pstmt.setInt(6, transaction.fee);
+                    if (transaction.referencedTransactionId != null) {
+                        pstmt.setLong(7, transaction.referencedTransactionId);
+                    } else {
+                        pstmt.setNull(7, Types.BIGINT);
+                    }
+                    pstmt.setInt(8, transaction.index);
+                    pstmt.setInt(9, transaction.height);
+                    pstmt.setLong(10, transaction.blockId);
+                    pstmt.setBytes(11, transaction.signature);
+                    pstmt.setInt(12, transaction.timestamp);
+                    pstmt.setByte(13, transaction.type.getType());
+                    pstmt.setByte(14, transaction.type.getSubtype());
+                    pstmt.setLong(15, transaction.getSenderAccountId());
+                    if (transaction.attachment != null) {
+                        pstmt.setObject(16, transaction.attachment);
+                    } else {
+                        pstmt.setNull(16, Types.JAVA_OBJECT);
+                    }
+                    pstmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+
     private final short deadline;
     private final byte[] senderPublicKey;
     private final Long recipientId;
@@ -140,19 +261,18 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     private final int fee;
     private final Long referencedTransactionId;
 
-    /*private after 0.6.0*/
-    public int index;
-    public int height;
-    public Long blockId;
-    public byte[] signature;
-    /**/
+    private int index;
+    private int height;
+    private Long blockId;
+    private volatile Block block;
+    private byte[] signature;
     private int timestamp;
-    private transient Type type;
+    private final Type type;
     private Attachment attachment;
-    private transient volatile Long id;
-    private transient volatile String stringId = null;
-    private transient volatile Long senderAccountId;
-    private transient volatile String hash;
+    private volatile Long id;
+    private volatile String stringId = null;
+    private volatile Long senderAccountId;
+    private volatile String hash;
 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                         int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
@@ -213,11 +333,16 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     public Block getBlock() {
-        return Blockchain.getBlock(blockId);
+        if (block == null) {
+            block = Block.findBlock(blockId);
+        }
+        return block;
     }
 
-    void setBlockId(Long blockId) {
-        this.blockId = blockId;
+    void setBlock(Block block) {
+        this.block = block;
+        this.blockId = block.getId();
+        this.height = block.getHeight();
     }
 
     void setHeight(int height) {
@@ -245,17 +370,29 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
     }
 
     public Long getId() {
-        calculateIds();
+        if (id == null) {
+            byte[] hash = Crypto.sha256().digest(getBytes());
+            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            id = bigInteger.longValue();
+            stringId = bigInteger.toString();
+        }
         return id;
     }
 
     public String getStringId() {
-        calculateIds();
+        if (stringId == null) {
+            getId();
+            if (stringId == null) {
+                stringId = Convert.convert(id);
+            }
+        }
         return stringId;
     }
 
     public Long getSenderAccountId() {
-        calculateIds();
+        if (senderAccountId == null) {
+            senderAccountId = Account.getId(senderPublicKey);
+        }
         return senderAccountId;
     }
 
@@ -470,28 +607,6 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
             hash = Convert.convert(Crypto.sha256().digest(data));
         }
         return hash;
-    }
-
-    private void calculateIds() {
-        if (stringId != null) {
-            return;
-        }
-        byte[] hash = Crypto.sha256().digest(getBytes());
-        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-        id = bigInteger.longValue();
-        senderAccountId = Account.getId(senderPublicKey);
-        stringId = bigInteger.toString();
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.defaultWriteObject();
-        out.write(type.getType());
-        out.write(type.getSubtype());
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        this.type = findTransactionType(in.readByte(), in.readByte());
     }
 
     public static Type findTransactionType(byte type, byte subtype) {
@@ -1007,7 +1122,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
                     Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
                     if (askOrder == null || askOrder.getQuantity() != attachment.getQuantity() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
-                        //TODO: undoing of partially filled orders not supported yet
+                        //undoing of partially filled orders not supported yet
                         throw new UndoNotSupportedException(transaction, "Ask order already filled");
                     }
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
@@ -1066,7 +1181,7 @@ public final class Transaction implements Comparable<Transaction>, Serializable 
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
                     Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
                     if (bidOrder == null || bidOrder.getQuantity() != attachment.getQuantity() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
-                        //TODO: undoing of partially filled orders not supported yet
+                        //undoing of partially filled orders not supported yet
                         throw new UndoNotSupportedException(transaction, "Bid order already filled");
                     }
                     senderAccount.addToBalanceAndUnconfirmedBalance(attachment.getQuantity() * attachment.getPrice());

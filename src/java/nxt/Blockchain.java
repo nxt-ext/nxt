@@ -4,20 +4,21 @@ import nxt.crypto.Crypto;
 import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.util.Convert;
+import nxt.util.DbIterator;
+import nxt.util.DbUtils;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,9 +26,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -42,16 +46,12 @@ public final class Blockchain {
 
     private static final AtomicInteger blockCounter = new AtomicInteger();
     private static final AtomicReference<Block> lastBlock = new AtomicReference<>();
-    private static final ConcurrentMap<Long, Block> blocks = new ConcurrentHashMap<>();
 
     private static final AtomicInteger transactionCounter = new AtomicInteger();
     private static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, Transaction> transactions = new ConcurrentHashMap<>();
 
-    private static final Collection<Block> allBlocks = Collections.unmodifiableCollection(blocks.values());
-    private static final Collection<Transaction> allTransactions = Collections.unmodifiableCollection(transactions.values());
     private static final Collection<Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
 
     static final ConcurrentMap<String, Transaction> transactionHashes = new ConcurrentHashMap<>();
@@ -195,22 +195,18 @@ public final class Blockchain {
 
                                     Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
 
+                                    //TODO: change to support getting only a few milestoneBlockIds at a time
                                     JSONArray milestoneBlockIds = (JSONArray)response.get("milestoneBlockIds");
                                     if (milestoneBlockIds == null) {
                                         return;
                                     }
+
                                     for (Object milestoneBlockId : milestoneBlockIds) {
-
                                         Long blockId = Convert.parseUnsignedLong((String) milestoneBlockId);
-                                        Block block = blocks.get(blockId);
-                                        if (block != null) {
-
+                                        if (Block.hasBlock(blockId)) {
                                             commonBlockId = blockId;
-
                                             break;
-
                                         }
-
                                     }
 
                                     {
@@ -233,7 +229,7 @@ public final class Blockchain {
                                             Long blockId;
                                             for (i = 0; i < numberOfBlocks; i++) {
                                                 blockId = Convert.parseUnsignedLong((String) nextBlockIds.get(i));
-                                                if (blocks.get(blockId) == null) {
+                                                if (! Block.hasBlock(blockId)) {
                                                     break;
                                                 }
                                                 commonBlockId = blockId;
@@ -242,7 +238,8 @@ public final class Blockchain {
                                         } while (i == numberOfBlocks);
                                     }
 
-                                    if (lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
+                                    final Block commonBlock = Block.findBlock(commonBlockId);
+                                    if (lastBlock.get().getHeight() - commonBlock.getHeight() < 720) {
 
                                         Long curBlockId = commonBlockId;
                                         LinkedList<Block> futureBlocks = new LinkedList<>();
@@ -285,7 +282,7 @@ public final class Blockchain {
                                                                 blockTransactions[j] = Transaction.getTransaction((JSONObject)transactionData.get(j));
                                                             }
                                                             try {
-                                                                Blockchain.pushBlock(block, blockTransactions, false);
+                                                                Blockchain.pushBlock(block, blockTransactions);
                                                             } catch (BlockNotAcceptedException e) {
                                                                 Logger.logDebugMessage("Failed to accept block " + block.getStringId()
                                                                         + " at height " + lastBlock.get().getHeight()
@@ -298,7 +295,7 @@ public final class Blockchain {
                                                             return;
                                                         }
 
-                                                    } else if (blocks.get(block.getId()) == null && block.transactionIds.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+                                                    } else if (! Block.hasBlock(block.getId()) && block.transactionIds.length <= Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
 
                                                         futureBlocks.add(block);
 
@@ -324,13 +321,9 @@ public final class Blockchain {
 
                                         } while (true);
 
-                                        if (!futureBlocks.isEmpty() && lastBlock.get().getHeight() - blocks.get(commonBlockId).getHeight() < 720) {
+                                        if (!futureBlocks.isEmpty() && lastBlock.get().getHeight() - commonBlock.getHeight() < 720) {
 
                                             synchronized (Blockchain.class) {
-
-                                                saveTransactions("transactions.nxt.bak");
-                                                saveBlocks("blocks.nxt.bak");
-
                                                 curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
                                                 boolean needsRescan;
 
@@ -341,7 +334,7 @@ public final class Blockchain {
                                                         for (Block block : futureBlocks) {
                                                             if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
                                                                 try {
-                                                                    Blockchain.pushBlock(block, block.blockTransactions, false);
+                                                                    Blockchain.pushBlock(block, block.blockTransactions);
                                                                 } catch (BlockNotAcceptedException e) {
                                                                     Logger.logDebugMessage("Failed to push future block " + block.getStringId()
                                                                             + " received from " + peer.getPeerAddress() + ", blacklisting");
@@ -364,26 +357,15 @@ public final class Blockchain {
                                                 }
 
                                                 if (needsRescan) {
-                                                    loadTransactions("transactions.nxt.bak");
-                                                    loadBlocks("blocks.nxt.bak");
-                                                    Account.clear();
-                                                    Alias.clear();
-                                                    Asset.clear();
-                                                    Order.clear();
-                                                    unconfirmedTransactions.clear();
-                                                    doubleSpendingTransactions.clear();
-                                                    nonBroadcastedTransactions.clear();
-                                                    transactionHashes.clear();
+                                                    // this relies on the database cascade trigger to delete all blocks after commonBlock
+                                                    if (commonBlock.getNextBlockId() != null) {
+                                                        Block.deleteBlock(commonBlock.getNextBlockId());
+                                                    }
                                                     Logger.logMessage("Re-scanning blockchain...");
                                                     Blockchain.scan();
                                                     Logger.logMessage("...Done");
                                                 }
                                             }
-                                        }
-
-                                        synchronized (Blockchain.class) {
-                                            saveTransactions("transactions.nxt");
-                                            saveBlocks("blocks.nxt");
                                         }
                                     }
                                 }
@@ -500,7 +482,7 @@ public final class Blockchain {
 
                     for (Transaction transaction : nonBroadcastedTransactions.values()) {
 
-                        if (unconfirmedTransactions.get(transaction.getId()) == null && transactions.get(transaction.getId()) == null) {
+                        if (unconfirmedTransactions.get(transaction.getId()) == null && ! Transaction.hasTransaction(transaction.getId())) {
 
                             transactionsData.add(transaction.getJSONObject());
 
@@ -535,12 +517,200 @@ public final class Blockchain {
 
     };
 
-    public static Collection<Block> getAllBlocks() {
-        return allBlocks;
+    public static DbIterator<Block> getAllBlocks() {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Block>() {
+                @Override
+                public Block get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Block.getBlock(con, rs);
+                }
+            });
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
-    public static Collection<Transaction> getAllTransactions() {
-        return allTransactions;
+    public static DbIterator<Block> getAllBlocks(Account account, int timestamp) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_public_key = ? ORDER BY db_id ASC");
+            pstmt.setInt(1, timestamp);
+            pstmt.setBytes(2, account.getPublicKey());
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Block>() {
+                @Override
+                public Block get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Block.getBlock(con, rs);
+                }
+            });
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static int getBlockCount() {
+        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block")) {
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static DbIterator<Transaction> getAllTransactions() {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Transaction>() {
+                @Override
+                public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Transaction.getTransaction(con, rs);
+                }
+            });
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
+        Connection con = null;
+        try {
+            con = Db.getConnection();
+            PreparedStatement pstmt;
+            if (type >= 0) {
+                if (subtype >= 0) {
+                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) AND type = ? AND subtype = ? ORDER BY timestamp ASC");
+                    pstmt.setInt(1, timestamp);
+                    pstmt.setLong(2, account.getId());
+                    pstmt.setLong(3, account.getId());
+                    pstmt.setByte(4, type);
+                    pstmt.setByte(5, subtype);
+                } else {
+                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) AND type = ? ORDER BY timestamp ASC");
+                    pstmt.setInt(1, timestamp);
+                    pstmt.setLong(2, account.getId());
+                    pstmt.setLong(3, account.getId());
+                    pstmt.setByte(4, type);
+                }
+            } else {
+                pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) ORDER BY timestamp ASC");
+                pstmt.setInt(1, timestamp);
+                pstmt.setLong(2, account.getId());
+                pstmt.setLong(3, account.getId());
+            }
+            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Transaction>() {
+                @Override
+                public Transaction get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                    return Transaction.getTransaction(con, rs);
+                }
+            });
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static int getTransactionCount() {
+        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction")) {
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static List<Long> getBlockIdsAfter(Long blockId, int limit) {
+        if (limit > 1440) {
+            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
+        }
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
+             PreparedStatement pstmt2 = con.prepareStatement("SELECT id FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
+            pstmt1.setLong(1, blockId);
+            ResultSet rs = pstmt1.executeQuery();
+            if (! rs.next()) {
+                rs.close();
+                return Collections.emptyList();
+            }
+            List<Long> result = new ArrayList<>();
+            int dbId = rs.getInt("db_id");
+            pstmt2.setInt(1, dbId);
+            pstmt2.setInt(2, limit);
+            rs = pstmt2.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getLong("id"));
+            }
+            rs.close();
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static List<Block> getBlocksAfter(Long blockId, int limit) {
+        if (limit > 1440) {
+            throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
+        }
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
+             PreparedStatement pstmt2 = con.prepareStatement("SELECT * FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
+            pstmt1.setLong(1, blockId);
+            ResultSet rs = pstmt1.executeQuery();
+            if (! rs.next()) {
+                rs.close();
+                return Collections.emptyList();
+            }
+            List<Block> result = new ArrayList<>();
+            int dbId = rs.getInt("db_id");
+            pstmt2.setInt(1, dbId);
+            pstmt2.setInt(2, limit);
+            rs = pstmt2.executeQuery();
+            while (rs.next()) {
+                result.add(Block.getBlock(con, rs));
+            }
+            rs.close();
+            return result;
+        } catch (NxtException.ValidationException|SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static long getBlockIdAtHeight(int height) {
+        Block block = lastBlock.get();
+        if (height > block.getHeight()) {
+            throw new IllegalArgumentException("Invalid height " + height + ", current blockchain is at " + block.getHeight());
+        }
+        if (height == block.getHeight()) {
+            return block.getId();
+        }
+        return Block.findBlockIdAtHeight(height);
+    }
+
+    public static List<Block> getBlocksFromHeight(int height) {
+        if (height < 0 || lastBlock.get().getHeight() - height > 1440) {
+            throw new IllegalArgumentException("Can't go back more than 1440 blocks");
+        }
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY height ASC")) {
+            pstmt.setInt(1, height);
+            ResultSet rs = pstmt.executeQuery();
+            List<Block> result = new ArrayList<>();
+            while (rs.next()) {
+                result.add(Block.getBlock(con, rs));
+            }
+            return result;
+        } catch (SQLException|NxtException.ValidationException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public static Collection<Transaction> getAllUnconfirmedTransactions() {
@@ -551,12 +721,12 @@ public final class Blockchain {
         return lastBlock.get();
     }
 
-    public static Block getBlock(Long id) {
-        return blocks.get(id);
+    public static Block getBlock(Long blockId) {
+        return Block.findBlock(blockId);
     }
 
     public static Transaction getTransaction(Long transactionId) {
-        return transactions.get(transactionId);
+        return Transaction.findTransaction(transactionId);
     }
 
     public static Transaction getUnconfirmedTransaction(Long transactionId) {
@@ -599,7 +769,7 @@ public final class Blockchain {
             transactions[i] = Transaction.getTransaction((JSONObject)transactionsData.get(i));
         }
         try {
-            pushBlock(block, transactions, true);
+            pushBlock(block, transactions);
             return true;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Block " + block.getStringId() + " not accepted: " + e.getMessage());
@@ -608,119 +778,66 @@ public final class Blockchain {
     }
 
     static void addBlock(Block block) {
-        if (block.getPreviousBlockId() == null) {
-            blocks.put(block.getId(), block);
-            lastBlock.set(block);
-        } else {
-            if (! lastBlock.compareAndSet(blocks.get(block.getPreviousBlockId()), block)) {
-                throw new IllegalStateException("Last block not equal to this.previousBlock"); // shouldn't happen
+        try (Connection con = Db.getConnection()) {
+            try {
+                Block.saveBlock(con, block);
+                lastBlock.set(block);
+                con.commit();
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
             }
-            if (blocks.putIfAbsent(block.getId(), block) != null) {
-                throw new IllegalStateException("duplicate block id: " + block.getId()); // shouldn't happen
-            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
     static void init() {
 
-        try {
+        if (! Block.hasBlock(Genesis.GENESIS_BLOCK_ID)) {
+            Logger.logMessage("Genesis block not in database, starting from scratch");
 
-            Logger.logMessage("Loading transactions...");
-            loadTransactions("transactions.nxt");
-            Logger.logMessage("...Done");
-
-        } catch (FileNotFoundException e) {
-            Logger.logMessage("transactions.nxt not found, starting from scratch");
-            transactions.clear();
+            SortedMap<Long,Transaction> transactionsMap = new TreeMap<>();
 
             try {
 
                 for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-
                     Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
                             Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
-
-                    transactions.put(transaction.getId(), transaction);
-
+                    transaction.setIndex(transactionCounter.incrementAndGet());
+                    transactionsMap.put(transaction.getId(), transaction);
                 }
 
-            } catch (NxtException.ValidationException validationException) {
-                Logger.logMessage(validationException.getMessage());
-                System.exit(1); // now this should never happen
-            }
-
-            for (Transaction transaction : transactions.values()) {
-                transaction.setIndex(transactionCounter.incrementAndGet());
-                transaction.setBlockId(Genesis.GENESIS_BLOCK_ID);
-
-            }
-
-            saveTransactions("transactions.nxt");
-
-        }
-
-        try {
-
-            Logger.logMessage("Loading blocks...");
-            loadBlocks("blocks.nxt");
-            Logger.logMessage("...Done");
-
-        } catch (FileNotFoundException e) {
-            Logger.logMessage("blocks.nxt not found, starting from scratch");
-            blocks.clear();
-
-            try {
-
-                Block block = new Block(-1, 0, null, transactions.size(), 1000000000, 0, transactions.size() * 128, null,
+                Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, null,
                         Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
-                block.setIndex(blockCounter.incrementAndGet());
+                genesisBlock.setIndex(blockCounter.incrementAndGet());
 
-                int i = 0;
-                for (Long transactionId : transactions.keySet()) {
-
-                    block.transactionIds[i++] = transactionId;
-
-                }
-                Arrays.sort(block.transactionIds);
+                Transaction[] transactions = transactionsMap.values().toArray(new Transaction[transactionsMap.size()]);
                 MessageDigest digest = Crypto.sha256();
-                for (i = 0; i < block.transactionIds.length; i++) {
-                    Transaction transaction = transactions.get(block.transactionIds[i]);
+                for (int i = 0; i < transactions.length; i++) {
+                    Transaction transaction = transactions[i];
+                    genesisBlock.transactionIds[i] = transaction.getId();
+                    genesisBlock.blockTransactions[i] = transaction;
                     digest.update(transaction.getBytes());
-                    block.blockTransactions[i] = transaction;
                 }
-                block.setPayloadHash(digest.digest());
 
-                blocks.put(Genesis.GENESIS_BLOCK_ID, block);
-                lastBlock.set(block);
+                genesisBlock.setPayloadHash(digest.digest());
+
+                for (Transaction transaction : genesisBlock.blockTransactions) {
+                    transaction.setBlock(genesisBlock);
+                }
+
+                addBlock(genesisBlock);
 
             } catch (NxtException.ValidationException validationException) {
                 Logger.logMessage(validationException.getMessage());
                 System.exit(1);
             }
-
-            saveBlocks("blocks.nxt");
-
         }
 
         Logger.logMessage("Scanning blockchain...");
         Blockchain.scan();
         Logger.logMessage("...Done");
-    }
-
-    static void shutdown() {
-        try {
-            saveBlocks("blocks.nxt");
-            Logger.logMessage("Saved blocks.nxt");
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error saving blocks", e);
-        }
-
-        try {
-            saveTransactions("transactions.nxt");
-            Logger.logMessage("Saved transactions.nxt");
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error saving transactions", e);
-        }
     }
 
     private static void processUnconfirmedTransactions(JSONObject request) throws NxtException.ValidationException {
@@ -749,7 +866,7 @@ public final class Blockchain {
                 synchronized (Blockchain.class) {
 
                     Long id = transaction.getId();
-                    if (transactions.containsKey(id) || unconfirmedTransactions.containsKey(id)
+                    if (Transaction.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
                             || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
                         continue;
                     }
@@ -828,7 +945,7 @@ public final class Blockchain {
     }
 
     private synchronized static byte[] calculateTransactionsChecksum() {
-        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(transactions.size(), new Comparator<Transaction>() {
+        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(getTransactionCount(), new Comparator<Transaction>() {
             @Override
             public int compare(Transaction o1, Transaction o2) {
                 long id1 = o1.getId();
@@ -836,7 +953,11 @@ public final class Blockchain {
                 return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.getTimestamp() < o2.getTimestamp() ? -1 : (o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)));
             }
         });
-        sortedTransactions.addAll(transactions.values());
+        try (DbIterator<Transaction> iterator = getAllTransactions()) {
+            while (iterator.hasNext()) {
+                sortedTransactions.add(iterator.next());
+            }
+        }
         MessageDigest digest = Crypto.sha256();
         while (! sortedTransactions.isEmpty()) {
             digest.update(sortedTransactions.poll().getBytes());
@@ -844,7 +965,7 @@ public final class Blockchain {
         return digest.digest();
     }
 
-    private static void pushBlock(final Block block, final Transaction[] trans, final boolean savingFlag) throws BlockNotAcceptedException {
+    private static void pushBlock(final Block block, final Transaction[] trans) throws BlockNotAcceptedException {
 
         JSONArray addedConfirmedTransactions;
         JSONArray removedUnconfirmedTransactions;
@@ -882,8 +1003,7 @@ public final class Blockchain {
                     throw new BlockNotAcceptedException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
-
-                if (block.getId().equals(Long.valueOf(0L)) || blocks.containsKey(block.getId())) {
+                if (block.getId().equals(Long.valueOf(0L)) || Block.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
                 }
                 if (! block.verifyGenerationSignature() || ! block.verifyBlockSignature()) {
@@ -900,6 +1020,7 @@ public final class Blockchain {
                         throw new BlockNotAcceptedException("Block contains duplicate transactions: " + transaction.getStringId());
                     }
                 }
+
                 Arrays.sort(block.transactionIds);
 
                 Map<Transaction.Type, Set<String>> duplicates = new HashMap<>();
@@ -907,8 +1028,9 @@ public final class Blockchain {
                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
                 int calculatedTotalAmount = 0, calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
-                for (Long transactionId : block.transactionIds) {
+                for (int i = 0; i < block.transactionIds.length; i++) {
 
+                    Long transactionId = block.transactionIds[i];
                     Transaction transaction = blockTransactions.get(transactionId);
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
@@ -917,14 +1039,13 @@ public final class Blockchain {
                                 + " for transaction " + transaction.getStringId() + ", current time is " + curTime
                                 + ", block timestamp is " + block.getTimestamp());
                     }
-                    if (transactions.get(transactionId) != null) {
+                    if (Transaction.hasTransaction(transactionId)) {
                         throw new BlockNotAcceptedException("Transaction " + transaction.getStringId() + " is already in the blockchain");
                     }
-                    Long referencedTransactionId = transaction.getReferencedTransactionId();
-                    if ((referencedTransactionId != null
-                            &&  transactions.get(referencedTransactionId) == null
-                            && blockTransactions.get(referencedTransactionId) == null)) {
-                        throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.convert(referencedTransactionId)
+                    if ((transaction.getReferencedTransactionId() != null
+                            &&  ! Transaction.hasTransaction(transaction.getReferencedTransactionId())
+                            && blockTransactions.get(transaction.getReferencedTransactionId()) == null)) {
+                        throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.convert(transaction.getReferencedTransactionId())
                                 +" for transaction " + transaction.getStringId());
                     }
                     if ((unconfirmedTransactions.get(transactionId) == null && !transaction.verify())) {
@@ -936,6 +1057,8 @@ public final class Blockchain {
                     if (transaction.isDuplicate(duplicates)) {
                         throw new BlockNotAcceptedException("Transaction is a duplicate: " + transaction.getStringId());
                     }
+
+                    block.blockTransactions[i] = transaction;
 
                     calculatedTotalAmount += transaction.getAmount();
 
@@ -974,38 +1097,30 @@ public final class Blockchain {
                 block.setHeight(previousLastBlock.getHeight() + 1);
 
                 Transaction duplicateTransaction = null;
-                for (Map.Entry<Long, Transaction> transactionEntry : blockTransactions.entrySet()) {
-                    Transaction transaction = transactionEntry.getValue();
-                    transaction.setHeight(block.getHeight());
-                    transaction.setBlockId(block.getId());
+                for (Transaction transaction : block.blockTransactions) {
+                    transaction.setBlock(block);
 
                     if (transactionHashes.putIfAbsent(transaction.getHash(), transaction) != null && block.getHeight() != 58294) {
-                        duplicateTransaction = transaction;
-                        break;
-                    }
-
-                    if (transactions.putIfAbsent(transactionEntry.getKey(), transaction) != null) {
-                        Logger.logMessage("duplicate transaction id " + transactionEntry.getKey());
                         duplicateTransaction = transaction;
                         break;
                     }
                 }
 
                 if (duplicateTransaction != null) {
-                    for (Long transactionId : blockTransactions.keySet()) {
-                        if (transactionId.equals(duplicateTransaction.getId())) {
-                            continue;
-                        }
-                        Transaction transaction = transactions.remove(transactionId);
-                        if (transaction != null) {
+                    for (Transaction transaction : block.blockTransactions) {
+                        if (! transaction.equals(duplicateTransaction)) {
                             Transaction hashTransaction = transactionHashes.get(transaction.getHash());
-                            if (hashTransaction != null && hashTransaction.getId().equals(transactionId)) {
+                            if (hashTransaction != null && hashTransaction.equals(transaction)) {
                                 transactionHashes.remove(transaction.getHash());
                             }
                         }
                     }
                     throw new BlockNotAcceptedException("Duplicate hash of transaction " + duplicateTransaction.getStringId());
                 }
+
+                block.calculateBaseTarget();
+
+                addBlock(block);
 
                 block.apply();
 
@@ -1039,11 +1154,6 @@ public final class Blockchain {
 
                     // TODO: Remove from double-spending transactions
 
-                }
-
-                if (savingFlag) {
-                    saveTransactions("transactions.nxt");
-                    saveBlocks("blocks.nxt");
                 }
 
             } catch (RuntimeException e) {
@@ -1108,7 +1218,7 @@ public final class Blockchain {
                     return false;
                 }
 
-                Block previousBlock = blocks.get(block.getPreviousBlockId());
+                Block previousBlock = Block.findBlock(block.getPreviousBlockId());
                 if (previousBlock == null) {
                     Logger.logMessage("Previous block is null");
                     throw new IllegalStateException();
@@ -1121,14 +1231,14 @@ public final class Blockchain {
                 Account generatorAccount = Account.getAccount(block.getGeneratorAccountId());
                 generatorAccount.addToBalanceAndUnconfirmedBalance(-block.getTotalFee() * 100L);
 
-                for (Long transactionId : block.transactionIds) {
+                for (Transaction transaction : block.blockTransactions) {
 
-                    Transaction transaction = transactions.remove(transactionId);
                     Transaction hashTransaction = transactionHashes.get(transaction.getHash());
-                    if (hashTransaction != null && hashTransaction.getId().equals(transactionId)) {
+                    if (hashTransaction != null && hashTransaction.equals(transaction)) {
                         transactionHashes.remove(transaction.getHash());
                     }
-                    unconfirmedTransactions.put(transactionId, transaction);
+                    
+                    unconfirmedTransactions.put(transaction.getId(), transaction);
 
                     transaction.undo();
 
@@ -1144,6 +1254,8 @@ public final class Blockchain {
                     addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
 
                 }
+
+                Block.deleteBlock(block.getId());
 
             } // synchronized
 
@@ -1177,13 +1289,29 @@ public final class Blockchain {
     }
 
     private synchronized static void scan() {
-        Map<Long,Block> loadedBlocks = new HashMap<>(blocks);
-        blocks.clear();
-        Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
-        Block currentBlock;
-        while ((currentBlock = loadedBlocks.get(currentBlockId)) != null) {
-            currentBlock.apply();
-            currentBlockId = currentBlock.getNextBlockId();
+        Account.clear();
+        Alias.clear();
+        Asset.clear();
+        Order.clear();
+        unconfirmedTransactions.clear();
+        doubleSpendingTransactions.clear();
+        nonBroadcastedTransactions.clear();
+        transactionHashes.clear();
+        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
+            Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
+            Block currentBlock;
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                currentBlock = Block.getBlock(con, rs);
+                if (! currentBlock.getId().equals(currentBlockId)) {
+                    throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                }
+                lastBlock.set(currentBlock);
+                currentBlock.apply();
+                currentBlockId = currentBlock.getNextBlockId();
+            }
+        } catch (NxtException.ValidationException|SQLException e) {
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
@@ -1192,7 +1320,7 @@ public final class Blockchain {
         Set<Transaction> sortedTransactions = new TreeSet<>();
 
         for (Transaction transaction : unconfirmedTransactions.values()) {
-            if (transaction.getReferencedTransactionId() == null || transactions.get(transaction.getReferencedTransactionId()) != null) {
+            if (transaction.getReferencedTransactionId() == null || Transaction.hasTransaction(transaction.getReferencedTransactionId())) {
                 sortedTransactions.add(transaction);
             }
         }
@@ -1331,64 +1459,18 @@ public final class Blockchain {
         }
     }
 
-    private static void loadTransactions(String fileName) throws FileNotFoundException {
+    public static class BlockNotAcceptedException extends NxtException {
 
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            transactionCounter.set(objectInputStream.readInt());
-            transactions.clear();
-            transactions.putAll((HashMap<Long, Transaction>) objectInputStream.readObject());
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException |ClassNotFoundException e) {
-            Logger.logMessage("Error loading transactions from " + fileName, e);
-            System.exit(1);
+        private BlockNotAcceptedException(String message) {
+            super(message);
         }
 
     }
 
-    private static void saveTransactions(String fileName) {
+    public static class BlockOutOfOrderException extends BlockNotAcceptedException {
 
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-        ) {
-            objectOutputStream.writeInt(transactionCounter.get());
-            objectOutputStream.writeObject(new HashMap(transactions));
-            objectOutputStream.close();
-        } catch (IOException e) {
-            Logger.logMessage("Error saving transactions to " + fileName, e);
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    private static void loadBlocks(String fileName) throws FileNotFoundException {
-
-        try (FileInputStream fileInputStream = new FileInputStream(fileName);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
-        ) {
-            blockCounter.set(objectInputStream.readInt());
-            blocks.clear();
-            blocks.putAll((HashMap<Long, Block>) objectInputStream.readObject());
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException|ClassNotFoundException e) {
-            Logger.logMessage("Error loading blocks from " + fileName, e);
-            System.exit(1);
-        }
-
-    }
-
-    private static void saveBlocks(String fileName) {
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
-        ) {
-            objectOutputStream.writeInt(blockCounter.get());
-            objectOutputStream.writeObject(new HashMap<>(blocks));
-        } catch (IOException e) {
-            Logger.logMessage("Error saving blocks to " + fileName, e);
-            throw new RuntimeException(e);
+        private BlockOutOfOrderException(String message) {
+            super(message);
         }
 	}
 	

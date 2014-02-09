@@ -39,8 +39,8 @@ public final class GetState extends HttpRequestHandler {
         }
         response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
 
-        response.put("numberOfBlocks", Blockchain.getAllBlocks().size());
-        response.put("numberOfTransactions", Blockchain.getAllTransactions().size());
+        response.put("numberOfBlocks", Blockchain.getBlockCount());
+        response.put("numberOfTransactions", Blockchain.getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
         response.put("numberOfAssets", Asset.getAllAssets().size());
         response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
