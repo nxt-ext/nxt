@@ -1473,22 +1473,6 @@ public final class Blockchain {
             super(message);
         }
 	}
-	
-    public static class BlockNotAcceptedException extends NxtException {
-
-        private BlockNotAcceptedException(String message) {
-            super(message);
-        }
-
-    }
-
-    public static class BlockOutOfOrderException extends BlockNotAcceptedException {
-
-        private BlockOutOfOrderException(String message) {
-            super(message);
-        }
-
-    }
 
     private Blockchain() {} // never, yet
 
