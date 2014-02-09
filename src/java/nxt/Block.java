@@ -143,6 +143,7 @@ public final class Block {
                 Transaction transaction = transactions.get(i);
                 block.transactionIds[i] = transaction.getId();
                 block.blockTransactions[i] = transaction;
+                transaction.setBlock(block);
             }
 
             block.cumulativeDifficulty = cumulativeDifficulty;
