@@ -809,7 +809,7 @@ public final class Blockchain {
                 }
 
                 Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, null,
-                        Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE);
+                        Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null);
                 genesisBlock.setIndex(blockCounter.incrementAndGet());
 
                 Transaction[] transactions = transactionsMap.values().toArray(new Transaction[transactionsMap.size()]);
@@ -1094,7 +1094,7 @@ public final class Blockchain {
                     }
                 }
 
-                block.setHeight(previousLastBlock.getHeight() + 1);
+                block.setPrevious(previousLastBlock);
 
                 Transaction duplicateTransaction = null;
                 for (Transaction transaction : block.blockTransactions) {
@@ -1117,8 +1117,6 @@ public final class Blockchain {
                     }
                     throw new BlockNotAcceptedException("Duplicate hash of transaction " + duplicateTransaction.getStringId());
                 }
-
-                block.calculateBaseTarget();
 
                 addBlock(block);
 
@@ -1391,7 +1389,7 @@ public final class Blockchain {
             if (previousBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
 
                 block = new Block(1, blockTimestamp, previousBlock.getId(), newTransactions.size(),
-                        totalAmount, totalFee, payloadLength, null, publicKey, null, new byte[64]);
+                        totalAmount, totalFee, payloadLength, null, publicKey, null, new byte[64], null);
 
             } else {
 

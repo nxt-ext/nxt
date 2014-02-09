@@ -345,9 +345,11 @@ public final class Transaction implements Comparable<Transaction> {
         this.height = block.getHeight();
     }
 
+    /*
     void setHeight(int height) {
         this.height = height;
     }
+    */
 
     public int getIndex() {
         return index;

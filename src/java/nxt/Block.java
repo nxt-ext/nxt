@@ -139,12 +139,6 @@ public final class Block {
 
             Block block = new Block(version, timestamp, previousBlockId, transactions.size(), totalAmount, totalFee, payloadLength,
                     payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
-            for (int i = 0; i < transactions.size(); i++) {
-                Transaction transaction = transactions.get(i);
-                block.transactionIds[i] = transaction.getId();
-                block.blockTransactions[i] = transaction;
-                transaction.setBlock(block);
-            }
 
             block.cumulativeDifficulty = cumulativeDifficulty;
             block.baseTarget = baseTarget;
@@ -152,6 +146,13 @@ public final class Block {
             block.index = index;
             block.height = height;
             block.id = id;
+
+            for (int i = 0; i < transactions.size(); i++) {
+                Transaction transaction = transactions.get(i);
+                block.transactionIds[i] = transaction.getId();
+                block.blockTransactions[i] = transaction;
+                transaction.setBlock(block);
+            }
 
             return block;
 
@@ -248,14 +249,6 @@ public final class Block {
     private volatile Long generatorAccountId;
     private SoftReference<JSONStreamAware> jsonRef;
 
-    Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee,
-          int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature)
-            throws NxtException.ValidationException {
-
-        this(version, timestamp, previousBlockId, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
-                generatorPublicKey, generationSignature, blockSignature, null);
-
-    }
 
     Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
                  byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash)
@@ -283,6 +276,7 @@ public final class Block {
         this.previousBlockHash = previousBlockHash;
         this.transactionIds = numberOfTransactions == 0 ? emptyLong : new Long[numberOfTransactions];
         this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
+        this.height = version == -1 ? 0 : -1;
 
     }
 
@@ -371,11 +365,10 @@ public final class Block {
     }
 
     public int getHeight() {
+        if (height == -1) {
+            throw new IllegalStateException("Block height not yet set");
+        }
         return height;
-    }
-
-    void setHeight(int height) {
-        this.height = height;
     }
 
     public Long getId() {
@@ -573,13 +566,21 @@ public final class Block {
 
     }
 
-    void calculateBaseTarget() {
+    void setPrevious(Block previousBlock) {
+        if (! previousBlock.getId().equals(getPreviousBlockId())) {
+            // shouldn't happen as previous id is already verified, but just in case
+            throw new IllegalStateException("Previous block id doesn't match");
+        }
+        this.height = previousBlock.getHeight() + 1;
+        this.calculateBaseTarget(previousBlock);
+    }
+
+    private void calculateBaseTarget(Block previousBlock) {
 
         if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlockId == null) {
             baseTarget = Nxt.initialBaseTarget;
             cumulativeDifficulty = BigInteger.ZERO;
         } else {
-            Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
