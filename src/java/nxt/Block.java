@@ -233,17 +233,17 @@ public final class Block {
     private final int totalAmount;
     private final int totalFee;
     private final int payloadLength;
+    private final byte[] generationSignature;
+    private final byte[] payloadHash;
     final Long[] transactionIds;
     final Transaction[] blockTransactions;
 
+    private byte[] blockSignature;
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
     private long baseTarget = Nxt.initialBaseTarget;
     private volatile Long nextBlockId;
     private int index;
     private int height;
-    private byte[] generationSignature;
-    private byte[] blockSignature;
-    private byte[] payloadHash;
     private volatile Long id;
     private volatile String stringId = null;
     private volatile Long generatorAccountId;
@@ -320,24 +320,12 @@ public final class Block {
         return payloadHash;
     }
 
-    void setPayloadHash(byte[] payloadHash) {
-        this.payloadHash = payloadHash;
-    }
-
     public byte[] getGenerationSignature() {
         return generationSignature;
     }
 
-    void setGenerationSignature(byte[] generationSignature) {
-        this.generationSignature = generationSignature;
-    }
-
     public byte[] getBlockSignature() {
         return blockSignature;
-    }
-
-    void setBlockSignature(byte[] blockSignature) {
-        this.blockSignature = blockSignature;
     }
 
     public Transaction[] getTransactions() {
@@ -473,6 +461,13 @@ public final class Block {
 
         return block;
 
+    }
+
+    void sign(String secretPhrase) {
+        byte[] data = getBytes();
+        byte[] data2 = new byte[data.length - 64];
+        System.arraycopy(data, 0, data2, 0, data2.length);
+        blockSignature = Crypto.sign(data2, secretPhrase);
     }
 
     boolean verifyBlockSignature() {

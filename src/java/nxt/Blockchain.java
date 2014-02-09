@@ -808,22 +808,20 @@ public final class Blockchain {
                     transactionsMap.put(transaction.getId(), transaction);
                 }
 
-                Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, null,
+                MessageDigest digest = Crypto.sha256();
+                for (Transaction transaction : transactionsMap.values()) {
+                    digest.update(transaction.getBytes());
+                }
+
+                Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
                         Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null);
                 genesisBlock.setIndex(blockCounter.incrementAndGet());
 
                 Transaction[] transactions = transactionsMap.values().toArray(new Transaction[transactionsMap.size()]);
-                MessageDigest digest = Crypto.sha256();
                 for (int i = 0; i < transactions.length; i++) {
                     Transaction transaction = transactions[i];
                     genesisBlock.transactionIds[i] = transaction.getId();
                     genesisBlock.blockTransactions[i] = transaction;
-                    digest.update(transaction.getBytes());
-                }
-
-                genesisBlock.setPayloadHash(digest.digest());
-
-                for (Transaction transaction : genesisBlock.blockTransactions) {
                     transaction.setBlock(genesisBlock);
                 }
 
@@ -1382,20 +1380,37 @@ public final class Blockchain {
 
         final byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
-        Block block;
+        Long[] transactionIds = newTransactions.keySet().toArray(new Long[newTransactions.size()]);
+        Arrays.sort(transactionIds);
+        MessageDigest digest = Crypto.sha256();
+        for (Long transactionId : transactionIds) {
+            digest.update(newTransactions.get(transactionId).getBytes());
+        }
+
+        byte[] payloadHash = digest.digest();
+        byte[] generationSignature;
+
         Block previousBlock = lastBlock.get();
+        if (previousBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+            generationSignature = Crypto.sign(previousBlock.getGenerationSignature(), secretPhrase);
+        } else {
+            digest.update(previousBlock.getGenerationSignature());
+            generationSignature = digest.digest(publicKey);
+        }
+
+        Block block;
 
         try {
             if (previousBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
 
                 block = new Block(1, blockTimestamp, previousBlock.getId(), newTransactions.size(),
-                        totalAmount, totalFee, payloadLength, null, publicKey, null, new byte[64], null);
+                        totalAmount, totalFee, payloadLength, payloadHash, publicKey, generationSignature, new byte[64], null);
 
             } else {
 
                 byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
                 block = new Block(2, blockTimestamp, previousBlock.getId(), newTransactions.size(),
-                        totalAmount, totalFee, payloadLength, null, publicKey, null, new byte[64], previousBlockHash);
+                        totalAmount, totalFee, payloadLength, payloadHash, publicKey, generationSignature, new byte[64], previousBlockHash);
 
             }
         } catch (NxtException.ValidationException e) {
@@ -1404,35 +1419,15 @@ public final class Blockchain {
             return;
         }
 
-        int i = 0;
-        for (Long transactionId : newTransactions.keySet()) {
-            block.transactionIds[i++] = transactionId;
+        block.setPrevious(previousBlock);
+
+        for (int i = 0 ; i < transactionIds.length; i++) {
+            block.transactionIds[i] = transactionIds[i];
+            block.blockTransactions[i] = newTransactions.get(transactionIds[i]);
+            block.blockTransactions[i].setBlock(block);
         }
 
-        Arrays.sort(block.transactionIds);
-        MessageDigest digest = Crypto.sha256();
-        for (i = 0; i < block.transactionIds.length; i++) {
-            Transaction transaction = newTransactions.get(block.transactionIds[i]);
-            digest.update(transaction.getBytes());
-            block.blockTransactions[i] = transaction;
-        }
-        block.setPayloadHash(digest.digest());
-
-        if (previousBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
-
-            block.setGenerationSignature(Crypto.sign(previousBlock.getGenerationSignature(), secretPhrase));
-
-        } else {
-
-            digest.update(previousBlock.getGenerationSignature());
-            block.setGenerationSignature(digest.digest(publicKey));
-
-        }
-
-        byte[] data = block.getBytes();
-        byte[] data2 = new byte[data.length - 64];
-        System.arraycopy(data, 0, data2, 0, data2.length);
-        block.setBlockSignature(Crypto.sign(data2, secretPhrase));
+        block.sign(secretPhrase);
 
         if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
 

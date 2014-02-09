@@ -260,6 +260,7 @@ public final class Transaction implements Comparable<Transaction> {
     private final int amount;
     private final int fee;
     private final Long referencedTransactionId;
+    private final Type type;
 
     private int index;
     private int height;
@@ -267,7 +268,6 @@ public final class Transaction implements Comparable<Transaction> {
     private volatile Block block;
     private byte[] signature;
     private int timestamp;
-    private final Type type;
     private Attachment attachment;
     private volatile Long id;
     private volatile String stringId = null;
@@ -344,12 +344,6 @@ public final class Transaction implements Comparable<Transaction> {
         this.blockId = block.getId();
         this.height = block.getHeight();
     }
-
-    /*
-    void setHeight(int height) {
-        this.height = height;
-    }
-    */
 
     public int getIndex() {
         return index;
