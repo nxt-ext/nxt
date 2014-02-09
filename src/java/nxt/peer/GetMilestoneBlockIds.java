@@ -3,6 +3,7 @@ package nxt.peer;
 import nxt.Block;
 import nxt.Blockchain;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -16,8 +17,6 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
     @Override
     JSONObject processJSONRequest(JSONObject request, Peer peer) {
 
-        JSONObject response = new JSONObject();
-
         //TODO: add support for getting only a few milestoneBlockIds at a time
         JSONArray milestoneBlockIds = new JSONArray();
         Block block = Blockchain.getLastBlock();
@@ -25,13 +24,20 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
         int height = block.getHeight();
         final int jumpLength = height * 4 / 1461 + 1;
 
-        while (height > 0) {
-            milestoneBlockIds.add(Convert.convert(blockId));
-            blockId = Blockchain.getBlockIdAtHeight(height);
-            height = height - jumpLength;
-        }
+        JSONObject response = new JSONObject();
+        try {
 
-        response.put("milestoneBlockIds", milestoneBlockIds);
+            while (height > 0) {
+                milestoneBlockIds.add(Convert.convert(blockId));
+                blockId = Blockchain.getBlockIdAtHeight(height);
+                height = height - jumpLength;
+            }
+            response.put("milestoneBlockIds", milestoneBlockIds);
+
+        } catch (RuntimeException e) {
+            Logger.logDebugMessage(e.toString());
+            response.put("error", e.toString());
+        }
 
         return response;
     }
