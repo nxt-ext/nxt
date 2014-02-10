@@ -80,7 +80,13 @@ final class DbVersion {
             case 6:
                 apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp)");
             case 7:
-                return 7; //NOTE: increment every time when adding a new update
+                apply("CREATE INDEX IF NOT EXISTS block_generator_account_id_idx ON block (generator_account_id)");
+            case 8:
+                apply("CREATE INDEX IF NOT EXISTS transaction_sender_account_id_idx ON transaction (sender_account_id)");
+            case 9:
+                apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
+            case 10:
+                return 10; //NOTE: increment every time when adding a new update
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
         }
