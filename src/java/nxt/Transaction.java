@@ -41,40 +41,6 @@ public final class Transaction implements Comparable<Transaction> {
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 
 
-    public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationException {
-
-        try {
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            byte type = buffer.get();
-            byte subtype = buffer.get();
-            int timestamp = buffer.getInt();
-            short deadline = buffer.getShort();
-            byte[] senderPublicKey = new byte[32];
-            buffer.get(senderPublicKey);
-            Long recipientId = buffer.getLong();
-            int amount = buffer.getInt();
-            int fee = buffer.getInt();
-            Long referencedTransactionId = Convert.zeroToNull(buffer.getLong());
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-
-            Type transactionType = findTransactionType(type, subtype);
-            Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
-                    fee, referencedTransactionId, signature);
-
-            if (! transactionType.loadAttachment(transaction, buffer)) {
-                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
-            }
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString());
-        }
-    }
-
     public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                                              int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationException {
         return new Transaction(Type.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
@@ -120,6 +86,40 @@ public final class Transaction implements Comparable<Transaction> {
             return rs.next();
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationException {
+
+        try {
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            byte type = buffer.get();
+            byte subtype = buffer.get();
+            int timestamp = buffer.getInt();
+            short deadline = buffer.getShort();
+            byte[] senderPublicKey = new byte[32];
+            buffer.get(senderPublicKey);
+            Long recipientId = buffer.getLong();
+            int amount = buffer.getInt();
+            int fee = buffer.getInt();
+            Long referencedTransactionId = Convert.zeroToNull(buffer.getLong());
+            byte[] signature = new byte[64];
+            buffer.get(signature);
+
+            Type transactionType = findTransactionType(type, subtype);
+            Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
+                    fee, referencedTransactionId, signature);
+
+            if (! transactionType.loadAttachment(transaction, buffer)) {
+                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
+            }
+
+            return transaction;
+
+        } catch (RuntimeException e) {
+            throw new NxtException.ValidationException(e.toString());
         }
     }
 

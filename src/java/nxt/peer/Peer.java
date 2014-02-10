@@ -67,14 +67,10 @@ public final class Peer implements Comparable<Peer> {
                 try {
 
                     if (Peer.getNumberOfConnectedPublicPeers() < Nxt.maxNumberOfConnectedPublicPeers) {
-
                         Peer peer = Peer.getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? State.NON_CONNECTED : State.DISCONNECTED, false);
                         if (peer != null) {
-
                             peer.connect();
-
                         }
-
                     }
 
                 } catch (Exception e) {
@@ -99,15 +95,10 @@ public final class Peer implements Comparable<Peer> {
                 try {
 
                     long curTime = System.currentTimeMillis();
-
                     for (Peer peer : peers.values()) {
-
                         if (peer.blacklistingTime > 0 && peer.blacklistingTime + Nxt.blacklistingPeriod <= curTime ) {
-
                             peer.removeBlacklistedStatus();
-
                         }
-
                     }
 
                 } catch (Exception e) {
@@ -137,17 +128,20 @@ public final class Peer implements Comparable<Peer> {
 
             try {
                 try {
+
                     Peer peer = Peer.getAnyPeer(State.CONNECTED, true);
-                    if (peer != null) {
-                        JSONObject response = peer.send(getPeersRequest);
-                        if (response != null) {
-                            JSONArray peers = (JSONArray)response.get("peers");
-                            for (Object peerAddress : peers) {
-                                String address = ((String)peerAddress).trim();
-                                if (address.length() > 0) {
-                                    Peer.addPeer(address, address);
-                                }
-                            }
+                    if (peer == null) {
+                        return;
+                    }
+                    JSONObject response = peer.send(getPeersRequest);
+                    if (response == null) {
+                        return;
+                    }
+                    JSONArray peers = (JSONArray)response.get("peers");
+                    for (Object peerAddress : peers) {
+                        String address = ((String)peerAddress).trim();
+                        if (address.length() > 0) {
+                            Peer.addPeer(address, address);
                         }
                     }
 
@@ -567,17 +561,14 @@ public final class Peer implements Comparable<Peer> {
 
         String log = null;
         boolean showLog = false;
-
         HttpURLConnection connection = null;
 
         try {
 
             if (Nxt.communicationLoggingMask != 0) {
-
                 StringWriter stringWriter = new StringWriter();
                 request.writeJSONString(stringWriter);
                 log = "\"" + announcedAddress + "\": " + stringWriter.toString();
-
             }
 
             URL url = new URL("http://" + announcedAddress + (port <= 0 ? ":7874" : "") + "/nxt");
@@ -597,7 +588,6 @@ public final class Peer implements Comparable<Peer> {
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
 
                 if ((Nxt.communicationLoggingMask & Nxt.LOGGING_MASK_200_RESPONSES) != 0) {
-
                     // inefficient
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                     byte[] buffer = new byte[65536];
@@ -616,11 +606,9 @@ public final class Peer implements Comparable<Peer> {
                 } else {
 
                     CountingInputStream cis = new CountingInputStream(connection.getInputStream());
-
                     try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
                         response = (JSONObject)JSONValue.parse(reader);
                     }
-
                     updateDownloadedVolume(cis.getCount());
 
                 }
@@ -628,55 +616,36 @@ public final class Peer implements Comparable<Peer> {
             } else {
 
                 if ((Nxt.communicationLoggingMask & Nxt.LOGGING_MASK_NON200_RESPONSES) != 0) {
-
                     log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
                     showLog = true;
-
                 }
-
                 setState(State.DISCONNECTED);
-
                 response = null;
 
             }
 
         } catch (RuntimeException|IOException e) {
-
             if (! (e instanceof UnknownHostException || e instanceof SocketTimeoutException || e instanceof SocketException)) {
                 Logger.logDebugMessage("Error sending JSON request", e);
             }
-
             if ((Nxt.communicationLoggingMask & Nxt.LOGGING_MASK_EXCEPTIONS) != 0) {
-
                 log += " >>> " + e.toString();
                 showLog = true;
-
             }
-
             if (state == State.NON_CONNECTED) {
-
                 blacklist();
-
             } else {
-
                 setState(State.DISCONNECTED);
-
             }
-
             response = null;
-
         }
 
         if (showLog) {
-
             Logger.logMessage(log + "\n");
-
         }
 
         if (connection != null) {
-
             connection.disconnect();
-
         }
 
         return response;

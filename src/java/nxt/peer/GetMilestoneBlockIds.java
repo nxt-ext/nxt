@@ -17,22 +17,43 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
     @Override
     JSONObject processJSONRequest(JSONObject request, Peer peer) {
 
-        //TODO: add support for getting only a few milestoneBlockIds at a time
-        JSONArray milestoneBlockIds = new JSONArray();
-        Block block = Blockchain.getLastBlock();
-        long blockId = block.getId();
-        int height = block.getHeight();
-        final int jumpLength = height * 4 / 1461 + 1;
-
         JSONObject response = new JSONObject();
         try {
 
-            while (height > 0) {
+            String lastBlockId = (String) request.get("lastMilestoneBlockId");
+            boolean batch = request.get("batch") != null;
+
+            long blockId;
+            int jumpLength;
+            int height;
+            int limit = 10;
+
+            if (lastBlockId != null) {
+                Block block = Blockchain.getBlock(Convert.parseUnsignedLong(lastBlockId));
+                if (block == null) {
+                    throw new IllegalStateException("Don't have block " + lastBlockId);
+                }
+                jumpLength = ((Number)request.get("jumpLength")).intValue();
+                height = Math.max(block.getHeight() - jumpLength, 0);
+                blockId = Blockchain.getBlockIdAtHeight(height);
+            } else {
+                Block block = Blockchain.getLastBlock();
+                blockId = block.getId();
+                height = block.getHeight();
+                jumpLength = height * 4 / 1461 + 1;
+                if (! batch) {
+                    limit = height;
+                }
+            }
+
+            JSONArray milestoneBlockIds = new JSONArray();
+            while (height > 0 && limit-- > 0) {
                 milestoneBlockIds.add(Convert.convert(blockId));
                 blockId = Blockchain.getBlockIdAtHeight(height);
                 height = height - jumpLength;
             }
             response.put("milestoneBlockIds", milestoneBlockIds);
+            response.put("jumpLength", jumpLength);
 
         } catch (RuntimeException e) {
             Logger.logDebugMessage(e.toString());
