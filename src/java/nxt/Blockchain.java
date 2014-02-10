@@ -110,7 +110,7 @@ public final class Blockchain {
                         Transaction transaction = iterator.next();
                         if (transaction.getExpiration() < curTime) {
                             iterator.remove();
-                            Account account = Account.getAccount(transaction.getSenderAccountId());
+                            Account account = Account.getAccount(transaction.getSenderId());
                             account.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
 
                             JSONObject removedUnconfirmedTransaction = new JSONObject();
@@ -504,7 +504,7 @@ public final class Blockchain {
         Connection con = null;
         try {
             con = Db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_account_id = ? ORDER BY db_id ASC");
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_id = ? ORDER BY db_id ASC");
             pstmt.setInt(1, timestamp);
             pstmt.setLong(2, account.getId());
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Block>() {
@@ -553,21 +553,21 @@ public final class Blockchain {
             PreparedStatement pstmt;
             if (type >= 0) {
                 if (subtype >= 0) {
-                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) AND type = ? AND subtype = ? ORDER BY timestamp ASC");
+                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) AND type = ? AND subtype = ? ORDER BY timestamp ASC");
                     pstmt.setInt(1, timestamp);
                     pstmt.setLong(2, account.getId());
                     pstmt.setLong(3, account.getId());
                     pstmt.setByte(4, type);
                     pstmt.setByte(5, subtype);
                 } else {
-                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) AND type = ? ORDER BY timestamp ASC");
+                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) AND type = ? ORDER BY timestamp ASC");
                     pstmt.setInt(1, timestamp);
                     pstmt.setLong(2, account.getId());
                     pstmt.setLong(3, account.getId());
                     pstmt.setByte(4, type);
                 }
             } else {
-                pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_account_id = ?) ORDER BY timestamp ASC");
+                pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) ORDER BY timestamp ASC");
                 pstmt.setInt(1, timestamp);
                 pstmt.setLong(2, account.getId());
                 pstmt.setLong(3, account.getId());
@@ -872,7 +872,7 @@ public final class Blockchain {
                 newTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
                 newTransaction.put("amount", transaction.getAmount());
                 newTransaction.put("fee", transaction.getFee());
-                newTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
+                newTransaction.put("sender", Convert.convert(transaction.getSenderId()));
                 newTransaction.put("id", transaction.getStringId());
                 newTransactions.add(newTransaction);
 
@@ -1091,7 +1091,7 @@ public final class Blockchain {
                     addedConfirmedTransaction.put("index", transaction.getIndex());
                     addedConfirmedTransaction.put("blockTimestamp", block.getTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                    addedConfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
+                    addedConfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
                     addedConfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
                     addedConfirmedTransaction.put("amount", transaction.getAmount());
                     addedConfirmedTransaction.put("fee", transaction.getFee());
@@ -1104,7 +1104,7 @@ public final class Blockchain {
                         removedUnconfirmedTransaction.put("index", removedTransaction.getIndex());
                         removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
 
-                        Account senderAccount = Account.getAccount(removedTransaction.getSenderAccountId());
+                        Account senderAccount = Account.getAccount(removedTransaction.getSenderId());
                         senderAccount.addToUnconfirmedBalance((removedTransaction.getAmount() + removedTransaction.getFee()) * 100L);
                     }
 
@@ -1135,7 +1135,7 @@ public final class Blockchain {
         addedRecentBlock.put("totalAmount", block.getTotalAmount());
         addedRecentBlock.put("totalFee", block.getTotalFee());
         addedRecentBlock.put("payloadLength", block.getPayloadLength());
-        addedRecentBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
+        addedRecentBlock.put("generator", Convert.convert(block.getGeneratorId()));
         addedRecentBlock.put("height", block.getHeight());
         addedRecentBlock.put("version", block.getVersion());
         addedRecentBlock.put("block", block.getStringId());
@@ -1184,7 +1184,7 @@ public final class Blockchain {
                     throw new IllegalStateException();
                 }
 
-                Account generatorAccount = Account.getAccount(block.getGeneratorAccountId());
+                Account generatorAccount = Account.getAccount(block.getGeneratorId());
                 generatorAccount.addToBalanceAndUnconfirmedBalance(-block.getTotalFee() * 100L);
 
                 for (Transaction transaction : block.blockTransactions) {
@@ -1205,7 +1205,7 @@ public final class Blockchain {
                     addedUnconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
                     addedUnconfirmedTransaction.put("amount", transaction.getAmount());
                     addedUnconfirmedTransaction.put("fee", transaction.getFee());
-                    addedUnconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
+                    addedUnconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
                     addedUnconfirmedTransaction.put("id", transaction.getStringId());
                     addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
 
@@ -1223,7 +1223,7 @@ public final class Blockchain {
             addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
             addedOrphanedBlock.put("totalFee", block.getTotalFee());
             addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
-            addedOrphanedBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
+            addedOrphanedBlock.put("generator", Convert.convert(block.getGeneratorId()));
             addedOrphanedBlock.put("height", block.getHeight());
             addedOrphanedBlock.put("version", block.getVersion());
             addedOrphanedBlock.put("block", block.getStringId());
@@ -1300,7 +1300,7 @@ public final class Blockchain {
                 int transactionLength = transaction.getSize();
                 if (newTransactions.get(transaction.getId()) == null && payloadLength + transactionLength <= Nxt.MAX_PAYLOAD_LENGTH) {
 
-                    Long sender = transaction.getSenderAccountId();
+                    Long sender = transaction.getSenderId();
                     Long accumulatedAmount = accumulatedAmounts.get(sender);
                     if (accumulatedAmount == null) {
                         accumulatedAmount = 0L;
@@ -1382,6 +1382,7 @@ public final class Blockchain {
         if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
             try {
                 pushBlock(block, block.blockTransactions);
+                Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) +" generated block " + block.getStringId());
             } catch (BlockNotAcceptedException e) {
                 Logger.logDebugMessage(e.getMessage());
             }

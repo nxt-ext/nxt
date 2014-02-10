@@ -37,7 +37,7 @@ final class GetInitialData extends UserRequestHandler {
             unconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
             unconfirmedTransaction.put("amount", transaction.getAmount());
             unconfirmedTransaction.put("fee", transaction.getFee());
-            unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderAccountId()));
+            unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
 
             unconfirmedTransactions.add(unconfirmedTransaction);
 
@@ -106,7 +106,7 @@ final class GetInitialData extends UserRequestHandler {
             recentBlock.put("totalAmount", block.getTotalAmount());
             recentBlock.put("totalFee", block.getTotalFee());
             recentBlock.put("payloadLength", block.getPayloadLength());
-            recentBlock.put("generator", Convert.convert(block.getGeneratorAccountId()));
+            recentBlock.put("generator", Convert.convert(block.getGeneratorId()));
             recentBlock.put("height", block.getHeight());
             recentBlock.put("version", block.getVersion());
             recentBlock.put("block", block.getStringId());

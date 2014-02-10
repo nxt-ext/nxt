@@ -165,7 +165,7 @@ public final class Block {
         try {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
                     + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
-                    + "base_target, next_block_id, index, height, generation_signature, block_signature, payload_hash, generator_account_id) "
+                    + "base_target, next_block_id, index, height, generation_signature, block_signature, payload_hash, generator_id) "
                     + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 pstmt.setLong(1, block.getId());
                 pstmt.setInt(2, block.version);
@@ -192,7 +192,7 @@ public final class Block {
                 pstmt.setBytes(15, block.generationSignature);
                 pstmt.setBytes(16, block.blockSignature);
                 pstmt.setBytes(17, block.payloadHash);
-                pstmt.setLong(18, block.getGeneratorAccountId());
+                pstmt.setLong(18, block.getGeneratorId());
                 pstmt.executeUpdate();
                 Transaction.saveTransactions(con, block.blockTransactions);
             }
@@ -246,7 +246,7 @@ public final class Block {
     private int height;
     private volatile Long id;
     private volatile String stringId = null;
-    private volatile Long generatorAccountId;
+    private volatile Long generatorId;
     private SoftReference<JSONStreamAware> jsonRef;
 
 
@@ -382,11 +382,11 @@ public final class Block {
         return stringId;
     }
 
-    public Long getGeneratorAccountId() {
-        if (generatorAccountId == null) {
-            generatorAccountId = Account.getId(generatorPublicKey);
+    public Long getGeneratorId() {
+        if (generatorId == null) {
+            generatorId = Account.getId(generatorPublicKey);
         }
-        return generatorAccountId;
+        return generatorId;
     }
 
     public synchronized JSONStreamAware getJSON() {
@@ -475,7 +475,7 @@ public final class Block {
 
     boolean verifyBlockSignature() {
 
-        Account account = Account.getAccount(getGeneratorAccountId());
+        Account account = Account.getAccount(getGeneratorId());
         if (account == null) {
             return false;
         }
@@ -501,7 +501,7 @@ public final class Block {
                 return false;
             }
 
-            Account account = Account.getAccount(getGeneratorAccountId());
+            Account account = Account.getAccount(getGeneratorId());
             if (account == null || account.getEffectiveBalance() <= 0) {
                 return false;
             }
@@ -536,7 +536,7 @@ public final class Block {
 
     void apply() {
 
-        Account generatorAccount = Account.addOrGetAccount(getGeneratorAccountId());
+        Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         if (! generatorAccount.setOrVerify(generatorPublicKey)) {
             throw new IllegalStateException("Generator public key mismatch");
         }

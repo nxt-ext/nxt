@@ -180,7 +180,7 @@ public final class Transaction implements Comparable<Transaction> {
             transaction.index = rs.getInt("index");
             transaction.height = rs.getInt("height");
             transaction.id = rs.getLong("id");
-            transaction.senderAccountId = rs.getLong("sender_account_id");
+            transaction.senderId = rs.getLong("sender_id");
 
             transaction.attachment = (Attachment)rs.getObject("attachment");
 
@@ -212,7 +212,7 @@ public final class Transaction implements Comparable<Transaction> {
         try {
             for (Transaction transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
-                        + "amount, fee, referenced_transaction_id, index, height, block_id, signature, timestamp, type, subtype, sender_account_id, attachment) "
+                        + "amount, fee, referenced_transaction_id, index, height, block_id, signature, timestamp, type, subtype, sender_id, attachment) "
                         + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     pstmt.setLong(1, transaction.getId());
                     pstmt.setShort(2, transaction.deadline);
@@ -232,7 +232,7 @@ public final class Transaction implements Comparable<Transaction> {
                     pstmt.setInt(12, transaction.timestamp);
                     pstmt.setByte(13, transaction.type.getType());
                     pstmt.setByte(14, transaction.type.getSubtype());
-                    pstmt.setLong(15, transaction.getSenderAccountId());
+                    pstmt.setLong(15, transaction.getSenderId());
                     if (transaction.attachment != null) {
                         pstmt.setObject(16, transaction.attachment);
                     } else {
@@ -264,7 +264,7 @@ public final class Transaction implements Comparable<Transaction> {
     private Attachment attachment;
     private volatile Long id;
     private volatile String stringId = null;
-    private volatile Long senderAccountId;
+    private volatile Long senderId;
     private volatile String hash;
 
     private Transaction(Type type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
@@ -381,11 +381,11 @@ public final class Transaction implements Comparable<Transaction> {
         return stringId;
     }
 
-    public Long getSenderAccountId() {
-        if (senderAccountId == null) {
-            senderAccountId = Account.getId(senderPublicKey);
+    public Long getSenderId() {
+        if (senderId == null) {
+            senderId = Account.getId(senderPublicKey);
         }
-        return senderAccountId;
+        return senderId;
     }
 
     @Override
@@ -525,7 +525,7 @@ public final class Transaction implements Comparable<Transaction> {
     }
 
     boolean verify() {
-        Account account = Account.getAccount(getSenderAccountId());
+        Account account = Account.getAccount(getSenderId());
         if (account == null) {
             return false;
         }
@@ -538,7 +538,7 @@ public final class Transaction implements Comparable<Transaction> {
 
     // returns true iff double spending
     boolean isDoubleSpending() {
-        Account senderAccount = Account.getAccount(getSenderAccountId());
+        Account senderAccount = Account.getAccount(getSenderId());
         if (senderAccount == null) {
             return true;
         }
@@ -548,7 +548,7 @@ public final class Transaction implements Comparable<Transaction> {
     }
 
     void apply() {
-        Account senderAccount = Account.getAccount(getSenderAccountId());
+        Account senderAccount = Account.getAccount(getSenderId());
         if (! senderAccount.setOrVerify(senderPublicKey)) {
             throw new RuntimeException("sender public key mismatch");
             // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
@@ -564,14 +564,14 @@ public final class Transaction implements Comparable<Transaction> {
 
     // NOTE: when undo is called, lastBlock has already been set to the previous block
     void undo() throws UndoNotSupportedException {
-        Account senderAccount = Account.getAccount(senderAccountId);
+        Account senderAccount = Account.getAccount(senderId);
         senderAccount.addToBalance((amount + fee) * 100L);
         Account recipientAccount = Account.getAccount(recipientId);
         type.undo(this, senderAccount, recipientAccount);
     }
 
     void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
-        Long senderId = getSenderAccountId();
+        Long senderId = getSenderId();
         Long accumulatedAmount = accumulatedAmounts.get(senderId);
         if (accumulatedAmount == null) {
             accumulatedAmount = 0L;
@@ -934,7 +934,7 @@ public final class Transaction implements Comparable<Transaction> {
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
                     Long assetId = transaction.getId();
-                    Asset.addAsset(assetId, transaction.getSenderAccountId(), attachment.getName(), attachment.getDescription(), attachment.getQuantity());
+                    Asset.addAsset(assetId, transaction.getSenderId(), attachment.getName(), attachment.getDescription(), attachment.getQuantity());
                     senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, attachment.getQuantity());
                 }
 
@@ -1028,10 +1028,10 @@ public final class Transaction implements Comparable<Transaction> {
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                   Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.attachment;
-                    Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderAccountId());
+                    Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderId());
                     if (accountAccumulatedAssetQuantities == null) {
                         accountAccumulatedAssetQuantities = new HashMap<>();
-                        accumulatedAssetQuantities.put(transaction.getSenderAccountId(), accountAccumulatedAssetQuantities);
+                        accumulatedAssetQuantities.put(transaction.getSenderId(), accountAccumulatedAssetQuantities);
                     }
                     Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAssetId());
                     if (assetAccumulatedAssetQuantities == null) {
@@ -1124,10 +1124,10 @@ public final class Transaction implements Comparable<Transaction> {
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.attachment;
-                    Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderAccountId());
+                    Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderId());
                     if (accountAccumulatedAssetQuantities == null) {
                         accountAccumulatedAssetQuantities = new HashMap<>();
-                        accumulatedAssetQuantities.put(transaction.getSenderAccountId(), accountAccumulatedAssetQuantities);
+                        accumulatedAssetQuantities.put(transaction.getSenderId(), accountAccumulatedAssetQuantities);
                     }
                     Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAssetId());
                     if (assetAccumulatedAssetQuantities == null) {
@@ -1183,7 +1183,7 @@ public final class Transaction implements Comparable<Transaction> {
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.attachment;
-                    accumulatedAmounts.put(transaction.getSenderAccountId(), accumulatedAmount + attachment.getQuantity() * attachment.getPrice());
+                    accumulatedAmounts.put(transaction.getSenderId(), accumulatedAmount + attachment.getQuantity() * attachment.getPrice());
                 }
 
                 /*

@@ -124,7 +124,7 @@ final class UnlockAccount extends UserRequestHandler {
                     myTransaction.put("index", transaction.getIndex());
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
-                    myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
+                    myTransaction.put("account", Convert.convert(transaction.getSenderId()));
                     myTransaction.put("receivedAmount", transaction.getAmount());
                     myTransaction.put("fee", transaction.getFee());
                     myTransaction.put("numberOfConfirmations", 0);
@@ -158,7 +158,7 @@ final class UnlockAccount extends UserRequestHandler {
             try (DbIterator<Transaction> transactionIterator = Blockchain.getAllTransactions(account, (byte)-1, (byte)-1, 0)) {
                 while (transactionIterator.hasNext()) {
                     Transaction transaction = transactionIterator.next();
-                    if (transaction.getSenderAccountId().equals(accountId)) {
+                    if (transaction.getSenderId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", transaction.getIndex());
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
@@ -177,7 +177,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransaction.put("index", transaction.getIndex());
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.convert(transaction.getSenderAccountId()));
+                        myTransaction.put("account", Convert.convert(transaction.getSenderId()));
                         myTransaction.put("receivedAmount", transaction.getAmount());
                         myTransaction.put("fee", transaction.getFee());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());

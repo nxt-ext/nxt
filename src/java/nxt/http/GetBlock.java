@@ -39,7 +39,7 @@ public final class GetBlock extends HttpRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("height", blockData.getHeight());
-        response.put("generator", Convert.convert(blockData.getGeneratorAccountId()));
+        response.put("generator", Convert.convert(blockData.getGeneratorId()));
         response.put("timestamp", blockData.getTimestamp());
         response.put("numberOfTransactions", blockData.getTransactionIds().length);
         response.put("totalAmount", blockData.getTotalAmount());
