@@ -1384,7 +1384,7 @@ public final class Blockchain {
                 pushBlock(block, block.blockTransactions);
                 Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) +" generated block " + block.getStringId());
             } catch (BlockNotAcceptedException e) {
-                Logger.logDebugMessage(e.getMessage());
+                Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             }
         } else {
             Logger.logMessage("Generated an incorrect block. Waiting for the next one...");

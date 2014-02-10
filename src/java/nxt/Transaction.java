@@ -392,56 +392,31 @@ public final class Transaction implements Comparable<Transaction> {
     public int compareTo(Transaction o) {
 
         if (height < o.height) {
-
             return -1;
-
-        } else if (height > o.height) {
-
-            return 1;
-
-        } else {
-
-            // equivalent to: fee * 1048576L / getSize() > o.fee * 1048576L / o.getSize()
-            if (fee * o.getSize() > o.fee * getSize()) {
-
-                return -1;
-
-            } else if (fee * o.getSize() < o.fee * getSize()) {
-
-                return 1;
-
-            } else {
-
-                if (timestamp < o.timestamp) {
-
-                    return -1;
-
-                } else if (timestamp > o.timestamp) {
-
-                    return 1;
-
-                } else {
-
-                    if (index < o.index) {
-
-                        return -1;
-
-                    } else if (index > o.index) {
-
-                        return 1;
-
-                    } else {
-
-                        return 0;
-
-                    }
-
-                }
-
-            }
-
         }
-
+        if (height > o.height) {
+            return 1;
+        }
+        // equivalent to: fee * 1048576L / getSize() > o.fee * 1048576L / o.getSize()
+        if (fee * o.getSize() > o.fee * getSize()) {
+            return -1;
+        }
+        if (fee * o.getSize() < o.fee * getSize()) {
+            return 1;
+        }
+        if (timestamp < o.timestamp) {
+            return -1;
+        }
+        if (timestamp > o.timestamp) {
+            return 1;
+        }
+        if (index < o.index) {
+            return -1;
+        }
+        if (index > o.index) {
+            return 1;
+        }
+        return 0;
     }
 
     public byte[] getBytes() {
@@ -496,22 +471,27 @@ public final class Transaction implements Comparable<Transaction> {
         signature = Crypto.sign(getBytes(), secretPhrase);
 
         try {
-
             while (!verify()) {
-
                 timestamp++;
                 // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
                 signature = new byte[64];
                 signature = Crypto.sign(getBytes(), secretPhrase);
-
             }
-
         } catch (RuntimeException e) {
-
             Logger.logMessage("Error signing transaction", e);
-
         }
 
+    }
+
+    public String getHash() {
+        if (hash == null) {
+            byte[] data = getBytes();
+            for (int i = 64; i < 128; i++) {
+                data[i] = 0;
+            }
+            hash = Convert.convert(Crypto.sha256().digest(data));
+        }
+        return hash;
     }
 
     @Override
@@ -588,17 +568,6 @@ public final class Transaction implements Comparable<Transaction> {
 
     int getSize() {
         return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
-    }
-
-    String getHash() {
-        if (hash == null) {
-            byte[] data = getBytes();
-            for (int i = 64; i < 128; i++) {
-                data[i] = 0;
-            }
-            hash = Convert.convert(Crypto.sha256().digest(data));
-        }
-        return hash;
     }
 
     public static Type findTransactionType(byte type, byte subtype) {
