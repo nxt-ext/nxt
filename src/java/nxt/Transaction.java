@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,12 +40,6 @@ public final class Transaction implements Comparable<Transaction> {
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 
-    public static final Comparator<Transaction> timestampComparator = new Comparator<Transaction>() {
-        @Override
-        public int compare(Transaction o1, Transaction o2) {
-            return o1.timestamp < o2.timestamp ? -1 : (o1.timestamp > o2.timestamp ? 1 : 0);
-        }
-    };
 
     public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationException {
 
@@ -367,6 +360,9 @@ public final class Transaction implements Comparable<Transaction> {
 
     public Long getId() {
         if (id == null) {
+            if (signature == null) {
+                throw new IllegalStateException("Transaction is not signed yet");
+            }
             byte[] hash = Crypto.sha256().digest(getBytes());
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();

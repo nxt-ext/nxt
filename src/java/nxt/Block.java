@@ -361,6 +361,9 @@ public final class Block {
 
     public Long getId() {
         if (id == null) {
+            if (blockSignature == null) {
+                throw new IllegalStateException("Block is not signed yet");
+            }
             byte[] hash = Crypto.sha256().digest(getBytes());
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
@@ -445,17 +448,13 @@ public final class Block {
         block.put("generatorPublicKey", Convert.convert(generatorPublicKey));
         block.put("generationSignature", Convert.convert(generationSignature));
         if (version > 1) {
-
             block.put("previousBlockHash", Convert.convert(previousBlockHash));
-
         }
         block.put("blockSignature", Convert.convert(blockSignature));
 
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : this.blockTransactions) {
-
             transactionsData.add(transaction.getJSONObject());
-
         }
         block.put("transactions", transactionsData);
 
@@ -464,6 +463,10 @@ public final class Block {
     }
 
     void sign(String secretPhrase) {
+        if (blockSignature != null) {
+            throw new IllegalStateException("Block already singed");
+        }
+        blockSignature = new byte[64];
         byte[] data = getBytes();
         byte[] data2 = new byte[data.length - 64];
         System.arraycopy(data, 0, data2, 0, data2.length);
@@ -474,9 +477,7 @@ public final class Block {
 
         Account account = Account.getAccount(getGeneratorAccountId());
         if (account == null) {
-
             return false;
-
         }
 
         byte[] data = getBytes();
@@ -493,22 +494,16 @@ public final class Block {
 
             Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             if (previousBlock == null) {
-
                 return false;
-
             }
 
             if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
-
                 return false;
-
             }
 
             Account account = Account.getAccount(getGeneratorAccountId());
             if (account == null || account.getEffectiveBalance() <= 0) {
-
                 return false;
-
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
@@ -517,19 +512,13 @@ public final class Block {
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
             if (version == 1) {
-
                 generationSignatureHash = digest.digest(generationSignature);
-
             } else {
-
                 digest.update(previousBlock.generationSignature);
                 generationSignatureHash = digest.digest(generatorPublicKey);
                 if (!Arrays.equals(generationSignature, generationSignatureHash)) {
-
                     return false;
-
                 }
-
             }
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
