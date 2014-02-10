@@ -1427,15 +1427,15 @@ public final class Blockchain {
             block.blockTransactions[i].setBlock(block);
         }
 
-        if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
-            try {
+        try {
+            if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
                 pushBlock(block, block.blockTransactions);
                 Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) +" generated block " + block.getStringId());
-            } catch (BlockNotAcceptedException e) {
-                Logger.logDebugMessage("Generate block failed: " + e.getMessage());
+            } else {
+                Logger.logMessage("Generated an incorrect block. Waiting for the next one...");
             }
-        } else {
-            Logger.logMessage("Generated an incorrect block. Waiting for the next one...");
+        } catch (BlockNotAcceptedException e) {
+            Logger.logDebugMessage("Generate block failed: " + e.getMessage());
         }
 
     }
@@ -1459,7 +1459,7 @@ public final class Blockchain {
 
     public static class BlockOutOfOrderException extends BlockNotAcceptedException {
 
-        private BlockOutOfOrderException(String message) {
+        BlockOutOfOrderException(String message) {
             super(message);
         }
 	}

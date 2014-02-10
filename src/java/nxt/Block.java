@@ -488,13 +488,13 @@ public final class Block {
 
     }
 
-    boolean verifyGenerationSignature() {
+    boolean verifyGenerationSignature() throws Blockchain.BlockOutOfOrderException {
 
         try {
 
             Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             if (previousBlock == null) {
-                return false;
+                throw new Blockchain.BlockOutOfOrderException("Can't verify signature because previous block is missing");
             }
 
             if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
