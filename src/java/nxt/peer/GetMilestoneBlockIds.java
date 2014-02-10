@@ -20,40 +20,48 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
         JSONObject response = new JSONObject();
         try {
 
-            String lastBlockId = (String) request.get("lastMilestoneBlockId");
-            boolean batch = request.get("batch") != null;
+            JSONArray milestoneBlockIds = new JSONArray();
 
-            long blockId;
-            int jumpLength;
-            int height;
-            int limit = 10;
-
-            if (lastBlockId != null) {
-                Block block = Blockchain.getBlock(Convert.parseUnsignedLong(lastBlockId));
-                if (block == null) {
-                    throw new IllegalStateException("Don't have block " + lastBlockId);
-                }
-                jumpLength = ((Number)request.get("jumpLength")).intValue();
-                height = Math.max(block.getHeight() - jumpLength, 0);
-                blockId = Blockchain.getBlockIdAtHeight(height);
-            } else {
-                Block block = Blockchain.getLastBlock();
-                blockId = block.getId();
-                height = block.getHeight();
-                jumpLength = height * 4 / 1461 + 1;
-                if (! batch) {
-                    limit = height;
+            String lastBlockIdString = (String) request.get("lastBlockId");
+            if (lastBlockIdString != null) {
+                Long lastBlockId = Convert.parseUnsignedLong(lastBlockIdString);
+                if (Blockchain.getLastBlock().getId().equals(lastBlockId) || Blockchain.hasBlock(lastBlockId)) {
+                    milestoneBlockIds.add(lastBlockIdString);
+                    return response;
                 }
             }
 
-            JSONArray milestoneBlockIds = new JSONArray();
+            long blockId;
+            int height;
+            int jump;
+            int limit;
+            String lastMilestoneBlockIdString = (String) request.get("lastMilestoneBlockId");
+            if (lastMilestoneBlockIdString != null) {
+                Block lastMilestoneBlock = Blockchain.getBlock(Convert.parseUnsignedLong(lastMilestoneBlockIdString));
+                if (lastMilestoneBlock == null) {
+                    throw new IllegalStateException("Don't have block " + lastMilestoneBlockIdString);
+                }
+                height = lastMilestoneBlock.getHeight();
+                jump = Math.min(1440, Blockchain.getLastBlock().getHeight() - height);
+                height = Math.max(height - jump, 0);
+                limit = 10;
+            } else if (lastBlockIdString != null) {
+                height = Blockchain.getLastBlock().getHeight();
+                jump = 10;
+                limit = 10;
+            } else {
+                height = Blockchain.getLastBlock().getHeight();
+                jump = height * 4 / 1461 + 1;
+                limit = height + 1;
+            }
+            blockId = Blockchain.getBlockIdAtHeight(height);
+
             while (height > 0 && limit-- > 0) {
                 milestoneBlockIds.add(Convert.convert(blockId));
                 blockId = Blockchain.getBlockIdAtHeight(height);
-                height = height - jumpLength;
+                height = height - jump;
             }
             response.put("milestoneBlockIds", milestoneBlockIds);
-            response.put("jumpLength", jumpLength);
 
         } catch (RuntimeException e) {
             Logger.logDebugMessage(e.toString());

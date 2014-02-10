@@ -284,15 +284,14 @@ public final class Blockchain {
         private Long getCommonMilestoneBlockId(Peer peer) {
 
             String lastMilestoneBlockId = null;
-            int jumpLength = 0;
 
             while (true) {
                 JSONObject milestoneBlockIdsRequest = new JSONObject();
                 milestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
-                milestoneBlockIdsRequest.put("batch", "true");
                 if (lastMilestoneBlockId != null) {
                     milestoneBlockIdsRequest.put("lastMilestoneBlockId", lastMilestoneBlockId);
-                    milestoneBlockIdsRequest.put("jumpLength", jumpLength);
+                } else {
+                    milestoneBlockIdsRequest.put("lastBlockId", Blockchain.getLastBlock().getStringId());
                 }
 
                 JSONObject response = peer.send(JSON.prepareRequest(milestoneBlockIdsRequest));
@@ -306,18 +305,19 @@ public final class Blockchain {
                 if (milestoneBlockIds.isEmpty()) {
                     return Genesis.GENESIS_BLOCK_ID;
                 }
-
+                /* prevent overloading with blockIds
+                if (milestoneBlockIds.size() > 20) {
+                    Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many milestoneBlockIds, blacklisting");
+                    peer.blacklist();
+                    return null;
+                }
+                */
                 for (Object milestoneBlockId : milestoneBlockIds) {
                     lastMilestoneBlockId = (String) milestoneBlockId;
                     Long blockId = Convert.parseUnsignedLong(lastMilestoneBlockId);
                     if (Block.hasBlock(blockId)) {
                         return blockId;
                     }
-                }
-                if (response.get("jumpLength") != null) {
-                    jumpLength = ((Number)response.get("jumpLength")).intValue();
-                } else {
-                    return Genesis.GENESIS_BLOCK_ID;
                 }
             }
 
@@ -337,7 +337,13 @@ public final class Blockchain {
                 if (nextBlockIds == null || nextBlockIds.size() == 0) {
                     return null;
                 }
-
+                /*
+                if (nextBlockIds.size() > 1440) {
+                    Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlockIds, blacklisting");
+                    peer.blacklist();
+                    return null;
+                }
+                */
                 for (Object nextBlockId : nextBlockIds) {
                     Long blockId = Convert.parseUnsignedLong((String) nextBlockId);
                     if (! Block.hasBlock(blockId)) {
@@ -358,7 +364,16 @@ public final class Blockchain {
             if (response == null) {
                 return null;
             }
-            return (JSONArray)response.get("nextBlocks");
+
+            JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
+            /*
+            if (nextBlocks.size() > 1440) {
+                Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlocks, blacklisting");
+                peer.blacklist();
+                return null;
+            }
+            */
+            return nextBlocks;
 
         }
 
@@ -737,6 +752,10 @@ public final class Blockchain {
 
     public static Block getBlock(Long blockId) {
         return Block.findBlock(blockId);
+    }
+
+    public static boolean hasBlock(Long blockId) {
+        return Block.hasBlock(blockId);
     }
 
     public static Transaction getTransaction(Long transactionId) {
