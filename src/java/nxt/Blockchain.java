@@ -467,40 +467,41 @@ public final class Blockchain {
 
         private void generateBlock(Account account, User user) {
 
-            Block lastBlock = Blockchain.lastBlock.get();
-
-            if (lastBlock.equals(lastBlocks.get(account))) {
-                return;
-            }
             long effectiveBalance = account.getEffectiveBalance();
             if (effectiveBalance <= 0) {
                 return;
             }
 
-            MessageDigest digest = Crypto.sha256();
-            byte[] generationSignatureHash;
-            if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
-                byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), user.getSecretPhrase());
-                generationSignatureHash = digest.digest(generationSignature);
-            } else {
-                digest.update(lastBlock.getGenerationSignature());
-                generationSignatureHash = digest.digest(user.getPublicKey());
+            Block lastBlock = Blockchain.lastBlock.get();
+
+            if (! lastBlock.equals(lastBlocks.get(account))) {
+
+                MessageDigest digest = Crypto.sha256();
+                byte[] generationSignatureHash;
+                if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+                    byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), user.getSecretPhrase());
+                    generationSignatureHash = digest.digest(generationSignature);
+                } else {
+                    digest.update(lastBlock.getGenerationSignature());
+                    generationSignatureHash = digest.digest(user.getPublicKey());
+                }
+
+                BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+
+                lastBlocks.put(account, lastBlock);
+                hits.put(account, hit);
+
+                JSONObject response = new JSONObject();
+                response.put("response", "setBlockGenerationDeadline");
+                response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.getTimestamp()));
+
+                user.send(response);
+
             }
-
-            BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-
-            lastBlocks.put(account, lastBlock);
-            hits.put(account, hit);
-
-            JSONObject response = new JSONObject();
-            response.put("response", "setBlockGenerationDeadline");
-            response.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.getTimestamp()));
-
-            user.send(response);
 
             int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
             if (elapsedTime > 0) {
-                BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+                BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance)).multiply(BigInteger.valueOf(elapsedTime));
                 if (hits.get(account).compareTo(target) < 0) {
                     Blockchain.generateBlock(user.getSecretPhrase());
                 }
