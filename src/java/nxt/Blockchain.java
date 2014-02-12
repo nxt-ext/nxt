@@ -552,28 +552,52 @@ public final class Blockchain {
     public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
         Connection con = null;
         try {
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT * FROM (");
+            buf.append("SELECT * FROM transaction WHERE recipient_id = ? ");
+            if (timestamp > 0) {
+                buf.append("AND timestamp >= ? ");
+            }
+            if (type >= 0) {
+                buf.append("AND type = ? ");
+                if (subtype >= 0) {
+                    buf.append("AND subtype = ? ");
+                }
+            }
+            buf.append("UNION SELECT * FROM transaction WHERE sender_id = ? ");
+            if (timestamp > 0) {
+                buf.append("AND timestamp >= ? ");
+            }
+            if (type >= 0) {
+                buf.append("AND type = ? ");
+                if (subtype >= 0) {
+                    buf.append("AND subtype = ? ");
+                }
+            }
+            buf.append(") ORDER BY timestamp ASC");
             con = Db.getConnection();
             PreparedStatement pstmt;
+            int i = 0;
+            pstmt = con.prepareStatement(buf.toString());
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
             if (type >= 0) {
+                pstmt.setByte(++i, type);
                 if (subtype >= 0) {
-                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) AND type = ? AND subtype = ? ORDER BY timestamp ASC");
-                    pstmt.setInt(1, timestamp);
-                    pstmt.setLong(2, account.getId());
-                    pstmt.setLong(3, account.getId());
-                    pstmt.setByte(4, type);
-                    pstmt.setByte(5, subtype);
-                } else {
-                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) AND type = ? ORDER BY timestamp ASC");
-                    pstmt.setInt(1, timestamp);
-                    pstmt.setLong(2, account.getId());
-                    pstmt.setLong(3, account.getId());
-                    pstmt.setByte(4, type);
+                    pstmt.setByte(++i, subtype);
                 }
-            } else {
-                pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) ORDER BY timestamp ASC");
-                pstmt.setInt(1, timestamp);
-                pstmt.setLong(2, account.getId());
-                pstmt.setLong(3, account.getId());
+            }
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
+            if (type >= 0) {
+                pstmt.setByte(++i, type);
+                if (subtype >= 0) {
+                    pstmt.setByte(++i, subtype);
+                }
             }
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Transaction>() {
                 @Override
