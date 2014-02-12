@@ -3,9 +3,7 @@ package nxt.user;
 import nxt.Account;
 import nxt.Block;
 import nxt.Blockchain;
-import nxt.Nxt;
 import nxt.Transaction;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
 import org.json.simple.JSONArray;
@@ -14,8 +12,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedMap;
@@ -35,19 +31,18 @@ final class UnlockAccount extends UserRequestHandler {
         // lock all other instances of this account being unlocked
         for (User u : User.getAllUsers()) {
             if (secretPhrase.equals(u.getSecretPhrase())) {
-                u.deinitializeKeyPair();
+                u.lockAccount();
                 if (! u.isInactive()) {
                     u.enqueue(LOCK_ACCOUNT);
                 }
             }
         }
 
-        BigInteger bigInt = user.initializeKeyPair(secretPhrase);
-        Long accountId = bigInt.longValue();
+        Long accountId = user.unlockAccount(secretPhrase);
 
         JSONObject response = new JSONObject();
         response.put("response", "unlockAccount");
-        response.put("account", bigInt.toString());
+        response.put("account", Convert.convert(accountId));
 
         if (secretPhrase.length() < 30) {
 
@@ -67,33 +62,6 @@ final class UnlockAccount extends UserRequestHandler {
         } else {
 
             response.put("balance", account.getUnconfirmedBalance());
-
-            long effectiveBalance = account.getEffectiveBalance();
-            if (effectiveBalance > 0) {
-
-                JSONObject response2 = new JSONObject();
-                response2.put("response", "setBlockGenerationDeadline");
-
-                Block lastBlock = Blockchain.getLastBlock();
-                MessageDigest digest = Crypto.sha256();
-                byte[] generationSignatureHash;
-                if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
-
-                    byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), user.getSecretPhrase());
-                    generationSignatureHash = digest.digest(generationSignature);
-
-                } else {
-
-                    digest.update(lastBlock.getGenerationSignature());
-                    generationSignatureHash = digest.digest(user.getPublicKey());
-
-                }
-                BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
-                response2.put("deadline", hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue() - (Convert.getEpochTime() - lastBlock.getTimestamp()));
-
-                user.enqueue(response2);
-
-            }
 
             JSONArray myTransactions = new JSONArray();
             byte[] accountPublicKey = account.getPublicKey();

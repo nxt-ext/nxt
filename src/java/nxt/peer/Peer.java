@@ -6,11 +6,12 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.ThreadPools;
 import nxt.Transaction;
-import nxt.user.User;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
+import nxt.util.Listener;
+import nxt.util.Listeners;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -54,9 +55,29 @@ public final class Peer implements Comparable<Peer> {
         NON_CONNECTED, CONNECTED, DISCONNECTED
     }
 
+    public static enum Event {
+        BLACKLIST, UNBLACKLIST, DEACTIVATE, REMOVE,
+        DOWNLOADED_VOLUME, UPLOADED_VOLUME, WEIGHT,
+        ADDED_ACTIVE_PEER, CHANGED_ACTIVE_PEER
+    }
+
+    private static final Listeners<Peer,Event> listeners = new Listeners<>();
     private static final AtomicInteger peerCounter = new AtomicInteger();
     private static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
     private static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
+
+    static {
+        Account.addListener(new Listener<Account>() {
+            @Override
+            public void notify(Account account) {
+                for (Peer peer : peers.values()) {
+                    if (account.getId().equals(peer.accountId) && peer.adjustedWeight > 0) {
+                        Peer.listeners.notify(peer, Event.WEIGHT);
+                    }
+                }
+            }
+        }, Account.Event.BALANCE);
+    }
 
     public static final Runnable peerConnectingThread = new Runnable() {
 
@@ -158,6 +179,14 @@ public final class Peer implements Comparable<Peer> {
 
     };
 
+    public static boolean addListener(Listener<Peer> listener, Event eventType) {
+        return listeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeListener(Listener<Peer> listener, Event eventType) {
+        return listeners.removeListener(listener, eventType);
+    }
+
     public static Collection<Peer> getAllPeers() {
         return allPeers;
     }
@@ -190,14 +219,6 @@ public final class Peer implements Comparable<Peer> {
         }
 
         return peer;
-    }
-
-    public static void updatePeerWeights(Account account) {
-        for (Peer peer : peers.values()) {
-            if (account.getId().equals(peer.accountId) && peer.adjustedWeight > 0) {
-                peer.updateWeight();
-            }
-        }
     }
 
     public static void sendToSomePeers(final JSONObject request) {
@@ -432,30 +453,8 @@ public final class Peer implements Comparable<Peer> {
     }
 
     public void blacklist() {
-
         blacklistingTime = System.currentTimeMillis();
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray removedKnownPeers = new JSONArray();
-        JSONObject removedKnownPeer = new JSONObject();
-        removedKnownPeer.put("index", index);
-        removedKnownPeers.add(removedKnownPeer);
-        response.put("removedKnownPeers", removedKnownPeers);
-
-        JSONArray addedBlacklistedPeers = new JSONArray();
-        JSONObject addedBlacklistedPeer = new JSONObject();
-        addedBlacklistedPeer.put("index", index);
-        addedBlacklistedPeer.put("announcedAddress", Convert.truncate(announcedAddress, "", 25, true));
-        if (isWellKnown()) {
-            addedBlacklistedPeer.put("wellKnown", true);
-        }
-        addedBlacklistedPeers.add(addedBlacklistedPeer);
-        response.put("addedBlacklistedPeers", addedBlacklistedPeers);
-
-        User.sendToAll(response);
-
+        listeners.notify(this, Event.BLACKLIST);
     }
 
     public void deactivate() {
@@ -463,30 +462,7 @@ public final class Peer implements Comparable<Peer> {
             setState(State.DISCONNECTED);
         }
         setState(State.NON_CONNECTED);
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray removedActivePeers = new JSONArray();
-        JSONObject removedActivePeer = new JSONObject();
-        removedActivePeer.put("index", index);
-        removedActivePeers.add(removedActivePeer);
-        response.put("removedActivePeers", removedActivePeers);
-
-        if (announcedAddress != null) {
-            JSONArray addedKnownPeers = new JSONArray();
-            JSONObject addedKnownPeer = new JSONObject();
-            addedKnownPeer.put("index", index);
-            addedKnownPeer.put("announcedAddress", Convert.truncate(announcedAddress, "", 25, true));
-            if (isWellKnown()) {
-                addedKnownPeer.put("wellKnown", true);
-            }
-            addedKnownPeers.add(addedKnownPeer);
-            response.put("addedKnownPeers", addedKnownPeers);
-        }
-
-        User.sendToAll(response);
-
+        listeners.notify(this, Event.DEACTIVATE);
     }
 
     public int getWeight() {
@@ -511,48 +487,14 @@ public final class Peer implements Comparable<Peer> {
     }
 
     public void removeBlacklistedStatus() {
-
         setState(State.NON_CONNECTED);
         blacklistingTime = 0;
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray removedBlacklistedPeers = new JSONArray();
-        JSONObject removedBlacklistedPeer = new JSONObject();
-        removedBlacklistedPeer.put("index", index);
-        removedBlacklistedPeers.add(removedBlacklistedPeer);
-        response.put("removedBlacklistedPeers", removedBlacklistedPeers);
-
-        JSONArray addedKnownPeers = new JSONArray();
-        JSONObject addedKnownPeer = new JSONObject();
-        addedKnownPeer.put("index", index);
-        addedKnownPeer.put("announcedAddress", Convert.truncate(announcedAddress, "", 25, true));
-        if (isWellKnown()) {
-            addedKnownPeer.put("wellKnown", true);
-        }
-        addedKnownPeers.add(addedKnownPeer);
-        response.put("addedKnownPeers", addedKnownPeers);
-
-        User.sendToAll(response);
-
+        listeners.notify(this, Event.UNBLACKLIST);
     }
 
     public void removePeer() {
-
         peers.values().remove(this);
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray removedKnownPeers = new JSONArray();
-        JSONObject removedKnownPeer = new JSONObject();
-        removedKnownPeer.put("index", index);
-        removedKnownPeers.add(removedKnownPeer);
-        response.put("removedKnownPeers", removedKnownPeers);
-
-        User.sendToAll(response);
-
+        listeners.notify(this, Event.REMOVE);
     }
 
     public JSONObject send(final JSONStreamAware request) {
@@ -690,7 +632,7 @@ public final class Peer implements Comparable<Peer> {
 
             for (Peer peer : groupedPeers) {
                 peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
-                peer.updateWeight();
+                listeners.notify(peer, Event.WEIGHT);
             }
 
             return true;
@@ -703,98 +645,23 @@ public final class Peer implements Comparable<Peer> {
     }
 
     void setState(State state) {
-
-        if (this.state == State.NON_CONNECTED && state != State.NON_CONNECTED) {
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            if (announcedAddress != null) {
-
-                JSONArray removedKnownPeers = new JSONArray();
-                JSONObject removedKnownPeer = new JSONObject();
-                removedKnownPeer.put("index", index);
-                removedKnownPeers.add(removedKnownPeer);
-                response.put("removedKnownPeers", removedKnownPeers);
-
-            }
-
-            JSONArray addedActivePeers = new JSONArray();
-            JSONObject addedActivePeer = new JSONObject();
-            addedActivePeer.put("index", index);
-            if (state == State.DISCONNECTED) {
-                addedActivePeer.put("disconnected", true);
-            }
-
-
-            addedActivePeer.put("address", Convert.truncate(peerAddress, "", 25, true));
-            addedActivePeer.put("announcedAddress", Convert.truncate(announcedAddress, "", 25, true));
-            if (isWellKnown()) {
-                addedActivePeer.put("wellKnown", true);
-            }
-            addedActivePeer.put("weight", getWeight());
-            addedActivePeer.put("downloaded", downloadedVolume);
-            addedActivePeer.put("uploaded", uploadedVolume);
-            addedActivePeer.put("software", getSoftware());
-            addedActivePeers.add(addedActivePeer);
-            response.put("addedActivePeers", addedActivePeers);
-
-            User.sendToAll(response);
-
-        } else if (this.state != State.NON_CONNECTED && state != State.NON_CONNECTED) {
-
-            JSONObject response = new JSONObject();
-            response.put("response", "processNewData");
-
-            JSONArray changedActivePeers = new JSONArray();
-            JSONObject changedActivePeer = new JSONObject();
-            changedActivePeer.put("index", index);
-            changedActivePeer.put(state == State.CONNECTED ? "connected" : "disconnected", true);
-            changedActivePeers.add(changedActivePeer);
-            response.put("changedActivePeers", changedActivePeers);
-
-            User.sendToAll(response);
-
-        }
-
+        State oldState = this.state;
         this.state = state;
-
+        if (oldState == State.NON_CONNECTED && state != State.NON_CONNECTED) {
+            listeners.notify(this, Event.ADDED_ACTIVE_PEER);
+        } else if (oldState != State.NON_CONNECTED && state != State.NON_CONNECTED) {
+            listeners.notify(this, Event.CHANGED_ACTIVE_PEER);
+        }
     }
 
     void updateDownloadedVolume(long volume) {
-
         downloadedVolume += volume;
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray changedActivePeers = new JSONArray();
-        JSONObject changedActivePeer = new JSONObject();
-        changedActivePeer.put("index", index);
-        changedActivePeer.put("downloaded", downloadedVolume);
-        changedActivePeers.add(changedActivePeer);
-        response.put("changedActivePeers", changedActivePeers);
-
-        User.sendToAll(response);
-
+        listeners.notify(this, Event.DOWNLOADED_VOLUME);
     }
 
     void updateUploadedVolume(long volume) {
-
         uploadedVolume += volume;
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray changedActivePeers = new JSONArray();
-        JSONObject changedActivePeer = new JSONObject();
-        changedActivePeer.put("index", index);
-        changedActivePeer.put("uploaded", uploadedVolume);
-        changedActivePeers.add(changedActivePeer);
-        response.put("changedActivePeers", changedActivePeers);
-
-        User.sendToAll(response);
-
+        listeners.notify(this, Event.UPLOADED_VOLUME);
     }
 
     private void connect() {
@@ -824,22 +691,6 @@ public final class Peer implements Comparable<Peer> {
                 setState(State.CONNECTED);
             }
         }
-    }
-
-    private void updateWeight() {
-
-        JSONObject response = new JSONObject();
-        response.put("response", "processNewData");
-
-        JSONArray changedActivePeers = new JSONArray();
-        JSONObject changedActivePeer = new JSONObject();
-        changedActivePeer.put("index", index);
-        changedActivePeer.put("weight", getWeight());
-        changedActivePeers.add(changedActivePeer);
-        response.put("changedActivePeers", changedActivePeers);
-
-        User.sendToAll(response);
-
     }
 
 }
