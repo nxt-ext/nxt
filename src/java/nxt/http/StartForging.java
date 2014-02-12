@@ -24,6 +24,9 @@ public final class StartForging extends HttpRequestDispatcher.HttpRequestHandler
         }
 
         Generator generator = Generator.startForging(secretPhrase);
+        if (generator == null) {
+            return JSONResponses.UNKNOWN_ACCOUNT;
+        }
 
         JSONObject response = new JSONObject();
         response.put("deadline", generator.getDeadline());

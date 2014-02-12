@@ -65,37 +65,37 @@ public final class Generator {
     }
 
     public static Generator startForging(String secretPhrase, byte[] publicKey) {
-        if (generators.size() > 10000) {
-            // prevent rogue peers from putting forging nodes out of memory
-            throw new IllegalStateException("Max 10000 forging accounts supported");
+        Account account = Account.getAccount(publicKey);
+        if (account == null) {
+            return null;
         }
-        Generator generator = new Generator(secretPhrase, publicKey);
+        Generator generator = new Generator(secretPhrase, publicKey, account);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         return old != null ? old : generator;
+    }
+
+    public static Generator stopForging(String secretPhrase) {
+        Generator generator = generators.remove(secretPhrase);
+        if (generator != null) {
+            lastBlocks.remove(generator.account);
+            hits.remove(generator.account);
+        }
+        return generator;
     }
 
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
     }
 
-    public static Generator stopForging(String secretPhrase) {
-        Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        if (account != null) {
-            lastBlocks.remove(account);
-            hits.remove(account);
-        }
-        return generators.remove(secretPhrase);
-    }
-
-    private final Long accountId;
+    private final Account account;
     private final String secretPhrase;
     private final byte[] publicKey;
     private volatile long deadline;
 
-    private Generator(String secretPhrase, byte[] publicKey) {
+    private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
-        this.accountId = Account.getId(publicKey);
+        this.account = account;
         forge(); // initialize deadline
     }
 
@@ -108,10 +108,6 @@ public final class Generator {
     }
 
     private void forge() {
-        Account account = Account.getAccount(accountId);
-        if (account == null) {
-            return;
-        }
 
         long effectiveBalance = account.getEffectiveBalance();
         if (effectiveBalance <= 0) {
