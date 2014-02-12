@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.Blockchain;
+import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.peer.Peer;
@@ -47,13 +48,7 @@ public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
         response.put("numberOfAliases", Alias.getAllAliases().size());
         response.put("numberOfPeers", Peer.getAllPeers().size());
         response.put("numberOfUsers", User.getAllUsers().size());
-        int unlockedAccounts = 0;
-        for (User user : User.getAllUsers()) {
-            if (user.getSecretPhrase() != null) {
-                unlockedAccounts += 1;
-            }
-        }
-        response.put("numberOfUnlockedAccounts", unlockedAccounts);
+        response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());

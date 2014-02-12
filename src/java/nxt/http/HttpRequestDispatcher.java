@@ -66,6 +66,8 @@ public class HttpRequestDispatcher {
         map.put("markHost", MarkHost.instance);
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
+        map.put("startForging", StartForging.instance);
+        map.put("stopForging", StopForging.instance);
 
         //TODO: those are still disabled
         //map.put("issueAsset", IssueAsset.instance);

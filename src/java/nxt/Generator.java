@@ -8,6 +8,8 @@ import nxt.util.Logger;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -23,6 +25,7 @@ public final class Generator {
     private static final ConcurrentMap<Account, BigInteger> hits = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
+    private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
 
     static final Runnable generateBlockThread = new Runnable() {
 
@@ -56,29 +59,35 @@ public final class Generator {
         return listeners.removeListener(listener, eventType);
     }
 
-    public static void startForging(String secretPhrase) {
+    public static Generator startForging(String secretPhrase) {
         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-        startForging(secretPhrase, publicKey);
+        return startForging(secretPhrase, publicKey);
     }
 
-    public static void startForging(String secretPhrase, byte[] publicKey) {
+    public static Generator startForging(String secretPhrase, byte[] publicKey) {
         Generator generator = new Generator(secretPhrase, publicKey);
-        generators.put(secretPhrase, generator);
+        Generator old = generators.putIfAbsent(secretPhrase, generator);
+        return old != null ? old : generator;
     }
 
-    public static void stopForging(String secretPhrase) {
-        generators.remove(secretPhrase);
+    public static Collection<Generator> getAllGenerators() {
+        return allGenerators;
+    }
+
+    public static Generator stopForging(String secretPhrase) {
+         return generators.remove(secretPhrase);
     }
 
     private final Long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
-    private long deadline;
+    private volatile long deadline;
 
     private Generator(String secretPhrase, byte[] publicKey) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
         this.accountId = Account.getId(publicKey);
+        forge(); // initialize deadline
     }
 
     public byte[] getPublicKey() {

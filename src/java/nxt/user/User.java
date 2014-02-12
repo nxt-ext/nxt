@@ -416,16 +416,70 @@ public final class User {
 
     User() {}
 
-    public String getSecretPhrase() {
-        return secretPhrase;
-    }
-
     public byte[] getPublicKey() {
         return publicKey;
     }
 
+    String getSecretPhrase() {
+        return secretPhrase;
+    }
+
     boolean isInactive() {
         return isInactive;
+    }
+
+    void enqueue(JSONStreamAware response) {
+        pendingResponses.offer(response);
+    }
+
+    void lockAccount() {
+        Generator.stopForging(secretPhrase);
+        secretPhrase = null;
+    }
+
+    Long unlockAccount(String secretPhrase) {
+        this.publicKey = Crypto.getPublicKey(secretPhrase);
+        this.secretPhrase = secretPhrase;
+        Generator.startForging(secretPhrase, publicKey);
+        return Account.getId(publicKey);
+    }
+
+    public synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        JSONArray responses = new JSONArray();
+        JSONStreamAware pendingResponse;
+        while ((pendingResponse = pendingResponses.poll()) != null) {
+            responses.add(pendingResponse);
+        }
+        if (responses.size() > 0) {
+            JSONObject combinedResponse = new JSONObject();
+            combinedResponse.put("responses", responses);
+            if (asyncContext != null) {
+                asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
+                try (Writer writer = asyncContext.getResponse().getWriter()) {
+                    combinedResponse.writeJSONString(writer);
+                }
+                asyncContext.complete();
+                asyncContext = req.startAsync();
+                asyncContext.addListener(new UserAsyncListener());
+                asyncContext.setTimeout(5000);
+            } else {
+                resp.setContentType("text/plain; charset=UTF-8");
+                try (Writer writer = resp.getWriter()) {
+                    combinedResponse.writeJSONString(writer);
+                }
+            }
+        } else {
+            if (asyncContext != null) {
+                asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
+                try (Writer writer = asyncContext.getResponse().getWriter()) {
+                    JSON.emptyJSON.writeJSONString(writer);
+                }
+                asyncContext.complete();
+            }
+            asyncContext = req.startAsync();
+            asyncContext.addListener(new UserAsyncListener());
+            asyncContext.setTimeout(5000);
+        }
     }
 
     private synchronized void send(JSONStreamAware response) {
@@ -475,60 +529,6 @@ public final class User {
 
         }
 
-    }
-
-    public synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        JSONArray responses = new JSONArray();
-        JSONStreamAware pendingResponse;
-        while ((pendingResponse = pendingResponses.poll()) != null) {
-            responses.add(pendingResponse);
-        }
-        if (responses.size() > 0) {
-            JSONObject combinedResponse = new JSONObject();
-            combinedResponse.put("responses", responses);
-            if (asyncContext != null) {
-                asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-                try (Writer writer = asyncContext.getResponse().getWriter()) {
-                    combinedResponse.writeJSONString(writer);
-                }
-                asyncContext.complete();
-                asyncContext = req.startAsync();
-                asyncContext.addListener(new UserAsyncListener());
-                asyncContext.setTimeout(5000);
-            } else {
-                resp.setContentType("text/plain; charset=UTF-8");
-                try (Writer writer = resp.getWriter()) {
-                    combinedResponse.writeJSONString(writer);
-                }
-            }
-        } else {
-            if (asyncContext != null) {
-                asyncContext.getResponse().setContentType("text/plain; charset=UTF-8");
-                try (Writer writer = asyncContext.getResponse().getWriter()) {
-                    JSON.emptyJSON.writeJSONString(writer);
-                }
-                asyncContext.complete();
-            }
-            asyncContext = req.startAsync();
-            asyncContext.addListener(new UserAsyncListener());
-            asyncContext.setTimeout(5000);
-        }
-    }
-
-    void enqueue(JSONStreamAware response) {
-        pendingResponses.offer(response);
-    }
-
-    void lockAccount() {
-        Generator.stopForging(secretPhrase);
-        secretPhrase = null;
-    }
-
-    Long unlockAccount(String secretPhrase) {
-        this.publicKey = Crypto.getPublicKey(secretPhrase);
-        this.secretPhrase = secretPhrase;
-        Generator.startForging(secretPhrase, publicKey);
-        return Account.getId(publicKey);
     }
 
 
