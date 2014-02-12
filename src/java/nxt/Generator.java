@@ -65,6 +65,10 @@ public final class Generator {
     }
 
     public static Generator startForging(String secretPhrase, byte[] publicKey) {
+        if (generators.size() > 10000) {
+            // prevent rogue peers from putting forging nodes out of memory
+            throw new IllegalStateException("Max 10000 forging accounts supported");
+        }
         Generator generator = new Generator(secretPhrase, publicKey);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         return old != null ? old : generator;
@@ -75,7 +79,12 @@ public final class Generator {
     }
 
     public static Generator stopForging(String secretPhrase) {
-         return generators.remove(secretPhrase);
+        Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+        if (account != null) {
+            lastBlocks.remove(account);
+            hits.remove(account);
+        }
+        return generators.remove(secretPhrase);
     }
 
     private final Long accountId;
