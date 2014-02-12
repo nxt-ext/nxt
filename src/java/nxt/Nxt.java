@@ -37,6 +37,7 @@ public final class Nxt extends HttpServlet {
     public static final int TRANSPARENT_FORGING_BLOCK_2 = 47000;
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
+    public static final int TRANSPARENT_FORGING_BLOCK_5 = 67000;
 
     public static final long MAX_BALANCE = 1000000000;
     public static final long initialBaseTarget = 153722867;
