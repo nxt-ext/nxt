@@ -1,8 +1,8 @@
 package nxt;
 
 import nxt.crypto.Crypto;
-import nxt.peer.Peer;
-import nxt.user.User;
+import nxt.util.Listener;
+import nxt.util.Listeners;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -19,10 +19,24 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public final class Account {
 
+    public static enum Event {
+        BALANCE, UNCONFIRMED_BALANCE
+    }
+
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
 
     private static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
+
+    private static final Listeners<Account,Event> listeners = new Listeners<>();
+
+    public static boolean addListener(Listener<Account> listener, Event eventType) {
+        return listeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeListener(Listener<Account> listener, Event eventType) {
+        return listeners.removeListener(listener, eventType);
+    }
 
     public static Collection<Account> getAllAccounts() {
         return allAccounts;
@@ -198,14 +212,14 @@ public final class Account {
             this.balance += amount;
             addToGuaranteedBalance(amount);
         }
-        Peer.updatePeerWeights(this);
+        listeners.notify(this, Event.BALANCE);
     }
 
     void addToUnconfirmedBalance(long amount) {
         synchronized (this) {
             this.unconfirmedBalance += amount;
         }
-        User.updateUserUnconfirmedBalance(this);
+        listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
 
     void addToBalanceAndUnconfirmedBalance(long amount) {
@@ -214,8 +228,8 @@ public final class Account {
             this.unconfirmedBalance += amount;
             addToGuaranteedBalance(amount);
         }
-        Peer.updatePeerWeights(this);
-        User.updateUserUnconfirmedBalance(this);
+        listeners.notify(this, Event.BALANCE);
+        listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
 
     private synchronized void addToGuaranteedBalance(long amount) {

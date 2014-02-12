@@ -13,7 +13,7 @@ import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-public final class ListAccountAliases extends HttpRequestHandler {
+public final class ListAccountAliases extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final ListAccountAliases instance = new ListAccountAliases();
 

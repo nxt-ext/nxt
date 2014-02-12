@@ -7,7 +7,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetPeers extends HttpRequestHandler {
+public final class GetPeers extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetPeers instance = new GetPeers();
 

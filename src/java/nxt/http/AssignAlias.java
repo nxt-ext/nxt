@@ -28,7 +28,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_URI;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class AssignAlias extends HttpRequestHandler {
+public final class AssignAlias extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final AssignAlias instance = new AssignAlias();
 

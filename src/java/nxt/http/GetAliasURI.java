@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 
-public final class GetAliasURI extends HttpRequestHandler {
+public final class GetAliasURI extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetAliasURI instance = new GetAliasURI();
 

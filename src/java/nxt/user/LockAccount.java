@@ -16,7 +16,7 @@ final class LockAccount extends UserRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
 
-        user.deinitializeKeyPair();
+        user.lockAccount();
 
         return LOCK_ACCOUNT;
     }

@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.http.HttpRequestHandler;
+import nxt.http.HttpRequestDispatcher;
 import nxt.peer.Hallmark;
 import nxt.peer.HttpJSONRequestHandler;
 import nxt.peer.Peer;
@@ -24,7 +24,7 @@ import java.util.Set;
 
 public final class Nxt extends HttpServlet {
 
-    public static final String VERSION = "0.6.2";
+    public static final String VERSION = "0.7.3";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -327,6 +327,8 @@ public final class Nxt extends HttpServlet {
                 Logger.logMessage("Invalid value for sendToPeersLimit " + sendToPeersLimit + ", using default " + Nxt.sendToPeersLimit);
             }
 
+            Db.init();
+
             Blockchain.init();
 
             ThreadPools.start();
@@ -355,7 +357,7 @@ public final class Nxt extends HttpServlet {
             String userPasscode = req.getParameter("user");
 
             if (userPasscode == null) {
-                HttpRequestHandler.process(req, resp);
+                HttpRequestDispatcher.process(req, resp);
                 return;
             }
 
@@ -401,7 +403,7 @@ public final class Nxt extends HttpServlet {
 
         ThreadPools.shutdown();
 
-        Blockchain.shutdown();
+        Db.shutdown();
 
         Logger.logMessage("NRS " + Nxt.VERSION + " stopped.");
 

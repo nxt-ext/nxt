@@ -25,7 +25,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
-public final class CancelBidOrder extends HttpRequestHandler {
+public final class CancelBidOrder extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final CancelBidOrder instance = new CancelBidOrder();
 

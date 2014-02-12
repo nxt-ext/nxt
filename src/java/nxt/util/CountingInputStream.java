@@ -25,7 +25,7 @@ public class CountingInputStream extends FilterInputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         int read = super.read(b, off, len);
         if (read >= 0) {
-            count += 1;
+            count += read;
         }
         return read;
     }

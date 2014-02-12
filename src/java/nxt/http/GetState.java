@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.Blockchain;
+import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.peer.Peer;
@@ -14,7 +15,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetState extends HttpRequestHandler {
+public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetState instance = new GetState();
 
@@ -39,21 +40,15 @@ public final class GetState extends HttpRequestHandler {
         }
         response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
 
-        response.put("numberOfBlocks", Blockchain.getAllBlocks().size());
-        response.put("numberOfTransactions", Blockchain.getAllTransactions().size());
+        response.put("numberOfBlocks", Blockchain.getBlockCount());
+        response.put("numberOfTransactions", Blockchain.getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
         response.put("numberOfAssets", Asset.getAllAssets().size());
         response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
         response.put("numberOfAliases", Alias.getAllAliases().size());
         response.put("numberOfPeers", Peer.getAllPeers().size());
         response.put("numberOfUsers", User.getAllUsers().size());
-        int unlockedAccounts = 0;
-        for (User user : User.getAllUsers()) {
-            if (user.getSecretPhrase() != null) {
-                unlockedAccounts += 1;
-            }
-        }
-        response.put("numberOfUnlockedAccounts", unlockedAccounts);
+        response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());

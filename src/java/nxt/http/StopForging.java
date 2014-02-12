@@ -1,8 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.crypto.Crypto;
-import nxt.util.Convert;
+import nxt.Generator;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -10,11 +8,12 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
-public final class GetAccountId extends HttpRequestDispatcher.HttpRequestHandler {
 
-    static final GetAccountId instance = new GetAccountId();
+public final class StopForging extends HttpRequestDispatcher.HttpRequestHandler {
 
-    private GetAccountId() {}
+    static final StopForging instance = new StopForging();
+
+    private StopForging() {}
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -24,12 +23,12 @@ public final class GetAccountId extends HttpRequestDispatcher.HttpRequestHandler
             return MISSING_SECRET_PHRASE;
         }
 
-        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+        Generator generator = Generator.stopForging(secretPhrase);
 
         JSONObject response = new JSONObject();
-        response.put("accountId", Convert.convert(Account.getId(publicKey)));
-
+        response.put("foundAndStopped", generator != null);
         return response;
+
     }
 
 }

@@ -14,7 +14,7 @@ import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
-public final class GetAskOrderIds extends HttpRequestHandler {
+public final class GetAskOrderIds extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetAskOrderIds instance = new GetAskOrderIds();
 

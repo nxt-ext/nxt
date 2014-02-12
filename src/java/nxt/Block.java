@@ -8,20 +8,22 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
-public final class Block implements Serializable {
+public final class Block {
 
-    static final long serialVersionUID = 0;
     static final Long[] emptyLong = new Long[0];
     static final Transaction[] emptyTransactions = new Transaction[0];
 
@@ -31,6 +33,52 @@ public final class Block implements Serializable {
             return o1.height < o2.height ? -1 : (o1.height > o2.height ? 1 : 0);
         }
     };
+
+    static Block findBlock(Long blockId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE id = ?")) {
+            pstmt.setLong(1, blockId);
+            ResultSet rs = pstmt.executeQuery();
+            Block block = null;
+            if (rs.next()) {
+                block = getBlock(con, rs);
+            }
+            rs.close();
+            return block;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!");
+        }
+    }
+
+    static boolean hasBlock(Long blockId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
+            pstmt.setLong(1, blockId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    static long findBlockIdAtHeight(int height) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
+            pstmt.setInt(1, height);
+            ResultSet rs = pstmt.executeQuery();
+            if (! rs.next()) {
+                rs.close();
+                throw new RuntimeException("Block at height " + height + " not found in database!");
+            }
+            long id = rs.getLong("id");
+            rs.close();
+            return id;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 
     static Block getBlock(JSONObject blockData) throws NxtException.ValidationException {
 
@@ -61,6 +109,122 @@ public final class Block implements Serializable {
 
     }
 
+    static Block getBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
+        try {
+            int version = rs.getInt("version");
+            int timestamp = rs.getInt("timestamp");
+            Long previousBlockId = rs.getLong("previous_block_id");
+            if (rs.wasNull()) {
+                previousBlockId = null;
+            }
+            int totalAmount = rs.getInt("total_amount");
+            int totalFee = rs.getInt("total_fee");
+            int payloadLength = rs.getInt("payload_length");
+            byte[] generatorPublicKey = rs.getBytes("generator_public_key");
+            byte[] previousBlockHash = rs.getBytes("previous_block_hash");
+            BigInteger cumulativeDifficulty = new BigInteger(rs.getBytes("cumulative_difficulty"));
+            long baseTarget = rs.getLong("base_target");
+            Long nextBlockId = rs.getLong("next_block_id");
+            if (rs.wasNull()) {
+                nextBlockId = null;
+            }
+            int index = rs.getInt("index");
+            int height = rs.getInt("height");
+            byte[] generationSignature = rs.getBytes("generation_signature");
+            byte[] blockSignature = rs.getBytes("block_signature");
+            byte[] payloadHash = rs.getBytes("payload_hash");
+
+            Long id = rs.getLong("id");
+            List<Transaction> transactions = Transaction.findBlockTransactions(con, id);
+
+            Block block = new Block(version, timestamp, previousBlockId, transactions.size(), totalAmount, totalFee, payloadLength,
+                    payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+
+            block.cumulativeDifficulty = cumulativeDifficulty;
+            block.baseTarget = baseTarget;
+            block.nextBlockId = nextBlockId;
+            block.index = index;
+            block.height = height;
+            block.id = id;
+
+            for (int i = 0; i < transactions.size(); i++) {
+                Transaction transaction = transactions.get(i);
+                block.transactionIds[i] = transaction.getId();
+                block.blockTransactions[i] = transaction;
+                transaction.setBlock(block);
+            }
+
+            return block;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static void saveBlock(Connection con, Block block) {
+        try {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
+                    + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
+                    + "base_target, next_block_id, index, height, generation_signature, block_signature, payload_hash, generator_id) "
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                pstmt.setLong(1, block.getId());
+                pstmt.setInt(2, block.version);
+                pstmt.setInt(3, block.timestamp);
+                if (block.previousBlockId != null) {
+                    pstmt.setLong(4, block.previousBlockId);
+                } else {
+                    pstmt.setNull(4, Types.BIGINT);
+                }
+                pstmt.setInt(5, block.totalAmount);
+                pstmt.setInt(6, block.totalFee);
+                pstmt.setInt(7, block.payloadLength);
+                pstmt.setBytes(8, block.generatorPublicKey);
+                pstmt.setBytes(9, block.previousBlockHash);
+                pstmt.setBytes(10, block.cumulativeDifficulty.toByteArray());
+                pstmt.setLong(11, block.baseTarget);
+                if (block.nextBlockId != null) {
+                    pstmt.setLong(12, block.nextBlockId);
+                } else {
+                    pstmt.setNull(12, Types.BIGINT);
+                }
+                pstmt.setInt(13, block.index);
+                pstmt.setInt(14, block.height);
+                pstmt.setBytes(15, block.generationSignature);
+                pstmt.setBytes(16, block.blockSignature);
+                pstmt.setBytes(17, block.payloadHash);
+                pstmt.setLong(18, block.getGeneratorId());
+                pstmt.executeUpdate();
+                Transaction.saveTransactions(con, block.blockTransactions);
+            }
+            if (block.previousBlockId != null) {
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE block SET next_block_id = ? WHERE id = ?")) {
+                    pstmt.setLong(1, block.getId());
+                    pstmt.setLong(2, block.previousBlockId);
+                    pstmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    // relying on cascade triggers in the database to delete also all subsequent blocks, and the transactions for all deleted blocks
+    static void deleteBlock(Long blockId) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("DELETE FROM block WHERE id = ?")) {
+            try {
+                pstmt.setLong(1, blockId);
+                pstmt.executeUpdate();
+                con.commit();
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     private final int version;
     private final int timestamp;
     private final Long previousBlockId;
@@ -69,36 +233,24 @@ public final class Block implements Serializable {
     private final int totalAmount;
     private final int totalFee;
     private final int payloadLength;
+    private final byte[] generationSignature;
+    private final byte[] payloadHash;
     final Long[] transactionIds;
+    final Transaction[] blockTransactions;
 
-    transient Transaction[] blockTransactions;
-
-    /*private after 0.6.0*/
-    public BigInteger cumulativeDifficulty = BigInteger.ZERO;
-    public long baseTarget = Nxt.initialBaseTarget;
-    public volatile Long nextBlockId;
-    public int index;
-    public int height;
-    /**/
-    private byte[] generationSignature;
     private byte[] blockSignature;
-    private byte[] payloadHash;
-    private transient volatile Long id;
-    private transient volatile String stringId = null;
-    private transient volatile Long generatorAccountId;
-    private transient SoftReference<JSONStreamAware> jsonRef;
+    private BigInteger cumulativeDifficulty = BigInteger.ZERO;
+    private long baseTarget = Nxt.initialBaseTarget;
+    private volatile Long nextBlockId;
+    private int index;
+    private int height;
+    private volatile Long id;
+    private volatile String stringId = null;
+    private volatile Long generatorId;
+    private SoftReference<JSONStreamAware> jsonRef;
 
-    Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee,
-          int payloadLength, byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature)
-            throws NxtException.ValidationException {
 
-        this(version, timestamp, previousBlockId, numberOfTransactions, totalAmount, totalFee, payloadLength, payloadHash,
-                generatorPublicKey, generationSignature, blockSignature, null);
-
-    }
-
-    /* not public after 0.6.0 */
-    public Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
+    Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
                  byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash)
             throws NxtException.ValidationException {
 
@@ -124,6 +276,7 @@ public final class Block implements Serializable {
         this.previousBlockHash = previousBlockHash;
         this.transactionIds = numberOfTransactions == 0 ? emptyLong : new Long[numberOfTransactions];
         this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
+        this.height = version == -1 ? 0 : -1;
 
     }
 
@@ -167,24 +320,12 @@ public final class Block implements Serializable {
         return payloadHash;
     }
 
-    void setPayloadHash(byte[] payloadHash) {
-        this.payloadHash = payloadHash;
-    }
-
     public byte[] getGenerationSignature() {
         return generationSignature;
     }
 
-    void setGenerationSignature(byte[] generationSignature) {
-        this.generationSignature = generationSignature;
-    }
-
     public byte[] getBlockSignature() {
         return blockSignature;
-    }
-
-    void setBlockSignature(byte[] blockSignature) {
-        this.blockSignature = blockSignature;
     }
 
     public Transaction[] getTransactions() {
@@ -212,26 +353,40 @@ public final class Block implements Serializable {
     }
 
     public int getHeight() {
+        if (height == -1) {
+            throw new IllegalStateException("Block height not yet set");
+        }
         return height;
     }
 
-    void setHeight(int height) {
-        this.height = height;
-    }
-
     public Long getId() {
-        calculateIds();
+        if (id == null) {
+            if (blockSignature == null) {
+                throw new IllegalStateException("Block is not signed yet");
+            }
+            byte[] hash = Crypto.sha256().digest(getBytes());
+            BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+            id = bigInteger.longValue();
+            stringId = bigInteger.toString();
+        }
         return id;
     }
 
     public String getStringId() {
-        calculateIds();
+        if (stringId == null) {
+            getId();
+            if (stringId == null) {
+                stringId = Convert.convert(id);
+            }
+        }
         return stringId;
     }
 
-    public Long getGeneratorAccountId() {
-        calculateIds();
-        return generatorAccountId;
+    public Long getGeneratorId() {
+        if (generatorId == null) {
+            generatorId = Account.getId(generatorPublicKey);
+        }
+        return generatorId;
     }
 
     public synchronized JSONStreamAware getJSON() {
@@ -293,17 +448,13 @@ public final class Block implements Serializable {
         block.put("generatorPublicKey", Convert.convert(generatorPublicKey));
         block.put("generationSignature", Convert.convert(generationSignature));
         if (version > 1) {
-
             block.put("previousBlockHash", Convert.convert(previousBlockHash));
-
         }
         block.put("blockSignature", Convert.convert(blockSignature));
 
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : this.blockTransactions) {
-
             transactionsData.add(transaction.getJSONObject());
-
         }
         block.put("transactions", transactionsData);
 
@@ -311,13 +462,22 @@ public final class Block implements Serializable {
 
     }
 
+    void sign(String secretPhrase) {
+        if (blockSignature != null) {
+            throw new IllegalStateException("Block already singed");
+        }
+        blockSignature = new byte[64];
+        byte[] data = getBytes();
+        byte[] data2 = new byte[data.length - 64];
+        System.arraycopy(data, 0, data2, 0, data2.length);
+        blockSignature = Crypto.sign(data2, secretPhrase);
+    }
+
     boolean verifyBlockSignature() {
 
-        Account account = Account.getAccount(getGeneratorAccountId());
+        Account account = Account.getAccount(getGeneratorId());
         if (account == null) {
-
             return false;
-
         }
 
         byte[] data = getBytes();
@@ -328,28 +488,22 @@ public final class Block implements Serializable {
 
     }
 
-    boolean verifyGenerationSignature() {
+    boolean verifyGenerationSignature() throws Blockchain.BlockOutOfOrderException {
 
         try {
 
             Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             if (previousBlock == null) {
-
-                return false;
-
+                throw new Blockchain.BlockOutOfOrderException("Can't verify signature because previous block is missing");
             }
 
             if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
-
                 return false;
-
             }
 
-            Account account = Account.getAccount(getGeneratorAccountId());
+            Account account = Account.getAccount(getGeneratorId());
             if (account == null || account.getEffectiveBalance() <= 0) {
-
                 return false;
-
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
@@ -358,19 +512,13 @@ public final class Block implements Serializable {
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
             if (version == 1) {
-
                 generationSignatureHash = digest.digest(generationSignature);
-
             } else {
-
                 digest.update(previousBlock.generationSignature);
                 generationSignatureHash = digest.digest(generatorPublicKey);
                 if (!Arrays.equals(generationSignature, generationSignatureHash)) {
-
                     return false;
-
                 }
-
             }
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
@@ -388,54 +536,35 @@ public final class Block implements Serializable {
 
     void apply() {
 
-        for (int i = 0; i < transactionIds.length; i++) {
-            blockTransactions[i] = Blockchain.getTransaction(transactionIds[i]);
-            if (blockTransactions[i] == null) {
-                throw new IllegalStateException("Missing transaction " + Convert.convert(transactionIds[i]));
-            }
-        }
-
-        if (previousBlockId == null && getId().equals(Genesis.GENESIS_BLOCK_ID)) {
-
-            calculateBaseTarget();
-            Blockchain.addBlock(this);
-
-        } else {
-
-            Block previousLastBlock = Blockchain.getLastBlock();
-
-            previousLastBlock.nextBlockId = getId();
-            height = previousLastBlock.height + 1;
-            calculateBaseTarget();
-            Blockchain.addBlock(this);
-
-        }
-
-        Account generatorAccount = Account.addOrGetAccount(getGeneratorAccountId());
+        Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         if (! generatorAccount.setOrVerify(generatorPublicKey)) {
             throw new IllegalStateException("Generator public key mismatch");
         }
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
         for (Transaction transaction : blockTransactions) {
-
-            transaction.setHeight(height);
-            transaction.setBlockId(this.getId());
             transaction.apply();
-
         }
 
         Blockchain.purgeExpiredHashes(this.timestamp);
 
     }
 
-    private void calculateBaseTarget() {
+    void setPrevious(Block previousBlock) {
+        if (! previousBlock.getId().equals(getPreviousBlockId())) {
+            // shouldn't happen as previous id is already verified, but just in case
+            throw new IllegalStateException("Previous block id doesn't match");
+        }
+        this.height = previousBlock.getHeight() + 1;
+        this.calculateBaseTarget(previousBlock);
+    }
+
+    private void calculateBaseTarget(Block previousBlock) {
 
         if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlockId == null) {
             baseTarget = Nxt.initialBaseTarget;
             cumulativeDifficulty = BigInteger.ZERO;
         } else {
-            Block previousBlock = Blockchain.getBlock(this.previousBlockId);
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
@@ -458,25 +587,6 @@ public final class Block implements Serializable {
             }
             baseTarget = newBaseTarget;
             cumulativeDifficulty = previousBlock.cumulativeDifficulty.add(Convert.two64.divide(BigInteger.valueOf(baseTarget)));
-        }
-    }
-
-    private void calculateIds() {
-        if (stringId != null) {
-            return;
-        }
-        byte[] hash = Crypto.sha256().digest(getBytes());
-        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
-        id = bigInteger.longValue();
-        stringId = bigInteger.toString();
-        generatorAccountId = Account.getId(generatorPublicKey);
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        this.blockTransactions = transactionIds.length == 0 ? emptyTransactions : new Transaction[transactionIds.length];
-        for (int i = 0; i < transactionIds.length; i++) {
-            this.blockTransactions[i] = Blockchain.getTransaction(transactionIds[i]);
         }
     }
 

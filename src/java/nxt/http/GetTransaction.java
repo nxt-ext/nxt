@@ -13,7 +13,7 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class GetTransaction extends HttpRequestHandler {
+public final class GetTransaction extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetTransaction instance = new GetTransaction();
 
@@ -44,11 +44,11 @@ public final class GetTransaction extends HttpRequestHandler {
                 return UNKNOWN_TRANSACTION;
             } else {
                 response = transactionData.getJSONObject();
-                response.put("sender", Convert.convert(transactionData.getSenderAccountId()));
+                response.put("sender", Convert.convert(transactionData.getSenderId()));
             }
         } else {
             response = transactionData.getJSONObject();
-            response.put("sender", Convert.convert(transactionData.getSenderAccountId()));
+            response.put("sender", Convert.convert(transactionData.getSenderId()));
             Block block = transactionData.getBlock();
             response.put("block", block.getStringId());
             response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);

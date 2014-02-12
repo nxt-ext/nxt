@@ -4,4 +4,4 @@ SP=src/java/
 /bin/rm -rf webapps/root/WEB-INF/classes/*
 /bin/rm -rf webapps/root/doc/*
 
-javac -sourcepath $SP -classpath $CP -d webapps/root/WEB-INF/classes/ src/java/*.java src/java/nxt/*.java src/java/nxt/*/*.java
+javac -sourcepath $SP -classpath $CP -d webapps/root/WEB-INF/classes/ src/java/nxt/*.java src/java/nxt/*/*.java

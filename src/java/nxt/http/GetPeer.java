@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.MISSING_PEER;
 import static nxt.http.JSONResponses.UNKNOWN_PEER;
 
-public final class GetPeer extends HttpRequestHandler {
+public final class GetPeer extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetPeer instance = new GetPeer();
 

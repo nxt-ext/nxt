@@ -40,9 +40,9 @@ public final class ThreadPools {
 
         scheduledThreadPool.scheduleWithFixedDelay(Blockchain.getMoreBlocksThread, 0, 1, TimeUnit.SECONDS);
 
-        scheduledThreadPool.scheduleWithFixedDelay(Blockchain.generateBlockThread, 0, 1, TimeUnit.SECONDS);
-
         scheduledThreadPool.scheduleWithFixedDelay(Blockchain.rebroadcastTransactionsThread, 0, 60, TimeUnit.SECONDS);
+
+        scheduledThreadPool.scheduleWithFixedDelay(Generator.generateBlockThread, 0, 1, TimeUnit.SECONDS);
 
     }
 
