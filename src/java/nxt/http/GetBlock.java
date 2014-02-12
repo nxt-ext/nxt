@@ -13,7 +13,7 @@ import static nxt.http.JSONResponses.INCORRECT_BLOCK;
 import static nxt.http.JSONResponses.MISSING_BLOCK;
 import static nxt.http.JSONResponses.UNKNOWN_BLOCK;
 
-public final class GetBlock extends HttpRequestHandler {
+public final class GetBlock extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetBlock instance = new GetBlock();
 

@@ -13,7 +13,7 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class GetTransactionBytes extends HttpRequestHandler {
+public final class GetTransactionBytes extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetTransactionBytes instance = new GetTransactionBytes();
 

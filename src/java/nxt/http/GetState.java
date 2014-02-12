@@ -14,7 +14,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetState extends HttpRequestHandler {
+public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetState instance = new GetState();
 

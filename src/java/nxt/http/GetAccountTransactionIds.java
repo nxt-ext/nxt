@@ -17,7 +17,7 @@ import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-public final class GetAccountTransactionIds extends HttpRequestHandler {
+public final class GetAccountTransactionIds extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 

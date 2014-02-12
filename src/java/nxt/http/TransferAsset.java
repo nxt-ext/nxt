@@ -27,7 +27,7 @@ import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class TransferAsset extends HttpRequestHandler {
+public final class TransferAsset extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final TransferAsset instance = new TransferAsset();
 

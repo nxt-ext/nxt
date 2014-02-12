@@ -16,9 +16,14 @@ import java.util.Map;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 
-public abstract class HttpRequestHandler {
+public class HttpRequestDispatcher {
 
-    private static final Map<String,HttpRequestHandler> httpGetHandlers;
+    // not an interface in order for processRequest to be package-local, not public
+    static abstract class HttpRequestHandler {
+        abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException, IOException;
+    }
+
+    private static final Map<String,HttpRequestHandler> handlers;
 
     static {
 
@@ -70,7 +75,7 @@ public abstract class HttpRequestHandler {
         //map.put("placeAskOrder", PlaceAskOrder.instance);
         //map.put("placeBidOrder", PlaceBidOrder.instance);
 
-        httpGetHandlers = Collections.unmodifiableMap(map);
+        handlers = Collections.unmodifiableMap(map);
     }
 
     public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -86,7 +91,7 @@ public abstract class HttpRequestHandler {
                 response = ERROR_INCORRECT_REQUEST;
             } else {
 
-                HttpRequestHandler requestHandler = httpGetHandlers.get(requestType);
+                HttpRequestHandler requestHandler = handlers.get(requestType);
                 if (requestHandler != null) {
                     try {
                         response = requestHandler.processRequest(req);
@@ -109,8 +114,6 @@ public abstract class HttpRequestHandler {
 
     }
 
-    HttpRequestHandler() {}
-
-    abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException, IOException;
+    private HttpRequestDispatcher() {}
 
 }

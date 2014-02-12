@@ -6,7 +6,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetTime extends HttpRequestHandler {
+public final class GetTime extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetTime instance = new GetTime();
 

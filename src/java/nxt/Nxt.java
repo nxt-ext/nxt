@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.http.HttpRequestHandler;
+import nxt.http.HttpRequestDispatcher;
 import nxt.peer.Hallmark;
 import nxt.peer.HttpJSONRequestHandler;
 import nxt.peer.Peer;
@@ -357,7 +357,7 @@ public final class Nxt extends HttpServlet {
             String userPasscode = req.getParameter("user");
 
             if (userPasscode == null) {
-                HttpRequestHandler.process(req, resp);
+                HttpRequestDispatcher.process(req, resp);
                 return;
             }
 

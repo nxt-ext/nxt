@@ -13,7 +13,7 @@ import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-public final class GetAccount extends HttpRequestHandler {
+public final class GetAccount extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetAccount instance = new GetAccount();
 

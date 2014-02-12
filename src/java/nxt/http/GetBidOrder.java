@@ -11,7 +11,7 @@ import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
-public final class GetBidOrder extends HttpRequestHandler {
+public final class GetBidOrder extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetBidOrder instance = new GetBidOrder();
 

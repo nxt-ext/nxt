@@ -16,7 +16,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_WEIGHT;
 
 
-public final class MarkHost extends HttpRequestHandler {
+public final class MarkHost extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 

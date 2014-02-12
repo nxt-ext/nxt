@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
 import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 
-public final class GetAliasIds extends HttpRequestHandler {
+public final class GetAliasIds extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetAliasIds instance = new GetAliasIds();
 

@@ -12,7 +12,7 @@ import static nxt.http.JSONResponses.INCORRECT_NUMBER_OF_CONFIRMATIONS;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_NUMBER_OF_CONFIRMATIONS;
 
-public final class GetGuaranteedBalance extends HttpRequestHandler {
+public final class GetGuaranteedBalance extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetGuaranteedBalance instance = new GetGuaranteedBalance();
 

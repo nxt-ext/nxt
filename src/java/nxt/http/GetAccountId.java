@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
-public final class GetAccountId extends HttpRequestHandler {
+public final class GetAccountId extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetAccountId instance = new GetAccountId();
 

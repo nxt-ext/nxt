@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 
-public final class GetBalance extends HttpRequestHandler {
+public final class GetBalance extends HttpRequestDispatcher.HttpRequestHandler {
 
     static final GetBalance instance = new GetBalance();
 
