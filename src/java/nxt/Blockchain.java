@@ -979,7 +979,7 @@ public final class Blockchain {
                     throw new BlockNotAcceptedException("Previous block hash doesn't match");
                 }
                 if (block.getTimestamp() > curTime + 15 || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
-                    throw new BlockNotAcceptedException("Invalid timestamp: " + block.getTimestamp()
+                    throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
                 if (block.getId().equals(Long.valueOf(0L)) || Block.hasBlock(block.getId())) {
