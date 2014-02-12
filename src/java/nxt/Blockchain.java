@@ -550,10 +550,16 @@ public final class Blockchain {
     }
 
     public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
+        return getAllTransactions(account, type, subtype, timestamp, Boolean.TRUE);
+    }
+
+    public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending) {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT * FROM (");
+            if (orderAscending != null) {
+                buf.append("SELECT * FROM (");
+            }
             buf.append("SELECT * FROM transaction WHERE recipient_id = ? ");
             if (timestamp > 0) {
                 buf.append("AND timestamp >= ? ");
@@ -574,7 +580,11 @@ public final class Blockchain {
                     buf.append("AND subtype = ? ");
                 }
             }
-            buf.append(") ORDER BY timestamp ASC");
+            if (Boolean.TRUE.equals(orderAscending)) {
+                buf.append(") ORDER BY timestamp ASC");
+            } else if (Boolean.FALSE.equals(orderAscending)) {
+                buf.append(") ORDER BY timestamp DESC");
+            }
             con = Db.getConnection();
             PreparedStatement pstmt;
             int i = 0;

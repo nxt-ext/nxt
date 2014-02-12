@@ -123,7 +123,7 @@ final class UnlockAccount extends UserRequestHandler {
                 }
             }
 
-            try (DbIterator<Transaction> transactionIterator = Blockchain.getAllTransactions(account, (byte)-1, (byte)-1, 0)) {
+            try (DbIterator<Transaction> transactionIterator = Blockchain.getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
                 while (transactionIterator.hasNext()) {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {
