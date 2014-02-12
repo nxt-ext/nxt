@@ -311,13 +311,13 @@ public final class Blockchain {
                 if (milestoneBlockIds.isEmpty()) {
                     return Genesis.GENESIS_BLOCK_ID;
                 }
-                /* prevent overloading with blockIds
+                // prevent overloading with blockIds
                 if (milestoneBlockIds.size() > 20) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many milestoneBlockIds, blacklisting");
                     peer.blacklist();
                     return null;
                 }
-                */
+
                 for (Object milestoneBlockId : milestoneBlockIds) {
                     lastMilestoneBlockId = (String) milestoneBlockId;
                     Long blockId = Convert.parseUnsignedLong(lastMilestoneBlockId);
@@ -343,13 +343,13 @@ public final class Blockchain {
                 if (nextBlockIds == null || nextBlockIds.size() == 0) {
                     return null;
                 }
-                /*
+                // prevent overloading with blockIds
                 if (nextBlockIds.size() > 1440) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist();
                     return null;
                 }
-                */
+
                 for (Object nextBlockId : nextBlockIds) {
                     Long blockId = Convert.parseUnsignedLong((String) nextBlockId);
                     if (! Block.hasBlock(blockId)) {
@@ -372,13 +372,13 @@ public final class Blockchain {
             }
 
             JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
-            /*
+            // prevent overloading with blocks
             if (nextBlocks.size() > 1440) {
                 Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlocks, blacklisting");
                 peer.blacklist();
                 return null;
             }
-            */
+
             return nextBlocks;
 
         }

@@ -7,6 +7,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 
 public final class StartForging extends HttpRequestDispatcher.HttpRequestHandler {
@@ -25,7 +26,7 @@ public final class StartForging extends HttpRequestDispatcher.HttpRequestHandler
 
         Generator generator = Generator.startForging(secretPhrase);
         if (generator == null) {
-            return JSONResponses.UNKNOWN_ACCOUNT;
+            return UNKNOWN_ACCOUNT;
         }
 
         JSONObject response = new JSONObject();

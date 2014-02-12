@@ -51,9 +51,9 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
                 jump = 10;
                 limit = 10;
             } else {
-                height = Blockchain.getLastBlock().getHeight();
-                jump = height * 4 / 1461 + 1;
-                limit = height + 1;
+                peer.blacklist();
+                response.put("error", "Old getMilestoneBlockIds protocol not supported, please upgrade to 0.7.3");
+                return response;
             }
             blockId = Blockchain.getBlockIdAtHeight(height);
 
