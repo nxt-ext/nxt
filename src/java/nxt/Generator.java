@@ -134,7 +134,7 @@ public final class Generator {
             hits.put(account, hit);
 
             long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue();
-            long elapsed = Convert.getEpochTime() - lastBlock.getTimestamp();
+            long elapsed = Math.max(Convert.getEpochTime() - lastBlock.getTimestamp(), 0);
 
             deadline = total - elapsed;
 
