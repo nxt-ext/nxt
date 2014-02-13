@@ -664,19 +664,11 @@ public final class Blockchain {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
-             PreparedStatement pstmt2 = con.prepareStatement("SELECT * FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
-            pstmt1.setLong(1, blockId);
-            ResultSet rs = pstmt1.executeQuery();
-            if (! rs.next()) {
-                rs.close();
-                return Collections.emptyList();
-            }
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Block> result = new ArrayList<>();
-            int dbId = rs.getInt("db_id");
-            pstmt2.setInt(1, dbId);
-            pstmt2.setInt(2, limit);
-            rs = pstmt2.executeQuery();
+            pstmt.setLong(1, blockId);
+            pstmt.setInt(2, limit);
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 result.add(Block.getBlock(con, rs));
             }
