@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentMap;
 
 public abstract class Order {
 
+    private static final SortedSet emptySortedSet = Collections.unmodifiableSortedSet(new TreeSet<>());
+
     static void clear() {
         Ask.askOrders.clear();
         Ask.sortedAskOrders.clear();
@@ -21,6 +23,10 @@ public abstract class Order {
 
         SortedSet<Ask> sortedAssetAskOrders = Ask.sortedAskOrders.get(assetId);
         SortedSet<Bid> sortedAssetBidOrders = Bid.sortedBidOrders.get(assetId);
+
+        if (sortedAssetAskOrders == null || sortedAssetBidOrders == null) {
+            return;
+        }
 
         while (!sortedAssetAskOrders.isEmpty() && !sortedAssetBidOrders.isEmpty()) {
 
@@ -143,7 +149,8 @@ public abstract class Order {
         }
 
         public static SortedSet<Ask> getSortedOrders(Long assetId) {
-            return Collections.unmodifiableSortedSet(sortedAskOrders.get(assetId));
+            SortedSet<Ask> sortedOrders = sortedAskOrders.get(assetId);
+            return sortedOrders == null ? emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
@@ -217,7 +224,8 @@ public abstract class Order {
         }
 
         public static SortedSet<Bid> getSortedOrders(Long assetId) {
-            return Collections.unmodifiableSortedSet(sortedBidOrders.get(assetId));
+            SortedSet<Bid> sortedOrders = sortedBidOrders.get(assetId);
+            return sortedOrders == null ? emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {

@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -174,8 +175,8 @@ public final class Account {
         return this.publicKey.compareAndSet(null, key) || Arrays.equals(key, this.publicKey.get());
     }
 
-    synchronized Integer getAssetBalance(Long assetId) {
-        return assetBalances.get(assetId);
+    synchronized int getAssetBalance(Long assetId) {
+        return Convert.nullToZero(assetBalances.get(assetId));
     }
 
     synchronized void addToAssetBalance(Long assetId, int quantity) {
