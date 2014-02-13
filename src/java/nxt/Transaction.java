@@ -886,7 +886,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String name = (String)attachmentData.get("name");
                     String description = (String)attachmentData.get("description");
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
@@ -919,7 +919,10 @@ public final class Transaction implements Comparable<Transaction> {
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
-                private boolean validateAttachment(Transaction transaction) {
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                        throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                    }
                     try {
                         Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
                         if (!Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
@@ -951,7 +954,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     Long assetId = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
@@ -959,7 +962,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
@@ -1009,7 +1012,10 @@ public final class Transaction implements Comparable<Transaction> {
                     accountAccumulatedAssetQuantities.put(attachment.getAssetId(), assetAccumulatedAssetQuantities + attachment.getQuantity());
                 }
 
-                private boolean validateAttachment(Transaction transaction) {
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                        throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                    }
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
                     return transaction.amount == 0 && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY;
                 }
@@ -1021,7 +1027,7 @@ public final class Transaction implements Comparable<Transaction> {
                 abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price);
 
                 @Override
-                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     Long assetId = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     long price = buffer.getLong();
@@ -1030,7 +1036,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     long price = (Long)attachmentData.get("price");
@@ -1038,7 +1044,10 @@ public final class Transaction implements Comparable<Transaction> {
                     return validateAttachment(transaction);
                 }
 
-                private boolean validateAttachment(Transaction transaction) {
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                        throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                    }
                     Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.attachment;
                     return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0
                             && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY
@@ -1174,7 +1183,10 @@ public final class Transaction implements Comparable<Transaction> {
 
             abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
 
-                final boolean validateAttachment(Transaction transaction) {
+                final boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                        throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                    }
                     return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0;
                 }
 
@@ -1202,13 +1214,13 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.zeroToNull(buffer.getLong()));
                     return validateAttachment(transaction);
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
                     return validateAttachment(transaction);
                 }
@@ -1232,13 +1244,13 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.zeroToNull(buffer.getLong()));
                     return validateAttachment(transaction);
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
                     return validateAttachment(transaction);
                 }
