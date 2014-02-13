@@ -346,6 +346,9 @@ public final class Peer implements Comparable<Peer> {
 
         this.peerAddress = peerAddress;
         this.announcedAddress = announcedAddress;
+        try {
+            this.port = new URL("http://" + announcedAddress).getPort();
+        } catch (MalformedURLException ignore) {}
         this.index = peerCounter.incrementAndGet();
         this.state = State.NON_CONNECTED;
     }
@@ -415,7 +418,7 @@ public final class Peer implements Comparable<Peer> {
         if (announcedPeerAddress != null) {
             this.announcedAddress = announcedPeerAddress;
             try {
-                this.port = new URL(announcedPeerAddress).getPort();
+                this.port = new URL("http://" + announcedPeerAddress).getPort();
             } catch (MalformedURLException ignore) {}
         }
     }

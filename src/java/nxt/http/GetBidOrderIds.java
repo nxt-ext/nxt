@@ -42,7 +42,7 @@ public final class GetBidOrderIds extends HttpRequestDispatcher.HttpRequestHandl
         int limit;
         try {
             limit = Integer.parseInt(req.getParameter("limit"));
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             limit = Integer.MAX_VALUE;
         }
 
