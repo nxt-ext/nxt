@@ -598,56 +598,6 @@ public final class Peer implements Comparable<Peer> {
 
     }
 
-    boolean analyzeHallmark(final String realHost, final String hallmarkString) {
-
-        if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
-            return true;
-        }
-
-        try {
-            Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (! hallmark.isValid() || ! hallmark.getHost().equals(realHost)) {
-                return false;
-            }
-            this.hallmark = hallmarkString;
-            Long accountId = Account.getId(hallmark.getPublicKey());
-            LinkedList<Peer> groupedPeers = new LinkedList<>();
-            int validDate = 0;
-            this.accountId = accountId;
-            this.weight = hallmark.getWeight();
-            this.date = hallmark.getDate();
-            for (Peer peer : peers.values()) {
-                if (accountId.equals(peer.accountId)) {
-                    groupedPeers.add(peer);
-                    if (peer.date > validDate) {
-                        validDate = peer.date;
-                    }
-                }
-            }
-
-            long totalWeight = 0;
-            for (Peer peer : groupedPeers) {
-                if (peer.date == validDate) {
-                    totalWeight += peer.weight;
-                } else {
-                    peer.weight = 0;
-                }
-            }
-
-            for (Peer peer : groupedPeers) {
-                peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
-                listeners.notify(peer, Event.WEIGHT);
-            }
-
-            return true;
-
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost + ", " + e.toString());
-        }
-        return false;
-
-    }
-
     void setState(State state) {
         State oldState = this.state;
         this.state = state;
@@ -695,6 +645,56 @@ public final class Peer implements Comparable<Peer> {
                 setState(State.CONNECTED);
             }
         }
+    }
+
+    private boolean analyzeHallmark(final String realHost, final String hallmarkString) {
+
+        if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
+            return true;
+        }
+
+        try {
+            Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
+            if (! hallmark.isValid() || ! hallmark.getHost().equals(realHost)) {
+                return false;
+            }
+            this.hallmark = hallmarkString;
+            Long accountId = Account.getId(hallmark.getPublicKey());
+            LinkedList<Peer> groupedPeers = new LinkedList<>();
+            int validDate = 0;
+            this.accountId = accountId;
+            this.weight = hallmark.getWeight();
+            this.date = hallmark.getDate();
+            for (Peer peer : peers.values()) {
+                if (accountId.equals(peer.accountId)) {
+                    groupedPeers.add(peer);
+                    if (peer.date > validDate) {
+                        validDate = peer.date;
+                    }
+                }
+            }
+
+            long totalWeight = 0;
+            for (Peer peer : groupedPeers) {
+                if (peer.date == validDate) {
+                    totalWeight += peer.weight;
+                } else {
+                    peer.weight = 0;
+                }
+            }
+
+            for (Peer peer : groupedPeers) {
+                peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
+                listeners.notify(peer, Event.WEIGHT);
+            }
+
+            return true;
+
+        } catch (RuntimeException e) {
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost + ", " + e.toString());
+        }
+        return false;
+
     }
 
 }
