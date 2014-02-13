@@ -1103,8 +1103,8 @@ public final class Blockchain {
 
                 block.apply();
 
-                addedConfirmedTransactions = new JSONArray();
-                removedUnconfirmedTransactions = new JSONArray();
+                addedConfirmedTransactions = new ArrayList<>();
+                removedUnconfirmedTransactions = new ArrayList<>();
 
                 for (Map.Entry<Long, Transaction> transactionEntry : blockTransactions.entrySet()) {
 

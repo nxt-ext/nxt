@@ -38,7 +38,7 @@ final class GetNextBlocks extends HttpJSONRequestHandler {
 
         JSONArray nextBlocksArray = new JSONArray();
         for (Block nextBlock : nextBlocks) {
-            nextBlocksArray.add(nextBlock.getJSON());
+            nextBlocksArray.add(nextBlock.getJSONObject());
         }
         response.put("nextBlocks", nextBlocksArray);
 

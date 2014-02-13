@@ -214,29 +214,30 @@ public final class Transaction implements Comparable<Transaction> {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
                         + "amount, fee, referenced_transaction_id, index, height, block_id, signature, timestamp, type, subtype, sender_id, attachment) "
                         + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-                    pstmt.setLong(1, transaction.getId());
-                    pstmt.setShort(2, transaction.deadline);
-                    pstmt.setBytes(3, transaction.senderPublicKey);
-                    pstmt.setLong(4, transaction.recipientId);
-                    pstmt.setInt(5, transaction.amount);
-                    pstmt.setInt(6, transaction.fee);
+                    int i = 0;
+                    pstmt.setLong(++i, transaction.getId());
+                    pstmt.setShort(++i, transaction.deadline);
+                    pstmt.setBytes(++i, transaction.senderPublicKey);
+                    pstmt.setLong(++i, transaction.recipientId);
+                    pstmt.setInt(++i, transaction.amount);
+                    pstmt.setInt(++i, transaction.fee);
                     if (transaction.referencedTransactionId != null) {
-                        pstmt.setLong(7, transaction.referencedTransactionId);
+                        pstmt.setLong(++i, transaction.referencedTransactionId);
                     } else {
-                        pstmt.setNull(7, Types.BIGINT);
+                        pstmt.setNull(++i, Types.BIGINT);
                     }
-                    pstmt.setInt(8, transaction.index);
-                    pstmt.setInt(9, transaction.height);
-                    pstmt.setLong(10, transaction.blockId);
-                    pstmt.setBytes(11, transaction.signature);
-                    pstmt.setInt(12, transaction.timestamp);
-                    pstmt.setByte(13, transaction.type.getType());
-                    pstmt.setByte(14, transaction.type.getSubtype());
-                    pstmt.setLong(15, transaction.getSenderId());
+                    pstmt.setInt(++i, transaction.index);
+                    pstmt.setInt(++i, transaction.height);
+                    pstmt.setLong(++i, transaction.blockId);
+                    pstmt.setBytes(++i, transaction.signature);
+                    pstmt.setInt(++i, transaction.timestamp);
+                    pstmt.setByte(++i, transaction.type.getType());
+                    pstmt.setByte(++i, transaction.type.getSubtype());
+                    pstmt.setLong(++i, transaction.getSenderId());
                     if (transaction.attachment != null) {
-                        pstmt.setObject(16, transaction.attachment);
+                        pstmt.setObject(++i, transaction.attachment);
                     } else {
-                        pstmt.setNull(16, Types.JAVA_OBJECT);
+                        pstmt.setNull(++i, Types.JAVA_OBJECT);
                     }
                     pstmt.executeUpdate();
                 }

@@ -2,13 +2,10 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
-import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -167,32 +164,33 @@ public final class Block {
                     + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
                     + "base_target, next_block_id, index, height, generation_signature, block_signature, payload_hash, generator_id) "
                     + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-                pstmt.setLong(1, block.getId());
-                pstmt.setInt(2, block.version);
-                pstmt.setInt(3, block.timestamp);
+                int i = 0;
+                pstmt.setLong(++i, block.getId());
+                pstmt.setInt(++i, block.version);
+                pstmt.setInt(++i, block.timestamp);
                 if (block.previousBlockId != null) {
-                    pstmt.setLong(4, block.previousBlockId);
+                    pstmt.setLong(++i, block.previousBlockId);
                 } else {
-                    pstmt.setNull(4, Types.BIGINT);
+                    pstmt.setNull(++i, Types.BIGINT);
                 }
-                pstmt.setInt(5, block.totalAmount);
-                pstmt.setInt(6, block.totalFee);
-                pstmt.setInt(7, block.payloadLength);
-                pstmt.setBytes(8, block.generatorPublicKey);
-                pstmt.setBytes(9, block.previousBlockHash);
-                pstmt.setBytes(10, block.cumulativeDifficulty.toByteArray());
-                pstmt.setLong(11, block.baseTarget);
+                pstmt.setInt(++i, block.totalAmount);
+                pstmt.setInt(++i, block.totalFee);
+                pstmt.setInt(++i, block.payloadLength);
+                pstmt.setBytes(++i, block.generatorPublicKey);
+                pstmt.setBytes(++i, block.previousBlockHash);
+                pstmt.setBytes(++i, block.cumulativeDifficulty.toByteArray());
+                pstmt.setLong(++i, block.baseTarget);
                 if (block.nextBlockId != null) {
-                    pstmt.setLong(12, block.nextBlockId);
+                    pstmt.setLong(++i, block.nextBlockId);
                 } else {
-                    pstmt.setNull(12, Types.BIGINT);
+                    pstmt.setNull(++i, Types.BIGINT);
                 }
-                pstmt.setInt(13, block.index);
-                pstmt.setInt(14, block.height);
-                pstmt.setBytes(15, block.generationSignature);
-                pstmt.setBytes(16, block.blockSignature);
-                pstmt.setBytes(17, block.payloadHash);
-                pstmt.setLong(18, block.getGeneratorId());
+                pstmt.setInt(++i, block.index);
+                pstmt.setInt(++i, block.height);
+                pstmt.setBytes(++i, block.generationSignature);
+                pstmt.setBytes(++i, block.blockSignature);
+                pstmt.setBytes(++i, block.payloadHash);
+                pstmt.setLong(++i, block.getGeneratorId());
                 pstmt.executeUpdate();
                 Transaction.saveTransactions(con, block.blockTransactions);
             }
@@ -247,7 +245,6 @@ public final class Block {
     private volatile Long id;
     private volatile String stringId = null;
     private volatile Long generatorId;
-    private SoftReference<JSONStreamAware> jsonRef;
 
 
     Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
@@ -389,19 +386,6 @@ public final class Block {
         return generatorId;
     }
 
-    public synchronized JSONStreamAware getJSON() {
-        JSONStreamAware json;
-        if (jsonRef != null) {
-            json = jsonRef.get();
-            if (json != null) {
-                return json;
-            }
-        }
-        json = JSON.prepare(getJSONObject());
-        jsonRef = new SoftReference<>(json);
-        return json;
-    }
-
     @Override
     public boolean equals(Object o) {
         return o instanceof Block && this.getId().equals(((Block)o).getId());
@@ -433,7 +417,7 @@ public final class Block {
         return buffer.array();
     }
 
-    JSONObject getJSONObject() {
+    public JSONObject getJSONObject() {
 
         JSONObject block = new JSONObject();
 
