@@ -68,7 +68,7 @@ public final class User {
                 JSONArray addedBlacklistedPeers = new JSONArray();
                 JSONObject addedBlacklistedPeer = new JSONObject();
                 addedBlacklistedPeer.put("index", peer.getIndex());
-                addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
+                addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), peer.getPeerAddress(), 25, true));
                 if (peer.isWellKnown()) {
                     addedBlacklistedPeer.put("wellKnown", true);
                 }
@@ -91,7 +91,7 @@ public final class User {
                     JSONArray addedKnownPeers = new JSONArray();
                     JSONObject addedKnownPeer = new JSONObject();
                     addedKnownPeer.put("index", peer.getIndex());
-                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
+                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), peer.getPeerAddress(), 25, true));
                     if (peer.isWellKnown()) {
                         addedKnownPeer.put("wellKnown", true);
                     }
@@ -114,7 +114,7 @@ public final class User {
                 JSONArray addedKnownPeers = new JSONArray();
                 JSONObject addedKnownPeer = new JSONObject();
                 addedKnownPeer.put("index", peer.getIndex());
-                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), peer.getPeerAddress(), 25, true));
                 if (peer.isWellKnown()) {
                     addedKnownPeer.put("wellKnown", true);
                 }

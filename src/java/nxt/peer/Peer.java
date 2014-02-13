@@ -457,6 +457,7 @@ public final class Peer implements Comparable<Peer> {
 
     public void blacklist() {
         blacklistingTime = System.currentTimeMillis();
+        deactivate();
         listeners.notify(this, Event.BLACKLIST);
     }
 
