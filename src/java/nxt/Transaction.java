@@ -1074,8 +1074,9 @@ public final class Transaction implements Comparable<Transaction> {
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.attachment;
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
-                    Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
+                    if (Asset.getAsset(attachment.getAssetId()) != null) {
+                        Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
+                    }
                 }
 
                 @Override
@@ -1133,8 +1134,9 @@ public final class Transaction implements Comparable<Transaction> {
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                    senderAccount.addToBalanceAndUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
-                    Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
+                    if (Asset.getAsset(attachment.getAssetId()) != null) {
+                        Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
+                    }
                 }
 
                 @Override

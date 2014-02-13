@@ -134,6 +134,10 @@ public abstract class Order {
 
         private static final Collection<Ask> allAskOrders = Collections.unmodifiableCollection(askOrders.values());
 
+        public static ConcurrentMap<Long, SortedSet<Ask>> getSortedAskOrders() {
+            return sortedAskOrders;
+        }
+
         public static Collection<Ask> getAllAskOrders() {
             return allAskOrders;
         }
@@ -147,14 +151,10 @@ public abstract class Order {
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
+            senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -quantity);
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
             askOrders.put(order.getId(), order);
-            SortedSet<Ask> sortedAssetAskOrders = sortedAskOrders.get(assetId);
-            if (sortedAssetAskOrders == null) {
-                sortedAssetAskOrders = new TreeSet<>();
-                sortedAskOrders.put(assetId,sortedAssetAskOrders);
-            }
-            sortedAssetAskOrders.add(order);
+            sortedAskOrders.get(assetId).add(order);
             matchOrders(assetId);
         }
 
@@ -208,6 +208,10 @@ public abstract class Order {
 
         private static final Collection<Bid> allBidOrders = Collections.unmodifiableCollection(bidOrders.values());
 
+        public static ConcurrentMap<Long, SortedSet<Bid>> getSortedBidOrders() {
+            return sortedBidOrders;
+        }
+
         public static Collection<Bid> getAllBidOrders() {
             return allBidOrders;
         }
@@ -221,14 +225,10 @@ public abstract class Order {
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
+            senderAccount.addToBalanceAndUnconfirmedBalance(-quantity * price);
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
-            senderAccount.addToBalanceAndUnconfirmedBalance(- quantity * price);
             bidOrders.put(order.getId(), order);
-            SortedSet<Bid> sortedAssetBidOrders = sortedBidOrders.get(assetId);
-            if (sortedAssetBidOrders == null) {
-                sortedAssetBidOrders = new TreeSet<>();
-                sortedBidOrders.put(assetId,sortedAssetBidOrders);
-            }
+            sortedBidOrders.get(assetId).add(order);
             matchOrders(assetId);
         }
 

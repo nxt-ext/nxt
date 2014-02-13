@@ -2,6 +2,7 @@ package nxt;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -27,6 +28,8 @@ public final class Asset {
         Asset asset = new Asset(assetId, senderAccountId, name, description, quantity);
         Asset.assets.put(assetId, asset);
         Asset.assetNameToAssetMappings.put(name.toLowerCase(), asset);
+        Order.Ask.getSortedAskOrders().put(assetId, new TreeSet<Order.Ask>());
+        Order.Bid.getSortedBidOrders().put(assetId, new TreeSet<Order.Bid>());
     }
 
     static void removeAsset(Long assetId) {
