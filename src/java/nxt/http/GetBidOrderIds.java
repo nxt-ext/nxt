@@ -39,9 +39,16 @@ public final class GetBidOrderIds extends HttpRequestDispatcher.HttpRequestHandl
             return UNKNOWN_ASSET;
         }
 
+        int limit;
+        try {
+            limit = Integer.parseInt(req.getParameter("limit"));
+        } catch (Exception e) {
+            limit = Integer.MAX_VALUE;
+        }
+
         JSONArray orderIds = new JSONArray();
         Iterator<Order.Bid> bidOrders = Order.Bid.getSortedOrders(assetId).iterator();
-        while (bidOrders.hasNext()) {
+        while (bidOrders.hasNext() && limit-- > 0) {
             orderIds.add(Convert.convert(bidOrders.next().getId()));
         }
 
