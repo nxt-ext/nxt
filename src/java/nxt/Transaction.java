@@ -32,6 +32,8 @@ public final class Transaction implements Comparable<Transaction> {
 
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
+    private static final byte SUBTYPE_MESSAGING_POLL_CREATION = 2;
+    private static final byte SUBTYPE_MESSAGING_VOTE_CASTING = 3;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -585,6 +587,10 @@ public final class Transaction implements Comparable<Transaction> {
                         return Type.Messaging.ARBITRARY_MESSAGE;
                     case SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT:
                         return Type.Messaging.ALIAS_ASSIGNMENT;
+                    case SUBTYPE_MESSAGING_POLL_CREATION:
+                        return Type.Messaging.POLL_CREATION;
+                    case SUBTYPE_MESSAGING_VOTE_CASTING:
+                        return Type.Messaging.VOTE_CASTING;
                     default:
                         return null;
                 }
@@ -839,6 +845,84 @@ public final class Transaction implements Comparable<Transaction> {
                         }
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error in alias assignment validation", e);
+                        return false;
+                    }
+                }
+
+            };
+
+            public final static Type POLL_CREATION = new Messaging() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_MESSAGING_POLL_CREATION;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                    return false;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                    throw new UndoNotSupportedException(transaction, "Reversal of poll creation not supported");
+                }
+
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
+                        throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                    }
+                    try {
+                        return transaction.amount == 0;
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error validating poll creation", e);
+                        return false;
+                    }
+                }
+
+            };
+
+            public final static Type VOTE_CASTING = new Messaging() {
+
+                @Override
+                public final byte getSubtype() {
+                    return SUBTYPE_MESSAGING_VOTE_CASTING;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                    return false;
+                }
+
+                @Override
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                    return validateAttachment(transaction);
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+                @Override
+                void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                    throw new UndoNotSupportedException(transaction, "Reversal of vote casting not supported");
+                }
+
+                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
+                        throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                    }
+                    try {
+                        return transaction.amount == 0;
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error validating vote casting", e);
                         return false;
                     }
                 }

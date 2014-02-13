@@ -48,6 +48,14 @@ public final class GetConstants extends HttpRequestDispatcher.HttpRequestHandler
         subtype.put("value", Transaction.Type.Messaging.ALIAS_ASSIGNMENT.getSubtype());
         subtype.put("description", "Alias assignment");
         subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", Transaction.Type.Messaging.POLL_CREATION.getSubtype());
+        subtype.put("description", "Poll creation");
+        subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", Transaction.Type.Messaging.VOTE_CASTING.getSubtype());
+        subtype.put("description", "Vote casting");
+        subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         transactionType = new JSONObject();
