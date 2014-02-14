@@ -44,6 +44,8 @@ final class GetInfo extends HttpJSONRequestHandler {
 
             peer.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
 
+            peer.setState(Peer.State.CONNECTED);
+
         }
 
         if (Nxt.myHallmark != null && Nxt.myHallmark.length() > 0) {

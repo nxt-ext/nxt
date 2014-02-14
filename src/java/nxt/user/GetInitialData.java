@@ -51,7 +51,8 @@ final class GetInitialData extends UserRequestHandler {
 
                 JSONObject blacklistedPeer = new JSONObject();
                 blacklistedPeer.put("index", peer.getIndex());
-                blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), address, 25, true));
+                blacklistedPeer.put("address", peer.getPeerAddress());
+                blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 if (peer.isWellKnown()) {
                     blacklistedPeer.put("wellKnown", true);
                 }
@@ -63,7 +64,8 @@ final class GetInitialData extends UserRequestHandler {
 
                     JSONObject knownPeer = new JSONObject();
                     knownPeer.put("index", peer.getIndex());
-                    knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
+                    knownPeer.put("address", peer.getPeerAddress());
+                    knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                     if (peer.isWellKnown()) {
                         knownPeer.put("wellKnown", true);
                     }
@@ -81,8 +83,8 @@ final class GetInitialData extends UserRequestHandler {
                     activePeer.put("disconnected", true);
 
                 }
-                activePeer.put("address", Convert.truncate(address, "", 25, true));
-                activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "", 25, true));
+                activePeer.put("address", Convert.truncate(address, "-", 25, true));
+                activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 activePeer.put("weight", peer.getWeight());
                 activePeer.put("downloaded", peer.getDownloadedVolume());
                 activePeer.put("uploaded", peer.getUploadedVolume());

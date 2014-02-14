@@ -159,11 +159,8 @@ public final class Peer implements Comparable<Peer> {
                         return;
                     }
                     JSONArray peers = (JSONArray)response.get("peers");
-                    for (Object peerAddress : peers) {
-                        String address = ((String)peerAddress).trim();
-                        if (address.length() > 0) {
-                            Peer.addPeer(address, address);
-                        }
+                    for (Object announcedAddress : peers) {
+                        Peer.addPeer((String)announcedAddress);
                     }
 
                 } catch (Exception e) {
@@ -193,6 +190,10 @@ public final class Peer implements Comparable<Peer> {
 
     public static Peer getPeer(String peerAddress) {
         return peers.get(peerAddress);
+    }
+
+    public static Peer addPeer(String announcedAddress) {
+        return addPeer(announcedAddress, announcedAddress);
     }
 
     public static Peer addPeer(final String address, final String announcedAddress) {
@@ -297,6 +298,9 @@ public final class Peer implements Comparable<Peer> {
 
     private static String parseHostAndPort(String address) {
         try {
+            if (address == null) {
+                return null;
+            }
             URI uri = new URI("http://" + address.trim());
             String host = uri.getHost();
             if (host == null || host.equals("") || host.equals("localhost") || host.equals("127.0.0.1") || host.equals("0:0:0:0:0:0:0:1")) {
@@ -641,13 +645,13 @@ public final class Peer implements Comparable<Peer> {
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
 
-            if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
+            if (analyzeHallmark((String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
             }
         }
     }
 
-    private boolean analyzeHallmark(final String realHost, final String hallmarkString) {
+    boolean analyzeHallmark(final String hallmarkString) {
 
         if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
             return true;
@@ -655,7 +659,7 @@ public final class Peer implements Comparable<Peer> {
 
         try {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (! hallmark.isValid() || ! hallmark.getHost().equals(realHost)) {
+            if (! hallmark.isValid() || ! hallmark.getHost().equals(announcedAddress)) {
                 return false;
             }
             this.hallmark = hallmarkString;
@@ -691,7 +695,7 @@ public final class Peer implements Comparable<Peer> {
             return true;
 
         } catch (RuntimeException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost + ", " + e.toString());
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + announcedAddress + ", " + e.toString());
         }
         return false;
 

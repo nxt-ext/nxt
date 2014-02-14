@@ -45,7 +45,7 @@
 					element.className = "wellKnown";
 					element.title = "Well-known address";
 				} else {
-					if (peer.announcedAddress.length > 0) {
+					if (peer.announcedAddress.length > 1) {
 						element.className = "enabledAnnouncedAddress";
 					} else {
 						element.className = "disabledAnnouncedAddress";
@@ -54,16 +54,8 @@
 				}
 				element = row.insertCell(3);
 				element.className = "text";
-				if (peer.announcedAddress.length > 0) {
-					element.title = peer.announcedAddress;
-					if (peer.announcedAddress.length <= 20) {
-						element.innerHTML = peer.announcedAddress;
-					} else {
-						element.innerHTML = peer.announcedAddress.substr(0, 20) + "...";
-					}
-				} else {
-					element.innerHTML = "-";
-				}
+				element.title = peer.announcedAddress;
+			    element.innerHTML = peer.announcedAddress;
 				element = row.insertCell(4);
 				element.id = "weightIcon" + peer.index;
 				element.className = peer.weight > 0 ? "enabledWeight" : "disabledWeight";

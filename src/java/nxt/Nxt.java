@@ -175,7 +175,7 @@ public final class Nxt extends HttpServlet {
                     if (wellKnownPeer.length() > 0) {
 
                         set.add(wellKnownPeer);
-                        Peer.addPeer(wellKnownPeer, wellKnownPeer);
+                        Peer.addPeer(wellKnownPeer);
 
                     }
 
