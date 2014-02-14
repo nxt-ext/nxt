@@ -15,6 +15,7 @@
         </style>
         <script type="text/javascript">
             function addPeer(peer) {
+                if (document.getElementById("peer" + peer.index) != null) return;
                 var peers = document.getElementById("peers"), row = peers.insertRow(peers.rows.length), element;
                 row.id = "peer" + peer.index;
                 element = row.insertCell(0);
