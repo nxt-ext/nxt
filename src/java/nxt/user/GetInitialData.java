@@ -53,6 +53,7 @@ final class GetInitialData extends UserRequestHandler {
                 blacklistedPeer.put("index", peer.getIndex());
                 blacklistedPeer.put("address", peer.getPeerAddress());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                blacklistedPeer.put("software", peer.getSoftware());
                 if (peer.isWellKnown()) {
                     blacklistedPeer.put("wellKnown", true);
                 }
@@ -66,10 +67,10 @@ final class GetInitialData extends UserRequestHandler {
                     knownPeer.put("index", peer.getIndex());
                     knownPeer.put("address", peer.getPeerAddress());
                     knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                    knownPeer.put("software", peer.getSoftware());
                     if (peer.isWellKnown()) {
                         knownPeer.put("wellKnown", true);
                     }
-
                     knownPeers.add(knownPeer);
 
                 }
@@ -79,9 +80,7 @@ final class GetInitialData extends UserRequestHandler {
                 JSONObject activePeer = new JSONObject();
                 activePeer.put("index", peer.getIndex());
                 if (peer.getState() == Peer.State.DISCONNECTED) {
-
                     activePeer.put("disconnected", true);
-
                 }
                 activePeer.put("address", Convert.truncate(address, "-", 25, true));
                 activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
@@ -122,29 +121,19 @@ final class GetInitialData extends UserRequestHandler {
         response.put("response", "processInitialData");
         response.put("version", Nxt.VERSION);
         if (unconfirmedTransactions.size() > 0) {
-
             response.put("unconfirmedTransactions", unconfirmedTransactions);
-
         }
         if (activePeers.size() > 0) {
-
             response.put("activePeers", activePeers);
-
         }
         if (knownPeers.size() > 0) {
-
             response.put("knownPeers", knownPeers);
-
         }
         if (blacklistedPeers.size() > 0) {
-
             response.put("blacklistedPeers", blacklistedPeers);
-
         }
         if (recentBlocks.size() > 0) {
-
             response.put("recentBlocks", recentBlocks);
-
         }
 
         return response;

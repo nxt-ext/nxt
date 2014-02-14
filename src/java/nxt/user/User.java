@@ -73,6 +73,7 @@ public final class User {
                 if (peer.isWellKnown()) {
                     addedBlacklistedPeer.put("wellKnown", true);
                 }
+                addedBlacklistedPeer.put("software", peer.getSoftware());
                 addedBlacklistedPeers.add(addedBlacklistedPeer);
                 response.put("addedBlacklistedPeers", addedBlacklistedPeers);
                 User.sendNewDataToAll(response);
@@ -97,6 +98,7 @@ public final class User {
                     if (peer.isWellKnown()) {
                         addedKnownPeer.put("wellKnown", true);
                     }
+                    addedKnownPeer.put("software", peer.getSoftware());
                     addedKnownPeers.add(addedKnownPeer);
                     response.put("addedKnownPeers", addedKnownPeers);
                 }
@@ -121,6 +123,7 @@ public final class User {
                 if (peer.isWellKnown()) {
                     addedKnownPeer.put("wellKnown", true);
                 }
+                addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
                 response.put("addedKnownPeers", addedKnownPeers);
                 User.sendNewDataToAll(response);
