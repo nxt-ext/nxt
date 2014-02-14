@@ -5,6 +5,7 @@ import org.h2.jdbcx.JdbcConnectionPool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 final class Db {
 
@@ -27,7 +28,14 @@ final class Db {
 
     static void shutdown() {
         if (cp != null) {
+            try (Connection con = cp.getConnection();
+                 Statement stmt = con.createStatement()) {
+                stmt.execute("SHUTDOWN COMPACT");
+            } catch (SQLException e) {
+                Logger.logDebugMessage(e.toString(), e);
+            }
             cp.dispose();
+            cp = null;
         }
     }
 
