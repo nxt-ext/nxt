@@ -156,11 +156,14 @@ public final class Blockchain {
             getCumulativeDifficultyRequest = JSON.prepareRequest(request);
         }
 
+        private boolean peerHasMore;
+
         @Override
         public void run() {
 
             try {
                 try {
+                    peerHasMore = true;
                     Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
@@ -185,12 +188,12 @@ public final class Blockchain {
                     if (! getLastBlock().getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                         commonBlockId = getCommonMilestoneBlockId(peer);
                     }
-                    if (commonBlockId == null) {
+                    if (commonBlockId == null || ! peerHasMore) {
                         return;
                     }
 
                     commonBlockId = getCommonBlockId(peer, commonBlockId);
-                    if (commonBlockId == null) {
+                    if (commonBlockId == null || ! peerHasMore) {
                         return;
                     }
 
@@ -294,10 +297,10 @@ public final class Blockchain {
             while (true) {
                 JSONObject milestoneBlockIdsRequest = new JSONObject();
                 milestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
-                if (lastMilestoneBlockId != null) {
-                    milestoneBlockIdsRequest.put("lastMilestoneBlockId", lastMilestoneBlockId);
-                } else {
+                if (lastMilestoneBlockId == null) {
                     milestoneBlockIdsRequest.put("lastBlockId", Blockchain.getLastBlock().getStringId());
+                } else {
+                    milestoneBlockIdsRequest.put("lastMilestoneBlockId", lastMilestoneBlockId);
                 }
 
                 JSONObject response = peer.send(JSON.prepareRequest(milestoneBlockIdsRequest));
@@ -317,13 +320,18 @@ public final class Blockchain {
                     peer.blacklist();
                     return null;
                 }
-
+                if (Boolean.TRUE.equals(response.get("last"))) {
+                    peerHasMore = false;
+                }
                 for (Object milestoneBlockId : milestoneBlockIds) {
-                    lastMilestoneBlockId = (String) milestoneBlockId;
-                    Long blockId = Convert.parseUnsignedLong(lastMilestoneBlockId);
+                    Long blockId = Convert.parseUnsignedLong((String)milestoneBlockId);
                     if (Block.hasBlock(blockId)) {
+                        if (lastMilestoneBlockId == null && milestoneBlockIds.size() > 1) {
+                            peerHasMore = false;
+                        }
                         return blockId;
                     }
+                    lastMilestoneBlockId = (String) milestoneBlockId;
                 }
             }
 
