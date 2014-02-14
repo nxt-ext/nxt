@@ -426,11 +426,14 @@ public final class Blockchain {
                 if (needsRescan) {
                     // this relies on the database cascade trigger to delete all blocks after commonBlock
                     if (commonBlock.getNextBlockId() != null) {
+                        Logger.logDebugMessage("Last block is " + lastBlock.get().getStringId() + " at " + lastBlock.get().getHeight());
+                        Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
                         Block.deleteBlock(commonBlock.getNextBlockId());
                     }
                     Logger.logMessage("Re-scanning blockchain...");
                     Blockchain.scan();
                     Logger.logMessage("...Done");
+                    Logger.logDebugMessage("Last block is " + lastBlock.get().getStringId() + " at " + lastBlock.get().getHeight());
                 }
             }
 
@@ -1210,6 +1213,9 @@ public final class Blockchain {
                 lastBlock.set(currentBlock);
                 currentBlock.apply();
                 currentBlockId = currentBlock.getNextBlockId();
+                if (currentBlock.getHeight() % 5000 == 0) {
+                    Logger.logDebugMessage("block " + currentBlock.getHeight());
+                }
             }
         } catch (NxtException.ValidationException|SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -1327,9 +1333,9 @@ public final class Blockchain {
         try {
             if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
                 pushBlock(block, block.blockTransactions);
-                Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) +" generated block " + block.getStringId());
+                Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) + " generated block " + block.getStringId());
             } else {
-                Logger.logMessage("Generated an incorrect block. Waiting for the next one...");
+                Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) + " generated an incorrect block. Waiting for the next one...");
             }
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
