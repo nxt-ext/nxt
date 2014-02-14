@@ -645,13 +645,15 @@ public final class Peer implements Comparable<Peer> {
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
 
-            if (analyzeHallmark((String)response.get("hallmark"))) {
+            if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
+            } else {
+                blacklist();
             }
         }
     }
 
-    boolean analyzeHallmark(final String hallmarkString) {
+    boolean analyzeHallmark(String address, final String hallmarkString) {
 
         if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
             return true;
@@ -659,7 +661,7 @@ public final class Peer implements Comparable<Peer> {
 
         try {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (! hallmark.isValid() || ! hallmark.getHost().equals(announcedAddress)) {
+            if (! hallmark.isValid() || ! hallmark.getHost().equals(address)) {
                 return false;
             }
             this.hallmark = hallmarkString;

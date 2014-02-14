@@ -81,7 +81,7 @@ public abstract class HttpJSONRequestHandler {
                 peer.setState(Peer.State.CONNECTED);
             }
             peer.updateDownloadedVolume(cis.getCount());
-            if (! peer.analyzeHallmark((String)request.get("hallmark"))) {
+            if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
                 peer.blacklist();
                 return;
             }
