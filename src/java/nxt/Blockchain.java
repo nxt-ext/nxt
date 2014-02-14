@@ -36,7 +36,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class Blockchain {
@@ -56,10 +55,8 @@ public final class Blockchain {
 
     private static volatile Peer lastBlockchainFeeder;
 
-    private static final AtomicInteger blockCounter = new AtomicInteger();
     private static final AtomicReference<Block> lastBlock = new AtomicReference<>();
 
-    private static final AtomicInteger transactionCounter = new AtomicInteger();
     private static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
@@ -156,11 +153,14 @@ public final class Blockchain {
             getCumulativeDifficultyRequest = JSON.prepareRequest(request);
         }
 
+        private boolean peerHasMore;
+
         @Override
         public void run() {
 
             try {
                 try {
+                    peerHasMore = true;
                     Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
@@ -185,12 +185,12 @@ public final class Blockchain {
                     if (! getLastBlock().getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                         commonBlockId = getCommonMilestoneBlockId(peer);
                     }
-                    if (commonBlockId == null) {
+                    if (commonBlockId == null || ! peerHasMore) {
                         return;
                     }
 
                     commonBlockId = getCommonBlockId(peer, commonBlockId);
-                    if (commonBlockId == null) {
+                    if (commonBlockId == null || ! peerHasMore) {
                         return;
                     }
 
@@ -294,10 +294,10 @@ public final class Blockchain {
             while (true) {
                 JSONObject milestoneBlockIdsRequest = new JSONObject();
                 milestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
-                if (lastMilestoneBlockId != null) {
-                    milestoneBlockIdsRequest.put("lastMilestoneBlockId", lastMilestoneBlockId);
-                } else {
+                if (lastMilestoneBlockId == null) {
                     milestoneBlockIdsRequest.put("lastBlockId", Blockchain.getLastBlock().getStringId());
+                } else {
+                    milestoneBlockIdsRequest.put("lastMilestoneBlockId", lastMilestoneBlockId);
                 }
 
                 JSONObject response = peer.send(JSON.prepareRequest(milestoneBlockIdsRequest));
@@ -311,19 +311,24 @@ public final class Blockchain {
                 if (milestoneBlockIds.isEmpty()) {
                     return Genesis.GENESIS_BLOCK_ID;
                 }
-                /* prevent overloading with blockIds
+                // prevent overloading with blockIds
                 if (milestoneBlockIds.size() > 20) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many milestoneBlockIds, blacklisting");
                     peer.blacklist();
                     return null;
                 }
-                */
+                if (Boolean.TRUE.equals(response.get("last"))) {
+                    peerHasMore = false;
+                }
                 for (Object milestoneBlockId : milestoneBlockIds) {
-                    lastMilestoneBlockId = (String) milestoneBlockId;
-                    Long blockId = Convert.parseUnsignedLong(lastMilestoneBlockId);
+                    Long blockId = Convert.parseUnsignedLong((String)milestoneBlockId);
                     if (Block.hasBlock(blockId)) {
+                        if (lastMilestoneBlockId == null && milestoneBlockIds.size() > 1) {
+                            peerHasMore = false;
+                        }
                         return blockId;
                     }
+                    lastMilestoneBlockId = (String) milestoneBlockId;
                 }
             }
 
@@ -343,13 +348,13 @@ public final class Blockchain {
                 if (nextBlockIds == null || nextBlockIds.size() == 0) {
                     return null;
                 }
-                /*
+                // prevent overloading with blockIds
                 if (nextBlockIds.size() > 1440) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist();
                     return null;
                 }
-                */
+
                 for (Object nextBlockId : nextBlockIds) {
                     Long blockId = Convert.parseUnsignedLong((String) nextBlockId);
                     if (! Block.hasBlock(blockId)) {
@@ -372,13 +377,13 @@ public final class Blockchain {
             }
 
             JSONArray nextBlocks = (JSONArray)response.get("nextBlocks");
-            /*
+            // prevent overloading with blocks
             if (nextBlocks.size() > 1440) {
                 Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlocks, blacklisting");
                 peer.blacklist();
                 return null;
             }
-            */
+
             return nextBlocks;
 
         }
@@ -550,30 +555,64 @@ public final class Blockchain {
     }
 
     public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
+        return getAllTransactions(account, type, subtype, timestamp, Boolean.TRUE);
+    }
+
+    public static DbIterator<Transaction> getAllTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending) {
         Connection con = null;
         try {
+            StringBuilder buf = new StringBuilder();
+            if (orderAscending != null) {
+                buf.append("SELECT * FROM (");
+            }
+            buf.append("SELECT * FROM transaction WHERE recipient_id = ? ");
+            if (timestamp > 0) {
+                buf.append("AND timestamp >= ? ");
+            }
+            if (type >= 0) {
+                buf.append("AND type = ? ");
+                if (subtype >= 0) {
+                    buf.append("AND subtype = ? ");
+                }
+            }
+            buf.append("UNION SELECT * FROM transaction WHERE sender_id = ? ");
+            if (timestamp > 0) {
+                buf.append("AND timestamp >= ? ");
+            }
+            if (type >= 0) {
+                buf.append("AND type = ? ");
+                if (subtype >= 0) {
+                    buf.append("AND subtype = ? ");
+                }
+            }
+            if (Boolean.TRUE.equals(orderAscending)) {
+                buf.append(") ORDER BY timestamp ASC");
+            } else if (Boolean.FALSE.equals(orderAscending)) {
+                buf.append(") ORDER BY timestamp DESC");
+            }
             con = Db.getConnection();
             PreparedStatement pstmt;
+            int i = 0;
+            pstmt = con.prepareStatement(buf.toString());
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
             if (type >= 0) {
+                pstmt.setByte(++i, type);
                 if (subtype >= 0) {
-                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) AND type = ? AND subtype = ? ORDER BY timestamp ASC");
-                    pstmt.setInt(1, timestamp);
-                    pstmt.setLong(2, account.getId());
-                    pstmt.setLong(3, account.getId());
-                    pstmt.setByte(4, type);
-                    pstmt.setByte(5, subtype);
-                } else {
-                    pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) AND type = ? ORDER BY timestamp ASC");
-                    pstmt.setInt(1, timestamp);
-                    pstmt.setLong(2, account.getId());
-                    pstmt.setLong(3, account.getId());
-                    pstmt.setByte(4, type);
+                    pstmt.setByte(++i, subtype);
                 }
-            } else {
-                pstmt = con.prepareStatement("SELECT * FROM transaction WHERE timestamp >= ? AND (recipient_id = ? OR sender_id = ?) ORDER BY timestamp ASC");
-                pstmt.setInt(1, timestamp);
-                pstmt.setLong(2, account.getId());
-                pstmt.setLong(3, account.getId());
+            }
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
+            if (type >= 0) {
+                pstmt.setByte(++i, type);
+                if (subtype >= 0) {
+                    pstmt.setByte(++i, subtype);
+                }
             }
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<Transaction>() {
                 @Override
@@ -630,19 +669,11 @@ public final class Blockchain {
             throw new IllegalArgumentException("Can't get more than 1440 blocks at a time");
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt1 = con.prepareStatement("SELECT db_id FROM block WHERE id = ?");
-             PreparedStatement pstmt2 = con.prepareStatement("SELECT * FROM block WHERE db_id > ? ORDER BY db_id ASC LIMIT ?")) {
-            pstmt1.setLong(1, blockId);
-            ResultSet rs = pstmt1.executeQuery();
-            if (! rs.next()) {
-                rs.close();
-                return Collections.emptyList();
-            }
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             List<Block> result = new ArrayList<>();
-            int dbId = rs.getInt("db_id");
-            pstmt2.setInt(1, dbId);
-            pstmt2.setInt(2, limit);
-            rs = pstmt2.executeQuery();
+            pstmt.setLong(1, blockId);
+            pstmt.setInt(2, limit);
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 result.add(Block.getBlock(con, rs));
             }
@@ -779,7 +810,6 @@ public final class Blockchain {
                 for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
                     Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
                             Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
-                    transaction.setIndex(transactionCounter.incrementAndGet());
                     transactionsMap.put(transaction.getId(), transaction);
                 }
 
@@ -790,7 +820,6 @@ public final class Blockchain {
 
                 Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
                         Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null);
-                genesisBlock.setIndex(blockCounter.incrementAndGet());
 
                 Transaction[] transactions = transactionsMap.values().toArray(new Transaction[transactionsMap.size()]);
                 for (int i = 0; i < transactions.length; i++) {
@@ -802,9 +831,9 @@ public final class Blockchain {
 
                 addBlock(genesisBlock);
 
-            } catch (NxtException.ValidationException validationException) {
-                Logger.logMessage(validationException.getMessage());
-                System.exit(1);
+            } catch (NxtException.ValidationException e) {
+                Logger.logMessage(e.getMessage());
+                throw new RuntimeException(e.toString(), e);
             }
         }
 
@@ -852,8 +881,6 @@ public final class Blockchain {
                     }
 
                     doubleSpendingTransaction = transaction.isDoubleSpending();
-
-                    transaction.setIndex(transactionCounter.incrementAndGet());
 
                     if (doubleSpendingTransaction) {
                         doubleSpendingTransactions.put(id, transaction);
@@ -955,7 +982,7 @@ public final class Blockchain {
                     throw new BlockNotAcceptedException("Previous block hash doesn't match");
                 }
                 if (block.getTimestamp() > curTime + 15 || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
-                    throw new BlockNotAcceptedException("Invalid timestamp: " + block.getTimestamp()
+                    throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                             + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp());
                 }
                 if (block.getId().equals(Long.valueOf(0L)) || Block.hasBlock(block.getId())) {
@@ -965,12 +992,9 @@ public final class Blockchain {
                     throw new BlockNotAcceptedException("Signature verification failed");
                 }
 
-                block.setIndex(blockCounter.incrementAndGet());
-
                 Map<Long, Transaction> blockTransactions = new HashMap<>();
                 for (int i = 0; i < block.transactionIds.length; i++) {
                     Transaction transaction = trans[i];
-                    transaction.setIndex(transactionCounter.incrementAndGet());
                     if (blockTransactions.put(block.transactionIds[i] = transaction.getId(), transaction) != null) {
                         throw new BlockNotAcceptedException("Block contains duplicate transactions: " + transaction.getStringId());
                     }
@@ -1077,8 +1101,8 @@ public final class Blockchain {
 
                 block.apply();
 
-                addedConfirmedTransactions = new JSONArray();
-                removedUnconfirmedTransactions = new JSONArray();
+                addedConfirmedTransactions = new ArrayList<>();
+                removedUnconfirmedTransactions = new ArrayList<>();
 
                 for (Map.Entry<Long, Transaction> transactionEntry : blockTransactions.entrySet()) {
 

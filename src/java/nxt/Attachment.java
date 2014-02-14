@@ -142,6 +142,82 @@ public interface Attachment {
         }
     }
 
+    public static class MessagingPollCreation implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public MessagingPollCreation() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            return buffer.array();
+
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+
+            JSONObject attachment = new JSONObject();
+
+            return attachment;
+
+        }
+
+        @Override
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.Messaging.POLL_CREATION;
+        }
+    }
+
+    public static class MessagingVoteCasting implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public MessagingVoteCasting() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            return buffer.array();
+
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+
+            JSONObject attachment = new JSONObject();
+
+            return attachment;
+
+        }
+
+        @Override
+        public Transaction.Type getTransactionType() {
+            return Transaction.Type.Messaging.VOTE_CASTING;
+        }
+    }
+
     public static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;

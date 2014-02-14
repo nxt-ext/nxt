@@ -63,6 +63,11 @@ public abstract class HttpJSONRequestHandler {
         JSONStreamAware response;
 
         try {
+            peer = Peer.addPeer(req.getRemoteHost(), null);
+            if (peer.isBlacklisted()) {
+                return;
+            }
+
             JSONObject request;
             CountingInputStream cis = new CountingInputStream(req.getInputStream());
             try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
@@ -72,18 +77,13 @@ public abstract class HttpJSONRequestHandler {
                 return;
             }
 
-            peer = Peer.addPeer(req.getRemoteHost(), "");
-            if (peer != null) {
-                if (peer.isBlacklisted()) {
-                    return;
-                }
-                if (peer.getState() == Peer.State.DISCONNECTED) {
-                    peer.setState(Peer.State.CONNECTED);
-                }
-                peer.updateDownloadedVolume(cis.getCount());
-                if (peer.analyzeHallmark(req.getRemoteHost(), (String)request.get("hallmark"))) {
-                    peer.setState(Peer.State.CONNECTED);
-                }
+            if (peer.getState() == Peer.State.DISCONNECTED) {
+                peer.setState(Peer.State.CONNECTED);
+            }
+            peer.updateDownloadedVolume(cis.getCount());
+            if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
+                peer.blacklist();
+                return;
             }
 
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {

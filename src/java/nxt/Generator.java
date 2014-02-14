@@ -65,28 +65,37 @@ public final class Generator {
     }
 
     public static Generator startForging(String secretPhrase, byte[] publicKey) {
-        Generator generator = new Generator(secretPhrase, publicKey);
+        Account account = Account.getAccount(publicKey);
+        if (account == null) {
+            return null;
+        }
+        Generator generator = new Generator(secretPhrase, publicKey, account);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         return old != null ? old : generator;
+    }
+
+    public static Generator stopForging(String secretPhrase) {
+        Generator generator = generators.remove(secretPhrase);
+        if (generator != null) {
+            lastBlocks.remove(generator.account);
+            hits.remove(generator.account);
+        }
+        return generator;
     }
 
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
     }
 
-    public static Generator stopForging(String secretPhrase) {
-         return generators.remove(secretPhrase);
-    }
-
-    private final Long accountId;
+    private final Account account;
     private final String secretPhrase;
     private final byte[] publicKey;
     private volatile long deadline;
 
-    private Generator(String secretPhrase, byte[] publicKey) {
+    private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
-        this.accountId = Account.getId(publicKey);
+        this.account = account;
         forge(); // initialize deadline
     }
 
@@ -99,10 +108,6 @@ public final class Generator {
     }
 
     private void forge() {
-        Account account = Account.getAccount(accountId);
-        if (account == null) {
-            return;
-        }
 
         long effectiveBalance = account.getEffectiveBalance();
         if (effectiveBalance <= 0) {
@@ -129,7 +134,7 @@ public final class Generator {
             hits.put(account, hit);
 
             long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue();
-            long elapsed = Convert.getEpochTime() - lastBlock.getTimestamp();
+            long elapsed = Math.max(Convert.getEpochTime() - lastBlock.getTimestamp(), 0);
 
             deadline = total - elapsed;
 

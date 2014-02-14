@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -174,8 +175,8 @@ public final class Account {
         return this.publicKey.compareAndSet(null, key) || Arrays.equals(key, this.publicKey.get());
     }
 
-    synchronized Integer getAssetBalance(Long assetId) {
-        return assetBalances.get(assetId);
+    synchronized int getAssetBalance(Long assetId) {
+        return Convert.nullToZero(assetBalances.get(assetId));
     }
 
     synchronized void addToAssetBalance(Long assetId, int quantity) {
@@ -255,8 +256,10 @@ public final class Account {
                     && i < guaranteedBalances.size() - 1
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-                if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_4) {
+                if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Nxt.TRANSPARENT_FORGING_BLOCK_5) {
                     gb.balance += amount; // because of a bug which leads to a fork
+                } else if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
+                    gb.balance += amount;
                 }
             } else if (amount < 0) {
                 gb.balance += amount; // subtract current block withdrawals from all previous gb records

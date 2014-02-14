@@ -40,14 +40,12 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Peer implements Comparable<Peer> {
 
@@ -62,7 +60,6 @@ public final class Peer implements Comparable<Peer> {
     }
 
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
-    private static final AtomicInteger peerCounter = new AtomicInteger();
     private static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
     private static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
 
@@ -159,11 +156,8 @@ public final class Peer implements Comparable<Peer> {
                         return;
                     }
                     JSONArray peers = (JSONArray)response.get("peers");
-                    for (Object peerAddress : peers) {
-                        String address = ((String)peerAddress).trim();
-                        if (address.length() > 0) {
-                            Peer.addPeer(address, address);
-                        }
+                    for (Object announcedAddress : peers) {
+                        Peer.addPeer((String)announcedAddress);
                     }
 
                 } catch (Exception e) {
@@ -193,6 +187,10 @@ public final class Peer implements Comparable<Peer> {
 
     public static Peer getPeer(String peerAddress) {
         return peers.get(peerAddress);
+    }
+
+    public static Peer addPeer(String announcedAddress) {
+        return addPeer(announcedAddress, announcedAddress);
     }
 
     public static Peer addPeer(final String address, final String announcedAddress) {
@@ -297,6 +295,9 @@ public final class Peer implements Comparable<Peer> {
 
     private static String parseHostAndPort(String address) {
         try {
+            if (address == null) {
+                return null;
+            }
             URI uri = new URI("http://" + address.trim());
             String host = uri.getHost();
             if (host == null || host.equals("") || host.equals("localhost") || host.equals("127.0.0.1") || host.equals("0:0:0:0:0:0:0:1")) {
@@ -324,7 +325,6 @@ public final class Peer implements Comparable<Peer> {
     }
 
 
-    private final int index;
     private final String peerAddress;
     private String announcedAddress;
     private int port;
@@ -346,12 +346,10 @@ public final class Peer implements Comparable<Peer> {
 
         this.peerAddress = peerAddress;
         this.announcedAddress = announcedAddress;
-        this.index = peerCounter.incrementAndGet();
+        try {
+            this.port = new URL("http://" + announcedAddress).getPort();
+        } catch (MalformedURLException ignore) {}
         this.state = State.NON_CONNECTED;
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     public String getPeerAddress() {
@@ -415,7 +413,7 @@ public final class Peer implements Comparable<Peer> {
         if (announcedPeerAddress != null) {
             this.announcedAddress = announcedPeerAddress;
             try {
-                this.port = new URL(announcedPeerAddress).getPort();
+                this.port = new URL("http://" + announcedPeerAddress).getPort();
             } catch (MalformedURLException ignore) {}
         }
     }
@@ -430,14 +428,12 @@ public final class Peer implements Comparable<Peer> {
 
     @Override
     public int compareTo(Peer o) {
-        long weight = getWeight(), weight2 = o.getWeight();
-        if (weight > weight2) {
+        if (weight > o.weight) {
             return -1;
-        } else if (weight < weight2) {
+        } else if (weight < o.weight) {
             return 1;
-        } else {
-            return index - o.index;
         }
+        return 0;
     }
 
     public void blacklist(NxtException cause) {
@@ -454,6 +450,7 @@ public final class Peer implements Comparable<Peer> {
 
     public void blacklist() {
         blacklistingTime = System.currentTimeMillis();
+        deactivate();
         listeners.notify(this, Event.BLACKLIST);
     }
 
@@ -594,56 +591,6 @@ public final class Peer implements Comparable<Peer> {
 
     }
 
-    boolean analyzeHallmark(final String realHost, final String hallmarkString) {
-
-        if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
-            return true;
-        }
-
-        try {
-            Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (! hallmark.isValid() || ! hallmark.getHost().equals(realHost)) {
-                return false;
-            }
-            this.hallmark = hallmarkString;
-            Long accountId = Account.getId(hallmark.getPublicKey());
-            LinkedList<Peer> groupedPeers = new LinkedList<>();
-            int validDate = 0;
-            this.accountId = accountId;
-            this.weight = hallmark.getWeight();
-            this.date = hallmark.getDate();
-            for (Peer peer : peers.values()) {
-                if (accountId.equals(peer.accountId)) {
-                    groupedPeers.add(peer);
-                    if (peer.date > validDate) {
-                        validDate = peer.date;
-                    }
-                }
-            }
-
-            long totalWeight = 0;
-            for (Peer peer : groupedPeers) {
-                if (peer.date == validDate) {
-                    totalWeight += peer.weight;
-                } else {
-                    peer.weight = 0;
-                }
-            }
-
-            for (Peer peer : groupedPeers) {
-                peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
-                listeners.notify(peer, Event.WEIGHT);
-            }
-
-            return true;
-
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + realHost + ", " + e.toString());
-        }
-        return false;
-
-    }
-
     void setState(State state) {
         State oldState = this.state;
         this.state = state;
@@ -689,8 +636,60 @@ public final class Peer implements Comparable<Peer> {
 
             if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
+            } else {
+                blacklist();
             }
         }
+    }
+
+    boolean analyzeHallmark(String address, final String hallmarkString) {
+
+        if (hallmarkString == null || hallmarkString.equals(this.hallmark)) {
+            return true;
+        }
+
+        try {
+            Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
+            if (! hallmark.isValid() || ! hallmark.getHost().equals(address)) {
+                return false;
+            }
+            this.hallmark = hallmarkString;
+            Long accountId = Account.getId(hallmark.getPublicKey());
+            List<Peer> groupedPeers = new ArrayList<>();
+            int validDate = 0;
+            this.accountId = accountId;
+            this.weight = hallmark.getWeight();
+            this.date = hallmark.getDate();
+            for (Peer peer : peers.values()) {
+                if (accountId.equals(peer.accountId)) {
+                    groupedPeers.add(peer);
+                    if (peer.date > validDate) {
+                        validDate = peer.date;
+                    }
+                }
+            }
+
+            long totalWeight = 0;
+            for (Peer peer : groupedPeers) {
+                if (peer.date == validDate) {
+                    totalWeight += peer.weight;
+                } else {
+                    peer.weight = 0;
+                }
+            }
+
+            for (Peer peer : groupedPeers) {
+                peer.adjustedWeight = Nxt.MAX_BALANCE * peer.weight / totalWeight;
+                listeners.notify(peer, Event.WEIGHT);
+            }
+
+            return true;
+
+        } catch (RuntimeException e) {
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + announcedAddress + ", " + e.toString());
+        }
+        return false;
+
     }
 
 }

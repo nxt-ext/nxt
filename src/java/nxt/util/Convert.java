@@ -38,10 +38,10 @@ public final class Convert {
 
     public static String convert(long objectId) {
 
-        BigInteger id = BigInteger.valueOf(objectId);
-        if (objectId < 0) {
-            id = id.add(two64);
+        if (objectId >= 0) {
+            return String.valueOf(objectId);
         }
+        BigInteger id = BigInteger.valueOf(objectId).add(two64);
         return id.toString();
 
     }
@@ -75,6 +75,10 @@ public final class Convert {
 
     public static long nullToZero(Long l) {
         return l == null ? 0 : l;
+    }
+
+    public static int nullToZero(Integer i) {
+        return i == null ? 0 : i;
     }
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {
