@@ -100,19 +100,17 @@ public final class User {
                 removedActivePeer.put("index", getIndex(peer));
                 removedActivePeers.add(removedActivePeer);
                 response.put("removedActivePeers", removedActivePeers);
-                if (peer.getAnnouncedAddress() != null) {
-                    JSONArray addedKnownPeers = new JSONArray();
-                    JSONObject addedKnownPeer = new JSONObject();
-                    addedKnownPeer.put("index", getIndex(peer));
-                    addedKnownPeer.put("address", peer.getPeerAddress());
-                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedKnownPeer.put("wellKnown", true);
-                    }
-                    addedKnownPeer.put("software", peer.getSoftware());
-                    addedKnownPeers.add(addedKnownPeer);
-                    response.put("addedKnownPeers", addedKnownPeers);
+                JSONArray addedKnownPeers = new JSONArray();
+                JSONObject addedKnownPeer = new JSONObject();
+                addedKnownPeer.put("index", getIndex(peer));
+                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                if (peer.isWellKnown()) {
+                    addedKnownPeer.put("wellKnown", true);
                 }
+                addedKnownPeer.put("software", peer.getSoftware());
+                addedKnownPeers.add(addedKnownPeer);
+                response.put("addedKnownPeers", addedKnownPeers);
                 User.sendNewDataToAll(response);
             }
         }, Peer.Event.DEACTIVATE);
@@ -200,13 +198,11 @@ public final class User {
             @Override
             public void notify(Peer peer) {
                 JSONObject response = new JSONObject();
-                if (peer.getAnnouncedAddress() != null) {
-                    JSONArray removedKnownPeers = new JSONArray();
-                    JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", getIndex(peer));
-                    removedKnownPeers.add(removedKnownPeer);
-                    response.put("removedKnownPeers", removedKnownPeers);
-                }
+                JSONArray removedKnownPeers = new JSONArray();
+                JSONObject removedKnownPeer = new JSONObject();
+                removedKnownPeer.put("index", getIndex(peer));
+                removedKnownPeers.add(removedKnownPeer);
+                response.put("removedKnownPeers", removedKnownPeers);
                 JSONArray addedActivePeers = new JSONArray();
                 JSONObject addedActivePeer = new JSONObject();
                 addedActivePeer.put("index", getIndex(peer));
