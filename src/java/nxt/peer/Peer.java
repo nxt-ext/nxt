@@ -40,14 +40,12 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Peer implements Comparable<Peer> {
 
@@ -62,7 +60,6 @@ public final class Peer implements Comparable<Peer> {
     }
 
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
-    private static final AtomicInteger peerCounter = new AtomicInteger();
     private static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
     private static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
 
@@ -328,7 +325,6 @@ public final class Peer implements Comparable<Peer> {
     }
 
 
-    private final int index;
     private final String peerAddress;
     private String announcedAddress;
     private int port;
@@ -353,12 +349,7 @@ public final class Peer implements Comparable<Peer> {
         try {
             this.port = new URL("http://" + announcedAddress).getPort();
         } catch (MalformedURLException ignore) {}
-        this.index = peerCounter.incrementAndGet();
         this.state = State.NON_CONNECTED;
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     public String getPeerAddress() {
@@ -437,14 +428,12 @@ public final class Peer implements Comparable<Peer> {
 
     @Override
     public int compareTo(Peer o) {
-        long weight = getWeight(), weight2 = o.getWeight();
-        if (weight > weight2) {
+        if (weight > o.weight) {
             return -1;
-        } else if (weight < weight2) {
+        } else if (weight < o.weight) {
             return 1;
-        } else {
-            return index - o.index;
         }
+        return 0;
     }
 
     public void blacklist(NxtException cause) {
@@ -666,7 +655,7 @@ public final class Peer implements Comparable<Peer> {
             }
             this.hallmark = hallmarkString;
             Long accountId = Account.getId(hallmark.getPublicKey());
-            LinkedList<Peer> groupedPeers = new LinkedList<>();
+            List<Peer> groupedPeers = new ArrayList<>();
             int validDate = 0;
             this.accountId = accountId;
             this.weight = hallmark.getWeight();

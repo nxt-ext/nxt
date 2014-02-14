@@ -179,7 +179,6 @@ public final class Transaction implements Comparable<Transaction> {
             Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
                     referencedTransactionId, signature);
             transaction.blockId = rs.getLong("block_id");
-            transaction.index = rs.getInt("index");
             transaction.height = rs.getInt("height");
             transaction.id = rs.getLong("id");
             transaction.senderId = rs.getLong("sender_id");
@@ -214,8 +213,8 @@ public final class Transaction implements Comparable<Transaction> {
         try {
             for (Transaction transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
-                        + "amount, fee, referenced_transaction_id, index, height, block_id, signature, timestamp, type, subtype, sender_id, attachment) "
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "amount, fee, referenced_transaction_id, height, block_id, signature, timestamp, type, subtype, sender_id, attachment) "
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.deadline);
@@ -228,7 +227,6 @@ public final class Transaction implements Comparable<Transaction> {
                     } else {
                         pstmt.setNull(++i, Types.BIGINT);
                     }
-                    pstmt.setInt(++i, transaction.index);
                     pstmt.setInt(++i, transaction.height);
                     pstmt.setLong(++i, transaction.blockId);
                     pstmt.setBytes(++i, transaction.signature);
@@ -258,7 +256,6 @@ public final class Transaction implements Comparable<Transaction> {
     private final Long referencedTransactionId;
     private final Type type;
 
-    private int index;
     private int height;
     private Long blockId;
     private volatile Block block;
@@ -341,14 +338,6 @@ public final class Transaction implements Comparable<Transaction> {
         this.height = block.getHeight();
     }
 
-    public int getIndex() {
-        return index;
-    }
-
-    void setIndex(int index) {
-        this.index = index;
-    }
-
     public int getTimestamp() {
         return timestamp;
     }
@@ -411,12 +400,6 @@ public final class Transaction implements Comparable<Transaction> {
             return -1;
         }
         if (timestamp > o.timestamp) {
-            return 1;
-        }
-        if (index < o.index) {
-            return -1;
-        }
-        if (index > o.index) {
             return 1;
         }
         return 0;

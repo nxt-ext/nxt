@@ -31,13 +31,14 @@ final class GetInitialData extends UserRequestHandler {
         for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
-            unconfirmedTransaction.put("index", transaction.getIndex());
+            unconfirmedTransaction.put("index", User.getIndex(transaction));
             unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
             unconfirmedTransaction.put("deadline", transaction.getDeadline());
             unconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
             unconfirmedTransaction.put("amount", transaction.getAmount());
             unconfirmedTransaction.put("fee", transaction.getFee());
             unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
+            unconfirmedTransaction.put("id", transaction.getStringId());
 
             unconfirmedTransactions.add(unconfirmedTransaction);
 
@@ -50,7 +51,7 @@ final class GetInitialData extends UserRequestHandler {
             if (peer.isBlacklisted()) {
 
                 JSONObject blacklistedPeer = new JSONObject();
-                blacklistedPeer.put("index", peer.getIndex());
+                blacklistedPeer.put("index", User.getIndex(peer));
                 blacklistedPeer.put("address", peer.getPeerAddress());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 blacklistedPeer.put("software", peer.getSoftware());
@@ -64,7 +65,7 @@ final class GetInitialData extends UserRequestHandler {
                 if (peer.getAnnouncedAddress() != null) {
 
                     JSONObject knownPeer = new JSONObject();
-                    knownPeer.put("index", peer.getIndex());
+                    knownPeer.put("index", User.getIndex(peer));
                     knownPeer.put("address", peer.getPeerAddress());
                     knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                     knownPeer.put("software", peer.getSoftware());
@@ -78,7 +79,7 @@ final class GetInitialData extends UserRequestHandler {
             } else {
 
                 JSONObject activePeer = new JSONObject();
-                activePeer.put("index", peer.getIndex());
+                activePeer.put("index", User.getIndex(peer));
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     activePeer.put("disconnected", true);
                 }
@@ -101,7 +102,7 @@ final class GetInitialData extends UserRequestHandler {
         for (int i = lastBlocks.size() - 1; i >=0; i--) {
             Block block = lastBlocks.get(i);
             JSONObject recentBlock = new JSONObject();
-            recentBlock.put("index", block.getIndex());
+            recentBlock.put("index", User.getIndex(block));
             recentBlock.put("timestamp", block.getTimestamp());
             recentBlock.put("numberOfTransactions", block.getTransactionIds().length);
             recentBlock.put("totalAmount", block.getTotalAmount());

@@ -11,6 +11,12 @@ final class Db {
     private static JdbcConnectionPool cp;
 
     static void init() {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Db.shutdown();
+            }
+        }));
         long maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
         Logger.logDebugMessage("Database cache size set to " + maxCacheSize + " kB");
         cp = JdbcConnectionPool.create("jdbc:h2:nxt_db/nxt;DB_CLOSE_DELAY=10;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize, "sa", "sa");

@@ -32,11 +32,22 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class User {
 
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
+
+    private static final AtomicInteger peerCounter = new AtomicInteger();
+    private static final ConcurrentMap<String, Integer> peerIndexMap = new ConcurrentHashMap<>();
+
+    private static final AtomicInteger blockCounter = new AtomicInteger();
+    private static final ConcurrentMap<Long, Integer> blockIndexMap = new ConcurrentHashMap<>();
+
+    private static final AtomicInteger transactionCounter = new AtomicInteger();
+    private static final ConcurrentMap<Long, Integer> transactionIndexMap = new ConcurrentHashMap<>();
+
 
     static {
         Account.addListener(new Listener<Account>() {
@@ -62,12 +73,12 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray removedKnownPeers = new JSONArray();
                 JSONObject removedKnownPeer = new JSONObject();
-                removedKnownPeer.put("index", peer.getIndex());
+                removedKnownPeer.put("index", getIndex(peer));
                 removedKnownPeers.add(removedKnownPeer);
                 response.put("removedKnownPeers", removedKnownPeers);
                 JSONArray addedBlacklistedPeers = new JSONArray();
                 JSONObject addedBlacklistedPeer = new JSONObject();
-                addedBlacklistedPeer.put("index", peer.getIndex());
+                addedBlacklistedPeer.put("index", getIndex(peer));
                 addedBlacklistedPeer.put("address", peer.getPeerAddress());
                 addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 if (peer.isWellKnown()) {
@@ -86,13 +97,13 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray removedActivePeers = new JSONArray();
                 JSONObject removedActivePeer = new JSONObject();
-                removedActivePeer.put("index", peer.getIndex());
+                removedActivePeer.put("index", getIndex(peer));
                 removedActivePeers.add(removedActivePeer);
                 response.put("removedActivePeers", removedActivePeers);
                 if (peer.getAnnouncedAddress() != null) {
                     JSONArray addedKnownPeers = new JSONArray();
                     JSONObject addedKnownPeer = new JSONObject();
-                    addedKnownPeer.put("index", peer.getIndex());
+                    addedKnownPeer.put("index", getIndex(peer));
                     addedKnownPeer.put("address", peer.getPeerAddress());
                     addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                     if (peer.isWellKnown()) {
@@ -112,12 +123,12 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray removedBlacklistedPeers = new JSONArray();
                 JSONObject removedBlacklistedPeer = new JSONObject();
-                removedBlacklistedPeer.put("index", peer.getIndex());
+                removedBlacklistedPeer.put("index", getIndex(peer));
                 removedBlacklistedPeers.add(removedBlacklistedPeer);
                 response.put("removedBlacklistedPeers", removedBlacklistedPeers);
                 JSONArray addedKnownPeers = new JSONArray();
                 JSONObject addedKnownPeer = new JSONObject();
-                addedKnownPeer.put("index", peer.getIndex());
+                addedKnownPeer.put("index", getIndex(peer));
                 addedKnownPeer.put("address", peer.getPeerAddress());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 if (peer.isWellKnown()) {
@@ -136,7 +147,7 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray removedKnownPeers = new JSONArray();
                 JSONObject removedKnownPeer = new JSONObject();
-                removedKnownPeer.put("index", peer.getIndex());
+                removedKnownPeer.put("index", getIndex(peer));
                 removedKnownPeers.add(removedKnownPeer);
                 response.put("removedKnownPeers", removedKnownPeers);
                 User.sendNewDataToAll(response);
@@ -149,7 +160,7 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray changedActivePeers = new JSONArray();
                 JSONObject changedActivePeer = new JSONObject();
-                changedActivePeer.put("index", peer.getIndex());
+                changedActivePeer.put("index", getIndex(peer));
                 changedActivePeer.put("downloaded", peer.getDownloadedVolume());
                 changedActivePeers.add(changedActivePeer);
                 response.put("changedActivePeers", changedActivePeers);
@@ -163,7 +174,7 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray changedActivePeers = new JSONArray();
                 JSONObject changedActivePeer = new JSONObject();
-                changedActivePeer.put("index", peer.getIndex());
+                changedActivePeer.put("index", getIndex(peer));
                 changedActivePeer.put("uploaded", peer.getUploadedVolume());
                 changedActivePeers.add(changedActivePeer);
                 response.put("changedActivePeers", changedActivePeers);
@@ -177,7 +188,7 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray changedActivePeers = new JSONArray();
                 JSONObject changedActivePeer = new JSONObject();
-                changedActivePeer.put("index", peer.getIndex());
+                changedActivePeer.put("index", getIndex(peer));
                 changedActivePeer.put("weight", peer.getWeight());
                 changedActivePeers.add(changedActivePeer);
                 response.put("changedActivePeers", changedActivePeers);
@@ -192,13 +203,13 @@ public final class User {
                 if (peer.getAnnouncedAddress() != null) {
                     JSONArray removedKnownPeers = new JSONArray();
                     JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", peer.getIndex());
+                    removedKnownPeer.put("index", getIndex(peer));
                     removedKnownPeers.add(removedKnownPeer);
                     response.put("removedKnownPeers", removedKnownPeers);
                 }
                 JSONArray addedActivePeers = new JSONArray();
                 JSONObject addedActivePeer = new JSONObject();
-                addedActivePeer.put("index", peer.getIndex());
+                addedActivePeer.put("index", getIndex(peer));
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     addedActivePeer.put("disconnected", true);
                 }
@@ -223,7 +234,7 @@ public final class User {
                 JSONObject response = new JSONObject();
                 JSONArray changedActivePeers = new JSONArray();
                 JSONObject changedActivePeer = new JSONObject();
-                changedActivePeer.put("index", peer.getIndex());
+                changedActivePeer.put("index", getIndex(peer));
                 changedActivePeer.put(peer.getState() == Peer.State.CONNECTED ? "connected" : "disconnected", true);
                 changedActivePeers.add(changedActivePeer);
                 response.put("changedActivePeers", changedActivePeers);
@@ -242,7 +253,7 @@ public final class User {
                 JSONArray removedUnconfirmedTransactions = new JSONArray();
                 for (Transaction transaction : transactions) {
                     JSONObject removedUnconfirmedTransaction = new JSONObject();
-                    removedUnconfirmedTransaction.put("index", transaction.getIndex());
+                    removedUnconfirmedTransaction.put("index", getIndex(transaction));
                     removedUnconfirmedTransactions.add(removedUnconfirmedTransaction);
                 }
                 response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
@@ -257,7 +268,7 @@ public final class User {
                 JSONArray addedUnconfirmedTransactions = new JSONArray();
                 for (Transaction transaction : transactions) {
                     JSONObject addedUnconfirmedTransaction = new JSONObject();
-                    addedUnconfirmedTransaction.put("index", transaction.getIndex());
+                    addedUnconfirmedTransaction.put("index", getIndex(transaction));
                     addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
                     addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
                     addedUnconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
@@ -279,7 +290,7 @@ public final class User {
                 JSONArray addedConfirmedTransactions = new JSONArray();
                 for (Transaction transaction : transactions) {
                     JSONObject addedConfirmedTransaction = new JSONObject();
-                    addedConfirmedTransaction.put("index", transaction.getIndex());
+                    addedConfirmedTransaction.put("index", getIndex(transaction));
                     addedConfirmedTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     addedConfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
@@ -301,7 +312,7 @@ public final class User {
                 JSONArray newTransactions = new JSONArray();
                 for (Transaction transaction : transactions) {
                     JSONObject newTransaction = new JSONObject();
-                    newTransaction.put("index", transaction.getIndex());
+                    newTransaction.put("index", getIndex(transaction));
                     newTransaction.put("timestamp", transaction.getTimestamp());
                     newTransaction.put("deadline", transaction.getDeadline());
                     newTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
@@ -323,7 +334,7 @@ public final class User {
                 JSONArray addedOrphanedBlocks = new JSONArray();
                 for (Block block : blocks) {
                     JSONObject addedOrphanedBlock = new JSONObject();
-                    addedOrphanedBlock.put("index", block.getIndex());
+                    addedOrphanedBlock.put("index", getIndex(block));
                     addedOrphanedBlock.put("timestamp", block.getTimestamp());
                     addedOrphanedBlock.put("numberOfTransactions", block.getTransactionIds().length);
                     addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
@@ -348,7 +359,7 @@ public final class User {
                 JSONArray addedRecentBlocks = new JSONArray();
                 for (Block block : blocks) {
                     JSONObject addedRecentBlock = new JSONObject();
-                    addedRecentBlock.put("index", block.getIndex());
+                    addedRecentBlock.put("index", getIndex(block));
                     addedRecentBlock.put("timestamp", block.getTimestamp());
                     addedRecentBlock.put("numberOfTransactions", block.getTransactionIds().length);
                     addedRecentBlock.put("totalAmount", block.getTotalAmount());
@@ -413,6 +424,34 @@ public final class User {
             user.send(response);
         }
     }
+
+    static int getIndex(Peer peer) {
+        Integer index = peerIndexMap.get(peer.getPeerAddress());
+        if (index == null) {
+            index = peerCounter.incrementAndGet();
+            peerIndexMap.put(peer.getPeerAddress(), index);
+        }
+        return index;
+    }
+
+    static int getIndex(Block block) {
+        Integer index = blockIndexMap.get(block.getId());
+        if (index == null) {
+            index = blockCounter.incrementAndGet();
+            blockIndexMap.put(block.getId(), index);
+        }
+        return index;
+    }
+
+    static int getIndex(Transaction transaction) {
+        Integer index = transactionIndexMap.get(transaction.getId());
+        if (index == null) {
+            index = transactionCounter.incrementAndGet();
+            transactionIndexMap.put(transaction.getId(), index);
+        }
+        return index;
+    }
+
 
     private volatile String secretPhrase;
     private volatile byte[] publicKey;

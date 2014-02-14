@@ -338,8 +338,9 @@ public final class Nxt extends HttpServlet {
 
             Logger.logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
 
+            Db.shutdown();
             Logger.logMessage("Error initializing Nxt servlet", e);
             System.exit(1);
 

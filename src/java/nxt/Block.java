@@ -125,7 +125,6 @@ public final class Block {
             if (rs.wasNull()) {
                 nextBlockId = null;
             }
-            int index = rs.getInt("index");
             int height = rs.getInt("height");
             byte[] generationSignature = rs.getBytes("generation_signature");
             byte[] blockSignature = rs.getBytes("block_signature");
@@ -140,7 +139,6 @@ public final class Block {
             block.cumulativeDifficulty = cumulativeDifficulty;
             block.baseTarget = baseTarget;
             block.nextBlockId = nextBlockId;
-            block.index = index;
             block.height = height;
             block.id = id;
 
@@ -162,8 +160,8 @@ public final class Block {
         try {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO block (id, version, timestamp, previous_block_id, "
                     + "total_amount, total_fee, payload_length, generator_public_key, previous_block_hash, cumulative_difficulty, "
-                    + "base_target, next_block_id, index, height, generation_signature, block_signature, payload_hash, generator_id) "
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "base_target, next_block_id, height, generation_signature, block_signature, payload_hash, generator_id) "
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.version);
@@ -185,7 +183,6 @@ public final class Block {
                 } else {
                     pstmt.setNull(++i, Types.BIGINT);
                 }
-                pstmt.setInt(++i, block.index);
                 pstmt.setInt(++i, block.height);
                 pstmt.setBytes(++i, block.generationSignature);
                 pstmt.setBytes(++i, block.blockSignature);
@@ -240,7 +237,6 @@ public final class Block {
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
     private long baseTarget = Nxt.initialBaseTarget;
     private volatile Long nextBlockId;
-    private int index;
     private int height;
     private volatile Long id;
     private volatile String stringId = null;
@@ -339,14 +335,6 @@ public final class Block {
 
     public Long getNextBlockId() {
         return nextBlockId;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    void setIndex(int index) {
-        this.index = index;
     }
 
     public int getHeight() {

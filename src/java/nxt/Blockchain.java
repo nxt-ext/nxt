@@ -36,7 +36,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class Blockchain {
@@ -56,10 +55,8 @@ public final class Blockchain {
 
     private static volatile Peer lastBlockchainFeeder;
 
-    private static final AtomicInteger blockCounter = new AtomicInteger();
     private static final AtomicReference<Block> lastBlock = new AtomicReference<>();
 
-    private static final AtomicInteger transactionCounter = new AtomicInteger();
     private static final ConcurrentMap<Long, Transaction> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> unconfirmedTransactions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, Transaction> nonBroadcastedTransactions = new ConcurrentHashMap<>();
@@ -813,7 +810,6 @@ public final class Blockchain {
                 for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
                     Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
                             Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
-                    transaction.setIndex(transactionCounter.incrementAndGet());
                     transactionsMap.put(transaction.getId(), transaction);
                 }
 
@@ -824,7 +820,6 @@ public final class Blockchain {
 
                 Block genesisBlock = new Block(-1, 0, null, transactionsMap.size(), 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
                         Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null);
-                genesisBlock.setIndex(blockCounter.incrementAndGet());
 
                 Transaction[] transactions = transactionsMap.values().toArray(new Transaction[transactionsMap.size()]);
                 for (int i = 0; i < transactions.length; i++) {
@@ -836,9 +831,9 @@ public final class Blockchain {
 
                 addBlock(genesisBlock);
 
-            } catch (NxtException.ValidationException validationException) {
-                Logger.logMessage(validationException.getMessage());
-                System.exit(1);
+            } catch (NxtException.ValidationException e) {
+                Logger.logMessage(e.getMessage());
+                throw new RuntimeException(e.toString(), e);
             }
         }
 
@@ -886,8 +881,6 @@ public final class Blockchain {
                     }
 
                     doubleSpendingTransaction = transaction.isDoubleSpending();
-
-                    transaction.setIndex(transactionCounter.incrementAndGet());
 
                     if (doubleSpendingTransaction) {
                         doubleSpendingTransactions.put(id, transaction);
@@ -999,12 +992,9 @@ public final class Blockchain {
                     throw new BlockNotAcceptedException("Signature verification failed");
                 }
 
-                block.setIndex(blockCounter.incrementAndGet());
-
                 Map<Long, Transaction> blockTransactions = new HashMap<>();
                 for (int i = 0; i < block.transactionIds.length; i++) {
                     Transaction transaction = trans[i];
-                    transaction.setIndex(transactionCounter.incrementAndGet());
                     if (blockTransactions.put(block.transactionIds[i] = transaction.getId(), transaction) != null) {
                         throw new BlockNotAcceptedException("Block contains duplicate transactions: " + transaction.getStringId());
                     }
