@@ -539,12 +539,19 @@ public final class Block {
     }
 
     void setPrevious(Block previousBlock) {
-        if (! previousBlock.getId().equals(getPreviousBlockId())) {
-            // shouldn't happen as previous id is already verified, but just in case
-            throw new IllegalStateException("Previous block id doesn't match");
+        if (previousBlock != null) {
+            if (! previousBlock.getId().equals(getPreviousBlockId())) {
+                // shouldn't happen as previous id is already verified, but just in case
+                throw new IllegalStateException("Previous block id doesn't match");
+            }
+            this.height = previousBlock.getHeight() + 1;
+            this.calculateBaseTarget(previousBlock);
+        } else {
+            this.height = 0;
         }
-        this.height = previousBlock.getHeight() + 1;
-        this.calculateBaseTarget(previousBlock);
+        for (Transaction transaction : blockTransactions) {
+            transaction.setBlock(this);
+        }
     }
 
     private void calculateBaseTarget(Block previousBlock) {

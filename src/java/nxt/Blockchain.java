@@ -786,9 +786,7 @@ public final class Blockchain {
                 Block genesisBlock = new Block(-1, 0, null, 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
                         Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, new ArrayList<>(transactionsMap.values()));
 
-                for (Transaction transaction : transactionsMap.values()) {
-                    transaction.setBlock(genesisBlock);
-                }
+                genesisBlock.setPrevious(null);
 
                 addBlock(genesisBlock);
 
@@ -1025,7 +1023,6 @@ public final class Blockchain {
 
                 Transaction duplicateTransaction = null;
                 for (Transaction transaction : block.getTransactions()) {
-                    transaction.setBlock(block);
                     if (transactionHashes.putIfAbsent(transaction.getHash(), transaction) != null && block.getHeight() != 58294) {
                         duplicateTransaction = transaction;
                         break;
