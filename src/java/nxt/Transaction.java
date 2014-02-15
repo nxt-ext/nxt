@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -860,29 +861,103 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                    return false;
-                }
+                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NotYetEnabledException {
 
-                @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                    String pollName, pollDescription;
+                    String[] pollOptions;
+                    byte minNumberOfOptions, maxNumberOfOptions;
+                    boolean optionsAreBinary;
+
+                    try {
+                        int pollNameBytesLength = buffer.getShort();
+                        byte[] pollNameBytes = new byte[pollNameBytesLength];
+                        buffer.get(pollNameBytes);
+                        pollName = (new String(pollNameBytes, "UTF-8")).trim();
+                    } catch (RuntimeException | UnsupportedEncodingException e) {
+                        Logger.logDebugMessage("Error parsing poll name", e);
+                        return false;
+                    }
+
+                    try {
+                        int pollDescriptionBytesLength = buffer.getShort();
+                        byte[] pollDescriptionBytes = new byte[pollDescriptionBytesLength];
+                        buffer.get(pollDescriptionBytes);
+                        pollDescription = (new String(pollDescriptionBytes, "UTF-8")).trim();
+                    } catch (RuntimeException | UnsupportedEncodingException e) {
+                        Logger.logDebugMessage("Error parsing poll description", e);
+                        return false;
+                    }
+
+                    try {
+                        int numberOfOptions = buffer.get();
+                        pollOptions = new String[numberOfOptions];
+                        for (int i = 0; i < numberOfOptions; i++) {
+                            int pollOptionBytesLength = buffer.getShort();
+                            byte[] pollOptionBytes = new byte[pollOptionBytesLength];
+                            buffer.get(pollOptionBytes);
+                            pollOptions[i] = (new String(pollOptionBytes, "UTF-8")).trim();
+                        }
+                    } catch (RuntimeException | UnsupportedEncodingException e) {
+                        Logger.logDebugMessage("Error parsing poll options", e);
+                        return false;
+                    }
+
+                    try {
+                        minNumberOfOptions = buffer.get();
+                        maxNumberOfOptions = buffer.get();
+                        optionsAreBinary = buffer.get() != 0;
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error parsing poll creation parameters", e);
+                        return false;
+                    }
+
+                    transaction.attachment = new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
                     return validateAttachment(transaction);
+
                 }
 
                 @Override
-                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NotYetEnabledException {
+
+                    String pollName = ((String)attachmentData.get("name")).trim();
+                    String pollDescription = ((String)attachmentData.get("description")).trim();
+                    JSONArray options = (JSONArray)attachmentData.get("options");
+                    String[] pollOptions = new String[options.size()];
+                    for (int i = 0; i < pollOptions.length; i++) {
+                        pollOptions[i] = ((String)options.get(i)).trim();
+                    }
+                    byte minNumberOfOptions = ((Long)attachmentData.get("minNumberOfOptions")).byteValue();
+                    byte maxNumberOfOptions = ((Long)attachmentData.get("maxNumberOfOptions")).byteValue();
+                    boolean optionsAreBinary = (Boolean)attachmentData.get("optionsAreBinary");
+
+                    transaction.attachment = new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+                    return validateAttachment(transaction);
+
+                }
+
+                @Override
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.attachment;
+                    Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(), attachment.getPollOptions(), attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.isOptionsAreBinary());
+                }
 
                 @Override
                 void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                     throw new UndoNotSupportedException(transaction, "Reversal of poll creation not supported");
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                private boolean validateAttachment(Transaction transaction) throws NotYetEnabledException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
                         throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
                     try {
-                        return transaction.amount == 0;
+                        Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.attachment;
+                        for (int i = 0; i < attachment.getPollOptions().length; i++) {
+                            if (attachment.getPollOptions()[i].length() > Nxt.MAX_POLL_OPTION_LENGTH) {
+                                return false;
+                            }
+                        }
+                        return attachment.getPollName().length() <= Nxt.MAX_POLL_NAME_LENGTH && attachment.getPollDescription().length() <= Nxt.MAX_POLL_DESCRIPTION_LENGTH && attachment.getPollOptions().length <= 100 && transaction.amount == 0 && Genesis.CREATOR_ID.equals(transaction.recipientId);
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error validating poll creation", e);
                         return false;
@@ -900,16 +975,49 @@ public final class Transaction implements Comparable<Transaction> {
 
                 @Override
                 boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                    return false;
+
+                    Long pollId;
+                    byte[] pollVote;
+
+                    try {
+                        pollId = buffer.getLong();
+                        int numberOfOptions = buffer.get();
+                        pollVote = new byte[numberOfOptions];
+                        buffer.get(pollVote);
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Error parsing vote casting parameters", e);
+                        return false;
+                    }
+
+                    transaction.attachment = new Attachment.MessagingVoteCasting(pollId, pollVote);
+                    return validateAttachment(transaction);
+
                 }
 
                 @Override
                 boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+                    Long pollId = (Long)attachmentData.get("pollId");
+                    JSONArray vote = (JSONArray)attachmentData.get("vote");
+                    byte[] pollVote = new byte[vote.size()];
+                    for (int i = 0; i < pollVote.length; i++) {
+                        pollVote[i] = ((Long)vote.get(i)).byteValue();
+                    }
+
+                    transaction.attachment = new Attachment.MessagingVoteCasting(pollId, pollVote);
                     return validateAttachment(transaction);
+
                 }
 
                 @Override
-                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+                void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                    Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting)transaction.attachment;
+                    Poll poll = Poll.getPoll(attachment.getPollId());
+                    if (poll != null) {
+                        Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(), attachment.getPollVote());
+                        poll.addVoter(transaction.getSenderId(), vote.getId());
+                    }
+                }
 
                 @Override
                 void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
@@ -921,7 +1029,7 @@ public final class Transaction implements Comparable<Transaction> {
                         throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
                     try {
-                        return transaction.amount == 0;
+                        return transaction.amount == 0 && Genesis.CREATOR_ID.equals(transaction.recipientId);
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error validating vote casting", e);
                         return false;

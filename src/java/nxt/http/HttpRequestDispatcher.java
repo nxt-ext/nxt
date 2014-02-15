@@ -31,6 +31,8 @@ public class HttpRequestDispatcher {
 
         map.put("assignAlias", AssignAlias.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
+        map.put("castVote", CastVote.instance);
+        map.put("createPoll", CreatePoll.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("getAccount", GetAccount.instance);

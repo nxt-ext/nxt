@@ -48,6 +48,9 @@ public final class Nxt extends HttpServlet {
     public static final int ASSET_ISSUANCE_FEE = 1000;
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
+    public static final int MAX_POLL_NAME_LENGTH = 100;
+    public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_POLL_OPTION_LENGTH = 100;
 
     public static final long epochBeginning;
     static {

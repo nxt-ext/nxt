@@ -1196,6 +1196,8 @@ public final class Blockchain {
         Alias.clear();
         Asset.clear();
         Order.clear();
+        Poll.clear();
+        Vote.clear();
         unconfirmedTransactions.clear();
         doubleSpendingTransactions.clear();
         nonBroadcastedTransactions.clear();
