@@ -24,7 +24,7 @@ import java.util.Set;
 
 public final class Nxt extends HttpServlet {
 
-    public static final String VERSION = "0.7.5";
+    public static final String VERSION = "0.7.6";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -178,7 +178,7 @@ public final class Nxt extends HttpServlet {
                     if (wellKnownPeer.length() > 0) {
 
                         set.add(wellKnownPeer);
-                        Peer.addPeer(wellKnownPeer, wellKnownPeer);
+                        Peer.addPeer(wellKnownPeer);
 
                     }
 
@@ -341,8 +341,9 @@ public final class Nxt extends HttpServlet {
 
             Logger.logMessage("NRS " + Nxt.VERSION + " started successfully.");
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
 
+            Db.shutdown();
             Logger.logMessage("Error initializing Nxt servlet", e);
             System.exit(1);
 
