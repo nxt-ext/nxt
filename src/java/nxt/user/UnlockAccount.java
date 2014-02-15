@@ -70,7 +70,7 @@ final class UnlockAccount extends UserRequestHandler {
                 if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", transaction.getIndex());
+                    myTransaction.put("index", User.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
@@ -89,7 +89,7 @@ final class UnlockAccount extends UserRequestHandler {
                 } else if (accountId.equals(transaction.getRecipientId())) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", transaction.getIndex());
+                    myTransaction.put("index", User.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.convert(transaction.getSenderId()));
@@ -112,7 +112,7 @@ final class UnlockAccount extends UserRequestHandler {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", block.getStringId()); // cfb: Generated fee transactions get an id equal to the block id
+                        myTransaction.put("index", User.getIndex(block));
                         myTransaction.put("blockTimestamp", block.getTimestamp());
                         myTransaction.put("block", block.getStringId());
                         myTransaction.put("earnedAmount", block.getTotalFee());
@@ -128,7 +128,7 @@ final class UnlockAccount extends UserRequestHandler {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", transaction.getIndex());
+                        myTransaction.put("index", User.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
@@ -142,7 +142,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
                     } else if (transaction.getRecipientId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", transaction.getIndex());
+                        myTransaction.put("index", User.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.convert(transaction.getSenderId()));

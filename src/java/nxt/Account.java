@@ -4,6 +4,7 @@ import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
+import nxt.util.Logger;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -16,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class Account {
 
@@ -70,7 +70,8 @@ public final class Account {
 
     private final Long id;
     private final int height;
-    private final AtomicReference<byte[]> publicKey = new AtomicReference<>();
+    private byte[] publicKey;
+    private int keyHeight;
     private long balance;
     private long unconfirmedBalance;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
@@ -87,8 +88,8 @@ public final class Account {
         return id;
     }
 
-    public byte[] getPublicKey() {
-        return publicKey.get();
+    public synchronized byte[] getPublicKey() {
+        return publicKey;
     }
 
     public synchronized long getBalance() {
@@ -157,22 +158,56 @@ public final class Account {
         return Collections.unmodifiableMap(assetBalances);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof Account && this.getId().equals(((Account)o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
-
     // returns true iff:
     // this.publicKey is set to null (in which case this.publicKey also gets set to key)
     // or
     // this.publicKey is already set to an array equal to key
-    boolean setOrVerify(byte[] key) {
-        return this.publicKey.compareAndSet(null, key) || Arrays.equals(key, this.publicKey.get());
+    synchronized boolean setOrVerify(byte[] key, int height) {
+        if (this.publicKey == null) {
+            this.publicKey = key;
+            this.keyHeight = -1;
+            return true;
+        } else if (Arrays.equals(this.publicKey, key)) {
+            return true;
+        } else if (this.keyHeight == -1) {
+            Logger.logMessage("DUPLICATE KEY!!!");
+            Logger.logMessage("Account key for " + Convert.convert(id) + " was already set to a different one at the same height "
+                    + ", current height is " + height + ", rejecting new key");
+            return false;
+        } else if (this.keyHeight >= height) {
+            Logger.logMessage("DUPLICATE KEY!!!");
+            Logger.logMessage("Changing key for account " + Convert.convert(id) + " at height " + height
+                    + ", was previously set to a different one at height " + keyHeight);
+            this.publicKey = key;
+            this.keyHeight = height;
+            return true;
+        }
+        Logger.logMessage("DUPLICATE KEY!!!");
+        Logger.logMessage("Invalid key for account " + Convert.convert(id) + " at height " + height
+                + ", was already set to a different one at height " + keyHeight);
+        return false;
+    }
+
+    synchronized void apply(int height) {
+        if (this.publicKey == null) {
+            throw new IllegalStateException("Public key has not been set for account " + Convert.convert(id)
+                    +" at height " + height + ", key height is " + keyHeight);
+        }
+        if (this.keyHeight == -1 || this.keyHeight > height) {
+            this.keyHeight = height;
+        }
+    }
+
+    synchronized void undo(int height) {
+        if (this.keyHeight >= height) {
+            Logger.logDebugMessage("Unsetting key for account " + Convert.convert(id) + " at height " + height
+                    + ", was previously set at height " + keyHeight);
+            this.publicKey = null;
+            this.keyHeight = -1;
+        }
+        if (this.height == height) {
+            accounts.remove(this);
+        }
     }
 
     synchronized int getAssetBalance(Long assetId) {

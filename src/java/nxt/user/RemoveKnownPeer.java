@@ -23,7 +23,7 @@ final class RemoveKnownPeer extends UserRequestHandler {
         } else {
             int index = Integer.parseInt(req.getParameter("peer"));
             for (Peer peer : Peer.getAllPeers()) {
-                if (peer.getIndex() == index) {
+                if (User.getIndex(peer) == index) {
                     peer.removePeer();
                     break;
                 }

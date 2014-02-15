@@ -63,7 +63,7 @@ public abstract class HttpJSONRequestHandler {
         JSONStreamAware response;
 
         try {
-            peer = Peer.addPeer(req.getRemoteHost(), "");
+            peer = Peer.addPeer(req.getRemoteHost(), null);
             if (peer.isBlacklisted()) {
                 return;
             }
@@ -81,6 +81,10 @@ public abstract class HttpJSONRequestHandler {
                 peer.setState(Peer.State.CONNECTED);
             }
             peer.updateDownloadedVolume(cis.getCount());
+            if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
+                peer.blacklist();
+                return;
+            }
 
             if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
                 HttpJSONRequestHandler jsonRequestHandler = jsonRequestHandlers.get((String)request.get("requestType"));

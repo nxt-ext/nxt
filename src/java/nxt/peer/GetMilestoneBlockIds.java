@@ -25,9 +25,13 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
             String lastBlockIdString = (String) request.get("lastBlockId");
             if (lastBlockIdString != null) {
                 Long lastBlockId = Convert.parseUnsignedLong(lastBlockIdString);
-                if (Blockchain.getLastBlock().getId().equals(lastBlockId) || Blockchain.hasBlock(lastBlockId)) {
+                Long myLastBlockId = Blockchain.getLastBlock().getId();
+                if (myLastBlockId.equals(lastBlockId) || Blockchain.hasBlock(lastBlockId)) {
                     milestoneBlockIds.add(lastBlockIdString);
                     response.put("milestoneBlockIds", milestoneBlockIds);
+                    if (myLastBlockId.equals(lastBlockId)) {
+                        response.put("last", Boolean.TRUE);
+                    }
                     return response;
                 }
             }
