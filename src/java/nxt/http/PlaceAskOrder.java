@@ -78,7 +78,7 @@ public final class PlaceAskOrder extends HttpRequestDispatcher.HttpRequestHandle
         int quantity;
         try {
             quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity >= Nxt.MAX_ASSET_QUANTITY) {
+            if (quantity <= 0 || quantity > Nxt.MAX_ASSET_QUANTITY) {
                 return INCORRECT_QUANTITY;
             }
         } catch (NumberFormatException e) {
