@@ -4,7 +4,6 @@ import nxt.Blockchain;
 import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.JSON;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 

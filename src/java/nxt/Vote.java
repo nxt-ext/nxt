@@ -1,5 +1,9 @@
 package nxt;
 
+import nxt.util.Convert;
+
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -21,15 +25,19 @@ public final class Vote {
 
     }
 
-    public static Vote addVote(Long id, Long pollId, Long voterId, byte[] vote) {
+    static Vote addVote(Long id, Long pollId, Long voterId, byte[] vote) {
         Vote voteData = new Vote(id, pollId, voterId, vote);
-        votes.put(id, voteData);
+        if (votes.putIfAbsent(id, voteData) != null) {
+            throw new IllegalStateException("Vote with id " + Convert.convert(id) + " already exists");
+        }
         return voteData;
     }
 
-    public static ConcurrentMap<Long, Vote> getVotes() { return votes; }
+    public static Map<Long, Vote> getVotes() {
+        return Collections.unmodifiableMap(votes);
+    }
 
-    public static void clear() {
+    static void clear() {
         votes.clear();
     }
 
@@ -46,15 +54,5 @@ public final class Vote {
     public Long getVoterId() { return voterId; }
 
     public byte[] getVote() { return vote; }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof Poll && this.getId().equals(((Poll)o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
 
 }

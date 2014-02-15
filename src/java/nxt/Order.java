@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Convert;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.SortedSet;
@@ -156,7 +158,9 @@ public abstract class Order {
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
             senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -quantity);
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
-            askOrders.put(order.getId(), order);
+            if (askOrders.putIfAbsent(order.getId(), order) != null) {
+                throw new IllegalStateException("Ask order id " + Convert.convert(order.getId()) + " already exists");
+            }
             SortedSet<Ask> sortedAssetAskOrders = sortedAskOrders.get(assetId);
             if (sortedAssetAskOrders == null) {
                 sortedAssetAskOrders = new TreeSet<>();
@@ -197,16 +201,6 @@ public abstract class Order {
 
         }
 
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof Ask && this.getId().equals(((Ask)o).getId());
-        }
-
-        @Override
-        public int hashCode() {
-            return getId().hashCode();
-        }
-
     }
 
     public static final class Bid extends Order implements Comparable<Bid> {
@@ -232,7 +226,9 @@ public abstract class Order {
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
             senderAccount.addToBalanceAndUnconfirmedBalance(-quantity * price);
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
-            bidOrders.put(order.getId(), order);
+            if (bidOrders.putIfAbsent(order.getId(), order) != null) {
+                throw new IllegalStateException("Bid order id " + Convert.convert(order.getId()) + " already exists");
+            }
             SortedSet<Bid> sortedAssetBidOrders = sortedBidOrders.get(assetId);
             if (sortedAssetBidOrders == null) {
                 sortedAssetBidOrders = new TreeSet<>();
@@ -271,16 +267,6 @@ public abstract class Order {
 
             }
 
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof Bid && this.getId().equals(((Bid)o).getId());
-        }
-
-        @Override
-        public int hashCode() {
-            return getId().hashCode();
         }
 
     }

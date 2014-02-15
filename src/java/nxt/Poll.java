@@ -1,5 +1,9 @@
 package nxt;
 
+import nxt.util.Convert;
+
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -13,7 +17,7 @@ public final class Poll {
     private final String[] options;
     private final byte minNumberOfOptions, maxNumberOfOptions;
     private final boolean optionsAreBinary;
-    private final ConcurrentHashMap<Long, Long> voters;
+    private final ConcurrentMap<Long, Long> voters;
 
     private Poll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
 
@@ -28,13 +32,17 @@ public final class Poll {
 
     }
 
-    public static void addPoll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
-        polls.put(id, new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary));
+    static void addPoll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
+        if (polls.putIfAbsent(id, new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary)) != null) {
+            throw new IllegalStateException("Poll with id " + Convert.convert(id) + " already exists");
+        }
     }
 
-    public static ConcurrentMap<Long, Poll> getPolls() { return polls; }
+    public static Map<Long, Poll> getPolls() {
+        return Collections.unmodifiableMap(polls);
+    }
 
-    public static void clear() {
+    static void clear() {
         polls.clear();
     }
 
@@ -58,20 +66,12 @@ public final class Poll {
 
     public boolean isOptionsAreBinary() { return optionsAreBinary; }
 
-    public ConcurrentHashMap<Long, Long> getVoters() { return voters; }
+    public Map<Long, Long> getVoters() {
+        return Collections.unmodifiableMap(voters);
+    }
 
-    public void addVoter(Long voterId, Long voteId) {
+    void addVoter(Long voterId, Long voteId) {
         voters.put(voterId, voteId);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof Poll && this.getId().equals(((Poll)o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
     }
 
 }

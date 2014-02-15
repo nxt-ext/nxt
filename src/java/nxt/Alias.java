@@ -76,14 +76,4 @@ public final class Alias {
         return account;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof Alias && this.getId().equals(((Alias)o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
-
 }

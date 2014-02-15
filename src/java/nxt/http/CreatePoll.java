@@ -1,6 +1,12 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Attachment;
+import nxt.Blockchain;
+import nxt.Genesis;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -11,8 +17,24 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_FEE;
+import static nxt.http.JSONResponses.INCORRECT_MAXNUMBEROFOPTIONS;
+import static nxt.http.JSONResponses.INCORRECT_MINNUMBEROFOPTIONS;
+import static nxt.http.JSONResponses.INCORRECT_OPTIONSAREBINARY;
+import static nxt.http.JSONResponses.INCORRECT_POLL_DESCRIPTION_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_POLL_NAME_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_POLL_OPTION_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
+import static nxt.http.JSONResponses.MISSING_DESCRIPTION;
+import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.MISSING_MAXNUMBEROFOPTIONS;
+import static nxt.http.JSONResponses.MISSING_MINNUMBEROFOPTIONS;
+import static nxt.http.JSONResponses.MISSING_NAME;
+import static nxt.http.JSONResponses.MISSING_OPTIONSAREBINARY;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
+import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 public final class CreatePoll extends HttpRequestDispatcher.HttpRequestHandler {
 
