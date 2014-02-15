@@ -1096,6 +1096,17 @@ public final class Transaction implements Comparable<Transaction> {
                 void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                  Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
+                @Override
+                boolean isDuplicate(Transaction transaction, Map<Type, Set<String>> duplicates) {
+                    Set<String> myDuplicates = duplicates.get(this);
+                    if (myDuplicates == null) {
+                        myDuplicates = new HashSet<>();
+                        duplicates.put(this, myDuplicates);
+                    }
+                    Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
+                    return ! myDuplicates.add(attachment.getName().toLowerCase());
+                }
+
                 private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
                         throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
