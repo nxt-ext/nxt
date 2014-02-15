@@ -48,7 +48,7 @@ public final class Blockchain {
         ADDED_DOUBLESPENDING_TRANSACTIONS
     }
 
-    private static final Listeners<List<Block>,Event> blockListeners = new Listeners<>();
+    private static final Listeners<Block,Event> blockListeners = new Listeners<>();
     private static final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
@@ -460,11 +460,11 @@ public final class Blockchain {
         return transactionListeners.removeListener(listener, eventType);
     }
 
-    public static boolean addBlockListener(Listener<List<Block>> listener, Event eventType) {
+    public static boolean addBlockListener(Listener<Block> listener, Event eventType) {
         return blockListeners.addListener(listener, eventType);
     }
 
-    public static boolean removeBlockListener(Listener<List<Block>> listener, Event eventType) {
+    public static boolean removeBlockListener(Listener<Block> listener, Event eventType) {
         return blockListeners.removeListener(listener, eventType);
     }
 
@@ -1077,7 +1077,7 @@ public final class Blockchain {
         if (addedConfirmedTransactions.size() > 0) {
             transactionListeners.notify(addedConfirmedTransactions, Event.ADDED_CONFIRMED_TRANSACTIONS);
         }
-        blockListeners.notify(Arrays.asList(block), Event.BLOCK_PUSHED);
+        blockListeners.notify(block, Event.BLOCK_PUSHED);
     }
 
     private static boolean popLastBlock() throws Transaction.UndoNotSupportedException {
@@ -1121,7 +1121,7 @@ public final class Blockchain {
                 transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
             }
 
-            blockListeners.notify(Arrays.asList(block), Event.BLOCK_POPPED);
+            blockListeners.notify(block, Event.BLOCK_POPPED);
 
         } catch (RuntimeException e) {
             Logger.logMessage("Error popping last block", e);
