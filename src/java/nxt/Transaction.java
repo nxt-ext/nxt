@@ -256,7 +256,7 @@ public final class Transaction implements Comparable<Transaction> {
     private final Long referencedTransactionId;
     private final Type type;
 
-    private int height;
+    private int height = Integer.MAX_VALUE;
     private Long blockId;
     private volatile Block block;
     private byte[] signature;
@@ -285,7 +285,6 @@ public final class Transaction implements Comparable<Transaction> {
         this.referencedTransactionId = referencedTransactionId;
         this.signature = signature;
         this.type = type;
-        this.height = Integer.MAX_VALUE;
 
     }
 
@@ -499,7 +498,7 @@ public final class Transaction implements Comparable<Transaction> {
         for (int i = 64; i < 128; i++) {
             data[i] = 0;
         }
-        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey);
+        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
 
     // returns true iff double spending
@@ -515,10 +514,11 @@ public final class Transaction implements Comparable<Transaction> {
 
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
-        if (! senderAccount.setOrVerify(senderPublicKey)) {
+        if (! senderAccount.setOrVerify(senderPublicKey, this.getHeight())) {
             throw new RuntimeException("sender public key mismatch");
             // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
         }
+        senderAccount.apply(this.getHeight());
         Blockchain.transactionHashes.put(getHash(), this);
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null) {
@@ -531,6 +531,7 @@ public final class Transaction implements Comparable<Transaction> {
     // NOTE: when undo is called, lastBlock has already been set to the previous block
     void undo() throws UndoNotSupportedException {
         Account senderAccount = Account.getAccount(senderId);
+        senderAccount.undo(this.getHeight());
         senderAccount.addToBalance((amount + fee) * 100L);
         Account recipientAccount = Account.getAccount(recipientId);
         type.undo(this, senderAccount, recipientAccount);

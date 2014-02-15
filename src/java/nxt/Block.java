@@ -456,7 +456,7 @@ public final class Block {
         byte[] data2 = new byte[data.length - 64];
         System.arraycopy(data, 0, data2, 0, data2.length);
 
-        return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey);
+        return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey, this.height);
 
     }
 
@@ -509,9 +509,10 @@ public final class Block {
     void apply() {
 
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
-        if (! generatorAccount.setOrVerify(generatorPublicKey)) {
+        if (! generatorAccount.setOrVerify(generatorPublicKey, this.height)) {
             throw new IllegalStateException("Generator public key mismatch");
         }
+        generatorAccount.apply(this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
         for (Transaction transaction : blockTransactions) {

@@ -1166,6 +1166,7 @@ public final class Blockchain {
                     throw new IllegalStateException();
                 }
                 Account generatorAccount = Account.getAccount(block.getGeneratorId());
+                generatorAccount.undo(block.getHeight());
                 generatorAccount.addToBalanceAndUnconfirmedBalance(-block.getTotalFee() * 100L);
                 for (Transaction transaction : block.blockTransactions) {
                     Transaction hashTransaction = transactionHashes.get(transaction.getHash());
