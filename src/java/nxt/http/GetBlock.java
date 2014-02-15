@@ -41,7 +41,7 @@ public final class GetBlock extends HttpRequestDispatcher.HttpRequestHandler {
         response.put("height", blockData.getHeight());
         response.put("generator", Convert.convert(blockData.getGeneratorId()));
         response.put("timestamp", blockData.getTimestamp());
-        response.put("numberOfTransactions", blockData.getTransactionIds().length);
+        response.put("numberOfTransactions", blockData.getTransactionIds().size());
         response.put("totalAmount", blockData.getTotalAmount());
         response.put("totalFee", blockData.getTotalFee());
         response.put("payloadLength", blockData.getPayloadLength());

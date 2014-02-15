@@ -112,7 +112,7 @@ public final class Account {
                 return 0;
             }
             int receivedInlastBlock = 0;
-            for (Transaction transaction : lastBlock.blockTransactions) {
+            for (Transaction transaction : lastBlock.getTransactions()) {
                 if (transaction.getRecipientId().equals(id)) {
                     receivedInlastBlock += transaction.getAmount();
                 }

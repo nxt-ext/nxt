@@ -332,7 +332,7 @@ public final class User {
                     JSONObject addedOrphanedBlock = new JSONObject();
                     addedOrphanedBlock.put("index", getIndex(block));
                     addedOrphanedBlock.put("timestamp", block.getTimestamp());
-                    addedOrphanedBlock.put("numberOfTransactions", block.getTransactionIds().length);
+                    addedOrphanedBlock.put("numberOfTransactions", block.getTransactionIds().size());
                     addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
                     addedOrphanedBlock.put("totalFee", block.getTotalFee());
                     addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
@@ -357,7 +357,7 @@ public final class User {
                     JSONObject addedRecentBlock = new JSONObject();
                     addedRecentBlock.put("index", getIndex(block));
                     addedRecentBlock.put("timestamp", block.getTimestamp());
-                    addedRecentBlock.put("numberOfTransactions", block.getTransactionIds().length);
+                    addedRecentBlock.put("numberOfTransactions", block.getTransactionIds().size());
                     addedRecentBlock.put("totalAmount", block.getTotalAmount());
                     addedRecentBlock.put("totalFee", block.getTotalFee());
                     addedRecentBlock.put("payloadLength", block.getPayloadLength());

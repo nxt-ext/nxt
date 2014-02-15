@@ -210,7 +210,7 @@ public final class Transaction implements Comparable<Transaction> {
         }
     }
 
-    static void saveTransactions(Connection con, Transaction... transactions) {
+    static void saveTransactions(Connection con, List<Transaction> transactions) {
         try {
             for (Transaction transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
