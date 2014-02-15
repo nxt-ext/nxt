@@ -206,6 +206,7 @@ public final class Account {
             this.keyHeight = -1;
         }
         if (this.height == height) {
+            Logger.logDebugMessage("Removing account " + Convert.convert(id) + " which was created in the popped off block");
             accounts.remove(this);
         }
     }
