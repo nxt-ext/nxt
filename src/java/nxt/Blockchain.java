@@ -198,12 +198,12 @@ public final class Blockchain {
                         return;
                     }
 
-                    Long curBlockId = commonBlockId;
-                    List<Block> futureBlocks = new ArrayList<>();
+                    Long currentBlockId = commonBlockId;
+                    List<Block> forkBlocks = new ArrayList<>();
 
                     while (true) {
 
-                        JSONArray nextBlocks = getNextBlocks(peer, curBlockId);
+                        JSONArray nextBlocks = getNextBlocks(peer, currentBlockId);
                         if (nextBlocks == null || nextBlocks.size() == 0) {
                             break;
                         }
@@ -219,7 +219,7 @@ public final class Blockchain {
                                     peer.blacklist(e);
                                     return;
                                 }
-                                curBlockId = block.getId();
+                                currentBlockId = block.getId();
 
                                 if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
                                     try {
@@ -235,7 +235,7 @@ public final class Blockchain {
                                     }
                                 } else if (! Block.hasBlock(block.getId())) {
 
-                                    futureBlocks.add(block);
+                                    forkBlocks.add(block);
 
                                 }
 
@@ -245,8 +245,8 @@ public final class Blockchain {
 
                     }
 
-                    if (! futureBlocks.isEmpty() && lastBlock.get().getHeight() - commonBlock.getHeight() >= 720) {
-                        processFutureBlocks(peer, futureBlocks, commonBlock);
+                    if (! forkBlocks.isEmpty() && lastBlock.get().getHeight() - commonBlock.getHeight() < 720) {
+                        processFork(peer, forkBlocks, commonBlock);
                     }
 
                 } catch (Exception e) {
@@ -361,7 +361,7 @@ public final class Blockchain {
 
         }
 
-        private void processFutureBlocks(Peer peer, final List<Block> futureBlocks, final Block commonBlock) {
+        private void processFork(Peer peer, final List<Block> forkBlocks, final Block commonBlock) {
 
             synchronized (Blockchain.class) {
                 BigInteger curCumulativeDifficulty = lastBlock.get().getCumulativeDifficulty();
@@ -371,12 +371,12 @@ public final class Blockchain {
                     while (!lastBlock.get().getId().equals(commonBlock.getId()) && Blockchain.popLastBlock()) {}
 
                     if (lastBlock.get().getId().equals(commonBlock.getId())) {
-                        for (Block block : futureBlocks) {
+                        for (Block block : forkBlocks) {
                             if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
                                 try {
                                     Blockchain.pushBlock(block);
                                 } catch (BlockNotAcceptedException e) {
-                                    Logger.logDebugMessage("Failed to push future block " + block.getStringId()
+                                    Logger.logDebugMessage("Failed to push fork block " + block.getStringId()
                                             + " received from " + peer.getPeerAddress() + ", blacklisting");
                                     peer.blacklist(e);
                                     break;
