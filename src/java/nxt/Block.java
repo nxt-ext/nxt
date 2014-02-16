@@ -243,7 +243,7 @@ public final class Block {
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
     private long baseTarget = Nxt.initialBaseTarget;
     private volatile Long nextBlockId;
-    private int height;
+    private int height = -1;
     private volatile Long id;
     private volatile String stringId = null;
     private volatile Long generatorId;
@@ -284,7 +284,6 @@ public final class Block {
             previousId = transaction.getId();
         }
         this.transactionIds = Collections.unmodifiableList(transactionIds);
-        this.height = version == -1 ? 0 : -1;
 
     }
 
@@ -427,7 +426,7 @@ public final class Block {
         block.put("version", version);
         block.put("timestamp", timestamp);
         block.put("previousBlock", Convert.convert(previousBlockId));
-        block.put("numberOfTransactions", blockTransactions.size());
+        block.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
         block.put("totalAmount", totalAmount);
         block.put("totalFee", totalFee);
         block.put("payloadLength", payloadLength);

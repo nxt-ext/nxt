@@ -14,7 +14,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
@@ -80,7 +80,7 @@ public final class CreatePoll extends HttpRequestDispatcher.HttpRequestHandler {
             return INCORRECT_POLL_DESCRIPTION_LENGTH;
         }
 
-        List<String> options = new LinkedList<>();
+        List<String> options = new ArrayList<>();
         while (options.size() < 100) {
             String optionValue = req.getParameter("option" + options.size());
             if (optionValue == null) {
