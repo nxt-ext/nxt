@@ -34,7 +34,7 @@ public final class DecodeToken extends HttpRequestDispatcher.HttpRequestHandler 
             Token token = Token.parseToken(tokenString, website.trim());
 
             JSONObject response = new JSONObject();
-            response.put("account", Convert.convert(Account.getId(token.getPublicKey())));
+            response.put("account", Convert.toUnsignedLong(Account.getId(token.getPublicKey())));
             response.put("timestamp", token.getTimestamp());
             response.put("valid", token.isValid());
 

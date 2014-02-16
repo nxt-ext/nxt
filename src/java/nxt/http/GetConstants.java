@@ -20,8 +20,8 @@ public final class GetConstants extends HttpRequestDispatcher.HttpRequestHandler
     static {
 
         JSONObject response = new JSONObject();
-        response.put("genesisBlockId", Convert.convert(Genesis.GENESIS_BLOCK_ID));
-        response.put("genesisAccountId", Convert.convert(Genesis.CREATOR_ID));
+        response.put("genesisBlockId", Convert.toUnsignedLong(Genesis.GENESIS_BLOCK_ID));
+        response.put("genesisAccountId", Convert.toUnsignedLong(Genesis.CREATOR_ID));
         response.put("maxBlockPayloadLength", Nxt.MAX_PAYLOAD_LENGTH);
         response.put("maxArbitraryMessageLength", Nxt.MAX_ARBITRARY_MESSAGE_LENGTH);
 

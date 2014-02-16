@@ -267,10 +267,10 @@ public final class User {
                     addedUnconfirmedTransaction.put("index", getIndex(transaction));
                     addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
                     addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
-                    addedUnconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+                    addedUnconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
                     addedUnconfirmedTransaction.put("amount", transaction.getAmount());
                     addedUnconfirmedTransaction.put("fee", transaction.getFee());
-                    addedUnconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
+                    addedUnconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     addedUnconfirmedTransaction.put("id", transaction.getStringId());
                     addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
                 }
@@ -289,8 +289,8 @@ public final class User {
                     addedConfirmedTransaction.put("index", getIndex(transaction));
                     addedConfirmedTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                    addedConfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
-                    addedConfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+                    addedConfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+                    addedConfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
                     addedConfirmedTransaction.put("amount", transaction.getAmount());
                     addedConfirmedTransaction.put("fee", transaction.getFee());
                     addedConfirmedTransaction.put("id", transaction.getStringId());
@@ -311,10 +311,10 @@ public final class User {
                     newTransaction.put("index", getIndex(transaction));
                     newTransaction.put("timestamp", transaction.getTimestamp());
                     newTransaction.put("deadline", transaction.getDeadline());
-                    newTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+                    newTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
                     newTransaction.put("amount", transaction.getAmount());
                     newTransaction.put("fee", transaction.getFee());
-                    newTransaction.put("sender", Convert.convert(transaction.getSenderId()));
+                    newTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     newTransaction.put("id", transaction.getStringId());
                     newTransactions.add(newTransaction);
                 }
@@ -335,7 +335,7 @@ public final class User {
                 addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
                 addedOrphanedBlock.put("totalFee", block.getTotalFee());
                 addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
-                addedOrphanedBlock.put("generator", Convert.convert(block.getGeneratorId()));
+                addedOrphanedBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
                 addedOrphanedBlock.put("height", block.getHeight());
                 addedOrphanedBlock.put("version", block.getVersion());
                 addedOrphanedBlock.put("block", block.getStringId());
@@ -358,7 +358,7 @@ public final class User {
                 addedRecentBlock.put("totalAmount", block.getTotalAmount());
                 addedRecentBlock.put("totalFee", block.getTotalFee());
                 addedRecentBlock.put("payloadLength", block.getPayloadLength());
-                addedRecentBlock.put("generator", Convert.convert(block.getGeneratorId()));
+                addedRecentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
                 addedRecentBlock.put("height", block.getHeight());
                 addedRecentBlock.put("version", block.getVersion());
                 addedRecentBlock.put("block", block.getStringId());

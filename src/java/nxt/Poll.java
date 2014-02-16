@@ -34,7 +34,7 @@ public final class Poll {
 
     static void addPoll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
         if (polls.putIfAbsent(id, new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary)) != null) {
-            throw new IllegalStateException("Poll with id " + Convert.convert(id) + " already exists");
+            throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
         }
     }
 

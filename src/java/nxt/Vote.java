@@ -28,7 +28,7 @@ public final class Vote {
     static Vote addVote(Long id, Long pollId, Long voterId, byte[] vote) {
         Vote voteData = new Vote(id, pollId, voterId, vote);
         if (votes.putIfAbsent(id, voteData) != null) {
-            throw new IllegalStateException("Vote with id " + Convert.convert(id) + " already exists");
+            throw new IllegalStateException("Vote with id " + Convert.toUnsignedLong(id) + " already exists");
         }
         return voteData;
     }

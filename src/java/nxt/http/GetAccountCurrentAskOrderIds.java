@@ -47,7 +47,7 @@ public final class GetAccountCurrentAskOrderIds extends HttpRequestDispatcher.Ht
         JSONArray orderIds = new JSONArray();
         for (Order.Ask askOrder : Order.Ask.getAllAskOrders()) {
             if ((assetId == null || askOrder.getAssetId().equals(assetId)) && askOrder.getAccount().equals(account)) {
-                orderIds.add(Convert.convert(askOrder.getId()));
+                orderIds.add(Convert.toUnsignedLong(askOrder.getId()));
             }
         }
 

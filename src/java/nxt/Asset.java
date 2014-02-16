@@ -28,7 +28,7 @@ public final class Asset {
     static void addAsset(Long assetId, Long senderAccountId, String name, String description, int quantity) {
         Asset asset = new Asset(assetId, senderAccountId, name, description, quantity);
         if (Asset.assets.putIfAbsent(assetId, asset) != null) {
-            throw new IllegalStateException("Asset with id " + Convert.convert(assetId) + " already exists");
+            throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
         }
         if (Asset.assetNameToAssetMappings.putIfAbsent(name.toLowerCase(), asset) != null) {
             throw new IllegalStateException("Asset with name " + name.toLowerCase() + " already exists");

@@ -42,10 +42,10 @@ public final class GetTransactionBytes extends HttpRequestDispatcher.HttpRequest
             if (transactionData == null) {
                 return UNKNOWN_TRANSACTION;
             } else {
-                response.put("bytes", Convert.convert(transactionData.getBytes()));
+                response.put("bytes", Convert.toHexString(transactionData.getBytes()));
             }
         } else {
-            response.put("bytes", Convert.convert(transactionData.getBytes()));
+            response.put("bytes", Convert.toHexString(transactionData.getBytes()));
             Block block = transactionData.getBlock();
             response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
 

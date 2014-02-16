@@ -36,7 +36,7 @@ public final class GetAlias extends HttpRequestDispatcher.HttpRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("account", Convert.convert(aliasData.getAccount().getId()));
+        response.put("account", Convert.toUnsignedLong(aliasData.getAccount().getId()));
         response.put("alias", aliasData.getAliasName());
         if (aliasData.getURI().length() > 0) {
             response.put("uri", aliasData.getURI());

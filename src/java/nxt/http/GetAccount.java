@@ -40,7 +40,7 @@ public final class GetAccount extends HttpRequestDispatcher.HttpRequestHandler {
         JSONObject response = new JSONObject();
         synchronized (accountData) {
             if (accountData.getPublicKey() != null) {
-                response.put("publicKey", Convert.convert(accountData.getPublicKey()));
+                response.put("publicKey", Convert.toHexString(accountData.getPublicKey()));
             }
 
             response.put("balance", accountData.getBalance());
@@ -50,7 +50,7 @@ public final class GetAccount extends HttpRequestDispatcher.HttpRequestHandler {
             for (Map.Entry<Long, Integer> assetBalanceEntry : accountData.getAssetBalances().entrySet()) {
 
                 JSONObject assetBalance = new JSONObject();
-                assetBalance.put("asset", Convert.convert(assetBalanceEntry.getKey()));
+                assetBalance.put("asset", Convert.toUnsignedLong(assetBalanceEntry.getKey()));
                 assetBalance.put("balance", assetBalanceEntry.getValue());
                 assetBalances.add(assetBalance);
 

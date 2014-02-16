@@ -134,13 +134,13 @@ public final class Transaction implements Comparable<Transaction> {
             byte subtype = ((Long)transactionData.get("subtype")).byteValue();
             int timestamp = ((Long)transactionData.get("timestamp")).intValue();
             short deadline = ((Long)transactionData.get("deadline")).shortValue();
-            byte[] senderPublicKey = Convert.convert((String) transactionData.get("senderPublicKey"));
+            byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
             Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
             if (recipientId == null) recipientId = 0L; // ugly
             int amount = ((Long)transactionData.get("amount")).intValue();
             int fee = ((Long)transactionData.get("fee")).intValue();
             Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-            byte[] signature = Convert.convert((String) transactionData.get("signature"));
+            byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
             Type transactionType = findTransactionType(type, subtype);
             Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
@@ -367,7 +367,7 @@ public final class Transaction implements Comparable<Transaction> {
         if (stringId == null) {
             getId();
             if (stringId == null) {
-                stringId = Convert.convert(id);
+                stringId = Convert.toUnsignedLong(id);
             }
         }
         return stringId;
@@ -434,12 +434,12 @@ public final class Transaction implements Comparable<Transaction> {
         transaction.put("subtype", type.getSubtype());
         transaction.put("timestamp", timestamp);
         transaction.put("deadline", deadline);
-        transaction.put("senderPublicKey", Convert.convert(senderPublicKey));
-        transaction.put("recipient", Convert.convert(recipientId));
+        transaction.put("senderPublicKey", Convert.toHexString(senderPublicKey));
+        transaction.put("recipient", Convert.toUnsignedLong(recipientId));
         transaction.put("amount", amount);
         transaction.put("fee", fee);
-        transaction.put("referencedTransaction", Convert.convert(referencedTransactionId));
-        transaction.put("signature", Convert.convert(signature));
+        transaction.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
+        transaction.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
             transaction.put("attachment", attachment.getJSON());
         }
@@ -475,7 +475,7 @@ public final class Transaction implements Comparable<Transaction> {
             for (int i = 64; i < 128; i++) {
                 data[i] = 0;
             }
-            hash = Convert.convert(Crypto.sha256().digest(data));
+            hash = Convert.toHexString(Crypto.sha256().digest(data));
         }
         return hash;
     }
@@ -722,7 +722,7 @@ public final class Transaction implements Comparable<Transaction> {
                 @Override
                 boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String message = (String)attachmentData.get("message");
-                    transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.convert(message));
+                    transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.parseHexString(message));
                     return validateAttachment(transaction);
                 }
 

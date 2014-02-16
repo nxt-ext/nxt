@@ -53,7 +53,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("message", Convert.convert(message));
+            attachment.put("message", Convert.toHexString(message));
 
             return attachment;
 
@@ -291,7 +291,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("pollId", Convert.convert(this.pollId));
+            attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
             for (int i = 0; i < this.pollVote.length; i++) {
                 vote.add(this.pollVote[i]);
@@ -427,7 +427,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(assetId));
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantity", quantity);
 
             return attachment;
@@ -486,7 +486,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(assetId));
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantity", quantity);
             attachment.put("price", price);
 
@@ -567,7 +567,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(orderId));
+            attachment.put("order", Convert.toUnsignedLong(orderId));
 
             return attachment;
 

@@ -61,7 +61,7 @@ public final class SendMessage extends HttpRequestDispatcher.HttpRequestHandler 
 
         byte[] message;
         try {
-            message = Convert.convert(messageValue);
+            message = Convert.parseHexString(messageValue);
         } catch (RuntimeException e) {
             return INCORRECT_ARBITRARY_MESSAGE;
         }
@@ -113,7 +113,7 @@ public final class SendMessage extends HttpRequestDispatcher.HttpRequestHandler 
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
-        response.put("bytes", Convert.convert(transaction.getBytes()));
+        response.put("bytes", Convert.toHexString(transaction.getBytes()));
 
         return response;
     }

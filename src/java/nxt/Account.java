@@ -171,26 +171,26 @@ public final class Account {
             return true;
         } else if (this.keyHeight == -1) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Account key for " + Convert.convert(id) + " was already set to a different one at the same height "
+            Logger.logMessage("Account key for " + Convert.toUnsignedLong(id) + " was already set to a different one at the same height "
                     + ", current height is " + height + ", rejecting new key");
             return false;
         } else if (this.keyHeight >= height) {
             Logger.logMessage("DUPLICATE KEY!!!");
-            Logger.logMessage("Changing key for account " + Convert.convert(id) + " at height " + height
+            Logger.logMessage("Changing key for account " + Convert.toUnsignedLong(id) + " at height " + height
                     + ", was previously set to a different one at height " + keyHeight);
             this.publicKey = key;
             this.keyHeight = height;
             return true;
         }
         Logger.logMessage("DUPLICATE KEY!!!");
-        Logger.logMessage("Invalid key for account " + Convert.convert(id) + " at height " + height
+        Logger.logMessage("Invalid key for account " + Convert.toUnsignedLong(id) + " at height " + height
                 + ", was already set to a different one at height " + keyHeight);
         return false;
     }
 
     synchronized void apply(int height) {
         if (this.publicKey == null) {
-            throw new IllegalStateException("Public key has not been set for account " + Convert.convert(id)
+            throw new IllegalStateException("Public key has not been set for account " + Convert.toUnsignedLong(id)
                     +" at height " + height + ", key height is " + keyHeight);
         }
         if (this.keyHeight == -1 || this.keyHeight > height) {
@@ -200,13 +200,13 @@ public final class Account {
 
     synchronized void undo(int height) {
         if (this.keyHeight >= height) {
-            Logger.logDebugMessage("Unsetting key for account " + Convert.convert(id) + " at height " + height
+            Logger.logDebugMessage("Unsetting key for account " + Convert.toUnsignedLong(id) + " at height " + height
                     + ", was previously set at height " + keyHeight);
             this.publicKey = null;
             this.keyHeight = -1;
         }
         if (this.height == height) {
-            Logger.logDebugMessage("Removing account " + Convert.convert(id) + " which was created in the popped off block");
+            Logger.logDebugMessage("Removing account " + Convert.toUnsignedLong(id) + " which was created in the popped off block");
             accounts.remove(this);
         }
     }

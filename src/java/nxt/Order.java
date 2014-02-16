@@ -159,7 +159,7 @@ public abstract class Order {
             senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -quantity);
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
             if (askOrders.putIfAbsent(order.getId(), order) != null) {
-                throw new IllegalStateException("Ask order id " + Convert.convert(order.getId()) + " already exists");
+                throw new IllegalStateException("Ask order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
             }
             SortedSet<Ask> sortedAssetAskOrders = sortedAskOrders.get(assetId);
             if (sortedAssetAskOrders == null) {
@@ -227,7 +227,7 @@ public abstract class Order {
             senderAccount.addToBalanceAndUnconfirmedBalance(-quantity * price);
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
             if (bidOrders.putIfAbsent(order.getId(), order) != null) {
-                throw new IllegalStateException("Bid order id " + Convert.convert(order.getId()) + " already exists");
+                throw new IllegalStateException("Bid order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
             }
             SortedSet<Bid> sortedAssetBidOrders = sortedBidOrders.get(assetId);
             if (sortedAssetBidOrders == null) {

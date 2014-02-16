@@ -91,11 +91,11 @@ public final class Block {
             int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
             int totalFee = ((Long)blockData.get("totalFee")).intValue();
             int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-            byte[] payloadHash = Convert.convert((String) blockData.get("payloadHash"));
-            byte[] generatorPublicKey = Convert.convert((String) blockData.get("generatorPublicKey"));
-            byte[] generationSignature = Convert.convert((String) blockData.get("generationSignature"));
-            byte[] blockSignature = Convert.convert((String) blockData.get("blockSignature"));
-            byte[] previousBlockHash = version == 1 ? null : Convert.convert((String) blockData.get("previousBlockHash"));
+            byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
+            byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
+            byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
+            byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
+            byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
 
             SortedMap<Long, Transaction> blockTransactions = new TreeMap<>();
             JSONArray transactionsData = (JSONArray)blockData.get("transactions");
@@ -375,7 +375,7 @@ public final class Block {
         if (stringId == null) {
             getId();
             if (stringId == null) {
-                stringId = Convert.convert(id);
+                stringId = Convert.toUnsignedLong(id);
             }
         }
         return stringId;
@@ -425,18 +425,18 @@ public final class Block {
 
         block.put("version", version);
         block.put("timestamp", timestamp);
-        block.put("previousBlock", Convert.convert(previousBlockId));
+        block.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
         block.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
         block.put("totalAmount", totalAmount);
         block.put("totalFee", totalFee);
         block.put("payloadLength", payloadLength);
-        block.put("payloadHash", Convert.convert(payloadHash));
-        block.put("generatorPublicKey", Convert.convert(generatorPublicKey));
-        block.put("generationSignature", Convert.convert(generationSignature));
+        block.put("payloadHash", Convert.toHexString(payloadHash));
+        block.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
+        block.put("generationSignature", Convert.toHexString(generationSignature));
         if (version > 1) {
-            block.put("previousBlockHash", Convert.convert(previousBlockHash));
+            block.put("previousBlockHash", Convert.toHexString(previousBlockHash));
         }
-        block.put("blockSignature", Convert.convert(blockSignature));
+        block.put("blockSignature", Convert.toHexString(blockSignature));
 
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : this.blockTransactions) {

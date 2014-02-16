@@ -36,7 +36,7 @@ public final class GetAsset extends HttpRequestDispatcher.HttpRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("account", Convert.convert(assetData.getAccountId()));
+        response.put("account", Convert.toUnsignedLong(assetData.getAccountId()));
         response.put("name", assetData.getName());
         if (assetData.getDescription().length() > 0) {
             response.put("description", assetData.getDescription());

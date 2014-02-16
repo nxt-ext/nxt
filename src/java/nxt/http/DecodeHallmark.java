@@ -30,7 +30,7 @@ public final class DecodeHallmark extends HttpRequestDispatcher.HttpRequestHandl
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkValue);
 
             JSONObject response = new JSONObject();
-            response.put("account", Convert.convert(Account.getId(hallmark.getPublicKey())));
+            response.put("account", Convert.toUnsignedLong(Account.getId(hallmark.getPublicKey())));
             response.put("host", hallmark.getHost());
             response.put("weight", hallmark.getWeight());
             String dateString = Hallmark.formatDate(hallmark.getDate());

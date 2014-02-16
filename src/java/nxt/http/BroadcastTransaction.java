@@ -28,7 +28,7 @@ public final class BroadcastTransaction extends HttpRequestDispatcher.HttpReques
 
         try {
 
-            byte[] bytes = Convert.convert(transactionBytes);
+            byte[] bytes = Convert.parseHexString(transactionBytes);
             Transaction transaction = Transaction.getTransaction(bytes);
 
             Blockchain.broadcast(transaction);

@@ -62,7 +62,7 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
             blockId = Blockchain.getBlockIdAtHeight(height);
 
             while (height > 0 && limit-- > 0) {
-                milestoneBlockIds.add(Convert.convert(blockId));
+                milestoneBlockIds.add(Convert.toUnsignedLong(blockId));
                 blockId = Blockchain.getBlockIdAtHeight(height);
                 height = height - jump;
             }

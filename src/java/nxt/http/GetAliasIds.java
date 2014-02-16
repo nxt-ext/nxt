@@ -38,7 +38,7 @@ public final class GetAliasIds extends HttpRequestDispatcher.HttpRequestHandler 
         JSONArray aliasIds = new JSONArray();
         for (Alias alias : Alias.getAllAliases()) {
             if (alias.getTimestamp() >= timestamp) {
-                aliasIds.add(Convert.convert(alias.getId()));
+                aliasIds.add(Convert.toUnsignedLong(alias.getId()));
             }
         }
 

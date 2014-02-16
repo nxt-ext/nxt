@@ -53,7 +53,7 @@ public final class Hallmark {
                 signature = Crypto.sign(data, secretPhrase);
             } while (!Crypto.verify(signature, data, publicKey));
 
-            return Convert.convert(data) + Convert.convert(signature);
+            return Convert.toHexString(data) + Convert.toHexString(signature);
 
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
@@ -64,7 +64,7 @@ public final class Hallmark {
 
         try {
 
-            byte[] hallmarkBytes = Convert.convert(hallmarkString);
+            byte[] hallmarkBytes = Convert.parseHexString(hallmarkString);
 
             ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);
             buffer.order(ByteOrder.LITTLE_ENDIAN);

@@ -19,7 +19,7 @@ public final class GetAssetIds extends HttpRequestDispatcher.HttpRequestHandler 
 
         JSONArray assetIds = new JSONArray();
         for (Asset asset : Asset.getAllAssets()) {
-            assetIds.add(Convert.convert(asset.getId()));
+            assetIds.add(Convert.toUnsignedLong(asset.getId()));
         }
 
         JSONObject response = new JSONObject();

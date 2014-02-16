@@ -312,7 +312,7 @@ public final class Blockchain {
             while (true) {
                 JSONObject request = new JSONObject();
                 request.put("requestType", "getNextBlockIds");
-                request.put("blockId", Convert.convert(commonBlockId));
+                request.put("blockId", Convert.toUnsignedLong(commonBlockId));
                 JSONObject response = peer.send(JSON.prepareRequest(request));
                 if (response == null) {
                     return null;
@@ -343,7 +343,7 @@ public final class Blockchain {
 
             JSONObject request = new JSONObject();
             request.put("requestType", "getNextBlocks");
-            request.put("blockId", Convert.convert(curBlockId));
+            request.put("blockId", Convert.toUnsignedLong(curBlockId));
             JSONObject response = peer.send(JSON.prepareRequest(request));
             if (response == null) {
                 return null;
@@ -971,7 +971,7 @@ public final class Blockchain {
                     if ((transaction.getReferencedTransactionId() != null
                             && ! Transaction.hasTransaction(transaction.getReferencedTransactionId())
                             && Collections.binarySearch(block.getTransactionIds(), transaction.getReferencedTransactionId()) < 0)) {
-                        throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.convert(transaction.getReferencedTransactionId())
+                        throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
                                 +" for transaction " + transaction.getStringId());
                     }
                     if ((unconfirmedTransactions.get(transaction.getId()) == null && !transaction.verify())) {
@@ -1003,7 +1003,7 @@ public final class Blockchain {
                 for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
                     Account senderAccount = Account.getAccount(accumulatedAmountEntry.getKey());
                     if (senderAccount.getBalance() < accumulatedAmountEntry.getValue()) {
-                        throw new BlockNotAcceptedException("Not enough funds in sender account: " + Convert.convert(senderAccount.getId()));
+                        throw new BlockNotAcceptedException("Not enough funds in sender account: " + Convert.toUnsignedLong(senderAccount.getId()));
                     }
                 }
 
@@ -1013,7 +1013,7 @@ public final class Blockchain {
                         Long assetId = accountAccumulatedAssetQuantitiesEntry.getKey();
                         Long quantity = accountAccumulatedAssetQuantitiesEntry.getValue();
                         if (senderAccount.getAssetBalance(assetId) < quantity) {
-                            throw new BlockNotAcceptedException("Asset balance not sufficient in sender account " + Convert.convert(senderAccount.getId()));
+                            throw new BlockNotAcceptedException("Asset balance not sufficient in sender account " + Convert.toUnsignedLong(senderAccount.getId()));
                         }
                     }
                 }
@@ -1264,9 +1264,9 @@ public final class Blockchain {
         try {
             if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
                 pushBlock(block);
-                Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) + " generated block " + block.getStringId());
+                Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
             } else {
-                Logger.logDebugMessage("Account " + Convert.convert(block.getGeneratorId()) + " generated an incorrect block.");
+                Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated an incorrect block.");
             }
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
