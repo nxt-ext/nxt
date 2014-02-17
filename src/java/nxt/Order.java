@@ -44,6 +44,8 @@ public abstract class Order {
             int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
             long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
+            Trade.addTrade(assetId, Blockchain.getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
+
             if ((((Order)askOrder).quantity -= quantity) == 0) {
 
                 Ask.removeOrder(askOrder.getId());

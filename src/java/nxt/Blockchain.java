@@ -1135,6 +1135,7 @@ public final class Blockchain {
         Asset.clear();
         Order.clear();
         Poll.clear();
+        Trade.clear();
         Vote.clear();
         unconfirmedTransactions.clear();
         doubleSpendingTransactions.clear();
