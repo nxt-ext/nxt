@@ -55,6 +55,8 @@ public class HttpRequestDispatcher {
         map.put("getMyInfo", GetMyInfo.instance);
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
+        map.put("getPoll", GetPoll.instance);
+        map.put("getPollIds", GetPollIds.instance);
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
