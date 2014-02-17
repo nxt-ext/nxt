@@ -1,5 +1,7 @@
 package nxt;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -30,6 +32,10 @@ public final class Trade {
             trades.put(assetId, assetTrades);
         }
         assetTrades.add(new Trade(blockId, askOrderId, bidOrderId, quantity, price));
+    }
+
+    public static Map<Long, CopyOnWriteArrayList<Trade>> getTrades() {
+        return Collections.unmodifiableMap(trades);
     }
 
     public static void clear() {
