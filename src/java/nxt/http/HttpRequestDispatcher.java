@@ -31,6 +31,8 @@ public class HttpRequestDispatcher {
 
         map.put("assignAlias", AssignAlias.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
+        map.put("cancelAskOrder", CancelAskOrder.instance);
+        map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
         map.put("createPoll", CreatePoll.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
@@ -64,20 +66,16 @@ public class HttpRequestDispatcher {
         map.put("getAskOrderIds", GetAskOrderIds.instance);
         map.put("getBidOrder", GetBidOrder.instance);
         map.put("getBidOrderIds", GetBidOrderIds.instance);
+        map.put("issueAsset", IssueAsset.instance);
         map.put("listAccountAliases", ListAccountAliases.instance);
         map.put("markHost", MarkHost.instance);
+        map.put("placeAskOrder", PlaceAskOrder.instance);
+        map.put("placeBidOrder", PlaceBidOrder.instance);
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);
-
-        //TODO: those are still disabled
-        //map.put("issueAsset", IssueAsset.instance);
-        //map.put("cancelAskOrder", CancelAskOrder.instance);
-        //map.put("cancelBidOrder", CancelBidOrder.instance);
-        //map.put("transferAsset", TransferAsset.instance);
-        //map.put("placeAskOrder", PlaceAskOrder.instance);
-        //map.put("placeBidOrder", PlaceBidOrder.instance);
+        map.put("transferAsset", TransferAsset.instance);
 
         handlers = Collections.unmodifiableMap(map);
     }
