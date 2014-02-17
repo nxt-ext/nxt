@@ -1,6 +1,7 @@
 package nxt.user;
 
 import nxt.util.JSON;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -34,6 +35,13 @@ final class JSONResponses {
         JSONObject response = new JSONObject();
         response.put("response", "notifyOfAcceptedTransaction");
         NOTIFY_OF_ACCEPTED_TRANSACTION = JSON.prepare(response);
+    }
+
+    static final JSONStreamAware DENY_ACCESS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("response", "denyAccess");
+        DENY_ACCESS = JSON.prepare(response);
     }
 
     private JSONResponses() {} // never

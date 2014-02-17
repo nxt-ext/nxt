@@ -822,7 +822,7 @@ public final class Transaction implements Comparable<Transaction> {
                         } else {
                             String normalizedAlias = attachment.getAliasName().toLowerCase();
                             for (int i = 0; i < normalizedAlias.length(); i++) {
-                                if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+                                if (Nxt.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
                                     return false;
                                 }
                             }
@@ -1120,7 +1120,7 @@ public final class Transaction implements Comparable<Transaction> {
                         } else {
                             String normalizedName = attachment.getName().toLowerCase();
                             for (int i = 0; i < normalizedName.length(); i++) {
-                                if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+                                if (Nxt.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
                                     return false;
                                 }
                             }

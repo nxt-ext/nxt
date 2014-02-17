@@ -1,5 +1,7 @@
 package nxt.util;
 
+import nxt.Nxt;
+
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,13 +19,10 @@ public final class Logger {
         }
     };
 
-    public static final boolean debug = System.getProperty("nxt.debug") != null;
-    public static final boolean enableStackTraces = System.getProperty("nxt.enableStackTraces") != null;
-
     private static PrintWriter fileLog = null;
     static {
         try {
-            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream("nxt.log")))), true);
+            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.logFile)))), true);
         } catch (IOException e) {
             System.out.println("Logging to file nxt.log not possible, will log to stdout only");
         }
@@ -40,7 +39,7 @@ public final class Logger {
     }
 
     public static void logMessage(String message, Exception e) {
-        if (enableStackTraces) {
+        if (Nxt.enableStackTraces) {
             logMessage(message);
             e.printStackTrace();
         } else {
@@ -49,19 +48,17 @@ public final class Logger {
     }
 
     public static void logDebugMessage(String message) {
-        if (debug) {
+        if (Nxt.debug) {
             logMessage("DEBUG: " + message);
         }
     }
 
     public static void logDebugMessage(String message, Exception e) {
-        if (debug) {
-            if (enableStackTraces) {
-                logMessage("DEBUG: " + message);
-                e.printStackTrace();
-            } else {
-                logMessage("DEBUG: " + message + ":\n" + e.toString());
-            }
+        if (Nxt.enableStackTraces) {
+            logMessage("DEBUG: " + message);
+            e.printStackTrace();
+        } else if (Nxt.debug) {
+            logMessage("DEBUG: " + message + ":\n" + e.toString());
         }
     }
 }

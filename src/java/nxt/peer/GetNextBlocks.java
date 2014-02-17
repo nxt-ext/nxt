@@ -6,6 +6,7 @@ import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ final class GetNextBlocks extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 

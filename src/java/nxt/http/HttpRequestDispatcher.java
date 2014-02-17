@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.util.Logger;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
@@ -16,7 +17,7 @@ import java.util.Map;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 
-public class HttpRequestDispatcher {
+class HttpRequestDispatcher {
 
     // not an interface in order for processRequest to be package-local, not public
     static abstract class HttpRequestHandler {
@@ -82,7 +83,7 @@ public class HttpRequestDispatcher {
         handlers = Collections.unmodifiableMap(map);
     }
 
-    public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         JSONStreamAware response;
 
@@ -99,7 +100,8 @@ public class HttpRequestDispatcher {
                 if (requestHandler != null) {
                     try {
                         response = requestHandler.processRequest(req);
-                    } catch (NxtException e) {
+                    } catch (NxtException|RuntimeException e) {
+                        Logger.logDebugMessage("Error processing API request", e);
                         response = ERROR_INCORRECT_REQUEST;
                     }
                 } else {

@@ -1,4 +1,6 @@
-CP=webapps/root/WEB-INF/lib/*:lib/*:lib/*/*
+CP=classes:lib/*
 SP=src/java/
 
-javadoc -quiet -sourcepath $SP -classpath $CP -protected -splitindex -subpackages nxt -d webapps/root/doc/
+/bin/rm -rf html/tools/doc/*
+
+javadoc -quiet -sourcepath $SP -classpath $CP -protected -splitindex -subpackages nxt -d html/tools/doc/

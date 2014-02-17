@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.NxtException;
-import nxt.ThreadPools;
 import nxt.Transaction;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
@@ -13,6 +12,12 @@ import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
+import nxt.util.ThreadPool;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.FilterMapping;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlets.DoSFilter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -41,9 +46,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -63,6 +71,28 @@ public final class Peer implements Comparable<Peer> {
     private static final ConcurrentMap<String, Peer> peers = new ConcurrentHashMap<>();
     private static final Collection<Peer> allPeers = Collections.unmodifiableCollection(peers.values());
 
+    private static final ExecutorService sendToPeersService = Executors.newFixedThreadPool(10);
+
+    public static final JSONStreamAware myPeerInfoRequest;
+    public static final JSONStreamAware myPeerInfoResponse;
+    static {
+        JSONObject json = new JSONObject();
+        if (Nxt.myAddress != null && Nxt.myAddress.length() > 0) {
+            json.put("announcedAddress", Nxt.myAddress + (Nxt.myPeerPort != Nxt.DEFAULT_PEER_PORT ? ":" + Nxt.myPeerPort : ""));
+        }
+        if (Nxt.myHallmark != null && Nxt.myHallmark.length() > 0) {
+            json.put("hallmark", Nxt.myHallmark);
+        }
+        json.put("application", "NRS");
+        json.put("version", Nxt.VERSION);
+        json.put("platform", Nxt.myPlatform);
+        json.put("shareAddress", Nxt.shareMyAddress);
+        myPeerInfoResponse = JSON.prepare(json);
+        json.put("requestType", "getInfo");
+        myPeerInfoRequest = JSON.prepareRequest(json);
+    }
+
+
     static {
         Account.addListener(new Listener<Account>() {
             @Override
@@ -76,7 +106,31 @@ public final class Peer implements Comparable<Peer> {
         }, Account.Event.BALANCE);
     }
 
-    public static final Runnable peerConnectingThread = new Runnable() {
+    static {
+        if (Nxt.shareMyAddress) {
+            try {
+                Server peerServer = new Server(Nxt.myPeerPort);
+                ServletHandler peerHandler = new ServletHandler();
+                peerHandler.addServletWithMapping(PeerServlet.class, "/*");
+                FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
+                filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("dosfilter.maxRequestsPerSec", "30"));
+                filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("dosfilter.delayMs", "1000"));
+                filterHolder.setInitParameter("trackSessions", "false");
+                filterHolder.setAsyncSupported(true);
+
+                peerServer.setHandler(peerHandler);
+                peerServer.start();
+                Logger.logMessage("Started peer networking server at port: " + Nxt.myPeerPort);
+            } catch (Exception e) {
+                Logger.logDebugMessage("Failed to start peer networking server", e);
+                throw new RuntimeException(e.toString(), e);
+            }
+        } else {
+            Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
+        }
+    }
+
+    private static final Runnable peerConnectingThread = new Runnable() {
 
         @Override
         public void run() {
@@ -104,7 +158,7 @@ public final class Peer implements Comparable<Peer> {
 
     };
 
-    public static final Runnable peerUnBlacklistingThread = new Runnable() {
+    private static final Runnable peerUnBlacklistingThread = new Runnable() {
 
         @Override
         public void run() {
@@ -132,7 +186,7 @@ public final class Peer implements Comparable<Peer> {
 
     };
 
-    public static final Runnable getMorePeersThread = new Runnable() {
+    private static final Runnable getMorePeersThread = new Runnable() {
 
         private final JSONStreamAware getPeersRequest;
         {
@@ -173,6 +227,18 @@ public final class Peer implements Comparable<Peer> {
 
     };
 
+    static {
+        ThreadPool.scheduleThread(peerConnectingThread, 5);
+        ThreadPool.scheduleThread(peerUnBlacklistingThread, 1);
+        ThreadPool.scheduleThread(getMorePeersThread, 5);
+    }
+
+    public static void init() {}
+
+    public static void shutdown() {
+        ThreadPool.shutdownExecutor(sendToPeersService);
+    }
+
     public static boolean addListener(Listener<Peer> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
@@ -195,12 +261,12 @@ public final class Peer implements Comparable<Peer> {
 
     public static Peer addPeer(final String address, final String announcedAddress) {
 
-        String peerAddress = parseHostAndPort(address);
+        String peerAddress = normalizeHostAndPort(address);
         if (peerAddress == null) {
             return null;
         }
 
-        String announcedPeerAddress = parseHostAndPort(announcedAddress);
+        String announcedPeerAddress = normalizeHostAndPort(announcedAddress);
 
         if (Nxt.myAddress != null && Nxt.myAddress.length() > 0 && Nxt.myAddress.equalsIgnoreCase(announcedPeerAddress)) {
             return null;
@@ -232,7 +298,12 @@ public final class Peer implements Comparable<Peer> {
             }
 
             if (! peer.isBlacklisted() && peer.state == State.CONNECTED && peer.announcedAddress != null) {
-                Future<JSONObject> futureResponse = ThreadPools.sendInParallel(peer, jsonRequest);
+                Future<JSONObject> futureResponse = sendToPeersService.submit(new Callable<JSONObject>() {
+                    @Override
+                    public JSONObject call() {
+                        return peer.send(jsonRequest);
+                    }
+                });
                 expectedResponses.add(futureResponse);
             }
             if (expectedResponses.size() >= Nxt.sendToPeersLimit - successful) {
@@ -293,7 +364,7 @@ public final class Peer implements Comparable<Peer> {
         return null;
     }
 
-    private static String parseHostAndPort(String address) {
+    public static String normalizeHostAndPort(String address) {
         try {
             if (address == null) {
                 return null;
@@ -323,7 +394,6 @@ public final class Peer implements Comparable<Peer> {
         }
         return numberOfConnectedPeers;
     }
-
 
     private final String peerAddress;
     private String announcedAddress;
@@ -409,7 +479,7 @@ public final class Peer implements Comparable<Peer> {
     }
 
     void setAnnouncedAddress(String announcedAddress) {
-        String announcedPeerAddress = parseHostAndPort(announcedAddress);
+        String announcedPeerAddress = normalizeHostAndPort(announcedAddress);
         if (announcedPeerAddress != null) {
             this.announcedAddress = announcedPeerAddress;
             try {
@@ -612,28 +682,12 @@ public final class Peer implements Comparable<Peer> {
     }
 
     private void connect() {
-        JSONObject request = new JSONObject();
-        request.put("requestType", "getInfo");
-        if (Nxt.myAddress != null && Nxt.myAddress.length() > 0) {
-            request.put("announcedAddress", Nxt.myAddress);
-        }
-        if (Nxt.myHallmark != null && Nxt.myHallmark.length() > 0) {
-            request.put("hallmark", Nxt.myHallmark);
-        }
-        request.put("application", "NRS");
-        request.put("version", Nxt.VERSION);
-        request.put("platform", Nxt.myPlatform);
-        request.put("scheme", Nxt.myScheme);
-        request.put("port", Nxt.myPort);
-        request.put("shareAddress", Nxt.shareMyAddress);
-        JSONObject response = send(JSON.prepareRequest(request));
-
+        JSONObject response = send(myPeerInfoRequest);
         if (response != null) {
             application = (String)response.get("application");
             version = (String)response.get("version");
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
-
             if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
             } else {

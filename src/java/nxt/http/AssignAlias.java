@@ -62,7 +62,7 @@ public final class AssignAlias extends HttpRequestDispatcher.HttpRequestHandler 
 
         String normalizedAlias = alias.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
-            if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+            if (Nxt.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
                 return INCORRECT_ALIAS;
             }
         }

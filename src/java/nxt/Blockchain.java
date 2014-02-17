@@ -9,6 +9,7 @@ import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
+import nxt.util.ThreadPool;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -64,7 +65,7 @@ public final class Blockchain {
 
     static final ConcurrentMap<String, Transaction> transactionHashes = new ConcurrentHashMap<>();
 
-    static final Runnable processTransactionsThread = new Runnable() {
+    private static final Runnable processTransactionsThread = new Runnable() {
 
         private final JSONStreamAware getUnconfirmedTransactionsRequest;
         {
@@ -103,7 +104,7 @@ public final class Blockchain {
 
     };
 
-    static final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
+    private static final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
 
         @Override
         public void run() {
@@ -143,7 +144,7 @@ public final class Blockchain {
 
     };
 
-    static final Runnable getMoreBlocksThread = new Runnable() {
+    private static final Runnable getMoreBlocksThread = new Runnable() {
 
         private final JSONStreamAware getCumulativeDifficultyRequest;
         {
@@ -405,7 +406,7 @@ public final class Blockchain {
                     }
                     Logger.logMessage("Re-scanning blockchain...");
                     Blockchain.scan();
-                    Logger.logMessage("...Done");
+                    Logger.logMessage("...Done re-scanning");
                     Logger.logDebugMessage("Last block is " + lastBlock.get().getStringId() + " at " + lastBlock.get().getHeight());
                 }
             }
@@ -414,7 +415,7 @@ public final class Blockchain {
 
     };
 
-    static final Runnable rebroadcastTransactionsThread = new Runnable() {
+    private static final Runnable rebroadcastTransactionsThread = new Runnable() {
 
         @Override
         public void run() {
@@ -450,6 +451,49 @@ public final class Blockchain {
         }
 
     };
+
+    static {
+        if (! Block.hasBlock(Genesis.GENESIS_BLOCK_ID)) {
+            Logger.logMessage("Genesis block not in database, starting from scratch");
+
+            try {
+                SortedMap<Long,Transaction> transactionsMap = new TreeMap<>();
+
+                for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
+                    Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
+                            Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
+                    transactionsMap.put(transaction.getId(), transaction);
+                }
+
+                MessageDigest digest = Crypto.sha256();
+                for (Transaction transaction : transactionsMap.values()) {
+                    digest.update(transaction.getBytes());
+                }
+
+                Block genesisBlock = new Block(-1, 0, null, 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
+                        Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, new ArrayList<>(transactionsMap.values()));
+
+                genesisBlock.setPrevious(null);
+
+                addBlock(genesisBlock);
+
+            } catch (NxtException.ValidationException e) {
+                Logger.logMessage(e.getMessage());
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+
+        Logger.logMessage("Scanning blockchain...");
+        Blockchain.scan();
+        Logger.logMessage("...Done scanning");
+    }
+
+    static {
+        ThreadPool.scheduleThread(processTransactionsThread, 5);
+        ThreadPool.scheduleThread(removeUnconfirmedTransactionsThread, 1);
+        ThreadPool.scheduleThread(getMoreBlocksThread, 1);
+        ThreadPool.scheduleThread(rebroadcastTransactionsThread, 60);
+    }
 
     public static boolean addTransactionListener(Listener<List<Transaction>> listener, Event eventType) {
         return transactionListeners.addListener(listener, eventType);
@@ -763,42 +807,7 @@ public final class Blockchain {
         }
     }
 
-    static void init() {
-
-        if (! Block.hasBlock(Genesis.GENESIS_BLOCK_ID)) {
-            Logger.logMessage("Genesis block not in database, starting from scratch");
-
-            try {
-                SortedMap<Long,Transaction> transactionsMap = new TreeMap<>();
-
-                for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-                    Transaction transaction = Transaction.newTransaction(0, (short)0, Genesis.CREATOR_PUBLIC_KEY,
-                            Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
-                    transactionsMap.put(transaction.getId(), transaction);
-                }
-
-                MessageDigest digest = Crypto.sha256();
-                for (Transaction transaction : transactionsMap.values()) {
-                    digest.update(transaction.getBytes());
-                }
-
-                Block genesisBlock = new Block(-1, 0, null, 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
-                        Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, new ArrayList<>(transactionsMap.values()));
-
-                genesisBlock.setPrevious(null);
-
-                addBlock(genesisBlock);
-
-            } catch (NxtException.ValidationException e) {
-                Logger.logMessage(e.getMessage());
-                throw new RuntimeException(e.toString(), e);
-            }
-        }
-
-        Logger.logMessage("Scanning blockchain...");
-        Blockchain.scan();
-        Logger.logMessage("...Done");
-    }
+    static void init() {}
 
     private static void processTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
         Transaction[] transactions = new Transaction[transactionsData.size()];
@@ -1152,9 +1161,6 @@ public final class Blockchain {
                 lastBlock.set(currentBlock);
                 currentBlock.apply();
                 currentBlockId = currentBlock.getNextBlockId();
-                if (currentBlock.getHeight() % 5000 == 0) {
-                    Logger.logDebugMessage("block " + currentBlock.getHeight());
-                }
             }
         } catch (NxtException.ValidationException|SQLException e) {
             throw new RuntimeException(e.toString(), e);

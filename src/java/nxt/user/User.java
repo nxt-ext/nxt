@@ -481,7 +481,7 @@ public final class User {
         return Account.getId(publicKey);
     }
 
-    public synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         JSONArray responses = new JSONArray();
         JSONStreamAware pendingResponse;
         while ((pendingResponse = pendingResponses.poll()) != null) {

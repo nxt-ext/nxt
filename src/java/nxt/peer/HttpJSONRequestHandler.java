@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class HttpJSONRequestHandler {
+abstract class HttpJSONRequestHandler {
 
     private static final Map<String,HttpJSONRequestHandler> jsonRequestHandlers;
 
@@ -57,7 +57,7 @@ public abstract class HttpJSONRequestHandler {
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
     }
 
-    public static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    static void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         Peer peer = null;
         JSONStreamAware response;

@@ -2,6 +2,7 @@ package nxt.peer;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 final class GetPeers extends HttpJSONRequestHandler {
 
@@ -11,7 +12,7 @@ final class GetPeers extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 

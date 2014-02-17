@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class UserRequestHandler {
+abstract class UserRequestHandler {
 
     private static final Map<String,UserRequestHandler> userRequestHandlers;
 
@@ -33,7 +33,7 @@ public abstract class UserRequestHandler {
         userRequestHandlers = Collections.unmodifiableMap(map);
     }
 
-    public static void process(HttpServletRequest req, User user) throws ServletException, IOException {
+    static void process(HttpServletRequest req, User user) throws ServletException, IOException {
 
         try {
             String requestType = req.getParameter("requestType");

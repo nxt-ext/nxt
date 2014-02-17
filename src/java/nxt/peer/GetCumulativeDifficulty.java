@@ -2,6 +2,7 @@ package nxt.peer;
 
 import nxt.Blockchain;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 final class GetCumulativeDifficulty extends HttpJSONRequestHandler {
 
@@ -11,7 +12,7 @@ final class GetCumulativeDifficulty extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 

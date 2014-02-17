@@ -60,7 +60,7 @@ public final class IssueAsset extends HttpRequestDispatcher.HttpRequestHandler {
 
         String normalizedName = name.toLowerCase();
         for (int i = 0; i < normalizedName.length(); i++) {
-            if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+            if (Nxt.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
                 return INCORRECT_ASSET_NAME;
             }
         }

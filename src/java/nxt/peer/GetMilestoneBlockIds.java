@@ -6,6 +6,7 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
 
@@ -15,7 +16,7 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONObject processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
         try {

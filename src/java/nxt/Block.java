@@ -535,6 +535,10 @@ public final class Block {
 
         Blockchain.purgeExpiredHashes(this.timestamp);
 
+        if (getHeight() % 5000 == 0) {
+            Logger.logDebugMessage("processed block " + getHeight());
+        }
+
     }
 
     void setPrevious(Block previousBlock) {
