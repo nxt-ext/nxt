@@ -1,8 +1,8 @@
 package nxt.util;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class Listeners<T,E extends Enum<E>> {
 
@@ -12,7 +12,7 @@ public final class Listeners<T,E extends Enum<E>> {
         synchronized (eventType) {
             List<Listener<T>> listeners = listenersMap.get(eventType);
             if (listeners == null) {
-                listeners = new ArrayList<>();
+                listeners = new CopyOnWriteArrayList<>();
                 listenersMap.put(eventType, listeners);
             }
             return listeners.add(listener);

@@ -9,8 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
@@ -56,7 +55,7 @@ public final class GetTrades extends HttpRequestDispatcher.HttpRequestHandler {
 
         JSONArray tradesData = new JSONArray();
         try {
-            CopyOnWriteArrayList<Trade> trades = Trade.getTrades(assetId);
+            List<Trade> trades = Trade.getTrades(assetId);
             for (int i = firstIndex; i <= lastIndex; i++) {
                 Trade trade = trades.get(i);
 
@@ -69,7 +68,7 @@ public final class GetTrades extends HttpRequestDispatcher.HttpRequestHandler {
 
                 tradesData.add(tradeData);
             }
-        } catch (Exception e) {}
+        } catch (RuntimeException e) {}
         response.put("trades", tradesData);
 
         return response;

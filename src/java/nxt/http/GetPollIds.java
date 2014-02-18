@@ -18,7 +18,7 @@ public final class GetPollIds extends HttpRequestDispatcher.HttpRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray pollIds = new JSONArray();
-        for (Poll poll : Poll.getPolls().values()) {
+        for (Poll poll : Poll.getAllPolls()) {
             pollIds.add(Convert.toUnsignedLong(poll.getId()));
         }
 

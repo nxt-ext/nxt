@@ -131,7 +131,7 @@ public final class JSONResponses {
     private static JSONStreamAware incorrect(String paramName, String details) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"" + paramName + "\"" + details);
+        response.put("errorDescription", "Incorrect \"" + paramName + "\" " + details);
         return JSON.prepare(response);
     }
 

@@ -1,6 +1,15 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Asset;
+import nxt.Blockchain;
+import nxt.Generator;
+import nxt.Nxt;
+import nxt.Order;
+import nxt.Poll;
+import nxt.Trade;
+import nxt.Vote;
 import nxt.peer.Peer;
 import nxt.user.User;
 import nxt.util.Convert;
@@ -8,7 +17,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.List;
 
 public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
 
@@ -41,12 +50,12 @@ public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
         response.put("numberOfAssets", Asset.getAllAssets().size());
         response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
         int numberOfTrades = 0;
-        for (CopyOnWriteArrayList<Trade> assetTrades : Trade.getTrades().values()) {
+        for (List<Trade> assetTrades : Trade.getAllTrades()) {
             numberOfTrades += assetTrades.size();
         }
         response.put("numberOfTrades", numberOfTrades);
         response.put("numberOfAliases", Alias.getAllAliases().size());
-        response.put("numberOfPolls", Poll.getPolls().size());
+        response.put("numberOfPolls", Poll.getAllPolls().size());
         response.put("numberOfVotes", Vote.getVotes().size());
         response.put("numberOfPeers", Peer.getAllPeers().size());
         response.put("numberOfUsers", User.getAllUsers().size());
