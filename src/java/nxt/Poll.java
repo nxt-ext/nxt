@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.util.Convert;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,6 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Poll {
 
     private static final ConcurrentMap<Long, Poll> polls = new ConcurrentHashMap<>();
+    private static final Collection<Poll> allPolls = Collections.unmodifiableCollection(polls.values());
 
     private final Long id;
     private final String name;
@@ -38,8 +40,8 @@ public final class Poll {
         }
     }
 
-    public static Map<Long, Poll> getPolls() {
-        return Collections.unmodifiableMap(polls);
+    public static Collection<Poll> getAllPolls() {
+        return allPolls;
     }
 
     static void clear() {

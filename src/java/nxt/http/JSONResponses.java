@@ -83,6 +83,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_OPTIONSAREBINARY = incorrect("optionsAreBinary");
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
+    public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -130,7 +131,7 @@ public final class JSONResponses {
     private static JSONStreamAware incorrect(String paramName, String details) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"" + paramName + "\"" + details);
+        response.put("errorDescription", "Incorrect \"" + paramName + "\" " + details);
         return JSON.prepare(response);
     }
 

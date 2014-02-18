@@ -854,6 +854,10 @@ public final class Transaction implements Comparable<Transaction> {
 
                     try {
                         int pollNameBytesLength = buffer.getShort();
+                        if (pollNameBytesLength > 4 * Nxt.MAX_POLL_NAME_LENGTH) {
+                            Logger.logDebugMessage("Error parsing poll name");
+                            return false;
+                        }
                         byte[] pollNameBytes = new byte[pollNameBytesLength];
                         buffer.get(pollNameBytes);
                         pollName = (new String(pollNameBytes, "UTF-8")).trim();
@@ -864,6 +868,10 @@ public final class Transaction implements Comparable<Transaction> {
 
                     try {
                         int pollDescriptionBytesLength = buffer.getShort();
+                        if (pollDescriptionBytesLength > 4 * Nxt.MAX_POLL_DESCRIPTION_LENGTH) {
+                            Logger.logDebugMessage("Error parsing poll description");
+                            return false;
+                        }
                         byte[] pollDescriptionBytes = new byte[pollDescriptionBytesLength];
                         buffer.get(pollDescriptionBytes);
                         pollDescription = (new String(pollDescriptionBytes, "UTF-8")).trim();
@@ -877,6 +885,10 @@ public final class Transaction implements Comparable<Transaction> {
                         pollOptions = new String[numberOfOptions];
                         for (int i = 0; i < numberOfOptions; i++) {
                             int pollOptionBytesLength = buffer.getShort();
+                            if (pollOptionBytesLength > 4 * Nxt.MAX_POLL_OPTION_LENGTH) {
+                                Logger.logDebugMessage("Error parsing poll options");
+                                return false;
+                            }
                             byte[] pollOptionBytes = new byte[pollOptionBytesLength];
                             buffer.get(pollOptionBytes);
                             pollOptions[i] = (new String(pollOptionBytes, "UTF-8")).trim();
@@ -966,6 +978,10 @@ public final class Transaction implements Comparable<Transaction> {
                     try {
                         pollId = buffer.getLong();
                         int numberOfOptions = buffer.get();
+                        if (numberOfOptions > 100) {
+                            Logger.logDebugMessage("Error parsing vote casting parameters");
+                            return false;
+                        }
                         pollVote = new byte[numberOfOptions];
                         buffer.get(pollVote);
                     } catch (RuntimeException e) {
