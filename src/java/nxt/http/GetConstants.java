@@ -11,7 +11,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetConstants extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetConstants extends APIServlet.APIRequestHandler {
 
     static final GetConstants instance = new GetConstants();
 

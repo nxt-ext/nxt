@@ -7,7 +7,7 @@ import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-final class ProcessBlock extends HttpJSONRequestHandler {
+final class ProcessBlock extends PeerServlet.PeerRequestHandler {
 
     static final ProcessBlock instance = new ProcessBlock();
 
@@ -28,7 +28,7 @@ final class ProcessBlock extends HttpJSONRequestHandler {
     }
 
     @Override
-    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
         try {
 

@@ -8,7 +8,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetUnconfirmedTransactionIds extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetUnconfirmedTransactionIds extends APIServlet.APIRequestHandler {
 
     static final GetUnconfirmedTransactionIds instance = new GetUnconfirmedTransactionIds();
 

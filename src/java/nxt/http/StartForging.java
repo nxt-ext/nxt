@@ -10,7 +10,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 
-public final class StartForging extends HttpRequestDispatcher.HttpRequestHandler {
+public final class StartForging extends APIServlet.APIRequestHandler {
 
     static final StartForging instance = new StartForging();
 

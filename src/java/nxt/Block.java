@@ -25,9 +25,6 @@ import java.util.TreeMap;
 
 public final class Block {
 
-    static final Long[] emptyLong = new Long[0];
-    static final Transaction[] emptyTransactions = new Transaction[0];
-
     public static final Comparator<Block> heightComparator = new Comparator<Block>() {
         @Override
         public int compare(Block o1, Block o2) {

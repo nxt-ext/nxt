@@ -28,7 +28,7 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class PlaceAskOrder extends HttpRequestDispatcher.HttpRequestHandler {
+public final class PlaceAskOrder extends APIServlet.APIRequestHandler {
 
     static final PlaceAskOrder instance = new PlaceAskOrder();
 

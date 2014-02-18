@@ -8,7 +8,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
+final class GetMilestoneBlockIds extends PeerServlet.PeerRequestHandler {
 
     static final GetMilestoneBlockIds instance = new GetMilestoneBlockIds();
 
@@ -16,7 +16,7 @@ final class GetMilestoneBlockIds extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
         try {

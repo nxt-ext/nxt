@@ -5,7 +5,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetMyInfo extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetMyInfo extends APIServlet.APIRequestHandler {
 
     static final GetMyInfo instance = new GetMyInfo();
 

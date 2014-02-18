@@ -12,6 +12,9 @@ import java.util.Date;
 
 public final class Logger {
 
+    private static final boolean debug;
+    private static final boolean enableStackTraces;
+
     private static final ThreadLocal<SimpleDateFormat> logDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
@@ -21,11 +24,15 @@ public final class Logger {
 
     private static PrintWriter fileLog = null;
     static {
+        debug = Nxt.getBooleanProperty("nxt.debug", false);
+        enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces", true);
         try {
-            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.logFile)))), true);
+            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log", "nxt.log"))))), true);
         } catch (IOException e) {
-            System.out.println("Logging to file nxt.log not possible, will log to stdout only");
+            logMessage("Logging to file nxt.log not possible, will log to stdout only");
         }
+        logMessage("Debug logging " + (debug ? "enabled" : "disabled"));
+        logMessage("Exception stack traces " + (enableStackTraces ? "enabled" : "disabled"));
     }
 
     private Logger() {} //never
@@ -39,7 +46,7 @@ public final class Logger {
     }
 
     public static void logMessage(String message, Exception e) {
-        if (Nxt.enableStackTraces) {
+        if (enableStackTraces) {
             logMessage(message);
             e.printStackTrace();
         } else {
@@ -48,16 +55,16 @@ public final class Logger {
     }
 
     public static void logDebugMessage(String message) {
-        if (Nxt.debug) {
+        if (debug) {
             logMessage("DEBUG: " + message);
         }
     }
 
     public static void logDebugMessage(String message, Exception e) {
-        if (Nxt.enableStackTraces) {
+        if (enableStackTraces) {
             logMessage("DEBUG: " + message);
             e.printStackTrace();
-        } else if (Nxt.debug) {
+        } else if (debug) {
             logMessage("DEBUG: " + message + ":\n" + e.toString());
         }
     }

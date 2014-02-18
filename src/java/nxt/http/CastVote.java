@@ -27,7 +27,7 @@ import static nxt.http.JSONResponses.MISSING_POLL;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class CastVote extends HttpRequestDispatcher.HttpRequestHandler {
+public final class CastVote extends APIServlet.APIRequestHandler {
 
     static final CastVote instance = new CastVote();
 

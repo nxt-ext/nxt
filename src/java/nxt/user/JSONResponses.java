@@ -1,7 +1,6 @@
 package nxt.user;
 
 import nxt.util.JSON;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -42,6 +41,14 @@ final class JSONResponses {
         JSONObject response = new JSONObject();
         response.put("response", "denyAccess");
         DENY_ACCESS = JSON.prepare(response);
+    }
+
+    static final JSONStreamAware INCORRECT_REQUEST;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("response", "showMessage");
+        response.put("message", "Incorrect request!");
+        INCORRECT_REQUEST = JSON.prepare(response);
     }
 
     private JSONResponses() {} // never

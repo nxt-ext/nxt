@@ -3,7 +3,7 @@ package nxt.peer;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-final class GetInfo extends HttpJSONRequestHandler {
+final class GetInfo extends PeerServlet.PeerRequestHandler {
 
     static final GetInfo instance = new GetInfo();
 
@@ -11,38 +11,38 @@ final class GetInfo extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
-
+    JSONStreamAware processRequest(JSONObject request, Peer peer) {
+        PeerImpl peerImpl = (PeerImpl)peer;
         String announcedAddress = (String)request.get("announcedAddress");
         if (announcedAddress != null) {
             announcedAddress = announcedAddress.trim();
             if (announcedAddress.length() > 0) {
-                peer.setAnnouncedAddress(announcedAddress);
+                peerImpl.setAnnouncedAddress(announcedAddress);
             }
         }
         String application = (String)request.get("application");
         if (application == null) {
             application = "?";
         }
-        peer.setApplication(application.trim());
+        peerImpl.setApplication(application.trim());
 
         String version = (String)request.get("version");
         if (version == null) {
             version = "?";
         }
-        peer.setVersion(version.trim());
+        peerImpl.setVersion(version.trim());
 
         String platform = (String)request.get("platform");
         if (platform == null) {
             platform = "?";
         }
-        peer.setPlatform(platform.trim());
+        peerImpl.setPlatform(platform.trim());
 
-        peer.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
+        peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
 
-        peer.setState(Peer.State.CONNECTED);
+        peerImpl.setState(Peer.State.CONNECTED);
 
-        return Peer.myPeerInfoResponse;
+        return Peers.myPeerInfoResponse;
 
     }
 

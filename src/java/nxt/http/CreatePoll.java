@@ -36,7 +36,7 @@ import static nxt.http.JSONResponses.MISSING_OPTIONSAREBINARY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class CreatePoll extends HttpRequestDispatcher.HttpRequestHandler {
+public final class CreatePoll extends APIServlet.APIRequestHandler {
 
     static final CreatePoll instance = new CreatePoll();
 

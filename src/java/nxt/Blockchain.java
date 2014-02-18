@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.peer.Peer;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
 import nxt.util.DbUtils;
@@ -78,7 +79,7 @@ public final class Blockchain {
         public void run() {
             try {
                 try {
-                    Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
+                    Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
                     }
@@ -161,7 +162,7 @@ public final class Blockchain {
             try {
                 try {
                     peerHasMore = true;
-                    Peer peer = Peer.getAnyPeer(Peer.State.CONNECTED, true);
+                    Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
                     }
@@ -436,7 +437,7 @@ public final class Blockchain {
                         JSONObject peerRequest = new JSONObject();
                         peerRequest.put("requestType", "processTransactions");
                         peerRequest.put("transactions", transactionsData);
-                        Peer.sendToSomePeers(peerRequest);
+                        Peers.sendToSomePeers(peerRequest);
                     }
 
                 } catch (Exception e) {
@@ -767,7 +768,7 @@ public final class Blockchain {
 
         nonBroadcastedTransactions.put(transaction.getId(), transaction);
 
-        Peer.sendToSomePeers(peerRequest);
+        Peers.sendToSomePeers(peerRequest);
         Logger.logDebugMessage("Broadcasted new transaction " + transaction.getStringId());
 
     }
@@ -880,7 +881,7 @@ public final class Blockchain {
             JSONObject peerRequest = new JSONObject();
             peerRequest.put("requestType", "processTransactions");
             peerRequest.put("transactions", validTransactionsData);
-            Peer.sendToSomePeers(peerRequest);
+            Peers.sendToSomePeers(peerRequest);
         }
 
         if (addedUnconfirmedTransactions.size() > 0) {
@@ -1076,7 +1077,7 @@ public final class Blockchain {
         if (block.getTimestamp() >= curTime - 15) {
             JSONObject request = block.getJSONObject();
             request.put("requestType", "processBlock");
-            Peer.sendToSomePeers(request);
+            Peers.sendToSomePeers(request);
         }
 
         if (removedUnconfirmedTransactions.size() > 0) {

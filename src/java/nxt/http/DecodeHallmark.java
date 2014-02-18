@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_HALLMARK;
 import static nxt.http.JSONResponses.MISSING_HALLMARK;
 
-public final class DecodeHallmark extends HttpRequestDispatcher.HttpRequestHandler {
+public final class DecodeHallmark extends APIServlet.APIRequestHandler {
 
     static final DecodeHallmark instance = new DecodeHallmark();
 

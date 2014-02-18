@@ -15,7 +15,7 @@ import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
-public final class GetTrades extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetTrades extends APIServlet.APIRequestHandler {
 
     static final GetTrades instance = new GetTrades();
 

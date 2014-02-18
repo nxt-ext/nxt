@@ -5,6 +5,7 @@ import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.peer.Peer;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,7 +16,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
-final class GetInitialData extends UserRequestHandler {
+final class GetInitialData extends UserServlet.UserRequestHandler {
 
     static final GetInitialData instance = new GetInitialData();
 
@@ -31,7 +32,7 @@ final class GetInitialData extends UserRequestHandler {
         for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
-            unconfirmedTransaction.put("index", User.getIndex(transaction));
+            unconfirmedTransaction.put("index", Users.getIndex(transaction));
             unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
             unconfirmedTransaction.put("deadline", transaction.getDeadline());
             unconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
@@ -44,14 +45,14 @@ final class GetInitialData extends UserRequestHandler {
 
         }
 
-        for (Peer peer : Peer.getAllPeers()) {
+        for (Peer peer : Peers.getAllPeers()) {
 
             String address = peer.getPeerAddress();
 
             if (peer.isBlacklisted()) {
 
                 JSONObject blacklistedPeer = new JSONObject();
-                blacklistedPeer.put("index", User.getIndex(peer));
+                blacklistedPeer.put("index", Users.getIndex(peer));
                 blacklistedPeer.put("address", peer.getPeerAddress());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 blacklistedPeer.put("software", peer.getSoftware());
@@ -65,7 +66,7 @@ final class GetInitialData extends UserRequestHandler {
                 if (peer.getAnnouncedAddress() != null) {
 
                     JSONObject knownPeer = new JSONObject();
-                    knownPeer.put("index", User.getIndex(peer));
+                    knownPeer.put("index", Users.getIndex(peer));
                     knownPeer.put("address", peer.getPeerAddress());
                     knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                     knownPeer.put("software", peer.getSoftware());
@@ -79,7 +80,7 @@ final class GetInitialData extends UserRequestHandler {
             } else {
 
                 JSONObject activePeer = new JSONObject();
-                activePeer.put("index", User.getIndex(peer));
+                activePeer.put("index", Users.getIndex(peer));
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     activePeer.put("disconnected", true);
                 }
@@ -102,7 +103,7 @@ final class GetInitialData extends UserRequestHandler {
         for (int i = lastBlocks.size() - 1; i >=0; i--) {
             Block block = lastBlocks.get(i);
             JSONObject recentBlock = new JSONObject();
-            recentBlock.put("index", User.getIndex(block));
+            recentBlock.put("index", Users.getIndex(block));
             recentBlock.put("timestamp", block.getTimestamp());
             recentBlock.put("numberOfTransactions", block.getTransactionIds().size());
             recentBlock.put("totalAmount", block.getTotalAmount());

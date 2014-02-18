@@ -12,7 +12,7 @@ import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.MISSING_POLL;
 import static nxt.http.JSONResponses.UNKNOWN_POLL;
 
-public final class GetPoll extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetPoll extends APIServlet.APIRequestHandler {
 
     static final GetPoll instance = new GetPoll();
 

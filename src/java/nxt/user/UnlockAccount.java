@@ -19,7 +19,7 @@ import java.util.TreeMap;
 
 import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
-final class UnlockAccount extends UserRequestHandler {
+final class UnlockAccount extends UserServlet.UserRequestHandler {
 
     static final UnlockAccount instance = new UnlockAccount();
 
@@ -29,7 +29,7 @@ final class UnlockAccount extends UserRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
         // lock all other instances of this account being unlocked
-        for (User u : User.getAllUsers()) {
+        for (User u : Users.getAllUsers()) {
             if (secretPhrase.equals(u.getSecretPhrase())) {
                 u.lockAccount();
                 if (! u.isInactive()) {
@@ -70,7 +70,7 @@ final class UnlockAccount extends UserRequestHandler {
                 if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", User.getIndex(transaction));
+                    myTransaction.put("index", Users.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
@@ -89,7 +89,7 @@ final class UnlockAccount extends UserRequestHandler {
                 } else if (accountId.equals(transaction.getRecipientId())) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", User.getIndex(transaction));
+                    myTransaction.put("index", Users.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
@@ -112,7 +112,7 @@ final class UnlockAccount extends UserRequestHandler {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", User.getIndex(block));
+                        myTransaction.put("index", Users.getIndex(block));
                         myTransaction.put("blockTimestamp", block.getTimestamp());
                         myTransaction.put("block", block.getStringId());
                         myTransaction.put("earnedAmount", block.getTotalFee());
@@ -128,7 +128,7 @@ final class UnlockAccount extends UserRequestHandler {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", User.getIndex(transaction));
+                        myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
@@ -142,7 +142,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
                     } else if (transaction.getRecipientId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", User.getIndex(transaction));
+                        myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));

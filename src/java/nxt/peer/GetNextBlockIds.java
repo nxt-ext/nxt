@@ -8,7 +8,7 @@ import org.json.simple.JSONStreamAware;
 
 import java.util.List;
 
-final class GetNextBlockIds extends HttpJSONRequestHandler {
+final class GetNextBlockIds extends PeerServlet.PeerRequestHandler {
 
     static final GetNextBlockIds instance = new GetNextBlockIds();
 
@@ -16,7 +16,7 @@ final class GetNextBlockIds extends HttpJSONRequestHandler {
 
 
     @Override
-    JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
+    JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
         JSONObject response = new JSONObject();
 

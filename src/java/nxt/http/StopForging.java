@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
 
-public final class StopForging extends HttpRequestDispatcher.HttpRequestHandler {
+public final class StopForging extends APIServlet.APIRequestHandler {
 
     static final StopForging instance = new StopForging();
 

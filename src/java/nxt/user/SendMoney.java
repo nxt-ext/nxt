@@ -14,7 +14,7 @@ import java.io.IOException;
 
 import static nxt.user.JSONResponses.NOTIFY_OF_ACCEPTED_TRANSACTION;
 
-final class SendMoney extends UserRequestHandler {
+final class SendMoney extends UserServlet.UserRequestHandler {
 
     static final SendMoney instance = new SendMoney();
 

@@ -11,7 +11,7 @@ import nxt.Poll;
 import nxt.Trade;
 import nxt.Vote;
 import nxt.peer.Peer;
-import nxt.user.User;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -19,7 +19,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetState extends APIServlet.APIRequestHandler {
 
     static final GetState instance = new GetState();
 
@@ -57,8 +57,8 @@ public final class GetState extends HttpRequestDispatcher.HttpRequestHandler {
         response.put("numberOfAliases", Alias.getAllAliases().size());
         response.put("numberOfPolls", Poll.getAllPolls().size());
         response.put("numberOfVotes", Vote.getVotes().size());
-        response.put("numberOfPeers", Peer.getAllPeers().size());
-        response.put("numberOfUsers", User.getAllUsers().size());
+        response.put("numberOfPeers", Peers.getAllPeers().size());
+        //response.put("numberOfUsers", Users.getAllUsers().size()); no longer meaningful
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());

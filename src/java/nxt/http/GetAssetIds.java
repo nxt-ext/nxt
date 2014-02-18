@@ -8,7 +8,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetAssetIds extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetAssetIds extends APIServlet.APIRequestHandler {
 
     static final GetAssetIds instance = new GetAssetIds();
 

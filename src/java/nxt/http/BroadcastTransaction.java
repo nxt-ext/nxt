@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION_BYTES;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES;
 
-public final class BroadcastTransaction extends HttpRequestDispatcher.HttpRequestHandler {
+public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
     static final BroadcastTransaction instance = new BroadcastTransaction();
 

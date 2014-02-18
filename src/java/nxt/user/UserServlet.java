@@ -1,19 +1,43 @@
 package nxt.user;
 
-import nxt.Nxt;
+import nxt.NxtException;
 import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.Writer;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static nxt.user.JSONResponses.DENY_ACCESS;
+import static nxt.user.JSONResponses.INCORRECT_REQUEST;
 
 public final class UserServlet extends HttpServlet  {
 
+    abstract static class UserRequestHandler {
+        abstract JSONStreamAware processRequest(HttpServletRequest request, User user) throws NxtException, IOException;
+    }
+
+    private static final Map<String,UserRequestHandler> userRequestHandlers;
+
+    static {
+        Map<String,UserRequestHandler> map = new HashMap<>();
+        map.put("generateAuthorizationToken", GenerateAuthorizationToken.instance);
+        map.put("getInitialData", GetInitialData.instance);
+        map.put("getNewData", GetNewData.instance);
+        map.put("lockAccount", LockAccount.instance);
+        map.put("removeActivePeer", RemoveActivePeer.instance);
+        map.put("removeBlacklistedPeer", RemoveBlacklistedPeer.instance);
+        map.put("removeKnownPeer", RemoveKnownPeer.instance);
+        map.put("sendMoney", SendMoney.instance);
+        map.put("unlockAccount", UnlockAccount.instance);
+        userRequestHandlers = Collections.unmodifiableMap(map);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -30,25 +54,44 @@ public final class UserServlet extends HttpServlet  {
             if (userPasscode == null) {
                 return;
             }
+            user = Users.getUser(userPasscode);
 
-            user = User.getUser(userPasscode);
-
-            if (Nxt.allowedUserHosts != null && !Nxt.allowedUserHosts.contains(req.getRemoteHost())) {
+            if (Users.allowedUserHosts != null && ! Users.allowedUserHosts.contains(req.getRemoteHost())) {
                 user.enqueue(DENY_ACCESS);
-            } else {
-                UserRequestHandler.process(req, user);
+                return;
             }
 
-        } catch (Exception e) {
+            String requestType = req.getParameter("requestType");
+            if (requestType == null) {
+                user.enqueue(INCORRECT_REQUEST);
+                return;
+            }
+
+            UserRequestHandler userRequestHandler = userRequestHandlers.get(requestType);
+            if (userRequestHandler == null) {
+                user.enqueue(INCORRECT_REQUEST);
+                return;
+            }
+
+            JSONStreamAware response = userRequestHandler.processRequest(req, user);
+            if (response != null) {
+                user.enqueue(response);
+            }
+
+        } catch (RuntimeException|NxtException e) {
+
+            Logger.logMessage("Error processing GET request", e);
+            JSONObject response = new JSONObject();
+            response.put("response", "showMessage");
+            response.put("message", e.toString());
+            user.enqueue(response);
+
+        } finally {
+
             if (user != null) {
-                Logger.logMessage("Error processing GET request", e);
-            } else {
-                Logger.logDebugMessage("Error processing GET request", e);
+                user.processPendingResponses(req, resp);
             }
-        }
 
-        if (user != null) {
-            user.processPendingResponses(req, resp);
         }
 
     }
