@@ -3,6 +3,7 @@ package nxt.user;
 import nxt.Block;
 import nxt.Blockchain;
 import nxt.Nxt;
+import nxt.TransactionProcessor;
 import nxt.Transaction;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
@@ -29,7 +30,7 @@ final class GetInitialData extends UserServlet.UserRequestHandler {
         JSONArray activePeers = new JSONArray(), knownPeers = new JSONArray(), blacklistedPeers = new JSONArray();
         JSONArray recentBlocks = new JSONArray();
 
-        for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
+        for (Transaction transaction : TransactionProcessor.getAllUnconfirmedTransactions()) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
             unconfirmedTransaction.put("index", Users.getIndex(transaction));

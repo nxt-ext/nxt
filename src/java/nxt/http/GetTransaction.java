@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Block;
 import nxt.Blockchain;
+import nxt.TransactionProcessor;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -39,7 +40,7 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
 
         JSONObject response;
         if (transactionData == null) {
-            transactionData = Blockchain.getUnconfirmedTransaction(transactionId);
+            transactionData = TransactionProcessor.getUnconfirmedTransaction(transactionId);
             if (transactionData == null) {
                 return UNKNOWN_TRANSACTION;
             } else {

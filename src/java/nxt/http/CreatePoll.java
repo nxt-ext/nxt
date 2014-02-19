@@ -2,9 +2,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -149,10 +149,10 @@ public final class CreatePoll extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(), options.toArray(new String[0]), minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
-        Transaction transaction = Blockchain.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Transaction transaction = TransactionProcessor.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        TransactionProcessor.broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());

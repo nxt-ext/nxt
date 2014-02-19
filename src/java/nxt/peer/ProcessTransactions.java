@@ -1,6 +1,6 @@
 package nxt.peer;
 
-import nxt.Blockchain;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
@@ -18,7 +18,7 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
 
         try {
 
-            Blockchain.processTransactions(request);
+            TransactionProcessor.processTransactions(request);
 
         } catch (NxtException.ValidationException e) {
             peer.blacklist(e);

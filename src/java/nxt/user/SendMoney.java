@@ -1,8 +1,8 @@
 package nxt.user;
 
 import nxt.Account;
-import nxt.Blockchain;
 import nxt.Nxt;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
@@ -124,10 +124,10 @@ final class SendMoney extends UserServlet.UserRequestHandler {
 
         } else {
 
-            final Transaction transaction = Blockchain.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
+            final Transaction transaction = TransactionProcessor.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
             transaction.sign(user.getSecretPhrase());
 
-            Blockchain.broadcast(transaction);
+            TransactionProcessor.broadcast(transaction);
 
             return NOTIFY_OF_ACCEPTED_TRANSACTION;
 

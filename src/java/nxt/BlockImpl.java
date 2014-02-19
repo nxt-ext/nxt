@@ -358,7 +358,7 @@ final class BlockImpl implements Block {
             transaction.apply();
         }
 
-        Blockchain.purgeExpiredHashes(this.timestamp);
+        TransactionProcessor.purgeExpiredHashes(this.timestamp);
 
         if (getHeight() % 5000 == 0) {
             Logger.logDebugMessage("processed block " + getHeight());

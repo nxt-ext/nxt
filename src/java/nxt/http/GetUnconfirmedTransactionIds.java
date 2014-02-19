@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Blockchain;
+import nxt.TransactionProcessor;
 import nxt.Transaction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -18,7 +18,7 @@ public final class GetUnconfirmedTransactionIds extends APIServlet.APIRequestHan
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONArray transactionIds = new JSONArray();
-        for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
+        for (Transaction transaction : TransactionProcessor.getAllUnconfirmedTransactions()) {
             transactionIds.add(transaction.getStringId());
         }
 

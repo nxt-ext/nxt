@@ -2,9 +2,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Poll;
 import nxt.Transaction;
@@ -110,10 +110,10 @@ public final class CastVote extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
-        Transaction transaction = Blockchain.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Transaction transaction = TransactionProcessor.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        TransactionProcessor.broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());

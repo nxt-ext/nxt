@@ -3,6 +3,7 @@ package nxt.user;
 import nxt.Account;
 import nxt.Block;
 import nxt.Blockchain;
+import nxt.TransactionProcessor;
 import nxt.Transaction;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
@@ -65,7 +66,7 @@ final class UnlockAccount extends UserServlet.UserRequestHandler {
 
             JSONArray myTransactions = new JSONArray();
             byte[] accountPublicKey = account.getPublicKey();
-            for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
+            for (Transaction transaction : TransactionProcessor.getAllUnconfirmedTransactions()) {
 
                 if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
 

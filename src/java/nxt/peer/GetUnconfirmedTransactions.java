@@ -1,6 +1,6 @@
 package nxt.peer;
 
-import nxt.Blockchain;
+import nxt.TransactionProcessor;
 import nxt.Transaction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,7 +19,7 @@ final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
         JSONObject response = new JSONObject();
 
         JSONArray transactionsData = new JSONArray();
-        for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
+        for (Transaction transaction : TransactionProcessor.getAllUnconfirmedTransactions()) {
 
             transactionsData.add(transaction.getJSONObject());
 

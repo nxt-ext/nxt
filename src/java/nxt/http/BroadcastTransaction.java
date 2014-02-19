@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Blockchain;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
@@ -29,9 +29,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         try {
 
             byte[] bytes = Convert.parseHexString(transactionBytes);
-            Transaction transaction = Blockchain.getTransaction(bytes);
+            Transaction transaction = TransactionProcessor.getTransaction(bytes);
 
-            Blockchain.broadcast(transaction);
+            TransactionProcessor.broadcast(transaction);
 
             JSONObject response = new JSONObject();
             response.put("transaction", transaction.getStringId());

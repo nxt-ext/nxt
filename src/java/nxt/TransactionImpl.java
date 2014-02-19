@@ -327,7 +327,7 @@ final class TransactionImpl implements Transaction {
             // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
         }
         senderAccount.apply(this.getHeight());
-        Blockchain.transactionHashes.put(getHash(), this);
+        TransactionProcessor.transactionHashes.put(getHash(), this);
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null) {
             recipientAccount = Account.addOrGetAccount(recipientId);

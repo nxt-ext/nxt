@@ -6,6 +6,7 @@ import nxt.Blockchain;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.TransactionProcessor;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -291,7 +292,7 @@ public final class Users {
 
     static {
 
-        Blockchain.addTransactionListener(new Listener<List<Transaction>>() {
+        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -306,7 +307,7 @@ public final class Users {
             }
         }, Blockchain.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
 
-        Blockchain.addTransactionListener(new Listener<List<Transaction>>() {
+        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -328,7 +329,7 @@ public final class Users {
             }
         }, Blockchain.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
-        Blockchain.addTransactionListener(new Listener<List<Transaction>>() {
+        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -350,7 +351,7 @@ public final class Users {
             }
         }, Blockchain.Event.ADDED_CONFIRMED_TRANSACTIONS);
 
-        Blockchain.addTransactionListener(new Listener<List<Transaction>>() {
+        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();

@@ -1,8 +1,8 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Blockchain;
 import nxt.Nxt;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -103,11 +103,11 @@ public final class SendMoney extends APIServlet.APIRequestHandler {
 
         }
 
-        Transaction transaction = Blockchain.newTransaction(Convert.getEpochTime(), deadline, publicKey,
+        Transaction transaction = TransactionProcessor.newTransaction(Convert.getEpochTime(), deadline, publicKey,
                 recipient, amount, fee, referencedTransaction);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        TransactionProcessor.broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());

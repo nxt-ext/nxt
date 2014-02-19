@@ -137,7 +137,7 @@ public final class Nxt {
             }));
 
             Db.init();
-            Blockchain.init();
+            TransactionProcessor.init();
             Peers.init();
             Generator.init();
             API.init();

@@ -23,11 +23,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -35,8 +33,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class Blockchain {
@@ -50,7 +46,6 @@ public final class Blockchain {
     }
 
     private static final Listeners<Block,Event> blockListeners = new Listeners<>();
-    private static final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
 
@@ -58,94 +53,7 @@ public final class Blockchain {
 
     private static final AtomicReference<BlockImpl> lastBlock = new AtomicReference<>();
 
-    private static final ConcurrentMap<Long, TransactionImpl> doubleSpendingTransactions = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-
-    private static final Collection<? extends Transaction> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
-
-    static final ConcurrentMap<String, Transaction> transactionHashes = new ConcurrentHashMap<>();
-
-    private static final Runnable processTransactionsThread = new Runnable() {
-
-        private final JSONStreamAware getUnconfirmedTransactionsRequest;
-        {
-            JSONObject request = new JSONObject();
-            request.put("requestType", "getUnconfirmedTransactions");
-            getUnconfirmedTransactionsRequest = JSON.prepareRequest(request);
-        }
-
-        @Override
-        public void run() {
-            try {
-                try {
-                    Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
-                    if (peer == null) {
-                        return;
-                    }
-                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest);
-                    if (response == null) {
-                        return;
-                    }
-                    try {
-                        JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                        processTransactions(transactionsData, false);
-                    } catch (NxtException.ValidationException e) {
-                        peer.blacklist(e);
-                    }
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
-                }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
-            }
-        }
-
-    };
-
-    private static final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
-
-        @Override
-        public void run() {
-
-            try {
-                try {
-
-                    int curTime = Convert.getEpochTime();
-                    List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
-
-                    Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
-                    while (iterator.hasNext()) {
-
-                        Transaction transaction = iterator.next();
-                        if (transaction.getExpiration() < curTime) {
-                            iterator.remove();
-                            Account account = Account.getAccount(transaction.getSenderId());
-                            account.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
-                            removedUnconfirmedTransactions.add(transaction);
-                        }
-                    }
-
-                    if (removedUnconfirmedTransactions.size() > 0) {
-                        transactionListeners.notify(removedUnconfirmedTransactions, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
-                    }
-
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error removing unconfirmed transactions", e);
-                }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
-            }
-
-        }
-
-    };
-
-    private static final Runnable getMoreBlocksThread = new Runnable() {
+    static final Runnable getMoreBlocksThread = new Runnable() {
 
         private final JSONStreamAware getCumulativeDifficultyRequest;
         {
@@ -226,7 +134,7 @@ public final class Blockchain {
                                 if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
                                     try {
 
-                                        Blockchain.pushBlock(block);
+                                        pushBlock(block);
 
                                     } catch (BlockNotAcceptedException e) {
                                         Logger.logDebugMessage("Failed to accept block " + block.getStringId()
@@ -270,7 +178,7 @@ public final class Blockchain {
                 JSONObject milestoneBlockIdsRequest = new JSONObject();
                 milestoneBlockIdsRequest.put("requestType", "getMilestoneBlockIds");
                 if (lastMilestoneBlockId == null) {
-                    milestoneBlockIdsRequest.put("lastBlockId", Blockchain.getLastBlock().getStringId());
+                    milestoneBlockIdsRequest.put("lastBlockId", getLastBlock().getStringId());
                 } else {
                     milestoneBlockIdsRequest.put("lastMilestoneBlockId", lastMilestoneBlockId);
                 }
@@ -370,13 +278,13 @@ public final class Blockchain {
                 boolean needsRescan;
 
                 try {
-                    while (!lastBlock.get().getId().equals(commonBlock.getId()) && Blockchain.popLastBlock()) {}
+                    while (!lastBlock.get().getId().equals(commonBlock.getId()) && popLastBlock()) {}
 
                     if (lastBlock.get().getId().equals(commonBlock.getId())) {
                         for (BlockImpl block : forkBlocks) {
                             if (lastBlock.get().getId().equals(block.getPreviousBlockId())) {
                                 try {
-                                    Blockchain.pushBlock(block);
+                                    pushBlock(block);
                                 } catch (BlockNotAcceptedException e) {
                                     Logger.logDebugMessage("Failed to push fork block " + block.getStringId()
                                             + " received from " + peer.getPeerAddress() + ", blacklisting");
@@ -406,47 +314,10 @@ public final class Blockchain {
                         Blocks.deleteBlock(commonBlock.getNextBlockId());
                     }
                     Logger.logMessage("Re-scanning blockchain...");
-                    Blockchain.scan();
+                    scan();
                     Logger.logMessage("...Done re-scanning");
                     Logger.logDebugMessage("Last block is " + lastBlock.get().getStringId() + " at " + lastBlock.get().getHeight());
                 }
-            }
-
-        }
-
-    };
-
-    private static final Runnable rebroadcastTransactionsThread = new Runnable() {
-
-        @Override
-        public void run() {
-
-            try {
-                try {
-                    JSONArray transactionsData = new JSONArray();
-
-                    for (Transaction transaction : nonBroadcastedTransactions.values()) {
-                        if (unconfirmedTransactions.get(transaction.getId()) == null && ! Transactions.hasTransaction(transaction.getId())) {
-                            transactionsData.add(transaction.getJSONObject());
-                        } else {
-                            nonBroadcastedTransactions.remove(transaction.getId());
-                        }
-                    }
-
-                    if (transactionsData.size() > 0) {
-                        JSONObject peerRequest = new JSONObject();
-                        peerRequest.put("requestType", "processTransactions");
-                        peerRequest.put("transactions", transactionsData);
-                        Peers.sendToSomePeers(peerRequest);
-                    }
-
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
-                }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
             }
 
         }
@@ -461,7 +332,7 @@ public final class Blockchain {
                 SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
 
                 for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-                    TransactionImpl transaction = newTransaction(0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
+                    TransactionImpl transaction = TransactionProcessor.newTransaction(0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
                             Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
                     transactionsMap.put(transaction.getId(), transaction);
                 }
@@ -490,18 +361,10 @@ public final class Blockchain {
     }
 
     static {
-        ThreadPool.scheduleThread(processTransactionsThread, 5);
-        ThreadPool.scheduleThread(removeUnconfirmedTransactionsThread, 1);
+        ThreadPool.scheduleThread(TransactionProcessor.processTransactionsThread, 5);
+        ThreadPool.scheduleThread(TransactionProcessor.removeUnconfirmedTransactionsThread, 1);
         ThreadPool.scheduleThread(getMoreBlocksThread, 1);
-        ThreadPool.scheduleThread(rebroadcastTransactionsThread, 60);
-    }
-
-    public static boolean addTransactionListener(Listener<List<Transaction>> listener, Event eventType) {
-        return transactionListeners.addListener(listener, eventType);
-    }
-
-    public static boolean removeTransactionListener(Listener<List<Transaction>> listener, Event eventType) {
-        return transactionListeners.removeListener(listener, eventType);
+        ThreadPool.scheduleThread(TransactionProcessor.rebroadcastTransactionsThread, 60);
     }
 
     public static boolean addBlockListener(Listener<Block> listener, Event eventType) {
@@ -734,10 +597,6 @@ public final class Blockchain {
         }
     }
 
-    public static Collection<? extends Transaction> getAllUnconfirmedTransactions() {
-        return allUnconfirmedTransactions;
-    }
-
     public static Block getLastBlock() {
         return lastBlock.get();
     }
@@ -754,55 +613,8 @@ public final class Blockchain {
         return Transactions.findTransaction(transactionId);
     }
 
-    public static Transaction getUnconfirmedTransaction(Long transactionId) {
-        return unconfirmedTransactions.get(transactionId);
-    }
-
-    public static void broadcast(Transaction transaction) {
-
-        JSONObject peerRequest = new JSONObject();
-        peerRequest.put("requestType", "processTransactions");
-        JSONArray transactionsData = new JSONArray();
-        transactionsData.add(transaction.getJSONObject());
-        peerRequest.put("transactions", transactionsData);
-
-        nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl)transaction);
-
-        Peers.sendToSomePeers(peerRequest);
-        Logger.logDebugMessage("Broadcasted new transaction " + transaction.getStringId());
-
-    }
-
     public static Peer getLastBlockchainFeeder() {
         return lastBlockchainFeeder;
-    }
-
-    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                                             int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
-    }
-
-    public static Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                                             int amount, int fee, Long referencedTransactionId, Attachment attachment)
-            throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipientId, amount, fee,
-                referencedTransactionId, null);
-        transaction.setAttachment(attachment);
-        return transaction;
-    }
-
-    static TransactionImpl newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                                          int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
-    }
-
-    public static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationException {
-        return Transactions.getTransaction(bytes);
-    }
-
-    public static void processTransactions(JSONObject request) throws NxtException.ValidationException {
-        JSONArray transactionsData = (JSONArray)request.get("transactions");
-        processTransactions(transactionsData, true);
     }
 
     public static boolean pushBlock(JSONObject request) throws NxtException {
@@ -829,92 +641,6 @@ public final class Blockchain {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-    }
-
-    static void init() {}
-
-    private static void processTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
-        TransactionImpl[] transactions = new TransactionImpl[transactionsData.size()];
-        for (int i = 0; i < transactions.length; i++) {
-            transactions[i] = Transactions.getTransaction((JSONObject) transactionsData.get(i));
-        }
-        processTransactions(transactions, sendToPeers);
-
-    }
-
-    private static void processTransactions(TransactionImpl[] transactions, final boolean sendToPeers) throws NxtException.ValidationException {
-        JSONArray validTransactionsData = new JSONArray();
-        List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
-        List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
-
-        for (TransactionImpl transaction : transactions) {
-
-            try {
-
-                int curTime = Convert.getEpochTime();
-                if (transaction.getTimestamp() > curTime + 15 || transaction.getExpiration() < curTime
-                        || transaction.getDeadline() > 1440) {
-                    continue;
-                }
-
-                boolean doubleSpendingTransaction;
-
-                synchronized (Blockchain.class) {
-
-                    Long id = transaction.getId();
-                    if (Transactions.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
-                            || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
-                        continue;
-                    }
-
-                    if (transactionHashes.containsKey(transaction.getHash())) {
-                        continue;
-                    }
-
-                    doubleSpendingTransaction = transaction.isDoubleSpending();
-
-                    if (doubleSpendingTransaction) {
-                        doubleSpendingTransactions.put(id, transaction);
-                    } else {
-                        if (sendToPeers) {
-                            if (nonBroadcastedTransactions.containsKey(id)) {
-                                Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
-                                        + " that we generated, will not forward to peers");
-                            } else {
-                                validTransactionsData.add(transaction.getJSONObject());
-                            }
-                        }
-                        unconfirmedTransactions.put(id, transaction);
-                    }
-                }
-
-                if (doubleSpendingTransaction) {
-                    addedDoubleSpendingTransactions.add(transaction);
-                } else {
-                    addedUnconfirmedTransactions.add(transaction);
-                }
-
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error processing transaction", e);
-            }
-
-        }
-
-        if (validTransactionsData.size() > 0) {
-            JSONObject peerRequest = new JSONObject();
-            peerRequest.put("requestType", "processTransactions");
-            peerRequest.put("transactions", validTransactionsData);
-            Peers.sendToSomePeers(peerRequest);
-        }
-
-        if (addedUnconfirmedTransactions.size() > 0) {
-            transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
-        }
-        if (addedDoubleSpendingTransactions.size() > 0) {
-            transactionListeners.notify(addedDoubleSpendingTransactions, Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
-        }
-
-
     }
 
     private synchronized static byte[] calculateTransactionsChecksum() {
@@ -1007,7 +733,7 @@ public final class Blockchain {
                         throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
                                 +" for transaction " + transaction.getStringId());
                     }
-                    if ((unconfirmedTransactions.get(transaction.getId()) == null && !transaction.verify())) {
+                    if ((TransactionProcessor.unconfirmedTransactions.get(transaction.getId()) == null && !transaction.verify())) {
                         throw new BlockNotAcceptedException("Signature verification failed for transaction " + transaction.getStringId());
                     }
                     if (transaction.getId().equals(Long.valueOf(0L))) {
@@ -1055,7 +781,7 @@ public final class Blockchain {
 
                 Transaction duplicateTransaction = null;
                 for (Transaction transaction : block.getTransactions()) {
-                    if (transactionHashes.putIfAbsent(transaction.getHash(), transaction) != null && block.getHeight() != 58294) {
+                    if (TransactionProcessor.transactionHashes.putIfAbsent(transaction.getHash(), transaction) != null && block.getHeight() != 58294) {
                         duplicateTransaction = transaction;
                         break;
                     }
@@ -1064,9 +790,9 @@ public final class Blockchain {
                 if (duplicateTransaction != null) {
                     for (Transaction transaction : block.getTransactions()) {
                         if (! transaction.equals(duplicateTransaction)) {
-                            Transaction hashTransaction = transactionHashes.get(transaction.getHash());
+                            Transaction hashTransaction = TransactionProcessor.transactionHashes.get(transaction.getHash());
                             if (hashTransaction != null && hashTransaction.equals(transaction)) {
-                                transactionHashes.remove(transaction.getHash());
+                                TransactionProcessor.transactionHashes.remove(transaction.getHash());
                             }
                         }
                     }
@@ -1082,7 +808,7 @@ public final class Blockchain {
 
                 for (Transaction transaction : block.getTransactions()) {
                     addedConfirmedTransactions.add(transaction);
-                    Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
+                    Transaction removedTransaction = TransactionProcessor.unconfirmedTransactions.remove(transaction.getId());
                     if (removedTransaction != null) {
                         removedUnconfirmedTransactions.add(removedTransaction);
                         Account senderAccount = Account.getAccount(removedTransaction.getSenderId());
@@ -1104,10 +830,10 @@ public final class Blockchain {
         }
 
         if (removedUnconfirmedTransactions.size() > 0) {
-            transactionListeners.notify(removedUnconfirmedTransactions, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+            TransactionProcessor.transactionListeners.notify(removedUnconfirmedTransactions, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
         if (addedConfirmedTransactions.size() > 0) {
-            transactionListeners.notify(addedConfirmedTransactions, Event.ADDED_CONFIRMED_TRANSACTIONS);
+            TransactionProcessor.transactionListeners.notify(addedConfirmedTransactions, Event.ADDED_CONFIRMED_TRANSACTIONS);
         }
         blockListeners.notify(block, Event.BLOCK_PUSHED);
     }
@@ -1138,11 +864,11 @@ public final class Blockchain {
                 generatorAccount.undo(block.getHeight());
                 generatorAccount.addToBalanceAndUnconfirmedBalance(-block.getTotalFee() * 100L);
                 for (TransactionImpl transaction : block.getTransactions()) {
-                    Transaction hashTransaction = transactionHashes.get(transaction.getHash());
+                    Transaction hashTransaction = TransactionProcessor.transactionHashes.get(transaction.getHash());
                     if (hashTransaction != null && hashTransaction.equals(transaction)) {
-                        transactionHashes.remove(transaction.getHash());
+                        TransactionProcessor.transactionHashes.remove(transaction.getHash());
                     }
-                    unconfirmedTransactions.put(transaction.getId(), transaction);
+                    TransactionProcessor.unconfirmedTransactions.put(transaction.getId(), transaction);
                     transaction.undo();
                     addedUnconfirmedTransactions.add(transaction);
                 }
@@ -1150,7 +876,7 @@ public final class Blockchain {
             } // synchronized
 
             if (addedUnconfirmedTransactions.size() > 0) {
-                transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
+                TransactionProcessor.transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
             }
 
             blockListeners.notify(block, Event.BLOCK_POPPED);
@@ -1170,10 +896,10 @@ public final class Blockchain {
         Poll.clear();
         Trade.clear();
         Vote.clear();
-        unconfirmedTransactions.clear();
-        doubleSpendingTransactions.clear();
-        nonBroadcastedTransactions.clear();
-        transactionHashes.clear();
+        TransactionProcessor.unconfirmedTransactions.clear();
+        TransactionProcessor.doubleSpendingTransactions.clear();
+        TransactionProcessor.nonBroadcastedTransactions.clear();
+        TransactionProcessor.transactionHashes.clear();
         try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
             Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
             BlockImpl currentBlock;
@@ -1196,7 +922,7 @@ public final class Blockchain {
 
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
-        for (TransactionImpl transaction : unconfirmedTransactions.values()) {
+        for (TransactionImpl transaction : TransactionProcessor.unconfirmedTransactions.values()) {
             if (transaction.getReferencedTransactionId() == null || Transactions.hasTransaction(transaction.getReferencedTransactionId())) {
                 sortedTransactions.add(transaction);
             }
@@ -1303,15 +1029,6 @@ public final class Blockchain {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
         }
 
-    }
-
-    static void purgeExpiredHashes(int blockTimestamp) {
-        Iterator<Map.Entry<String, Transaction>> iterator = Blockchain.transactionHashes.entrySet().iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().getValue().getExpiration() < blockTimestamp) {
-                iterator.remove();
-            }
-        }
     }
 
     public static class BlockNotAcceptedException extends NxtException {

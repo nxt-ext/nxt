@@ -3,9 +3,9 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
+import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -100,11 +100,11 @@ public final class IssueAsset extends APIServlet.APIRequestHandler {
 
         int timestamp = Convert.getEpochTime();
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
-        Transaction transaction = Blockchain.newTransaction(timestamp, (short) 1440, publicKey,
+        Transaction transaction = TransactionProcessor.newTransaction(timestamp, (short) 1440, publicKey,
                 Genesis.CREATOR_ID, 0, fee, null, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        TransactionProcessor.broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
