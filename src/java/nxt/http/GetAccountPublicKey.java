@@ -39,7 +39,7 @@ public final class GetAccountPublicKey extends HttpRequestDispatcher.HttpRequest
         if (account.getPublicKey() != null) {
 
             JSONObject response = new JSONObject();
-            response.put("publicKey", Convert.convert(account.getPublicKey()));
+            response.put("publicKey", Convert.toHexString(account.getPublicKey()));
             return response;
 
         } else {

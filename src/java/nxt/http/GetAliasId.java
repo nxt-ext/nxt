@@ -30,7 +30,7 @@ public final class GetAliasId extends HttpRequestDispatcher.HttpRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("id", Convert.convert(aliasData.getId()));
+        response.put("id", Convert.toUnsignedLong(aliasData.getId()));
         return response;
     }
 

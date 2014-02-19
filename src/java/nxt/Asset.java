@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Convert;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,8 +27,12 @@ public final class Asset {
 
     static void addAsset(Long assetId, Long senderAccountId, String name, String description, int quantity) {
         Asset asset = new Asset(assetId, senderAccountId, name, description, quantity);
-        Asset.assets.put(assetId, asset);
-        Asset.assetNameToAssetMappings.put(name.toLowerCase(), asset);
+        if (Asset.assets.putIfAbsent(assetId, asset) != null) {
+            throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
+        }
+        if (Asset.assetNameToAssetMappings.putIfAbsent(name.toLowerCase(), asset) != null) {
+            throw new IllegalStateException("Asset with name " + name.toLowerCase() + " already exists");
+        }
     }
 
     static void removeAsset(Long assetId) {
@@ -71,16 +77,6 @@ public final class Asset {
 
     public int getQuantity() {
         return quantity;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof Asset && this.getId().equals(((Asset) o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
     }
 
 }

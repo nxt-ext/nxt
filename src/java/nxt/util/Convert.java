@@ -11,47 +11,45 @@ public final class Convert {
 
     private Convert() {} //never
 
-    public static byte[] convert(String string) {
-        byte[] bytes = new byte[string.length() / 2];
+    public static byte[] parseHexString(String hex) {
+        byte[] bytes = new byte[hex.length() / 2];
         for (int i = 0; i < bytes.length; i++) {
-            int digit1 = alphabet.indexOf(string.charAt(i * 2));
-            int digit2 = alphabet.indexOf(string.charAt(i * 2 + 1));
-            if (digit1 < 0 || digit2 < 0 || digit1 > 15) {
-                throw new NumberFormatException("Invalid hex number: " + string);
+            int char1 = hex.charAt(i * 2);
+            char1 = char1 > 0x60 ? char1 - 0x57 : char1 - 0x30;
+            int char2 = hex.charAt(i * 2 + 1);
+            char2 = char2 > 0x60 ? char2 - 0x57 : char2 - 0x30;
+            if (char1 < 0 || char2 < 0 || char1 > 15 || char2 > 15) {
+                throw new NumberFormatException("Invalid hex number: " + hex);
             }
-            bytes[i] = (byte)((digit1 << 4) + digit2);
-            //bytes[i] = (byte)Integer.parseInt(string.substring(i * 2, i * 2 + 2), 16);
+            bytes[i] = (byte)((char1 << 4) + char2);
         }
         return bytes;
     }
 
-    public static String convert(byte[] bytes) {
-
-        StringBuilder string = new StringBuilder();
-        for (byte b : bytes) {
-            int number;
-            string.append(alphabet.charAt((number = b & 0xFF) >> 4)).append(alphabet.charAt(number & 0xF));
+    public static String toHexString(byte[] bytes) {
+        char[] chars = new char[bytes.length * 2];
+        for (int i = 0; i < bytes.length; i++) {
+            int char1 = (bytes[i] & 0xFF) >> 4;
+            chars[i * 2] = (char) (char1 > 9 ? char1 + 0x57 : char1 + 0x30);
+            int char2 = (bytes[i] & 0xF);
+            chars[i * 2 + 1] = (char) (char2 > 9 ? char2 + 0x57 : char2 + 0x30);
         }
-        return string.toString();
-
+        return String.valueOf(chars);
     }
 
-    public static String convert(long objectId) {
-
+    public static String toUnsignedLong(long objectId) {
         if (objectId >= 0) {
             return String.valueOf(objectId);
         }
         BigInteger id = BigInteger.valueOf(objectId).add(two64);
         return id.toString();
-
     }
 
-    public static String convert(Long objectId) {
-        return convert(nullToZero(objectId));
+    public static String toUnsignedLong(Long objectId) {
+        return toUnsignedLong(nullToZero(objectId));
     }
 
     public static Long parseUnsignedLong(String number) {
-
         if (number == null) {
             throw new IllegalArgumentException("trying to parse null");
         }
@@ -60,13 +58,10 @@ public final class Convert {
             throw new IllegalArgumentException("overflow: " + number);
         }
         return zeroToNull(bigInt.longValue());
-
     }
 
     public static int getEpochTime() {
-
         return (int)((System.currentTimeMillis() - Nxt.epochBeginning + 500) / 1000);
-
     }
 
     public static Long zeroToNull(long l) {

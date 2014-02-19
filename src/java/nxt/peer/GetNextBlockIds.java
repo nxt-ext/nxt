@@ -24,7 +24,7 @@ final class GetNextBlockIds extends HttpJSONRequestHandler {
         List<Long> ids = Blockchain.getBlockIdsAfter(blockId, 1440);
 
         for (Long id : ids) {
-            nextBlockIds.add(Convert.convert(id));
+            nextBlockIds.add(Convert.toUnsignedLong(id));
         }
 
         response.put("nextBlockIds", nextBlockIds);

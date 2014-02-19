@@ -70,6 +70,20 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than \"" + Nxt.MAX_ARBITRARY_MESSAGE_LENGTH + "\" bytes)");
     public static final JSONStreamAware MISSING_AMOUNT = missing("amount");
     public static final JSONStreamAware INCORRECT_AMOUNT = incorrect("amount");
+    public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
+    public static final JSONStreamAware MISSING_MINNUMBEROFOPTIONS = missing("minNumberOfOptions");
+    public static final JSONStreamAware MISSING_MAXNUMBEROFOPTIONS = missing("maxNumberOfOptions");
+    public static final JSONStreamAware MISSING_OPTIONSAREBINARY = missing("optionsAreBinary");
+    public static final JSONStreamAware MISSING_POLL = missing("poll");
+    public static final JSONStreamAware INCORRECT_POLL_NAME_LENGTH = incorrect("name", "(length must be not longer than " + Nxt.MAX_POLL_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_POLL_DESCRIPTION_LENGTH = incorrect("description", "(length must be not longer than " + Nxt.MAX_POLL_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_POLL_OPTION_LENGTH = incorrect("option", "(length must be not longer than " + Nxt.MAX_POLL_OPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_MINNUMBEROFOPTIONS = incorrect("minNumberOfOptions");
+    public static final JSONStreamAware INCORRECT_MAXNUMBEROFOPTIONS = incorrect("maxNumberOfOptions");
+    public static final JSONStreamAware INCORRECT_OPTIONSAREBINARY = incorrect("optionsAreBinary");
+    public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
+    public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
+    public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -117,7 +131,7 @@ public final class JSONResponses {
     private static JSONStreamAware incorrect(String paramName, String details) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"" + paramName + "\"" + details);
+        response.put("errorDescription", "Incorrect \"" + paramName + "\" " + details);
         return JSON.prepare(response);
     }
 

@@ -36,8 +36,8 @@ public final class GetBidOrder extends HttpRequestDispatcher.HttpRequestHandler 
         }
 
         JSONObject response = new JSONObject();
-        response.put("account", Convert.convert(orderData.getAccount().getId()));
-        response.put("asset", Convert.convert(orderData.getAssetId()));
+        response.put("account", Convert.toUnsignedLong(orderData.getAccount().getId()));
+        response.put("asset", Convert.toUnsignedLong(orderData.getAssetId()));
         response.put("quantity", orderData.getQuantity());
         response.put("price", orderData.getPrice());
 

@@ -3,8 +3,10 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.Blockchain;
+import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.Poll;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
@@ -12,61 +14,64 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
-import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
-import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
+import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
+import static nxt.http.JSONResponses.INCORRECT_VOTE;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_FEE;
-import static nxt.http.JSONResponses.MISSING_MESSAGE;
-import static nxt.http.JSONResponses.MISSING_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_POLL;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class SendMessage extends HttpRequestDispatcher.HttpRequestHandler {
+public final class CastVote extends HttpRequestDispatcher.HttpRequestHandler {
 
-    static final SendMessage instance = new SendMessage();
+    static final CastVote instance = new CastVote();
 
-    private SendMessage() {}
+    private CastVote() {}
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException, IOException {
 
         String secretPhrase = req.getParameter("secretPhrase");
-        String recipientValue = req.getParameter("recipient");
-        String messageValue = req.getParameter("message");
+        String pollValue = req.getParameter("poll");
         String feeValue = req.getParameter("fee");
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionValue = req.getParameter("referencedTransaction");
         if (secretPhrase == null) {
             return MISSING_SECRET_PHRASE;
-        } else if (recipientValue == null || "0".equals(recipientValue)) {
-            return MISSING_RECIPIENT;
-        } else if (messageValue == null) {
-            return MISSING_MESSAGE;
+        } else if (pollValue == null) {
+            return MISSING_POLL;
         } else if (feeValue == null) {
             return MISSING_FEE;
         } else if (deadlineValue == null) {
             return MISSING_DEADLINE;
         }
 
-        Long recipient;
+        Poll pollData;
+        int numberOfOptions = 0;
         try {
-            recipient = Convert.parseUnsignedLong(recipientValue);
+            pollData = Poll.getPoll(Convert.parseUnsignedLong(pollValue));
+            if (pollData != null) {
+                numberOfOptions = pollData.getOptions().length;
+            }
         } catch (RuntimeException e) {
-            return INCORRECT_RECIPIENT;
+            return INCORRECT_POLL;
         }
 
-        byte[] message;
+        byte[] vote = new byte[numberOfOptions];
         try {
-            message = Convert.parseHexString(messageValue);
-        } catch (RuntimeException e) {
-            return INCORRECT_ARBITRARY_MESSAGE;
-        }
-        if (message.length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
-            return INCORRECT_ARBITRARY_MESSAGE;
+            for (int i = 0; i < numberOfOptions; i++) {
+                String voteValue = req.getParameter("vote" + i);
+                if (voteValue != null) {
+                    vote[i] = Byte.parseByte(voteValue);
+                }
+            }
+        } catch (NumberFormatException e) {
+            return INCORRECT_VOTE;
         }
 
         int fee;
@@ -104,9 +109,8 @@ public final class SendMessage extends HttpRequestDispatcher.HttpRequestHandler 
         }
         int timestamp = Convert.getEpochTime();
 
-        Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
-                recipient, 0, fee, referencedTransaction, attachment);
+        Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
+        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
         Blockchain.broadcast(transaction);

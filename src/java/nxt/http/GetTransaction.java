@@ -44,11 +44,11 @@ public final class GetTransaction extends HttpRequestDispatcher.HttpRequestHandl
                 return UNKNOWN_TRANSACTION;
             } else {
                 response = transactionData.getJSONObject();
-                response.put("sender", Convert.convert(transactionData.getSenderId()));
+                response.put("sender", Convert.toUnsignedLong(transactionData.getSenderId()));
             }
         } else {
             response = transactionData.getJSONObject();
-            response.put("sender", Convert.convert(transactionData.getSenderId()));
+            response.put("sender", Convert.toUnsignedLong(transactionData.getSenderId()));
             Block block = transactionData.getBlock();
             response.put("block", block.getStringId());
             response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);

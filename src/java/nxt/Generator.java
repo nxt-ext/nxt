@@ -83,6 +83,10 @@ public final class Generator {
         return generator;
     }
 
+    public static Generator getGenerator(String secretPhrase) {
+        return generators.get(secretPhrase);
+    }
+
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
     }

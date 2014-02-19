@@ -111,7 +111,7 @@ public final class SendMoney extends HttpRequestDispatcher.HttpRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
-        response.put("bytes", Convert.convert(transaction.getBytes()));
+        response.put("bytes", Convert.toHexString(transaction.getBytes()));
 
         return response;
     }

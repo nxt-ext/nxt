@@ -15,9 +15,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public final class Block {
 
@@ -84,21 +88,26 @@ public final class Block {
             int version = ((Long)blockData.get("version")).intValue();
             int timestamp = ((Long)blockData.get("timestamp")).intValue();
             Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-            int numberOfTransactions = ((Long)blockData.get("numberOfTransactions")).intValue();
             int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
             int totalFee = ((Long)blockData.get("totalFee")).intValue();
             int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-            byte[] payloadHash = Convert.convert((String) blockData.get("payloadHash"));
-            byte[] generatorPublicKey = Convert.convert((String) blockData.get("generatorPublicKey"));
-            byte[] generationSignature = Convert.convert((String) blockData.get("generationSignature"));
-            byte[] blockSignature = Convert.convert((String) blockData.get("blockSignature"));
-            byte[] previousBlockHash = version == 1 ? null : Convert.convert((String) blockData.get("previousBlockHash"));
-            if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || payloadLength > Nxt.MAX_PAYLOAD_LENGTH) {
-                throw new NxtException.ValidationException("Invalid number of transactions or payload length");
+            byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
+            byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
+            byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
+            byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
+            byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
+
+            SortedMap<Long, Transaction> blockTransactions = new TreeMap<>();
+            JSONArray transactionsData = (JSONArray)blockData.get("transactions");
+            for (Object transactionData : transactionsData) {
+                Transaction transaction = Transaction.getTransaction((JSONObject)transactionData);
+                if (blockTransactions.put(transaction.getId(), transaction) != null) {
+                    throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
+                }
             }
 
-            return new Block(version, timestamp, previousBlock, numberOfTransactions, totalAmount, totalFee, payloadLength,
-                    payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+            return new Block(version, timestamp, previousBlock, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey,
+                    generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
 
         } catch (RuntimeException e) {
             throw new NxtException.ValidationException(e.toString(), e);
@@ -133,8 +142,8 @@ public final class Block {
             Long id = rs.getLong("id");
             List<Transaction> transactions = Transaction.findBlockTransactions(con, id);
 
-            Block block = new Block(version, timestamp, previousBlockId, transactions.size(), totalAmount, totalFee, payloadLength,
-                    payloadHash, generatorPublicKey, generationSignature, blockSignature, previousBlockHash);
+            Block block = new Block(version, timestamp, previousBlockId, totalAmount, totalFee, payloadLength, payloadHash,
+                    generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions);
 
             block.cumulativeDifficulty = cumulativeDifficulty;
             block.baseTarget = baseTarget;
@@ -142,10 +151,7 @@ public final class Block {
             block.height = height;
             block.id = id;
 
-            for (int i = 0; i < transactions.size(); i++) {
-                Transaction transaction = transactions.get(i);
-                block.transactionIds[i] = transaction.getId();
-                block.blockTransactions[i] = transaction;
+            for (Transaction transaction : transactions) {
                 transaction.setBlock(block);
             }
 
@@ -230,25 +236,25 @@ public final class Block {
     private final int payloadLength;
     private final byte[] generationSignature;
     private final byte[] payloadHash;
-    final Long[] transactionIds;
-    final Transaction[] blockTransactions;
+    private final List<Long> transactionIds;
+    private final List<Transaction> blockTransactions;
 
     private byte[] blockSignature;
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
     private long baseTarget = Nxt.initialBaseTarget;
     private volatile Long nextBlockId;
-    private int height;
+    private int height = -1;
     private volatile Long id;
     private volatile String stringId = null;
     private volatile Long generatorId;
 
 
-    Block(int version, int timestamp, Long previousBlockId, int numberOfTransactions, int totalAmount, int totalFee, int payloadLength,
-                 byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash)
+    Block(int version, int timestamp, Long previousBlockId, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash,
+          byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<Transaction> transactions)
             throws NxtException.ValidationException {
 
-        if (numberOfTransactions > Nxt.MAX_NUMBER_OF_TRANSACTIONS || numberOfTransactions < 0) {
-            throw new NxtException.ValidationException("attempted to create a block with " + numberOfTransactions + " transactions");
+        if (transactions.size() > Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+            throw new NxtException.ValidationException("attempted to create a block with " + transactions.size() + " transactions");
         }
 
         if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
@@ -267,9 +273,17 @@ public final class Block {
         this.blockSignature = blockSignature;
 
         this.previousBlockHash = previousBlockHash;
-        this.transactionIds = numberOfTransactions == 0 ? emptyLong : new Long[numberOfTransactions];
-        this.blockTransactions = numberOfTransactions == 0 ? emptyTransactions : new Transaction[numberOfTransactions];
-        this.height = version == -1 ? 0 : -1;
+        this.blockTransactions = Collections.unmodifiableList(transactions);
+        List<Long> transactionIds = new ArrayList<>(this.blockTransactions.size());
+        Long previousId = Long.MIN_VALUE;
+        for (Transaction transaction : this.blockTransactions) {
+            if (transaction.getId() < previousId) {
+                throw new NxtException.ValidationException("Block transactions are not sorted!");
+            }
+            transactionIds.add(transaction.getId());
+            previousId = transaction.getId();
+        }
+        this.transactionIds = Collections.unmodifiableList(transactionIds);
 
     }
 
@@ -305,7 +319,7 @@ public final class Block {
         return payloadLength;
     }
 
-    public Long[] getTransactionIds() {
+    public List<Long> getTransactionIds() {
         return transactionIds;
     }
 
@@ -321,7 +335,7 @@ public final class Block {
         return blockSignature;
     }
 
-    public Transaction[] getTransactions() {
+    public List<Transaction> getTransactions() {
         return blockTransactions;
     }
 
@@ -361,7 +375,7 @@ public final class Block {
         if (stringId == null) {
             getId();
             if (stringId == null) {
-                stringId = Convert.convert(id);
+                stringId = Convert.toUnsignedLong(id);
             }
         }
         return stringId;
@@ -391,7 +405,7 @@ public final class Block {
         buffer.putInt(version);
         buffer.putInt(timestamp);
         buffer.putLong(Convert.nullToZero(previousBlockId));
-        buffer.putInt(transactionIds.length);
+        buffer.putInt(blockTransactions.size());
         buffer.putInt(totalAmount);
         buffer.putInt(totalFee);
         buffer.putInt(payloadLength);
@@ -411,18 +425,18 @@ public final class Block {
 
         block.put("version", version);
         block.put("timestamp", timestamp);
-        block.put("previousBlock", Convert.convert(previousBlockId));
-        block.put("numberOfTransactions", transactionIds.length);
+        block.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
+        block.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
         block.put("totalAmount", totalAmount);
         block.put("totalFee", totalFee);
         block.put("payloadLength", payloadLength);
-        block.put("payloadHash", Convert.convert(payloadHash));
-        block.put("generatorPublicKey", Convert.convert(generatorPublicKey));
-        block.put("generationSignature", Convert.convert(generationSignature));
+        block.put("payloadHash", Convert.toHexString(payloadHash));
+        block.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
+        block.put("generationSignature", Convert.toHexString(generationSignature));
         if (version > 1) {
-            block.put("previousBlockHash", Convert.convert(previousBlockHash));
+            block.put("previousBlockHash", Convert.toHexString(previousBlockHash));
         }
-        block.put("blockSignature", Convert.convert(blockSignature));
+        block.put("blockSignature", Convert.toHexString(blockSignature));
 
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : this.blockTransactions) {
@@ -456,7 +470,7 @@ public final class Block {
         byte[] data2 = new byte[data.length - 64];
         System.arraycopy(data, 0, data2, 0, data2.length);
 
-        return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey);
+        return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey, this.height);
 
     }
 
@@ -509,9 +523,10 @@ public final class Block {
     void apply() {
 
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
-        if (! generatorAccount.setOrVerify(generatorPublicKey)) {
+        if (! generatorAccount.setOrVerify(generatorPublicKey, this.height)) {
             throw new IllegalStateException("Generator public key mismatch");
         }
+        generatorAccount.apply(this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
         for (Transaction transaction : blockTransactions) {
@@ -523,12 +538,19 @@ public final class Block {
     }
 
     void setPrevious(Block previousBlock) {
-        if (! previousBlock.getId().equals(getPreviousBlockId())) {
-            // shouldn't happen as previous id is already verified, but just in case
-            throw new IllegalStateException("Previous block id doesn't match");
+        if (previousBlock != null) {
+            if (! previousBlock.getId().equals(getPreviousBlockId())) {
+                // shouldn't happen as previous id is already verified, but just in case
+                throw new IllegalStateException("Previous block id doesn't match");
+            }
+            this.height = previousBlock.getHeight() + 1;
+            this.calculateBaseTarget(previousBlock);
+        } else {
+            this.height = 0;
         }
-        this.height = previousBlock.getHeight() + 1;
-        this.calculateBaseTarget(previousBlock);
+        for (Transaction transaction : blockTransactions) {
+            transaction.setBlock(this);
+        }
     }
 
     private void calculateBaseTarget(Block previousBlock) {

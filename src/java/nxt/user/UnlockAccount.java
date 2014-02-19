@@ -42,7 +42,7 @@ final class UnlockAccount extends UserRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("response", "unlockAccount");
-        response.put("account", Convert.convert(accountId));
+        response.put("account", Convert.toUnsignedLong(accountId));
 
         if (secretPhrase.length() < 30) {
 
@@ -73,7 +73,7 @@ final class UnlockAccount extends UserRequestHandler {
                     myTransaction.put("index", User.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
-                    myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
+                    myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
                     myTransaction.put("sentAmount", transaction.getAmount());
                     if (accountId.equals(transaction.getRecipientId())) {
 
@@ -92,7 +92,7 @@ final class UnlockAccount extends UserRequestHandler {
                     myTransaction.put("index", User.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
-                    myTransaction.put("account", Convert.convert(transaction.getSenderId()));
+                    myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
                     myTransaction.put("receivedAmount", transaction.getAmount());
                     myTransaction.put("fee", transaction.getFee());
                     myTransaction.put("numberOfConfirmations", 0);
@@ -131,7 +131,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransaction.put("index", User.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.convert(transaction.getRecipientId()));
+                        myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
                         myTransaction.put("sentAmount", transaction.getAmount());
                         if (accountId.equals(transaction.getRecipientId())) {
                             myTransaction.put("receivedAmount", transaction.getAmount());
@@ -145,7 +145,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransaction.put("index", User.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.convert(transaction.getSenderId()));
+                        myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
                         myTransaction.put("receivedAmount", transaction.getAmount());
                         myTransaction.put("fee", transaction.getFee());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());

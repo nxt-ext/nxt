@@ -34,10 +34,10 @@ final class GetInitialData extends UserRequestHandler {
             unconfirmedTransaction.put("index", User.getIndex(transaction));
             unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
             unconfirmedTransaction.put("deadline", transaction.getDeadline());
-            unconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+            unconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             unconfirmedTransaction.put("amount", transaction.getAmount());
             unconfirmedTransaction.put("fee", transaction.getFee());
-            unconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
+            unconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
             unconfirmedTransaction.put("id", transaction.getStringId());
 
             unconfirmedTransactions.add(unconfirmedTransaction);
@@ -104,11 +104,11 @@ final class GetInitialData extends UserRequestHandler {
             JSONObject recentBlock = new JSONObject();
             recentBlock.put("index", User.getIndex(block));
             recentBlock.put("timestamp", block.getTimestamp());
-            recentBlock.put("numberOfTransactions", block.getTransactionIds().length);
+            recentBlock.put("numberOfTransactions", block.getTransactionIds().size());
             recentBlock.put("totalAmount", block.getTotalAmount());
             recentBlock.put("totalFee", block.getTotalFee());
             recentBlock.put("payloadLength", block.getPayloadLength());
-            recentBlock.put("generator", Convert.convert(block.getGeneratorId()));
+            recentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
             recentBlock.put("height", block.getHeight());
             recentBlock.put("version", block.getVersion());
             recentBlock.put("block", block.getStringId());

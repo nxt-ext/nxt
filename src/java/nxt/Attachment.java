@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.util.Convert;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -52,7 +53,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("message", Convert.convert(message));
+            attachment.put("message", Convert.toHexString(message));
 
             return attachment;
 
@@ -146,22 +147,73 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public MessagingPollCreation() {
+        private final String pollName;
+        private final String pollDescription;
+        private final String[] pollOptions;
+        private final byte minNumberOfOptions, maxNumberOfOptions;
+        private final boolean optionsAreBinary;
+
+        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
+
+            this.pollName = pollName;
+            this.pollDescription = pollDescription;
+            this.pollOptions = pollOptions;
+            this.minNumberOfOptions = minNumberOfOptions;
+            this.maxNumberOfOptions = maxNumberOfOptions;
+            this.optionsAreBinary = optionsAreBinary;
 
         }
 
         @Override
         public int getSize() {
-            return 0;
+            try {
+                int size = 2 + pollName.getBytes("UTF-8").length + 2 + pollDescription.getBytes("UTF-8").length + 1;
+                for (int i = 0; i < pollOptions.length; i++) {
+                    size += 2 + pollOptions[i].getBytes("UTF-8").length;
+                }
+                size +=  1 + 1 + 1;
+                return size;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
         }
 
         @Override
         public byte[] getBytes() {
 
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            try {
 
-            return buffer.array();
+                byte[] name = this.pollName.getBytes("UTF-8");
+                byte[] description = this.pollDescription.getBytes("UTF-8");
+                byte[][] options = new byte[this.pollOptions.length][];
+                for (int i = 0; i < this.pollOptions.length; i++) {
+                    options[i] = this.pollOptions[i].getBytes("UTF-8");
+                }
+
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putShort((short)name.length);
+                buffer.put(name);
+                buffer.putShort((short)description.length);
+                buffer.put(description);
+                buffer.put((byte)options.length);
+                for (int i = 0; i < options.length; i++) {
+                    buffer.putShort((short)options[i].length);
+                    buffer.put(options[i]);
+                }
+                buffer.put(this.minNumberOfOptions);
+                buffer.put(this.maxNumberOfOptions);
+                buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
+
+                return buffer.array();
+
+            } catch (RuntimeException | UnsupportedEncodingException e) {
+
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+
+            }
 
         }
 
@@ -169,6 +221,16 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
+            attachment.put("name", this.pollName);
+            attachment.put("description", this.pollDescription);
+            JSONArray options = new JSONArray();
+            for (int i = 0; i < this.pollOptions.length; i++) {
+                options.add(this.pollOptions[i]);
+            }
+            attachment.put("options", options);
+            attachment.put("minNumberOfOptions", this.minNumberOfOptions);
+            attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
+            attachment.put("optionsAreBinary", this.optionsAreBinary);
 
             return attachment;
 
@@ -178,19 +240,38 @@ public interface Attachment {
         public Transaction.Type getTransactionType() {
             return Transaction.Type.Messaging.POLL_CREATION;
         }
+
+        public String getPollName() { return pollName; }
+
+        public String getPollDescription() { return pollDescription; }
+
+        public String[] getPollOptions() { return pollOptions; }
+
+        public byte getMinNumberOfOptions() { return minNumberOfOptions; }
+
+        public byte getMaxNumberOfOptions() { return maxNumberOfOptions; }
+
+        public boolean isOptionsAreBinary() { return optionsAreBinary; }
+
     }
 
     public static class MessagingVoteCasting implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
-        public MessagingVoteCasting() {
+        private final Long pollId;
+        private final byte[] pollVote;
+
+        public MessagingVoteCasting(Long pollId, byte[] pollVote) {
+
+            this.pollId = pollId;
+            this.pollVote = pollVote;
 
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 1 + this.pollVote.length;
         }
 
         @Override
@@ -198,6 +279,9 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putLong(this.pollId);
+            buffer.put((byte)this.pollVote.length);
+            buffer.put(this.pollVote);
 
             return buffer.array();
 
@@ -207,6 +291,12 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
+            attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
+            JSONArray vote = new JSONArray();
+            for (int i = 0; i < this.pollVote.length; i++) {
+                vote.add(this.pollVote[i]);
+            }
+            attachment.put("vote", vote);
 
             return attachment;
 
@@ -216,6 +306,11 @@ public interface Attachment {
         public Transaction.Type getTransactionType() {
             return Transaction.Type.Messaging.VOTE_CASTING;
         }
+
+        public Long getPollId() { return pollId; }
+
+        public byte[] getPollVote() { return pollVote; }
+
     }
 
     public static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
@@ -332,7 +427,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(assetId));
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantity", quantity);
 
             return attachment;
@@ -391,7 +486,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("asset", Convert.convert(assetId));
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantity", quantity);
             attachment.put("price", price);
 
@@ -472,7 +567,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("order", Convert.convert(orderId));
+            attachment.put("order", Convert.toUnsignedLong(orderId));
 
             return attachment;
 

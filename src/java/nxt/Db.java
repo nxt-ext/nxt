@@ -5,18 +5,21 @@ import org.h2.jdbcx.JdbcConnectionPool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 final class Db {
 
     private static JdbcConnectionPool cp;
 
     static void init() {
+        /*
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
                 Db.shutdown();
             }
         }));
+        */
         long maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
         Logger.logDebugMessage("Database cache size set to " + maxCacheSize + " kB");
         cp = JdbcConnectionPool.create("jdbc:h2:nxt_db/nxt;DB_CLOSE_DELAY=10;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize, "sa", "sa");
@@ -27,7 +30,14 @@ final class Db {
 
     static void shutdown() {
         if (cp != null) {
-            cp.dispose();
+            try (Connection con = cp.getConnection();
+                 Statement stmt = con.createStatement()) {
+                stmt.execute("SHUTDOWN COMPACT");
+            } catch (SQLException e) {
+                Logger.logDebugMessage(e.toString(), e);
+            }
+            //cp.dispose();
+            cp = null;
         }
     }
 

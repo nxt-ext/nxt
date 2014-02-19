@@ -39,29 +39,29 @@ public final class GetBlock extends HttpRequestDispatcher.HttpRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("height", blockData.getHeight());
-        response.put("generator", Convert.convert(blockData.getGeneratorId()));
+        response.put("generator", Convert.toUnsignedLong(blockData.getGeneratorId()));
         response.put("timestamp", blockData.getTimestamp());
-        response.put("numberOfTransactions", blockData.getTransactionIds().length);
+        response.put("numberOfTransactions", blockData.getTransactionIds().size());
         response.put("totalAmount", blockData.getTotalAmount());
         response.put("totalFee", blockData.getTotalFee());
         response.put("payloadLength", blockData.getPayloadLength());
         response.put("version", blockData.getVersion());
-        response.put("baseTarget", Convert.convert(blockData.getBaseTarget()));
+        response.put("baseTarget", Convert.toUnsignedLong(blockData.getBaseTarget()));
         if (blockData.getPreviousBlockId() != null) {
-            response.put("previousBlock", Convert.convert(blockData.getPreviousBlockId()));
+            response.put("previousBlock", Convert.toUnsignedLong(blockData.getPreviousBlockId()));
         }
         if (blockData.getNextBlockId() != null) {
-            response.put("nextBlock", Convert.convert(blockData.getNextBlockId()));
+            response.put("nextBlock", Convert.toUnsignedLong(blockData.getNextBlockId()));
         }
-        response.put("payloadHash", Convert.convert(blockData.getPayloadHash()));
-        response.put("generationSignature", Convert.convert(blockData.getGenerationSignature()));
+        response.put("payloadHash", Convert.toHexString(blockData.getPayloadHash()));
+        response.put("generationSignature", Convert.toHexString(blockData.getGenerationSignature()));
         if (blockData.getVersion() > 1) {
-            response.put("previousBlockHash", Convert.convert(blockData.getPreviousBlockHash()));
+            response.put("previousBlockHash", Convert.toHexString(blockData.getPreviousBlockHash()));
         }
-        response.put("blockSignature", Convert.convert(blockData.getBlockSignature()));
+        response.put("blockSignature", Convert.toHexString(blockData.getBlockSignature()));
         JSONArray transactions = new JSONArray();
         for (Long transactionId : blockData.getTransactionIds()) {
-            transactions.add(Convert.convert(transactionId));
+            transactions.add(Convert.toUnsignedLong(transactionId));
         }
         response.put("transactions", transactions);
 

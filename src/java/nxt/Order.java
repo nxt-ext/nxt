@@ -1,15 +1,17 @@
 package nxt;
 
+import nxt.util.Convert;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public abstract class Order {
 
-    private static final SortedSet emptySortedSet = Collections.unmodifiableSortedSet(new TreeSet<>());
+    private static final SortedSet<? extends Order> emptySortedSet = Collections.unmodifiableSortedSet(new ConcurrentSkipListSet<Order>());
 
     static void clear() {
         Ask.askOrders.clear();
@@ -34,26 +36,22 @@ public abstract class Order {
             Bid bidOrder = sortedAssetBidOrders.first();
 
             if (askOrder.getPrice() > bidOrder.getPrice()) {
-
                 break;
-
             }
 
             int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
             long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
+            Trade.addTrade(assetId, Blockchain.getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
+
             if ((((Order)askOrder).quantity -= quantity) == 0) {
-
                 Ask.removeOrder(askOrder.getId());
-
             }
 
             askOrder.getAccount().addToBalanceAndUnconfirmedBalance(quantity * price);
 
             if ((((Order)bidOrder).quantity -= quantity) == 0) {
-
                 Bid.removeOrder(bidOrder.getId());
-
             }
 
             bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
@@ -104,31 +102,18 @@ public abstract class Order {
     }
 
     private int compareTo(Order o) {
-
         if (height < o.height) {
-
             return -1;
-
         } else if (height > o.height) {
-
             return 1;
-
         } else {
-
             if (id < o.id) {
-
                 return -1;
-
             } else if (id > o.id) {
-
                 return 1;
-
             } else {
-
                 return 0;
-
             }
-
         }
 
     }
@@ -150,16 +135,18 @@ public abstract class Order {
 
         public static SortedSet<Ask> getSortedOrders(Long assetId) {
             SortedSet<Ask> sortedOrders = sortedAskOrders.get(assetId);
-            return sortedOrders == null ? emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
+            return sortedOrders == null ? (SortedSet<Ask>)emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
             senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -quantity);
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
-            askOrders.put(order.getId(), order);
+            if (askOrders.putIfAbsent(order.getId(), order) != null) {
+                throw new IllegalStateException("Ask order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
+            }
             SortedSet<Ask> sortedAssetAskOrders = sortedAskOrders.get(assetId);
             if (sortedAssetAskOrders == null) {
-                sortedAssetAskOrders = new TreeSet<>();
+                sortedAssetAskOrders = new ConcurrentSkipListSet<>();
                 sortedAskOrders.put(assetId,sortedAssetAskOrders);
             }
             sortedAssetAskOrders.add(order);
@@ -180,31 +167,13 @@ public abstract class Order {
 
         @Override
         public int compareTo(Ask o) {
-
             if (this.getPrice() < o.getPrice()) {
-
                 return -1;
-
             } else if (this.getPrice() > o.getPrice()) {
-
                 return 1;
-
             } else {
-
                 return super.compareTo(o);
-
             }
-
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof Ask && this.getId().equals(((Ask)o).getId());
-        }
-
-        @Override
-        public int hashCode() {
-            return getId().hashCode();
         }
 
     }
@@ -226,16 +195,18 @@ public abstract class Order {
 
         public static SortedSet<Bid> getSortedOrders(Long assetId) {
             SortedSet<Bid> sortedOrders = sortedBidOrders.get(assetId);
-            return sortedOrders == null ? emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
+            return sortedOrders == null ? (SortedSet<Bid>)emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
             senderAccount.addToBalanceAndUnconfirmedBalance(-quantity * price);
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
-            bidOrders.put(order.getId(), order);
+            if (bidOrders.putIfAbsent(order.getId(), order) != null) {
+                throw new IllegalStateException("Bid order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
+            }
             SortedSet<Bid> sortedAssetBidOrders = sortedBidOrders.get(assetId);
             if (sortedAssetBidOrders == null) {
-                sortedAssetBidOrders = new TreeSet<>();
+                sortedAssetBidOrders = new ConcurrentSkipListSet<>();
                 sortedBidOrders.put(assetId,sortedAssetBidOrders);
             }
             sortedAssetBidOrders.add(order);
@@ -256,31 +227,13 @@ public abstract class Order {
 
         @Override
         public int compareTo(Bid o) {
-
             if (this.getPrice() > o.getPrice()) {
-
                 return -1;
-
             } else if (this.getPrice() < o.getPrice()) {
-
                 return 1;
-
             } else {
-
                 return super.compareTo(o);
-
             }
-
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof Bid && this.getId().equals(((Bid)o).getId());
-        }
-
-        @Override
-        public int hashCode() {
-            return getId().hashCode();
         }
 
     }

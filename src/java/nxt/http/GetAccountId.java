@@ -27,7 +27,7 @@ public final class GetAccountId extends HttpRequestDispatcher.HttpRequestHandler
         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
         JSONObject response = new JSONObject();
-        response.put("accountId", Convert.convert(Account.getId(publicKey)));
+        response.put("accountId", Convert.toUnsignedLong(Account.getId(publicKey)));
 
         return response;
     }

@@ -49,7 +49,7 @@ public final class GetAskOrderIds extends HttpRequestDispatcher.HttpRequestHandl
         JSONArray orderIds = new JSONArray();
         Iterator<Order.Ask> askOrders = Order.Ask.getSortedOrders(assetId).iterator();
         while (askOrders.hasNext() && limit-- > 0) {
-            orderIds.add(Convert.convert(askOrders.next().getId()));
+            orderIds.add(Convert.toUnsignedLong(askOrders.next().getId()));
         }
 
         JSONObject response = new JSONObject();

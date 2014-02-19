@@ -100,19 +100,17 @@ public final class User {
                 removedActivePeer.put("index", getIndex(peer));
                 removedActivePeers.add(removedActivePeer);
                 response.put("removedActivePeers", removedActivePeers);
-                if (peer.getAnnouncedAddress() != null) {
-                    JSONArray addedKnownPeers = new JSONArray();
-                    JSONObject addedKnownPeer = new JSONObject();
-                    addedKnownPeer.put("index", getIndex(peer));
-                    addedKnownPeer.put("address", peer.getPeerAddress());
-                    addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    if (peer.isWellKnown()) {
-                        addedKnownPeer.put("wellKnown", true);
-                    }
-                    addedKnownPeer.put("software", peer.getSoftware());
-                    addedKnownPeers.add(addedKnownPeer);
-                    response.put("addedKnownPeers", addedKnownPeers);
+                JSONArray addedKnownPeers = new JSONArray();
+                JSONObject addedKnownPeer = new JSONObject();
+                addedKnownPeer.put("index", getIndex(peer));
+                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                if (peer.isWellKnown()) {
+                    addedKnownPeer.put("wellKnown", true);
                 }
+                addedKnownPeer.put("software", peer.getSoftware());
+                addedKnownPeers.add(addedKnownPeer);
+                response.put("addedKnownPeers", addedKnownPeers);
                 User.sendNewDataToAll(response);
             }
         }, Peer.Event.DEACTIVATE);
@@ -200,13 +198,11 @@ public final class User {
             @Override
             public void notify(Peer peer) {
                 JSONObject response = new JSONObject();
-                if (peer.getAnnouncedAddress() != null) {
-                    JSONArray removedKnownPeers = new JSONArray();
-                    JSONObject removedKnownPeer = new JSONObject();
-                    removedKnownPeer.put("index", getIndex(peer));
-                    removedKnownPeers.add(removedKnownPeer);
-                    response.put("removedKnownPeers", removedKnownPeers);
-                }
+                JSONArray removedKnownPeers = new JSONArray();
+                JSONObject removedKnownPeer = new JSONObject();
+                removedKnownPeer.put("index", getIndex(peer));
+                removedKnownPeers.add(removedKnownPeer);
+                response.put("removedKnownPeers", removedKnownPeers);
                 JSONArray addedActivePeers = new JSONArray();
                 JSONObject addedActivePeer = new JSONObject();
                 addedActivePeer.put("index", getIndex(peer));
@@ -271,10 +267,10 @@ public final class User {
                     addedUnconfirmedTransaction.put("index", getIndex(transaction));
                     addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
                     addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
-                    addedUnconfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+                    addedUnconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
                     addedUnconfirmedTransaction.put("amount", transaction.getAmount());
                     addedUnconfirmedTransaction.put("fee", transaction.getFee());
-                    addedUnconfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
+                    addedUnconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     addedUnconfirmedTransaction.put("id", transaction.getStringId());
                     addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
                 }
@@ -293,8 +289,8 @@ public final class User {
                     addedConfirmedTransaction.put("index", getIndex(transaction));
                     addedConfirmedTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                    addedConfirmedTransaction.put("sender", Convert.convert(transaction.getSenderId()));
-                    addedConfirmedTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+                    addedConfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+                    addedConfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
                     addedConfirmedTransaction.put("amount", transaction.getAmount());
                     addedConfirmedTransaction.put("fee", transaction.getFee());
                     addedConfirmedTransaction.put("id", transaction.getStringId());
@@ -315,10 +311,10 @@ public final class User {
                     newTransaction.put("index", getIndex(transaction));
                     newTransaction.put("timestamp", transaction.getTimestamp());
                     newTransaction.put("deadline", transaction.getDeadline());
-                    newTransaction.put("recipient", Convert.convert(transaction.getRecipientId()));
+                    newTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
                     newTransaction.put("amount", transaction.getAmount());
                     newTransaction.put("fee", transaction.getFee());
-                    newTransaction.put("sender", Convert.convert(transaction.getSenderId()));
+                    newTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     newTransaction.put("id", transaction.getStringId());
                     newTransactions.add(newTransaction);
                 }
@@ -327,51 +323,47 @@ public final class User {
             }
         }, Blockchain.Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
 
-        Blockchain.addBlockListener(new Listener<List<Block>>() {
+        Blockchain.addBlockListener(new Listener<Block>() {
             @Override
-            public void notify(List<Block> blocks) {
+            public void notify(Block block) {
                 JSONObject response = new JSONObject();
                 JSONArray addedOrphanedBlocks = new JSONArray();
-                for (Block block : blocks) {
-                    JSONObject addedOrphanedBlock = new JSONObject();
-                    addedOrphanedBlock.put("index", getIndex(block));
-                    addedOrphanedBlock.put("timestamp", block.getTimestamp());
-                    addedOrphanedBlock.put("numberOfTransactions", block.getTransactionIds().length);
-                    addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
-                    addedOrphanedBlock.put("totalFee", block.getTotalFee());
-                    addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
-                    addedOrphanedBlock.put("generator", Convert.convert(block.getGeneratorId()));
-                    addedOrphanedBlock.put("height", block.getHeight());
-                    addedOrphanedBlock.put("version", block.getVersion());
-                    addedOrphanedBlock.put("block", block.getStringId());
-                    addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
-                    addedOrphanedBlocks.add(addedOrphanedBlock);
-                }
+                JSONObject addedOrphanedBlock = new JSONObject();
+                addedOrphanedBlock.put("index", getIndex(block));
+                addedOrphanedBlock.put("timestamp", block.getTimestamp());
+                addedOrphanedBlock.put("numberOfTransactions", block.getTransactionIds().size());
+                addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
+                addedOrphanedBlock.put("totalFee", block.getTotalFee());
+                addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
+                addedOrphanedBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
+                addedOrphanedBlock.put("height", block.getHeight());
+                addedOrphanedBlock.put("version", block.getVersion());
+                addedOrphanedBlock.put("block", block.getStringId());
+                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
+                addedOrphanedBlocks.add(addedOrphanedBlock);
                 response.put("addedOrphanedBlocks", addedOrphanedBlocks);
                 User.sendNewDataToAll(response);
             }
         }, Blockchain.Event.BLOCK_POPPED);
 
-        Blockchain.addBlockListener(new Listener<List<Block>>() {
+        Blockchain.addBlockListener(new Listener<Block>() {
             @Override
-            public void notify(List<Block> blocks) {
+            public void notify(Block block) {
                 JSONObject response = new JSONObject();
                 JSONArray addedRecentBlocks = new JSONArray();
-                for (Block block : blocks) {
-                    JSONObject addedRecentBlock = new JSONObject();
-                    addedRecentBlock.put("index", getIndex(block));
-                    addedRecentBlock.put("timestamp", block.getTimestamp());
-                    addedRecentBlock.put("numberOfTransactions", block.getTransactionIds().length);
-                    addedRecentBlock.put("totalAmount", block.getTotalAmount());
-                    addedRecentBlock.put("totalFee", block.getTotalFee());
-                    addedRecentBlock.put("payloadLength", block.getPayloadLength());
-                    addedRecentBlock.put("generator", Convert.convert(block.getGeneratorId()));
-                    addedRecentBlock.put("height", block.getHeight());
-                    addedRecentBlock.put("version", block.getVersion());
-                    addedRecentBlock.put("block", block.getStringId());
-                    addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
-                    addedRecentBlocks.add(addedRecentBlock);
-                }
+                JSONObject addedRecentBlock = new JSONObject();
+                addedRecentBlock.put("index", getIndex(block));
+                addedRecentBlock.put("timestamp", block.getTimestamp());
+                addedRecentBlock.put("numberOfTransactions", block.getTransactionIds().size());
+                addedRecentBlock.put("totalAmount", block.getTotalAmount());
+                addedRecentBlock.put("totalFee", block.getTotalFee());
+                addedRecentBlock.put("payloadLength", block.getPayloadLength());
+                addedRecentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
+                addedRecentBlock.put("height", block.getHeight());
+                addedRecentBlock.put("version", block.getVersion());
+                addedRecentBlock.put("block", block.getStringId());
+                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.initialBaseTarget)));
+                addedRecentBlocks.add(addedRecentBlock);
                 response.put("addedRecentBlocks", addedRecentBlocks);
                 User.sendNewDataToAll(response);
             }
