@@ -16,13 +16,7 @@ final class ProcessTransactions extends HttpJSONRequestHandler {
     @Override
     JSONStreamAware processJSONRequest(JSONObject request, Peer peer) {
 
-        try {
-
-            Blockchain.processTransactions(request);
-
-        } catch (NxtException.ValidationException e) {
-            peer.blacklist(e);
-        }
+        Blockchain.processTransactions(request);
 
         return JSON.emptyJSON;
     }

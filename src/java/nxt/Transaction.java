@@ -115,8 +115,13 @@ public final class Transaction implements Comparable<Transaction> {
             Transaction transaction = new Transaction(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
                     fee, referencedTransactionId, signature);
 
-            if (! transactionType.loadAttachment(transaction, buffer)) {
-                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
+            try {
+                transactionType.loadAttachment(transaction, buffer);
+            } catch (NxtException.ValidationException e) {
+                if (transaction.attachment != null) {
+                    Logger.logDebugMessage("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
+                }
+                throw e;
             }
 
             return transaction;
@@ -148,8 +153,11 @@ public final class Transaction implements Comparable<Transaction> {
 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
-            if (! transactionType.loadAttachment(transaction, attachmentData)) {
-                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+            try {
+                transactionType.loadAttachment(transaction, attachmentData);
+            } catch (NxtException.ValidationException e) {
+                Logger.logDebugMessage("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+                throw e;
             }
 
             return transaction;
@@ -502,6 +510,10 @@ public final class Transaction implements Comparable<Transaction> {
         return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
 
+    void validateAttachment() throws NxtException.ValidationException {
+        type.validateAttachment(this);
+    }
+
     // returns true iff double spending
     boolean isDoubleSpending() {
         Account senderAccount = Account.getAccount(getSenderId());
@@ -608,9 +620,11 @@ public final class Transaction implements Comparable<Transaction> {
 
         public abstract byte getSubtype();
 
-        abstract boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException;
+        abstract void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException;
 
-        abstract boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException;
+        abstract void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException;
+
+        abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
         // return true iff double spending
         final boolean isDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
@@ -649,13 +663,13 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) {
-                    return validateAttachment(transaction);
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                    validateAttachment(transaction);
                 }
 
                 @Override
-                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) {
-                    return validateAttachment(transaction);
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -677,8 +691,11 @@ public final class Transaction implements Comparable<Transaction> {
                     return false;
                 }
 
-                private boolean validateAttachment(Transaction transaction) {
-                    return transaction.amount > 0 && transaction.amount < Nxt.MAX_BALANCE;
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                    if (transaction.amount <= 0 || transaction.amount >= Nxt.MAX_BALANCE) {
+                        throw new NxtException.ValidationException("Invalid payment transaction amount: " + transaction.amount);
+                    }
                 }
 
             };
@@ -708,22 +725,22 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     int messageLength = buffer.getInt();
-                    if (messageLength <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                        byte[] message = new byte[messageLength];
-                        buffer.get(message);
-                        transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
-                        return validateAttachment(transaction);
+                    if (messageLength > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                        throw new NxtException.ValidationException("Invalid message length: " + messageLength);
                     }
-                    return false;
+                    byte[] message = new byte[messageLength];
+                    buffer.get(message);
+                    transaction.attachment = new Attachment.MessagingArbitraryMessage(message);
+                    validateAttachment(transaction);
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String message = (String)attachmentData.get("message");
                     transaction.attachment = new Attachment.MessagingArbitraryMessage(Convert.parseHexString(message));
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -732,16 +749,14 @@ public final class Transaction implements Comparable<Transaction> {
                 @Override
                 void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
                         throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
-                    try {
-                        Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.attachment;
-                        return transaction.amount == 0 && attachment.getMessage().length <= Nxt.MAX_ARBITRARY_MESSAGE_LENGTH;
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error validating arbitrary message", e);
-                        return false;
+                    Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.attachment;
+                    if (transaction.amount != 0 || attachment.getMessage().length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                        throw new NxtException.ValidationException("Invalid transaction amount or message length");
                     }
                 }
 
@@ -755,7 +770,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     int aliasLength = buffer.get();
                     if (aliasLength > Nxt.MAX_ALIAS_LENGTH * 3) {
                         throw new NxtException.ValidationException("Max alias length exceeded");
@@ -771,19 +786,19 @@ public final class Transaction implements Comparable<Transaction> {
                     try {
                         transaction.attachment = new Attachment.MessagingAliasAssignment(new String(alias, "UTF-8"),
                                 new String(uri, "UTF-8"));
-                        return validateAttachment(transaction);
+                        validateAttachment(transaction);
                     } catch (RuntimeException|UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error parsing alias assignment", e);
+                        throw new NxtException.ValidationException(e.toString());
                     }
-                    return false;
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String alias = (String)attachmentData.get("alias");
                     String uri = (String)attachmentData.get("uri");
                     transaction.attachment = new Attachment.MessagingAliasAssignment(alias, uri);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -810,28 +825,25 @@ public final class Transaction implements Comparable<Transaction> {
                     return ! myDuplicates.add(attachment.getAliasName().toLowerCase());
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
                         throw new NotYetEnabledException("Aliases not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
-                    try {
-                        Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
-                        if (! Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || attachment.getAliasName().length() == 0
-                                || attachment.getAliasName().length() > Nxt.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Nxt.MAX_ALIAS_URI_LENGTH) {
-                            return false;
-                        } else {
-                            String normalizedAlias = attachment.getAliasName().toLowerCase();
-                            for (int i = 0; i < normalizedAlias.length(); i++) {
-                                if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
-                                    return false;
-                                }
-                            }
-                            Alias alias = Alias.getAlias(normalizedAlias);
-                            return alias == null || Arrays.equals(alias.getAccount().getPublicKey(), transaction.senderPublicKey);
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.attachment;
+                    if (! Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || attachment.getAliasName().length() == 0
+                            || attachment.getAliasName().length() > Nxt.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Nxt.MAX_ALIAS_URI_LENGTH) {
+                        throw new NxtException.ValidationException("Invalid alias assignment transaction");
+                    }
+                    String normalizedAlias = attachment.getAliasName().toLowerCase();
+                    for (int i = 0; i < normalizedAlias.length(); i++) {
+                        if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+                            throw new NxtException.ValidationException("Invalid characters in alias name: " + normalizedAlias);
                         }
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error in alias assignment validation", e);
-                        return false;
+                    }
+                    Alias alias = Alias.getAlias(normalizedAlias);
+                    if (alias != null && ! Arrays.equals(alias.getAccount().getPublicKey(), transaction.senderPublicKey)) {
+                        throw new NxtException.ValidationException("Alias " + normalizedAlias + " already owned by another account");
                     }
                 }
 
@@ -845,7 +857,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NotYetEnabledException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
 
                     String pollName, pollDescription;
                     String[] pollOptions;
@@ -855,29 +867,27 @@ public final class Transaction implements Comparable<Transaction> {
                     try {
                         int pollNameBytesLength = buffer.getShort();
                         if (pollNameBytesLength > 4 * Nxt.MAX_POLL_NAME_LENGTH) {
-                            Logger.logDebugMessage("Error parsing poll name");
-                            return false;
+                            throw new NxtException.ValidationException("Error parsing poll name");
                         }
                         byte[] pollNameBytes = new byte[pollNameBytesLength];
                         buffer.get(pollNameBytes);
                         pollName = (new String(pollNameBytes, "UTF-8")).trim();
                     } catch (RuntimeException | UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error parsing poll name", e);
-                        return false;
+                        throw new NxtException.ValidationException(e.toString());
                     }
 
                     try {
                         int pollDescriptionBytesLength = buffer.getShort();
                         if (pollDescriptionBytesLength > 4 * Nxt.MAX_POLL_DESCRIPTION_LENGTH) {
-                            Logger.logDebugMessage("Error parsing poll description");
-                            return false;
+                            throw new NxtException.ValidationException("Error parsing poll description");
                         }
                         byte[] pollDescriptionBytes = new byte[pollDescriptionBytesLength];
                         buffer.get(pollDescriptionBytes);
                         pollDescription = (new String(pollDescriptionBytes, "UTF-8")).trim();
                     } catch (RuntimeException | UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error parsing poll description", e);
-                        return false;
+                        throw new NxtException.ValidationException(e.toString());
                     }
 
                     try {
@@ -886,8 +896,7 @@ public final class Transaction implements Comparable<Transaction> {
                         for (int i = 0; i < numberOfOptions; i++) {
                             int pollOptionBytesLength = buffer.getShort();
                             if (pollOptionBytesLength > 4 * Nxt.MAX_POLL_OPTION_LENGTH) {
-                                Logger.logDebugMessage("Error parsing poll options");
-                                return false;
+                                throw new NxtException.ValidationException("Error parsing poll options");
                             }
                             byte[] pollOptionBytes = new byte[pollOptionBytesLength];
                             buffer.get(pollOptionBytes);
@@ -895,7 +904,7 @@ public final class Transaction implements Comparable<Transaction> {
                         }
                     } catch (RuntimeException | UnsupportedEncodingException e) {
                         Logger.logDebugMessage("Error parsing poll options", e);
-                        return false;
+                        throw new NxtException.ValidationException(e.toString());
                     }
 
                     try {
@@ -904,16 +913,17 @@ public final class Transaction implements Comparable<Transaction> {
                         optionsAreBinary = buffer.get() != 0;
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Error parsing poll creation parameters", e);
-                        return false;
+                        throw new NxtException.ValidationException(e.toString());
                     }
 
-                    transaction.attachment = new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
-                    return validateAttachment(transaction);
+                    transaction.attachment = new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions,
+                            minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+                    validateAttachment(transaction);
 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NotYetEnabledException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
 
                     String pollName = ((String)attachmentData.get("name")).trim();
                     String pollDescription = ((String)attachmentData.get("description")).trim();
@@ -926,15 +936,17 @@ public final class Transaction implements Comparable<Transaction> {
                     byte maxNumberOfOptions = ((Long)attachmentData.get("maxNumberOfOptions")).byteValue();
                     boolean optionsAreBinary = (Boolean)attachmentData.get("optionsAreBinary");
 
-                    transaction.attachment = new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
-                    return validateAttachment(transaction);
+                    transaction.attachment = new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions,
+                            minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+                    validateAttachment(transaction);
 
                 }
 
                 @Override
                 void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
                     Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.attachment;
-                    Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(), attachment.getPollOptions(), attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.isOptionsAreBinary());
+                    Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(), attachment.getPollOptions(),
+                            attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.isOptionsAreBinary());
                 }
 
                 @Override
@@ -942,21 +954,20 @@ public final class Transaction implements Comparable<Transaction> {
                     throw new UndoNotSupportedException(transaction, "Reversal of poll creation not supported");
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NotYetEnabledException {
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
                         throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
-                    try {
-                        Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.attachment;
-                        for (int i = 0; i < attachment.getPollOptions().length; i++) {
-                            if (attachment.getPollOptions()[i].length() > Nxt.MAX_POLL_OPTION_LENGTH) {
-                                return false;
-                            }
+                    Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.attachment;
+                    for (int i = 0; i < attachment.getPollOptions().length; i++) {
+                        if (attachment.getPollOptions()[i].length() > Nxt.MAX_POLL_OPTION_LENGTH) {
+                            throw new NxtException.ValidationException("Invalid poll options length");
                         }
-                        return attachment.getPollName().length() <= Nxt.MAX_POLL_NAME_LENGTH && attachment.getPollDescription().length() <= Nxt.MAX_POLL_DESCRIPTION_LENGTH && attachment.getPollOptions().length <= 100 && transaction.amount == 0 && Genesis.CREATOR_ID.equals(transaction.recipientId);
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error validating poll creation", e);
-                        return false;
+                    }
+                    if (attachment.getPollName().length() > Nxt.MAX_POLL_NAME_LENGTH || attachment.getPollDescription().length() > Nxt.MAX_POLL_DESCRIPTION_LENGTH
+                            || attachment.getPollOptions().length > 100 || transaction.amount != 0 || ! Genesis.CREATOR_ID.equals(transaction.recipientId)) {
+                        throw new NxtException.ValidationException("Invalid poll creation transaction");
                     }
                 }
 
@@ -970,7 +981,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
 
                     Long pollId;
                     byte[] pollVote;
@@ -979,23 +990,21 @@ public final class Transaction implements Comparable<Transaction> {
                         pollId = buffer.getLong();
                         int numberOfOptions = buffer.get();
                         if (numberOfOptions > 100) {
-                            Logger.logDebugMessage("Error parsing vote casting parameters");
-                            return false;
+                            throw new NxtException.ValidationException("Error parsing vote casting parameters");
                         }
                         pollVote = new byte[numberOfOptions];
                         buffer.get(pollVote);
                     } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error parsing vote casting parameters", e);
-                        return false;
+                        throw new NxtException.ValidationException(e.toString());
                     }
 
                     transaction.attachment = new Attachment.MessagingVoteCasting(pollId, pollVote);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
 
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
 
                     Long pollId = (Long)attachmentData.get("pollId");
                     JSONArray vote = (JSONArray)attachmentData.get("vote");
@@ -1005,7 +1014,7 @@ public final class Transaction implements Comparable<Transaction> {
                     }
 
                     transaction.attachment = new Attachment.MessagingVoteCasting(pollId, pollVote);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
 
                 }
 
@@ -1024,15 +1033,13 @@ public final class Transaction implements Comparable<Transaction> {
                     throw new UndoNotSupportedException(transaction, "Reversal of vote casting not supported");
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
                         throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
-                    try {
-                        return transaction.amount == 0 && Genesis.CREATOR_ID.equals(transaction.recipientId);
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error validating vote casting", e);
-                        return false;
+                    if (transaction.amount != 0 || ! Genesis.CREATOR_ID.equals(transaction.recipientId)) {
+                        throw new NxtException.ValidationException("Invalid voting transaction");
                     }
                 }
 
@@ -1054,7 +1061,7 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     int nameLength = buffer.get();
                     if (nameLength > 30) {
                         throw new NxtException.ValidationException("Max asset name length exceeded");
@@ -1071,20 +1078,19 @@ public final class Transaction implements Comparable<Transaction> {
                     try {
                         transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(new String(name, "UTF-8").intern(),
                                 new String(description, "UTF-8").intern(), quantity);
-                        return validateAttachment(transaction);
+                        validateAttachment(transaction);
                     } catch (RuntimeException|UnsupportedEncodingException e) {
-                        Logger.logDebugMessage("Error in asset issuance", e);
+                        throw new NxtException.ValidationException(e.toString());
                     }
-                    return false;
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     String name = (String)attachmentData.get("name");
                     String description = (String)attachmentData.get("description");
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     transaction.attachment = new Attachment.ColoredCoinsAssetIssuance(name.trim(), description.trim(), quantity);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -1123,28 +1129,25 @@ public final class Transaction implements Comparable<Transaction> {
                     return ! myDuplicates.add(attachment.getName().toLowerCase());
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
                         throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
-                    try {
-                        Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
-                        if (!Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
-                                || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
-                                || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
-                            return false;
-                        } else {
-                            String normalizedName = attachment.getName().toLowerCase();
-                            for (int i = 0; i < normalizedName.length(); i++) {
-                                if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
-                                    return false;
-                                }
-                            }
-                            return Asset.getAsset(normalizedName) == null;
+                    Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.attachment;
+                    if (!Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0 || transaction.fee < Nxt.ASSET_ISSUANCE_FEE
+                            || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
+                            || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
+                        throw new NxtException.ValidationException("Invalid asset issue transaction");
+                    }
+                    String normalizedName = attachment.getName().toLowerCase();
+                    for (int i = 0; i < normalizedName.length(); i++) {
+                        if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+                            throw new NxtException.ValidationException("Invalid asset name " + normalizedName);
                         }
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Error validating colored coins asset issuance", e);
-                        return false;
+                    }
+                    if (Asset.getAsset(normalizedName) != null) {
+                        throw new NxtException.ValidationException("Asset " + normalizedName + " already exists");
                     }
                 }
 
@@ -1158,19 +1161,19 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     Long assetId = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     transaction.attachment = new Attachment.ColoredCoinsAssetTransfer(assetId, quantity);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -1216,12 +1219,15 @@ public final class Transaction implements Comparable<Transaction> {
                     accountAccumulatedAssetQuantities.put(attachment.getAssetId(), assetAccumulatedAssetQuantities + attachment.getQuantity());
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
                         throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
                     Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.attachment;
-                    return transaction.amount == 0 && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY;
+                    if (transaction.amount != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
+                        throw new NxtException.ValidationException("Invalid asset quantity or transaction amount");
+                    }
                 }
 
             };
@@ -1231,31 +1237,34 @@ public final class Transaction implements Comparable<Transaction> {
                 abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, int quantity, long price);
 
                 @Override
-                final boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                final void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     Long assetId = Convert.zeroToNull(buffer.getLong());
                     int quantity = buffer.getInt();
                     long price = buffer.getLong();
                     transaction.attachment = makeAttachment(assetId, quantity, price);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
-                final boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                final void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                     int quantity = ((Long)attachmentData.get("quantity")).intValue();
                     long price = (Long)attachmentData.get("price");
                     transaction.attachment = makeAttachment(assetId, quantity, price);
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
-                private boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
                         throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
                     Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.attachment;
-                    return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0
-                            && attachment.getQuantity() > 0 && attachment.getQuantity() <= Nxt.MAX_ASSET_QUANTITY
-                            && attachment.getPrice() > 0 && attachment.getPrice() <= Nxt.MAX_BALANCE * 100L;
+                    if (! Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0
+                            || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY
+                            || attachment.getPrice() <= 0 || attachment.getPrice() > Nxt.MAX_BALANCE * 100L) {
+                        throw new NxtException.ValidationException("Invalid order quantity or price");
+                    }
                 }
 
             }
@@ -1370,28 +1379,18 @@ public final class Transaction implements Comparable<Transaction> {
                     accumulatedAmounts.put(transaction.getSenderId(), accumulatedAmount + attachment.getQuantity() * attachment.getPrice());
                 }
 
-                /*
-                @Override
-                final long getRecipientDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
-
-                @Override
-                final long getSenderDeltaBalance(Transaction transaction) {
-                    Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.attachment;
-                    return -attachment.quantity * attachment.price;
-                }
-                */
-
             };
 
             abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
 
-                final boolean validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                @Override
+                final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                     if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
                         throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
                     }
-                    return Genesis.CREATOR_ID.equals(transaction.recipientId) && transaction.amount == 0;
+                    if (! Genesis.CREATOR_ID.equals(transaction.recipientId) || transaction.amount != 0) {
+                        throw new NxtException.ValidationException("Invalid transaction amount or recipient");
+                    }
                 }
 
                 @Override
@@ -1418,15 +1417,15 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.zeroToNull(buffer.getLong()));
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -1448,15 +1447,15 @@ public final class Transaction implements Comparable<Transaction> {
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.zeroToNull(buffer.getLong()));
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
-                boolean loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                void loadAttachment(Transaction transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                     transaction.attachment = new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order")));
-                    return validateAttachment(transaction);
+                    validateAttachment(transaction);
                 }
 
                 @Override
@@ -1468,22 +1467,6 @@ public final class Transaction implements Comparable<Transaction> {
                     }
                 }
 
-                /*
-                @Override
-                final long getRecipientDeltaBalance(Transaction transaction) {
-                    return 0;
-                }
-
-                @Override
-                final long getSenderDeltaBalance(Transaction transaction) {
-                    Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.attachment;
-                    Order.Bid bidOrder = Order.Bid.getBidOrder(attachment.order);
-                    if (bidOrder == null) {
-                        return 0;
-                    }
-                    return bidOrder.getQuantity() * bidOrder.price;
-                }
-                */
             };
         }
     }

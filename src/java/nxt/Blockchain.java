@@ -85,12 +85,8 @@ public final class Blockchain {
                     if (response == null) {
                         return;
                     }
-                    try {
-                        JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                        processTransactions(transactionsData, false);
-                    } catch (NxtException.ValidationException e) {
-                        peer.blacklist(e);
-                    }
+                    JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
+                    processJSONTransactions(transactionsData, false);
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
@@ -715,16 +711,9 @@ public final class Blockchain {
 
     public static void broadcast(Transaction transaction) {
 
-        JSONObject peerRequest = new JSONObject();
-        peerRequest.put("requestType", "processTransactions");
-        JSONArray transactionsData = new JSONArray();
-        transactionsData.add(transaction.getJSONObject());
-        peerRequest.put("transactions", transactionsData);
-
+        processTransactions(Arrays.asList(transaction), true);
         nonBroadcastedTransactions.put(transaction.getId(), transaction);
-
-        Peer.sendToSomePeers(peerRequest);
-        Logger.logDebugMessage("Broadcasted new transaction " + transaction.getStringId());
+        Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
 
     }
 
@@ -732,9 +721,9 @@ public final class Blockchain {
         return lastBlockchainFeeder;
     }
 
-    public static void processTransactions(JSONObject request) throws NxtException.ValidationException {
+    public static void processTransactions(JSONObject request) {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
-        processTransactions(transactionsData, true);
+        processJSONTransactions(transactionsData, true);
     }
 
     public static boolean pushBlock(JSONObject request) throws NxtException {
@@ -800,16 +789,20 @@ public final class Blockchain {
         Logger.logMessage("...Done");
     }
 
-    private static void processTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
-        Transaction[] transactions = new Transaction[transactionsData.size()];
-        for (int i = 0; i < transactions.length; i++) {
-            transactions[i] = Transaction.getTransaction((JSONObject)transactionsData.get(i));
+    private static void processJSONTransactions(JSONArray transactionsData, final boolean sendToPeers) {
+        List<Transaction> transactions = new ArrayList<>();
+        for (Object transactionData : transactionsData) {
+            try {
+                Transaction transaction = Transaction.getTransaction((JSONObject)transactionData);
+                transactions.add(transaction);
+            } catch (NxtException.ValidationException e) {
+                Logger.logDebugMessage("Dropping invalid transaction", e);
+            }
         }
         processTransactions(transactions, sendToPeers);
-
     }
 
-    private static void processTransactions(Transaction[] transactions, final boolean sendToPeers) throws NxtException.ValidationException {
+    private static void processTransactions(List<Transaction> transactions, final boolean sendToPeers) {
         JSONArray validTransactionsData = new JSONArray();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
@@ -982,6 +975,11 @@ public final class Blockchain {
                     }
                     if (transaction.isDuplicate(duplicates)) {
                         throw new BlockNotAcceptedException("Transaction is a duplicate: " + transaction.getStringId());
+                    }
+                    try {
+                        transaction.validateAttachment();
+                    } catch (NxtException.ValidationException e) {
+                        throw new BlockNotAcceptedException(e.getMessage());
                     }
 
                     calculatedTotalAmount += transaction.getAmount();
@@ -1205,6 +1203,12 @@ public final class Blockchain {
                         }
 
                         if (transaction.isDuplicate(duplicates)) {
+                            continue;
+                        }
+
+                        try {
+                            transaction.validateAttachment();
+                        } catch (NxtException.ValidationException e) {
                             continue;
                         }
 
