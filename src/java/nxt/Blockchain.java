@@ -796,7 +796,9 @@ public final class Blockchain {
                 Transaction transaction = Transaction.getTransaction((JSONObject)transactionData);
                 transactions.add(transaction);
             } catch (NxtException.ValidationException e) {
-                Logger.logDebugMessage("Dropping invalid transaction", e);
+                if (! (e instanceof Transaction.NotYetEnabledException)) {
+                    Logger.logDebugMessage("Dropping invalid transaction", e);
+                }
             }
         }
         processTransactions(transactions, sendToPeers);

@@ -118,7 +118,7 @@ public final class Transaction implements Comparable<Transaction> {
             try {
                 transactionType.loadAttachment(transaction, buffer);
             } catch (NxtException.ValidationException e) {
-                if (transaction.attachment != null) {
+                if (transaction.attachment != null && ! (e instanceof NotYetEnabledException)) {
                     Logger.logDebugMessage("Invalid transaction attachment:\n" + transaction.attachment.getJSON());
                 }
                 throw e;
@@ -156,7 +156,9 @@ public final class Transaction implements Comparable<Transaction> {
             try {
                 transactionType.loadAttachment(transaction, attachmentData);
             } catch (NxtException.ValidationException e) {
-                Logger.logDebugMessage("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+                if (! (e instanceof NotYetEnabledException)) {
+                    Logger.logDebugMessage("Invalid transaction attachment:\n" + attachmentData.toJSONString());
+                }
                 throw e;
             }
 
