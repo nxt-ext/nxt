@@ -105,7 +105,7 @@ public final class SendMessage extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Blockchain.newTransaction(timestamp, deadline, publicKey,
                 recipient, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

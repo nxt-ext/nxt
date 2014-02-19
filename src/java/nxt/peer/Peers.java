@@ -122,10 +122,14 @@ public final class Peers {
         } else {
             Logger.logMessage("No wellKnownPeers defined, using default nxtcrypto.org and nxtbase.com nodes");
             for (int i = 1; i <= 12; i++) {
-                addresses.add("vps" + i + ".nxtcrypto.org");
+                if (ThreadLocalRandom.current().nextInt(4) == 1) {
+                    addresses.add("vps" + i + ".nxtcrypto.org");
+                }
             }
             for (int i = 1; i <= 99; i++) {
-                addresses.add("node" + i + ".nxtbase.com");
+                if (ThreadLocalRandom.current().nextInt(10) == 1) {
+                    addresses.add("node" + i + ".nxtbase.com");
+                }
             }
         }
         wellKnownPeers = Collections.unmodifiableSet(addresses);

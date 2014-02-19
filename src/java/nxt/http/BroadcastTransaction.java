@@ -29,7 +29,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         try {
 
             byte[] bytes = Convert.parseHexString(transactionBytes);
-            Transaction transaction = Transaction.getTransaction(bytes);
+            Transaction transaction = Blockchain.getTransaction(bytes);
 
             Blockchain.broadcast(transaction);
 

@@ -150,7 +150,10 @@ public final class Nxt {
 
         private static void init() {}
 
+        private Init() {} // never
+
     }
 
+    private Nxt() {} // never
 
 }

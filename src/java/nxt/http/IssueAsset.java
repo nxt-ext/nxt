@@ -100,7 +100,7 @@ public final class IssueAsset extends APIServlet.APIRequestHandler {
 
         int timestamp = Convert.getEpochTime();
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
-        Transaction transaction = Transaction.newTransaction(timestamp, (short)1440, publicKey,
+        Transaction transaction = Blockchain.newTransaction(timestamp, (short) 1440, publicKey,
                 Genesis.CREATOR_ID, 0, fee, null, attachment);
         transaction.sign(secretPhrase);
 

@@ -124,7 +124,7 @@ final class SendMoney extends UserServlet.UserRequestHandler {
 
         } else {
 
-            final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
+            final Transaction transaction = Blockchain.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
             transaction.sign(user.getSecretPhrase());
 
             Blockchain.broadcast(transaction);

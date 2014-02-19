@@ -149,7 +149,7 @@ public final class CreatePoll extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(), options.toArray(new String[0]), minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Transaction transaction = Blockchain.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
         Blockchain.broadcast(transaction);

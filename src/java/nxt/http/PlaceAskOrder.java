@@ -128,7 +128,7 @@ public final class PlaceAskOrder extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline,
+        Transaction transaction = Blockchain.newTransaction(timestamp, deadline,
                 publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

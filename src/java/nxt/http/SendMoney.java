@@ -103,7 +103,7 @@ public final class SendMoney extends APIServlet.APIRequestHandler {
 
         }
 
-        Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, publicKey,
+        Transaction transaction = Blockchain.newTransaction(Convert.getEpochTime(), deadline, publicKey,
                 recipient, amount, fee, referencedTransaction);
         transaction.sign(secretPhrase);
 

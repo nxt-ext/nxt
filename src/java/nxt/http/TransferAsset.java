@@ -123,7 +123,7 @@ public final class TransferAsset extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Blockchain.newTransaction(timestamp, deadline, publicKey,
                 recipient, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

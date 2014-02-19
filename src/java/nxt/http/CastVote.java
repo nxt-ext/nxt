@@ -110,7 +110,7 @@ public final class CastVote extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Transaction transaction = Blockchain.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
         Blockchain.broadcast(transaction);
