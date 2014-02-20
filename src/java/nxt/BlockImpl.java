@@ -354,10 +354,6 @@ final class BlockImpl implements Block {
         generatorAccount.apply(this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
-        if (getHeight() % 5000 == 0) {
-            Logger.logDebugMessage("processed block " + getHeight());
-        }
-
     }
 
     void setPrevious(BlockImpl previousBlock) {

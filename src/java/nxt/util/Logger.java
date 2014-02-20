@@ -12,6 +12,10 @@ import java.util.Date;
 
 public final class Logger {
 
+    public static enum Event {
+        MESSAGE, EXCEPTION
+    }
+
     private static final boolean debug;
     private static final boolean enableStackTraces;
 
@@ -21,6 +25,9 @@ public final class Logger {
             return new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS] ");
         }
     };
+
+    private static final Listeners<String,Event> messageListeners = new Listeners<>();
+    private static final Listeners<Exception,Event> exceptionListeners = new Listeners<>();
 
     private static PrintWriter fileLog = null;
     static {
@@ -37,12 +44,21 @@ public final class Logger {
 
     private Logger() {} //never
 
+    public static void addMessageListener(Listener<String> listener, Event eventType) {
+        messageListeners.addListener(listener, eventType);
+    }
+
+    public static void addExceptionListener(Listener<Exception> listener, Event eventType) {
+        exceptionListeners.addListener(listener, eventType);
+    }
+
     public static void logMessage(String message) {
         String logEntry = logDateFormat.get().format(new Date()) + message;
         System.out.println(logEntry);
         if (fileLog != null) {
             fileLog.println(logEntry);
         }
+        messageListeners.notify(message, Event.MESSAGE);
     }
 
     public static void logMessage(String message, Exception e) {
@@ -52,6 +68,7 @@ public final class Logger {
         } else {
             logMessage(message + ":\n" + e.toString());
         }
+        exceptionListeners.notify(e, Event.EXCEPTION);
     }
 
     public static void logDebugMessage(String message) {
@@ -67,5 +84,6 @@ public final class Logger {
         } else if (debug) {
             logMessage("DEBUG: " + message + ":\n" + e.toString());
         }
+        exceptionListeners.notify(e, Event.EXCEPTION);
     }
 }

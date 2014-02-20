@@ -1,18 +1,14 @@
 package nxt;
 
 import nxt.peer.Peer;
-import nxt.util.Listener;
+import nxt.util.Observable;
 import org.json.simple.JSONObject;
 
-public interface BlockchainProcessor {
+public interface BlockchainProcessor extends Observable<Block,BlockchainProcessor.Event> {
 
     public static enum Event {
-        BLOCK_PUSHED, BLOCK_POPPED, BLOCK_GENERATED
+        BLOCK_PUSHED, BLOCK_POPPED, BLOCK_GENERATED, BLOCK_SCANNED
     }
-
-    boolean addBlockListener(Listener<Block> listener, Event eventType);
-
-    boolean removeBlockListener(Listener<Block> listener, Event eventType);
 
     Peer getLastBlockchainFeeder();
 

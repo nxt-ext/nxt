@@ -1,12 +1,12 @@
 package nxt;
 
-import nxt.util.Listener;
+import nxt.util.Observable;
 import org.json.simple.JSONObject;
 
 import java.util.Collection;
 import java.util.List;
 
-public interface TransactionProcessor {
+public interface TransactionProcessor extends Observable<List<Transaction>,TransactionProcessor.Event> {
 
     public static enum Event {
         REMOVED_UNCONFIRMED_TRANSACTIONS,
@@ -14,10 +14,6 @@ public interface TransactionProcessor {
         ADDED_CONFIRMED_TRANSACTIONS,
         ADDED_DOUBLESPENDING_TRANSACTIONS
     }
-
-    boolean addTransactionListener(Listener<List<Transaction>> listener, Event eventType);
-
-    boolean removeTransactionListener(Listener<List<Transaction>> listener, Event eventType);
 
     Collection<? extends Transaction> getAllUnconfirmedTransactions();
 

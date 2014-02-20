@@ -58,6 +58,13 @@ public final class Nxt {
     public static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 
     private static final Properties properties = new Properties();
+    static {
+        try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt.properties")) {
+            Nxt.properties.load(is);
+        } catch (IOException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
 
     public static int getIntProperty(String name, int defaultValue) {
         try {
@@ -131,11 +138,6 @@ public final class Nxt {
             System.out.println("Initializing Nxt server version " + Nxt.VERSION);
 
             long startTime = System.currentTimeMillis();
-            try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt.properties")) {
-                Nxt.properties.load(is);
-            } catch (IOException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
 
             Logger.logMessage("logging enabled");
 

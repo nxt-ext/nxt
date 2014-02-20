@@ -292,7 +292,7 @@ public final class Users {
 
     static {
 
-        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -307,7 +307,7 @@ public final class Users {
             }
         }, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
 
-        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -329,7 +329,7 @@ public final class Users {
             }
         }, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
-        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -351,7 +351,7 @@ public final class Users {
             }
         }, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
 
-        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -373,7 +373,7 @@ public final class Users {
             }
         }, TransactionProcessor.Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
 
-        Nxt.getBlockchainProcessor().addBlockListener(new Listener<Block>() {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
                 JSONObject response = new JSONObject();
@@ -396,7 +396,7 @@ public final class Users {
             }
         }, BlockchainProcessor.Event.BLOCK_POPPED);
 
-        Nxt.getBlockchainProcessor().addBlockListener(new Listener<Block>() {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
                 JSONObject response = new JSONObject();

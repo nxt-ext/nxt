@@ -158,12 +158,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public boolean addTransactionListener(Listener<List<Transaction>> listener, Event eventType) {
+    public boolean addListener(Listener<List<Transaction>> listener, Event eventType) {
         return transactionListeners.addListener(listener, eventType);
     }
 
     @Override
-    public boolean removeTransactionListener(Listener<List<Transaction>> listener, Event eventType) {
+    public boolean removeListener(Listener<List<Transaction>> listener, Event eventType) {
         return transactionListeners.removeListener(listener, eventType);
     }
 

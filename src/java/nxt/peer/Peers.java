@@ -120,7 +120,7 @@ public final class Peers {
                 }
             }
         } else {
-            Logger.logMessage("No wellKnownPeers defined, using default nxtcrypto.org and nxtbase.com nodes");
+            Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org and nxtbase.com nodes");
             for (int i = 1; i <= 12; i++) {
                 if (ThreadLocalRandom.current().nextInt(4) == 1) {
                     addresses.add("vps" + i + ".nxtcrypto.org");

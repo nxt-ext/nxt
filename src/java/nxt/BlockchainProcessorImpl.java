@@ -136,7 +136,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     } catch (BlockNotAcceptedException e) {
                                         Logger.logDebugMessage("Failed to accept block " + block.getStringId()
                                                 + " at height " + blockchain.getLastBlock().getHeight()
-                                                + " received from " + peer.getPeerAddress() + ", blacklisting");
+                                                + " received from " + peer.getPeerAddress());
+                                        Logger.logDebugMessage(e.toString());
                                         peer.blacklist(e);
                                         return;
                                     }
@@ -322,18 +323,28 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     };
 
     private BlockchainProcessorImpl() {
+
+        blockListeners.addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                if (block.getHeight() % 5000 == 0) {
+                    Logger.logDebugMessage("processed block " + block.getHeight());
+                }
+            }
+        }, Event.BLOCK_SCANNED);
+
         addGenesisBlock();
         scan();
         ThreadPool.scheduleThread(getMoreBlocksThread, 1);
     }
 
     @Override
-    public boolean addBlockListener(Listener<Block> listener, BlockchainProcessor.Event eventType) {
+    public boolean addListener(Listener<Block> listener, BlockchainProcessor.Event eventType) {
         return blockListeners.addListener(listener, eventType);
     }
 
     @Override
-    public boolean removeBlockListener(Listener<Block> listener, Event eventType) {
+    public boolean removeListener(Listener<Block> listener, Event eventType) {
         return blockListeners.removeListener(listener, eventType);
     }
 
@@ -782,6 +793,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     blockchain.setLastBlock(currentBlock);
                     transactionProcessor.apply(currentBlock);
+                    blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     currentBlockId = currentBlock.getNextBlockId();
                 }
             } catch (NxtException.ValidationException|SQLException e) {

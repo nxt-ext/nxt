@@ -12,7 +12,7 @@ final class Db {
     private static volatile JdbcConnectionPool cp;
 
     static void init() {
-        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB", (int)Runtime.getRuntime().maxMemory() / (1024 * 2));
+        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB", (int)(Runtime.getRuntime().maxMemory() / (1024 * 2)));
         String dbUrl = Nxt.getStringProperty("nxt.dbUrl", "jdbc:h2:nxt_db/nxt;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize);
         if (! dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
