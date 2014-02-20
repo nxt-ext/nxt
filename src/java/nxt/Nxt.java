@@ -94,15 +94,30 @@ public final class Nxt {
         return defaultValue;
     }
 
+    public static Blockchain getBlockchain() {
+        return BlockchainImpl.getInstance();
+    }
+
+    public static BlockchainProcessor getBlockchainProcessor() {
+        return BlockchainProcessorImpl.getInstance();
+    }
+
+    public static TransactionProcessor getTransactionProcessor() {
+        return TransactionProcessorImpl.getInstance();
+    }
+
     public static void main(String[] args) {
         init();
+        if (args.length == 1 && "reset".equalsIgnoreCase(args[0])) {
+            getBlockchainProcessor().fullReset();
+        }
     }
 
     public static void init() {
         Init.init();
     }
 
-    public static void shutdown() {
+    private static void shutdown() {
         Peers.shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
@@ -137,7 +152,8 @@ public final class Nxt {
             }));
 
             Db.init();
-            TransactionProcessor.init();
+            BlockchainProcessorImpl.getInstance();
+            TransactionProcessorImpl.getInstance();
             Peers.init();
             Generator.init();
             API.init();

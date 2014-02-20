@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
-final class LockAccount extends UserServlet.UserRequestHandler {
+public final class LockAccount extends UserServlet.UserRequestHandler {
 
     static final LockAccount instance = new LockAccount();
 

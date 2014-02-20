@@ -14,7 +14,6 @@ import java.util.Set;
 
 final class TransactionImpl implements Transaction {
 
-
     private final short deadline;
     private final byte[] senderPublicKey;
     private final Long recipientId;
@@ -114,7 +113,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public Block getBlock() {
         if (block == null) {
-            block = Blocks.findBlock(blockId);
+            block = BlockDb.findBlock(blockId);
         }
         return block;
     }
@@ -331,7 +330,6 @@ final class TransactionImpl implements Transaction {
             // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
         }
         senderAccount.apply(this.getHeight());
-        TransactionProcessor.transactionHashes.put(getHash(), this);
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null) {
             recipientAccount = Account.addOrGetAccount(recipientId);

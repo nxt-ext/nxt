@@ -10,7 +10,7 @@ import java.net.InetAddress;
 
 import static nxt.user.JSONResponses.LOCAL_USERS_ONLY;
 
-final class RemoveActivePeer extends UserServlet.UserRequestHandler {
+public final class RemoveActivePeer extends UserServlet.UserRequestHandler {
 
     static final RemoveActivePeer instance = new RemoveActivePeer();
 

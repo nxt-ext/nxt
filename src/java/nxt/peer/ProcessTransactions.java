@@ -1,7 +1,6 @@
 package nxt.peer;
 
-import nxt.TransactionProcessor;
-import nxt.NxtException;
+import nxt.Nxt;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -16,7 +15,7 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
-        TransactionProcessor.processTransactions(request);
+        Nxt.getTransactionProcessor().processTransactions(request);
 
         return JSON.emptyJSON;
     }

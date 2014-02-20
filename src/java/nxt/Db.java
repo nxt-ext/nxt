@@ -9,12 +9,16 @@ import java.sql.Statement;
 
 final class Db {
 
-    private static JdbcConnectionPool cp;
+    private static volatile JdbcConnectionPool cp;
 
     static void init() {
-        long maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
-        Logger.logDebugMessage("Database cache size set to " + maxCacheSize + " kB");
-        cp = JdbcConnectionPool.create("jdbc:h2:nxt_db/nxt;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize, "sa", "sa");
+        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB", (int)Runtime.getRuntime().maxMemory() / (1024 * 2));
+        String dbUrl = Nxt.getStringProperty("nxt.dbUrl", "jdbc:h2:nxt_db/nxt;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize);
+        if (! dbUrl.contains("CACHE_SIZE=")) {
+            dbUrl += ";CACHE_SIZE=" + maxCacheSize;
+        }
+        Logger.logDebugMessage("Database jdbc url set to: " + dbUrl);
+        cp = JdbcConnectionPool.create(dbUrl, "sa", "sa");
         cp.setMaxConnections(200);
         cp.setLoginTimeout(70);
         DbVersion.init();

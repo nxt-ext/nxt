@@ -2,7 +2,7 @@ package nxt.user;
 
 import nxt.Account;
 import nxt.Block;
-import nxt.Blockchain;
+import nxt.BlockchainProcessor;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Transaction;
@@ -292,7 +292,7 @@ public final class Users {
 
     static {
 
-        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -305,9 +305,9 @@ public final class Users {
                 response.put("removedUnconfirmedTransactions", removedUnconfirmedTransactions);
                 Users.sendNewDataToAll(response);
             }
-        }, Blockchain.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
 
-        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -327,9 +327,9 @@ public final class Users {
                 response.put("addedUnconfirmedTransactions", addedUnconfirmedTransactions);
                 Users.sendNewDataToAll(response);
             }
-        }, Blockchain.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
+        }, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
-        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -349,9 +349,9 @@ public final class Users {
                 response.put("addedConfirmedTransactions", addedConfirmedTransactions);
                 Users.sendNewDataToAll(response);
             }
-        }, Blockchain.Event.ADDED_CONFIRMED_TRANSACTIONS);
+        }, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
 
-        TransactionProcessor.addTransactionListener(new Listener<List<Transaction>>() {
+        Nxt.getTransactionProcessor().addTransactionListener(new Listener<List<Transaction>>() {
             @Override
             public void notify(List<Transaction> transactions) {
                 JSONObject response = new JSONObject();
@@ -371,9 +371,9 @@ public final class Users {
                 response.put("addedDoubleSpendingTransactions", newTransactions);
                 Users.sendNewDataToAll(response);
             }
-        }, Blockchain.Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
+        }, TransactionProcessor.Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
 
-        Blockchain.addBlockListener(new Listener<Block>() {
+        Nxt.getBlockchainProcessor().addBlockListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
                 JSONObject response = new JSONObject();
@@ -394,9 +394,9 @@ public final class Users {
                 response.put("addedOrphanedBlocks", addedOrphanedBlocks);
                 Users.sendNewDataToAll(response);
             }
-        }, Blockchain.Event.BLOCK_POPPED);
+        }, BlockchainProcessor.Event.BLOCK_POPPED);
 
-        Blockchain.addBlockListener(new Listener<Block>() {
+        Nxt.getBlockchainProcessor().addBlockListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
                 JSONObject response = new JSONObject();
@@ -417,7 +417,7 @@ public final class Users {
                 response.put("addedRecentBlocks", addedRecentBlocks);
                 Users.sendNewDataToAll(response);
             }
-        }, Blockchain.Event.BLOCK_PUSHED);
+        }, BlockchainProcessor.Event.BLOCK_PUSHED);
 
     }
 

@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.Nxt;
-import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -105,11 +104,11 @@ public final class SendMessage extends APIServlet.APIRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
-        Transaction transaction = TransactionProcessor.newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey,
                 recipient, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        TransactionProcessor.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());

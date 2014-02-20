@@ -2,8 +2,7 @@ package nxt.user;
 
 import nxt.Account;
 import nxt.Block;
-import nxt.Blockchain;
-import nxt.TransactionProcessor;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
@@ -20,7 +19,7 @@ import java.util.TreeMap;
 
 import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
-final class UnlockAccount extends UserServlet.UserRequestHandler {
+public final class UnlockAccount extends UserServlet.UserRequestHandler {
 
     static final UnlockAccount instance = new UnlockAccount();
 
@@ -66,7 +65,7 @@ final class UnlockAccount extends UserServlet.UserRequestHandler {
 
             JSONArray myTransactions = new JSONArray();
             byte[] accountPublicKey = account.getPublicKey();
-            for (Transaction transaction : TransactionProcessor.getAllUnconfirmedTransactions()) {
+            for (Transaction transaction : Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
 
                 if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
 
@@ -107,8 +106,8 @@ final class UnlockAccount extends UserServlet.UserRequestHandler {
 
             SortedMap<Integer,JSONObject> myTransactionsMap = new TreeMap<>();
 
-            int blockchainHeight = Blockchain.getLastBlock().getHeight();
-            try (DbIterator<Block> blockIterator = Blockchain.getAllBlocks(account, 0)) {
+            int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
+            try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getAllBlocks(account, 0)) {
                 while (blockIterator.hasNext()) {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
@@ -124,7 +123,7 @@ final class UnlockAccount extends UserServlet.UserRequestHandler {
                 }
             }
 
-            try (DbIterator<Transaction> transactionIterator = Blockchain.getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
+            try (DbIterator<? extends Transaction> transactionIterator = Nxt.getBlockchain().getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
                 while (transactionIterator.hasNext()) {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {

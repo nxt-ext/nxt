@@ -1,8 +1,7 @@
 package nxt.http;
 
 import nxt.Block;
-import nxt.Blockchain;
-import nxt.TransactionProcessor;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -32,14 +31,14 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
         Transaction transactionData;
         try {
             transactionId = Convert.parseUnsignedLong(transaction);
-            transactionData = Blockchain.getTransaction(transactionId);
+            transactionData = Nxt.getBlockchain().getTransaction(transactionId);
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
 
         JSONObject response = new JSONObject();
         if (transactionData == null) {
-            transactionData = TransactionProcessor.getUnconfirmedTransaction(transactionId);
+            transactionData = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
             if (transactionData == null) {
                 return UNKNOWN_TRANSACTION;
             } else {
@@ -48,7 +47,7 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
         } else {
             response.put("bytes", Convert.toHexString(transactionData.getBytes()));
             Block block = transactionData.getBlock();
-            response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
+            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight() + 1);
 
         }
         return response;

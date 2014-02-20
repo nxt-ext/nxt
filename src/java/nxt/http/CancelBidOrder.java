@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.Genesis;
 import nxt.Nxt;
-import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Order;
 import nxt.Transaction;
@@ -94,11 +93,11 @@ public final class CancelBidOrder extends APIServlet.APIRequestHandler {
 
         int timestamp = Convert.getEpochTime();
         Attachment attachment = new Attachment.ColoredCoinsBidOrderCancellation(order);
-        Transaction transaction = TransactionProcessor.newTransaction(timestamp, deadline,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline,
                 publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        TransactionProcessor.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());

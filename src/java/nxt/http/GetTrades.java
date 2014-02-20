@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Asset;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.Trade;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -60,7 +60,7 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
                 Trade trade = trades.get(i);
 
                 JSONObject tradeData = new JSONObject();
-                tradeData.put("timestamp", Blockchain.getBlock(trade.getBlockId()).getTimestamp());
+                tradeData.put("timestamp", Nxt.getBlockchain().getBlock(trade.getBlockId()).getTimestamp());
                 tradeData.put("askOrderId", Convert.toUnsignedLong(trade.getAskOrderId()));
                 tradeData.put("bidOrderId", Convert.toUnsignedLong(trade.getBidOrderId()));
                 tradeData.put("quantity", trade.getQuantity());

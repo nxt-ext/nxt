@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Block;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -29,7 +29,7 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
 
         Block blockData;
         try {
-            blockData = Blockchain.getBlock(Convert.parseUnsignedLong(block));
+            blockData = Nxt.getBlockchain().getBlock(Convert.parseUnsignedLong(block));
             if (blockData == null) {
                 return UNKNOWN_BLOCK;
             }

@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
-import nxt.Blockchain;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
@@ -32,8 +31,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         response.put("version", Nxt.VERSION);
         response.put("time", Convert.getEpochTime());
-        response.put("lastBlock", Blockchain.getLastBlock().getStringId());
-        response.put("cumulativeDifficulty", Blockchain.getLastBlock().getCumulativeDifficulty().toString());
+        response.put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
+        response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
         long totalEffectiveBalance = 0;
         for (Account account : Account.getAllAccounts()) {
@@ -44,8 +43,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
         }
         response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
 
-        response.put("numberOfBlocks", Blockchain.getBlockCount());
-        response.put("numberOfTransactions", Blockchain.getTransactionCount());
+        response.put("numberOfBlocks", Nxt.getBlockchain().getBlockCount());
+        response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
         response.put("numberOfAssets", Asset.getAllAssets().size());
         response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
@@ -60,7 +59,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfPeers", Peers.getAllPeers().size());
         //response.put("numberOfUsers", Users.getAllUsers().size()); no longer meaningful
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
-        Peer lastBlockchainFeeder = Blockchain.getLastBlockchainFeeder();
+        Peer lastBlockchainFeeder = Nxt.getBlockchainProcessor().getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());

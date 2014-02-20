@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -215,8 +214,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
-                    throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
+                    throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.getAttachment();
                 if (transaction.getAmount() != 0 || attachment.getMessage().length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
@@ -290,8 +289,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
-                    throw new NotYetEnabledException("Aliases not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Aliases not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || attachment.getAliasName().length() == 0
@@ -415,8 +414,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
-                    throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.getAttachment();
                 for (int i = 0; i < attachment.getPollOptions().length; i++) {
@@ -494,8 +493,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
-                    throw new NotYetEnabledException("Voting System not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 if (transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Invalid vote casting amount or recipient");
@@ -592,8 +591,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || transaction.getFee() < Nxt.ASSET_ISSUANCE_FEE
@@ -682,8 +681,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
                 if (transaction.getAmount() != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
@@ -717,8 +716,8 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0
@@ -846,8 +845,8 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Blockchain.getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Blockchain.getLastBlock().getHeight());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0) {
                     throw new NxtException.ValidationException("Invalid asset order cancellation amount or recipient");

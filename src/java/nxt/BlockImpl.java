@@ -299,13 +299,13 @@ final class BlockImpl implements Block {
 
     }
 
-    boolean verifyGenerationSignature() throws Blockchain.BlockOutOfOrderException {
+    boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {
 
         try {
 
-            BlockImpl previousBlock = (BlockImpl)Blockchain.getBlock(this.previousBlockId);
+            BlockImpl previousBlock = (BlockImpl)Nxt.getBlockchain().getBlock(this.previousBlockId);
             if (previousBlock == null) {
-                throw new Blockchain.BlockOutOfOrderException("Can't verify signature because previous block is missing");
+                throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");
             }
 
             if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
@@ -318,7 +318,7 @@ final class BlockImpl implements Block {
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
-            BigInteger target = BigInteger.valueOf(Blockchain.getLastBlock().getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+            BigInteger target = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
@@ -353,12 +353,6 @@ final class BlockImpl implements Block {
         }
         generatorAccount.apply(this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
-
-        for (TransactionImpl transaction : blockTransactions) {
-            transaction.apply();
-        }
-
-        TransactionProcessor.purgeExpiredHashes(this.timestamp);
 
         if (getHeight() % 5000 == 0) {
             Logger.logDebugMessage("processed block " + getHeight());

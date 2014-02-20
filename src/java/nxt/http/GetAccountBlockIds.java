@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Block;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
 import org.json.simple.JSONArray;
@@ -55,7 +55,7 @@ public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
         }
 
         JSONArray blockIds = new JSONArray();
-        try (DbIterator<Block> iterator = Blockchain.getAllBlocks(accountData, timestamp)) {
+        try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getAllBlocks(accountData, timestamp)) {
             while (iterator.hasNext()) {
                 Block block = iterator.next();
                 blockIds.add(block.getStringId());

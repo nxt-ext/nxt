@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.TransactionProcessor;
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
@@ -29,9 +29,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         try {
 
             byte[] bytes = Convert.parseHexString(transactionBytes);
-            Transaction transaction = TransactionProcessor.getTransaction(bytes);
+            Transaction transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
 
-            TransactionProcessor.broadcast(transaction);
+            Nxt.getTransactionProcessor().broadcast(transaction);
 
             JSONObject response = new JSONObject();
             response.put("transaction", transaction.getStringId());

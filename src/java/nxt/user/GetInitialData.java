@@ -1,9 +1,7 @@
 package nxt.user;
 
 import nxt.Block;
-import nxt.Blockchain;
 import nxt.Nxt;
-import nxt.TransactionProcessor;
 import nxt.Transaction;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
@@ -17,7 +15,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
-final class GetInitialData extends UserServlet.UserRequestHandler {
+public final class GetInitialData extends UserServlet.UserRequestHandler {
 
     static final GetInitialData instance = new GetInitialData();
 
@@ -30,7 +28,7 @@ final class GetInitialData extends UserServlet.UserRequestHandler {
         JSONArray activePeers = new JSONArray(), knownPeers = new JSONArray(), blacklistedPeers = new JSONArray();
         JSONArray recentBlocks = new JSONArray();
 
-        for (Transaction transaction : TransactionProcessor.getAllUnconfirmedTransactions()) {
+        for (Transaction transaction : Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
 
             JSONObject unconfirmedTransaction = new JSONObject();
             unconfirmedTransaction.put("index", Users.getIndex(transaction));
@@ -98,8 +96,8 @@ final class GetInitialData extends UserServlet.UserRequestHandler {
             }
         }
 
-        int height = Blockchain.getLastBlock().getHeight();
-        List<Block> lastBlocks = Blockchain.getBlocksFromHeight(Math.max(0, height - 59));
+        int height = Nxt.getBlockchain().getLastBlock().getHeight();
+        List<? extends Block> lastBlocks = Nxt.getBlockchain().getBlocksFromHeight(Math.max(0, height - 59));
 
         for (int i = lastBlocks.size() - 1; i >=0; i--) {
             Block block = lastBlocks.get(i);

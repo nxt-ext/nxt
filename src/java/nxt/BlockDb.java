@@ -1,21 +1,14 @@
 package nxt;
 
-import nxt.util.Convert;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
-final class Blocks {
+final class BlockDb {
 
     static BlockImpl findBlock(Long blockId) {
         try (Connection con = Db.getConnection();
@@ -24,7 +17,7 @@ final class Blocks {
             ResultSet rs = pstmt.executeQuery();
             BlockImpl block = null;
             if (rs.next()) {
-                block = getBlock(con, rs);
+                block = findBlock(con, rs);
             }
             rs.close();
             return block;
@@ -63,41 +56,7 @@ final class Blocks {
         }
     }
 
-    static BlockImpl getBlock(JSONObject blockData) throws NxtException.ValidationException {
-
-        try {
-
-            int version = ((Long)blockData.get("version")).intValue();
-            int timestamp = ((Long)blockData.get("timestamp")).intValue();
-            Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-            int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
-            int totalFee = ((Long)blockData.get("totalFee")).intValue();
-            int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-            byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
-            byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
-            byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
-            byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
-            byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
-
-            SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
-            JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-            for (Object transactionData : transactionsData) {
-                TransactionImpl transaction = Transactions.getTransaction((JSONObject) transactionData);
-                if (blockTransactions.put(transaction.getId(), transaction) != null) {
-                    throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
-                }
-            }
-
-            return new BlockImpl(version, timestamp, previousBlock, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey,
-                    generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString(), e);
-        }
-
-    }
-
-    static BlockImpl getBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static BlockImpl findBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
@@ -122,7 +81,7 @@ final class Blocks {
             byte[] payloadHash = rs.getBytes("payload_hash");
 
             Long id = rs.getLong("id");
-            List<TransactionImpl> transactions = Transactions.findBlockTransactions(con, id);
+            List<TransactionImpl> transactions = TransactionDb.findBlockTransactions(con, id);
 
             BlockImpl block = new BlockImpl(version, timestamp, previousBlockId, totalAmount, totalFee, payloadLength, payloadHash,
                     generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions,
@@ -172,7 +131,7 @@ final class Blocks {
                 pstmt.setBytes(++i, block.getPayloadHash());
                 pstmt.setLong(++i, block.getGeneratorId());
                 pstmt.executeUpdate();
-                Transactions.saveTransactions(con, block.getTransactions());
+                TransactionDb.saveTransactions(con, block.getTransactions());
             }
             if (block.getPreviousBlockId() != null) {
                 try (PreparedStatement pstmt = con.prepareStatement("UPDATE block SET next_block_id = ? WHERE id = ?")) {
@@ -202,4 +161,20 @@ final class Blocks {
             throw new RuntimeException(e.toString(), e);
         }
     }
+
+    static void deleteAllBlocks() {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("DELETE FROM block")) {
+            try {
+                pstmt.executeUpdate();
+                con.commit();
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
 }

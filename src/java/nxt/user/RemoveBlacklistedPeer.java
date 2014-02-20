@@ -10,7 +10,7 @@ import java.net.InetAddress;
 
 import static nxt.user.JSONResponses.LOCAL_USERS_ONLY;
 
-final class RemoveBlacklistedPeer extends UserServlet.UserRequestHandler {
+public final class RemoveBlacklistedPeer extends UserServlet.UserRequestHandler {
 
     static final RemoveBlacklistedPeer instance = new RemoveBlacklistedPeer();
 

@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
@@ -68,7 +68,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
         }
 
         JSONArray transactionIds = new JSONArray();
-        try (DbIterator<Transaction> iterator = Blockchain.getAllTransactions(account, type, subtype, timestamp)) {
+        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions(account, type, subtype, timestamp)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactionIds.add(transaction.getStringId());

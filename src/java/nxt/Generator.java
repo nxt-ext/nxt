@@ -124,7 +124,7 @@ public final class Generator {
             return;
         }
 
-        Block lastBlock = Blockchain.getLastBlock();
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
         if (! lastBlock.equals(lastBlocks.get(account))) {
 
@@ -156,7 +156,7 @@ public final class Generator {
         if (elapsedTime > 0) {
             BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance)).multiply(BigInteger.valueOf(elapsedTime));
             if (hits.get(account).compareTo(target) < 0) {
-                Blockchain.generateBlock(secretPhrase);
+                BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
             }
         }
 

@@ -6,7 +6,6 @@ import nxt.Alias;
 import nxt.Attachment;
 import nxt.Genesis;
 import nxt.Nxt;
-import nxt.TransactionProcessor;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
@@ -110,11 +109,11 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
 
             int timestamp = Convert.getEpochTime();
             Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
-            Transaction transaction = TransactionProcessor.newTransaction(timestamp, deadline,
+            Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline,
                     publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
             transaction.sign(secretPhrase);
 
-            TransactionProcessor.broadcast(transaction);
+            Nxt.getTransactionProcessor().broadcast(transaction);
 
             response.put("transaction", transaction.getStringId());
 

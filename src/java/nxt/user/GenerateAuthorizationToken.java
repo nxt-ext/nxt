@@ -9,7 +9,7 @@ import java.io.IOException;
 
 import static nxt.user.JSONResponses.INVALID_SECRET_PHRASE;
 
-final class GenerateAuthorizationToken extends UserServlet.UserRequestHandler {
+public final class GenerateAuthorizationToken extends UserServlet.UserRequestHandler {
 
     static final GenerateAuthorizationToken instance = new GenerateAuthorizationToken();
 

@@ -1,10 +1,5 @@
 package nxt;
 
-import nxt.util.Convert;
-import org.json.simple.JSONObject;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +8,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-final class Transactions {
+final class TransactionDb {
 
     static Transaction findTransaction(Long transactionId) {
         try (Connection con = Db.getConnection();
@@ -22,7 +17,7 @@ final class Transactions {
             ResultSet rs = pstmt.executeQuery();
             Transaction transaction = null;
             if (rs.next()) {
-                transaction = getTransaction(con, rs);
+                transaction = findTransaction(con, rs);
             }
             rs.close();
             return transaction;
@@ -44,70 +39,7 @@ final class Transactions {
         }
     }
 
-    static Transaction getTransaction(byte[] bytes) throws NxtException.ValidationException {
-
-        try {
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            byte type = buffer.get();
-            byte subtype = buffer.get();
-            int timestamp = buffer.getInt();
-            short deadline = buffer.getShort();
-            byte[] senderPublicKey = new byte[32];
-            buffer.get(senderPublicKey);
-            Long recipientId = buffer.getLong();
-            int amount = buffer.getInt();
-            int fee = buffer.getInt();
-            Long referencedTransactionId = Convert.zeroToNull(buffer.getLong());
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
-                    fee, referencedTransactionId, signature);
-
-            transactionType.loadAttachment(transaction, buffer);
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString());
-        }
-    }
-
-    static TransactionImpl getTransaction(JSONObject transactionData) throws NxtException.ValidationException {
-
-        try {
-
-            byte type = ((Long)transactionData.get("type")).byteValue();
-            byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-            int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-            short deadline = ((Long)transactionData.get("deadline")).shortValue();
-            byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-            Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-            if (recipientId == null) recipientId = 0L; // ugly
-            int amount = ((Long)transactionData.get("amount")).intValue();
-            int fee = ((Long)transactionData.get("fee")).intValue();
-            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-            byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
-
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
-                    referencedTransactionId, signature);
-
-            JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-
-            transactionType.loadAttachment(transaction, attachmentData);
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString());
-        }
-    }
-
-    static TransactionImpl getTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static TransactionImpl findTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
 
             byte type = rs.getByte("type");
@@ -144,7 +76,7 @@ final class Transactions {
             pstmt.setLong(1, blockId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                list.add(getTransaction(con, rs));
+                list.add(findTransaction(con, rs));
             }
             rs.close();
             return list;
@@ -192,4 +124,5 @@ final class Transactions {
             throw new RuntimeException(e.toString(), e);
         }
     }
+
 }
