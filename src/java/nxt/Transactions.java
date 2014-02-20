@@ -67,9 +67,7 @@ final class Transactions {
             TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
                     fee, referencedTransactionId, signature);
 
-            if (! transactionType.loadAttachment(transaction, buffer)) {
-                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + transaction.getAttachment().getJSON());
-            }
+            transactionType.loadAttachment(transaction, buffer);
 
             return transaction;
 
@@ -100,9 +98,7 @@ final class Transactions {
 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
-            if (! transactionType.loadAttachment(transaction, attachmentData)) {
-                throw new NxtException.ValidationException("Invalid transaction attachment:\n" + attachmentData.toJSONString());
-            }
+            transactionType.loadAttachment(transaction, attachmentData);
 
             return transaction;
 

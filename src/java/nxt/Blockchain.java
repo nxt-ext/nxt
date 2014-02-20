@@ -742,6 +742,11 @@ public final class Blockchain {
                     if (transaction.isDuplicate(duplicates)) {
                         throw new BlockNotAcceptedException("Transaction is a duplicate: " + transaction.getStringId());
                     }
+                    try {
+                        transaction.validateAttachment();
+                    } catch (NxtException.ValidationException e) {
+                        throw new BlockNotAcceptedException(e.getMessage());
+                    }
 
                     calculatedTotalAmount += transaction.getAmount();
 
@@ -961,6 +966,12 @@ public final class Blockchain {
                         }
 
                         if (transaction.isDuplicate(duplicates)) {
+                            continue;
+                        }
+
+                        try {
+                            transaction.validateAttachment();
+                        } catch (NxtException.ValidationException e) {
                             continue;
                         }
 

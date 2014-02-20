@@ -13,6 +13,7 @@ import org.json.simple.JSONStreamAware;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -131,12 +132,8 @@ public final class TransactionProcessor {
                     if (response == null) {
                         return;
                     }
-                    try {
-                        JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                        processTransactions(transactionsData, false);
-                    } catch (NxtException.ValidationException e) {
-                        peer.blacklist(e);
-                    }
+                    JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
+                    processJSONTransactions(transactionsData, false);
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
@@ -161,16 +158,9 @@ public final class TransactionProcessor {
 
     public static void broadcast(Transaction transaction) {
 
-        JSONObject peerRequest = new JSONObject();
-        peerRequest.put("requestType", "processTransactions");
-        JSONArray transactionsData = new JSONArray();
-        transactionsData.add(transaction.getJSONObject());
-        peerRequest.put("transactions", transactionsData);
-
-        nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl)transaction);
-
-        Peers.sendToSomePeers(peerRequest);
-        Logger.logDebugMessage("Broadcasted new transaction " + transaction.getStringId());
+        processTransactions(Arrays.asList((TransactionImpl)transaction), true);
+        nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
+        Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
 
     }
 
@@ -197,23 +187,28 @@ public final class TransactionProcessor {
         return Transactions.getTransaction(bytes);
     }
 
-    public static void processTransactions(JSONObject request) throws NxtException.ValidationException {
+    public static void processTransactions(JSONObject request) {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
-        processTransactions(transactionsData, true);
+        processJSONTransactions(transactionsData, true);
     }
 
     static void init() {}
 
-    private static void processTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
-        TransactionImpl[] transactions = new TransactionImpl[transactionsData.size()];
-        for (int i = 0; i < transactions.length; i++) {
-            transactions[i] = Transactions.getTransaction((JSONObject) transactionsData.get(i));
+    private static void processJSONTransactions(JSONArray transactionsData, final boolean sendToPeers) {
+        List<TransactionImpl> transactions = new ArrayList<>();
+        for (Object transactionData : transactionsData) {
+            try {
+                transactions.add(Transactions.getTransaction((JSONObject) transactionData));
+            } catch (NxtException.ValidationException e) {
+                if (! (e instanceof TransactionType.NotYetEnabledException)) {
+                    Logger.logDebugMessage("Dropping invalid transaction", e);
+                }
+            }
         }
         processTransactions(transactions, sendToPeers);
-
     }
 
-    private static void processTransactions(TransactionImpl[] transactions, final boolean sendToPeers) throws NxtException.ValidationException {
+    private static void processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
         JSONArray validTransactionsData = new JSONArray();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();

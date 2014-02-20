@@ -309,6 +309,10 @@ final class TransactionImpl implements Transaction {
         return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
 
+    void validateAttachment() throws NxtException.ValidationException {
+        type.validateAttachment(this);
+    }
+
     // returns true iff double spending
     boolean isDoubleSpending() {
         Account senderAccount = Account.getAccount(getSenderId());
