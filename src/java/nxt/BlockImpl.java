@@ -32,7 +32,7 @@ final class BlockImpl implements Block {
 
     private byte[] blockSignature;
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
-    private long baseTarget = Nxt.initialBaseTarget;
+    private long baseTarget = Nxt.INITIAL_BASE_TARGET;
     private volatile Long nextBlockId;
     private int height = -1;
     private volatile Long id;
@@ -375,15 +375,15 @@ final class BlockImpl implements Block {
     private void calculateBaseTarget(BlockImpl previousBlock) {
 
         if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlockId == null) {
-            baseTarget = Nxt.initialBaseTarget;
+            baseTarget = Nxt.INITIAL_BASE_TARGET;
             cumulativeDifficulty = BigInteger.ZERO;
         } else {
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
                     .divide(BigInteger.valueOf(60)).longValue();
-            if (newBaseTarget < 0 || newBaseTarget > Nxt.maxBaseTarget) {
-                newBaseTarget = Nxt.maxBaseTarget;
+            if (newBaseTarget < 0 || newBaseTarget > Nxt.MAX_BASE_TARGET) {
+                newBaseTarget = Nxt.MAX_BASE_TARGET;
             }
             if (newBaseTarget < curBaseTarget / 2) {
                 newBaseTarget = curBaseTarget / 2;
@@ -393,7 +393,7 @@ final class BlockImpl implements Block {
             }
             long twofoldCurBaseTarget = curBaseTarget * 2;
             if (twofoldCurBaseTarget < 0) {
-                twofoldCurBaseTarget = Nxt.maxBaseTarget;
+                twofoldCurBaseTarget = Nxt.MAX_BASE_TARGET;
             }
             if (newBaseTarget > twofoldCurBaseTarget) {
                 newBaseTarget = twofoldCurBaseTarget;

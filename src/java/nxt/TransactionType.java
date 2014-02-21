@@ -299,7 +299,7 @@ public abstract class TransactionType {
                 }
                 String normalizedAlias = attachment.getAliasName().toLowerCase();
                 for (int i = 0; i < normalizedAlias.length(); i++) {
-                    if (Nxt.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+                    if (Nxt.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                         throw new NxtException.ValidationException("Invalid alias name: " + normalizedAlias);
                     }
                 }
@@ -602,7 +602,7 @@ public abstract class TransactionType {
                 }
                 String normalizedName = attachment.getName().toLowerCase();
                 for (int i = 0; i < normalizedName.length(); i++) {
-                    if (Nxt.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+                    if (Nxt.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                         throw new NxtException.ValidationException("Invalid asset name: " + normalizedName);
                     }
                 }
@@ -935,7 +935,7 @@ public abstract class TransactionType {
 
         private final Transaction transaction;
 
-        public UndoNotSupportedException(Transaction transaction, String message) {
+        UndoNotSupportedException(Transaction transaction, String message) {
             super(message);
             this.transaction = transaction;
         }
@@ -948,12 +948,10 @@ public abstract class TransactionType {
 
     public static final class NotYetEnabledException extends NxtException.ValidationException {
 
-        public NotYetEnabledException(String message) {
+        NotYetEnabledException(String message) {
             super(message);
         }
 
-        public NotYetEnabledException(String message, Throwable cause) {
-            super(message, cause);
-        }
     }
+
 }

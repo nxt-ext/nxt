@@ -12,7 +12,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     Peer getLastBlockchainFeeder();
 
-    void pushBlock(JSONObject request) throws NxtException;
+    void processPeerBlock(JSONObject request) throws NxtException;
 
     void fullReset();
 

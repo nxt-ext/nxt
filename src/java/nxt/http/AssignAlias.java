@@ -61,7 +61,7 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
 
         String normalizedAlias = alias.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
-            if (Nxt.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+            if (Nxt.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                 return INCORRECT_ALIAS;
             }
         }

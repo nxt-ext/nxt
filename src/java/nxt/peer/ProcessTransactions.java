@@ -15,7 +15,7 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
 
-        Nxt.getTransactionProcessor().processTransactions(request);
+        Nxt.getTransactionProcessor().processPeerTransactions(request);
 
         return JSON.emptyJSON;
     }

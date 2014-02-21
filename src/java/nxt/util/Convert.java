@@ -60,7 +60,7 @@ public final class Convert {
     }
 
     public static int getEpochTime() {
-        return (int)((System.currentTimeMillis() - Nxt.epochBeginning + 500) / 1000);
+        return (int)((System.currentTimeMillis() - Nxt.EPOCH_BEGINNING + 500) / 1000);
     }
 
     public static Long zeroToNull(long l) {

@@ -185,7 +185,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public void processTransactions(JSONObject request) {
+    public void processPeerTransactions(JSONObject request) {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
         processJSONTransactions(transactionsData, true);
     }

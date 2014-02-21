@@ -157,6 +157,7 @@ public final class Peers {
     }
 
     private static class Init {
+        
         static {
             if (Peers.shareMyAddress) {
                 try {
@@ -181,7 +182,11 @@ public final class Peers {
                 Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
             }
         }
+
         private static void init() {}
+
+        private Init() {}
+
     }
 
     private static final Runnable peerUnBlacklistingThread = new Runnable() {
