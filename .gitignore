@@ -3,4 +3,5 @@
 /webapps/
 /classes/
 /*.log
-/html/tools/doc/*
+/html/doc/*
+/keystore

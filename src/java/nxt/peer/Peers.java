@@ -8,6 +8,7 @@ import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletHandler;
@@ -161,19 +162,26 @@ public final class Peers {
         static {
             if (Peers.shareMyAddress) {
                 try {
-                    Server peerServer = new Server(Peers.myPeerPort);
+                    Server peerServer = new Server();
+                    ServerConnector connector = new ServerConnector(peerServer);
+                    connector.setPort(Peers.myPeerPort);
+                    String host = Nxt.getStringProperty("nxt.peerServerHost");
+                    connector.setHost(host);
+                    connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
+                    peerServer.addConnector(connector);
+
                     ServletHandler peerHandler = new ServletHandler();
                     peerHandler.addServletWithMapping(PeerServlet.class, "/*");
                     FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
-                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("dosfilter.maxRequestsPerSec"));
-                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("dosfilter.delayMs"));
+                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
+                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
                     filterHolder.setInitParameter("trackSessions", "false");
                     filterHolder.setAsyncSupported(true);
 
                     peerServer.setHandler(peerHandler);
                     peerServer.setStopAtShutdown(true);
                     peerServer.start();
-                    Logger.logMessage("Started peer networking server at port: " + Peers.myPeerPort);
+                    Logger.logMessage("Started peer networking server at " + host + ":" + Peers.myPeerPort);
                 } catch (Exception e) {
                     Logger.logDebugMessage("Failed to start peer networking server", e);
                     throw new RuntimeException(e.toString(), e);

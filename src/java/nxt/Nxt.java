@@ -6,7 +6,6 @@ import nxt.user.Users;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -131,6 +130,11 @@ public final class Nxt {
         }
     }
 
+    public static void init(Properties customProperties) {
+        properties.putAll(customProperties);
+        init();
+    }
+
     public static void init() {
         Init.init();
     }
@@ -145,7 +149,6 @@ public final class Nxt {
     private static class Init {
 
         static {
-
             System.out.println("Initializing Nxt server version " + Nxt.VERSION);
 
             long startTime = System.currentTimeMillis();
