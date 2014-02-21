@@ -134,10 +134,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         pushBlock(block);
 
                                     } catch (BlockNotAcceptedException e) {
-                                        Logger.logDebugMessage("Failed to accept block " + block.getStringId()
-                                                + " at height " + blockchain.getLastBlock().getHeight()
-                                                + " received from " + peer.getPeerAddress());
-                                        Logger.logDebugMessage(e.toString());
                                         peer.blacklist(e);
                                         return;
                                     }
@@ -285,8 +281,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     pushBlock(block);
                                 } catch (BlockNotAcceptedException e) {
-                                    Logger.logDebugMessage("Failed to push fork block " + block.getStringId()
-                                            + " received from " + peer.getPeerAddress() + ", blacklisting");
                                     peer.blacklist(e);
                                     break;
                                 }
