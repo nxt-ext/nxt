@@ -15,12 +15,10 @@ import java.util.Set;
 
 public final class API {
 
-    private static final int DEFAULT_API_PORT = 7876;
-
     static final Set<String> allowedBotHosts;
 
     static {
-        String allowedBotHostsString = Nxt.getStringProperty("nxt.allowedBotHosts", "127.0.0.1; localhost; 0:0:0:0:0:0:0:1;");
+        String allowedBotHostsString = Nxt.getStringProperty("nxt.allowedBotHosts");
         if (! allowedBotHostsString.equals("*")) {
             Set<String> hosts = new HashSet<>();
             for (String allowedBotHost : allowedBotHostsString.split(";")) {
@@ -34,10 +32,10 @@ public final class API {
             allowedBotHosts = null;
         }
 
-        boolean enableAPIServer = Nxt.getBooleanProperty("nxt.enableAPIServer", allowedBotHosts == null || ! allowedBotHosts.isEmpty());
+        boolean enableAPIServer = Nxt.getBooleanProperty("nxt.enableAPIServer");
         if (enableAPIServer) {
             try {
-                int port = Nxt.getIntProperty("nxt.apiServerPort", API.DEFAULT_API_PORT);
+                int port = Nxt.getIntProperty("nxt.apiServerPort");
                 Server apiServer = new Server(port);
                 ServletHandler apiHandler = new ServletHandler();
                 apiHandler.addServletWithMapping(APIServlet.class, "/nxt");
@@ -45,7 +43,7 @@ public final class API {
                 ResourceHandler apiFileHandler = new ResourceHandler();
                 apiFileHandler.setDirectoriesListed(true);
                 apiFileHandler.setWelcomeFiles(new String[]{"index.html"});
-                apiFileHandler.setResourceBase(Nxt.getStringProperty("nxt.apiResourceBase", "html/tools"));
+                apiFileHandler.setResourceBase(Nxt.getStringProperty("nxt.apiResourceBase"));
 
                 HandlerList apiHandlers = new HandlerList();
                 apiHandlers.setHandlers(new Handler[] { apiFileHandler, apiHandler, new DefaultHandler() });

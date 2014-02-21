@@ -13,15 +13,18 @@ final class Db {
     private static volatile int maxActiveConnections;
 
     static void init() {
-        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB", (int)(Runtime.getRuntime().maxMemory() / (1024 * 2)));
-        String dbUrl = Nxt.getStringProperty("nxt.dbUrl", "jdbc:h2:nxt_db/nxt;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize);
+        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB");
+        if (maxCacheSize == 0) {
+            maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
+        }
+        String dbUrl = Nxt.getStringProperty("nxt.dbUrl");
         if (! dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
         }
         Logger.logDebugMessage("Database jdbc url set to: " + dbUrl);
         cp = JdbcConnectionPool.create(dbUrl, "sa", "sa");
-        cp.setMaxConnections(Nxt.getIntProperty("nxt.maxDbConnections", 10));
-        cp.setLoginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout", 70));
+        cp.setMaxConnections(Nxt.getIntProperty("nxt.maxDbConnections"));
+        cp.setLoginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout"));
         DbVersion.init();
     }
 

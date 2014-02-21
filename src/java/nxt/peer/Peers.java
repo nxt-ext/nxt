@@ -78,11 +78,11 @@ public final class Peers {
 
     static {
 
-        myPlatform = Nxt.getStringProperty("nxt.myPlatform", "PC");
-        myAddress = Nxt.getStringProperty("nxt.myAddress", null);
-        myPeerPort = Nxt.getIntProperty("nxt.peerServerPort", 7874);
-        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress", true);
-        myHallmark = Nxt.getStringProperty("nxt.myHallmark", null);
+        myPlatform = Nxt.getStringProperty("nxt.myPlatform");
+        myAddress = Nxt.getStringProperty("nxt.myAddress");
+        myPeerPort = Nxt.getIntProperty("nxt.peerServerPort");
+        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress");
+        myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
@@ -110,7 +110,7 @@ public final class Peers {
         json.put("requestType", "getInfo");
         myPeerInfoRequest = JSON.prepareRequest(json);
 
-        String wellKnownPeersString = Nxt.getStringProperty("nxt.wellKnownPeers", null);
+        String wellKnownPeersString = Nxt.getStringProperty("nxt.wellKnownPeers");
         Set<String> addresses = new HashSet<>();
         if (wellKnownPeersString != null && wellKnownPeersString.length() > 0) {
             for (String address : wellKnownPeersString.split(";")) {
@@ -134,16 +134,16 @@ public final class Peers {
         }
         wellKnownPeers = Collections.unmodifiableSet(addresses);
 
-        maxNumberOfConnectedPublicPeers = Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers", 20);
-        connectTimeout = Nxt.getIntProperty("nxt.connectTimeout", 2000);
-        readTimeout = Nxt.getIntProperty("nxt.readTimeout", 5000);
-        enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection", true);
-        pushThreshold = Nxt.getIntProperty("nxt.pushThreshold", 0);
-        pullThreshold = Nxt.getIntProperty("nxt.pullThreshold", 0);
+        maxNumberOfConnectedPublicPeers = Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers");
+        connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
+        readTimeout = Nxt.getIntProperty("nxt.readTimeout");
+        enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection");
+        pushThreshold = Nxt.getIntProperty("nxt.pushThreshold");
+        pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
 
-        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod", 300000);
-        communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask", 0);
-        sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit", 10);
+        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
+        communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
+        sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
 
         StringBuilder buf = new StringBuilder();
         for (String address : wellKnownPeers) {
@@ -157,7 +157,7 @@ public final class Peers {
     }
 
     private static class Init {
-        
+
         static {
             if (Peers.shareMyAddress) {
                 try {
@@ -165,8 +165,8 @@ public final class Peers {
                     ServletHandler peerHandler = new ServletHandler();
                     peerHandler.addServletWithMapping(PeerServlet.class, "/*");
                     FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
-                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("dosfilter.maxRequestsPerSec", "30"));
-                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("dosfilter.delayMs", "1000"));
+                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("dosfilter.maxRequestsPerSec"));
+                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("dosfilter.delayMs"));
                     filterHolder.setInitParameter("trackSessions", "false");
                     filterHolder.setAsyncSupported(true);
 

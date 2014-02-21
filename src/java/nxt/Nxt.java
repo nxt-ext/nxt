@@ -6,6 +6,7 @@ import nxt.user.Users;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -57,38 +58,48 @@ public final class Nxt {
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
 
-    private static final Properties properties = new Properties();
+    private static final Properties defaultProperties = new Properties();
+    static {
+        try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt-default.properties")) {
+            Nxt.defaultProperties.load(is);
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading nxt-default.properties", e);
+        }
+    }
+    private static final Properties properties = new Properties(defaultProperties);
     static {
         try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt.properties")) {
-            Nxt.properties.load(is);
+            if (is != null) {
+                Nxt.properties.load(is);
+            } // ignore if missing
         } catch (IOException e) {
-            throw new RuntimeException(e.toString(), e);
+            throw new RuntimeException("Error loading nxt.properties", e);
         }
     }
 
-    public static int getIntProperty(String name, int defaultValue) {
+    public static int getIntProperty(String name) {
         try {
             int result = Integer.parseInt(properties.getProperty(name));
             Logger.logMessage(name + " = \"" + result + "\"");
             return result;
         } catch (NumberFormatException e) {
-            Logger.logMessage(name + " not defined, default is " + defaultValue);
-            return defaultValue;
+            Logger.logMessage(name + " not defined, assuming 0");
+            return 0;
         }
     }
 
-    public static String getStringProperty(String name, String defaultValue) {
+    public static String getStringProperty(String name) {
         String value = properties.getProperty(name);
-        if (value != null) {
-            Logger.logMessage(name + " = \"" + value.trim() + "\"");
-            return value.trim();
+        if (value != null && ! "".equals(value = value.trim())) {
+            Logger.logMessage(name + " = \"" + value + "\"");
+            return value;
         } else {
-            Logger.logMessage(name + " not defined, default is " + defaultValue);
-            return defaultValue;
+            Logger.logMessage(name + " not defined, assuming null");
+            return null;
         }
     }
 
-    public static Boolean getBooleanProperty(String name, boolean defaultValue) {
+    public static Boolean getBooleanProperty(String name) {
         String value = properties.getProperty(name);
         if (Boolean.TRUE.toString().equals(value)) {
             Logger.logMessage(name + " = \"true\"");
@@ -97,8 +108,8 @@ public final class Nxt {
             Logger.logMessage(name + " = \"false\"");
             return false;
         }
-        Logger.logMessage(name + " not defined, default is " + defaultValue);
-        return defaultValue;
+        Logger.logMessage(name + " not defined, assuming false");
+        return false;
     }
 
     public static Blockchain getBlockchain() {
@@ -141,7 +152,7 @@ public final class Nxt {
 
             Logger.logMessage("logging enabled");
 
-            if (! Nxt.getBooleanProperty("nxt.debugJetty", false)) {
+            if (! Nxt.getBooleanProperty("nxt.debugJetty")) {
                 System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
                 Logger.logDebugMessage("jetty logging disabled");
             }

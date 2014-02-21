@@ -31,12 +31,12 @@ public final class Logger {
 
     private static PrintWriter fileLog = null;
     static {
-        debug = Nxt.getBooleanProperty("nxt.debug", false);
-        enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces", true);
+        debug = Nxt.getBooleanProperty("nxt.debug");
+        enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces");
         try {
-            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log", "nxt.log"))))), true);
+            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log"))))), true);
         } catch (IOException e) {
-            logMessage("Logging to file nxt.log not possible, will log to stdout only");
+            logMessage("Logging to file not possible, will log to stdout only", e);
         }
         logMessage("Debug logging " + (debug ? "enabled" : "disabled"));
         logMessage("Exception stack traces " + (enableStackTraces ? "enabled" : "disabled"));

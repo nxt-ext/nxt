@@ -36,8 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Users {
 
-    private static final int DEFAULT_UI_PORT = 7875;
-
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
 
@@ -54,7 +52,7 @@ public final class Users {
 
     static {
 
-        String allowedUserHostsString = Nxt.getStringProperty("nxt.allowedUserHosts", "127.0.0.1; localhost; 0:0:0:0:0:0:0:1;");
+        String allowedUserHostsString = Nxt.getStringProperty("nxt.allowedUserHosts");
         if (! allowedUserHostsString.equals("*")) {
             Set<String> hosts = new HashSet<>();
             for (String allowedUserHost : allowedUserHostsString.split(";")) {
@@ -68,11 +66,11 @@ public final class Users {
             allowedUserHosts = null;
         }
 
-        boolean enableUIServer = Nxt.getBooleanProperty("nxt.enableUIServer", allowedUserHosts == null || !allowedUserHosts.isEmpty());
+        boolean enableUIServer = Nxt.getBooleanProperty("nxt.enableUIServer");
         if (enableUIServer) {
             try {
-                int port = Nxt.getIntProperty("nxt.UIServerPort", Users.DEFAULT_UI_PORT);
-                Server userServer = new Server(Users.DEFAULT_UI_PORT);
+                int port = Nxt.getIntProperty("nxt.UIServerPort");
+                Server userServer = new Server(port);
 
                 ServletHandler userHandler = new ServletHandler();
                 ServletHolder userHolder = userHandler.addServletWithMapping(UserServlet.class, "/nxt");
@@ -81,7 +79,7 @@ public final class Users {
                 ResourceHandler userFileHandler = new ResourceHandler();
                 userFileHandler.setDirectoriesListed(false);
                 userFileHandler.setWelcomeFiles(new String[]{"index.html"});
-                userFileHandler.setResourceBase(Nxt.getStringProperty("nxt.uiResourceBase", "html/nrs"));
+                userFileHandler.setResourceBase(Nxt.getStringProperty("nxt.uiResourceBase"));
 
                 HandlerList userHandlers = new HandlerList();
                 userHandlers.setHandlers(new Handler[] { userFileHandler, userHandler, new DefaultHandler() });
