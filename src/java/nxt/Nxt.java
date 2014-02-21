@@ -160,6 +160,7 @@ public final class Nxt {
             Generator.init();
             API.init();
             Users.init();
+            ThreadPool.start();
 
             long currentTime = System.currentTimeMillis();
             Logger.logDebugMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
