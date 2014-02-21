@@ -348,14 +348,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
-    public boolean pushBlock(JSONObject request) throws NxtException {
+    public void pushBlock(JSONObject request) throws NxtException {
         BlockImpl block = parseBlock(request);
-        try {
-            pushBlock(block);
-            return true;
-        } catch (BlockNotAcceptedException e) {
-            throw e;
-        }
+        pushBlock(block);
     }
 
     @Override

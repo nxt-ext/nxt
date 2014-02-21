@@ -37,8 +37,8 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
                 // when loading blockchain from scratch
                 return NOT_ACCEPTED;
             }
-            boolean accepted = Nxt.getBlockchainProcessor().pushBlock(request);
-            return accepted ? ACCEPTED : NOT_ACCEPTED;
+            Nxt.getBlockchainProcessor().pushBlock(request);
+            return ACCEPTED;
 
         } catch (NxtException e) {
             if (peer != null) {
