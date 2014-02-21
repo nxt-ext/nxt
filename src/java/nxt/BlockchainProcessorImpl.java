@@ -254,6 +254,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
 
             JSONArray nextBlocks = (JSONArray) response.get("nextBlocks");
+            if (nextBlocks == null) {
+                return null;
+            }
             // prevent overloading with blocks
             if (nextBlocks.size() > 1440) {
                 Logger.logDebugMessage("Obsolete or rogue peer " + peer.getPeerAddress() + " sends too many nextBlocks, blacklisting");
