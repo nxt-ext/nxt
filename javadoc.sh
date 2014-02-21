@@ -1,4 +1,4 @@
-CP=classes:lib/*
+CP=nxt.jar:lib/*:conf
 SP=src/java/
 
 /bin/rm -rf html/doc/*

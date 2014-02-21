@@ -48,7 +48,7 @@ final class Db {
         int activeConnections = cp.getActiveConnections();
         if (activeConnections > maxActiveConnections) {
             maxActiveConnections = activeConnections;
-            Logger.logDebugMessage("Database connection pool max size: " + activeConnections);
+            Logger.logDebugMessage("Database connection pool current size: " + activeConnections);
         }
         return con;
     }
