@@ -87,6 +87,7 @@ public final class Users {
                 userHandlers.setHandlers(new Handler[] { userFileHandler, userHandler, new DefaultHandler() });
 
                 userServer.setHandler(userHandlers);
+                userServer.setStopAtShutdown(true);
                 userServer.start();
                 Logger.logMessage("Started user interface server on port " + port);
             } catch (Exception e) {

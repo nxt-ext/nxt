@@ -51,6 +51,7 @@ public final class API {
                 apiHandlers.setHandlers(new Handler[] { apiFileHandler, apiHandler, new DefaultHandler() });
 
                 apiServer.setHandler(apiHandlers);
+                apiServer.setStopAtShutdown(true);
                 apiServer.start();
                 Logger.logMessage("Started API server on port " + port);
             } catch (Exception e) {

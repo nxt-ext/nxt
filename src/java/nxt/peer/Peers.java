@@ -154,28 +154,34 @@ public final class Peers {
         }
         Logger.logDebugMessage("Well known peers: " + buf.toString());
 
-        if (Peers.shareMyAddress) {
-            try {
-                Server peerServer = new Server(Peers.myPeerPort);
-                ServletHandler peerHandler = new ServletHandler();
-                peerHandler.addServletWithMapping(PeerServlet.class, "/*");
-                FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
-                filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("dosfilter.maxRequestsPerSec", "30"));
-                filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("dosfilter.delayMs", "1000"));
-                filterHolder.setInitParameter("trackSessions", "false");
-                filterHolder.setAsyncSupported(true);
+    }
 
-                peerServer.setHandler(peerHandler);
-                peerServer.start();
-                Logger.logMessage("Started peer networking server at port: " + Peers.myPeerPort);
-            } catch (Exception e) {
-                Logger.logDebugMessage("Failed to start peer networking server", e);
-                throw new RuntimeException(e.toString(), e);
+    private static class Init {
+        static {
+            if (Peers.shareMyAddress) {
+                try {
+                    Server peerServer = new Server(Peers.myPeerPort);
+                    ServletHandler peerHandler = new ServletHandler();
+                    peerHandler.addServletWithMapping(PeerServlet.class, "/*");
+                    FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
+                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("dosfilter.maxRequestsPerSec", "30"));
+                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("dosfilter.delayMs", "1000"));
+                    filterHolder.setInitParameter("trackSessions", "false");
+                    filterHolder.setAsyncSupported(true);
+
+                    peerServer.setHandler(peerHandler);
+                    peerServer.setStopAtShutdown(true);
+                    peerServer.start();
+                    Logger.logMessage("Started peer networking server at port: " + Peers.myPeerPort);
+                } catch (Exception e) {
+                    Logger.logDebugMessage("Failed to start peer networking server", e);
+                    throw new RuntimeException(e.toString(), e);
+                }
+            } else {
+                Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
             }
-        } else {
-            Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
         }
-
+        private static void init() {}
     }
 
     private static final Runnable peerUnBlacklistingThread = new Runnable() {
@@ -292,7 +298,9 @@ public final class Peers {
         ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
     }
 
-    public static void init() {}
+    public static void init() {
+        Init.init();
+    }
 
     public static void shutdown() {
         ThreadPool.shutdownExecutor(sendToPeersService);
