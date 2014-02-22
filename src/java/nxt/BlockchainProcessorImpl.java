@@ -361,7 +361,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         synchronized (blockchain) {
             Logger.logMessage("Deleting blockchain...");
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
-            BlockDb.deleteAllBlocks();
+            BlockDb.deleteAll();
             addGenesisBlock();
             scan();
         }

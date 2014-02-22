@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
 
@@ -162,11 +163,14 @@ final class BlockDb {
         }
     }
 
-    static void deleteAllBlocks() {
+    static void deleteAll() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("DELETE FROM block")) {
+             Statement stmt = con.createStatement()) {
             try {
-                pstmt.executeUpdate();
+                stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
+                stmt.executeUpdate("TRUNCATE TABLE transaction");
+                stmt.executeUpdate("TRUNCATE TABLE block");
+                stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
                 con.commit();
             } catch (SQLException e) {
                 con.rollback();
