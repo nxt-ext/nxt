@@ -36,7 +36,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, TransactionImpl> transactionHashes = new ConcurrentHashMap<>();
+    private static class TransactionHashInfo {
+        private final Long transactionId;
+        private final int expiration;
+        private TransactionHashInfo(Transaction transaction) {
+            this.transactionId = transaction.getId();
+            this.expiration = transaction.getExpiration();
+        }
+    }
+    private final ConcurrentMap<String, TransactionHashInfo> transactionHashes = new ConcurrentHashMap<>();
     private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
@@ -286,7 +294,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         block.apply();
         for (TransactionImpl transaction : block.getTransactions()) {
             transaction.apply();
-            transactionHashes.put(transaction.getHash(), transaction);
+            transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
         }
         purgeExpiredHashes(block.getTimestamp());
     }
@@ -294,8 +302,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void undo(BlockImpl block) throws TransactionType.UndoNotSupportedException {
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
-            Transaction hashTransaction = transactionHashes.get(transaction.getHash());
-            if (hashTransaction != null && hashTransaction.equals(transaction)) {
+            TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
+            if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
                 transactionHashes.remove(transaction.getHash());
             }
             unconfirmedTransactions.put(transaction.getId(), transaction);
@@ -310,7 +318,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     TransactionImpl checkTransactionHashes(BlockImpl block) {
         TransactionImpl duplicateTransaction = null;
         for (TransactionImpl transaction : block.getTransactions()) {
-            if (transactionHashes.putIfAbsent(transaction.getHash(), transaction) != null && block.getHeight() != 58294) {
+            if (transactionHashes.putIfAbsent(transaction.getHash(), new TransactionHashInfo(transaction)) != null && block.getHeight() != 58294) {
                 duplicateTransaction = transaction;
                 break;
             }
@@ -319,8 +327,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (duplicateTransaction != null) {
             for (TransactionImpl transaction : block.getTransactions()) {
                 if (! transaction.equals(duplicateTransaction)) {
-                    TransactionImpl hashTransaction = transactionHashes.get(transaction.getHash());
-                    if (hashTransaction != null && hashTransaction.equals(transaction)) {
+                    TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
+                    if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
                         transactionHashes.remove(transaction.getHash());
                     }
                 }
@@ -354,9 +362,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private void purgeExpiredHashes(int blockTimestamp) {
-        Iterator<Map.Entry<String, TransactionImpl>> iterator = transactionHashes.entrySet().iterator();
+        Iterator<Map.Entry<String, TransactionHashInfo>> iterator = transactionHashes.entrySet().iterator();
         while (iterator.hasNext()) {
-            if (iterator.next().getValue().getExpiration() < blockTimestamp) {
+            if (iterator.next().getValue().expiration < blockTimestamp) {
                 iterator.remove();
             }
         }
