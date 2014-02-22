@@ -67,7 +67,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
-    public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than \"" + Nxt.MAX_ARBITRARY_MESSAGE_LENGTH + "\" bytes)");
+    public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than " + Nxt.MAX_ARBITRARY_MESSAGE_LENGTH + " bytes)");
     public static final JSONStreamAware MISSING_AMOUNT = missing("amount");
     public static final JSONStreamAware INCORRECT_AMOUNT = incorrect("amount");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
@@ -117,6 +117,14 @@ public final class JSONResponses {
         ERROR_INCORRECT_REQUEST = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware NOT_FORGING;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Account is not forging");
+        NOT_FORGING = JSON.prepare(response);
+    }
+
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -125,13 +133,13 @@ public final class JSONResponses {
     }
 
     private static JSONStreamAware incorrect(String paramName) {
-        return incorrect(paramName, "");
+        return incorrect(paramName, null);
     }
 
     private static JSONStreamAware incorrect(String paramName, String details) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"" + paramName + "\" " + details);
+        response.put("errorDescription", "Incorrect \"" + paramName + (details != null ? "\" " + details : "\""));
         return JSON.prepare(response);
     }
 

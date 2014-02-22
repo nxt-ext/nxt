@@ -337,5 +337,20 @@
     </table>
     <div class="result"></div>
 </form>
+<hr>
+<b>Get Forging Deadline:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getForging"/>
+    <table>
+        <tr>
+            <td>Secret phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
 </body>
 </html>

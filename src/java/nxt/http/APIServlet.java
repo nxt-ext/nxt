@@ -79,6 +79,7 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMoney", SendMoney.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);
+        map.put("getForging", GetForging.instance);
         map.put("transferAsset", TransferAsset.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
