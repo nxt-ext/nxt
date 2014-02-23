@@ -25,7 +25,9 @@
             var downloadingDeadlines = [], uploadingDeadlines = [];
 
             function addPeer(peer) {
-                if (document.getElementById("peer" + peer.index) != null) return;
+                if (document.getElementById("peer" + peer.index) != null) {
+                    document.getElementById("peers").deleteRow(document.getElementById("peer" + peer.index).rowIndex);
+                }
                 var peers = document.getElementById("peers"), row = peers.insertRow(peers.rows.length), element;
                 row.id = "peer" + peer.index;
                 element = row.insertCell(0);
@@ -42,6 +44,7 @@
                 element.title = peer.address;
                 element.innerHTML = peer.address;
                 element = row.insertCell(2);
+                element.id = "announcedAddressIcon" + peer.index;
                 if (peer.wellKnown) {
                     element.className = "wellKnown";
                     element.title = "Well-known address";
@@ -54,6 +57,7 @@
                     element.title = "Announced address";
                 }
                 element = row.insertCell(3);
+                element.id = "announcedAddress" + peer.index;
                 element.className = "text";
                 element.title = peer.announcedAddress;
                 element.innerHTML = peer.announcedAddress;
@@ -121,6 +125,23 @@
                     element.className = "disconnected";
                     element.title = "Disconnected";
                     document.getElementById("remove" + peer.index).title = "Remove from the list";
+                }
+                if (peer.announcedAddress) {
+                    element = document.getElementById("announcedAddress" + peer.index);
+                    element.title = peer.announcedAddress;
+                    element.innerHTML = peer.announcedAddress;
+                    element = document.getElementById("announcedAddressIcon" + peer.index);
+                    if (peer.wellKnown) {
+                        element.className = "wellKnown";
+                        element.title = "Well-known address";
+                    } else {
+                        if (peer.announcedAddress.length > 1) {
+                            element.className = "enabledAnnouncedAddress";
+                        } else {
+                            element.className = "disabledAnnouncedAddress";
+                        }
+                        element.title = "Announced address";
+                    }
                 }
                 if (peer.weight) {
                     element = document.getElementById("weightIcon" + peer.index);

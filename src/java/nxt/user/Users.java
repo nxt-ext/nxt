@@ -50,6 +50,7 @@ public final class Users {
 
     private static final AtomicInteger peerCounter = new AtomicInteger();
     private static final ConcurrentMap<String, Integer> peerIndexMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer, String> peerAddressMap = new ConcurrentHashMap<>();
 
     private static final AtomicInteger blockCounter = new AtomicInteger();
     private static final ConcurrentMap<Long, Integer> blockIndexMap = new ConcurrentHashMap<>();
@@ -178,6 +179,11 @@ public final class Users {
             @Override
             public void notify(Peer peer) {
                 JSONObject response = new JSONObject();
+                JSONArray removedActivePeers = new JSONArray();
+                JSONObject removedActivePeer = new JSONObject();
+                removedActivePeer.put("index", Users.getIndex(peer));
+                removedActivePeers.add(removedActivePeer);
+                response.put("removedActivePeers", removedActivePeers);
                 JSONArray removedKnownPeers = new JSONArray();
                 JSONObject removedKnownPeer = new JSONObject();
                 removedKnownPeer.put("index", Users.getIndex(peer));
@@ -313,7 +319,7 @@ public final class Users {
                 JSONArray addedActivePeers = new JSONArray();
                 JSONObject addedActivePeer = new JSONObject();
                 addedActivePeer.put("index", Users.getIndex(peer));
-                if (peer.getState() == Peer.State.DISCONNECTED) {
+                if (peer.getState() != Peer.State.CONNECTED) {
                     addedActivePeer.put("disconnected", true);
                 }
                 addedActivePeer.put("address", Convert.truncate(peer.getPeerAddress(), "-", 25, true));
@@ -339,11 +345,34 @@ public final class Users {
                 JSONObject changedActivePeer = new JSONObject();
                 changedActivePeer.put("index", Users.getIndex(peer));
                 changedActivePeer.put(peer.getState() == Peer.State.CONNECTED ? "connected" : "disconnected", true);
+                changedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                if (peer.isWellKnown()) {
+                    changedActivePeer.put("wellKnown", true);
+                }
                 changedActivePeers.add(changedActivePeer);
                 response.put("changedActivePeers", changedActivePeers);
                 Users.sendNewDataToAll(response);
             }
         }, Peers.Event.CHANGED_ACTIVE_PEER);
+
+        Peers.addListener(new Listener<Peer>() {
+            @Override
+            public void notify(Peer peer) {
+                JSONObject response = new JSONObject();
+                JSONArray addedKnownPeers = new JSONArray();
+                JSONObject addedKnownPeer = new JSONObject();
+                addedKnownPeer.put("index", Users.getIndex(peer));
+                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                if (peer.isWellKnown()) {
+                    addedKnownPeer.put("wellKnown", true);
+                }
+                addedKnownPeer.put("software", peer.getSoftware());
+                addedKnownPeers.add(addedKnownPeer);
+                response.put("addedKnownPeers", addedKnownPeers);
+                Users.sendNewDataToAll(response);
+            }
+        }, Peers.Event.NEW_PEER);
 
     }
 
@@ -533,8 +562,17 @@ public final class Users {
         if (index == null) {
             index = peerCounter.incrementAndGet();
             peerIndexMap.put(peer.getPeerAddress(), index);
+            peerAddressMap.put(index, peer.getPeerAddress());
         }
         return index;
+    }
+
+    static Peer getPeer(int index) {
+        String peerAddress = peerAddressMap.get(index);
+        if (peerAddress == null) {
+            return null;
+        }
+        return Peers.getPeer(peerAddress);
     }
 
     static int getIndex(Block block) {

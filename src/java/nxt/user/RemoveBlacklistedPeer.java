@@ -22,13 +22,9 @@ public final class RemoveBlacklistedPeer extends UserServlet.UserRequestHandler 
             return LOCAL_USERS_ONLY;
         } else {
             int index = Integer.parseInt(req.getParameter("peer"));
-            for (Peer peer : Peers.getAllPeers()) {
-                if (Users.getIndex(peer) == index) {
-                    if (peer.isBlacklisted()) {
-                        peer.unBlacklist();
-                    }
-                    break;
-                }
+            Peer peer = Users.getPeer(index);
+            if (peer != null && peer.isBlacklisted()) {
+                peer.unBlacklist();
             }
         }
         return null;

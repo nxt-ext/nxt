@@ -14,11 +14,12 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
         PeerImpl peerImpl = (PeerImpl)peer;
         String announcedAddress = (String)request.get("announcedAddress");
-        if (announcedAddress != null) {
-            announcedAddress = announcedAddress.trim();
-            if (announcedAddress.length() > 0) {
-                peerImpl.setAnnouncedAddress(announcedAddress);
+        if (announcedAddress != null && (announcedAddress = announcedAddress.trim()).length() > 0) {
+            if (peerImpl.getAnnouncedAddress() != null && ! announcedAddress.equals(peerImpl.getAnnouncedAddress())) {
+                // force verification of changed announced address
+                peerImpl.setState(Peer.State.NON_CONNECTED);
             }
+            peerImpl.setAnnouncedAddress(announcedAddress);
         }
         String application = (String)request.get("application");
         if (application == null) {
@@ -40,7 +41,8 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
 
-        peerImpl.setState(Peer.State.CONNECTED);
+        //peerImpl.setState(Peer.State.CONNECTED);
+        Peers.notifyListeners(peerImpl, Peers.Event.ADDED_ACTIVE_PEER);
 
         return Peers.myPeerInfoResponse;
 

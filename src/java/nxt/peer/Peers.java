@@ -41,7 +41,8 @@ public final class Peers {
     public static enum Event {
         BLACKLIST, UNBLACKLIST, DEACTIVATE, REMOVE,
         DOWNLOADED_VOLUME, UPLOADED_VOLUME, WEIGHT,
-        ADDED_ACTIVE_PEER, CHANGED_ACTIVE_PEER
+        ADDED_ACTIVE_PEER, CHANGED_ACTIVE_PEER,
+        NEW_PEER
     }
 
     static final int LOGGING_MASK_EXCEPTIONS = 1;
@@ -57,7 +58,7 @@ public final class Peers {
     private static final int DEFAULT_PEER_PORT = 7874;
     private static final String myPlatform;
     private static final String myAddress;
-    private static final int myPeerPort;
+    private static final int myPeerServerPort;
     private static final String myHallmark;
     private static final boolean shareMyAddress;
     private static final int maxNumberOfConnectedPublicPeers;
@@ -81,7 +82,7 @@ public final class Peers {
 
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
         myAddress = Nxt.getStringProperty("nxt.myAddress");
-        myPeerPort = Nxt.getIntProperty("nxt.peerServerPort");
+        myPeerServerPort = Nxt.getIntProperty("nxt.peerServerPort");
         shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress");
         myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
@@ -98,7 +99,11 @@ public final class Peers {
 
         JSONObject json = new JSONObject();
         if (Peers.myAddress != null && Peers.myAddress.length() > 0) {
-            json.put("announcedAddress", Peers.myAddress + (Peers.myPeerPort != Peers.DEFAULT_PEER_PORT ? ":" + Peers.myPeerPort : ""));
+            if (Peers.myAddress.indexOf(':') > 0) {
+                json.put("announcedAddress", Peers.myAddress);
+            } else {
+                json.put("announcedAddress", Peers.myAddress + (Peers.myPeerServerPort != Peers.DEFAULT_PEER_PORT ? ":" + Peers.myPeerServerPort : ""));
+            }
         }
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             json.put("hallmark", Peers.myHallmark);
@@ -164,7 +169,7 @@ public final class Peers {
                 try {
                     Server peerServer = new Server();
                     ServerConnector connector = new ServerConnector(peerServer);
-                    connector.setPort(Peers.myPeerPort);
+                    connector.setPort(Peers.myPeerServerPort);
                     String host = Nxt.getStringProperty("nxt.peerServerHost");
                     connector.setHost(host);
                     connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
@@ -181,7 +186,7 @@ public final class Peers {
                     peerServer.setHandler(peerHandler);
                     peerServer.setStopAtShutdown(true);
                     peerServer.start();
-                    Logger.logMessage("Started peer networking server at " + host + ":" + Peers.myPeerPort);
+                    Logger.logMessage("Started peer networking server at " + host + ":" + Peers.myPeerServerPort);
                 } catch (Exception e) {
                     Logger.logDebugMessage("Failed to start peer networking server", e);
                     throw new RuntimeException(e.toString(), e);
@@ -364,6 +369,7 @@ public final class Peers {
         if (peer == null) {
             peer = new PeerImpl(peerAddress, announcedPeerAddress);
             peers.put(peerAddress, peer);
+            listeners.notify(peer, Event.NEW_PEER);
         }
 
         return peer;
@@ -422,7 +428,7 @@ public final class Peers {
 
         List<Peer> selectedPeers = new ArrayList<>();
         for (Peer peer : peers.values()) {
-            if (! peer.isBlacklisted() && peer.getState() == state && peer.getAnnouncedAddress() != null
+            if (! peer.isBlacklisted() && peer.getState() == state /*&& peer.getAnnouncedAddress() != null*/
                     && (!applyPullThreshold || ! Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold)) {
                 selectedPeers.add(peer);
             }

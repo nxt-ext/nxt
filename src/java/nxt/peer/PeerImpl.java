@@ -24,9 +24,12 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -68,11 +71,14 @@ final class PeerImpl implements Peer {
     }
 
     void setState(State state) {
-        State oldState = this.state;
-        this.state = state;
-        if (oldState == State.NON_CONNECTED && state != State.NON_CONNECTED) {
+        if (this.state == state) {
+            return;
+        }
+        if (this.state == State.NON_CONNECTED) {
+            this.state = state;
             Peers.notifyListeners(this, Peers.Event.ADDED_ACTIVE_PEER);
-        } else if (oldState != State.NON_CONNECTED && state != State.NON_CONNECTED) {
+        } else if (state != State.NON_CONNECTED) {
+            this.state = state;
             Peers.notifyListeners(this, Peers.Event.CHANGED_ACTIVE_PEER);
         }
     }
@@ -83,7 +89,9 @@ final class PeerImpl implements Peer {
     }
 
     void updateDownloadedVolume(long volume) {
-        downloadedVolume += volume;
+        synchronized (this) {
+            downloadedVolume += volume;
+        }
         Peers.notifyListeners(this, Peers.Event.DOWNLOADED_VOLUME);
     }
 
@@ -93,7 +101,9 @@ final class PeerImpl implements Peer {
     }
 
     void updateUploadedVolume(long volume) {
-        uploadedVolume += volume;
+        synchronized (this) {
+            uploadedVolume += volume;
+        }
         Peers.notifyListeners(this, Peers.Event.UPLOADED_VOLUME);
     }
 
@@ -202,7 +212,8 @@ final class PeerImpl implements Peer {
     @Override
     public void blacklist() {
         blacklistingTime = System.currentTimeMillis();
-        deactivate();
+        setState(State.NON_CONNECTED);
+        //deactivate();
         Peers.notifyListeners(this, Peers.Event.BLACKLIST);
     }
 
@@ -221,9 +232,11 @@ final class PeerImpl implements Peer {
 
     @Override
     public void deactivate() {
+        /*
         if (state == State.CONNECTED) {
             setState(State.DISCONNECTED);
         }
+        */
         setState(State.NON_CONNECTED);
         Peers.notifyListeners(this, Peers.Event.DEACTIVATE);
     }
@@ -245,13 +258,15 @@ final class PeerImpl implements Peer {
 
         try {
 
+            String address = announcedAddress != null ? announcedAddress : peerAddress;
+
             if (Peers.communicationLoggingMask != 0) {
                 StringWriter stringWriter = new StringWriter();
                 request.writeJSONString(stringWriter);
-                log = "\"" + announcedAddress + "\": " + stringWriter.toString();
+                log = "\"" + address + "\": " + stringWriter.toString();
             }
 
-            URL url = new URL("http://" + announcedAddress + (port <= 0 ? ":7874" : "") + "/nxt");
+            URL url = new URL("http://" + address + (port <= 0 ? ":7874" : "") + "/nxt");
             /**///URL url = new URL("http://" + announcedAddress + ":6874" + "/nxt");
             connection = (HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
@@ -299,7 +314,11 @@ final class PeerImpl implements Peer {
                     log += " >>> Peer responded with HTTP " + connection.getResponseCode() + " code!";
                     showLog = true;
                 }
-                setState(State.DISCONNECTED);
+                if (state == State.CONNECTED) {
+                    setState(State.DISCONNECTED);
+                } else {
+                    setState(State.NON_CONNECTED);
+                }
                 response = null;
 
             }
@@ -314,7 +333,7 @@ final class PeerImpl implements Peer {
             }
             if (state == State.NON_CONNECTED) {
                 blacklist();
-            } else {
+            } else if (state == State.CONNECTED) {
                 setState(State.DISCONNECTED);
             }
             response = null;
@@ -349,11 +368,17 @@ final class PeerImpl implements Peer {
             version = (String)response.get("version");
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
+            if (announcedAddress == null) {
+                setAnnouncedAddress(peerAddress);
+                Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
+            }
             if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
             } else {
                 blacklist();
             }
+        } else {
+            setState(State.NON_CONNECTED);
         }
     }
 
@@ -373,8 +398,13 @@ final class PeerImpl implements Peer {
         }
 
         try {
+            URI uri = new URI("http://" + address.trim());
+            String host = uri.getHost();
+
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
-            if (! hallmark.isValid() || ! hallmark.getHost().equals(address)) {
+            if (! hallmark.isValid()
+                    || ! (hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
+                Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
                 return false;
             }
             this.hallmark = hallmark;
@@ -404,8 +434,8 @@ final class PeerImpl implements Peer {
 
             return true;
 
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage("Failed to analyze hallmark for peer " + announcedAddress + ", " + e.toString());
+        } catch (URISyntaxException | UnknownHostException | RuntimeException e) {
+            Logger.logDebugMessage("Failed to analyze hallmark for peer " + address + ", " + e.toString());
         }
         return false;
 

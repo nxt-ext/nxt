@@ -32,6 +32,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("state", peer.getState().ordinal());
         response.put("announcedAddress", peer.getAnnouncedAddress());
+        response.put("shareAddress", peer.shareAddress());
         if (peer.getHallmark() != null) {
             response.put("hallmark", peer.getHallmark());
         }

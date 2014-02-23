@@ -22,11 +22,9 @@ public final class RemoveKnownPeer extends UserServlet.UserRequestHandler {
             return LOCAL_USERS_ONLY;
         } else {
             int index = Integer.parseInt(req.getParameter("peer"));
-            for (Peer peer : Peers.getAllPeers()) {
-                if (Users.getIndex(peer) == index) {
-                    peer.remove();
-                    break;
-                }
+            Peer peer = Users.getPeer(index);
+            if (peer != null) {
+                peer.remove();
             }
         }
         return null;

@@ -62,19 +62,15 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
 
             } else if (peer.getState() == Peer.State.NON_CONNECTED) {
 
-                if (peer.getAnnouncedAddress() != null) {
-
-                    JSONObject knownPeer = new JSONObject();
-                    knownPeer.put("index", Users.getIndex(peer));
-                    knownPeer.put("address", peer.getPeerAddress());
-                    knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
-                    knownPeer.put("software", peer.getSoftware());
-                    if (peer.isWellKnown()) {
-                        knownPeer.put("wellKnown", true);
-                    }
-                    knownPeers.add(knownPeer);
-
+                JSONObject knownPeer = new JSONObject();
+                knownPeer.put("index", Users.getIndex(peer));
+                knownPeer.put("address", peer.getPeerAddress());
+                knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
+                knownPeer.put("software", peer.getSoftware());
+                if (peer.isWellKnown()) {
+                    knownPeer.put("wellKnown", true);
                 }
+                knownPeers.add(knownPeer);
 
             } else {
 
