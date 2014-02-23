@@ -117,6 +117,25 @@
     <div class="result"></div>
 </form>
 <hr>
+<b>Generate Token:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="generateToken"/>
+    <table>
+        <tr>
+            <td>Website:</td>
+            <td><input type="text" name="website"/></td>
+        </tr>
+        <tr>
+            <td>Secret Phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
 <b>Verify Token:</b><br/>
 <form action="/nxt" method="GET" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="decodeToken"/>

@@ -38,6 +38,7 @@ public final class APIServlet extends HttpServlet {
         map.put("createPoll", CreatePoll.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
+        map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountId", GetAccountId.instance);
