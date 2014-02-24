@@ -330,9 +330,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, Event.BLOCK_SCANNED);
 
-        addGenesisBlock();
-        scan();
+        ThreadPool.runBeforeStart(new Runnable() {
+            @Override
+            public void run() {
+                addGenesisBlock();
+                scan();
+            }
+        });
+
         ThreadPool.scheduleThread(getMoreBlocksThread, 1);
+
     }
 
     @Override
@@ -764,7 +771,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void scan() {
         synchronized (blockchain) {
-            Logger.logDebugMessage("Scanning blockchain...");
+            Logger.logMessage("Scanning blockchain...");
             Account.clear();
             Alias.clear();
             Asset.clear();
@@ -790,7 +797,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (NxtException.ValidationException|SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
-            Logger.logDebugMessage("...done");
+            Logger.logMessage("...done");
         }
     }
 

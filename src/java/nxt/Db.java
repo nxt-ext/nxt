@@ -33,7 +33,7 @@ final class Db {
             try (Connection con = cp.getConnection();
                  Statement stmt = con.createStatement()) {
                 stmt.execute("SHUTDOWN COMPACT");
-                Logger.logDebugMessage("Database shutdown completed");
+                Logger.logMessage("Database shutdown completed");
             } catch (SQLException e) {
                 Logger.logDebugMessage(e.toString(), e);
             }

@@ -88,12 +88,17 @@ public final class Peers {
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
-                if (! hallmark.isValid()) {
+                if (! hallmark.isValid() || myAddress == null) {
                     throw new RuntimeException();
                 }
-            } catch (RuntimeException e) {
-                Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark);
-                throw e;
+                URI uri = new URI("http://" + myAddress.trim());
+                String host = uri.getHost();
+                if (! hallmark.getHost().equals(host)) {
+                    throw new RuntimeException();
+                }
+            } catch (RuntimeException|URISyntaxException e) {
+                Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
+                throw new RuntimeException(e.toString(), e);
             }
         }
 
@@ -166,31 +171,36 @@ public final class Peers {
 
         static {
             if (Peers.shareMyAddress) {
-                try {
-                    Server peerServer = new Server();
-                    ServerConnector connector = new ServerConnector(peerServer);
-                    connector.setPort(Peers.myPeerServerPort);
-                    String host = Nxt.getStringProperty("nxt.peerServerHost");
-                    connector.setHost(host);
-                    connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
-                    peerServer.addConnector(connector);
+                final Server peerServer = new Server();
+                ServerConnector connector = new ServerConnector(peerServer);
+                connector.setPort(Peers.myPeerServerPort);
+                final String host = Nxt.getStringProperty("nxt.peerServerHost");
+                connector.setHost(host);
+                connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
+                peerServer.addConnector(connector);
 
-                    ServletHandler peerHandler = new ServletHandler();
-                    peerHandler.addServletWithMapping(PeerServlet.class, "/*");
-                    FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
-                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
-                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
-                    filterHolder.setInitParameter("trackSessions", "false");
-                    filterHolder.setAsyncSupported(true);
+                ServletHandler peerHandler = new ServletHandler();
+                peerHandler.addServletWithMapping(PeerServlet.class, "/*");
+                FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
+                filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
+                filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
+                filterHolder.setInitParameter("trackSessions", "false");
+                filterHolder.setAsyncSupported(true);
 
-                    peerServer.setHandler(peerHandler);
-                    peerServer.setStopAtShutdown(true);
-                    peerServer.start();
-                    Logger.logMessage("Started peer networking server at " + host + ":" + Peers.myPeerServerPort);
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Failed to start peer networking server", e);
-                    throw new RuntimeException(e.toString(), e);
-                }
+                peerServer.setHandler(peerHandler);
+                peerServer.setStopAtShutdown(true);
+                ThreadPool.runBeforeStart(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            peerServer.start();
+                            Logger.logMessage("Started peer networking server at " + host + ":" + Peers.myPeerServerPort);
+                        } catch (Exception e) {
+                            Logger.logDebugMessage("Failed to start peer networking server", e);
+                            throw new RuntimeException(e.toString(), e);
+                        }
+                    }
+                });
             } else {
                 Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
             }

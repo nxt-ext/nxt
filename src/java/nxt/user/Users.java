@@ -12,6 +12,7 @@ import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
+import nxt.util.ThreadPool;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -78,79 +79,86 @@ public final class Users {
 
         boolean enableUIServer = Nxt.getBooleanProperty("nxt.enableUIServer");
         if (enableUIServer) {
-            try {
-                int port = Nxt.getIntProperty("nxt.uiServerPort");
-                String host = Nxt.getStringProperty("nxt.uiServerHost");
-                Server userServer = new Server();
-                ServerConnector connector;
+            final int port = Nxt.getIntProperty("nxt.uiServerPort");
+            final String host = Nxt.getStringProperty("nxt.uiServerHost");
+            final Server userServer = new Server();
+            ServerConnector connector;
 
-                boolean enableSSL = Nxt.getBooleanProperty("nxt.uiSSL");
-                if (enableSSL) {
-                    Logger.logMessage("Using SSL (https) for the user interface server");
-                    HttpConfiguration https_config = new HttpConfiguration();
-                    https_config.setSecureScheme("https");
-                    https_config.setSecurePort(port);
-                    https_config.addCustomizer(new SecureRequestCustomizer());
-                    SslContextFactory sslContextFactory = new SslContextFactory();
-                    sslContextFactory.setKeyStorePath(Nxt.getStringProperty("nxt.keyStorePath"));
-                    sslContextFactory.setKeyStorePassword(Nxt.getStringProperty("nxt.keyStorePassword"));
-                    sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
-                            "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
-                            "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
-                    connector = new ServerConnector(userServer, new SslConnectionFactory(sslContextFactory, "http/1.1"),
-                            new HttpConnectionFactory(https_config));
-                } else {
-                    connector = new ServerConnector(userServer);
-                }
-
-                connector.setPort(port);
-                connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.uiServerIdleTimeout"));
-                userServer.addConnector(connector);
-
-
-                HandlerList userHandlers = new HandlerList();
-
-                ResourceHandler userFileHandler = new ResourceHandler();
-                userFileHandler.setDirectoriesListed(false);
-                userFileHandler.setWelcomeFiles(new String[]{"index.html"});
-                userFileHandler.setResourceBase(Nxt.getStringProperty("nxt.uiResourceBase"));
-
-                userHandlers.addHandler(userFileHandler);
-
-                String javadocResourceBase = Nxt.getStringProperty("nxt.javadocResourceBase");
-                if (javadocResourceBase != null) {
-                    ContextHandler contextHandler = new ContextHandler("/doc");
-                    ResourceHandler docFileHandler = new ResourceHandler();
-                    docFileHandler.setDirectoriesListed(false);
-                    docFileHandler.setWelcomeFiles(new String[]{"index.html"});
-                    docFileHandler.setResourceBase(javadocResourceBase);
-                    contextHandler.setHandler(docFileHandler);
-                    userHandlers.addHandler(contextHandler);
-                }
-
-                ServletHandler userHandler = new ServletHandler();
-                ServletHolder userHolder = userHandler.addServletWithMapping(UserServlet.class, "/nxt");
-                userHolder.setAsyncSupported(true);
-
-                if (Nxt.getBooleanProperty("nxt.uiServerCORS")) {
-                    FilterHolder filterHolder = userHandler.addFilterWithMapping(CrossOriginFilter.class, "/*", FilterMapping.DEFAULT);
-                    filterHolder.setInitParameter("allowedHeaders", "*");
-                    filterHolder.setAsyncSupported(true);
-                }
-
-                userHandlers.addHandler(userHandler);
-
-                userHandlers.addHandler(new DefaultHandler());
-
-                userServer.setHandler(userHandlers);
-                userServer.setStopAtShutdown(true);
-                userServer.start();
-                Logger.logMessage("Started user interface server at " + host + ":" + port);
-            } catch (Exception e) {
-                Logger.logDebugMessage("Failed to start user interface server", e);
-                throw new RuntimeException(e.toString(), e);
+            boolean enableSSL = Nxt.getBooleanProperty("nxt.uiSSL");
+            if (enableSSL) {
+                Logger.logMessage("Using SSL (https) for the user interface server");
+                HttpConfiguration https_config = new HttpConfiguration();
+                https_config.setSecureScheme("https");
+                https_config.setSecurePort(port);
+                https_config.addCustomizer(new SecureRequestCustomizer());
+                SslContextFactory sslContextFactory = new SslContextFactory();
+                sslContextFactory.setKeyStorePath(Nxt.getStringProperty("nxt.keyStorePath"));
+                sslContextFactory.setKeyStorePassword(Nxt.getStringProperty("nxt.keyStorePassword"));
+                sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+                        "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                        "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
+                connector = new ServerConnector(userServer, new SslConnectionFactory(sslContextFactory, "http/1.1"),
+                        new HttpConnectionFactory(https_config));
+            } else {
+                connector = new ServerConnector(userServer);
             }
+
+            connector.setPort(port);
+            connector.setHost(host);
+            connector.setIdleTimeout(Nxt.getIntProperty("nxt.uiServerIdleTimeout"));
+            userServer.addConnector(connector);
+
+
+            HandlerList userHandlers = new HandlerList();
+
+            ResourceHandler userFileHandler = new ResourceHandler();
+            userFileHandler.setDirectoriesListed(false);
+            userFileHandler.setWelcomeFiles(new String[]{"index.html"});
+            userFileHandler.setResourceBase(Nxt.getStringProperty("nxt.uiResourceBase"));
+
+            userHandlers.addHandler(userFileHandler);
+
+            String javadocResourceBase = Nxt.getStringProperty("nxt.javadocResourceBase");
+            if (javadocResourceBase != null) {
+                ContextHandler contextHandler = new ContextHandler("/doc");
+                ResourceHandler docFileHandler = new ResourceHandler();
+                docFileHandler.setDirectoriesListed(false);
+                docFileHandler.setWelcomeFiles(new String[]{"index.html"});
+                docFileHandler.setResourceBase(javadocResourceBase);
+                contextHandler.setHandler(docFileHandler);
+                userHandlers.addHandler(contextHandler);
+            }
+
+            ServletHandler userHandler = new ServletHandler();
+            ServletHolder userHolder = userHandler.addServletWithMapping(UserServlet.class, "/nxt");
+            userHolder.setAsyncSupported(true);
+
+            if (Nxt.getBooleanProperty("nxt.uiServerCORS")) {
+                FilterHolder filterHolder = userHandler.addFilterWithMapping(CrossOriginFilter.class, "/*", FilterMapping.DEFAULT);
+                filterHolder.setInitParameter("allowedHeaders", "*");
+                filterHolder.setAsyncSupported(true);
+            }
+
+            userHandlers.addHandler(userHandler);
+
+            userHandlers.addHandler(new DefaultHandler());
+
+            userServer.setHandler(userHandlers);
+            userServer.setStopAtShutdown(true);
+
+            ThreadPool.runBeforeStart(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        userServer.start();
+                        Logger.logMessage("Started user interface server at " + host + ":" + port);
+                    } catch (Exception e) {
+                        Logger.logDebugMessage("Failed to start user interface server", e);
+                        throw new RuntimeException(e.toString(), e);
+                    }
+                }
+            });
+
         } else {
             Logger.logMessage("User interface server not enabled");
         }

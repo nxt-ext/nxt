@@ -124,10 +124,13 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Nxt.shutdown();
+            }
+        }));
         init();
-        if (args.length == 1 && "reset".equalsIgnoreCase(args[0])) {
-            getBlockchainProcessor().fullReset();
-        }
     }
 
     public static void init(Properties customProperties) {
@@ -139,7 +142,7 @@ public final class Nxt {
         Init.init();
     }
 
-    private static void shutdown() {
+    public static void shutdown() {
         Peers.shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
@@ -159,13 +162,6 @@ public final class Nxt {
                 System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
                 Logger.logDebugMessage("jetty logging disabled");
             }
-
-            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Nxt.shutdown();
-                }
-            }));
 
             Db.init();
             BlockchainProcessorImpl.getInstance();
