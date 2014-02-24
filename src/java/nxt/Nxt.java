@@ -6,6 +6,7 @@ import nxt.user.Users;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
@@ -13,7 +14,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.8.0e";
+    public static final String VERSION = "0.8.1e";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -60,7 +61,20 @@ public final class Nxt {
     private static final Properties defaultProperties = new Properties();
     static {
         try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt-default.properties")) {
-            Nxt.defaultProperties.load(is);
+            if (is != null) {
+                Nxt.defaultProperties.load(is);
+            } else {
+                String configFile = System.getProperty("nxt-default.properties");
+                if (configFile != null) {
+                    try (InputStream fis = new FileInputStream(configFile)) {
+                        Nxt.defaultProperties.load(fis);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error loading nxt-default.properties from " + configFile);
+                    }
+                } else {
+                    throw new RuntimeException("nxt-default.properties not in classpath and system property nxt-default.properties not defined either");
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error loading nxt-default.properties", e);
         }

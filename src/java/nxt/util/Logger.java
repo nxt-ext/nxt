@@ -35,7 +35,7 @@ public final class Logger {
         enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces");
         try {
             fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log"))))), true);
-        } catch (IOException e) {
+        } catch (IOException|RuntimeException e) {
             logMessage("Logging to file not possible, will log to stdout only", e);
         }
         logMessage("Debug logging " + (debug ? "enabled" : "disabled"));
