@@ -34,7 +34,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
         response.put("announcedAddress", peer.getAnnouncedAddress());
         response.put("shareAddress", peer.shareAddress());
         if (peer.getHallmark() != null) {
-            response.put("hallmark", peer.getHallmark());
+            response.put("hallmark", peer.getHallmark().getHallmarkString());
         }
         response.put("weight", peer.getWeight());
         response.put("downloadedVolume", peer.getDownloadedVolume());
