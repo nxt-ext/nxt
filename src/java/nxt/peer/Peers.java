@@ -131,15 +131,20 @@ public final class Peers {
                 }
             }
         } else {
-            Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org and nxtbase.com nodes");
+            Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org, nxtbase.com and mynxt.info nodes");
             for (int i = 1; i <= 12; i++) {
                 if (ThreadLocalRandom.current().nextInt(4) == 1) {
                     addresses.add("vps" + i + ".nxtcrypto.org");
                 }
             }
-            for (int i = 1; i <= 99; i++) {
+            for (int i = 1; i <= 100; i++) {
                 if (ThreadLocalRandom.current().nextInt(10) == 1) {
                     addresses.add("node" + i + ".nxtbase.com");
+                }
+            }
+            for (int i = 1; i <= 20; i++) {
+                if (ThreadLocalRandom.current().nextInt(4) == 1) {
+                    addresses.add("node" + i + ".mynxt.info");
                 }
             }
         }
