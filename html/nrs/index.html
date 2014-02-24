@@ -270,7 +270,10 @@
 			
 			function sendRequest(requestParameters) {
 				var request = new XMLHttpRequest();
-				request.open("GET", "nxt?user=" + user + "&requestType=" + requestParameters + "&" + Math.random());
+				var params = "user=" + user + "&requestType=" + requestParameters + "&" + Math.random();
+				request.open("POST", "/nxt");
+				request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                request.setRequestHeader("Content-length", params.length);
 				request.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						if (--numberOfPendingRequests < 1) {
@@ -461,7 +464,7 @@
 					}
 				};
 				numberOfPendingRequests++;
-				request.send();
+				request.send(params);
 			}
 			
 			function setSelectedAsset(assetId) {
