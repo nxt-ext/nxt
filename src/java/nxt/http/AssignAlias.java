@@ -122,4 +122,9 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

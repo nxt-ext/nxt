@@ -1,7 +1,6 @@
 package nxt.user;
 
 import nxt.peer.Peer;
-import nxt.peer.Peers;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;

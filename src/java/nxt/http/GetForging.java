@@ -9,8 +9,8 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.NOT_FORGING;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 
 public final class GetForging extends APIServlet.APIRequestHandler {
@@ -40,6 +40,11 @@ public final class GetForging extends APIServlet.APIRequestHandler {
         response.put("deadline", generator.getDeadline());
         return response;
 
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

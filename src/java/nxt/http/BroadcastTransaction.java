@@ -42,4 +42,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         }
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

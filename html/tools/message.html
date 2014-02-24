@@ -73,26 +73,28 @@ function sendMessage(form) {
     document.getElementById('submit').disabled = true;
     document.getElementById('submit').value = 'Submitting... Please wait.';
 
-    var url = '/nxt?';
+    var params = '';
     for (i = 0; i < form.elements.length; i++) {
         if (!form.elements[i].name) {
             continue;
         }
-        if (!url.endsWith('?')) {
-            url += '&';
+        if (i > 0) {
+            params += '&';
         }
-        url += encodeURIComponent(form.elements[i].name);
-        url += '=';
+        params += encodeURIComponent(form.elements[i].name);
+        params += '=';
         if (form.elements[i].name == 'message') {
-            url += encodeURIComponent(convertToHex(form.elements[i].value));
+            params += encodeURIComponent(convertToHex(form.elements[i].value));
         } else {
-            url += encodeURIComponent(form.elements[i].value);
+            params += encodeURIComponent(form.elements[i].value);
         }
     }
-    url += '&r=' + Math.random();    
+    params += '&r=' + Math.random();
     var request = new XMLHttpRequest();
-    request.open("GET", url, false);
-    request.send();
+    request.open("POST", "/nxt", false);
+    request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    request.setRequestHeader("Content-length", params.length);
+    request.send(params);
     var result = JSON.stringify(JSON.parse(request.responseText), null, 4);
     document.getElementById('result').innerHTML = result;
     document.getElementById('submit').disabled = false;

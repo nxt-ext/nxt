@@ -125,6 +125,15 @@ public final class JSONResponses {
         NOT_FORGING = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware POST_REQUIRED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 1);
+        response.put("errorDescription", "This request is only accepted using POST!");
+        POST_REQUIRED = JSON.prepare(response);
+    }
+
+
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

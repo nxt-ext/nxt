@@ -105,4 +105,9 @@ public final class CancelAskOrder extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

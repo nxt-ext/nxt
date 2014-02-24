@@ -32,4 +32,9 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

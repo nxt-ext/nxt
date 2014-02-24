@@ -31,4 +31,9 @@ public final class StopForging extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

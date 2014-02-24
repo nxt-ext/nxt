@@ -67,4 +67,9 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

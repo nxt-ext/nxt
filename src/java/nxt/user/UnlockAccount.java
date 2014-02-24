@@ -170,4 +170,9 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

@@ -10,21 +10,24 @@
     </style>
     <script type="text/javascript">
         function submitForm(form) {
-            var url = '/nxt?';
+            var url = '/nxt';
+            var params = '';
             for (i = 0; i < form.elements.length; i++) {
                 if (! form.elements[i].name) {
                     continue;
                 }
-                if (! url.endsWith('?')) {
-                    url += '&';
+                if (i > 0) {
+                    params += '&';
                 }
-                url += encodeURIComponent(form.elements[i].name);
-                url += '=';
-                url += encodeURIComponent(form.elements[i].value);
+                params += encodeURIComponent(form.elements[i].name);
+                params += '=';
+                params += encodeURIComponent(form.elements[i].value);
             }
             var request = new XMLHttpRequest();
-            request.open("GET", url, false);
-            request.send();
+            request.open("POST", url, false);
+            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            request.setRequestHeader("Content-length", params.length);
+            request.send(params);
             var result = JSON.stringify(JSON.parse(request.responseText), null, 4);
             form.getElementsByClassName("result")[0].textContent = result;
             return false;
@@ -76,7 +79,7 @@
 <body>
 <h3>Nxt admin tools</h3>
 <b>Generate Hallmark:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="markHost"/>
     <table>
         <tr>
@@ -103,7 +106,7 @@
 </form>
 <hr>
 <b>Verify Hallmark:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="decodeHallmark"/>
     <table>
         <tr>
@@ -118,7 +121,7 @@
 </form>
 <hr>
 <b>Generate Token:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="generateToken"/>
     <table>
         <tr>
@@ -137,7 +140,7 @@
 </form>
 <hr>
 <b>Verify Token:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="decodeToken"/>
     <table>
         <tr>
@@ -156,7 +159,7 @@
 </form>
 <hr>
 <b>Get Peers:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getPeers"/>
     <table>
         <tr>
@@ -167,7 +170,7 @@
 </form>
 <hr>
 <b>Get Peer Info:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getPeer"/>
     <table>
         <tr>
@@ -182,7 +185,7 @@
 </form>
 <hr>
 <b>Get State:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getState"/>
     <table>
         <tr>
@@ -193,7 +196,7 @@
 </form>
 <hr>
 <b>Get My Info:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getMyInfo"/>
     <table>
         <tr>
@@ -204,7 +207,7 @@
 </form>
 <hr>
 <b>Get Account Balance:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getBalance"/>
     <table>
         <tr>
@@ -233,7 +236,7 @@
 </form>
 <hr>
 <b>Get Guaranteed Account Balance:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getGuaranteedBalance"/>
     <table>
         <tr>
@@ -252,7 +255,7 @@
 </form>
 <hr>
 <b>Get Account Public Key:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getAccountPublicKey"/>
     <table>
         <tr>
@@ -267,7 +270,7 @@
 </form>
 <hr>
 <b>Get Account Aliases:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="listAccountAliases"/>
     <table>
         <tr>
@@ -282,7 +285,7 @@
 </form>
 <hr>
 <b>Get Alias URI:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getAliasURI"/>
     <table>
         <tr>
@@ -297,7 +300,7 @@
 </form>
 <hr>
 <b>Send Money:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="sendMoney"/>
     <table>
         <tr>
@@ -328,7 +331,7 @@
 </form>
 <hr>
 <b>Start Forging:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="startForging"/>
     <table>
         <tr>
@@ -343,7 +346,7 @@
 </form>
 <hr>
 <b>Stop Forging:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="stopForging"/>
     <table>
         <tr>
@@ -358,7 +361,7 @@
 </form>
 <hr>
 <b>Get Forging Deadline:</b><br/>
-<form action="/nxt" method="GET" onsubmit="return submitForm(this);">
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
     <input type="hidden" name="requestType" value="getForging"/>
     <table>
         <tr>

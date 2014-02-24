@@ -30,4 +30,10 @@ public final class GenerateAuthorizationToken extends UserServlet.UserRequestHan
 
         return response;
     }
+
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

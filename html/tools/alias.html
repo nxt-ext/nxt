@@ -12,18 +12,21 @@
 				var uri = document.getElementById("uri").value;
 				var fee = document.getElementById("fee").value;
 				var deadline = document.getElementById("deadline").value;
-				sendRequest("assignAlias&secretPhrase=" + encodeURIComponent(secretPhrase) + "&alias=" + encodeURIComponent(alias) + "&uri=" + encodeURIComponent(uri) + "&fee=" + fee + "&deadline=" + deadline);
+				sendRequest("requestType=assignAlias&secretPhrase=" + encodeURIComponent(secretPhrase) + "&alias=" + encodeURIComponent(alias) + "&uri=" + encodeURIComponent(uri) + "&fee=" + fee + "&deadline=" + deadline);
 			}
 			function sendRequest(requestParameters) {
 				var request = new XMLHttpRequest();
-				request.open("GET", "/nxt?requestType=" + requestParameters + "&" + Math.random());
+				requestParameters += "&" + Math.random();
+				request.open("POST", "/nxt");
+	            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                request.setRequestHeader("Content-length", requestParameters.length);
 				request.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						document.getElementById("response").value = this.responseText;
 						document.getElementById("ok").disabled = false;
 					}
 				};
-				request.send();
+				request.send(requestParameters);
 			}
 		</script>
 	</head>

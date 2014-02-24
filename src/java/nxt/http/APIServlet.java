@@ -1,6 +1,8 @@
 package nxt.http;
 
+import nxt.Nxt;
 import nxt.NxtException;
+import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONStreamAware;
 
@@ -16,13 +18,19 @@ import java.util.Map;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
+import static nxt.http.JSONResponses.POST_REQUIRED;
 
 public final class APIServlet extends HttpServlet {
 
     // not an interface in order for processRequest to be package-local, not public
     abstract static class APIRequestHandler {
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException, IOException;
+        boolean requirePost() {
+            return false;
+        }
     }
+
+    private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
 
     private static final Map<String,APIRequestHandler> apiRequestHandlers;
 
@@ -88,42 +96,58 @@ public final class APIServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        process(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        process(req, resp);
+    }
+
+    private void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
-        JSONStreamAware response;
+        JSONStreamAware response = JSON.emptyJSON;
 
-        if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
-            response = ERROR_NOT_ALLOWED;
-        } else {
+        try {
+
+            if (API.allowedBotHosts != null && ! API.allowedBotHosts.contains(req.getRemoteHost())) {
+                response = ERROR_NOT_ALLOWED;
+                return;
+            }
 
             String requestType = req.getParameter("requestType");
             if (requestType == null) {
                 response = ERROR_INCORRECT_REQUEST;
-            } else {
-
-                APIRequestHandler apiRequestHandler = apiRequestHandlers.get(requestType);
-                if (apiRequestHandler != null) {
-                    try {
-                        response = apiRequestHandler.processRequest(req);
-                    } catch (NxtException |RuntimeException e) {
-                        Logger.logDebugMessage("Error processing API request", e);
-                        response = ERROR_INCORRECT_REQUEST;
-                    }
-                } else {
-                    response = ERROR_INCORRECT_REQUEST;
-                }
-
+                return;
             }
 
-        }
+            APIRequestHandler apiRequestHandler = apiRequestHandlers.get(requestType);
+            if (apiRequestHandler == null) {
+                response = ERROR_INCORRECT_REQUEST;
+                return;
+            }
 
-        resp.setContentType("text/plain; charset=UTF-8");
+            if (enforcePost && apiRequestHandler.requirePost() && ! "POST".equals(req.getMethod())) {
+                response = POST_REQUIRED;
+                return;
+            }
 
-        try (Writer writer = resp.getWriter()) {
-            response.writeJSONString(writer);
+            try {
+                response = apiRequestHandler.processRequest(req);
+            } catch (NxtException |RuntimeException e) {
+                Logger.logDebugMessage("Error processing API request", e);
+                response = ERROR_INCORRECT_REQUEST;
+            }
+
+        } finally {
+            resp.setContentType("text/plain; charset=UTF-8");
+            try (Writer writer = resp.getWriter()) {
+                response.writeJSONString(writer);
+            }
         }
 
     }

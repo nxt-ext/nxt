@@ -132,4 +132,9 @@ public final class PlaceBidOrder extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

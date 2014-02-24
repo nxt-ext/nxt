@@ -111,4 +111,9 @@ public final class IssueAsset extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

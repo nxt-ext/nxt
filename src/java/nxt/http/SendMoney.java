@@ -115,4 +115,9 @@ public final class SendMoney extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

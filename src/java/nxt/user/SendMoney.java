@@ -133,4 +133,9 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
         }
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
 }

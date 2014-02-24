@@ -51,6 +51,14 @@ public final class JSONResponses {
         INCORRECT_REQUEST = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware POST_REQUIRED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("response", "showMessage");
+        response.put("message", "This request is only accepted using POST!");
+        POST_REQUIRED = JSON.prepare(response);
+    }
+
     private JSONResponses() {} // never
 
 }

@@ -1,5 +1,6 @@
 package nxt.user;
 
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -16,12 +17,18 @@ import java.util.Map;
 
 import static nxt.user.JSONResponses.DENY_ACCESS;
 import static nxt.user.JSONResponses.INCORRECT_REQUEST;
+import static nxt.user.JSONResponses.POST_REQUIRED;
 
 public final class UserServlet extends HttpServlet  {
 
     abstract static class UserRequestHandler {
         abstract JSONStreamAware processRequest(HttpServletRequest request, User user) throws NxtException, IOException;
+        boolean requirePost() {
+            return false;
+        }
     }
+
+    private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.uiServerEnforcePOST");
 
     private static final Map<String,UserRequestHandler> userRequestHandlers;
 
@@ -41,6 +48,15 @@ public final class UserServlet extends HttpServlet  {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        process(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        process(req, resp);
+    }
+
+    private void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
@@ -70,6 +86,11 @@ public final class UserServlet extends HttpServlet  {
             UserRequestHandler userRequestHandler = userRequestHandlers.get(requestType);
             if (userRequestHandler == null) {
                 user.enqueue(INCORRECT_REQUEST);
+                return;
+            }
+
+            if (enforcePost && userRequestHandler.requirePost() && ! "POST".equals(req.getMethod())) {
+                user.enqueue(POST_REQUIRED);
                 return;
             }
 
