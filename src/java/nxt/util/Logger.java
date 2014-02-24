@@ -44,12 +44,20 @@ public final class Logger {
 
     private Logger() {} //never
 
-    public static void addMessageListener(Listener<String> listener, Event eventType) {
-        messageListeners.addListener(listener, eventType);
+    public static boolean addMessageListener(Listener<String> listener, Event eventType) {
+        return messageListeners.addListener(listener, eventType);
     }
 
-    public static void addExceptionListener(Listener<Exception> listener, Event eventType) {
-        exceptionListeners.addListener(listener, eventType);
+    public static boolean addExceptionListener(Listener<Exception> listener, Event eventType) {
+        return exceptionListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeMessageListener(Listener<String> listener, Event eventType) {
+        return messageListeners.removeListener(listener, eventType);
+    }
+
+    public static boolean removeExceptionListener(Listener<Exception> listener, Event eventType) {
+        return exceptionListeners.removeListener(listener, eventType);
     }
 
     public static void logMessage(String message) {
@@ -64,7 +72,10 @@ public final class Logger {
     public static void logMessage(String message, Exception e) {
         if (enableStackTraces) {
             logMessage(message);
-            e.printStackTrace();
+            e.printStackTrace(System.out);
+            if (fileLog != null) {
+                e.printStackTrace(fileLog);
+            }
         } else {
             logMessage(message + ":\n" + e.toString());
         }
@@ -80,7 +91,10 @@ public final class Logger {
     public static void logDebugMessage(String message, Exception e) {
         if (enableStackTraces) {
             logMessage("DEBUG: " + message);
-            e.printStackTrace();
+            e.printStackTrace(System.out);
+            if (fileLog != null) {
+                e.printStackTrace(fileLog);
+            }
         } else if (debug) {
             logMessage("DEBUG: " + message + ":\n" + e.toString());
         }
