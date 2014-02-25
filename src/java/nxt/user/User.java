@@ -12,7 +12,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -68,7 +67,7 @@ final class User {
         return Account.getId(publicKey);
     }
 
-    synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    synchronized void processPendingResponses(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         JSONArray responses = new JSONArray();
         JSONStreamAware pendingResponse;
         while ((pendingResponse = pendingResponses.poll()) != null) {

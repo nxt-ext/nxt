@@ -13,7 +13,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -33,7 +32,7 @@ public final class CastVote extends APIServlet.APIRequestHandler {
     private CastVote() {}
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException, IOException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String pollValue = req.getParameter("poll");
@@ -57,6 +56,7 @@ public final class CastVote extends APIServlet.APIRequestHandler {
             if (pollData != null) {
                 numberOfOptions = pollData.getOptions().length;
             }
+            else return INCORRECT_POLL;
         } catch (RuntimeException e) {
             return INCORRECT_POLL;
         }

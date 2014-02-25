@@ -12,7 +12,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +41,7 @@ public final class CreatePoll extends APIServlet.APIRequestHandler {
     private CreatePoll() {}
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException, IOException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String nameValue = req.getParameter("name");

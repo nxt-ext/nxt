@@ -68,7 +68,9 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
 
                 tradesData.add(tradeData);
             }
-        } catch (RuntimeException e) {}
+        } catch (RuntimeException e) {
+            response.put("error", e.toString());
+        }
         response.put("trades", tradesData);
 
         return response;

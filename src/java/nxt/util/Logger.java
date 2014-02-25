@@ -29,15 +29,17 @@ public final class Logger {
     private static final Listeners<String,Event> messageListeners = new Listeners<>();
     private static final Listeners<Exception,Event> exceptionListeners = new Listeners<>();
 
-    private static PrintWriter fileLog = null;
+    private static final PrintWriter fileLog;
     static {
         debug = Nxt.getBooleanProperty("nxt.debug");
         enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces");
+        PrintWriter printWriter = null;
         try {
-            fileLog = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log"))))), true);
+            printWriter = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log"))))), true);
         } catch (IOException|RuntimeException e) {
             logMessage("Logging to file not possible, will log to stdout only", e);
         }
+        fileLog = printWriter;
         logMessage("Debug logging " + (debug ? "enabled" : "disabled"));
         logMessage("Exception stack traces " + (enableStackTraces ? "enabled" : "disabled"));
     }

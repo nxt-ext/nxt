@@ -102,10 +102,12 @@ public final class UserServlet extends HttpServlet  {
         } catch (RuntimeException|NxtException e) {
 
             Logger.logMessage("Error processing GET request", e);
-            JSONObject response = new JSONObject();
-            response.put("response", "showMessage");
-            response.put("message", e.toString());
-            user.enqueue(response);
+            if (user != null) {
+                JSONObject response = new JSONObject();
+                response.put("response", "showMessage");
+                response.put("message", e.toString());
+                user.enqueue(response);
+            }
 
         } finally {
 

@@ -136,13 +136,9 @@ final class PeerImpl implements Peer {
 
     @Override
     public String getSoftware() {
-        StringBuilder buf = new StringBuilder();
-        buf.append(Convert.truncate(application, "?", 10, false));
-        buf.append(" (");
-        buf.append(Convert.truncate(version, "?", 10, false));
-        buf.append(")").append(" @ ");
-        buf.append(Convert.truncate(platform, "?", 10, false));
-        return buf.toString();
+        return Convert.truncate(application, "?", 10, false)
+                + " (" + Convert.truncate(version, "?", 10, false) + ")"
+                + " @ " + Convert.truncate(platform, "?", 10, false);
     }
 
     @Override

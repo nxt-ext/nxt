@@ -24,7 +24,7 @@ public final class APIServlet extends HttpServlet {
 
     // not an interface in order for processRequest to be package-local, not public
     abstract static class APIRequestHandler {
-        abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException, IOException;
+        abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
         boolean requirePost() {
             return false;
         }
@@ -104,7 +104,7 @@ public final class APIServlet extends HttpServlet {
         process(req, resp);
     }
 
-    private void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void process(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");

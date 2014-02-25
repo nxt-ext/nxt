@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collections;
 
 public interface Attachment {
 
@@ -168,8 +169,8 @@ public interface Attachment {
         public int getSize() {
             try {
                 int size = 2 + pollName.getBytes("UTF-8").length + 2 + pollDescription.getBytes("UTF-8").length + 1;
-                for (int i = 0; i < pollOptions.length; i++) {
-                    size += 2 + pollOptions[i].getBytes("UTF-8").length;
+                for (String pollOption : pollOptions) {
+                    size += 2 + pollOption.getBytes("UTF-8").length;
                 }
                 size +=  1 + 1 + 1;
                 return size;
@@ -198,9 +199,9 @@ public interface Attachment {
                 buffer.putShort((short)description.length);
                 buffer.put(description);
                 buffer.put((byte)options.length);
-                for (int i = 0; i < options.length; i++) {
-                    buffer.putShort((short)options[i].length);
-                    buffer.put(options[i]);
+                for (byte[] option : options) {
+                    buffer.putShort((short) option.length);
+                    buffer.put(option);
                 }
                 buffer.put(this.minNumberOfOptions);
                 buffer.put(this.maxNumberOfOptions);
@@ -224,9 +225,7 @@ public interface Attachment {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
             JSONArray options = new JSONArray();
-            for (int i = 0; i < this.pollOptions.length; i++) {
-                options.add(this.pollOptions[i]);
-            }
+            Collections.addAll(options, this.pollOptions);
             attachment.put("options", options);
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
@@ -293,8 +292,8 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
-            for (int i = 0; i < this.pollVote.length; i++) {
-                vote.add(this.pollVote[i]);
+            for (byte aPollVote : this.pollVote) {
+                vote.add(aPollVote);
             }
             attachment.put("vote", vote);
 
