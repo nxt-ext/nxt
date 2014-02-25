@@ -19,8 +19,7 @@
 				requestParameters += "&" + Math.random();
 				request.open("POST", "/nxt");
 	            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                request.setRequestHeader("Content-length", requestParameters.length);
-				request.onreadystatechange = function() {
+                request.onreadystatechange = function() {
 					if (this.readyState == 4 && this.status == 200) {
 						document.getElementById("response").value = this.responseText;
 						document.getElementById("ok").disabled = false;

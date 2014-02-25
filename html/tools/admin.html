@@ -26,7 +26,6 @@
             var request = new XMLHttpRequest();
             request.open("POST", url, false);
             request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            request.setRequestHeader("Content-length", params.length);
             request.send(params);
             var result = JSON.stringify(JSON.parse(request.responseText), null, 4);
             form.getElementsByClassName("result")[0].textContent = result;
