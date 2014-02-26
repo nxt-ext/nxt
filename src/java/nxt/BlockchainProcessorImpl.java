@@ -310,7 +310,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         BlockDb.deleteBlock(commonBlock.getNextBlockId());
                     }
                     Logger.logMessage("Will do a re-scan");
+                    blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
                     scan();
+                    blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
                     Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                 }
             }
