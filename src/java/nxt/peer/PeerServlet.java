@@ -67,6 +67,9 @@ public final class PeerServlet extends HttpServlet {
 
         try {
             peer = Peers.addPeer(req.getRemoteHost(), null);
+            if (peer == null) {
+                Logger.logDebugMessage("Invalid peer remote host: " + req.getRemoteHost());
+            }
             if (peer.isBlacklisted()) {
                 return;
             }
