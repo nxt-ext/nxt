@@ -144,6 +144,10 @@
 				element.className = "se";
 				element = parent.document.getElementById("orphanedBlocksCounter");
 				element.innerHTML = parseInt(element.innerHTML) + 1;
+
+                document.getElementById("myTransactionsFrame").contentWindow.removeTransaction("block" + block.index);
+				document.getElementById("myTransactionsFrame").contentWindow.decrementNumberOfConfirmations();
+
 			}
 			
 			function addBlocks(blocks) {

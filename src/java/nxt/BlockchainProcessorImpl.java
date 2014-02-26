@@ -570,12 +570,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 transactionProcessor.apply(block);
 
-                transactionProcessor.updateUnconfirmedTransactions(block);
-
             } catch (RuntimeException e) {
                 Logger.logMessage("Error pushing block", e);
                 throw new BlockNotAcceptedException(e.toString());
             }
+
+            blockListeners.notify(block, Event.BLOCK_PUSHED);
+
+            transactionProcessor.updateUnconfirmedTransactions(block);
+
         } // synchronized
 
         if (block.getTimestamp() >= Convert.getEpochTime() - 15) {
@@ -583,8 +586,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             request.put("requestType", "processBlock");
             Peers.sendToSomePeers(request);
         }
-
-        blockListeners.notify(block, Event.BLOCK_PUSHED);
 
     }
 

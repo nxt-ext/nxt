@@ -17,6 +17,7 @@
 		</style>
 		<script type="text/javascript">
 			function addTransaction(transaction) {
+			    removeTransaction(transaction.index);
 				var transactions = document.getElementById("transactions"), row = transactions.insertRow(transactions.rows.length), element;
 				row.id = "transaction" + transaction.index;
 				element = row.insertCell(0);
@@ -113,16 +114,18 @@
 				return (new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000)).toLocaleString();
 			}
 			
-			function removeTransaction(transaction) {
-				document.getElementById("transactions").deleteRow(document.getElementById("transaction" + transaction.index).rowIndex);
-				var element = parent.document.getElementById("unconfirmedTransactionsCounter");
-				element.innerHTML = parseInt(element.innerHTML) - 1;
+			function removeTransaction(index) {
+			    if (document.getElementById("transaction" + index)) {
+    				document.getElementById("transactions").deleteRow(document.getElementById("transaction" + index).rowIndex);
+	    			var element = parent.document.getElementById("unconfirmedTransactionsCounter");
+		    		element.innerHTML = parseInt(element.innerHTML) - 1;
+		    	}
 			}
 			
 			function removeTransactions(transactions) {
 				var i;
 				for (i = 0; i < transactions.length; i++) {
-					removeTransaction(transactions[i]);
+					removeTransaction(transactions[i].index);
 				}
 			}
 		</script>

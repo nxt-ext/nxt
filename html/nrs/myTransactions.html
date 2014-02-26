@@ -23,6 +23,7 @@
 		</style>
 		<script type="text/javascript">
 			function addTransaction(transaction, insert) {
+			    removeTransaction(transaction.index);
 				var transactions = document.getElementById("transactions"), row = transactions.insertRow(insert ? 0 : transactions.rows.length), element;
 				row.id = "transaction" + transaction.index;
 				element = row.insertCell(0);
@@ -30,14 +31,14 @@
 				element.title = "Timestamp";
 				element = row.insertCell(1);
 				element.className = "text";
-				if (transaction.numberOfConfirmations > 0) {
-					if (!transaction.earnedAmount && transaction.blockTimestamp != 0) {
+				if (transaction.deadline) {
+					element.title = "Deadline: " + formatDeadline(transaction.deadline);
+					element.innerHTML = formatTimestamp(transaction.transactionTimestamp);
+                } else {
+					if (! transaction.earnedAmount && transaction.blockTimestamp != 0) {
 						element.title = "Sent: " + formatTimestamp(transaction.transactionTimestamp);
 					}
 					element.innerHTML = formatTimestamp(transaction.blockTimestamp);
-				} else {
-					element.title = "Deadline: " + formatDeadline(transaction.deadline);
-					element.innerHTML = formatTimestamp(transaction.transactionTimestamp);
 				}
 				element = row.insertCell(2);
 				if (transaction.blockTimestamp == 0) {
@@ -109,7 +110,8 @@
 				element = row.insertCell(11);
 				element.className = "text";
 				element.title = transaction.numberOfConfirmations;
-				element.innerHTML = transaction.numberOfConfirmations > 0 ? (transaction.numberOfConfirmations > 10 ? "10+" : transaction.numberOfConfirmations) : "-";
+				element.innerHTML = transaction.numberOfConfirmations < 0 ? "-" :
+				    (transaction.numberOfConfirmations > 10 ? "10+" : transaction.numberOfConfirmations);
 				element = row.insertCell(12);
 				element.className = "info";
 				element.title = "Id: " + transaction.id;
@@ -173,10 +175,22 @@
 				for (i = transactions.rows.length; i-- > 0; ) {
 					element = transactions.rows[i].cells[11];
 					numberOfConfirmations = parseInt(element.title);
-					if (numberOfConfirmations > 0) {
-						element.title = ++numberOfConfirmations;
-						element.innerHTML = numberOfConfirmations > 10 ? "10+" : numberOfConfirmations;
-					}
+    				element.title = ++numberOfConfirmations;
+					element.innerHTML = numberOfConfirmations > 10 ? "10+" : numberOfConfirmations;
+					transactions.rows[i].cells[10].className = numberOfConfirmations > 0 ? "enabledNumberOfConfirmations" : "disabledNumberOfConfirmations";
+				}
+			}
+
+			function decrementNumberOfConfirmations() {
+				var transactions = document.getElementById("transactions"), i, element, numberOfConfirmations;
+				for (i = transactions.rows.length; i-- > 0; ) {
+					element = transactions.rows[i].cells[11];
+					numberOfConfirmations = parseInt(element.title);
+					if (numberOfConfirmations >= 0) {
+    					element.title = --numberOfConfirmations;
+	    				element.innerHTML = numberOfConfirmations > 10 ? "10+" : numberOfConfirmations;
+		    			transactions.rows[i].cells[10].className = numberOfConfirmations > 0 ? "enabledNumberOfConfirmations" : "disabledNumberOfConfirmations";
+		    		}
 				}
 			}
 			
@@ -185,11 +199,8 @@
 				parent.document.getElementById("myTransactionsCounter").innerHTML = 0;
 			}
 			
-			function removeTransaction(transaction) {
-				var element = document.getElementById("transaction" + transaction.index + "Unconfirmed");
-				if (element == null) {
-					element = document.getElementById("transaction" + transaction.index);
-				}
+			function removeTransaction(index) {
+				var element = document.getElementById("transaction" + index);
 				if (element != null) {
 					document.getElementById("transactions").deleteRow(element.rowIndex);
 					element = parent.document.getElementById("myTransactionsCounter");
@@ -200,7 +211,7 @@
 			function removeTransactions(transactions) {
 				var i;
 				for (i = 0; i < transactions.length; i++) {
-					removeTransaction(transactions[i]);
+					removeTransaction(transactions[i].index);
 				}
 			}
 		</script>

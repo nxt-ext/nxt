@@ -8,13 +8,16 @@
 			body {background-color: #C0C0C0; color: #000; font-family: Tahoma; font-size: 10pt; margin: 0; padding: 0;}
 			button {box-sizing: border-box; font-family: Tahoma; font-size: 10pt; height: 40px; width: 100%;}
 			div {position: absolute;}
-			.account {color: #0F0; cursor: default; display: none; font-weight: bold; height: 20px; left: 50px; line-height: 20px; top: 15px; width: 160px;}
+			.account {color: #0F0; cursor: default; display: none; font-weight: bold; height: 20px; left: 50px;
+                line-height: 20px; top: 15px; width: 160px;}
 			.add {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACiElEQVQ4y6XU70sTcRwH8I8bGv0BktCznvSkhz0o6nE96EG/iB4UPai0RUQPRGMqgQpl4YOoJJJW6RYW+CsPRzkVci1deulmNyb+2nbb7ueW7n7sdIxPd0vCS0qmH3jdcfD+fvhw3OcA/lEej8eyvr5enc/nx3WBDf5cLtcQDAZLodhSFKU6l1eQlB7heKa+YEq6j2v5VVRVtbnYfiX6oYkpqRVbE2DiW21ATdPCRqaYhhZZUUKfV+qwJQ7YQsPvu24obcNsNpvQM9aiGkqSFBpN27EpBibulA0VVd2+of6iy1iWLWcYpjwcDu/LSNKcJ2XHexEwIQQb6tMzJElWGFlDKBTa86dRbe3dEkmSH2Q1Tda0Ndzso2hH+zKY9PM21NbMOf2sKsvys76+D1bgOP6CrGbwPXsdn9BHTZoj+7F6EUwaIxVbci7mMmbUNAqCWAmCKLZTK5/wzgLsCpnuNhp2AMfzzukUgTfnYFcmhHfIcpwL9IuT5AewKgC78pXtQoZhXbAcibYsiNNYOVmKV7/BjlybtCLFezEao9ugu7vnEC+ImTDnxzH6rcnj2bN45QuYPAyc2JKjWB+KqZQ66HYfKXw6Lx2vDpPTMy9mKWpg9gdFGFhOyDipGrw0DCbtwSrUB8gGN3L6GeL7TMDR6XQd/3sdjQfLBms8yYQ6AjV4cRBMnpNVmGQ5Y1NKN+W33WsLHU+GXpM1eL4XTNr8lZhIssXvcoxOUA5/LZ7uApOnvhuoT190w5L5hSXCGybwnHMvnnoDBWc6y9BDdeHiUsRb7O8Lenr7j8XiiZ+xJI2L8fmCaDKKdIKRiEH3SdhJ2evqDwwNj9wa8/rqDcMjo7cbG5sO/m+6X/+Nz3akEC/sAAAAAElFTkSuQmCC); cursor: pointer; display: inline; height: 20px; margin: 0 0 0 10px; width: 20px;}
-			.balance {color: #0F0; cursor: default; display: none; font-size: 18pt; font-weight: bold; height: 20px; left: 100%; line-height: 20px; margin-left: -240px; text-align: right; top: 15px; width: 190px;}
+			.balance {color: #0F0; cursor: default; display: none; font-size: 18pt; font-weight: bold; height: 20px;
+                left: 100%; line-height: 20px; margin-left: -240px; text-align: right; top: 15px; width: 190px;}
 			.bar {background-color: #000; height: 50px; left: 0; width: 100%;}
 			.close {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAADtUlEQVQ4y42Ua0ybVRjHO/SjJibihxWyUi5jF0xMTEpxC8ORqAkf8NO+aDJNGmUJTrZPWnEX+CAxKhiBZKuxy8g0M7voYC2FdkALuOFmm9GO3unlbfv2+r5g07W0zd+nqM0oZdlJ/smb8/zP73nOOc95BYL/hl6vf25jY+OTfD6vyuVyivX19TrBDiOZTB4gj5K8E7RGplQqd20xzM7OPk+BsXwqBe7qFTy2mEFmluf5plIYJZJQLJEyPgB/7SrymQwymcwwQSs2DQqFooImxrLJJNzvH4O5vhqWpgasz+tBVbAcxxWhlEBCcwleo4Zlv3jT6/noQ+TSaaTT6eHOzs5dBdMHWarM9t4x/EWG/2UkKG+YQzabZeOJRBOBJfTNxTUqGAn2pNdJ0CxVSr53Bfza2uXYtAZ366q3aelgA+L62cKWwnQkXHTyNu7tE5f1ckt3QUkHBX6/vzcVCWOprQV6CpRq/mA9onMzYNUTMBCsnOf+O0fxmOfg8Xi6BWfOnn05Go2Z1lbdmD/SAm1t1TbdOVAHXWNN2dji22/i70AAbDi8IJPJXtw87P7+/qpIJGLi3C7MEFRFxmeR/q02rDEMQiF28dSp069saYe+vr4qlg2b4i4nplql+I0WPE1agnF+PwLB4GJPT09l2YY9d+58AWqJOhwYl76OX8VVZXW77RDiXi+CweCfJ09+WrnTAxBQtma6dc72+038vFeEK2JhWf2yvxau6SmQN8wwzKtlYQwTaOZ4nnt08wYuNYigrBE+VZf31cI+paFW4cM+v38r1OdnmhMJjlu+cR0XCXaBFjyLfiSodVJdaOiw1+v7F+pwOPfG4nHOdP0aRupF+EEk3Kax9iO4dLi5bGy0sRYWtQqxWJxdWbFWF6r7zrl0D4P1e/CtaPc2/dTeCoYuyWux4OIhSVnP941ieMxmeH2+LwUul1th1mnxFQVKdeFoK3x2O+x2xx8ut9u0SotGCFrqG6Dt26ko2u2AQDM13c6GIznN1wM4v2d3UcME89pssDucC11dXZVyuVxIyY3u5WUMvSEp+vpo2zOjwwix4fStW+OSwjFW6HR3ukMsm1MRtJcMQ+1tWLVaYbM7FrpOnCj2mVz+hdDpdBmdDx/im8NS9NZUQ0uwYIjdUE9qjpOl+KOtmNbqugPBUMb1aAUBJoAVq83wMVVW2l6ffS4XUtUPGHolbkrKBIIplUq9BVaEjoyMSvR6w5nxiYnjUmnLCzs9gI6OjpdUarVsTm/oHRwaeu1J2D+HcEp1+iRSdwAAAABJRU5ErkJggg==); cursor: pointer; height: 20px; left: 100%; margin-left: -30px; top: 5px; width: 20px;}
 			.collapse {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAADR0lEQVQ4y7WUa2gTWRTHb0JdqYpCXbGigqAFP1iXVfwgiH4QfGD7YX0syGpFan2uSNEK1YIP8BkiFdwqvne1aKOgpq1u1SbVbDDVPtLGavMwz5lkMjOZpNG2ySTp3+mApaFZdQt74Ad3zpn53XvnwCHkX6KkpERRVVWlrKioUJDRhkqlUsRisTXJZPJuKpXyDQwM9EkEpWdtPB7/zWw2Z323LMAwOYlEojY1kMCH/ofQR3ahXtiA55FidPfdRiLVj0QyaRLC4VnflHV1dY0XRbFFEO24xS6EiiYjuMLMhj/WDGlTD03T074q/PSp93yPSOOCfyZO+ojMBf903GGX41JgzlBOTU0EE+tEX39/rfRZ5n/b1t6eG4+LsQdcEY56CI55lXgVOQcpBVFMSIiwRO/ghDdbrl9nlsg5n49alFEYDLJF0RiPI+6xOOwi0HK7ITVgBAZBLdcHoXvNCIWEYxmFPB+qtEX1KHMSGUPoPI57cnHcPTWN1nC1VFfI75iEGwgJwsPMJ2TZy28jf2Ofg8jo+cqh9XBMoZsodSjl9Uv+IjiOb8godLpcB+geG3ZbFdhlJXgaPAc26pXwpNHKP5Drg1iEBnA8/+Ifo3HMCGFjo25hT/QjTlkXY3sHQallMuyhFgzmvkCFHTj8bo5cH6TSvhpsxI9wONL4wen8MU2YJYWPoowdwUZsez0GW5sJdrwZh6vWYtS71fjLvhe/t+TI+eGUm+fCwZkhhCMOH0XPS5PW1GgWsBz/Uee+iWJDNja/IN/FTmMOmn1aqUHhHtofKBjuVNTW1RUGmKDQHWjFH+1bsKdpBjY/+wE7dFOgblmHl667KDPMw8YGksamp1l41K0GHxJiNrsjP+2kp8+cndvRadFI4l6OF/AFhuXiLrfHQ7E+nDIWYoOWpPGrVgGz1wCPl1Jlarxy/vyfpty6Xb2i/vGTohrNvYKVK1dNz8/Pn9TW3nEtyHG49uYg1moU+EVDhtBZNXC63Df+03hTKpVZOn3Tfj8TjD+2XMf66gko+JNg76OfQTEUWtvM20czNpWae/cLpeuxDsoGk00Hmgmg67312dKly7JHPYzLyw/N0uubDpmaX1+qravfkpeXN478H/EZAAK9LZMSz5IAAAAASUVORK5CYII=); cursor: pointer; height: 20px; left: 100%; margin-left: -30px; top: 0; width: 20px;}
-			.dialog {background-color: #C0C0C0; border: 1px solid #000; cursor: default; height: 320px; left: 50%; margin: -151px -201px; top: 50%; width: 400px;}
+			.dialog {background-color: #C0C0C0; border: 1px solid #000; cursor: default; height: 320px; left: 50%; margin: -151px -201px;
+                top: 50%; width: 400px;}
 			.dialogContent {height: 250px; left: 10px; top: 40px; width: 380px;}
 			.dialogHeader {background-color: #000; height: 30px; left: 0; top: 0; width: 100%;}
 			.dialogTitle {color: #FFF; cursor: default; font-weight: bold; height: 20px; left: 10px; line-height: 20px; top: 5px; width: 350px;}
@@ -71,7 +74,8 @@
 		</style>
 		<script type="text/javascript">
 			var widgetIds = ["transactions", "peers", "blocks", "accounts"], widgetToggleClassNames = ["Transactions", "Peers", "Blocks", "Accounts"];
-			var advancedWidgetIds = ["library", "shops", "assetExchange", "reputation"], advancedWidgetToggleClassNames = ["Library", "Shops", "AssetExchange", "Reputation"];
+			var advancedWidgetIds = ["library", "shops", "assetExchange", "reputation"],
+			    advancedWidgetToggleClassNames = ["Library", "Shops", "AssetExchange", "Reputation"];
 			var user = Math.random(), numberOfPendingRequests = 0, account = "";
 			var selectedAssetId;
 			
@@ -82,7 +86,8 @@
 			
 			function adjustDeadlineTime() {
 				var deadline = document.getElementById("deadline").value;
-				document.getElementById("deadlineTime").value = isNaN(deadline) ? "" : ("~ " + (new Date((new Date()).getTime() + deadline * 3600000)).toLocaleString());
+				document.getElementById("deadlineTime").value = isNaN(deadline) ? "" :
+				    ("~ " + (new Date((new Date()).getTime() + deadline * 3600000)).toLocaleString());
 			}
 			
 			function adjustFee() {
@@ -91,11 +96,17 @@
 			}
 			
 			function adjustSections(widgetIndex, widgetHeight, sections) {
-				var widget = document.getElementById(widgetIds[widgetIndex]), widgetWidth = parseInt(widget.style.width.substr(0, widget.style.width.length - 2));
-				var section2 = document.getElementById(sections[1]), section3 = document.getElementById(sections[2]), section1Frame = document.getElementById(sections[0] + "Frame"), section2Frame = document.getElementById(sections[1] + "Frame"), section3Frame = document.getElementById(sections[2] + "Frame");
+				var widget = document.getElementById(widgetIds[widgetIndex]),
+				    widgetWidth = parseInt(widget.style.width.substr(0, widget.style.width.length - 2));
+				var section2 = document.getElementById(sections[1]), section3 = document.getElementById(sections[2]),
+				    section1Frame = document.getElementById(sections[0] + "Frame"),
+				    section2Frame = document.getElementById(sections[1] + "Frame"),
+				    section3Frame = document.getElementById(sections[2] + "Frame");
 				section3.style.width = section2.style.width = document.getElementById(sections[0]).style.width = (widgetWidth - 30) + "px";
 				section3Frame.style.width = section2Frame.style.width = section1Frame.style.width = (widgetWidth - 20 - 2) + "px";
-				var sectionVisibilityFlags = [document.getElementById(sections[0] + "Collapse").style.display != "none", document.getElementById(sections[1] + "Collapse").style.display != "none", document.getElementById(sections[2] + "Collapse").style.display != "none"], sectionHeight = 0;
+				var sectionVisibilityFlags = [document.getElementById(sections[0] + "Collapse").style.display != "none",
+				    document.getElementById(sections[1] + "Collapse").style.display != "none",
+				    document.getElementById(sections[2] + "Collapse").style.display != "none"], sectionHeight = 0;
 				for (i = 3; i-- > 0; ) {
 					if (sectionVisibilityFlags[i]) {
 						sectionHeight++;
@@ -106,9 +117,12 @@
 				section2.style.top = (45 + (sectionVisibilityFlags[0] ? sectionHeight : 0)) + "px";
 				section2Frame.style.top = (70 + (sectionVisibilityFlags[0] ? sectionHeight : 0)) + "px";
 				section2Frame.style.height = (sectionHeight - 1) + "px";
-				section3.style.top = (70 + (sectionVisibilityFlags[0] ? sectionHeight : 0) + (sectionVisibilityFlags[1] ? sectionHeight : 0) + 10) + "px";
-				section3Frame.style.top = (105 + (sectionVisibilityFlags[0] ? sectionHeight : 0) + (sectionVisibilityFlags[1] ? sectionHeight : 0)) + "px";
-				section3Frame.style.height = (widgetHeight - 30 - (105 + (sectionVisibilityFlags[0] ? sectionHeight : 0) + (sectionVisibilityFlags[1] ? sectionHeight : 0)) - 10 - 1) + "px";
+				section3.style.top = (70 + (sectionVisibilityFlags[0] ? sectionHeight : 0) +
+				    (sectionVisibilityFlags[1] ? sectionHeight : 0) + 10) + "px";
+				section3Frame.style.top = (105 + (sectionVisibilityFlags[0] ? sectionHeight : 0) +
+				    (sectionVisibilityFlags[1] ? sectionHeight : 0)) + "px";
+				section3Frame.style.height = (widgetHeight - 30 - (105 + (sectionVisibilityFlags[0] ? sectionHeight : 0) +
+				    (sectionVisibilityFlags[1] ? sectionHeight : 0)) - 10 - 1) + "px";
 				section1Frame.style.display = sectionVisibilityFlags[0] ? "block" : "none";
 				section2Frame.style.display = sectionVisibilityFlags[1] ? "block" : "none";
 				section3Frame.style.display = sectionVisibilityFlags[2] ? "block" : "none";
@@ -129,7 +143,8 @@
 				widgetHeight = innerHeight - 122;
 				for (i = visibleWidgets.length; i-- > 0; ) {
 					visibleWidgets[i].style.left = (10 + i * (widgetWidth + 10)) + "px";
-					visibleWidgets[i].style.width = ((i == visibleWidgets.length - 1 ? (innerWidth - 10 - 10 * visibleWidgets.length - i * widgetWidth) : widgetWidth) - 2) + "px";
+					visibleWidgets[i].style.width = ((i == visibleWidgets.length - 1 ? (innerWidth - 10 - 10 * visibleWidgets.length - i * widgetWidth)
+					    : widgetWidth) - 2) + "px";
 					visibleWidgets[i].style.height = widgetHeight + "px";
 					document.getElementById(visibleWidgets[i].id + "Content").style.height = (innerHeight - 102) + "px";
 				}
@@ -183,7 +198,8 @@
 				document.getElementById("input").readOnly = true;
 				document.getElementById("generateAuthorizationToken").disabled = true;
 				document.getElementById("secretPhrase").readOnly = true;
-				sendRequest("generateAuthorizationToken&website=" + encodeURIComponent(document.getElementById("input").value) + "&secretPhrase=" + encodeURIComponent(document.getElementById("secretPhrase").value));
+				sendRequest("generateAuthorizationToken&website=" + encodeURIComponent(document.getElementById("input").value) +
+				    "&secretPhrase=" + encodeURIComponent(document.getElementById("secretPhrase").value));
 			}
 			
 			function initialize() {
@@ -206,7 +222,8 @@
 				fee = element.value;
 				element.readOnly = true;
 				document.getElementById("issueAsset").disabled = true;
-				sendRequest("issueAsset&name=" + encodeURIComponent(name) + "&description=" + encodeURIComponent(description) + "&quantity=" + quantity + "&fee=" + fee);
+				sendRequest("issueAsset&name=" + encodeURIComponent(name) + "&description=" + encodeURIComponent(description) +
+				    "&quantity=" + quantity + "&fee=" + fee);
 			}
 			
 			function placeAskOrder() {
@@ -244,7 +261,9 @@
 			}
 			
 			function requestAssets() {
-				sendRequest("getAssets&showIssuedAssets=" + (document.getElementById("issuedAssets").className == "enabledIssuedAssets") + "&showOwnedAssets=" + (document.getElementById("ownedAssets").className == "enabledOwnedAssets") + "&showOtherAssets=" + (document.getElementById("otherAssets").className == "enabledOtherAssets"));
+				sendRequest("getAssets&showIssuedAssets=" + (document.getElementById("issuedAssets").className == "enabledIssuedAssets") +
+				    "&showOwnedAssets=" + (document.getElementById("ownedAssets").className == "enabledOwnedAssets") + "&showOtherAssets=" +
+				    (document.getElementById("otherAssets").className == "enabledOtherAssets"));
 			}
 			
 			function sendMoney() {
@@ -265,7 +284,8 @@
 				secretPhrase = element.value;
 				element.readOnly = true;
 				document.getElementById("sendMoney").disabled = true;
-				sendRequest("sendMoney&recipient=" + recipient + "&amount=" + amount + "&fee=" + fee + "&deadline=" + deadline + "&secretPhrase=" + encodeURIComponent(secretPhrase));
+				sendRequest("sendMoney&recipient=" + recipient + "&amount=" + amount + "&fee=" + fee + "&deadline=" + deadline +
+				    "&secretPhrase=" + encodeURIComponent(secretPhrase));
 			}
 			
 			function sendRequest(requestParameters) {
@@ -353,17 +373,22 @@
 									document.getElementById("myTransactionsFrame").contentWindow.addTransactions(response.addedMyTransactions, false);
 								}
 								if (response.addedConfirmedTransactions) {
-									document.getElementById("myTransactionsFrame").contentWindow.incrementNumberOfConfirmations();
 									for (j = 0; j < response.addedConfirmedTransactions.length; j++) {
 										object = response.addedConfirmedTransactions[j];
 										if (object.sender == account) {
-											object2 = {"index": object.index, "blockTimestamp": object.blockTimestamp, "transactionTimestamp": object.transactionTimestamp, "account": object.recipient, "sentAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 1, "id": object.id};
+											object2 = {"index": object.index, "blockTimestamp": object.blockTimestamp,
+											    "transactionTimestamp": object.transactionTimestamp, "account": object.recipient,
+											    "sentAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 0, "id": object.id};
 											if (object.recipient == account) {
 												object2.receivedAmount = object.amount;
 											}
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction(object2, true);
 										} else if (object.recipient == account) {
-											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.index, "blockTimestamp": object.blockTimestamp, "transactionTimestamp": object.transactionTimestamp, "account": object.sender, "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 1, "id": object.id}, true);
+											document.getElementById("myTransactionsFrame").contentWindow.addTransaction(
+											    {"index": object.index, "blockTimestamp": object.blockTimestamp,
+											    "transactionTimestamp": object.transactionTimestamp, "account": object.sender,
+											    "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 0,
+											    "id": object.id}, true);
 										}
 									}
 									;
@@ -372,20 +397,26 @@
 									for (j = 0; j < response.addedUnconfirmedTransactions.length; j++) {
 										object = response.addedUnconfirmedTransactions[j];
 										if (object.sender == account) {
-											object2 = {"index": object.index + "Unconfirmed", "transactionTimestamp": object.timestamp, "deadline": object.deadline, "account": object.recipient, "sentAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 0, "id": object.id};
+											object2 = {"index": object.index, "transactionTimestamp": object.timestamp, "deadline": object.deadline,
+											    "account": object.recipient, "sentAmount": object.amount, "fee": object.fee,
+											    "numberOfConfirmations": -1, "id": object.id};
 											if (object.recipient == account) {
 												object2.receivedAmount = object.amount;
 											}
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction(object2, true);
 										} else if (object.recipient == account) {
-											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.index + "Unconfirmed", "transactionTimestamp": object.timestamp, "deadline": object.deadline, "account": object.sender, "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 0, "id": object.id}, true);
+											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.index,
+											    "transactionTimestamp": object.timestamp, "deadline": object.deadline, "account": object.sender,
+											    "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": -1, "id": object.id},
+											    true);
 										}
 									}
 									document.getElementById("unconfirmedTransactionsFrame").contentWindow.addTransactions(response.addedUnconfirmedTransactions);
 								}
 								if (response.removedUnconfirmedTransactions) {
 									document.getElementById("myTransactionsFrame").contentWindow.removeTransactions(response.removedUnconfirmedTransactions);
-									document.getElementById("unconfirmedTransactionsFrame").contentWindow.removeTransactions(response.removedUnconfirmedTransactions);
+									document.getElementById("unconfirmedTransactionsFrame").contentWindow.removeTransactions(
+									    response.removedUnconfirmedTransactions);
 								}
 								if (response.addedActivePeers) {
 									document.getElementById("activePeersFrame").contentWindow.addPeers(response.addedActivePeers);
@@ -409,10 +440,13 @@
 									document.getElementById("blacklistedPeersFrame").contentWindow.removePeers(response.removedBlacklistedPeers);
 								}
 								if (response.addedRecentBlocks) {
+									document.getElementById("myTransactionsFrame").contentWindow.incrementNumberOfConfirmations();
 									for (j = 0; j < response.addedRecentBlocks.length; j++) {
 										object = response.addedRecentBlocks[j];
 										if (object.generator == account && object.totalFee > 0) {
-											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.block, "blockTimestamp": object.timestamp, "block": object.block, "earnedAmount": object.totalFee, "numberOfConfirmations": 1, "id": "-"}, true);
+											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": "block" + object.index,
+											    "blockTimestamp": object.timestamp, "block": object.block, "earnedAmount": object.totalFee,
+											    "numberOfConfirmations": 0, "id": "-"}, true);
 										}
 									}
 									document.getElementById("recentBlocksFrame").contentWindow.addBlocks(response.addedRecentBlocks, true);
@@ -434,7 +468,8 @@
 								document.getElementById("recentBlocksFrame").contentWindow.setDeadline(response.deadline);
 								break;
 							case "showAuthorizationToken":
-								showDialog("Authorization", "<table style='margin-top: 50px;'><tr><td class='label'>Authorization token</td></tr><tr><td class='input'><textarea id='input'>" + response.token + "</textarea></td></tr></table>");
+								showDialog("Authorization", "<table style='margin-top: 50px;'><tr><td class='label'>Authorization token</td></tr>"
+								    + "<tr><td class='input'><textarea id='input'>" + response.token + "</textarea></td></tr></table>");
 								break;
 							case "showMessage":
 								showMessage(response.message);
@@ -444,7 +479,8 @@
 								document.getElementById("unlock").style.display = "none";
 								account = response.account;
 								element = document.getElementById("account");
-								element.innerHTML = account + "<div class='key' title='Click to authorize on a third-party website with this account' onclick='showAuthorizationDialog();'></div>";
+								element.innerHTML = account +
+								    "<div class='key' title='Click to authorize on a third-party website with this account' onclick='showAuthorizationDialog();'></div>";
 								element.style.display = "block";
 								element = document.getElementById("balance");
 								element.innerHTML = formatAmount(response.balance);
@@ -471,11 +507,21 @@
 			}
 			
 			function showAccountDialog() {
-				showDialog("Account", "<table style='margin-top: 20px;'><tr><td class='label'>Secret phrase</td></tr><tr><td class='input'><input type='password' id='input' onkeydown='if (event.keyCode == 13) unlockAccount(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td><button id='unlockAccount' onclick='unlockAccount();'>Unlock account</button></td></tr><tr><td><b>If opening a new account, please note:</b><br /> A simple passphrase will certainly result in your NXT being stolen! Do not use any phrase that appears in any printed or online material, no matter how long or obscure. A secure passphrase will be at least 35 characters long and consist of random letters, numbers, and special characters, or a meaningless combination of 10 random words.</td></tr></table>");
+				showDialog("Account", "<table style='margin-top: 20px;'><tr><td class='label'>Secret phrase</td></tr>" +
+				    "<tr><td class='input'><input type='password' id='input' onkeydown='if (event.keyCode == 13) unlockAccount(); else if (event.keyCode == 27) closeDialog();'></td></tr>" +
+				    "<tr><td><button id='unlockAccount' onclick='unlockAccount();'>Unlock account</button></td></tr>" +
+				    "<tr><td><b>If opening a new account, please note:</b><br /> " +
+				    "A simple passphrase will certainly result in your NXT being stolen! Do not use any phrase that appears in any printed or online material, " +
+				    "no matter how long or obscure. A secure passphrase will be at least 35 characters long and consist of random letters, numbers, and special " +
+				    "characters, or a meaningless combination of 10 random words.</td></tr></table>");
 			}
 			
 			function showAuthorizationDialog() {
-				showDialog("Authorization", "<table style='margin-top: 50px;'><tr><td class='label'>Website</td></tr><tr><td class='input'><input id='input' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td class='label'>Secret phrase</td></tr><tr><td class='input'><input type='password' id='secretPhrase' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr><tr><td><button id='generateAuthorizationToken' onclick='generateAuthorizationToken();'>Generate authorization token</button></td></tr></table>");
+				showDialog("Authorization", "<table style='margin-top: 50px;'><tr><td class='label'>Website</td></tr>" +
+				"<tr><td class='input'><input id='input' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr>" +
+				"<tr><td class='label'>Secret phrase</td></tr>" +
+				"<tr><td class='input'><input type='password' id='secretPhrase' onkeydown='if (event.keyCode == 13) generateAuthorizationToken(); else if (event.keyCode == 27) closeDialog();'></td></tr>" +
+				"<tr><td><button id='generateAuthorizationToken' onclick='generateAuthorizationToken();'>Generate authorization token</button></td></tr></table>");
 			}
 			
 			function showDialog(title, content, oncloseFunction) {
@@ -494,14 +540,23 @@
 			}
 			
 			function showAskOrderDialog(quantity, price, fee) {
-				showDialog("Ask order", "<table style='margin-top: 38px;'><tr><td class='label' style='padding-top: 0;'>Quantity</td><td class='label' style='padding-top: 0;'>Price</td></tr><tr><td class='input'><input type='number' id='input' oninput='adjustAmount();'></td><td class='input'><input type='number' id='price' oninput='adjustAmount();'></td></tr><tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr><tr><td class='input'><input type='number' id='amount' readonly></td><td class='input'><input type='number' id='fee'></td></tr><tr><td colspan='2'><button id='placeAskOrder' onclick='placeAskOrder();'>Place ask order</button></td></tr></table>");
+				showDialog("Ask order", "<table style='margin-top: 38px;'>" +
+				    "<tr><td class='label' style='padding-top: 0;'>Quantity</td><td class='label' style='padding-top: 0;'>Price</td></tr>" +
+				    "<tr><td class='input'><input type='number' id='input' oninput='adjustAmount();'></td><td class='input'><input type='number' id='price' oninput='adjustAmount();'></td></tr>" +
+				    "<tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr>" +
+				    "<tr><td class='input'><input type='number' id='amount' readonly></td><td class='input'><input type='number' id='fee'></td></tr>" +
+				    "<tr><td colspan='2'><button id='placeAskOrder' onclick='placeAskOrder();'>Place ask order</button></td></tr></table>");
 				document.getElementById("input").value = quantity;
 				document.getElementById("price").value = price;
 				document.getElementById("fee").value = fee;
 			}
 			
 			function showAssetDialog(name, description, quantity, fee) {
-				showDialog("Asset", "<table><tr><td class='label' colspan='2'>Name</td></tr><tr><td class='input' colspan='2'><input id='input' maxlength='20'></td></tr><tr><td class='label' colspan='2'>Description</td></tr><tr><td class='input' colspan='2'><input id='description' maxlength='1000'></td></tr><tr><td class='label' style='padding-top: 0;'>Quantity</td><td class='label' style='padding-top: 0;'>Fee</td></tr><tr><td class='input'><input type='number' id='quantity'></td><td class='input'><input type='number' id='fee'></td></tr><tr><td colspan='2'><button id='issueAsset' onclick='issueAsset();'>Issue asset</button></td></tr></table>");
+				showDialog("Asset", "<table><tr><td class='label' colspan='2'>Name</td></tr><tr><td class='input' colspan='2'><input id='input' maxlength='20'></td></tr>" +
+				    "<tr><td class='label' colspan='2'>Description</td></tr><tr><td class='input' colspan='2'><input id='description' maxlength='1000'></td></tr>" +
+				    "<tr><td class='label' style='padding-top: 0;'>Quantity</td><td class='label' style='padding-top: 0;'>Fee</td></tr>" +
+				    "<tr><td class='input'><input type='number' id='quantity'></td><td class='input'><input type='number' id='fee'></td></tr>" +
+				    "<tr><td colspan='2'><button id='issueAsset' onclick='issueAsset();'>Issue asset</button></td></tr></table>");
 				document.getElementById("input").value = name;
 				document.getElementById("description").value = description;
 				document.getElementById("quantity").value = quantity;
@@ -509,14 +564,26 @@
 			}
 			
 			function showBidOrderDialog(quantity, price, fee) {
-				showDialog("Bid order", "<table style='margin-top: 38px;'><tr><td class='label' style='padding-top: 0;'>Quantity</td><td class='label' style='padding-top: 0;'>Price</td></tr><tr><td class='input'><input type='number' id='input' oninput='adjustAmount();'></td><td class='input'><input type='number' id='price' oninput='adjustAmount();'></td></tr><tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr><tr><td class='input'><input type='number' id='amount' readonly></td><td class='input'><input type='number' id='fee'></td></tr><tr><td colspan='2'><button id='placeBidOrder' onclick='placeBidOrder();'>Place bid order</button></td></tr></table>");
+				showDialog("Bid order", "<table style='margin-top: 38px;'>" +
+				    "<tr><td class='label' style='padding-top: 0;'>Quantity</td><td class='label' style='padding-top: 0;'>Price</td></tr>" +
+				    "<tr><td class='input'><input type='number' id='input' oninput='adjustAmount();'></td><td class='input'><input type='number' id='price' oninput='adjustAmount();'></td></tr>" +
+				    "<tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr>" +
+				    "<tr><td class='input'><input type='number' id='amount' readonly></td><td class='input'><input type='number' id='fee'></td></tr>" +
+				    "<tr><td colspan='2'><button id='placeBidOrder' onclick='placeBidOrder();'>Place bid order</button></td></tr></table>");
 				document.getElementById("input").value = quantity;
 				document.getElementById("price").value = price;
 				document.getElementById("fee").value = fee;
 			}
 			
 			function showTransactionDialog(recipient, amount, fee, deadline) {
-				showDialog("Transaction", "<table><tr><td class='label' colspan='2'>Recipient</td></tr><tr><td class='input' colspan='2'><input id='input'></td></tr><tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr><tr><td class='input'><input type='number' id='amount' oninput='adjustFee();'></td><td class='input'><input type='number' id='fee'></td></tr><tr><td class='label' colspan='2' style='padding-top: 0;'>Deadline (in hours)</td></tr><tr><td class='input'><input type='number' id='deadline' oninput='adjustDeadlineTime();'></td><td class='input'><input id='deadlineTime' readonly></td></tr><tr><td class='label' colspan='2'>Secret phrase</td></tr><tr><td class='input' colspan='2'><input type='password' id='secretPhrase'></td></tr><tr><td colspan='2'><button id='sendMoney' onclick='sendMoney();'>Send money</button></td></tr></table>");
+				showDialog("Transaction", "<table><tr><td class='label' colspan='2'>Recipient</td></tr><tr><td class='input' colspan='2'><input id='input'></td></tr>" +
+				    "<tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr>" +
+				    "<tr><td class='input'><input type='number' id='amount' oninput='adjustFee();'></td><td class='input'><input type='number' id='fee'></td></tr>" +
+				    "<tr><td class='label' colspan='2' style='padding-top: 0;'>Deadline (in hours)</td></tr><tr><td class='input'><input type='number' id='deadline' oninput='adjustDeadlineTime();'></td>" +
+				        "<td class='input'><input id='deadlineTime' readonly></td></tr>" +
+				    "<tr><td class='label' colspan='2'>Secret phrase</td></tr>" +
+				    "<tr><td class='input' colspan='2'><input type='password' id='secretPhrase'></td></tr>" +
+				    "<tr><td colspan='2'><button id='sendMoney' onclick='sendMoney();'>Send money</button></td></tr></table>");
 				document.getElementById("input").value = recipient;
 				document.getElementById("amount").value = amount;
 				document.getElementById("fee").value = fee;
@@ -546,8 +613,10 @@
 			}
 			
 			function toggleAssetFilter(filterIndex) {
-				var filterIds = ["issued", "owned", "other"], filterClassNames = ["Issued", "Owned", "Other"], element = document.getElementById(filterIds[filterIndex] + "Assets");
-				element.className = element.className == "enabled" + filterClassNames[filterIndex] + "Assets" ? ("disabled" + filterClassNames[filterIndex] + "Assets") : ("enabled" + filterClassNames[filterIndex] + "Assets");
+				var filterIds = ["issued", "owned", "other"], filterClassNames = ["Issued", "Owned", "Other"],
+				    element = document.getElementById(filterIds[filterIndex] + "Assets");
+				element.className = element.className == "enabled" + filterClassNames[filterIndex] + "Assets" ?
+				    ("disabled" + filterClassNames[filterIndex] + "Assets") : ("enabled" + filterClassNames[filterIndex] + "Assets");
 				requestAssets();
 			}
 			
@@ -587,11 +656,20 @@
 				<div class="close" title="Close" onclick="toggleWidget(0);"></div>
 			</div>
 			<div id="transactionsContent" class="widgetContent">
-				<div id="myTransactions" class="section" style="top: 10px;">My transactions [<span id="myTransactionsCounter">0</span>]<div id="myTransactionsExpand" class="expand" title="Expand" style="display: none;" onclick="expand('myTransactions');"></div><div id="myTransactionsCollapse" class="collapse" title="Collapse" onclick="collapse('myTransactions');"></div></div>
+				<div id="myTransactions" class="section" style="top: 10px;">My transactions [<span id="myTransactionsCounter">0</span>]
+                    <div id="myTransactionsExpand" class="expand" title="Expand" style="display: none;" onclick="expand('myTransactions');"></div>
+                    <div id="myTransactionsCollapse" class="collapse" title="Collapse" onclick="collapse('myTransactions');"></div>
+                </div>
 				<iframe id="myTransactionsFrame" class="widget" src="myTransactions.html" style="top: 35px;"></iframe>
-				<div id="unconfirmedTransactions" class="section">Unconfirmed transactions [<span id="unconfirmedTransactionsCounter">0</span>]<div id="unconfirmedTransactionsExpand" class="expand" title="Expand" onclick="expand('unconfirmedTransactions');"></div><div id="unconfirmedTransactionsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('unconfirmedTransactions');"></div></div>
+				<div id="unconfirmedTransactions" class="section">Unconfirmed transactions [<span id="unconfirmedTransactionsCounter">0</span>]
+                    <div id="unconfirmedTransactionsExpand" class="expand" title="Expand" onclick="expand('unconfirmedTransactions');"></div>
+                    <div id="unconfirmedTransactionsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('unconfirmedTransactions');"></div>
+                </div>
 				<iframe id="unconfirmedTransactionsFrame" class="widget" src="unconfirmedTransactions.html" style="display: none;"></iframe>
-				<div id="doubleSpendingTransactions" class="section">Double-spending transactions [<span id="doubleSpendingTransactionsCounter">0</span>]<div id="doubleSpendingTransactionsExpand" class="expand" title="Expand" onclick="expand('doubleSpendingTransactions');"></div><div id="doubleSpendingTransactionsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('doubleSpendingTransactions');"></div></div>
+				<div id="doubleSpendingTransactions" class="section">Double-spending transactions [<span id="doubleSpendingTransactionsCounter">0</span>]
+                    <div id="doubleSpendingTransactionsExpand" class="expand" title="Expand" onclick="expand('doubleSpendingTransactions');"></div>
+                    <div id="doubleSpendingTransactionsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('doubleSpendingTransactions');"></div>
+                </div>
 				<iframe id="doubleSpendingTransactionsFrame" class="widget" src="doubleSpendingTransactions.html" style="display: none;"></iframe>
 			</div>
 		</div>
@@ -601,11 +679,20 @@
 				<div class="close" title="Close" onclick="toggleWidget(1);"></div>
 			</div>
 			<div id="peersContent" class="widgetContent">
-				<div id="activePeers" class="section" style="top: 10px;">Active peers [<span id="activePeersCounter">0</span>]<div id="activePeersExpand" class="expand" title="Expand" style="display: none;" onclick="expand('activePeers');"></div><div id="activePeersCollapse" class="collapse" title="Collapse" onclick="collapse('activePeers');"></div></div>
+				<div id="activePeers" class="section" style="top: 10px;">Active peers [<span id="activePeersCounter">0</span>]
+                    <div id="activePeersExpand" class="expand" title="Expand" style="display: none;" onclick="expand('activePeers');"></div>
+                    <div id="activePeersCollapse" class="collapse" title="Collapse" onclick="collapse('activePeers');"></div>
+                </div>
 				<iframe id="activePeersFrame" class="widget" src="activePeers.html" style="top: 35px;"></iframe>
-				<div id="knownPeers" class="section">Known peers [<span id="knownPeersCounter">0</span>]<div id="knownPeersExpand" class="expand" title="Expand" onclick="expand('knownPeers');"></div><div id="knownPeersCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('knownPeers');"></div></div>
+				<div id="knownPeers" class="section">Known peers [<span id="knownPeersCounter">0</span>]
+                    <div id="knownPeersExpand" class="expand" title="Expand" onclick="expand('knownPeers');"></div>
+                    <div id="knownPeersCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('knownPeers');"></div>
+                </div>
 				<iframe id="knownPeersFrame" class="widget" src="knownPeers.html" style="display: none;"></iframe>
-				<div id="blacklistedPeers" class="section">Blacklisted peers [<span id="blacklistedPeersCounter">0</span>]<div id="blacklistedPeersExpand" class="expand" title="Expand" onclick="expand('blacklistedPeers');"></div><div id="blacklistedPeersCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('blacklistedPeers');"></div></div>
+				<div id="blacklistedPeers" class="section">Blacklisted peers [<span id="blacklistedPeersCounter">0</span>]
+                    <div id="blacklistedPeersExpand" class="expand" title="Expand" onclick="expand('blacklistedPeers');"></div>
+                    <div id="blacklistedPeersCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('blacklistedPeers');"></div>
+                </div>
 				<iframe id="blacklistedPeersFrame" class="widget" src="blacklistedPeers.html" style="display: none;"></iframe>
 			</div>
 		</div>
@@ -615,11 +702,20 @@
 				<div class="close" title="Close" onclick="toggleWidget(2);"></div>
 			</div>
 			<div id="blocksContent" class="widgetContent">
-				<div id="recentBlocks" class="section" style="top: 10px;">Recent blocks [<span id="recentBlocksCounter">0</span>]<div id="recentBlocksExpand" class="expand" title="Expand" style="display: none;" onclick="expand('recentBlocks');"></div><div id="recentBlocksCollapse" class="collapse" title="Collapse" onclick="collapse('recentBlocks');"></div></div>
+				<div id="recentBlocks" class="section" style="top: 10px;">Recent blocks [<span id="recentBlocksCounter">0</span>]
+                    <div id="recentBlocksExpand" class="expand" title="Expand" style="display: none;" onclick="expand('recentBlocks');"></div>
+                    <div id="recentBlocksCollapse" class="collapse" title="Collapse" onclick="collapse('recentBlocks');"></div>
+                </div>
 				<iframe id="recentBlocksFrame" class="widget" src="recentBlocks.html" style="top: 35px;"></iframe>
-				<div id="orphanedBlocks" class="section">Orphaned blocks [<span id="orphanedBlocksCounter">0</span>]<div id="orphanedBlocksExpand" class="expand" title="Expand" onclick="expand('orphanedBlocks');"></div><div id="orphanedBlocksCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('orphanedBlocks');"></div></div>
+				<div id="orphanedBlocks" class="section">Orphaned blocks [<span id="orphanedBlocksCounter">0</span>]
+                    <div id="orphanedBlocksExpand" class="expand" title="Expand" onclick="expand('orphanedBlocks');"></div>
+                    <div id="orphanedBlocksCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('orphanedBlocks');"></div>
+                </div>
 				<iframe id="orphanedBlocksFrame" class="widget" src="orphanedBlocks.html" style="display: none;"></iframe>
-				<div id="weirdBlocks" class="section">Weird blocks [<span id="weirdBlocksCounter">0</span>]<div id="weirdBlocksExpand" class="expand" title="Expand" onclick="expand('weirdBlocks');"></div><div id="weirdBlocksCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('weirdBlocks');"></div></div>
+				<div id="weirdBlocks" class="section">Weird blocks [<span id="weirdBlocksCounter">0</span>]
+                    <div id="weirdBlocksExpand" class="expand" title="Expand" onclick="expand('weirdBlocks');"></div>
+                    <div id="weirdBlocksCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('weirdBlocks');"></div>
+                </div>
 				<iframe id="weirdBlocksFrame" class="widget" src="weirdBlocks.html" style="display: none;"></iframe>
 			</div>
 		</div>
@@ -629,11 +725,20 @@
 				<div class="close" title="Close" onclick="toggleWidget(3);"></div>
 			</div>
 			<div id="accountsContent" class="widgetContent">
-				<div id="activeAccounts" class="section" style="top: 10px;">Active accounts [<span id="activeAccountsCounter">0</span>]<div id="activeAccountsExpand" class="expand" title="Expand" style="display: none;" onclick="expand('activeAccounts');"></div><div id="activeAccountsCollapse" class="collapse" title="Collapse" onclick="collapse('activeAccounts');"></div></div>
+				<div id="activeAccounts" class="section" style="top: 10px;">Active accounts [<span id="activeAccountsCounter">0</span>]
+                    <div id="activeAccountsExpand" class="expand" title="Expand" style="display: none;" onclick="expand('activeAccounts');"></div>
+                    <div id="activeAccountsCollapse" class="collapse" title="Collapse" onclick="collapse('activeAccounts');"></div>
+                </div>
 				<iframe id="activeAccountsFrame" class="widget" src="activeAccounts.html" style="top: 35px;"></iframe>
-				<div id="newAccounts" class="section">New accounts [<span id="newAccountsCounter">0</span>]<div id="newAccountsExpand" class="expand" title="Expand" onclick="expand('newAccounts');"></div><div id="newAccountsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('newAccounts');"></div></div>
+				<div id="newAccounts" class="section">New accounts [<span id="newAccountsCounter">0</span>]
+                    <div id="newAccountsExpand" class="expand" title="Expand" onclick="expand('newAccounts');"></div>
+                    <div id="newAccountsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('newAccounts');"></div>
+                </div>
 				<iframe id="newAccountsFrame" class="widget" src="newAccounts.html" style="display: none;"></iframe>
-				<div id="suspiciousAccounts" class="section">Suspicious accounts [<span id="suspiciousAccountsCounter">0</span>]<div id="suspiciousAccountsExpand" class="expand" title="Expand" onclick="expand('suspiciousAccounts');"></div><div id="suspiciousAccountsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('suspiciousAccounts');"></div></div>
+				<div id="suspiciousAccounts" class="section">Suspicious accounts [<span id="suspiciousAccountsCounter">0</span>]
+                    <div id="suspiciousAccountsExpand" class="expand" title="Expand" onclick="expand('suspiciousAccounts');"></div>
+                    <div id="suspiciousAccountsCollapse" class="collapse" title="Collapse" style="display: none;" onclick="collapse('suspiciousAccounts');"></div>
+                </div>
 				<iframe id="suspiciousAccountsFrame" class="widget" src="suspiciousAccounts.html" style="display: none;"></iframe>
 			</div>
 		</div>

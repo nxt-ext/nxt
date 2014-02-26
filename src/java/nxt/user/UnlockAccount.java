@@ -76,12 +76,10 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
                     myTransaction.put("sentAmount", transaction.getAmount());
                     if (accountId.equals(transaction.getRecipientId())) {
-
                         myTransaction.put("receivedAmount", transaction.getAmount());
-
                     }
                     myTransaction.put("fee", transaction.getFee());
-                    myTransaction.put("numberOfConfirmations", 0);
+                    myTransaction.put("numberOfConfirmations", -1);
                     myTransaction.put("id", transaction.getStringId());
 
                     myTransactions.add(myTransaction);
@@ -95,7 +93,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
                     myTransaction.put("receivedAmount", transaction.getAmount());
                     myTransaction.put("fee", transaction.getFee());
-                    myTransaction.put("numberOfConfirmations", 0);
+                    myTransaction.put("numberOfConfirmations", -1);
                     myTransaction.put("id", transaction.getStringId());
 
                     myTransactions.add(myTransaction);
@@ -112,7 +110,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", Users.getIndex(block));
+                        myTransaction.put("index", "block" + Users.getIndex(block));
                         myTransaction.put("blockTimestamp", block.getTimestamp());
                         myTransaction.put("block", block.getStringId());
                         myTransaction.put("earnedAmount", block.getTotalFee());
