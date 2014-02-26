@@ -394,7 +394,7 @@ final class PeerImpl implements Peer {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
             if (! hallmark.isValid()
                     || ! (hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
-                Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
+                //Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
                 return false;
             }
             this.hallmark = hallmark;

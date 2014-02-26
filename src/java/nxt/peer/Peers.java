@@ -295,6 +295,9 @@ public final class Peers {
                         return;
                     }
                     JSONArray peers = (JSONArray)response.get("peers");
+                    if (peers == null) {
+                        return;
+                    }
                     for (Object announcedAddress : peers) {
                         addPeer((String) announcedAddress);
                     }
