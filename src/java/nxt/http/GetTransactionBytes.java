@@ -47,7 +47,7 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
         } else {
             response.put("bytes", Convert.toHexString(transactionData.getBytes()));
             Block block = transactionData.getBlock();
-            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight() + 1);
+            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight());
 
         }
         return response;
