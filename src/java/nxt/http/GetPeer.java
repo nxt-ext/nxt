@@ -43,7 +43,6 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
         response.put("version", peer.getVersion());
         response.put("platform", peer.getPlatform());
         response.put("blacklisted", peer.isBlacklisted());
-        response.put("wellknown", peer.isWellKnown());
 
         return response;
     }
