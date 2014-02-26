@@ -66,9 +66,10 @@ public final class PeerServlet extends HttpServlet {
         JSONStreamAware response;
 
         try {
-            peer = Peers.addPeer(req.getRemoteHost(), null);
+            peer = Peers.addPeer(req.getRemoteAddr(), null);
             if (peer == null) {
-                Logger.logDebugMessage("Invalid peer remote host: " + req.getRemoteHost());
+                Logger.logDebugMessage("Invalid peer address: " + req.getRemoteAddr());
+                return;
             }
             if (peer.isBlacklisted()) {
                 return;

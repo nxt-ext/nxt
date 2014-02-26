@@ -209,7 +209,6 @@ final class PeerImpl implements Peer {
     public void blacklist() {
         blacklistingTime = System.currentTimeMillis();
         setState(State.NON_CONNECTED);
-        //deactivate();
         Peers.notifyListeners(this, Peers.Event.BLACKLIST);
     }
 
@@ -228,11 +227,6 @@ final class PeerImpl implements Peer {
 
     @Override
     public void deactivate() {
-        /*
-        if (state == State.CONNECTED) {
-            setState(State.DISCONNECTED);
-        }
-        */
         setState(State.NON_CONNECTED);
         Peers.notifyListeners(this, Peers.Event.DEACTIVATE);
     }
@@ -400,7 +394,7 @@ final class PeerImpl implements Peer {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
             if (! hallmark.isValid()
                     || ! (hallmark.getHost().equals(host) || InetAddress.getByName(host).equals(InetAddress.getByName(hallmark.getHost())))) {
-                //Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
+                Logger.logDebugMessage("Invalid hallmark for " + host + ", hallmark host is " + hallmark.getHost());
                 return false;
             }
             this.hallmark = hallmark;

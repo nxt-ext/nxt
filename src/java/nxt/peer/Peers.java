@@ -360,7 +360,18 @@ public final class Peers {
     }
 
     public static Peer addPeer(String announcedAddress) {
-        return addPeer(announcedAddress, announcedAddress);
+        if (announcedAddress == null) {
+            return null;
+        }
+        try {
+            URI uri = new URI("http://" + announcedAddress.trim());
+            String host = uri.getHost();
+            InetAddress inetAddress = InetAddress.getByName(host);
+            return addPeer(inetAddress.getHostAddress(), announcedAddress);
+        } catch (URISyntaxException | UnknownHostException e) {
+            Logger.logDebugMessage("Invalid peer address: " + announcedAddress, e);
+            return null;
+        }
     }
 
     static PeerImpl addPeer(final String address, final String announcedAddress) {
