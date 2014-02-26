@@ -136,8 +136,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         @Override
         public void run() {
             try {
+                Peer peer = null;
                 try {
-                    Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
+                    peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                     if (peer == null) {
                         return;
                     }
@@ -148,6 +149,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
                     processJSONTransactions(transactionsData, false);
                 } catch (Exception e) {
+                    if (peer != null) {
+                        peer.blacklist();
+                    }
                     Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
             } catch (Throwable t) {
