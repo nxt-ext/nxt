@@ -5,7 +5,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-final class GetNewData extends UserRequestHandler {
+public final class GetNewData extends UserServlet.UserRequestHandler {
 
     static final GetNewData instance = new GetNewData();
 

@@ -4,7 +4,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Alias;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -28,7 +27,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_URI;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class AssignAlias extends HttpRequestDispatcher.HttpRequestHandler {
+public final class AssignAlias extends APIServlet.APIRequestHandler {
 
     static final AssignAlias instance = new AssignAlias();
 
@@ -62,7 +61,7 @@ public final class AssignAlias extends HttpRequestDispatcher.HttpRequestHandler 
 
         String normalizedAlias = alias.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
-            if (Convert.alphabet.indexOf(normalizedAlias.charAt(i)) < 0) {
+            if (Nxt.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                 return INCORRECT_ALIAS;
             }
         }
@@ -110,17 +109,22 @@ public final class AssignAlias extends HttpRequestDispatcher.HttpRequestHandler 
 
             int timestamp = Convert.getEpochTime();
             Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
-            Transaction transaction = Transaction.newTransaction(timestamp, deadline,
+            Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline,
                     publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
             transaction.sign(secretPhrase);
 
-            Blockchain.broadcast(transaction);
+            Nxt.getTransactionProcessor().broadcast(transaction);
 
             response.put("transaction", transaction.getStringId());
 
         }
 
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

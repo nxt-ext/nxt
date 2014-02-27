@@ -6,7 +6,8 @@ import java.math.BigInteger;
 
 public final class Convert {
 
-    public static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+    private static final char[] hexChars = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
 
     private Convert() {} //never
@@ -29,10 +30,8 @@ public final class Convert {
     public static String toHexString(byte[] bytes) {
         char[] chars = new char[bytes.length * 2];
         for (int i = 0; i < bytes.length; i++) {
-            int char1 = (bytes[i] & 0xFF) >> 4;
-            chars[i * 2] = (char) (char1 > 9 ? char1 + 0x57 : char1 + 0x30);
-            int char2 = (bytes[i] & 0xF);
-            chars[i * 2 + 1] = (char) (char2 > 9 ? char2 + 0x57 : char2 + 0x30);
+            chars[i * 2] = hexChars[((bytes[i] >> 4) & 0xF)];
+            chars[i * 2 + 1] = hexChars[(bytes[i] & 0xF)];
         }
         return String.valueOf(chars);
     }
@@ -61,7 +60,7 @@ public final class Convert {
     }
 
     public static int getEpochTime() {
-        return (int)((System.currentTimeMillis() - Nxt.epochBeginning + 500) / 1000);
+        return (int)((System.currentTimeMillis() - Nxt.EPOCH_BEGINNING + 500) / 1000);
     }
 
     public static Long zeroToNull(long l) {

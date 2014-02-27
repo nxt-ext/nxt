@@ -9,22 +9,22 @@ import java.sql.Statement;
 
 final class Db {
 
-    private static JdbcConnectionPool cp;
+    private static volatile JdbcConnectionPool cp;
+    private static volatile int maxActiveConnections;
 
     static void init() {
-        /*
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Db.shutdown();
-            }
-        }));
-        */
-        long maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
-        Logger.logDebugMessage("Database cache size set to " + maxCacheSize + " kB");
-        cp = JdbcConnectionPool.create("jdbc:h2:nxt_db/nxt;DB_CLOSE_DELAY=10;DB_CLOSE_ON_EXIT=FALSE;CACHE_SIZE=" + maxCacheSize, "sa", "sa");
-        cp.setMaxConnections(200);
-        cp.setLoginTimeout(70);
+        long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB");
+        if (maxCacheSize == 0) {
+            maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
+        }
+        String dbUrl = Nxt.getStringProperty("nxt.dbUrl");
+        if (! dbUrl.contains("CACHE_SIZE=")) {
+            dbUrl += ";CACHE_SIZE=" + maxCacheSize;
+        }
+        Logger.logDebugMessage("Database jdbc url set to: " + dbUrl);
+        cp = JdbcConnectionPool.create(dbUrl, "sa", "sa");
+        cp.setMaxConnections(Nxt.getIntProperty("nxt.maxDbConnections"));
+        cp.setLoginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout"));
         DbVersion.init();
     }
 
@@ -33,6 +33,7 @@ final class Db {
             try (Connection con = cp.getConnection();
                  Statement stmt = con.createStatement()) {
                 stmt.execute("SHUTDOWN COMPACT");
+                Logger.logMessage("Database shutdown completed");
             } catch (SQLException e) {
                 Logger.logDebugMessage(e.toString(), e);
             }
@@ -44,6 +45,11 @@ final class Db {
     static Connection getConnection() throws SQLException {
         Connection con = cp.getConnection();
         con.setAutoCommit(false);
+        int activeConnections = cp.getActiveConnections();
+        if (activeConnections > maxActiveConnections) {
+            maxActiveConnections = activeConnections;
+            Logger.logDebugMessage("Database connection pool current size: " + activeConnections);
+        }
         return con;
     }
 

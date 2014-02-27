@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -28,7 +27,7 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class PlaceAskOrder extends HttpRequestDispatcher.HttpRequestHandler {
+public final class PlaceAskOrder extends APIServlet.APIRequestHandler {
 
     static final PlaceAskOrder instance = new PlaceAskOrder();
 
@@ -128,15 +127,20 @@ public final class PlaceAskOrder extends HttpRequestDispatcher.HttpRequestHandle
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline,
                 publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

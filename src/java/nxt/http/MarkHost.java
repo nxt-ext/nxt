@@ -16,7 +16,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_WEIGHT;
 
 
-public final class MarkHost extends HttpRequestDispatcher.HttpRequestHandler {
+public final class MarkHost extends APIServlet.APIRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 
@@ -65,6 +65,11 @@ public final class MarkHost extends HttpRequestDispatcher.HttpRequestHandler {
             return INCORRECT_DATE;
         }
 
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

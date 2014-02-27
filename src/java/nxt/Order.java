@@ -20,7 +20,6 @@ public abstract class Order {
         Bid.sortedBidOrders.clear();
     }
 
-    // called only from Blockchain.apply(Block) which is already synchronized on Blockchain.class
     private static void matchOrders(Long assetId) {
 
         SortedSet<Ask> sortedAssetAskOrders = Ask.sortedAskOrders.get(assetId);
@@ -42,7 +41,7 @@ public abstract class Order {
             int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
             long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
-            Trade.addTrade(assetId, Blockchain.getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
+            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
 
             if ((((Order)askOrder).quantity -= quantity) == 0) {
                 Ask.removeOrder(askOrder.getId());
@@ -74,7 +73,7 @@ public abstract class Order {
         this.assetId = assetId;
         this.quantity = quantity;
         this.price = price;
-        this.height = Blockchain.getLastBlock().getHeight();
+        this.height = Nxt.getBlockchain().getLastBlock().getHeight();
     }
 
     public Long getId() {

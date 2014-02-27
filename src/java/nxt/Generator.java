@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
+import nxt.util.ThreadPool;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -27,7 +28,7 @@ public final class Generator {
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
 
-    static final Runnable generateBlockThread = new Runnable() {
+    private static final Runnable generateBlockThread = new Runnable() {
 
         @Override
         public void run() {
@@ -50,6 +51,11 @@ public final class Generator {
 
     };
 
+    static {
+        ThreadPool.scheduleThread(generateBlockThread, 1);
+    }
+
+    static void init() {}
 
     public static boolean addListener(Listener<Generator> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
@@ -118,7 +124,7 @@ public final class Generator {
             return;
         }
 
-        Block lastBlock = Blockchain.getLastBlock();
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
         if (! lastBlock.equals(lastBlocks.get(account))) {
 
@@ -150,7 +156,7 @@ public final class Generator {
         if (elapsedTime > 0) {
             BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance)).multiply(BigInteger.valueOf(elapsedTime));
             if (hits.get(account).compareTo(target) < 0) {
-                Blockchain.generateBlock(secretPhrase);
+                BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
             }
         }
 

@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
-public final class GetAccountId extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetAccountId extends APIServlet.APIRequestHandler {
 
     static final GetAccountId instance = new GetAccountId();
 
@@ -30,6 +30,11 @@ public final class GetAccountId extends HttpRequestDispatcher.HttpRequestHandler
         response.put("accountId", Convert.toUnsignedLong(Account.getId(publicKey)));
 
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -27,7 +26,7 @@ import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class TransferAsset extends HttpRequestDispatcher.HttpRequestHandler {
+public final class TransferAsset extends APIServlet.APIRequestHandler {
 
     static final TransferAsset instance = new TransferAsset();
 
@@ -123,15 +122,20 @@ public final class TransferAsset extends HttpRequestDispatcher.HttpRequestHandle
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey,
                 recipient, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

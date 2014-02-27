@@ -1,5 +1,6 @@
 package nxt.peer;
 
+import nxt.Account;
 import nxt.Nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
@@ -89,27 +90,35 @@ public final class Hallmark {
 
             boolean isValid = host.length() < 100 && weight > 0 && weight <= Nxt.MAX_BALANCE && Crypto.verify(signature, data, publicKey);
 
-            return new Hallmark(publicKey, signature, host, weight, date, isValid);
+            return new Hallmark(hallmarkString, publicKey, signature, host, weight, date, isValid);
 
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
+    private final String hallmarkString;
     private final String host;
     private final int weight;
     private final int date;
     private final byte[] publicKey;
+    private final Long accountId;
     private final byte[] signature;
     private final boolean isValid;
 
-    private Hallmark(byte[] publicKey, byte[] signature, String host, int weight, int date, boolean isValid) {
+    private Hallmark(String hallmarkString, byte[] publicKey, byte[] signature, String host, int weight, int date, boolean isValid) {
+        this.hallmarkString = hallmarkString;
         this.host = host;
         this.publicKey = publicKey;
+        this.accountId = Account.getId(publicKey);
         this.signature = signature;
         this.weight = weight;
         this.date = date;
         this.isValid = isValid;
+    }
+
+    public String getHallmarkString() {
+        return hallmarkString;
     }
 
     public String getHost() {
@@ -130,6 +139,10 @@ public final class Hallmark {
 
     public byte[] getPublicKey() {
         return publicKey;
+    }
+
+    public Long getAccountId() {
+        return accountId;
     }
 
     public boolean isValid() {

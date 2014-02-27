@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -14,7 +13,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -27,14 +25,14 @@ import static nxt.http.JSONResponses.MISSING_POLL;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class CastVote extends HttpRequestDispatcher.HttpRequestHandler {
+public final class CastVote extends APIServlet.APIRequestHandler {
 
     static final CastVote instance = new CastVote();
 
     private CastVote() {}
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException, IOException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String secretPhrase = req.getParameter("secretPhrase");
         String pollValue = req.getParameter("poll");
@@ -58,6 +56,7 @@ public final class CastVote extends HttpRequestDispatcher.HttpRequestHandler {
             if (pollData != null) {
                 numberOfOptions = pollData.getOptions().length;
             }
+            else return INCORRECT_POLL;
         } catch (RuntimeException e) {
             return INCORRECT_POLL;
         }
@@ -110,16 +109,21 @@ public final class CastVote extends HttpRequestDispatcher.HttpRequestHandler {
         int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
-        Transaction transaction = Transaction.newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
         response.put("bytes", Convert.toHexString(transaction.getBytes()));
 
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

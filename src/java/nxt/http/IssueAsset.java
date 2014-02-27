@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
-import nxt.Blockchain;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -29,7 +28,7 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class IssueAsset extends HttpRequestDispatcher.HttpRequestHandler {
+public final class IssueAsset extends APIServlet.APIRequestHandler {
 
     static final IssueAsset instance = new IssueAsset();
 
@@ -60,7 +59,7 @@ public final class IssueAsset extends HttpRequestDispatcher.HttpRequestHandler {
 
         String normalizedName = name.toLowerCase();
         for (int i = 0; i < normalizedName.length(); i++) {
-            if (Convert.alphabet.indexOf(normalizedName.charAt(i)) < 0) {
+            if (Nxt.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                 return INCORRECT_ASSET_NAME;
             }
         }
@@ -100,16 +99,21 @@ public final class IssueAsset extends HttpRequestDispatcher.HttpRequestHandler {
 
         int timestamp = Convert.getEpochTime();
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
-        Transaction transaction = Transaction.newTransaction(timestamp, (short)1440, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, (short) 1440, publicKey,
                 Genesis.CREATOR_ID, 0, fee, null, attachment);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
         return response;
 
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

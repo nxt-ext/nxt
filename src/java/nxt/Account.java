@@ -81,7 +81,7 @@ public final class Account {
 
     private Account(Long id) {
         this.id = id;
-        this.height = Blockchain.getLastBlock().getHeight();
+        this.height = Nxt.getBlockchain().getLastBlock().getHeight();
     }
 
     public Long getId() {
@@ -102,7 +102,7 @@ public final class Account {
 
     public int getEffectiveBalance() {
 
-        Block lastBlock = Blockchain.getLastBlock();
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
         if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
@@ -126,13 +126,13 @@ public final class Account {
     }
 
     public synchronized long getGuaranteedBalance(final int numberOfConfirmations) {
-        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations >= Blockchain.getLastBlock().getHeight() || numberOfConfirmations < 0) {
+        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight() || numberOfConfirmations < 0) {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
         }
         if (guaranteedBalances.isEmpty()) {
             return 0;
         }
-        int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(Blockchain.getLastBlock().getHeight() - numberOfConfirmations, 0));
+        int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(Nxt.getBlockchain().getLastBlock().getHeight() - numberOfConfirmations, 0));
         if (i == -1) {
             return 0;
         }
@@ -207,7 +207,7 @@ public final class Account {
         }
         if (this.height == height) {
             Logger.logDebugMessage("Removing account " + Convert.toUnsignedLong(id) + " which was created in the popped off block");
-            accounts.remove(this);
+            accounts.remove(this.getId());
         }
     }
 
@@ -270,15 +270,13 @@ public final class Account {
     }
 
     private synchronized void addToGuaranteedBalance(long amount) {
-        int blockchainHeight = Blockchain.getLastBlock().getHeight();
+        int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
         GuaranteedBalance last = null;
         if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
             // this only happens while last block is being popped off
             if (amount > 0) {
                 // this is a reversal of a withdrawal or a fee, so previous gb records need to be corrected
-                Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
-                while (iter.hasNext()) {
-                    GuaranteedBalance gb = iter.next();
+                for (GuaranteedBalance gb : guaranteedBalances) {
                     gb.balance += amount;
                 }
             } // deposits don't need to be reversed as they have never been applied to old gb records to begin with

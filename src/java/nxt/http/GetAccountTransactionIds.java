@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
@@ -17,7 +17,7 @@ import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-public final class GetAccountTransactionIds extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler {
 
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 
@@ -68,7 +68,7 @@ public final class GetAccountTransactionIds extends HttpRequestDispatcher.HttpRe
         }
 
         JSONArray transactionIds = new JSONArray();
-        try (DbIterator<Transaction> iterator = Blockchain.getAllTransactions(account, type, subtype, timestamp)) {
+        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions(account, type, subtype, timestamp)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactionIds.add(transaction.getStringId());

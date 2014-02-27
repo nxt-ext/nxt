@@ -2,7 +2,7 @@ package nxt.user;
 
 import nxt.Account;
 import nxt.Block;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
@@ -19,7 +19,7 @@ import java.util.TreeMap;
 
 import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
-final class UnlockAccount extends UserRequestHandler {
+public final class UnlockAccount extends UserServlet.UserRequestHandler {
 
     static final UnlockAccount instance = new UnlockAccount();
 
@@ -29,7 +29,7 @@ final class UnlockAccount extends UserRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
         // lock all other instances of this account being unlocked
-        for (User u : User.getAllUsers()) {
+        for (User u : Users.getAllUsers()) {
             if (secretPhrase.equals(u.getSecretPhrase())) {
                 u.lockAccount();
                 if (! u.isInactive()) {
@@ -65,23 +65,21 @@ final class UnlockAccount extends UserRequestHandler {
 
             JSONArray myTransactions = new JSONArray();
             byte[] accountPublicKey = account.getPublicKey();
-            for (Transaction transaction : Blockchain.getAllUnconfirmedTransactions()) {
+            for (Transaction transaction : Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
 
                 if (Arrays.equals(transaction.getSenderPublicKey(), accountPublicKey)) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", User.getIndex(transaction));
+                    myTransaction.put("index", Users.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
                     myTransaction.put("sentAmount", transaction.getAmount());
                     if (accountId.equals(transaction.getRecipientId())) {
-
                         myTransaction.put("receivedAmount", transaction.getAmount());
-
                     }
                     myTransaction.put("fee", transaction.getFee());
-                    myTransaction.put("numberOfConfirmations", 0);
+                    myTransaction.put("numberOfConfirmations", -1);
                     myTransaction.put("id", transaction.getStringId());
 
                     myTransactions.add(myTransaction);
@@ -89,13 +87,13 @@ final class UnlockAccount extends UserRequestHandler {
                 } else if (accountId.equals(transaction.getRecipientId())) {
 
                     JSONObject myTransaction = new JSONObject();
-                    myTransaction.put("index", User.getIndex(transaction));
+                    myTransaction.put("index", Users.getIndex(transaction));
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
                     myTransaction.put("receivedAmount", transaction.getAmount());
                     myTransaction.put("fee", transaction.getFee());
-                    myTransaction.put("numberOfConfirmations", 0);
+                    myTransaction.put("numberOfConfirmations", -1);
                     myTransaction.put("id", transaction.getStringId());
 
                     myTransactions.add(myTransaction);
@@ -106,13 +104,13 @@ final class UnlockAccount extends UserRequestHandler {
 
             SortedMap<Integer,JSONObject> myTransactionsMap = new TreeMap<>();
 
-            int blockchainHeight = Blockchain.getLastBlock().getHeight();
-            try (DbIterator<Block> blockIterator = Blockchain.getAllBlocks(account, 0)) {
+            int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
+            try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getAllBlocks(account, 0)) {
                 while (blockIterator.hasNext()) {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", User.getIndex(block));
+                        myTransaction.put("index", "block" + Users.getIndex(block));
                         myTransaction.put("blockTimestamp", block.getTimestamp());
                         myTransaction.put("block", block.getStringId());
                         myTransaction.put("earnedAmount", block.getTotalFee());
@@ -123,12 +121,12 @@ final class UnlockAccount extends UserRequestHandler {
                 }
             }
 
-            try (DbIterator<Transaction> transactionIterator = Blockchain.getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
+            try (DbIterator<? extends Transaction> transactionIterator = Nxt.getBlockchain().getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
                 while (transactionIterator.hasNext()) {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", User.getIndex(transaction));
+                        myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
@@ -142,7 +140,7 @@ final class UnlockAccount extends UserRequestHandler {
                         myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
                     } else if (transaction.getRecipientId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
-                        myTransaction.put("index", User.getIndex(transaction));
+                        myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
@@ -168,6 +166,11 @@ final class UnlockAccount extends UserRequestHandler {
             }
         }
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

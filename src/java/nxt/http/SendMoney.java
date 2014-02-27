@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -24,7 +23,7 @@ import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class SendMoney extends HttpRequestDispatcher.HttpRequestHandler {
+public final class SendMoney extends APIServlet.APIRequestHandler {
 
     static final SendMoney instance = new SendMoney();
 
@@ -103,17 +102,22 @@ public final class SendMoney extends HttpRequestDispatcher.HttpRequestHandler {
 
         }
 
-        Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(Convert.getEpochTime(), deadline, publicKey,
                 recipient, amount, fee, referencedTransaction);
         transaction.sign(secretPhrase);
 
-        Blockchain.broadcast(transaction);
+        Nxt.getTransactionProcessor().broadcast(transaction);
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
         response.put("bytes", Convert.toHexString(transaction.getBytes()));
 
         return response;
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

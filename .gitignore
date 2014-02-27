@@ -1,5 +1,8 @@
 /.idea/
 /nxt_db/
-/*.log
+/webapps/
 /classes/
-/html/
+/*.log
+/html/doc/*
+/keystore
+/nxt.jar

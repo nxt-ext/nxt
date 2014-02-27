@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collections;
 
 public interface Attachment {
 
@@ -17,10 +18,10 @@ public interface Attachment {
     public byte[] getBytes();
     public JSONStreamAware getJSON();
 
-    Transaction.Type getTransactionType();
+    TransactionType getTransactionType();
 
 
-    public static class MessagingArbitraryMessage implements Attachment, Serializable {
+    public final static class MessagingArbitraryMessage implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -60,8 +61,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.Messaging.ARBITRARY_MESSAGE;
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ARBITRARY_MESSAGE;
         }
 
         public byte[] getMessage() {
@@ -69,7 +70,7 @@ public interface Attachment {
         }
     }
 
-    public static class MessagingAliasAssignment implements Attachment, Serializable {
+    public final static class MessagingAliasAssignment implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -130,8 +131,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.Messaging.ALIAS_ASSIGNMENT;
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_ASSIGNMENT;
         }
 
         public String getAliasName() {
@@ -143,7 +144,7 @@ public interface Attachment {
         }
     }
 
-    public static class MessagingPollCreation implements Attachment, Serializable {
+    public final static class MessagingPollCreation implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -168,8 +169,8 @@ public interface Attachment {
         public int getSize() {
             try {
                 int size = 2 + pollName.getBytes("UTF-8").length + 2 + pollDescription.getBytes("UTF-8").length + 1;
-                for (int i = 0; i < pollOptions.length; i++) {
-                    size += 2 + pollOptions[i].getBytes("UTF-8").length;
+                for (String pollOption : pollOptions) {
+                    size += 2 + pollOption.getBytes("UTF-8").length;
                 }
                 size +=  1 + 1 + 1;
                 return size;
@@ -198,9 +199,9 @@ public interface Attachment {
                 buffer.putShort((short)description.length);
                 buffer.put(description);
                 buffer.put((byte)options.length);
-                for (int i = 0; i < options.length; i++) {
-                    buffer.putShort((short)options[i].length);
-                    buffer.put(options[i]);
+                for (byte[] option : options) {
+                    buffer.putShort((short) option.length);
+                    buffer.put(option);
                 }
                 buffer.put(this.minNumberOfOptions);
                 buffer.put(this.maxNumberOfOptions);
@@ -224,9 +225,7 @@ public interface Attachment {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
             JSONArray options = new JSONArray();
-            for (int i = 0; i < this.pollOptions.length; i++) {
-                options.add(this.pollOptions[i]);
-            }
+            Collections.addAll(options, this.pollOptions);
             attachment.put("options", options);
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
@@ -237,8 +236,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.Messaging.POLL_CREATION;
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.POLL_CREATION;
         }
 
         public String getPollName() { return pollName; }
@@ -255,7 +254,7 @@ public interface Attachment {
 
     }
 
-    public static class MessagingVoteCasting implements Attachment, Serializable {
+    public final static class MessagingVoteCasting implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -293,8 +292,8 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
-            for (int i = 0; i < this.pollVote.length; i++) {
-                vote.add(this.pollVote[i]);
+            for (byte aPollVote : this.pollVote) {
+                vote.add(aPollVote);
             }
             attachment.put("vote", vote);
 
@@ -303,8 +302,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.Messaging.VOTE_CASTING;
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.VOTE_CASTING;
         }
 
         public Long getPollId() { return pollId; }
@@ -313,7 +312,7 @@ public interface Attachment {
 
     }
 
-    public static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
+    public final static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -375,8 +374,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.ColoredCoins.ASSET_ISSUANCE;
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.ASSET_ISSUANCE;
         }
 
         public String getName() {
@@ -392,7 +391,7 @@ public interface Attachment {
         }
     }
 
-    public static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
+    public final static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
@@ -435,8 +434,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.ColoredCoins.ASSET_TRANSFER;
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.ASSET_TRANSFER;
         }
 
         public Long getAssetId() {
@@ -507,7 +506,7 @@ public interface Attachment {
         }
     }
 
-    public static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
+    public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
         static final long serialVersionUID = 0;
 
@@ -516,13 +515,13 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.ColoredCoins.ASK_ORDER_PLACEMENT;
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT;
         }
 
     }
 
-    public static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
+    public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
         static final long serialVersionUID = 0;
 
@@ -531,8 +530,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.ColoredCoins.BID_ORDER_PLACEMENT;
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.BID_ORDER_PLACEMENT;
         }
 
     }
@@ -578,7 +577,7 @@ public interface Attachment {
         }
     }
 
-    public static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
+    public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
         static final long serialVersionUID = 0;
 
@@ -587,13 +586,13 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.ColoredCoins.ASK_ORDER_CANCELLATION;
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION;
         }
 
     }
 
-    public static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
+    public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
         static final long serialVersionUID = 0;
 
@@ -602,8 +601,8 @@ public interface Attachment {
         }
 
         @Override
-        public Transaction.Type getTransactionType() {
-            return Transaction.Type.ColoredCoins.BID_ORDER_CANCELLATION;
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.BID_ORDER_CANCELLATION;
         }
 
     }

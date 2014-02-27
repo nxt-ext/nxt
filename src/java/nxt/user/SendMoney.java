@@ -1,7 +1,6 @@
 package nxt.user;
 
 import nxt.Account;
-import nxt.Blockchain;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -14,7 +13,7 @@ import java.io.IOException;
 
 import static nxt.user.JSONResponses.NOTIFY_OF_ACCEPTED_TRANSACTION;
 
-final class SendMoney extends UserRequestHandler {
+public final class SendMoney extends UserServlet.UserRequestHandler {
 
     static final SendMoney instance = new SendMoney();
 
@@ -124,14 +123,19 @@ final class SendMoney extends UserRequestHandler {
 
         } else {
 
-            final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
+            final Transaction transaction = Nxt.getTransactionProcessor().newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
             transaction.sign(user.getSecretPhrase());
 
-            Blockchain.broadcast(transaction);
+            Nxt.getTransactionProcessor().broadcast(transaction);
 
             return NOTIFY_OF_ACCEPTED_TRANSACTION;
 
         }
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }
