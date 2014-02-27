@@ -312,14 +312,14 @@ final class TransactionImpl implements Transaction {
         type.validateAttachment(this);
     }
 
-    // returns true iff double spending
-    boolean isDoubleSpending() {
+    // returns false iff double spending
+    boolean applyUnconfirmed() {
         Account senderAccount = Account.getAccount(getSenderId());
         if (senderAccount == null) {
-            return true;
+            return false;
         }
         synchronized(senderAccount) {
-            return type.isDoubleSpending(this, senderAccount, this.amount + this.fee);
+            return type.applyUnconfirmed(this, senderAccount);
         }
     }
 
@@ -334,15 +334,18 @@ final class TransactionImpl implements Transaction {
         if (recipientAccount == null) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
-        senderAccount.addToBalanceAndUnconfirmedBalance(- (amount + fee) * 100L);
         type.apply(this, senderAccount, recipientAccount);
+    }
+
+    void undoUnconfirmed() {
+        Account senderAccount = Account.getAccount(getSenderId());
+        type.undoUnconfirmed(this, senderAccount);
     }
 
     // NOTE: when undo is called, lastBlock has already been set to the previous block
     void undo() throws TransactionType.UndoNotSupportedException {
         Account senderAccount = Account.getAccount(senderId);
         senderAccount.undo(this.getHeight());
-        senderAccount.addToBalance((amount + fee) * 100L);
         Account recipientAccount = Account.getAccount(recipientId);
         type.undo(this, senderAccount, recipientAccount);
     }

@@ -46,14 +46,14 @@ public abstract class Order {
             if ((((Order)askOrder).quantity -= quantity) == 0) {
                 Ask.removeOrder(askOrder.getId());
             }
-
             askOrder.getAccount().addToBalanceAndUnconfirmedBalance(quantity * price);
+            askOrder.getAccount().addToAssetBalance(assetId, -quantity);
 
             if ((((Order)bidOrder).quantity -= quantity) == 0) {
                 Bid.removeOrder(bidOrder.getId());
             }
-
             bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
+            bidOrder.getAccount().addToBalance(-quantity * price);
 
         }
 
@@ -138,7 +138,6 @@ public abstract class Order {
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
-            senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -quantity);
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
             if (askOrders.putIfAbsent(order.getId(), order) != null) {
                 throw new IllegalStateException("Ask order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
@@ -198,7 +197,6 @@ public abstract class Order {
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
-            senderAccount.addToBalanceAndUnconfirmedBalance(-quantity * price);
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
             if (bidOrders.putIfAbsent(order.getId(), order) != null) {
                 throw new IllegalStateException("Bid order id " + Convert.toUnsignedLong(order.getId()) + " already exists");

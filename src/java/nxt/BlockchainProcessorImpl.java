@@ -570,12 +570,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 addBlock(block);
 
-                transactionProcessor.apply(block);
-
             } catch (RuntimeException e) {
                 Logger.logMessage("Error pushing block", e);
                 throw new BlockNotAcceptedException(e.toString());
             }
+
+            transactionProcessor.apply(block);
 
             blockListeners.notify(block, Event.BLOCK_PUSHED);
 
@@ -793,6 +793,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new NxtException.ValidationException("Database blocks in the wrong order!");
                     }
                     blockchain.setLastBlock(currentBlock);
+                    for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                        transaction.applyUnconfirmed();
+                    }
                     transactionProcessor.apply(currentBlock);
                     blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     currentBlockId = currentBlock.getNextBlockId();

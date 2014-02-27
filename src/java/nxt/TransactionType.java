@@ -85,20 +85,42 @@ public abstract class TransactionType {
 
     abstract void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException;
 
-    // return true iff double spending
-    final boolean isDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
+    // return false iff double spending
+    final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
+        int totalAmount = transaction.getAmount() + transaction.getFee();
         if (senderAccount.getUnconfirmedBalance() < totalAmount * 100L) {
-            return true;
+            return false;
         }
         senderAccount.addToUnconfirmedBalance(- totalAmount * 100L);
-        return checkDoubleSpending(transaction, senderAccount, totalAmount);
+        if (! applyAttachmentUnconfirmed(transaction, senderAccount)) {
+            senderAccount.addToUnconfirmedBalance(totalAmount * 100L);
+            return false;
+        }
+        return true;
     }
 
-    abstract boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount);
+    abstract boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
-    abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
+    final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        senderAccount.addToBalance(- (transaction.getAmount() + transaction.getFee()) * 100L);
+        applyAttachment(transaction, senderAccount, recipientAccount);
+    }
 
-    abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException;
+    abstract void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
+
+    final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
+        senderAccount.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
+        undoAttachmentUnconfirmed(transaction, senderAccount);
+    }
+
+    abstract void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
+
+    final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+        senderAccount.addToBalance((transaction.getAmount() + transaction.getFee()) * 100L);
+        undoAttachment(transaction, senderAccount, recipientAccount);
+    }
+
+    abstract void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException;
 
     abstract void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount);
@@ -134,23 +156,26 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 recipientAccount.addToBalanceAndUnconfirmedBalance(transaction.getAmount() * 100L);
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 recipientAccount.addToBalanceAndUnconfirmedBalance(-transaction.getAmount() * 100L);
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
             @Override
-            boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
-                return false;
-            }
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
@@ -172,12 +197,15 @@ public abstract class TransactionType {
         }
 
         @Override
-        boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
-            return false;
+        final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
         }
 
         @Override
-        void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
+
+        @Override
+        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                           Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
         public final static TransactionType ARBITRARY_MESSAGE = new Messaging() {
@@ -207,10 +235,10 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
@@ -264,14 +292,14 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
                 Block block = transaction.getBlock();
                 Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(), attachment.getAliasURI(), block.getTimestamp());
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 // can't tell whether Alias existed before and what was its previous uri
                 throw new UndoNotSupportedException(transaction, "Reversal of alias assignment not supported");
             }
@@ -401,14 +429,14 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.getAttachment();
                 Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(), attachment.getPollOptions(),
                         attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.isOptionsAreBinary());
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 throw new UndoNotSupportedException(transaction, "Reversal of poll creation not supported");
             }
 
@@ -477,7 +505,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting)transaction.getAttachment();
                 Poll poll = Poll.getPoll(attachment.getPollId());
                 if (poll != null) {
@@ -487,7 +515,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 throw new UndoNotSupportedException(transaction, "Reversal of vote casting not supported");
             }
 
@@ -554,12 +582,12 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
-                return false;
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
                 Long assetId = transaction.getId();
                 Asset.addAsset(assetId, transaction.getSenderId(), attachment.getName(), attachment.getDescription(), attachment.getQuantity());
@@ -567,12 +595,15 @@ public abstract class TransactionType {
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
                 Long assetId = transaction.getId();
                 senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -attachment.getQuantity());
                 Asset.removeAsset(assetId);
             }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
@@ -637,31 +668,36 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.getAssetId());
-                if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.getQuantity()) {
-                    account.addToUnconfirmedBalance(totalAmount * 100L);
+                Integer unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalance(attachment.getAssetId());
+                if (unconfirmedAssetBalance != null && unconfirmedAssetBalance >= attachment.getQuantity()) {
+                    senderAccount.addToUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
                     return true;
-                } else {
-                    account.addToUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
-                    return false;
                 }
+                return false;
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
+                senderAccount.addToAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
                 recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+                senderAccount.addToAssetBalance(attachment.getAssetId(), attachment.getQuantity());
                 recipientAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
             }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
+                senderAccount.addToUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+            }
+
 
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
@@ -715,7 +751,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -741,20 +777,18 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
-                Integer unconfirmedAssetBalance = account.getUnconfirmedAssetBalance(attachment.getAssetId());
-                if (unconfirmedAssetBalance == null || unconfirmedAssetBalance < attachment.getQuantity()) {
-                    account.addToUnconfirmedBalance(totalAmount * 100L);
+                Integer unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalance(attachment.getAssetId());
+                if (unconfirmedAssetBalance != null && unconfirmedAssetBalance >= attachment.getQuantity()) {
+                    senderAccount.addToUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
                     return true;
-                } else {
-                    account.addToUnconfirmedAssetBalance(attachment.getAssetId(), -attachment.getQuantity());
-                    return false;
                 }
+                return false;
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
                 if (Asset.getAsset(attachment.getAssetId()) != null) {
                     Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
@@ -762,14 +796,20 @@ public abstract class TransactionType {
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
                 Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
                 if (askOrder == null || askOrder.getQuantity() != attachment.getQuantity() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Ask order already filled");
                 }
-                senderAccount.addToAssetAndUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+                senderAccount.addToAssetBalance(attachment.getAssetId(), attachment.getQuantity());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
+                senderAccount.addToUnconfirmedAssetBalance(attachment.getAssetId(), attachment.getQuantity());
             }
 
             @Override
@@ -802,19 +842,17 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean checkDoubleSpending(Transaction transaction, Account account, int totalAmount) {
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
-                if (account.getUnconfirmedBalance() < attachment.getQuantity() * attachment.getPrice()) {
-                    account.addToUnconfirmedBalance(totalAmount * 100L);
+                if (senderAccount.getUnconfirmedBalance() >= attachment.getQuantity() * attachment.getPrice()) {
+                    senderAccount.addToUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
                     return true;
-                } else {
-                    account.addToUnconfirmedBalance(-attachment.getQuantity() * attachment.getPrice());
-                    return false;
                 }
+                return false;
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.getAttachment();
                 if (Asset.getAsset(attachment.getAssetId()) != null) {
                     Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(), attachment.getQuantity(), attachment.getPrice());
@@ -822,14 +860,20 @@ public abstract class TransactionType {
             }
 
             @Override
-            void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.getAttachment();
                 Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
                 if (bidOrder == null || bidOrder.getQuantity() != attachment.getQuantity() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Bid order already filled");
                 }
-                senderAccount.addToBalanceAndUnconfirmedBalance(attachment.getQuantity() * attachment.getPrice());
+                senderAccount.addToBalance(attachment.getQuantity() * attachment.getPrice());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
+                senderAccount.addToUnconfirmedBalance(attachment.getQuantity() * attachment.getPrice());
             }
 
             @Override
@@ -854,8 +898,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            final boolean checkDoubleSpending(Transaction transaction, Account senderAccount, int totalAmount) {
-                return false;
+            final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
             }
 
             @Override
@@ -863,9 +907,12 @@ public abstract class TransactionType {
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
             @Override
-            final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+            final void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 throw new UndoNotSupportedException(transaction, "Reversal of order cancellation not supported");
             }
+
+            @Override
+            final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
         }
 
@@ -889,7 +936,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.getAttachment();
                 Order order = Order.Ask.removeOrder(attachment.getOrderId());
                 if (order != null) {
@@ -919,7 +966,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.getAttachment();
                 Order order = Order.Bid.removeOrder(attachment.getOrderId());
                 if (order != null) {

@@ -58,15 +58,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     int curTime = Convert.getEpochTime();
                     List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
 
-                    Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
-                    while (iterator.hasNext()) {
-
-                        Transaction transaction = iterator.next();
-                        if (transaction.getExpiration() < curTime) {
-                            iterator.remove();
-                            Account account = Account.getAccount(transaction.getSenderId());
-                            account.addToUnconfirmedBalance((transaction.getAmount() + transaction.getFee()) * 100L);
-                            removedUnconfirmedTransactions.add(transaction);
+                    synchronized (BlockchainImpl.getInstance()) {
+                        Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
+                        while (iterator.hasNext()) {
+                            TransactionImpl transaction = iterator.next();
+                            if (transaction.getExpiration() < curTime) {
+                                iterator.remove();
+                                transaction.undoUnconfirmed();
+                                removedUnconfirmedTransactions.add(transaction);
+                            }
                         }
                     }
 
@@ -349,8 +349,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
                 removedUnconfirmedTransactions.add(removedTransaction);
-                Account senderAccount = Account.getAccount(removedTransaction.getSenderId());
-                senderAccount.addToUnconfirmedBalance((removedTransaction.getAmount() + removedTransaction.getFee()) * 100L);
             }
             // TODO: Remove from double-spending transactions
         }
@@ -416,7 +414,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         continue;
                     }
 
-                    doubleSpendingTransaction = transaction.isDoubleSpending();
+                    doubleSpendingTransaction = !transaction.applyUnconfirmed();
 
                     if (doubleSpendingTransaction) {
                         doubleSpendingTransactions.put(id, transaction);
