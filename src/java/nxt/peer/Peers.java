@@ -372,7 +372,7 @@ public final class Peers {
             InetAddress inetAddress = InetAddress.getByName(host);
             return addPeer(inetAddress.getHostAddress(), announcedAddress);
         } catch (URISyntaxException | UnknownHostException e) {
-            Logger.logDebugMessage("Invalid peer address: " + announcedAddress, e);
+            Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
             return null;
         }
     }

@@ -275,7 +275,7 @@ final class BlockImpl implements Block {
 
     void sign(String secretPhrase) {
         if (blockSignature != null) {
-            throw new IllegalStateException("Block already singed");
+            throw new IllegalStateException("Block already signed");
         }
         blockSignature = new byte[64];
         byte[] data = getBytes();
