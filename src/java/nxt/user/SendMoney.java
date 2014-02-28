@@ -123,7 +123,8 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
 
         } else {
 
-            final Transaction transaction = Nxt.getTransactionProcessor().newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
+            final Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, user.getPublicKey(),
+                    recipient, amount, fee, null);
             transaction.sign(user.getSecretPhrase());
 
             Nxt.getTransactionProcessor().broadcast(transaction);

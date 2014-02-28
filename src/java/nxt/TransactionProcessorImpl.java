@@ -235,24 +235,19 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                       int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
+        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
     }
 
     @Override
-    public Transaction newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                       int amount, int fee, Long referencedTransactionId, Attachment attachment)
             throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline, senderPublicKey, recipientId, amount, fee,
                 referencedTransactionId, null);
         transaction.setAttachment(attachment);
         return transaction;
-    }
-
-    TransactionImpl newTransaction(int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                                          int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {

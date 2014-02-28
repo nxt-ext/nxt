@@ -401,7 +401,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-                TransactionImpl transaction = transactionProcessor.newTransaction(0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
+                TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, 0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
                         Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
                 transactionsMap.put(transaction.getId(), transaction);
             }

@@ -101,10 +101,9 @@ public final class SendMessage extends APIServlet.APIRequestHandler {
         if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
             return NOT_ENOUGH_FUNDS;
         }
-        int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey,
                 recipient, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

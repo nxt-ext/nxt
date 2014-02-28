@@ -107,9 +107,8 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
 
         } else {
 
-            int timestamp = Convert.getEpochTime();
             Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
-            Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline,
+            Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline,
                     publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
             transaction.sign(secretPhrase);
 

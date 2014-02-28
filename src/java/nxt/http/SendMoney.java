@@ -102,7 +102,7 @@ public final class SendMoney extends APIServlet.APIRequestHandler {
 
         }
 
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(Convert.getEpochTime(), deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey,
                 recipient, amount, fee, referencedTransaction);
         transaction.sign(secretPhrase);
 

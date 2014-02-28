@@ -106,10 +106,10 @@ public final class CastVote extends APIServlet.APIRequestHandler {
         if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
             return NOT_ENOUGH_FUNDS;
         }
-        int timestamp = Convert.getEpochTime();
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, Genesis.CREATOR_ID,
+                0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
         Nxt.getTransactionProcessor().broadcast(transaction);

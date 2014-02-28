@@ -118,10 +118,8 @@ public final class PlaceBidOrder extends APIServlet.APIRequestHandler {
             return NOT_ENOUGH_FUNDS;
         }
 
-        int timestamp = Convert.getEpochTime();
-
         Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey,
                 Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

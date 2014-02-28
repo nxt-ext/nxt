@@ -119,10 +119,8 @@ public final class TransferAsset extends APIServlet.APIRequestHandler {
             return NOT_ENOUGH_FUNDS;
         }
 
-        int timestamp = Convert.getEpochTime();
-
         Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey,
                 recipient, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

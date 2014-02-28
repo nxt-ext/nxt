@@ -97,9 +97,8 @@ public final class IssueAsset extends APIServlet.APIRequestHandler {
             return NOT_ENOUGH_FUNDS;
         }
 
-        int timestamp = Convert.getEpochTime();
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, (short) 1440, publicKey,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction((short) 1440, publicKey,
                 Genesis.CREATOR_ID, 0, fee, null, attachment);
         transaction.sign(secretPhrase);
 

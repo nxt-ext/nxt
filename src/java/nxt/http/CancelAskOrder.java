@@ -91,9 +91,8 @@ public final class CancelAskOrder extends APIServlet.APIRequestHandler {
             return NOT_ENOUGH_FUNDS;
         }
 
-        int timestamp = Convert.getEpochTime();
         Attachment attachment = new Attachment.ColoredCoinsAskOrderCancellation(order);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline,
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline,
                 publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 

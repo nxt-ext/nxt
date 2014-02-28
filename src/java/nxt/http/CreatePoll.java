@@ -144,10 +144,11 @@ public final class CreatePoll extends APIServlet.APIRequestHandler {
         if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
             return NOT_ENOUGH_FUNDS;
         }
-        int timestamp = Convert.getEpochTime();
 
-        Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(), options.toArray(new String[options.size()]), minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(timestamp, deadline, publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
+        Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(),
+                options.toArray(new String[options.size()]), minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, Genesis.CREATOR_ID,
+                0, fee, referencedTransaction, attachment);
         transaction.sign(secretPhrase);
 
         Nxt.getTransactionProcessor().broadcast(transaction);
