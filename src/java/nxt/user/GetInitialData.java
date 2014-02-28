@@ -46,8 +46,6 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
 
         for (Peer peer : Peers.getAllPeers()) {
 
-            String address = peer.getPeerAddress();
-
             if (peer.isBlacklisted()) {
 
                 JSONObject blacklistedPeer = new JSONObject();
@@ -79,7 +77,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     activePeer.put("disconnected", true);
                 }
-                activePeer.put("address", Convert.truncate(address, "-", 25, true));
+                activePeer.put("address", peer.getPeerAddress());
                 activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 activePeer.put("weight", peer.getWeight());
                 activePeer.put("downloaded", peer.getDownloadedVolume());

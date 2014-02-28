@@ -390,10 +390,6 @@ public final class Peers {
             return null;
         }
 
-        if (announcedPeerAddress != null) {
-            peerAddress = announcedPeerAddress;
-        }
-
         PeerImpl peer = peers.get(peerAddress);
         if (peer == null) {
             peer = new PeerImpl(peerAddress, announcedPeerAddress);

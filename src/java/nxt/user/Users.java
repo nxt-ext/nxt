@@ -330,7 +330,7 @@ public final class Users {
                 if (peer.getState() != Peer.State.CONNECTED) {
                     addedActivePeer.put("disconnected", true);
                 }
-                addedActivePeer.put("address", Convert.truncate(peer.getPeerAddress(), "-", 25, true));
+                addedActivePeer.put("address", peer.getPeerAddress());
                 addedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 if (peer.isWellKnown()) {
                     addedActivePeer.put("wellKnown", true);
