@@ -68,7 +68,6 @@ public final class PeerServlet extends HttpServlet {
         try {
             peer = Peers.addPeer(req.getRemoteAddr(), null);
             if (peer == null) {
-                Logger.logDebugMessage("Invalid peer address: " + req.getRemoteAddr());
                 return;
             }
             if (peer.isBlacklisted()) {
