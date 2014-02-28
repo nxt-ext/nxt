@@ -583,7 +583,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         } // synchronized
 
-        if (block.getTimestamp() >= Convert.getEpochTime() - 15) {
+        if (block.getTimestamp() >= Convert.getEpochTime() - 60) {
             JSONObject request = block.getJSONObject();
             request.put("requestType", "processBlock");
             Peers.sendToSomePeers(request);
@@ -732,6 +732,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 pushBlock(block);
                 blockListeners.notify(block, Event.BLOCK_GENERATED);
                 Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
+                Logger.logDebugMessage("Generation took " + (Convert.getEpochTime() - blockTimestamp) + " seconds");
             } else {
                 Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated an incorrect block.");
             }
