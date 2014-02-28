@@ -32,6 +32,8 @@ public final class Nxt {
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;
 
+    public static final boolean isTestnet;
+
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;
     public static final int ARBITRARY_MESSAGES_BLOCK = 40000;
@@ -39,8 +41,8 @@ public final class Nxt {
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
     public static final int TRANSPARENT_FORGING_BLOCK_5 = 67000;
-    public static final int ASSET_EXCHANGE_BLOCK = 111111;
-    public static final int VOTING_SYSTEM_BLOCK = 222222;
+    public static final int ASSET_EXCHANGE_BLOCK; // = 111111;
+    public static final int VOTING_SYSTEM_BLOCK; // = 222222;
 
     public static final long EPOCH_BEGINNING;
     static {
@@ -88,6 +90,12 @@ public final class Nxt {
         } catch (IOException e) {
             throw new RuntimeException("Error loading nxt.properties", e);
         }
+    }
+
+    static {
+        isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
+        ASSET_EXCHANGE_BLOCK = isTestnet ? 0 : 111111;
+        VOTING_SYSTEM_BLOCK = isTestnet ? 0 : 222222;
     }
 
     public static int getIntProperty(String name) {
@@ -189,6 +197,9 @@ public final class Nxt {
             long currentTime = System.currentTimeMillis();
             Logger.logDebugMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
             Logger.logMessage("Nxt server " + Nxt.VERSION + " started successfully.");
+            if (isTestnet) {
+                Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
+            }
         }
 
         private static void init() {}

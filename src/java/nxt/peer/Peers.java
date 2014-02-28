@@ -55,7 +55,8 @@ public final class Peers {
     static final int readTimeout;
     static final int blacklistingPeriod;
 
-    private static final int DEFAULT_PEER_PORT = 7874;
+    static final int DEFAULT_PEER_PORT = 7874;
+    static final int TESTNET_PEER_PORT = 6874;
     private static final String myPlatform;
     private static final String myAddress;
     private static final int myPeerServerPort;
@@ -82,7 +83,13 @@ public final class Peers {
 
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
         myAddress = Nxt.getStringProperty("nxt.myAddress");
+        if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && ! Nxt.isTestnet) {
+            throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
+        }
         myPeerServerPort = Nxt.getIntProperty("nxt.peerServerPort");
+        if (myPeerServerPort == TESTNET_PEER_PORT && ! Nxt.isTestnet) {
+            throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
+        }
         shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress");
         myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
@@ -104,10 +111,14 @@ public final class Peers {
 
         JSONObject json = new JSONObject();
         if (Peers.myAddress != null && Peers.myAddress.length() > 0) {
-            if (Peers.myAddress.indexOf(':') > 0) {
-                json.put("announcedAddress", Peers.myAddress);
+            if (! Nxt.isTestnet) {
+                if (Peers.myAddress.indexOf(':') > 0) {
+                    json.put("announcedAddress", Peers.myAddress);
+                } else {
+                    json.put("announcedAddress", Peers.myAddress + (Peers.myPeerServerPort != Peers.DEFAULT_PEER_PORT ? ":" + Peers.myPeerServerPort : ""));
+                }
             } else {
-                json.put("announcedAddress", Peers.myAddress + (Peers.myPeerServerPort != Peers.DEFAULT_PEER_PORT ? ":" + Peers.myPeerServerPort : ""));
+                json.put("announcedAddress", Peers.myAddress.split(":")[0] + ":" + TESTNET_PEER_PORT);
             }
         }
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
@@ -117,12 +128,13 @@ public final class Peers {
         json.put("version", Nxt.VERSION);
         json.put("platform", Peers.myPlatform);
         json.put("shareAddress", Peers.shareMyAddress);
+        Logger.logDebugMessage("My peer info:\n" + json.toJSONString());
         myPeerInfoResponse = JSON.prepare(json);
         json.put("requestType", "getInfo");
         myPeerInfoRequest = JSON.prepareRequest(json);
 
-        String wellKnownPeersString = Nxt.getStringProperty("nxt.wellKnownPeers");
         Set<String> addresses = new HashSet<>();
+        String wellKnownPeersString = Nxt.isTestnet ? Nxt.getStringProperty("nxt.testnetPeers") : Nxt.getStringProperty("nxt.wellKnownPeers");
         if (wellKnownPeersString != null && wellKnownPeersString.length() > 0) {
             for (String address : wellKnownPeersString.split(";")) {
                 address = address.trim();
@@ -130,7 +142,7 @@ public final class Peers {
                     addresses.add(address);
                 }
             }
-        } else {
+        } else if (! Nxt.isTestnet) {
             Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org, nxtbase.com and mynxt.info nodes");
             for (int i = 1; i <= 12; i++) {
                 if (ThreadLocalRandom.current().nextInt(4) == 1) {
@@ -178,7 +190,8 @@ public final class Peers {
             if (Peers.shareMyAddress) {
                 final Server peerServer = new Server();
                 ServerConnector connector = new ServerConnector(peerServer);
-                connector.setPort(Peers.myPeerServerPort);
+                final int port = Nxt.isTestnet ? TESTNET_PEER_PORT : Peers.myPeerServerPort;
+                connector.setPort(port);
                 final String host = Nxt.getStringProperty("nxt.peerServerHost");
                 connector.setHost(host);
                 connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
@@ -199,7 +212,7 @@ public final class Peers {
                     public void run() {
                         try {
                             peerServer.start();
-                            Logger.logMessage("Started peer networking server at " + host + ":" + Peers.myPeerServerPort);
+                            Logger.logMessage("Started peer networking server at " + host + ":" + port);
                         } catch (Exception e) {
                             Logger.logDebugMessage("Failed to start peer networking server", e);
                             throw new RuntimeException(e.toString(), e);
@@ -393,6 +406,10 @@ public final class Peers {
         PeerImpl peer = peers.get(peerAddress);
         if (peer == null) {
             peer = new PeerImpl(peerAddress, announcedPeerAddress);
+            if (Nxt.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
+                Logger.logDebugMessage("Peer " + peerAddress + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");
+                return null;
+            }
             peers.put(peerAddress, peer);
             listeners.notify(peer, Event.NEW_PEER);
         }

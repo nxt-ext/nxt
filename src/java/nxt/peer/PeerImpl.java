@@ -165,6 +165,10 @@ final class PeerImpl implements Peer {
         }
     }
 
+    int getPort() {
+        return port;
+    }
+
     @Override
     public boolean isWellKnown() {
         return announcedAddress != null && Peers.wellKnownPeers.contains(announcedAddress);
@@ -256,8 +260,7 @@ final class PeerImpl implements Peer {
                 log = "\"" + address + "\": " + stringWriter.toString();
             }
 
-            URL url = new URL("http://" + address + (port <= 0 ? ":7874" : "") + "/nxt");
-            /**///URL url = new URL("http://" + announcedAddress + ":6874" + "/nxt");
+            URL url = new URL("http://" + address + (port <= 0 ? ":" + (Nxt.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nxt");
             connection = (HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);

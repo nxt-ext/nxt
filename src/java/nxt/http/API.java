@@ -25,6 +25,8 @@ import java.util.Set;
 
 public final class API {
 
+    private static final int TESTNET_API_PORT = 6876;
+
     static final Set<String> allowedBotHosts;
 
     static {
@@ -44,7 +46,7 @@ public final class API {
 
         boolean enableAPIServer = Nxt.getBooleanProperty("nxt.enableAPIServer");
         if (enableAPIServer) {
-            final int port = Nxt.getIntProperty("nxt.apiServerPort");
+            final int port = Nxt.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
             final Server apiServer = new Server();
             ServerConnector connector;

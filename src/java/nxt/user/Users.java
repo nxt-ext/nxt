@@ -46,6 +46,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Users {
 
+    private static final int TESTNET_UI_PORT=6875;
+
     private static final ConcurrentMap<String, User> users = new ConcurrentHashMap<>();
     private static final Collection<User> allUsers = Collections.unmodifiableCollection(users.values());
 
@@ -79,7 +81,7 @@ public final class Users {
 
         boolean enableUIServer = Nxt.getBooleanProperty("nxt.enableUIServer");
         if (enableUIServer) {
-            final int port = Nxt.getIntProperty("nxt.uiServerPort");
+            final int port = Nxt.isTestnet ? TESTNET_UI_PORT : Nxt.getIntProperty("nxt.uiServerPort");
             final String host = Nxt.getStringProperty("nxt.uiServerHost");
             final Server userServer = new Server();
             ServerConnector connector;
