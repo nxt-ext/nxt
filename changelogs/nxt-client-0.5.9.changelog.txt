@@ -1,0 +1,34 @@
+Release 0.5.9:
+
+http://download.nxtcrypto.org/nxt-client-0.5.9.zip
+
+sha256: 35e0454c0eba551637674fa0e607774b864b0f428b5618f0d14f1ddc8d42cb62
+
+Change log:
+
+Resolved all remaining thread concurrency issues in the block and
+transaction handling. All reported null pointer exceptions, division by
+zero, and related bugs should not happen anymore. If you see any
+errors in the log at all, please report them in our bug database:
+https://bitbucket.org/JeanLucPicard/nxt-public/issues
+
+Added Asset Exchange related APIs:
+getAskOrder, getAskOrderIds, getBidOrder, getBidOrderIds,
+getAccountCurrentAskOrderIds, getAccountCurrentBidOrderIds.
+
+Prevent the Recent Blocks tab in the browser UI from growing beyond
+60 blocks. This should help avoid browser slowdown and freeze during
+downloading of the whole blockchain from scratch.
+
+Added transaction re-broadcasting. To make sure a new transaction has
+been received by the network, it is broadcasted every minute, until
+it shows in the list of unconfirmed or confirmed transactions.
+
+The debug logs are quiet now, in fact I haven't seen any exceptions in
+the last 24 h of testing this release. Everybody should give it a try as
+I hope this is a really stable release. In particular, peers still
+running the buggy 0.5.7 will get blacklisted if they don't upgrade,
+because they keep broadcasting malformed JSON blocks and will be treated
+as zombies.
+
+

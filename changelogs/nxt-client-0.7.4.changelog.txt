@@ -1,0 +1,22 @@
+Release 0.7.4
+
+http://download.nxtcrypto.org/nxt-client-0.7.4.zip
+
+sha256: 847c70f734a3954159af99e0241d448369d4833067076570671324946a835245
+
+
+Change log:
+
+Another bugfix in the transition to Transparent Forging, starting from
+block 67000. Upgrade before this block, because there will be a fork.
+
+This release drops support for the old getMilestoneBlockIds protocol.
+Clients older than 0.7.3 will not be able to request blocks from 0.7.4
+nodes. Everybody needs to upgrade to 0.7.4 anyway, before block 67000.
+
+Some optimizations in the database queries used during unlock account,
+let's see if this helps Raspberry users.
+
+Minor other improvements.
+
+

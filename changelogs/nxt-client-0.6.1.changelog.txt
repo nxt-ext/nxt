@@ -1,0 +1,16 @@
+Release 0.6.1
+
+http://download.nxtcrypto.org/nxt-client-0.6.1.zip
+
+sha256: 6b5c8632c2d52a066d40017055a2e28f25d16fa30d3c0574bddb12f7d157e55c
+
+Change log:
+
+Fixed a minor bug in the 0.6.0 critical bugfix. Probably not exploitable,
+but doesn't hurt to upgrade.
+
+Backported some minor optimizations from 0.7.0.
+
+Better handling of malformed peer announced addresses.
+
+

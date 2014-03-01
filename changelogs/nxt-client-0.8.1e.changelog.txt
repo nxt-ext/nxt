@@ -1,0 +1,67 @@
+Release 0.8.1e
+
+http://download.nxtcrypto.org/nxt-client-0.8.1e.zip
+
+sha256: 4c665609a08fc5e79143e715c0f46246c66d35c1db6138ca9b025a1188d9aa3c
+
+
+Change log:
+
+Improved handling of peer announced addresses and ports. Setting
+nxt.myAddress is now optional, which will help users with dynamic IP
+addresses. When connecting to a peer, as long as nxt.shareMyAddress is
+enabled, it will at a later time attempt to connect to your announced
+address, or if not set, to the address your request came from.
+If successful, the peer will use this address to connect to you in the
+future, and will share it with others. This also does verification of
+announced addresses, and considers your node connected only after a 
+successful connection to the announced address is made. This will prevent
+invalid announced addresses from being spread to other peers too.
+
+If you need to use a non-default port, the port has to be appended to your
+announced address too. It does not need to be the same as
+nxt.myPeerServerPort, so you can run the server on one port but forward
+a different router port to it. If the port is not set in announced address
+however, but nxt.myPeerServerPort is non-default, nxt.myPeerServerPort
+will automatically be appended to the announced address.
+
+To summarize: For users with dynamic IPs, you don't need to put anything
+in nxt.myAddress, but still need to set up port forwarding at your router.
+
+Verification of hallmarks has also been improved to attempt to resolve
+hostnames to IP addresses. Note that if you use a non-default port,
+the hallmark should include your address only, without the port.
+
+Added generateToken API request. Parameters are secretPhrase and website,
+response is the token string wrapped in JSON. This is also available
+on the admin.html page.
+
+Improved handling of init and shutdown. Nxt.shutdown() is now public and
+client developers can call it. When Nxt is started as a standalone
+application by calling main(), it will schedule a shutdown hook, otherwise
+if started using init(), the caller of init() is responsible for calling
+shutdown() or scheduling a shutdown hook.
+
+Delayed starting the blockchain scan and the jetty servlets until the
+initialization of all classes has completed. This should allow registering
+listeners with those, and will also help prevent errors due to servlets
+starting to accept requests before the system is fully initialized.
+
+If nxt-default.properties is not found in the classpath, Nxt will also
+make an attempt to load it from the file defined in the system property
+nxt-default.properties, so you can define it on the command line:
+java -Dnxt-default.properties=conf/nxt-default.properties. This is of
+interest to client developers only.
+
+Support use of POST in addition to GET for all API and UI http requests.
+To enforce use of POST only, for those requests that require the user
+secretPhrase, the nxt.properties nxt.apiServerEnforcePOST and
+nxt.uiServerEnforcePOST can be set (default is false for API, true for
+UI). This way client developers can enforce that only POST requests are 
+used for handling sensitive data.
+
+The default NRS browser UI has been changed to use POST only, and so have
+the tools - admin.html, message.html, alias.html. This way the user
+secretPhrase will no longer be cached in the browser memory.
+
+

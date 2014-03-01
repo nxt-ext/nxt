@@ -1,0 +1,54 @@
+Release 0.7.1
+
+http://download.nxtcrypto.org/nxt-client-0.7.1.zip
+
+sha256: 08f54b324ec4e644adc4864368e31c7ed14feb52918ca4522377c94d1f360f8a
+
+
+Release 0.6.2
+
+http://download.nxtcrypto.org/nxt-client-0.6.2.zip
+
+sha256: cdb39d82e59aade4a0ea6b9f64fc9852fdab5d37a9a4ba755dffeaa96672aaf5
+
+
+Change log:
+
+Fixed a bug in the calculation of guaranteed balance which could in some
+cases result in effective balance higher than the actual balance. Since
+this change can produce a fork, a switch to the correct calculation will
+happen at block 64000. Everyone should upgrade to either 0.7.1 or 0.6.2
+before that block, or we will get forks.
+
+Improved validation of peer addresses to prevent syntactically invalid or
+unresolvable addresses from being included in the peers list.
+
+Enabled logging of all debugging output to a log file. Everything printed
+out to the console will also get logged to a file nxt.log. This should
+help with submitting bug reports in case of crashes and errors, as it
+doesn't matter anymore if your windows console just disappeared.
+The nxt.log file is overwritten at every server restart.
+
+Cleaned-up hallmark and authorization token processing. Added Token and
+Hallmark classes, those can be now used by Java client developers to
+generate and validate tokens and hallmarks without going through the http
+interface.
+
+Improved logging of block push failures and block pop-off events, those
+will now print out the block id and the reason for block rejection.
+
+Improved peer blacklisting and logging of reasons for blacklisting. Http
+requests from blacklisted peers are now completely ignored.
+
+Made all API request handling classes under the nxt.http package visible
+in the javadoc documentation, to be used for documenting the parameters
+and return values of the http API.
+
+There haven't been any database related bugs in the 0.7 series. All the
+above changes have been applied to both 0.6 and 0.7 branches. I encourage
+more people to try the 0.7.1 version, there is no need to continue
+maintaining the 0.6 branch very long if we don't encounter problems with
+the database version.
+
+
+

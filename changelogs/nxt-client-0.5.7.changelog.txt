@@ -1,0 +1,29 @@
+Release 0.5.7:
+
+http://download.nxtcrypto.org/nxt-client-0.5.7.zip
+
+sha256: 20002edeaaf0ffab97ab2f969969acb4f8a9df35fe489361b44e5291d95a33a7
+
+Change log:
+
+After the optimizations in memory and CPU usage, this release is about
+optimizing the networking. Instead of sending to all peers, data are
+pushed to only 10 peers by default. The number is configurable in
+web.xml, the sendToPeersLimit parameter. This should reduce the network
+traffic, and should also significantly reduce the waiting time the user
+experiences when sending out a transaction. Furthermore, sends are now
+done in parallel, using a pool of 10 threads, which means slow peers
+will not delay the sending to the rest.
+
+A few of the exceptions found from the debug output have been fixed,
+and some more networking exceptions known to be harmless will now be
+ignored. The logs are much more quiet now even with debug enabled, so
+I have decided to enable the nxt.debug parameter by default in nxt.ini.
+
+Transparent Forging phase 2 starts at block 47000. Everybody should
+update to at least 0.5.7 before this block is reached, otherwise we
+may see forks.
+
+Added Wesley's send message tool, message.html.
+
+

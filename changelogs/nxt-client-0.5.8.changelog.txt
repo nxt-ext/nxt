@@ -1,0 +1,15 @@
+Release 0.5.8:
+
+http://download.nxtcrypto.org/nxt-client-0.5.8.zip
+
+sha256: 4f0ceb4583ba50a7b791635586249868958c90899d7a5033d2c763c701b859d5
+
+Change log:
+
+Fixed a thread concurrency issue which is the likely cause of the
+OutOfMemory errors some have experienced. This is a critical bugfix,
+users of 0.5.7 should upgrade to 0.5.8.
+
+Added "type" and "subtype" filters to getAccountTransactionsIds API.
+
+

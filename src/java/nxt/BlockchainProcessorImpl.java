@@ -714,7 +714,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         try {
 
-            block = new BlockImpl(version, blockTimestamp, previousBlock.getId(), totalAmount, totalFee,payloadLength,
+            block = new BlockImpl(version, blockTimestamp, previousBlock.getId(), totalAmount, totalFee, payloadLength,
                         payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(newTransactions.values()));
 
         } catch (NxtException.ValidationException e) {

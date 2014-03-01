@@ -1,0 +1,154 @@
+Release 0.8.0e
+
+http://download.nxtcrypto.org/nxt-client-0.8.0e.zip
+
+sha256: 12ea7642953934b4b36cb833c500afefc9d1521776a298e3a6b6473cb0303a0c
+
+
+Change log:
+
+This release introduces a major change in the Nxt server architecture.
+Instead of being a servlet run by Jetty, Nxt is now a standalone
+application which itself launches Jetty servlets, when needed.
+This should make it easier to use as a Java library, as it no longer
+needs to be run inside a servlet container.
+
+The Nxt configuration has been made more flexible, both for the end user
+and for application developers. Nxt no longer uses web.xml, or any xml
+files for that matter. Instead, a user-friendly properties file is used.
+
+The layout of the distribution has been changed and simplified. Unpacking
+the zip file will produce the following directory structure:
+
+nxt/conf/
+This is where the configuration files are kept. All default properties
+are in conf/nxt-default.properties. You should never edit this file,
+unless you are a packager or client developer who needs different
+defaults for his distribution.
+All default values are reasonable, so Nxt can just be started without
+any configuration. If however the end user wants to customize some
+parameters, the way to do that is to create another properties file,
+conf/nxt.properties, containing ONLY the properties that need to be
+different from the defaults. Nxt will read both nxt-default.properties
+and nxt.properties, and the values in nxt.properties will override those
+in nxt-default.properties.
+
+nxt/html/
+This contains the html files needed for the NRS javascript based client,
+under html/nrs, the html-based tools such as admin.html and update.html
+under html/tools, and the javadoc documentation for the Java API under
+html/doc.
+
+nxt/lib/
+This is where all required Java libraries are kept - Jetty, H2 database,
+and the JSON-simple library. All Jetty libraries that are not used by Nxt
+are no longer included, which also results in a smaller distribution
+package.
+
+nxt/nxt.jar
+This jar contains all compiled Nxt classes.
+
+nxt/run.sh
+This script is the simplest way to start Nxt, under Linux:
+java -Xmx1024M -cp nxt.jar:lib/*:conf nxt.Nxt
+As you can see, the classpath needs to include nxt.jar, all the jars under
+lib, and the conf directory.
+
+Notably missing are start.jar, webapps, and the Jetty configuration
+directories, which are no longer needed.
+
+In addition to the switch to embedded Jetty, significant refactoring of the
+code has been done, which may be of interest to users of the Java API. The
+changes are too many to describe here, but can be easily seen by comparing
+the javadoc of 0.8.0 with that of the 0.7 branch. Most notably, interfaces
+have been defined for the Block and Transaction classes, the Blockchain
+class has been split into several classes, and the Peer and User classes
+have also seen some clean up.
+
+Client developers using the Java API can override any of the default
+properties by submitting a custom Properties object to Nxt.init().
+
+The configurable properties in nxt-default.properties are all documented in
+the comments in that file. Some additional details about those:
+
+Nxt will start up to three different Jetty servers, if needed.
+
+The peer networking server accepts http requests from peers. It is only
+started if nxt.shareMyAddress=true (which is the default). If you are behind
+a firewall and don't have an externally visible IP, you can set this to false
+to disable it.
+
+The port and host interface of the peer server are configurable. If you set
+a non-default port in nxt.peerServerPort, this will be appended to the address
+you announce to peers (this address should be set in nxt.myAddress). Using
+non-default peer networking port hasn't been tested much though.
+
+For a machine with multiple network interfaces, now you can specify on which
+interface to bind each server. By default, nxt.peerServerHost=0.0.0.0 so the
+peer networking server listens on all interfaces.
+
+There are no hardcoded nxt.wellKnownPeers in the default properties files.
+You are supposed to set those to your own preferred peers in nxt.properties.
+However, if none are set, a random selection of nxtcrypto.org and nxtbase.com
+public nodes will be used.
+
+The DoS Filter is enabled for the peer server only.
+
+The API server accepts http/json API requests. By default, now it runs on port
+7876, and listens on the local 127.0.0.1 interface only. If you run a public
+node and want to accept API requests from anyone, set nxt.apiServerHost to
+0.0.0.0, and nxt.allowedBotHosts to * (or empty).
+
+The nxt.apiResourceBase points to a directory of static html files that are
+also served by the API server. Developers of clients using the http/json API
+will want to customize this to point to their client html and javascript files.
+
+The Jetty Cross Origin Filter can be enabled for the API server by setting
+nxt.apiServerCORS=true (disabled by default).
+
+The UI server is used for the NRS javascript client UI. By default it runs on
+port 7875 and accepts requests from localhost only. Client developers using
+the same API calls as the NRS client (not the http/json ones) should customize
+nxt.uiResourceBase to point to their client html and javascript files instead.
+
+SSL can be enabled for both the API server and the UI server (default disabled).
+If this is done, the corresponding ports will accept https requests only. There
+is no way currently to have both http and https supported at the same time, but
+this can be added, I just didn't see the need for it.
+If you enable SSL, you need to set nxt.keyStorePath and nxt.keyStorePassword,
+and obviously you need to have your own SSL certificate (self-signed or signed
+by a CA) in a keystore file. I have only tested this with a self-signed
+certificate.
+
+Client developers using the Java API will probably want to disable both the
+API server and the UI server, and for users without a visible IP address
+even the peer server.
+
+Debugging output is now disabled by default, but can be enabled by setting
+nxt.debug=true. Exception stack traces will still be logged, as long as
+nxt.enableStackTraces=true. I hope there will be none of those.
+
+The connection to the database can be completely customized, as the full
+jdbc url used to connect to it is exposed in the properties file and can be
+modified. Client developers that insist on being able to access the database
+from a separate process, while Nxt is running, can do so by appending
+;AUTO_SERVER=TRUE to the jdbc url, which will enable automatic mixed-mode.
+This is disabled by default, but if you enable it and write to the database
+while Nxt is running, expect things to break.
+
+It is also possible to have the database in a different location, not just
+in the current working directory, if you change the jdbc url accordingly.
+
+To change the amount of memory used for the database cache, use the
+nxt.dbCacheKB parameter, in kilobytes. If set to 0, by default 50 % of the
+memory available to the JVM is used for database cache.
+
+There have been no changes to the database schema, you should use your
+existing nxt_db directory with this release too, instead of downloading
+the blockchain from scratch.
+
+This release is labeled experimental, but please try it. In particular, the
+client developers and packagers should test it well, and if there are no
+major issues, expect the 0.7 branch to become obsolete soon.
+
+

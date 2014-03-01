@@ -1,0 +1,28 @@
+Version 0.5.0 is now available at:
+
+http://info.nxtcrypto.org/nxt-client-0.5.0.zip
+
+sha256: c0676985f9ef08852250ba1d3fe980ee1392c3f70be6917f384f3636fa6f06e3
+
+This is to be considered stable release. Change log:
+
+Fixed more concurrency issues, performance optimizations and code cleanup.
+I have fixed all the visible code issues that I consider to be bugs, the
+remaining TODO's on my list are a matter of code cleanup and refactoring.
+
+Added a checkpoint at block 30000 (the start of transparent forging block).
+
+Added wesleyh's update checker:
+https://bitcointalk.org/index.php?topic=345619.msg4294180#msg4294180
+Use https://localhost:7875/update.html to check for updates - this feature
+may still have bugs, but including it in the package is a good way to get
+people to test it on multiple browsers.
+
+I have not been able to find any possible cause yet for the most critical
+in my opinion bug reported so far, transactions being sent to a recipient
+different than the one selected. I have read through the relevant code
+again, but don't see any obvious way how this could happen. I am not
+ignoring those reports and believe it may be a real bug and not a user
+error, but without a way to reproduce the problem, it is very hard to
+track it down.
+

@@ -1,0 +1,28 @@
+Release 0.5.10
+
+http://download.nxtcrypto.org/nxt-client-0.5.10.zip
+
+sha256: 9cbe87450f6ed23f8cb881026e44dcee46108101c0de0d40989cbd6215ce233a
+
+Change log:
+
+This is a bugfix release. All users of 0.5.9 and earlier should upgrade.
+
+Fixed a bug in Transparent Forging. The fix will take effect at block
+51000. Users who don't upgrade by this block will be left out on a fork.
+
+Fixed a minor bug in peer weight calculation.
+
+
+Progress report:
+
+The refactoring of 0.6.0 is going well. The Nxt project now consists of
+86 java files instead of 1. I will proceed to work on persisting blocks
+and transactions in a database some time next week. I do not plan to
+release 0.6.0 until absolutely necessary, because it does not contain
+any new user visible features and at this point is likely less stable
+than the 0.5.x series. Urgent bugfixes and new API's, if needed, will
+still be added to 0.5.x. Any Nxt clone projects that have been eagerly
+awaiting the 0.6.x series, so that they can benefit from my refactoring
+work for free, will have to continue waiting, while we make progress.
+
