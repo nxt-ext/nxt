@@ -105,12 +105,17 @@ public final class Generator {
     private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
+        // need to store publicKey in addition to account, because the account may not have had its publicKey set yet
         this.account = account;
         forge(); // initialize deadline
     }
 
     public byte[] getPublicKey() {
         return publicKey;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 
     public long getDeadline() {
