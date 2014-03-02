@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Generator {
 
     public static enum Event {
-        GENERATION_DEADLINE
+        GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
@@ -77,7 +77,14 @@ public final class Generator {
         }
         Generator generator = new Generator(secretPhrase, publicKey, account);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
-        return old != null ? old : generator;
+        if (old != null) {
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(account.getId()) + " is already forging");
+            return old;
+        }
+        listeners.notify(generator, Event.START_FORGING);
+        Logger.logDebugMessage("Account " + Convert.toUnsignedLong(account.getId()) + " started forging, deadline "
+                + generator.getDeadline() + " seconds");
+        return generator;
     }
 
     public static Generator stopForging(String secretPhrase) {
@@ -85,6 +92,8 @@ public final class Generator {
         if (generator != null) {
             lastBlocks.remove(generator.account);
             hits.remove(generator.account);
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccount().getId()) + " stopped forging");
+            listeners.notify(generator, Event.STOP_FORGING);
         }
         return generator;
     }
