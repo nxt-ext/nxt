@@ -62,6 +62,7 @@ public final class Nxt {
 
     private static final Properties defaultProperties = new Properties();
     static {
+        System.out.println("Initializing Nxt server version " + Nxt.VERSION);
         try (InputStream is = ClassLoader.getSystemResourceAsStream("nxt-default.properties")) {
             if (is != null) {
                 Nxt.defaultProperties.load(is);
@@ -174,7 +175,6 @@ public final class Nxt {
     private static class Init {
 
         static {
-            System.out.println("Initializing Nxt server version " + Nxt.VERSION);
 
             long startTime = System.currentTimeMillis();
 

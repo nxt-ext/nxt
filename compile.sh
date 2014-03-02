@@ -6,5 +6,7 @@ SP=src/java/
 javac -sourcepath $SP -classpath $CP -d classes/ src/java/nxt/*.java src/java/nxt/*/*.java || exit 1
 
 /bin/rm -f nxt.jar 
-jar cvf nxt.jar -C classes .
+jar cf nxt.jar -C classes . || exit 1
 /bin/rm -rf classes
+
+echo "nxt.jar generated successfully"

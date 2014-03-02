@@ -33,7 +33,7 @@ public final class ThreadPool {
         if (scheduledThreadPool != null) {
             throw new IllegalStateException("Executor service already started");
         }
-        Logger.logDebugMessage("Running final tasks...");
+        Logger.logDebugMessage("Running " + runBeforeStartJobs.size() + " final tasks...");
         for (Runnable runnable : runBeforeStartJobs) {
             runnable.run(); // run them all sequentially within the current thread
         }

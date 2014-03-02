@@ -22,7 +22,6 @@ import static nxt.http.JSONResponses.POST_REQUIRED;
 
 public final class APIServlet extends HttpServlet {
 
-    // not an interface in order for processRequest to be package-local, not public
     abstract static class APIRequestHandler {
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
         boolean requirePost() {
