@@ -51,6 +51,8 @@ public final class Peers {
     static final int communicationLoggingMask;
 
     static final Set<String> wellKnownPeers;
+    static final Set<String> knownBlacklistedPeers;
+
     static final int connectTimeout;
     static final int readTimeout;
     static final int blacklistingPeriod;
@@ -118,7 +120,7 @@ public final class Peers {
                     json.put("announcedAddress", Peers.myAddress + (Peers.myPeerServerPort != Peers.DEFAULT_PEER_PORT ? ":" + Peers.myPeerServerPort : ""));
                 }
             } else {
-                json.put("announcedAddress", Peers.myAddress.split(":")[0] + ":" + TESTNET_PEER_PORT);
+                json.put("announcedAddress", Peers.myAddress.split(":")[0]);
             }
         }
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
@@ -162,6 +164,18 @@ public final class Peers {
         }
         wellKnownPeers = Collections.unmodifiableSet(addresses);
 
+        Set<String> blacklistedAddresses = new HashSet<>();
+        String knownBlacklistedPeersString = Nxt.getStringProperty("nxt.knownBlacklistedPeers");
+        if (knownBlacklistedPeersString != null && knownBlacklistedPeersString.length() > 0) {
+            for (String address : knownBlacklistedPeersString.split(";")) {
+                address = address.trim();
+                if (address.length() > 0) {
+                    blacklistedAddresses.add(address);
+                }
+            }
+        }
+        knownBlacklistedPeers = Collections.unmodifiableSet(blacklistedAddresses);
+
         maxNumberOfConnectedPublicPeers = Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers");
         connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
         readTimeout = Nxt.getIntProperty("nxt.readTimeout");
@@ -199,11 +213,14 @@ public final class Peers {
 
                 ServletHandler peerHandler = new ServletHandler();
                 peerHandler.addServletWithMapping(PeerServlet.class, "/*");
-                FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
-                filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
-                filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
-                filterHolder.setInitParameter("trackSessions", "false");
-                filterHolder.setAsyncSupported(true);
+                if (Nxt.getBooleanProperty("nxt.enablePeerServerDoSFilter")) {
+                    FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
+                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
+                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
+                    filterHolder.setInitParameter("maxRequestMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestMs"));
+                    filterHolder.setInitParameter("trackSessions", "false");
+                    filterHolder.setAsyncSupported(true);
+                }
 
                 peerServer.setHandler(peerHandler);
                 peerServer.setStopAtShutdown(true);
@@ -470,7 +487,7 @@ public final class Peers {
 
         List<Peer> selectedPeers = new ArrayList<>();
         for (Peer peer : peers.values()) {
-            if (! peer.isBlacklisted() && peer.getState() == state /*&& peer.getAnnouncedAddress() != null*/
+            if (! peer.isBlacklisted() && peer.getState() == state && peer.shareAddress()
                     && (!applyPullThreshold || ! Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold)) {
                 selectedPeers.add(peer);
             }

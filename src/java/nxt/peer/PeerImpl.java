@@ -58,6 +58,7 @@ final class PeerImpl implements Peer {
             this.port = new URL("http://" + announcedAddress).getPort();
         } catch (MalformedURLException ignore) {}
         this.state = State.NON_CONNECTED;
+        this.shareAddress = true;
     }
 
     @Override
@@ -193,7 +194,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public boolean isBlacklisted() {
-        return blacklistingTime > 0;
+        return blacklistingTime > 0 || Peers.knownBlacklistedPeers.contains(peerAddress);
     }
 
     @Override
@@ -324,9 +325,7 @@ final class PeerImpl implements Peer {
                 log += " >>> " + e.toString();
                 showLog = true;
             }
-            if (state == State.NON_CONNECTED) {
-                blacklist();
-            } else if (state == State.CONNECTED) {
+            if (state == State.CONNECTED) {
                 setState(State.DISCONNECTED);
             }
             response = null;
