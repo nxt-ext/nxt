@@ -157,10 +157,10 @@ public final class Generator {
             lastBlocks.put(account, lastBlock);
             hits.put(account, hit);
 
-            long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue();
-            long elapsed = Math.max(Convert.getEpochTime() - lastBlock.getTimestamp(), 0);
+            long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue();
+            long elapsed = Convert.getEpochTime() - lastBlock.getTimestamp();
 
-            deadline = total - elapsed;
+            deadline = Math.max(total - elapsed, 0);
 
             listeners.notify(this, Event.GENERATION_DEADLINE);
 
