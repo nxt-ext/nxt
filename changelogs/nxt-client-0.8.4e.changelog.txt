@@ -1,0 +1,57 @@
+Several changes in the calculation of unconfirmed balances and
+unconfirmed asset balances. This is an attempt to fix the
+negative unconfirmed balance bug and "Not enough funds" error,
+but hasn't been tested, this is why this release is experimental.
+
+Enabled use of testnet just by setting nxt.isTestnet property
+in nxt.properties. No other changes are needed.
+
+When switching to testnet by setting nxt.isTestnet=true, peer
+port becomes 6874, UI port 6875, and API server port 6876.
+Those values are hardcoded to prevent mistakes and take
+precedence over any custom port values in nxt.properties.
+Also, when NOT using testnet, the server will refuse to start
+if peer port is set to 6874, again to prevent accidental
+mixing of real and test blockchains.
+
+For testnet, a new subdirectory for the test blockchain will
+be automatically created, nxt_test_db.
+
+You need to set nxt.testnetPeers to a list of known public
+test nodes. I have set up bug.airdns.org with the 0.8.4e code,
+and a copy of the testnet blockchain, as obtained from holms.
+I hope other people will also set up test nodes and announce
+them on the forum.
+
+In this release, when switching to test net, the Voting and
+Asset Exchange features will be automatically enabled. On the
+real net, they will still be disabled. The NRS UI client
+however doesn't support those features, so you would need to
+use a different UI, or use the http API directly.
+
+Added nxt.knownBlacklistedPeers parameter, for manual
+blacklisting of peers in the nxt.properties file.
+
+No longer overwrite the peer address with its announced
+address in the Active peers panel, use only the IP to uniquely
+identify a peer.
+
+Allow disabling of the DoSFilter for the peer networking
+server. Added nxt.peerServerDoSFilter.maxRequestMs=300000
+parameter, because the default value for the DoSFilter
+maxRequestMs forcefully closes peer requests taking longer
+than 30 s, which breaks blockchain downloads for slow peers.
+This is very likely the cause for the Jetty error warnings
+we had back in 0.5.x days.
+
+Added Generator.getAccount method, and START_FORGING and
+STOP_FORGING events, of interest to Java API clients.
+
+Added run.bat script for Windows users.
+
+Source code is now included in the release package under
+the src directory. The compile.sh and javadoc.sh scripts
+can be used to compile the source, and regenerate nxt.jar
+and the javadoc documentation.
+
+
