@@ -452,7 +452,7 @@ public abstract class TransactionType {
                     }
                 }
                 if (attachment.getPollName().length() > Nxt.MAX_POLL_NAME_LENGTH || attachment.getPollDescription().length() > Nxt.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > 100 || transaction.getAmount() != 0 || Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
+                        || attachment.getPollOptions().length > 100 || transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Invalid poll attachment: " + attachment.getJSON());
                 }
             }
@@ -626,7 +626,7 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || transaction.getFee() < Nxt.ASSET_ISSUANCE_FEE
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || transaction.getFee() < Nxt.ASSET_ISSUANCE_FEE
                         || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
                         || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
                     throw new NxtException.ValidationException("Invalid asset issuance: " + attachment.getJSON());
