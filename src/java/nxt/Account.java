@@ -126,7 +126,10 @@ public final class Account {
     }
 
     public synchronized long getGuaranteedBalance(final int numberOfConfirmations) {
-        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight() || numberOfConfirmations < 0) {
+        if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
+            return 0;
+        }
+        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations < 0) {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
         }
         if (guaranteedBalances.isEmpty()) {
