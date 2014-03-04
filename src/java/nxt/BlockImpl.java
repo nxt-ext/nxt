@@ -348,10 +348,7 @@ final class BlockImpl implements Block {
     void apply() {
 
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
-        if (! generatorAccount.setOrVerify(generatorPublicKey, this.height)) {
-            throw new IllegalStateException("Generator public key mismatch");
-        }
-        generatorAccount.apply(this.height);
+        generatorAccount.apply(generatorPublicKey, this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
     }

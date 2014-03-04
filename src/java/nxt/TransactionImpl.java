@@ -325,11 +325,7 @@ final class TransactionImpl implements Transaction {
 
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
-        if (! senderAccount.setOrVerify(senderPublicKey, this.getHeight())) {
-            throw new RuntimeException("sender public key mismatch");
-            // shouldn't happen, because transactions are already verified somewhere higher in pushBlock...
-        }
-        senderAccount.apply(this.getHeight());
+        senderAccount.apply(senderPublicKey, this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
         if (recipientAccount == null) {
             recipientAccount = Account.addOrGetAccount(recipientId);

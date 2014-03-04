@@ -191,7 +191,10 @@ public final class Account {
         return false;
     }
 
-    synchronized void apply(int height) {
+    synchronized void apply(byte[] key, int height) {
+        if (! setOrVerify(key, this.height)) {
+            throw new IllegalStateException("Generator public key mismatch");
+        }
         if (this.publicKey == null) {
             throw new IllegalStateException("Public key has not been set for account " + Convert.toUnsignedLong(id)
                     +" at height " + height + ", key height is " + keyHeight);
