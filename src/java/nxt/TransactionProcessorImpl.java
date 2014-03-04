@@ -291,6 +291,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void apply(BlockImpl block) {
         block.apply();
         for (TransactionImpl transaction : block.getTransactions()) {
+            if (! unconfirmedTransactions.containsKey(transaction.getId())) {
+                transaction.applyUnconfirmed();
+            }
             transaction.apply();
             transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
         }

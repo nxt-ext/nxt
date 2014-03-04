@@ -512,7 +512,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
                                 +" for transaction " + transaction.getStringId());
                     }
-                    if ((transactionProcessor.getUnconfirmedTransaction(transaction.getId()) != null && !transaction.verify())) {
+                    if (! transaction.verify()) {
                         throw new BlockNotAcceptedException("Signature verification failed for transaction " + transaction.getStringId());
                     }
                     if (transaction.getId().equals(Long.valueOf(0L))) {
@@ -793,9 +793,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new NxtException.ValidationException("Database blocks in the wrong order!");
                     }
                     blockchain.setLastBlock(currentBlock);
-                    for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                        transaction.applyUnconfirmed();
-                    }
                     transactionProcessor.apply(currentBlock);
                     blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                     currentBlockId = currentBlock.getNextBlockId();
