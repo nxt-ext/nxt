@@ -175,9 +175,11 @@
 				for (i = transactions.rows.length; i-- > 0; ) {
 					element = transactions.rows[i].cells[11];
 					numberOfConfirmations = parseInt(element.title);
-    				element.title = ++numberOfConfirmations;
-					element.innerHTML = numberOfConfirmations > 10 ? "10+" : numberOfConfirmations;
-					transactions.rows[i].cells[10].className = numberOfConfirmations > 0 ? "enabledNumberOfConfirmations" : "disabledNumberOfConfirmations";
+					if (numberOfConfirmations >= 0) {
+        				element.title = ++numberOfConfirmations;
+	    				element.innerHTML = numberOfConfirmations > 10 ? "10+" : numberOfConfirmations;
+		    			transactions.rows[i].cells[10].className = "enabledNumberOfConfirmations";
+		    		}
 				}
 			}
 
