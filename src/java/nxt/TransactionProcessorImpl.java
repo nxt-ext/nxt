@@ -96,11 +96,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 try {
                     JSONArray transactionsData = new JSONArray();
 
+                    int curTime = Convert.getEpochTime();
                     for (Transaction transaction : nonBroadcastedTransactions.values()) {
-                        if (unconfirmedTransactions.get(transaction.getId()) == null && ! TransactionDb.hasTransaction(transaction.getId())) {
-                            transactionsData.add(transaction.getJSONObject());
-                        } else {
+                        if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
                             nonBroadcastedTransactions.remove(transaction.getId());
+                        } else if (transaction.getTimestamp() < curTime - 30) {
+                            transactionsData.add(transaction.getJSONObject());
                         }
                     }
 
@@ -149,7 +150,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (transactionsData == null) {
                         return;
                     }
-                    processJSONTransactions(transactionsData, false);
+                    processPeerTransactions(transactionsData, false);
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
@@ -198,7 +199,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public void processPeerTransactions(JSONObject request) {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
-        processJSONTransactions(transactionsData, true);
+        processPeerTransactions(transactionsData, true);
     }
 
     @Override
@@ -369,7 +370,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    private void processJSONTransactions(JSONArray transactionsData, final boolean sendToPeers) {
+    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
@@ -381,6 +382,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
         processTransactions(transactions, sendToPeers);
+        for (TransactionImpl transaction : transactions) {
+            nonBroadcastedTransactions.remove(transaction.getId());
+        }
     }
 
     private void processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
