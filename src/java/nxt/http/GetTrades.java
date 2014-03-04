@@ -42,6 +42,9 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         int firstIndex, lastIndex;
         try {
             firstIndex = Integer.parseInt(req.getParameter("firstIndex"));
+            if (firstIndex < 0) {
+                firstIndex = 0;
+            }
         } catch (NumberFormatException e) {
             firstIndex = 0;
         }
@@ -56,7 +59,7 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         JSONArray tradesData = new JSONArray();
         try {
             List<Trade> trades = Trade.getTrades(assetId);
-            for (int i = firstIndex; i <= lastIndex; i++) {
+            for (int i = firstIndex; i <= lastIndex && i < trades.size(); i++) {
                 Trade trade = trades.get(i);
 
                 JSONObject tradeData = new JSONObject();
