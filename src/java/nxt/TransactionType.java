@@ -940,7 +940,7 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.getAttachment();
                 Order order = Order.Ask.removeOrder(attachment.getOrderId());
                 if (order != null) {
-                    senderAccount.addToAssetAndUnconfirmedAssetBalance(order.getAssetId(), order.getQuantity());
+                    senderAccount.addToUnconfirmedAssetBalance(order.getAssetId(), order.getQuantity());
                 }
             }
 
@@ -970,7 +970,7 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.getAttachment();
                 Order order = Order.Bid.removeOrder(attachment.getOrderId());
                 if (order != null) {
-                    senderAccount.addToBalanceAndUnconfirmedBalance(order.getQuantity() * order.getPrice());
+                    senderAccount.addToUnconfirmedBalance(order.getQuantity() * order.getPrice());
                 }
             }
 
