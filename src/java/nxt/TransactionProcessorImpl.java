@@ -62,7 +62,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
                         while (iterator.hasNext()) {
                             TransactionImpl transaction = iterator.next();
-                            if (transaction.getExpiration() < curTime) {
+                            boolean isNotValid = false;
+                            try {
+                                transaction.validateAttachment();
+                            } catch (NxtException.ValidationException e) {
+                                isNotValid = true;
+                            }
+                            if (transaction.getExpiration() < curTime || isNotValid) {
                                 iterator.remove();
                                 transaction.undoUnconfirmed();
                                 removedUnconfirmedTransactions.add(transaction);
