@@ -803,7 +803,6 @@ public abstract class TransactionType {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Ask order already filled");
                 }
-                senderAccount.addToAssetBalance(attachment.getAssetId(), attachment.getQuantity());
             }
 
             @Override
@@ -867,7 +866,6 @@ public abstract class TransactionType {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Bid order already filled");
                 }
-                senderAccount.addToBalance(attachment.getQuantity() * attachment.getPrice());
             }
 
             @Override
