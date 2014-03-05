@@ -54,6 +54,7 @@ public abstract class Order {
             }
             bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
             bidOrder.getAccount().addToBalance(-quantity * price);
+            bidOrder.getAccount().addToUnconfirmedBalance(quantity * (bidOrder.getPrice() - price));
 
         }
 
