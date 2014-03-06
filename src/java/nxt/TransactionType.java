@@ -88,7 +88,8 @@ public abstract class TransactionType {
     // return false iff double spending
     final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
         int totalAmount = transaction.getAmount() + transaction.getFee();
-        if (senderAccount.getUnconfirmedBalance() < totalAmount * 100L) {
+        if (senderAccount.getUnconfirmedBalance() < totalAmount * 100L
+                && ! (transaction.getTimestamp() == 0 && Arrays.equals(senderAccount.getPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
             return false;
         }
         senderAccount.addToUnconfirmedBalance(- totalAmount * 100L);
