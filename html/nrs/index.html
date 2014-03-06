@@ -179,7 +179,12 @@
 			}
 			
 			function formatAmount(amount) {
-				var digits=[], formattedAmount = "", i, cents = amount % 100;
+				var digits=[], formattedAmount = "", i, isNegative = false;
+				if (amount < 0) {
+				    isNegative = true;
+				    amount = -amount;
+				}
+				var cents = amount % 100;
 				amount = Math.floor(amount / 100);
 				do {
 					digits[digits.length] = amount % 10;
@@ -190,6 +195,9 @@
 						formattedAmount = "'" + formattedAmount;
 					}
 					formattedAmount = digits[i] + formattedAmount;
+				}
+				if (isNegative) {
+				    formattedAmount = "-" + formattedAmount;
 				}
 				return formattedAmount + "<span class='cents'>." + Math.floor(cents / 10) + "" + cents % 10 + "</span>";
 			}
