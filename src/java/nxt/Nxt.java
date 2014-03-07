@@ -21,10 +21,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimeZone;
 
 public final class Nxt extends HttpServlet {
 
-    public static final String VERSION = "0.7.6";
+    public static final String VERSION = "0.7.7";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -54,8 +55,7 @@ public final class Nxt extends HttpServlet {
 
     public static final long epochBeginning;
     static {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.ZONE_OFFSET, 0);
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calendar.set(Calendar.YEAR, 2013);
         calendar.set(Calendar.MONTH, Calendar.NOVEMBER);
         calendar.set(Calendar.DAY_OF_MONTH, 24);
