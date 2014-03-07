@@ -11,10 +11,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Properties;
+import java.util.TimeZone;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.8.7";
+    public static final String VERSION = "0.8.8";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -46,8 +47,7 @@ public final class Nxt {
 
     public static final long EPOCH_BEGINNING;
     static {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.ZONE_OFFSET, 0);
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calendar.set(Calendar.YEAR, 2013);
         calendar.set(Calendar.MONTH, Calendar.NOVEMBER);
         calendar.set(Calendar.DAY_OF_MONTH, 24);
