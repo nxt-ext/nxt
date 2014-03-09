@@ -287,6 +287,17 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public byte[] getGuid() {
+        byte[] data = getBytes();
+        for (int i = 64; i < 128; i++) {
+            data[i] = 0;
+        }
+        byte[] hash = Crypto.sha256().digest(data);
+        hash[hash.length - 1] &= (byte)(0xFF - 1); // cfb: transaction guids have the very last bit set to 0b
+        return hash;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o instanceof TransactionImpl && this.getId().equals(((Transaction)o).getId());
     }

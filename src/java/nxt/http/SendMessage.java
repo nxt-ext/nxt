@@ -111,6 +111,7 @@ public final class SendMessage extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
+        response.put("guid", Convert.toHexString(transaction.getGuid()));
         response.put("bytes", Convert.toHexString(transaction.getBytes()));
 
         return response;

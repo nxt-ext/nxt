@@ -34,6 +34,8 @@ public interface Transaction extends Comparable<Transaction> {
 
     String getHash();
 
+    byte[] getGuid();
+
     TransactionType getType();
 
     Attachment getAttachment();

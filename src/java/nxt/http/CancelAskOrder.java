@@ -100,6 +100,7 @@ public final class CancelAskOrder extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("transaction", transaction.getStringId());
+        response.put("guid", Convert.toHexString(transaction.getGuid()));
         return response;
 
     }

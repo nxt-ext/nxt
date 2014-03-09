@@ -115,6 +115,7 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
             Nxt.getTransactionProcessor().broadcast(transaction);
 
             response.put("transaction", transaction.getStringId());
+            response.put("guid", Convert.toHexString(transaction.getGuid()));
 
         }
 

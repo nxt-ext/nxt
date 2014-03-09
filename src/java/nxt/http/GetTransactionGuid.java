@@ -1,8 +1,8 @@
 package nxt.http;
 
-import nxt.Block;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -13,11 +13,11 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class GetTransaction extends APIServlet.APIRequestHandler {
+public class GetTransactionGuid extends APIServlet.APIRequestHandler {
 
-    static final GetTransaction instance = new GetTransaction();
+    static final GetTransactionGuid instance = new GetTransactionGuid();
 
-    private GetTransaction() {}
+    private GetTransactionGuid() {}
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -30,31 +30,23 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
         Long transactionId;
         Transaction transactionData;
         try {
-
             transactionId = Convert.parseUnsignedLong(transaction);
             transactionData = Nxt.getBlockchain().getTransaction(transactionId);
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
 
-        JSONObject response;
         if (transactionData == null) {
             transactionData = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
             if (transactionData == null) {
                 return UNKNOWN_TRANSACTION;
-            } else {
-                response = transactionData.getJSONObject();
             }
-        } else {
-            response = transactionData.getJSONObject();
-            Block block = transactionData.getBlock();
-            response.put("block", block.getStringId());
-            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight());
         }
-        response.put("sender", Convert.toUnsignedLong(transactionData.getSenderId()));
-        response.put("guid", Convert.toHexString(transactionData.getGuid()));
 
+        JSONObject response = new JSONObject();
+        response.put("guid", Convert.toHexString(transactionData.getGuid()));
         return response;
+
     }
 
 }
