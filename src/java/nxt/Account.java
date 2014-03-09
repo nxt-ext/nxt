@@ -104,6 +104,11 @@ public final class Account {
     public int getEffectiveBalance() {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
+
+        if (publicKey == null && lastBlock.getHeight() >= Nxt.TRANSPARENT_FORGING_BLOCK_6) {
+            return 0; // cfb: Accounts with non-revealed public key are not allowed to generate blocks
+        }
+
         if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {

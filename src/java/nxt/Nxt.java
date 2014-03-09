@@ -42,6 +42,7 @@ public final class Nxt {
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
     public static final int TRANSPARENT_FORGING_BLOCK_5 = 67000;
+    public static final int TRANSPARENT_FORGING_BLOCK_6 = 100000;
     public static final int ASSET_EXCHANGE_BLOCK; // = 111111;
     public static final int VOTING_SYSTEM_BLOCK; // = 222222;
 
