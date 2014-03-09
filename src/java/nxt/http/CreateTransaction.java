@@ -100,6 +100,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             response.put("transaction", transaction.getStringId());
         }
         response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+        response.put("guid", Convert.toHexString(transaction.getGuid()));
         return response;
 
     }
