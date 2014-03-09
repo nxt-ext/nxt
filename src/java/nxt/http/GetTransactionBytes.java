@@ -42,10 +42,11 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
             if (transactionData == null) {
                 return UNKNOWN_TRANSACTION;
             }
+        } else {
+            Block block = transactionData.getBlock();
+            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight());
         }
         response.put("transactionBytes", Convert.toHexString(transactionData.getBytes()));
-        Block block = transactionData.getBlock();
-        response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight());
         return response;
 
     }
