@@ -275,15 +275,8 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public String getHash() {
-        if (hash == null) {
-            byte[] data = getBytes();
-            for (int i = 64; i < 128; i++) {
-                data[i] = 0;
-            }
-            hash = Convert.toHexString(Crypto.sha256().digest(data));
-        }
-        return hash;
+    public String getHash() { // cfb: This is not the real hash because the very last bit is set to 0b!
+        return Convert.toHexString(getGuid());
     }
 
     @Override
@@ -293,7 +286,7 @@ final class TransactionImpl implements Transaction {
             data[i] = 0;
         }
         byte[] hash = Crypto.sha256().digest(data);
-        hash[hash.length - 1] &= (byte)(0xFF - 1); // cfb: transaction guids have the very last bit set to 0b
+        hash[hash.length - 1] &= 0x7F; // cfb: transaction guids have the very last bit set to 0b
         return hash;
     }
 

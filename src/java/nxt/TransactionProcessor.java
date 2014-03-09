@@ -31,4 +31,6 @@ public interface TransactionProcessor extends Observable<List<Transaction>,Trans
     Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                int amount, int fee, Long referencedTransactionId, Attachment attachment) throws NxtException.ValidationException;
 
+    Long findTransaction(String guid);
+
 }

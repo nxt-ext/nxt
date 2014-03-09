@@ -45,6 +45,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
     private final ConcurrentMap<String, TransactionHashInfo> transactionHashes = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> transactionGuids = new ConcurrentHashMap<>();
     private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
@@ -293,6 +294,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         doubleSpendingTransactions.clear();
         nonBroadcastedTransactions.clear();
         transactionHashes.clear();
+        transactionGuids.clear();
     }
 
     void apply(BlockImpl block) {
@@ -303,6 +305,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             transaction.apply();
             transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
+            transactionGuids.put(Convert.toHexString(transaction.getGuid()), transaction.getId());
         }
         purgeExpiredHashes(block.getTimestamp());
     }
@@ -314,6 +317,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
                 transactionHashes.remove(transaction.getHash());
             }
+            transactionGuids.remove(Convert.toHexString(transaction.getGuid()));
             unconfirmedTransactions.put(transaction.getId(), transaction);
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
@@ -465,6 +469,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             transactionListeners.notify(addedDoubleSpendingTransactions, Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
         }
 
+    }
+
+    @Override
+    public Long findTransaction(String guid) {
+        return transactionGuids.get(guid);
     }
 
 }

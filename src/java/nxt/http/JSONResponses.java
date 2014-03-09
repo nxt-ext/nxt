@@ -84,6 +84,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
+    public static final JSONStreamAware MISSING_GUID = missing("guid");
+    public static final JSONStreamAware INCORRECT_GUID = incorrect("guid");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
