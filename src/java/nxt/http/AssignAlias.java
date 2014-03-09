@@ -27,7 +27,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_URI;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class AssignAlias extends APIServlet.APIRequestHandler {
+public final class AssignAlias extends CreateTransaction {
 
     static final AssignAlias instance = new AssignAlias();
 
@@ -35,23 +35,13 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
-        String secretPhrase = req.getParameter("secretPhrase");
         String alias = req.getParameter("alias");
         String uri = req.getParameter("uri");
-        String feeValue = req.getParameter("fee");
-        String deadlineValue = req.getParameter("deadline");
-        String referencedTransactionValue = req.getParameter("referencedTransaction");
 
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        } else if (alias == null) {
+        if (alias == null) {
             return MISSING_ALIAS;
         } else if (uri == null) {
             return MISSING_URI;
-        } else if (feeValue == null) {
-            return MISSING_FEE;
-        } else if (deadlineValue == null) {
-            return MISSING_DEADLINE;
         }
 
         alias = alias.trim();
@@ -71,60 +61,22 @@ public final class AssignAlias extends APIServlet.APIRequestHandler {
             return INCORRECT_URI_LENGTH;
         }
 
-        int fee;
-        try {
-            fee = Integer.parseInt(feeValue);
-            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
-                return INCORRECT_FEE;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_FEE;
-        }
-
-        short deadline;
-        try {
-            deadline = Short.parseShort(deadlineValue);
-            if (deadline < 1 || deadline > 1440) {
-                return INCORRECT_DEADLINE;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_DEADLINE;
-        }
-
-        Long referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
-        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-        Account account = Account.getAccount(publicKey);
-        if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
+        Account account = getAccount(req);
+        if (account == null) {
             return NOT_ENOUGH_FUNDS;
         }
 
         Alias aliasData = Alias.getAlias(normalizedAlias);
-        JSONObject response = new JSONObject();
-        if (aliasData != null && aliasData.getAccount() != account) {
-
+        if (aliasData != null && ! aliasData.getAccount().getId().equals(account.getId())) {
+            JSONObject response = new JSONObject();
             response.put("errorCode", 8);
             response.put("errorDescription", "\"" + alias + "\" is already used");
-
+            return response;
         } else {
-
             Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
-            Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline,
-                    publicKey, Genesis.CREATOR_ID, 0, fee, referencedTransaction, attachment);
-            transaction.sign(secretPhrase);
-
-            Nxt.getTransactionProcessor().broadcast(transaction);
-
-            response.put("transaction", transaction.getStringId());
-            response.put("guid", Convert.toHexString(transaction.getGuid()));
-
+            return createTransaction(req, account, attachment);
         }
 
-        return response;
-    }
-
-    @Override
-    boolean requirePost() {
-        return true;
     }
 
 }
