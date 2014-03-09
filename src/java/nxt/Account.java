@@ -7,6 +7,7 @@ import nxt.util.Listeners;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -354,6 +355,23 @@ public final class Account {
         public String toString() {
             return "height: " + height + ", guaranteed: " + balance;
         }
+    }
+
+    public BigInteger getHit(String secretPhrase, Block block) {
+        MessageDigest digest = Crypto.sha256();
+        byte[] generationSignatureHash;
+        if (block.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+            byte[] generationSignature = Crypto.sign(block.getGenerationSignature(), secretPhrase);
+            generationSignatureHash = digest.digest(generationSignature);
+        } else {
+            digest.update(block.getGenerationSignature());
+            generationSignatureHash = digest.digest(publicKey);
+        }
+        return new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+    }
+
+    public long getHitTime(BigInteger hit, Block block) {
+        return block.getTimestamp() + hit.divide(BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(getEffectiveBalance()))).longValue();
     }
 
 }

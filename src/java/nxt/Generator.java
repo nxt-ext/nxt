@@ -142,25 +142,12 @@ public final class Generator {
 
         if (! lastBlock.equals(lastBlocks.get(account))) {
 
-            MessageDigest digest = Crypto.sha256();
-            byte[] generationSignatureHash;
-            if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
-                byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), secretPhrase);
-                generationSignatureHash = digest.digest(generationSignature);
-            } else {
-                digest.update(lastBlock.getGenerationSignature());
-                generationSignatureHash = digest.digest(publicKey);
-            }
-
-            BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+            BigInteger hit = account.getHit(secretPhrase, lastBlock);
 
             lastBlocks.put(account, lastBlock);
             hits.put(account, hit);
 
-            long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue();
-            long elapsed = Convert.getEpochTime() - lastBlock.getTimestamp();
-
-            deadline = Math.max(total - elapsed, 0);
+            deadline = Math.max(account.getHitTime(hit, lastBlock) - Convert.getEpochTime(), 0);
 
             listeners.notify(this, Event.GENERATION_DEADLINE);
 
