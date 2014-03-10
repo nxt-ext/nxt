@@ -3,30 +3,21 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
-import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
-import nxt.Transaction;
-import nxt.crypto.Crypto;
-import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.ASSET_NAME_ALREADY_USED;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_DESCRIPTION;
-import static nxt.http.JSONResponses.INCORRECT_ASSET_ISSUANCE_FEE;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_QUANTITY;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_NAME;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class IssueAsset extends CreateTransaction {
 
@@ -78,7 +69,7 @@ public final class IssueAsset extends CreateTransaction {
 
         Account account = getAccount(req);
         if (account == null) {
-            return NOT_ENOUGH_FUNDS;
+            return UNKNOWN_ACCOUNT;
         }
 
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);

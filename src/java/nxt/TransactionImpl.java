@@ -221,7 +221,7 @@ final class TransactionImpl implements Transaction {
         buffer.putInt(amount);
         buffer.putInt(fee);
         buffer.putLong(Convert.nullToZero(referencedTransactionId));
-        buffer.put(signature);
+        buffer.put(signature != null ? signature : new byte[64]);
         if (attachment != null) {
             buffer.put(attachment.getBytes());
         }
@@ -258,14 +258,13 @@ final class TransactionImpl implements Transaction {
             throw new IllegalStateException("Transaction already signed");
         }
 
-        signature = new byte[64]; // ugly but signature is needed by getBytes()
         signature = Crypto.sign(getBytes(), secretPhrase);
 
         try {
             while (!verify()) {
                 timestamp++;
                 // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
-                signature = new byte[64];
+                signature = null;
                 signature = Crypto.sign(getBytes(), secretPhrase);
             }
         } catch (RuntimeException e) {
