@@ -316,22 +316,43 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public MessagingHubTerminalAnnouncement() {
+        private final String[] uris;
 
+        public MessagingHubTerminalAnnouncement(String[] uris) {
+            this.uris = uris;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            try {
+                int size = 2;
+                for (String uri : uris) {
+                    size += 2 + uri.getBytes("UTF-8").length;
+                }
+                return size;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
         }
 
         @Override
         public byte[] getBytes() {
 
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            return buffer.array();
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putShort((short)uris.length);
+                for (String uri : uris) {
+                    byte[] uriBytes = uri.getBytes("UTF-8");
+                    buffer.putShort((short)uriBytes.length);
+                    buffer.put(uriBytes);
+                }
+                return buffer.array();
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
 
         }
 
@@ -339,7 +360,11 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-
+            JSONArray uris = new JSONArray();
+            for (String uri : this.uris) {
+                uris.add(uri);
+            }
+            attachment.put("uris", uris);
             return attachment;
 
         }

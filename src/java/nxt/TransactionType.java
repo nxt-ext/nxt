@@ -542,19 +542,44 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement());
+                String[] uris;
+                try {
+                    int numberOfUris = buffer.getShort();
+                    uris = new String[numberOfUris];
+                    for (int i = 0; i < uris.length; i++) {
+                        int uriBytesLength = buffer.getShort();
+                        byte[] uriBytes = new byte[uriBytesLength];
+                        buffer.get(uriBytes);
+                        uris[i] = new String(uriBytes, "UTF-8");
+                    }
+                } catch (RuntimeException|UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
+                }
+
+                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(uris));
                 validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement());
+                String[] uris;
+                try {
+                    JSONArray urisData = (JSONArray)attachmentData.get("uris");
+                    uris = new String[urisData.size()];
+                    for (int i = 0; i < uris.length; i++) {
+                        uris[i] = (String)urisData.get(i);
+                    }
+                } catch (RuntimeException e) {
+                    throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
+                }
+
+                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(uris));
                 validateAttachment(transaction);
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                // TODO: cfb: @JLP, Any suggestions how it's better to store array of strings? It must be stored until next transaction doesn't rewrite the strings (for the same account).
             }
 
             @Override
