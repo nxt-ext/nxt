@@ -28,7 +28,7 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
-public final class IssueAsset extends APIServlet.APIRequestHandler {
+public final class IssueAsset extends CreateTransaction {
 
     static final IssueAsset instance = new IssueAsset();
 
@@ -37,19 +37,14 @@ public final class IssueAsset extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
-        String secretPhrase = req.getParameter("secretPhrase");
         String name = req.getParameter("name");
         String description = req.getParameter("description");
         String quantityValue = req.getParameter("quantity");
-        String feeValue = req.getParameter("fee");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        } else if (name == null) {
+
+        if (name == null) {
             return MISSING_NAME;
         } else if (quantityValue == null) {
             return MISSING_QUANTITY;
-        } else if (feeValue == null) {
-            return MISSING_FEE;
         }
 
         name = name.trim();
@@ -81,38 +76,14 @@ public final class IssueAsset extends APIServlet.APIRequestHandler {
             return INCORRECT_QUANTITY;
         }
 
-        int fee;
-        try {
-            fee = Integer.parseInt(feeValue);
-            if (fee < Nxt.ASSET_ISSUANCE_FEE) {
-                return INCORRECT_ASSET_ISSUANCE_FEE;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_FEE;
-        }
-
-        byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-        Account account = Account.getAccount(publicKey);
-        if (account == null || fee * 100L > account.getUnconfirmedBalance()) {
+        Account account = getAccount(req);
+        if (account == null) {
             return NOT_ENOUGH_FUNDS;
         }
 
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction((short) 1440, publicKey,
-                Genesis.CREATOR_ID, 0, fee, null, attachment);
-        transaction.sign(secretPhrase);
+        return createTransaction(req, account, attachment);
 
-        Nxt.getTransactionProcessor().broadcast(transaction);
-
-        JSONObject response = new JSONObject();
-        response.put("transaction", transaction.getStringId());
-        return response;
-
-    }
-
-    @Override
-    boolean requirePost() {
-        return true;
     }
 
 }
