@@ -90,8 +90,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         // shouldn't try to get publicKey from senderAccount as it may have not been set yet
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey,
-                recipientId, amount, fee, referencedTransaction, attachment);
+        Transaction transaction = attachment == null ?
+                Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
+                        amount, fee, referencedTransaction)
+                :
+                Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
+                        amount, fee, referencedTransaction, attachment);
 
         JSONObject response = new JSONObject();
         if (secretPhrase != null) {
