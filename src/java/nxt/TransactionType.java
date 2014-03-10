@@ -22,6 +22,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
     private static final byte SUBTYPE_MESSAGING_POLL_CREATION = 2;
     private static final byte SUBTYPE_MESSAGING_VOTE_CASTING = 3;
+    private static final byte SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT = 4;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
@@ -48,6 +49,8 @@ public abstract class TransactionType {
                         return Messaging.POLL_CREATION;
                     case SUBTYPE_MESSAGING_VOTE_CASTING:
                         return Messaging.VOTE_CASTING;
+                    case SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT:
+                        return Messaging.HUB_TERMINAL_ANNOUNCEMENT;
                     default:
                         return null;
                 }
@@ -531,6 +534,43 @@ public abstract class TransactionType {
             }
 
         };
+
+        public static final TransactionType HUB_TERMINAL_ANNOUNCEMENT = new Messaging() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement());
+                validateAttachment(transaction);
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement());
+                validateAttachment(transaction);
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of hub terminal announcement not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_6) {
+                    throw new NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
     }
 
     public static abstract class ColoredCoins extends TransactionType {

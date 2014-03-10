@@ -312,6 +312,45 @@ public interface Attachment {
 
     }
 
+    public final static class MessagingHubTerminalAnnouncement implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public MessagingHubTerminalAnnouncement() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            return buffer.array();
+
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+
+            JSONObject attachment = new JSONObject();
+
+            return attachment;
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.HUB_TERMINAL_ANNOUNCEMENT;
+        }
+
+    }
+
     public final static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
