@@ -2,28 +2,17 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Genesis;
-import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
-import nxt.Transaction;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_POLL;
-import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.INCORRECT_VOTE;
-import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_POLL;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class CastVote extends CreateTransaction {
 
@@ -66,7 +55,7 @@ public final class CastVote extends CreateTransaction {
 
         Account account = getAccount(req);
         if (account == null) {
-            return NOT_ENOUGH_FUNDS;
+            return UNKNOWN_ACCOUNT;
         }
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);

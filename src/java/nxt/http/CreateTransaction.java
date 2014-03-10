@@ -24,11 +24,11 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     final Account getAccount(HttpServletRequest req) {
-        String secretPhrase = req.getParameter("secretPhrase");
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase != null) {
             return Account.getAccount(Crypto.getPublicKey(secretPhrase));
         }
-        String publicKeyString = req.getParameter("publicKey");
+        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
         if (publicKeyString == null) {
             return null;
         }
@@ -45,8 +45,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String deadlineValue = req.getParameter("deadline");
         String feeValue = req.getParameter("fee");
         String referencedTransactionValue = req.getParameter("referencedTransaction");
-        String secretPhrase = req.getParameter("secretPhrase");
-        String publicKeyValue = req.getParameter("publicKey");
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;

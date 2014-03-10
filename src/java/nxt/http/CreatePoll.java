@@ -2,37 +2,26 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
-import nxt.Transaction;
-import nxt.crypto.Crypto;
-import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_MAXNUMBEROFOPTIONS;
 import static nxt.http.JSONResponses.INCORRECT_MINNUMBEROFOPTIONS;
 import static nxt.http.JSONResponses.INCORRECT_OPTIONSAREBINARY;
 import static nxt.http.JSONResponses.INCORRECT_POLL_DESCRIPTION_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_POLL_NAME_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_POLL_OPTION_LENGTH;
-import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
-import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_DESCRIPTION;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_MAXNUMBEROFOPTIONS;
 import static nxt.http.JSONResponses.MISSING_MINNUMBEROFOPTIONS;
 import static nxt.http.JSONResponses.MISSING_NAME;
 import static nxt.http.JSONResponses.MISSING_OPTIONSAREBINARY;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class CreatePoll extends CreateTransaction {
 
@@ -104,7 +93,7 @@ public final class CreatePoll extends CreateTransaction {
 
         Account account = getAccount(req);
         if (account == null) {
-            return NOT_ENOUGH_FUNDS;
+            return UNKNOWN_ACCOUNT;
         }
 
         Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(),

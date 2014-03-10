@@ -7,7 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.Collections;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL;
