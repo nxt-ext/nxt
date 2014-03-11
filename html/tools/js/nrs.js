@@ -5629,7 +5629,10 @@
         	if (error == "abort") {
         		return;
         	} else if (callback) {
-        		callback({"errorCode": -1, "errorDescription": error}, {});
+        		if (error == "timeout") {
+	        		error = "The request timed out. Warning: This does not mean the request did not go through. You should wait for the next block and see if your request has been processed.";
+        		}
+         		callback({"errorCode": -1, "errorDescription": error}, {});
         	}
         });
     }
