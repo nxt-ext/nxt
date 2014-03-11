@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.XoredData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -675,7 +676,18 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsListing() {
+        private final String name;
+        private final String description;
+        private final String tags;
+        private final int quantity;
+        private final long price;
+
+        public DigitalGoodsListing(String name, String description, String tags, int quantity, long price) {
+            this.name = name;
+            this.description = description;
+            this.tags = tags;
+            this.quantity = quantity;
+            this.price = price;
         }
 
         @Override
@@ -712,7 +724,10 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsDelisting() {
+        private final Long goodsId;
+
+        public DigitalGoodsDelisting(Long goodsId) {
+            this.goodsId = goodsId;
         }
 
         @Override
@@ -749,7 +764,12 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsPriceChange() {
+        private final Long goodsId;
+        private final long price;
+
+        public DigitalGoodsPriceChange(Long goodsId, long price) {
+            this.goodsId = goodsId;
+            this.price = price;
         }
 
         @Override
@@ -786,7 +806,12 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsQuantityChange() {
+        private final Long goodsId;
+        private final int deltaQuantity;
+
+        public DigitalGoodsQuantityChange(Long goodsId, int deltaQuantity) {
+            this.goodsId = goodsId;
+            this.deltaQuantity = deltaQuantity;
         }
 
         @Override
@@ -823,7 +848,16 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsPurchase() {
+        private final Long goodsId;
+        private final int quantity;
+        private final long price;
+        private final XoredData note;
+
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long price, XoredData note) {
+            this.goodsId = goodsId;
+            this.quantity = quantity;
+            this.price = price;
+            this.note = note;
         }
 
         @Override
@@ -860,7 +894,14 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsDelivery() {
+        private final Long purchaseId;
+        private final XoredData goods;
+        private final long discount;
+
+        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discount) {
+            this.purchaseId = purchaseId;
+            this.goods = goods;
+            this.discount = discount;
         }
 
         @Override
@@ -897,7 +938,14 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsRating() {
+        private final Long purchaseId;
+        private final byte deltaRating;
+        private final String comment;
+
+        public DigitalGoodsRating(Long purchaseId, byte deltaRating, String comment) {
+            this.purchaseId = purchaseId;
+            this.deltaRating = deltaRating;
+            this.comment = comment;
         }
 
         @Override
@@ -934,7 +982,14 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public DigitalGoodsRefund() {
+        private final Long purchaseId;
+        private final long refund;
+        private final String note;
+
+        public DigitalGoodsRefund(Long purchaseId, long refund, String note) {
+            this.purchaseId = purchaseId;
+            this.refund = refund;
+            this.note = note;
         }
 
         @Override
