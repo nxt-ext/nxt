@@ -24,12 +24,12 @@ public final class Int128 {
     }
 
     public static Int128 multiply(long multiplicand, long multiplier) {
-        long multiplicandMantissa0 = multiplicand & 0x3FFFFFFF, multiplicandMantissa32 = multiplicand >> 30;
-        long multiplierMantissa0 = multiplier & 0x3FFFFFFF, multiplierMantissa32 = multiplier >> 30;
+        long multiplicandMantissa0 = multiplicand & 0x3FFFFFFF, multiplicandMantissa30 = multiplicand >> 30;
+        long multiplierMantissa0 = multiplier & 0x3FFFFFFF, multiplierMantissa30 = multiplier >> 30;
 
         long product1stPart = multiplicandMantissa0 * multiplierMantissa0;
-        long product2ndPart = multiplicandMantissa0 * multiplierMantissa32 + multiplicandMantissa32 * multiplierMantissa0;
-        long product3rdPart = multiplicandMantissa32 * multiplierMantissa32;
+        long product2ndPart = multiplicandMantissa0 * multiplierMantissa30 + multiplicandMantissa30 * multiplierMantissa0;
+        long product3rdPart = multiplicandMantissa30 * multiplierMantissa30;
 
         return new Int128(product1stPart + ((product2ndPart & 0x3FFFFFFF) << 30), (product2ndPart >> 30) + product3rdPart);
     }
