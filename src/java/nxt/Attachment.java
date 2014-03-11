@@ -1030,20 +1030,18 @@ public interface Attachment {
         static final long serialVersionUID = 0;
 
         private final Long purchaseId;
-        private final byte deltaRating;
-        private final String comment;
+        private final XoredData note;
 
-        public DigitalGoodsRating(Long purchaseId, byte deltaRating, String comment) {
+        public DigitalGoodsRating(Long purchaseId, XoredData note) {
             this.purchaseId = purchaseId;
-            this.deltaRating = deltaRating;
-            this.comment = comment;
+            this.note = note;
         }
 
         @Override
         public int getSize() {
             try {
-                return 8 + 1 + 2 + comment.getBytes("UTF-8").length;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
+                return 8 + 2 + note.getData().length + 32;
+            } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
             }
@@ -1055,12 +1053,11 @@ public interface Attachment {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(purchaseId.longValue());
-                buffer.put(deltaRating);
-                byte[] commentBytes = comment.getBytes("UTF-8");
-                buffer.putShort((short)commentBytes.length);
-                buffer.put(commentBytes);
+                buffer.putShort((short)note.getData().length);
+                buffer.put(note.getData());
+                buffer.put(note.getNonce());
                 return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
+            } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return null;
             }
@@ -1070,21 +1067,19 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            attachment.put("deltaRating", deltaRating);
-            attachment.put("comment", comment);
+            attachment.put("note", Convert.toHexString(note.getData()));
+            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
         }
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.DigitalGoods.RATING;
+            return TransactionType.DigitalGoods.FEEDBACK;
         }
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public byte getDeltaRating() { return deltaRating; }
-
-        public String getComment() { return comment; }
+        public XoredData getNote() { return note; }
 
     }
 
@@ -1094,9 +1089,9 @@ public interface Attachment {
 
         private final Long purchaseId;
         private final long refund;
-        private final String note;
+        private final XoredData note;
 
-        public DigitalGoodsRefund(Long purchaseId, long refund, String note) {
+        public DigitalGoodsRefund(Long purchaseId, long refund, XoredData note) {
             this.purchaseId = purchaseId;
             this.refund = refund;
             this.note = note;
@@ -1105,8 +1100,8 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                return 8 + 8 + 2 + note.getBytes("UTF-8").length;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
+                return 8 + 8 + 2 + note.getData().length + 32;
+            } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
             }
@@ -1119,11 +1114,11 @@ public interface Attachment {
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(purchaseId.longValue());
                 buffer.putLong(refund);
-                byte[] noteBytes = note.getBytes("UTF-8");
-                buffer.putShort((short)noteBytes.length);
-                buffer.put(noteBytes);
+                buffer.putShort((short)note.getData().length);
+                buffer.put(note.getData());
+                buffer.put(note.getNonce());
                 return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
+            } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return null;
             }
@@ -1134,7 +1129,8 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
             attachment.put("refund", refund);
-            attachment.put("note", note);
+            attachment.put("note", Convert.toHexString(note.getData()));
+            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
         }
 
@@ -1147,7 +1143,7 @@ public interface Attachment {
 
         public long getRefund() { return refund; }
 
-        public String getNote() { return note; }
+        public XoredData getNote() { return note; }
 
     }
 

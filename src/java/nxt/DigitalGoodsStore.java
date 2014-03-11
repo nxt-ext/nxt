@@ -171,11 +171,11 @@ public final class DigitalGoodsStore {
 
     }
 
-    public static void rate(Long purchaseId, byte deltaRating, String comment) {
+    public static void giveFeedback(Long purchaseId, XoredData note) {
 
     }
 
-    public static void refund(Long purchaseId, long refund, String note) {
+    public static void refund(Long purchaseId, long refund, XoredData note) {
 
     }
 

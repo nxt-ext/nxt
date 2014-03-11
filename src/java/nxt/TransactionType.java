@@ -37,7 +37,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE = 3;
     private static final byte SUBTYPE_DIGITAL_GOODS_PURCHASE = 4;
     private static final byte SUBTYPE_DIGITAL_GOODS_DELIVERY = 5;
-    private static final byte SUBTYPE_DIGITAL_GOODS_RATING = 6;
+    private static final byte SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
@@ -95,8 +95,8 @@ public abstract class TransactionType {
                         return DigitalGoods.PURCHASE;
                     case SUBTYPE_DIGITAL_GOODS_DELIVERY:
                         return DigitalGoods.DELIVERY;
-                    case SUBTYPE_DIGITAL_GOODS_RATING:
-                        return DigitalGoods.RATING;
+                    case SUBTYPE_DIGITAL_GOODS_FEEDBACK:
+                        return DigitalGoods.FEEDBACK;
                     case SUBTYPE_DIGITAL_GOODS_REFUND:
                         return DigitalGoods.REFUND;
                     default:
@@ -1443,7 +1443,7 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
-                XoredData goods = new XoredData(Convert.parseHexString((String)attachmentData.get("goods")), Convert.parseHexString((String)attachmentData.get("goodsNonce")));;
+                XoredData goods = new XoredData(Convert.parseHexString((String)attachmentData.get("goods")), Convert.parseHexString((String)attachmentData.get("goodsNonce")));
                 long discount = ((Long)attachmentData.get("discount")).longValue();
 
                 transaction.setAttachment(new Attachment.DigitalGoodsDelivery(purchaseId, goods, discount));
@@ -1476,65 +1476,62 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType RATING = new DigitalGoods() {
+        public static final TransactionType FEEDBACK = new DigitalGoods() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_RATING; }
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_FEEDBACK; }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long purchaseId;
-                byte deltaRating;
-                String comment;
+                XoredData note;
 
                 purchaseId = buffer.getLong();
 
-                deltaRating = buffer.get();
-
                 try {
-                    int commentBytesLength = buffer.getShort();
-                    byte[] commentBytes = new byte[commentBytesLength];
-                    buffer.get(commentBytes);
-                    comment = new String(commentBytes, "UTF-8");
-                } catch (RuntimeException | UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error parsing rating comment", e);
+                    int noteBytesLength = buffer.getShort();
+                    byte[] noteBytes = new byte[noteBytesLength];
+                    buffer.get(noteBytes);
+                    byte[] noteNonceBytes = new byte[32];
+                    buffer.get(noteNonceBytes);
+                    note = new XoredData(noteBytes, noteNonceBytes);
+                } catch (RuntimeException e) {
+                    throw new NxtException.ValidationException("Error parsing feedback note", e);
                 }
 
-                transaction.setAttachment(new Attachment.DigitalGoodsRating(purchaseId, deltaRating, comment));
+                transaction.setAttachment(new Attachment.DigitalGoodsRating(purchaseId, note));
                 validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
-                byte deltaRating = ((Long)attachmentData.get("deltaRating")).byteValue();
-                String comment = (String)attachmentData.get("comment");
+                XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")), Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
-                transaction.setAttachment(new Attachment.DigitalGoodsRating(purchaseId, deltaRating, comment));
+                transaction.setAttachment(new Attachment.DigitalGoodsRating(purchaseId, note));
                 validateAttachment(transaction);
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRating attachment = (Attachment.DigitalGoodsRating)transaction.getAttachment();
-                DigitalGoodsStore.rate(attachment.getPurchaseId(), attachment.getDeltaRating(), attachment.getComment());
+                DigitalGoodsStore.giveFeedback(attachment.getPurchaseId(), attachment.getNote());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods rating not supported");
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods feedback not supported");
             }
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods rating not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                    throw new NotYetEnabledException("Digital goods feedback not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.DigitalGoodsRating attachment = (Attachment.DigitalGoodsRating)transaction.getAttachment();
                 if (transaction.getAmount() != 0
-                        || attachment.getDeltaRating() < -1 || attachment.getDeltaRating() > 1
-                        || attachment.getComment().length() > 1000) {
-                    throw new NxtException.ValidationException("Invalid digital goods rating: " + attachment.getJSON());
+                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32) {
+                    throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSON());
                 }
             }
 
@@ -1549,7 +1546,7 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long purchaseId;
                 long refund;
-                String note;
+                XoredData note;
 
                 purchaseId = buffer.getLong();
 
@@ -1559,8 +1556,10 @@ public abstract class TransactionType {
                     int noteBytesLength = buffer.getShort();
                     byte[] noteBytes = new byte[noteBytesLength];
                     buffer.get(noteBytes);
-                    note = new String(noteBytes, "UTF-8");
-                } catch (RuntimeException | UnsupportedEncodingException e) {
+                    byte[] noteNonceBytes = new byte[32];
+                    buffer.get(noteNonceBytes);
+                    note = new XoredData(noteBytes, noteNonceBytes);
+                } catch (RuntimeException e) {
                     throw new NxtException.ValidationException("Error parsing refund note", e);
                 }
 
@@ -1572,7 +1571,7 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
                 long refund = ((Long)attachmentData.get("refund")).longValue();
-                String note = (String)attachmentData.get("note");
+                XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")), Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
                 transaction.setAttachment(new Attachment.DigitalGoodsRefund(purchaseId, refund, note));
                 validateAttachment(transaction);
@@ -1597,7 +1596,7 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
                 if (transaction.getAmount() != 0
                         || attachment.getRefund() < 0 || attachment.getRefund() > Nxt.MAX_BALANCE
-                        || attachment.getNote().length() > 1000) {
+                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSON());
                 }
             }
