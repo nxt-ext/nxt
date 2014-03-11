@@ -32,6 +32,7 @@ public final class Nxt {
     public static final int MAX_POLL_NAME_LENGTH = 100;
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;
+    public static final int MAX_DIGITAL_GOODS_QUANTITY = 1000000000;
 
     public static final boolean isTestnet;
 

@@ -1167,6 +1167,16 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+                Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmount() != 0
+                        || attachment.getName().length() == 0 || attachment.getName().length() > 100
+                        || attachment.getDescription().length() > 1000
+                        || attachment.getTags().length() > 100
+                        || attachment.getQuantity() < 0 || attachment.getQuantity() > Nxt.MAX_DIGITAL_GOODS_QUANTITY
+                        || attachment.getPrice() <= 0 || attachment.getPrice() > Nxt.MAX_BALANCE) {
+                    throw new NxtException.ValidationException("Invalid digital goods listing: " + attachment.getJSON());
+                }
             }
 
         };
@@ -1207,6 +1217,11 @@ public abstract class TransactionType {
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods delisting not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmount() != 0) {
+                    throw new NxtException.ValidationException("Invalid digital goods delisting: " + attachment.getJSON());
                 }
             }
 
@@ -1252,6 +1267,12 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods price change not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+                Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmount() != 0
+                        || attachment.getPrice() <= 0 || attachment.getPrice() > Nxt.MAX_BALANCE) {
+                    throw new NxtException.ValidationException("Invalid digital goods price change: " + attachment.getJSON());
+                }
             }
 
         };
@@ -1295,6 +1316,12 @@ public abstract class TransactionType {
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods quantity change not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmount() != 0
+                        || attachment.getDeltaQuantity() < -Nxt.MAX_DIGITAL_GOODS_QUANTITY || attachment.getDeltaQuantity() > Nxt.MAX_DIGITAL_GOODS_QUANTITY) {
+                    throw new NxtException.ValidationException("Invalid digital goods quantity change: " + attachment.getJSON());
                 }
             }
 
@@ -1362,6 +1389,13 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods purchase not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
+                if (transaction.getAmount() != 0
+                        || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_DIGITAL_GOODS_QUANTITY
+                        || attachment.getPrice() <= 0 || attachment.getPrice() > Nxt.MAX_BALANCE
+                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32) {
+                    throw new NxtException.ValidationException("Invalid digital goods purchase: " + attachment.getJSON());
+                }
             }
 
         };
@@ -1420,6 +1454,12 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods delivery not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+                Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
+                if (transaction.getAmount() != 0
+                        || attachment.getGoods().getData().length > 1000 || attachment.getGoods().getNonce().length != 32
+                        || attachment.getDiscount() < 0 || attachment.getDiscount() > Nxt.MAX_BALANCE) {
+                    throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSON());
+                }
             }
 
         };
@@ -1476,6 +1516,12 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods rating not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+                Attachment.DigitalGoodsRating attachment = (Attachment.DigitalGoodsRating)transaction.getAttachment();
+                if (transaction.getAmount() != 0
+                        || attachment.getDeltaRating() < -1 || attachment.getDeltaRating() > 1
+                        || attachment.getComment().length() > 1000) {
+                    throw new NxtException.ValidationException("Invalid digital goods rating: " + attachment.getJSON());
+                }
             }
 
         };
@@ -1531,6 +1577,12 @@ public abstract class TransactionType {
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new NotYetEnabledException("Digital goods refund not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
+                if (transaction.getAmount() != 0
+                        || attachment.getRefund() < 0 || attachment.getRefund() > Nxt.MAX_BALANCE
+                        || attachment.getNote().length() > 1000) {
+                    throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSON());
                 }
             }
 
