@@ -1155,6 +1155,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing)transaction.getAttachment();
+                DigitalGoodsStore.listGoods(transaction.getId(), attachment.getName(), attachment.getDescription(), attachment.getTags(), attachment.getQuantity(), attachment.getPrice());
             }
 
             @Override
@@ -1206,6 +1208,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting)transaction.getAttachment();
+                DigitalGoodsStore.delistGoods(attachment.getGoodsId());
             }
 
             @Override
@@ -1255,6 +1259,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange)transaction.getAttachment();
+                DigitalGoodsStore.changePrice(attachment.getGoodsId(), attachment.getPrice());
             }
 
             @Override
@@ -1305,6 +1311,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange)transaction.getAttachment();
+                DigitalGoodsStore.changePrice(attachment.getGoodsId(), attachment.getDeltaQuantity());
             }
 
             @Override

@@ -16,6 +16,8 @@ public final class DigitalGoodsStore {
         private int quantity;
         private long price;
 
+        private boolean delisted;
+
         public Goods(String name, String description, String tags, int quantity, long price) {
             this.name = name;
             this.description = description;
@@ -40,16 +42,29 @@ public final class DigitalGoodsStore {
             return quantity;
         }
 
-        public void setQuantity(int quantity) {
-            this.quantity = quantity;
+        public void changeQuantity(int deltaQuantity) {
+            if (!delisted) {
+                quantity += deltaQuantity;
+                if (quantity < 0) {
+                    quantity = 0;
+                } else if (quantity > Nxt.MAX_DIGITAL_GOODS_QUANTITY) {
+                    quantity = Nxt.MAX_DIGITAL_GOODS_QUANTITY;
+                }
+            }
         }
 
         public long getPrice() {
             return price;
         }
 
-        public void setPrice(long price) {
-            this.price = price;
+        public void changePrice(long price) {
+            if (!delisted) {
+                this.price = price;
+            }
+        }
+
+        public void delist() {
+            delisted = true;
         }
     }
 
@@ -121,6 +136,31 @@ public final class DigitalGoodsStore {
     public static void clear() {
         goods.clear();
         purchases.clear();
+    }
+
+    public static void listGoods(Long goodsId, String name, String description, String tags, int quantity, long price) {
+        goods.put(goodsId, new Goods(name, description, tags, quantity, price));
+    }
+
+    public static void delistGoods(Long goodsId) {
+        Goods goods = getGoods(goodsId);
+        if (goods != null) {
+            goods.delist();
+        }
+    }
+
+    public static void changePrice(Long goodsId, long price) {
+        Goods goods = getGoods(goodsId);
+        if (goods != null) {
+            goods.changePrice(price);
+        }
+    }
+
+    public static void changeQuantity(Long goodsId, int deltaQuantity) {
+        Goods goods = getGoods(goodsId);
+        if (goods != null) {
+            goods.changeQuantity(deltaQuantity);
+        }
     }
 
 }
