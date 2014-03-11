@@ -320,16 +320,18 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
+        private final long minFeePerByte;
         private final String[] uris;
 
-        public MessagingHubTerminalAnnouncement(String[] uris) {
+        public MessagingHubTerminalAnnouncement(long minFeePerByte, String[] uris) {
+            this.minFeePerByte = minFeePerByte;
             this.uris = uris;
         }
 
         @Override
         public int getSize() {
             try {
-                int size = 1;
+                int size = 8 + 1;
                 for (String uri : uris) {
                     size += 2 + uri.getBytes("UTF-8").length;
                 }
@@ -346,7 +348,8 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)uris.length);
+                buffer.putLong(minFeePerByte);
+                buffer.put((byte) uris.length);
                 for (String uri : uris) {
                     byte[] uriBytes = uri.getBytes("UTF-8");
                     buffer.putShort((short)uriBytes.length);
@@ -364,6 +367,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
+            attachment.put("minFeePerByte", minFeePerByte);
             JSONArray uris = new JSONArray();
             for (String uri : this.uris) {
                 uris.add(uri);
@@ -376,6 +380,13 @@ public interface Attachment {
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.HUB_TERMINAL_ANNOUNCEMENT;
+        } 
+        public long getMinFeePerByte() {
+            return minFeePerByte;
+        }
+
+        public String[] getUris() {
+            return uris;
         }
 
     }

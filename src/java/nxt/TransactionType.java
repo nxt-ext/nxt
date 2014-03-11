@@ -583,6 +583,7 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                long minFeePerByte = buffer.getLong();
                 String[] uris;
                 try {
                     int numberOfUris = buffer.get();
@@ -597,12 +598,13 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
                 }
 
-                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(uris));
+                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(minFeePerByte, uris));
                 validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                long minFeePerByte = ((Long)attachmentData.get("minFeePerByte")).longValue();
                 String[] uris;
                 try {
                     JSONArray urisData = (JSONArray)attachmentData.get("uris");
@@ -614,7 +616,7 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
                 }
 
-                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(uris));
+                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(minFeePerByte, uris));
                 validateAttachment(transaction);
             }
 
@@ -632,6 +634,12 @@ public abstract class TransactionType {
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
                     throw new NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MessagingHubTerminalAnnouncement attachment = (Attachment.MessagingHubTerminalAnnouncement)transaction.getAttachment();
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmount() != 0
+                        || attachment.getMinFeePerByte() < 0 || attachment.getMinFeePerByte() > Constants.MAX_BALANCE) { // cfb: "0" is allowed to show that another way to determine the min fee should be used
+                    throw new NxtException.ValidationException("Invalid hub terminal announcement: " + attachment.getJSON());
                 }
             }
 
