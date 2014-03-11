@@ -44,13 +44,15 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
             return INCORRECT_TRANSACTION;
         }
 
-        JSONObject response = transaction.getJSONObject();
+        JSONObject response;
         if (transaction == null) {
             transaction = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
             if (transaction == null) {
                 return UNKNOWN_TRANSACTION;
             }
+            response = transaction.getJSONObject();
         } else {
+            response = transaction.getJSONObject();
             response.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
             response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
         }
