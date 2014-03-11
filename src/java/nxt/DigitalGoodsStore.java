@@ -163,4 +163,20 @@ public final class DigitalGoodsStore {
         }
     }
 
+    public static void purchase(Long goodsId, int quantity, long price, int deliveryDeadline, XoredData note) {
+
+    }
+
+    public static void deliver(Long purchaseId, XoredData goods, long discount) {
+
+    }
+
+    public static void rate(Long purchaseId, byte deltaRating, String comment) {
+
+    }
+
+    public static void refund(Long purchaseId, long refund, String note) {
+
+    }
+
 }
