@@ -1278,22 +1278,20 @@
 							<input type="hidden" name="order" id="cancel_order_order" value="" />
 							<input type="hidden" name="fee" data-default="1" value="1" />
 							<input type="hidden" name="deadline" data-default="24" value="24" />
-							<!--
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_order_fee">FEE</label>
-										<input type="number" name="fee" id="cancel_order_fee" class="form-control" placeholder="Fee" tabindex="2">
+										<input type="number" name="fee" id="cancel_order_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="2">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_order_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="cancel_order_deadline" class="form-control" placeholder="Deadline" tabindex="2" >
+										<input type="number" name="deadline" id="cancel_order_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="3">
 									</div>
 								</div>
 							</div>
-							-->
 							<div class="form-group">
 								<label for="cancel_order_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
@@ -1638,6 +1636,21 @@
 									<div class="form-group">
 										<label for="create_poll_max_options">MAXIMUM NR OF CHOICES</label>
 										<input type="number" name="maxNumberOfOptions" id="create_poll_max_options" class="form-control" placeholder="" data-default="1" value="1" tabindex="5">
+									</div>
+								</div>
+							</div>
+							
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="create_poll_fee">FEE</label>
+										<input type="number" name="fee" id="create_poll_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="3">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="create_poll_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="create_poll_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="4">
 									</div>
 								</div>
 							</div>
