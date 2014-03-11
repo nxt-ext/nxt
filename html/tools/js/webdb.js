@@ -4,7 +4,7 @@
 (function() {
   var WebDB, indexedDB, webDB, webSQL, _mix, _typeOf;
 
-  window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
+  window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
 
   webDB = (function() {
     webDB.prototype.db = null;
@@ -338,7 +338,7 @@
         throw "WebSQL not supported";
       }
       size = size * 1024 * 1024;
-      this.db = window.openDatabase(name, version, "", size);
+      this.db = window.openDatabase(name, 1, "", size); //don't care about the version..hack..
       _tables = 0;
       for (table in schema) {
         sql = "CREATE TABLE IF NOT EXISTS " + table + " (";

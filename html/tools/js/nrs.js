@@ -518,7 +518,7 @@
 	    			$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
 	    			
 	    			NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-	    		} else if (NRS.state.lastBlock != response.lastBlock) {	    			
+	    		} else if (NRS.state.lastBlock != response.lastBlock) {	 
 	    			NRS.temp.blocks = [];
 					NRS.state = response;
 					NRS.getAccountBalance();
@@ -5283,11 +5283,15 @@
 		        name: "VARCHAR(10)",
 		        quantity: "NUMBER",
 		        groupName: "VARCHAR(100)"
+		    },
+		    data: {
+		    	id: "VARCHAR(100)",
+		    	contents: "TEXT"
 		    }
 		};
 		
 		try {
-			NRS.database = new WebDB("NXT", schema, 1, 4, function() {
+			NRS.database = new WebDB("NXT", schema, 2, 4, function() {
 				NRS.databaseSupport = true;
 				NRS.loadContacts();
 			});
@@ -5380,13 +5384,39 @@
     }
     
     NRS.getAccountBalance = function(firstRun) {
-    	NRS.sendRequest("getAccount", {"account": NRS.account}, function(response) {    		
+    	NRS.sendRequest("getAccount", {"account": NRS.account}, function(response) {    
+    		var previousAccountBalance = NRS.accountBalance;
+    				
     		NRS.accountBalance = response;
     		    		
     		if (response.errorCode) {
 	    		$("#account_balance").html("0");
 	    		$("#account_nr_assets").html("0");
     		} else {
+    			if (NRS.databaseSupport) {
+    				NRS.database.select("data", [{"id": "asset_balances"}], function(asset_balance) {
+						if (asset_balance.length) {
+						    var previous_balances = asset_balance[0].contents;
+						    var current_balances = JSON.stringify(NRS.accountBalance.assetBalances);
+						    						    
+						    if (previous_balances != current_balances) {
+							    previous_balances = JSON.parse(previous_balances);
+								NRS.database.update("data", {contents: current_balances}, [{id: "asset_balances"}]);
+								NRS.checkAssetDifferences(NRS.accountBalance.assetBalances, previous_balances);
+						    } 
+						} else {
+					    	NRS.database.insert("data", {id: "asset_balances", contents: JSON.stringify(NRS.accountBalance.assetBalances)});
+						}
+					});
+				} else if (previousAccountBalance && previousAccountBalance.assetBalances) {
+					var previous_balances = JSON.stringify(previousAccountBalance.assetBalances);
+					var current_balances = JSON.stringify(NRS.accountBalance.assetBalances);
+					
+					if (previous_balances != current_balances) {
+						NRS.checkAssetDifferences(NRS.accountBalance.assetBalances, previousAccountBalance.assetBalances);
+					}
+				}
+
 	    		if (response.balance > 0) {
 	    			var balance = response.balance;
 	    		} else {
@@ -5416,6 +5446,56 @@
 
 	    	}
     	});
+    }
+    
+    NRS.checkAssetDifferences = function(current_balances, previous_balances) {
+    	var current_balances_  = {};
+    	var previous_balances_ = {};
+    		    
+	    for (var k in previous_balances) {
+		    previous_balances_[previous_balances[k].asset] = previous_balances[k].balance;
+	    }
+	    
+	    for (var k in current_balances) {
+		    current_balances_[current_balances[k].asset] = current_balances[k].balance;
+	    }
+	    
+	    var diff = {};
+	    
+	    for (var k in previous_balances_) {
+			if (!(k in current_balances_)) {
+				diff[k] = -(previous_balances_[k]);
+			} else if (previous_balances_[k] !== current_balances_[k]) {
+				var change = current_balances_[k] - previous_balances_[k];
+				diff[k] = change;
+			}
+		}
+		
+		for (k in current_balances_) {
+			if (!(k in previous_balances_)) {
+				diff[k] = current_balances_[k]; // property is new
+			}
+		}
+				
+		var nr = Object.keys(diff).length;
+			
+		if (nr == 0) {
+			return;
+		} else if (nr <= 3) {
+			for (k in diff) {
+				NRS.sendRequest("getAsset", {"asset": k, "_extra": {"difference": diff[k]}}, function(asset, input) {
+					asset.difference = input["_extra"].difference;
+										
+					if (asset.difference > 0) {
+						$.growl("You bought " + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + " assets.", {"type": "success"});
+					} else {
+						$.growl("You sould " + NRS.formatAmount(asset.difference) + " " +  asset.name.escapeHTML() + " assets.", {"type": "success"});
+					}
+				});
+			}
+		} else {
+			$.growl("Multiple different assets have been sold and/or bought.", {"type": "success"});
+		}
     }
     
     NRS.handleInitialTransactions = function(transactions, transactionIds) {       	 	
