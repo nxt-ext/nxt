@@ -43,13 +43,11 @@ public final class DigitalGoodsStore {
         }
 
         public void changeQuantity(int deltaQuantity) {
-            if (!delisted) {
-                quantity += deltaQuantity;
-                if (quantity < 0) {
-                    quantity = 0;
-                } else if (quantity > Nxt.MAX_DIGITAL_GOODS_QUANTITY) {
-                    quantity = Nxt.MAX_DIGITAL_GOODS_QUANTITY;
-                }
+            quantity += deltaQuantity;
+            if (quantity < 0) {
+                quantity = 0;
+            } else if (quantity > Nxt.MAX_DIGITAL_GOODS_QUANTITY) {
+                quantity = Nxt.MAX_DIGITAL_GOODS_QUANTITY;
             }
         }
 
@@ -58,13 +56,15 @@ public final class DigitalGoodsStore {
         }
 
         public void changePrice(long price) {
-            if (!delisted) {
-                this.price = price;
-            }
+            this.price = price;
         }
 
         public void delist() {
             delisted = true;
+        }
+
+        public boolean isDelisted() {
+            return delisted;
         }
     }
 
@@ -144,21 +144,21 @@ public final class DigitalGoodsStore {
 
     public static void delistGoods(Long goodsId) {
         Goods goods = getGoods(goodsId);
-        if (goods != null) {
+        if (goods != null && !goods.isDelisted()) {
             goods.delist();
         }
     }
 
     public static void changePrice(Long goodsId, long price) {
         Goods goods = getGoods(goodsId);
-        if (goods != null) {
+        if (goods != null && !goods.isDelisted()) {
             goods.changePrice(price);
         }
     }
 
     public static void changeQuantity(Long goodsId, int deltaQuantity) {
         Goods goods = getGoods(goodsId);
-        if (goods != null) {
+        if (goods != null && !goods.isDelisted()) {
             goods.changeQuantity(deltaQuantity);
         }
     }
