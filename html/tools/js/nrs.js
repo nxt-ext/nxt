@@ -307,6 +307,7 @@
     NRS.genesis = "1739068987193023818";
     NRS.selectedContext = null;
     NRS.database = null;
+    NRS.databaseSupport = false;
     NRS.assets = {};
     NRS.loadedBefore = [];
     NRS.contacts = {};
@@ -1666,8 +1667,8 @@
     	
         $(".content.content-stretch:visible").width($(".page:visible").width());
 				
-		if (NRS.database) {
-			NRS.database.select("assetstest", null, function(dbAssets) {			
+		if (NRS.databaseSupport) {
+			NRS.database.select("assets", null, function(dbAssets) {			
 				$.each(dbAssets, function(index, asset) {
 					NRS.assets[asset.assetId] = asset;
 				});
@@ -1710,8 +1711,8 @@
 	    				   
 	    				   asset.assetId = input.asset;
 
-						   if (NRS.database) {
-		    				   NRS.database.insert("assetstest", asset);
+						   if (NRS.databaseSupport) {
+		    				   NRS.database.insert("assets", asset);
 						   }
 						   
 	    				   nr_assets++;
@@ -2333,9 +2334,14 @@
 		$("#asset_order_total").html(NRS.formatAmount(price*quantity, true) + " NXT");
 		$("#asset_order_fee_paid").html(NRS.formatAmount(fee) + " NXT");
 				
-		$("#asset_order_total_tooltip").popover("destroy");
-		$("#asset_order_total_tooltip").data("content", tooltipTitle);
-		$("#asset_order_total_tooltip").popover({"content": tooltipTitle, "trigger": "hover"});
+		if (quantity > 1) {
+			$("#asset_order_total_tooltip").show();
+			$("#asset_order_total_tooltip").popover("destroy");
+			$("#asset_order_total_tooltip").data("content", tooltipTitle);
+			$("#asset_order_total_tooltip").popover({"content": tooltipTitle, "trigger": "hover"});
+		} else {
+			$("#asset_order_total_tooltip").hide();
+		}
 		
 		$("#asset_order_type").val((orderType == "Buy" ? "placeBidOrder" : "placeAskOrder"));
 		$("#asset_order_asset").val(assetId);
@@ -2416,12 +2422,11 @@
 	    var oldGroupName = $("#asset_exchange_change_group_name_old").val();
 	    var newGroupName = $("#asset_exchange_change_group_name_new").val();
 	    	    
-		NRS.database.update("assetstest", {"groupName": newGroupName}, [{"groupName": oldGroupName}], function() {
+		NRS.database.update("assets", {"groupName": newGroupName}, [{"groupName": oldGroupName}], function() {
 			NRS.pages.asset_exchange();
 		});
 			    
 	    $.growl("Group name updated successfully.", {"type": "success"});
-	    	    
 		
 	    return {"stop": true};
     }
@@ -2438,12 +2443,12 @@
 		if (option == "add_to_group") {			
 			$("#asset_exchange_group_asset").val(assetId);
 																
-			NRS.database.select("assetstest", [{"assetId": assetId}], function(asset) {				
+			NRS.database.select("assets", [{"assetId": assetId}], function(asset) {				
 				asset = asset[0];
 												
 				$("#asset_exchange_group_title").html(String(asset.name).escapeHTML());
 			    	
-				NRS.database.select("assetstest", [], function(assets) {
+				NRS.database.select("assets", [], function(assets) {
 					
 					//NRS.database.execute("SELECT DISTINCT groupName FROM assets", [], function(groupNames) {					
 					var groupNames = [];
@@ -2481,7 +2486,7 @@
 				});
 			});
 		} else if (option == "remove_from_group") {
-			NRS.database.update("assetstest", {"groupName": ""}, [{"assetId": assetId}], function() {
+			NRS.database.update("assets", {"groupName": ""}, [{"assetId": assetId}], function() {
 		    	NRS.pages.asset_exchange();
 				$.growl("Asset removed from group successfully.", {"type": "success"});
 			});
@@ -2508,7 +2513,7 @@
 	    	groupName = $("#asset_exchange_group_new_group").val();
 	    } 
 	    	    
-	    NRS.database.update("assetstest", {"groupName": groupName}, [{"assetId": assetId}], function() {
+	    NRS.database.update("assets", {"groupName": groupName}, [{"assetId": assetId}], function() {
 		    NRS.pages.asset_exchange();
 	   	    if (!groupName) {
 		   		$.growl("Asset removed from group successfully.", {"type": "success"});
@@ -4490,9 +4495,10 @@
 	NRS.pages.contacts = function() {
 		NRS.pageLoading();
 		
-		if (!NRS.database) {
+		if (!NRS.databaseSupport) {
 			$("#contact_page_database_error").show();
 			$("#contacts_table_container").hide();
+			$("#add_contact_button").hide();
 			NRS.pageLoaded();
 			return;
 		}
@@ -5115,7 +5121,7 @@
     	account = $.trim(account);
     	    	
 		if (!(/^\d+$/.test(account))) {
-			if (NRS.database && account.charAt(0) != '@') {
+			if (NRS.databaseSupport && account.charAt(0) != '@') {
 				NRS.database.select("contacts", [{"name": account}], function(contact) {	
 					if (contact.length) {
 						contact = contact[0];
@@ -5244,7 +5250,9 @@
 	}
 	
 	NRS.createDatabase = function() {
-		//indexedDB.deleteDatabase("NRS");
+		if (indexedDB) {
+			indexedDB.deleteDatabase("NRS");
+		}
 		var schema = {
 		    contacts:{
 		    	id: "INTEGER PRIMARY KEY AUTOINCREMENT",
@@ -5253,7 +5261,7 @@
 		        accountId: "VARCHAR(100)",
 		        description: "TEXT"
 		    },
-		    assetstest: {
+		    assets: {
 		    	account: "VARCHAR(100)",
 		        assetId: "VARCHAR(100)",
 		        description: "TEXT",
@@ -5263,13 +5271,14 @@
 		    }
 		};
 		
-		
 		try {
-			NRS.database = new WebDB("NRS", schema, 1, 4, function() {
+			NRS.database = new WebDB("NXT", schema, 1, 4, function() {
+				NRS.databaseSupport = true;
 				NRS.loadContacts();
 			});
 		} catch (err) {
 			NRS.database = null;
+			NRS.databaseSupport = false;
 		}
 	}
 
@@ -5635,12 +5644,12 @@
     });
     
     $(".sidebar_context").on("contextmenu", "a", function(e) {
-    	if (!NRS.database) {
+	 	e.preventDefault();
+	 	
+	 	if (!NRS.databaseSupport) {
 	    	return;
     	}
     	
-	 	e.preventDefault();
-	 	
 	 	NRS.closeContextMenu();
 	 	
 	 	if ($(this).hasClass("no-context")) {

@@ -15,19 +15,25 @@
       this.schema = schema;
       this.version = version;
       this.size = size != null ? size : 5242880;
-      if (window.indexedDB) {
-        this.schema = (function() {
-          var _results;
-          _results = [];
-          for (key in this.schema) {
-            _results.push(key);
-          }
-          return _results;
-        }).call(this);
-        manager = new WebDB.indexedDB(this.name, this.schema, this.version, callback);
-      } else if (window.openDatabase) {
-        manager = new WebDB.webSQL(this.name, this.schema, this.version, this.size, callback);
-      } 
+      try {
+	      if (window.indexedDB) {
+	        this.schema = (function() {
+	          var _results;
+	          _results = [];
+	          for (key in this.schema) {
+	            _results.push(key);
+	          }
+	          return _results;
+	        }).call(this);
+	        manager = new WebDB.indexedDB(this.name, this.schema, this.version, callback);
+	      } else if (window.openDatabase) {
+	        manager = new WebDB.webSQL(this.name, this.schema, this.version, this.size, callback);
+	      } else {
+		      throw "Browser does not have database support.";
+	      }
+	  } catch (e) {
+		  throw e;
+	  }
       if (!window.openDatabase && !window.indexedDB) {
         this.select = function() {
           throw "HTML5 Databases not supported";
@@ -105,15 +111,14 @@
       }
       
       openRequest = window.indexedDB.open(name, version);
+      
       openRequest.onsuccess = function(e) {
         _this.db = e.target.result;
         if (callback != null) {
           return callback.call(callback);
         }
       };
-      openRequest.onerror = function(e) {
-        throw "Error opening database";
-      };
+      
       openRequest.onupgradeneeded = function(e) {
         var options, table, _i, _len, _results;
         _this.db = e.target.result;
