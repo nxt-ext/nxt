@@ -329,7 +329,7 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                int size = 2;
+                int size = 1;
                 for (String uri : uris) {
                     size += 2 + uri.getBytes("UTF-8").length;
                 }
@@ -346,7 +346,7 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putShort((short)uris.length);
+                buffer.put((byte)uris.length);
                 for (String uri : uris) {
                     byte[] uriBytes = uri.getBytes("UTF-8");
                     buffer.putShort((short)uriBytes.length);

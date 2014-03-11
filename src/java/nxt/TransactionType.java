@@ -585,7 +585,7 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 String[] uris;
                 try {
-                    int numberOfUris = buffer.getShort();
+                    int numberOfUris = buffer.get();
                     uris = new String[numberOfUris];
                     for (int i = 0; i < uris.length; i++) {
                         int uriBytesLength = buffer.getShort();
