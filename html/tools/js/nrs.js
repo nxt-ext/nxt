@@ -2302,14 +2302,14 @@
 			var fee = parseInt($("#buy_asset_fee").val(), 10);
 			
 			var description = "Buy <strong>" + NRS.formatAmount(quantity) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + " NXT</strong> each.";
-			var tooltipTitle = "You will have paid " + NRS.formatAmount(price) + " NXT (excluding fee) once all assets have been bought";
+			var tooltipTitle = "Once all assets have been bought, you will have paid " + NRS.formatAmount(price) + " NXT (excluding fee) ";
 		} else {
 			var price = Math.round(parseFloat($("#sell_asset_price").val())*100)/100;
 			var quantity = parseInt($("#sell_asset_quantity").val(), 10);
 			var fee = parseInt($("#sell_asset_fee").val(), 10);
 		
 			var description = "Sell <strong>" + NRS.formatAmount(quantity) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + " NXT</strong> each.";
-			var tooltipTitle = "You will have received " + NRS.formatAmount(price) + " NXT once all assets have been sold";
+			var tooltipTitle = "Once all assets have been sold, you will have received " + NRS.formatAmount(price) + " NXT.";
 		}
 		
 		if (isNaN(price)) {
