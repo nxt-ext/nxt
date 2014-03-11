@@ -3138,6 +3138,10 @@ nrs_update_hashes {
 .lockscreen #downloading_blockchain {
 	display:none !important;
 }
+
+label .popover-content {
+	font-weight:normal;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

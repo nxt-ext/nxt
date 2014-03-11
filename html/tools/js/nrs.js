@@ -324,7 +324,7 @@
 		    $(".testnet_only").show();
 			$("#testnet_login").show();
 	    }
-					
+				
     	NRS.createDatabase();
     	
     	NRS.getState(function() {
@@ -2301,13 +2301,15 @@
 			var quantity = parseInt($("#buy_asset_quantity").val(), 10);
 			var fee = parseInt($("#buy_asset_fee").val(), 10);
 			
-			var description = "Buy <strong>" + quantity + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + "</strong> NXT each.";
+			var description = "Buy <strong>" + NRS.formatAmount(quantity) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + " NXT</strong> each.";
+			var tooltipTitle = "You will have paid " + NRS.formatAmount(price) + " NXT (excluding fee) once all assets have been bought";
 		} else {
 			var price = Math.round(parseFloat($("#sell_asset_price").val())*100)/100;
 			var quantity = parseInt($("#sell_asset_quantity").val(), 10);
 			var fee = parseInt($("#sell_asset_fee").val(), 10);
 		
-			var description = "Sell <strong>" + quantity + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + "</strong> NXT each.";
+			var description = "Sell <strong>" + NRS.formatAmount(quantity) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + " NXT</strong> each.";
+			var tooltipTitle = "You will have received " + NRS.formatAmount(price) + " NXT once all assets have been sold";
 		}
 		
 		if (isNaN(price)) {
@@ -2328,7 +2330,12 @@
 		}
 		
 		$("#asset_order_description").html(description);		
-		$("#asset_order_total").html(NRS.formatAmount(price*quantity+fee, true) + " NXT");
+		$("#asset_order_total").html(NRS.formatAmount(price*quantity, true) + " NXT");
+		$("#asset_order_fee_paid").html(NRS.formatAmount(fee) + " NXT");
+				
+		$("#asset_order_total_tooltip").popover("destroy");
+		$("#asset_order_total_tooltip").data("content", tooltipTitle);
+		$("#asset_order_total_tooltip").popover({"content": tooltipTitle, "trigger": "hover"});
 		
 		$("#asset_order_type").val((orderType == "Buy" ? "placeBidOrder" : "placeAskOrder"));
 		$("#asset_order_asset").val(assetId);
