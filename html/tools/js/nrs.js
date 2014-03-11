@@ -468,10 +468,11 @@
     	if (password != PassPhraseGenerator.passPhrase) {    		
 	    	$("#account_phrase_generator_panel .step_3 .callout").show();
     	} else {
-	    	NRS.login(password);
-	   		$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
-	    	$("#account_phrase_generator_panel textarea").val("");
+	    	NRS.login(password, function() {
+	   			$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
+	   		});
 	    	PassPhraseGenerator.reset();
+	    	$("#account_phrase_generator_panel textarea").val("");
     		$("#account_phrase_generator_panel .step_3 .callout").hide();
     	}    
     }
@@ -495,10 +496,10 @@
     	if (error) {
     		$("#account_phrase_custom_panel .callout").first().removeClass("callout-info").addClass("callout-danger").html(error);
     	} else {
-    		$("#registration_password").val("");
-    		$("#registration_password_repeat").val("");
-    		NRS.login(password);
-			$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
+    		$("#registration_password, #registration_password_repeat").val("");
+    		NRS.login(password, function() {
+				$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
+			});
     	}
     });
        
@@ -5265,7 +5266,7 @@
 		}
 	}
 
-    NRS.login = function(password) {
+    NRS.login = function(password, callback) {
     	$("#login_password, #registration_password, #registration_password_repeat").val("");
     	    	
     	if (!password.length) {
@@ -5289,7 +5290,7 @@
 	    	 if (password.length < 35) {
 			   	passwordNotice = "Your secret phrase is less than 35 characters long. This is not secure.";
 			 } else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-				 passwordNotice = "Your secret phrase does not contain both numbers and uppercase letters. This is not secure.";
+				 passwordNotice = "Your secret phrase does not contain numbers and uppercase letters. This is not secure.";
 			 } 
 				    
 			if (passwordNotice) {
@@ -5312,6 +5313,10 @@
 	    	//NRS.getAccountAliases();
 	    	    	    
 	    	NRS.unlock();
+	    	
+	    	if (callback) {
+		    	callback();
+	    	}
 	    		       		       	
 	    	NRS.sendRequest('getAccountTransactionIds', {"account": NRS.account, "timestamp": 0}, function(response) {
 				if (response.transactionIds && response.transactionIds.length) {
