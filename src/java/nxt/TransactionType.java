@@ -7,11 +7,7 @@ import org.json.simple.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public abstract class TransactionType {
 
@@ -162,6 +158,14 @@ public abstract class TransactionType {
 
     boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
         return false;
+    }
+
+    Collection<TransactionType> getPhasingTransactionTypes() {
+        return Arrays.asList(new TransactionType[0]);
+    }
+
+    Collection<TransactionType> getPhasedTransactionTypes() {
+        return Arrays.asList(new TransactionType[0]);
     }
 
     public static abstract class Payment extends TransactionType {
@@ -1406,6 +1410,11 @@ public abstract class TransactionType {
                 }
             }
 
+            @Override
+            Collection<TransactionType> getPhasingTransactionTypes() {
+                return Arrays.asList(new TransactionType[]{DELIVERY});
+            }
+
         };
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
@@ -1470,6 +1479,11 @@ public abstract class TransactionType {
                         || attachment.getDiscount() < 0 || attachment.getDiscount() > Constants.MAX_BALANCE) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSON());
                 }
+            }
+
+            @Override
+            Collection<TransactionType> getPhasedTransactionTypes() {
+                return Arrays.asList(new TransactionType[]{PURCHASE});
             }
 
         };
