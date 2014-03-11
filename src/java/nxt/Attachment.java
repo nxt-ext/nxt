@@ -692,7 +692,12 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            try {
+                return 2 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 2 + tags.getBytes("UTF-8").length + 4 + 8;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
         }
 
         @Override
@@ -700,8 +705,19 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                byte[] nameBytes = name.getBytes("UTF-8");
+                buffer.putShort((short)nameBytes.length);
+                buffer.put(nameBytes);
+                byte[] descriptionBytes = description.getBytes("UTF-8");
+                buffer.putShort((short)descriptionBytes.length);
+                buffer.put(descriptionBytes);
+                byte[] tagsBytes = tags.getBytes("UTF-8");
+                buffer.putShort((short)tagsBytes.length);
+                buffer.put(tagsBytes);
+                buffer.putInt(quantity);
+                buffer.putLong(price);
                 return buffer.array();
-            } catch (RuntimeException e) {
+            } catch (RuntimeException|UnsupportedEncodingException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return null;
             }
@@ -710,6 +726,11 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("name", name);
+            attachment.put("description", description);
+            attachment.put("tags", tags);
+            attachment.put("quantity", quantity);
+            attachment.put("price", price);
             return attachment;
         }
 
@@ -732,7 +753,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            return 8;
         }
 
         @Override
@@ -740,6 +761,7 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId.longValue());
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -750,6 +772,7 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
             return attachment;
         }
 
@@ -774,7 +797,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 8;
         }
 
         @Override
@@ -782,6 +805,8 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId.longValue());
+                buffer.putLong(price);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -792,6 +817,8 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            attachment.put("price", price);
             return attachment;
         }
 
@@ -816,7 +843,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 4;
         }
 
         @Override
@@ -824,6 +851,8 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId.longValue());
+                buffer.putInt(deltaQuantity);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -834,6 +863,8 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            attachment.put("deltaQuantity", deltaQuantity);
             return attachment;
         }
 
@@ -862,7 +893,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 4 + 8 + 2 + note.getData().length + 32;
         }
 
         @Override
@@ -870,6 +901,12 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId.longValue());
+                buffer.putInt(quantity);
+                buffer.putLong(price);
+                buffer.putShort((short)note.getData().length);
+                buffer.put(note.getData());
+                buffer.put(note.getNonce());
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -880,6 +917,11 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            attachment.put("quantity", quantity);
+            attachment.put("price", price);
+            attachment.put("note", Convert.toHexString(note.getData()));
+            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
         }
 
@@ -906,7 +948,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 2 + goods.getData().length + 32 + 8;
         }
 
         @Override
@@ -914,6 +956,11 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(purchaseId.longValue());
+                buffer.putShort((short)goods.getData().length);
+                buffer.put(goods.getData());
+                buffer.put(goods.getNonce());
+                buffer.putLong(discount);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -924,6 +971,10 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
+            attachment.put("goods", Convert.toHexString(goods.getData()));
+            attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
+            attachment.put("discount", discount);
             return attachment;
         }
 
@@ -950,7 +1001,12 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            try {
+                return 8 + 1 + 2 + comment.getBytes("UTF-8").length;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
         }
 
         @Override
@@ -958,8 +1014,13 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(purchaseId.longValue());
+                buffer.put(deltaRating);
+                byte[] commentBytes = comment.getBytes("UTF-8");
+                buffer.putShort((short)commentBytes.length);
+                buffer.put(commentBytes);
                 return buffer.array();
-            } catch (RuntimeException e) {
+            } catch (RuntimeException|UnsupportedEncodingException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return null;
             }
@@ -968,6 +1029,9 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
+            attachment.put("deltaRating", deltaRating);
+            attachment.put("comment", comment);
             return attachment;
         }
 
@@ -994,7 +1058,12 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 0;
+            try {
+                return 8 + 8 + 2 + note.getBytes("UTF-8").length;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
         }
 
         @Override
@@ -1002,8 +1071,13 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(purchaseId.longValue());
+                buffer.putLong(refund);
+                byte[] noteBytes = note.getBytes("UTF-8");
+                buffer.putShort((short)noteBytes.length);
+                buffer.put(noteBytes);
                 return buffer.array();
-            } catch (RuntimeException e) {
+            } catch (RuntimeException|UnsupportedEncodingException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return null;
             }
@@ -1012,6 +1086,9 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
+            attachment.put("refund", refund);
+            attachment.put("note", note);
             return attachment;
         }
 
