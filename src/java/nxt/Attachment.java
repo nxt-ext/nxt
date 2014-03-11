@@ -739,6 +739,16 @@ public interface Attachment {
             return TransactionType.DigitalGoods.LISTING;
         }
 
+        public String getName() { return name; }
+
+        public String getDescription() { return description; }
+
+        public String getTags() { return tags; }
+
+        public int getQuantity() { return quantity; }
+
+        public long getPrice() { return price; }
+
     }
 
     public final static class DigitalGoodsDelisting implements Attachment, Serializable {
@@ -780,6 +790,8 @@ public interface Attachment {
         public TransactionType getTransactionType() {
             return TransactionType.DigitalGoods.DELISTING;
         }
+
+        public Long getGoodsId() { return goodsId; }
 
     }
 
@@ -827,6 +839,10 @@ public interface Attachment {
             return TransactionType.DigitalGoods.PRICE_CHANGE;
         }
 
+        public Long getGoodsId() { return goodsId; }
+
+        public long getPrice() { return price; }
+
     }
 
     public final static class DigitalGoodsQuantityChange implements Attachment, Serializable {
@@ -872,6 +888,10 @@ public interface Attachment {
         public TransactionType getTransactionType() {
             return TransactionType.DigitalGoods.QUANTITY_CHANGE;
         }
+
+        public Long getGoodsId() { return goodsId; }
+
+        public int getDeltaQuantity() { return deltaQuantity; }
 
     }
 
@@ -934,6 +954,16 @@ public interface Attachment {
             return TransactionType.DigitalGoods.PURCHASE;
         }
 
+        public Long getGoodsId() { return goodsId; }
+
+        public int getQuantity() { return quantity; }
+
+        public long getPrice() { return price; }
+
+        public int getDeliveryDeadline() { return deliveryDeadline; }
+
+        public XoredData getNote() { return note; }
+
     }
 
     public final static class DigitalGoodsDelivery implements Attachment, Serializable {
@@ -986,6 +1016,12 @@ public interface Attachment {
         public TransactionType getTransactionType() {
             return TransactionType.DigitalGoods.DELIVERY;
         }
+
+        public Long getPurchaseId() { return purchaseId; }
+
+        public XoredData getGoods() { return goods; }
+
+        public long getDiscount() { return discount; }
 
     }
 
@@ -1044,6 +1080,12 @@ public interface Attachment {
             return TransactionType.DigitalGoods.RATING;
         }
 
+        public Long getPurchaseId() { return purchaseId; }
+
+        public byte getDeltaRating() { return deltaRating; }
+
+        public String getComment() { return comment; }
+
     }
 
     public final static class DigitalGoodsRefund implements Attachment, Serializable {
@@ -1100,6 +1142,12 @@ public interface Attachment {
         public TransactionType getTransactionType() {
             return TransactionType.DigitalGoods.REFUND;
         }
+
+        public Long getPurchaseId() { return purchaseId; }
+
+        public long getRefund() { return refund; }
+
+        public String getNote() { return note; }
 
     }
 
