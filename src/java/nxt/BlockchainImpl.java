@@ -69,7 +69,7 @@ final class BlockchainImpl implements Blockchain {
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
                 @Override
                 public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return BlockDb.findBlock(con, rs);
+                    return BlockDb.loadBlock(con, rs);
                 }
             });
         } catch (SQLException e) {
@@ -89,7 +89,7 @@ final class BlockchainImpl implements Blockchain {
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
                 @Override
                 public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return BlockDb.findBlock(con, rs);
+                    return BlockDb.loadBlock(con, rs);
                 }
             });
         } catch (SQLException e) {
@@ -139,7 +139,7 @@ final class BlockchainImpl implements Blockchain {
             pstmt.setInt(2, limit);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                result.add(BlockDb.findBlock(con, rs));
+                result.add(BlockDb.loadBlock(con, rs));
             }
             rs.close();
             return result;
@@ -171,7 +171,7 @@ final class BlockchainImpl implements Blockchain {
             ResultSet rs = pstmt.executeQuery();
             List<BlockImpl> result = new ArrayList<>();
             while (rs.next()) {
-                result.add(BlockDb.findBlock(con, rs));
+                result.add(BlockDb.loadBlock(con, rs));
             }
             return result;
         } catch (SQLException|NxtException.ValidationException e) {
@@ -214,7 +214,7 @@ final class BlockchainImpl implements Blockchain {
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
                 @Override
                 public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return TransactionDb.findTransaction(con, rs);
+                    return TransactionDb.loadTransaction(con, rs);
                 }
             });
         } catch (SQLException e) {
@@ -288,7 +288,7 @@ final class BlockchainImpl implements Blockchain {
             return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
                 @Override
                 public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return TransactionDb.findTransaction(con, rs);
+                    return TransactionDb.loadTransaction(con, rs);
                 }
             });
         } catch (SQLException e) {
