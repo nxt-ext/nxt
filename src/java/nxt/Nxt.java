@@ -45,6 +45,7 @@ public final class Nxt {
     public static final int TRANSPARENT_FORGING_BLOCK_6 = 100000;
     public static final int ASSET_EXCHANGE_BLOCK; // = 111111;
     public static final int VOTING_SYSTEM_BLOCK; // = 222222;
+    public static final int DIGITAL_GOODS_STORE_BLOCK; // = 333333;
 
     public static final long EPOCH_BEGINNING;
     static {
@@ -98,6 +99,7 @@ public final class Nxt {
         isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
         ASSET_EXCHANGE_BLOCK = isTestnet ? 0 : 111111;
         VOTING_SYSTEM_BLOCK = isTestnet ? 0 : 222222;
+        DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : 333333;
     }
 
     public static int getIntProperty(String name) {

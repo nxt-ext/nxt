@@ -671,4 +671,300 @@ public interface Attachment {
 
     }
 
+    public final static class DigitalGoodsListing implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsListing() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.LISTING;
+        }
+
+    }
+
+    public final static class DigitalGoodsDelisting implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsDelisting() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.DELISTING;
+        }
+
+    }
+
+    public final static class DigitalGoodsPriceChange implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsPriceChange() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.PRICE_CHANGE;
+        }
+
+    }
+
+    public final static class DigitalGoodsQuantityChange implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsQuantityChange() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.QUANTITY_CHANGE;
+        }
+
+    }
+
+    public final static class DigitalGoodsPurchase implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsPurchase() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.PURCHASE;
+        }
+
+    }
+
+    public final static class DigitalGoodsDelivery implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsDelivery() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.DELIVERY;
+        }
+
+    }
+
+    public final static class DigitalGoodsRating implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsRating() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.RATING;
+        }
+
+    }
+
+    public final static class DigitalGoodsRefund implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public DigitalGoodsRefund() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.REFUND;
+        }
+
+    }
+
 }

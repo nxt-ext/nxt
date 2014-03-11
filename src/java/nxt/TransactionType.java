@@ -17,6 +17,7 @@ public abstract class TransactionType {
     private static final byte TYPE_PAYMENT = 0;
     private static final byte TYPE_MESSAGING = 1;
     private static final byte TYPE_COLORED_COINS = 2;
+    private static final byte TYPE_DIGITAL_GOODS = 3;
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
@@ -29,6 +30,14 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+    private static final byte SUBTYPE_DIGITAL_GOODS_LISTING = 0;
+    private static final byte SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
+    private static final byte SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE = 2;
+    private static final byte SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE = 3;
+    private static final byte SUBTYPE_DIGITAL_GOODS_PURCHASE = 4;
+    private static final byte SUBTYPE_DIGITAL_GOODS_DELIVERY = 5;
+    private static final byte SUBTYPE_DIGITAL_GOODS_RATING = 6;
+    private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -68,6 +77,27 @@ public abstract class TransactionType {
                         return ColoredCoins.ASK_ORDER_CANCELLATION;
                     case SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION:
                         return ColoredCoins.BID_ORDER_CANCELLATION;
+                    default:
+                        return null;
+                }
+            case TYPE_DIGITAL_GOODS:
+                switch (subtype) {
+                    case SUBTYPE_DIGITAL_GOODS_LISTING:
+                        return DigitalGoods.LISTING;
+                    case SUBTYPE_DIGITAL_GOODS_DELISTING:
+                        return DigitalGoods.DELISTING;
+                    case SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE:
+                        return DigitalGoods.PRICE_CHANGE;
+                    case SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE:
+                        return DigitalGoods.QUANTITY_CHANGE;
+                    case SUBTYPE_DIGITAL_GOODS_PURCHASE:
+                        return DigitalGoods.PURCHASE;
+                    case SUBTYPE_DIGITAL_GOODS_DELIVERY:
+                        return DigitalGoods.DELIVERY;
+                    case SUBTYPE_DIGITAL_GOODS_RATING:
+                        return DigitalGoods.RATING;
+                    case SUBTYPE_DIGITAL_GOODS_REFUND:
+                        return DigitalGoods.REFUND;
                     default:
                         return null;
                 }
@@ -1039,6 +1069,277 @@ public abstract class TransactionType {
             }
 
         };
+    }
+
+    public static abstract class DigitalGoods extends TransactionType {
+
+        private DigitalGoods() {}
+
+        @Override
+        public final byte getType() {
+            return TransactionType.TYPE_DIGITAL_GOODS;
+        }
+
+        @Override
+        final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
+
+        @Override
+        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+        public static final TransactionType LISTING = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_LISTING; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods listing not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType DELISTING = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_DELISTING; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods delisting not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods delisting not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType PRICE_CHANGE = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods price change not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods price change not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType QUANTITY_CHANGE = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods quantity change not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods quantity change not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType PURCHASE = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_PURCHASE; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods purchase not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods purchase not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType DELIVERY = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_DELIVERY; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods delivery not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods delivery not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType RATING = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_RATING; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods rating not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods rating not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+        public static final TransactionType REFUND = new DigitalGoods() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_REFUND; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of digital goods refund not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.DIGITAL_GOODS_STORE_BLOCK) {
+                    throw new NotYetEnabledException("Digital goods refund not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
     }
 
 
