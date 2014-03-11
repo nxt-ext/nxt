@@ -2001,6 +2001,7 @@
 						  <li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
 						  <li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
 						  <li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
+						  <li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
 						</ul>
 
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_transactions" style="display:none;max-height:350px;overflow:auto;">
@@ -2054,6 +2055,16 @@
 							</table>
 							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 							<div class="data-empty-container" style="padding-top:10px">This user has no assets.</div>
+						</div>
+						
+						<div class="user_info_modal_content data-never-loading" id="user_info_modal_actions" style="display:none;">
+							<div class="row">
+								<div class="col-xs-6 col-md-6" style="margin-left:auto;margin-right:auto;float:none;">
+									<button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="">Send NXT</button>
+									<button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="">Send a Message</button>
+									<button type="button" id="user_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="">Add as Contact</button>
+								</div>
+							</div>
 						</div>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">

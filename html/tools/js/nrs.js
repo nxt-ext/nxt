@@ -1314,6 +1314,14 @@
 	    	
 	    	$("#user_info_modal_account").html(String(NRS.userInfoModal.user).escapeHTML());
 	    	
+	    	$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
+	    	
+	    	if (NRS.userInfoModal.user in NRS.contacts) {
+		    	$("#user_info_modal_add_as_contact").hide();
+	    	} else {
+		    	$("#user_info_modal_add_as_contact").show();
+	    	}
+	
 	    	NRS.sendRequest("getAccount", {"account": NRS.userInfoModal.user}, function(response) {
 		    	var balance;
 		    	
@@ -1346,7 +1354,7 @@
     $("#user_info_modal").on("hidden.bs.modal", function(e) {
 		$(this).find(".user_info_modal_content").hide();
 		$(this).find(".user_info_modal_content table tbody").empty();
-		$(this).find(".user_info_modal_content:not(.data-loading)").addClass("data-loading");
+		$(this).find(".user_info_modal_content:not(.data-loading,.data-never-loading)").addClass("data-loading");
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#user_info_transactions").addClass("active");
 		NRS.userInfoModal.user = 0;
@@ -1366,7 +1374,7 @@
 		
 		content.show();
 		
-		if (content.hasClass("data-loading")) {
+		if (content.hasClass("data-loading")) {		
 			NRS.userInfoModal[tab]();
 		}
     });
@@ -4921,6 +4929,16 @@
     	}
     }
     
+    //hide modal when another one is activated.
+    $(".modal").on("show.bs.modal", function(e) {
+    	var $visible_modal = $(".modal.in");
+    	
+    	if ($visible_modal.length) {
+	    	$visible_modal.modal("hide");
+    	}
+    });
+        
+    
     $(".modal button.btn-primary:not([data-dismiss=modal])").click(function() {
     	var $btn = $(this);
     	
@@ -5061,14 +5079,13 @@
     	});
     });
     
-    $("#send_message_modal").on("show.bs.modal", function(e) {
+    $("#send_message_modal, #send_money_modal, #add_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 		
-		var contact = $invoker.data("contact");
+		var account = $invoker.data("account");
 		
-		if (contact) {
-			$("#send_message_recipient").val(contact.unescapeHTML());
-			$("#send_message_recipient").trigger("blur");
+		if (account) {
+			$(this).find("input[name=recipient], input[name=account_id]").val(account.unescapeHTML()).trigger("blur");
 		}
     });
     
@@ -5076,17 +5093,6 @@
 	    var amount = parseInt($(this).val(), 10);
         $("#send_money_fee").val(isNaN(amount) ? "1" : (amount < 500 ? 1 : Math.round(amount / 1000)));
     });
-    
-	$("#send_money_modal").on('show.bs.modal', function (e) {
-		var $invoker = $(e.relatedTarget);
-		
-		var contact = $invoker.data("contact");
-		
-		if (contact) {
-			$("#send_money_recipient").val(contact.unescapeHTML());
-			$("#send_money_recipient").trigger("blur");
-		}
-	});
     
     NRS.sendMoneyShowAccountInformation = function(accountId) {
     	NRS.getAccountError(accountId, function(response) {
