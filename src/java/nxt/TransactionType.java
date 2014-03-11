@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.XoredData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -1099,10 +1100,57 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                String name;
+                String description;
+                String tags;
+                int quantity;
+                long price;
+
+                try {
+                    int nameBytesLength = buffer.getShort();
+                    byte[] nameBytes = new byte[nameBytesLength];
+                    buffer.get(nameBytes);
+                    name = new String(nameBytes, "UTF-8");
+                } catch (RuntimeException | UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error parsing goods name", e);
+                }
+
+                try {
+                    int descriptionBytesLength = buffer.getShort();
+                    byte[] descriptionBytes = new byte[descriptionBytesLength];
+                    buffer.get(descriptionBytes);
+                    description = new String(descriptionBytes, "UTF-8");
+                } catch (RuntimeException | UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error parsing goods description", e);
+                }
+
+                try {
+                    int tagsBytesLength = buffer.getShort();
+                    byte[] tagsBytes = new byte[tagsBytesLength];
+                    buffer.get(tagsBytes);
+                    tags = new String(tagsBytes, "UTF-8");
+                } catch (RuntimeException | UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error parsing goods tags", e);
+                }
+
+                quantity = buffer.getInt();
+
+                price = buffer.getLong();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, price));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                String name = (String)attachmentData.get("name");
+                String description = (String)attachmentData.get("description");
+                String tags = (String)attachmentData.get("tags");
+                int quantity = ((Long)attachmentData.get("quantity")).intValue();
+                long price = ((Long)attachmentData.get("price")).longValue();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, price));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1130,10 +1178,20 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long goodsId;
+
+                goodsId = buffer.getLong();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsDelisting(goodsId));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long goodsId = (Long)attachmentData.get("goods");
+
+                transaction.setAttachment(new Attachment.DigitalGoodsDelisting(goodsId));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1161,10 +1219,23 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long goodsId;
+                long price;
+
+                goodsId = buffer.getLong();
+                price = buffer.getLong();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsPriceChange(goodsId, price));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long goodsId = (Long)attachmentData.get("goods");
+                long price = ((Long)attachmentData.get("price")).longValue();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsPriceChange(goodsId, price));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1192,10 +1263,23 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long goodsId;
+                int deltaQuantity;
+
+                goodsId = buffer.getLong();
+                deltaQuantity = buffer.getInt();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsQuantityChange(goodsId, deltaQuantity));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long goodsId = (Long)attachmentData.get("goods");
+                int deltaQuantity = ((Long)attachmentData.get("deltaQuantity")).intValue();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsQuantityChange(goodsId, deltaQuantity));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1223,10 +1307,45 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long goodsId;
+                int quantity;
+                long price;
+                int deliveryDeadline;
+                XoredData note;
+
+                goodsId = buffer.getLong();
+
+                quantity = buffer.getInt();
+
+                price = buffer.getLong();
+
+                deliveryDeadline = buffer.getInt();
+
+                try {
+                    int noteBytesLength = buffer.getShort();
+                    byte[] noteBytes = new byte[noteBytesLength];
+                    buffer.get(noteBytes);
+                    byte[] noteNonceBytes = new byte[32];
+                    buffer.get(noteNonceBytes);
+                    note = new XoredData(noteBytes, noteNonceBytes);
+                } catch (RuntimeException e) {
+                    throw new NxtException.ValidationException("Error parsing purchase note", e);
+                }
+
+                transaction.setAttachment(new Attachment.DigitalGoodsPurchase(goodsId, quantity, price, deliveryDeadline, note));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long goodsId = (Long)attachmentData.get("goods");
+                int quantity = ((Long)attachmentData.get("quantity")).intValue();
+                long price = ((Long)attachmentData.get("price")).longValue();
+                int deliveryDeadline = ((Long)attachmentData.get("deliveryDeadline")).intValue();
+                XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")), Convert.parseHexString((String)attachmentData.get("noteNonce")));
+
+                transaction.setAttachment(new Attachment.DigitalGoodsPurchase(goodsId, quantity, price, deliveryDeadline, note));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1254,10 +1373,37 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long purchaseId;
+                XoredData goods;
+                long discount;
+
+                purchaseId = buffer.getLong();
+
+                try {
+                    int goodsBytesLength = buffer.getShort();
+                    byte[] goodsBytes = new byte[goodsBytesLength];
+                    buffer.get(goodsBytes);
+                    byte[] goodsNonceBytes = new byte[32];
+                    buffer.get(goodsNonceBytes);
+                    goods = new XoredData(goodsBytes, goodsNonceBytes);
+                } catch (RuntimeException e) {
+                    throw new NxtException.ValidationException("Error parsing delivery goods", e);
+                }
+
+                discount = buffer.getLong();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsDelivery(purchaseId, goods, discount));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long purchaseId = (Long)attachmentData.get("purchase");
+                XoredData goods = new XoredData(Convert.parseHexString((String)attachmentData.get("goods")), Convert.parseHexString((String)attachmentData.get("goodsNonce")));;
+                long discount = ((Long)attachmentData.get("discount")).longValue();
+
+                transaction.setAttachment(new Attachment.DigitalGoodsDelivery(purchaseId, goods, discount));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1285,10 +1431,35 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long purchaseId;
+                byte deltaRating;
+                String comment;
+
+                purchaseId = buffer.getLong();
+
+                deltaRating = buffer.get();
+
+                try {
+                    int commentBytesLength = buffer.getShort();
+                    byte[] commentBytes = new byte[commentBytesLength];
+                    buffer.get(commentBytes);
+                    comment = new String(commentBytes, "UTF-8");
+                } catch (RuntimeException | UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error parsing rating comment", e);
+                }
+
+                transaction.setAttachment(new Attachment.DigitalGoodsRating(purchaseId, deltaRating, comment));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long purchaseId = (Long)attachmentData.get("purchase");
+                byte deltaRating = ((Long)attachmentData.get("deltaRating")).byteValue();
+                String comment = (String)attachmentData.get("comment");
+
+                transaction.setAttachment(new Attachment.DigitalGoodsRating(purchaseId, deltaRating, comment));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1316,10 +1487,35 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                Long purchaseId;
+                long refund;
+                String note;
+
+                purchaseId = buffer.getLong();
+
+                refund = buffer.getLong();
+
+                try {
+                    int noteBytesLength = buffer.getShort();
+                    byte[] noteBytes = new byte[noteBytesLength];
+                    buffer.get(noteBytes);
+                    note = new String(noteBytes, "UTF-8");
+                } catch (RuntimeException | UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error parsing refund note", e);
+                }
+
+                transaction.setAttachment(new Attachment.DigitalGoodsRefund(purchaseId, refund, note));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                Long purchaseId = (Long)attachmentData.get("purchase");
+                long refund = ((Long)attachmentData.get("refund")).longValue();
+                String note = (String)attachmentData.get("note");
+
+                transaction.setAttachment(new Attachment.DigitalGoodsRefund(purchaseId, refund, note));
+                validateAttachment(transaction);
             }
 
             @Override
