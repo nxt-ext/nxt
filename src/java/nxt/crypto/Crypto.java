@@ -5,9 +5,12 @@ import nxt.util.Logger;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 public final class Crypto {
+
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     private Crypto() {} //never
 
@@ -98,6 +101,58 @@ public final class Crypto {
         } catch (RuntimeException e) {
             Logger.logMessage("Error in Crypto verify", e);
             return false;
+        }
+
+    }
+
+    private static void xorProcess(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
+
+        byte[] seed = new byte[32];
+        Curve25519.curve(seed, myPrivateKey, theirPublicKey);
+        for (int i = 0; i < 32; i++) {
+            seed[i] ^= nonce[i];
+        }
+
+        MessageDigest sha256 = sha256();
+        for (int i = 0; i < length / 32; i++) {
+            byte[] key = sha256.digest(seed);
+            for (int j = 0; j < 32; j++) {
+                data[position++] ^= key[j];
+                seed[j] = (byte)(~seed[j]);
+            }
+            seed = sha256.digest(seed);
+        }
+        byte[] key = sha256.digest(seed);
+        for (int i = 0; i < length % 32; i++) {
+            data[position++] ^= key[i];
+        }
+
+    }
+
+    public static byte[] xorEncrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey) {
+
+        byte[] nonce = new byte[32];
+        secureRandom.nextBytes(nonce); // cfb: May block as entropy is being gathered, for example, if they need to read from /dev/random on various unix-like operating systems
+        xorProcess(data, position, length, myPrivateKey, theirPublicKey, nonce);
+        return nonce;
+
+    }
+
+    public static void xorDecrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
+        xorProcess(data, position, length, myPrivateKey, theirPublicKey, nonce);
+    }
+
+    public static byte[] getSharedSecret(byte[] myPrivateKey, byte[] theirPublicKey) {
+
+        try {
+
+            byte[] sharedSecret = new byte[32];
+            Curve25519.curve(sharedSecret, myPrivateKey, theirPublicKey);
+            return sharedSecret;
+
+        } catch (RuntimeException e) {
+            Logger.logMessage("Error getting shared secret", e);
+            return null;
         }
 
     }
