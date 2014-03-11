@@ -882,18 +882,20 @@ public interface Attachment {
         private final Long goodsId;
         private final int quantity;
         private final long price;
+        private final int deliveryDeadline;
         private final XoredData note;
 
-        public DigitalGoodsPurchase(Long goodsId, int quantity, long price, XoredData note) {
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long price, int deliveryDeadline, XoredData note) {
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.price = price;
+            this.deliveryDeadline = deliveryDeadline;
             this.note = note;
         }
 
         @Override
         public int getSize() {
-            return 8 + 4 + 8 + 2 + note.getData().length + 32;
+            return 8 + 4 + 8 + 4 + 2 + note.getData().length + 32;
         }
 
         @Override
@@ -904,6 +906,7 @@ public interface Attachment {
                 buffer.putLong(goodsId.longValue());
                 buffer.putInt(quantity);
                 buffer.putLong(price);
+                buffer.putInt(deliveryDeadline);
                 buffer.putShort((short)note.getData().length);
                 buffer.put(note.getData());
                 buffer.put(note.getNonce());
@@ -920,6 +923,7 @@ public interface Attachment {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("quantity", quantity);
             attachment.put("price", price);
+            attachment.put("deliveryDeadline", deliveryDeadline);
             attachment.put("note", Convert.toHexString(note.getData()));
             attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
