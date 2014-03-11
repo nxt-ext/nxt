@@ -1,8 +1,11 @@
 package nxt;
 
+import nxt.util.Convert;
+import nxt.util.DbIterator;
 import nxt.util.Logger;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -98,7 +101,32 @@ final class DbVersion {
             case 15:
                 apply("ALTER TABLE transaction DROP COLUMN IF EXISTS index");
             case 16:
-                return 16; //NOTE: increment every time when adding a new update
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS block_timestamp INT");
+            case 17:
+                apply("UPDATE transaction SET block_timestamp = (SELECT timestamp FROM block WHERE block.id = transaction.block_id)");
+            case 18:
+                apply("ALTER TABLE transaction ALTER COLUMN block_timestamp SET NOT NULL");
+            case 19:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS hash BINARY(32)");
+                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
+                     Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET hash = ? WHERE id = ?")) {
+                    while (iterator.hasNext()) {
+                        Transaction transaction = iterator.next();
+                        pstmt.setBytes(1, Convert.parseHexString(transaction.getHash()));
+                        pstmt.setLong(2, transaction.getId());
+                        pstmt.executeUpdate();
+                    }
+                    con.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+            case 20:
+                apply("ALTER TABLE transaction ALTER COLUMN hash SET NOT NULL");
+            case 21:
+                apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
+            case 22:
+                return 22; //NOTE: increment every time when adding a new update
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
         }

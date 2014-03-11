@@ -246,30 +246,30 @@ final class BlockImpl implements Block {
     @Override
     public JSONObject getJSONObject() {
 
-        JSONObject block = new JSONObject();
+        JSONObject json = new JSONObject();
 
-        block.put("version", version);
-        block.put("timestamp", timestamp);
-        block.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
-        block.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
-        block.put("totalAmount", totalAmount);
-        block.put("totalFee", totalFee);
-        block.put("payloadLength", payloadLength);
-        block.put("payloadHash", Convert.toHexString(payloadHash));
-        block.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
-        block.put("generationSignature", Convert.toHexString(generationSignature));
+        json.put("version", version);
+        json.put("timestamp", timestamp);
+        json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
+        json.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
+        json.put("totalAmount", totalAmount);
+        json.put("totalFee", totalFee);
+        json.put("payloadLength", payloadLength);
+        json.put("payloadHash", Convert.toHexString(payloadHash));
+        json.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
+        json.put("generationSignature", Convert.toHexString(generationSignature));
         if (version > 1) {
-            block.put("previousBlockHash", Convert.toHexString(previousBlockHash));
+            json.put("previousBlockHash", Convert.toHexString(previousBlockHash));
         }
-        block.put("blockSignature", Convert.toHexString(blockSignature));
+        json.put("blockSignature", Convert.toHexString(blockSignature));
 
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : this.blockTransactions) {
             transactionsData.add(transaction.getJSONObject());
         }
-        block.put("transactions", transactionsData);
+        json.put("transactions", transactionsData);
 
-        return block;
+        return json;
 
     }
 

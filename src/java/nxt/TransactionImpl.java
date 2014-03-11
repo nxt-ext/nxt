@@ -27,6 +27,7 @@ final class TransactionImpl implements Transaction {
     private volatile Block block;
     private byte[] signature;
     private int timestamp;
+    private int blockTimestamp = -1;
     private Attachment attachment;
     private volatile Long id;
     private volatile String stringId = null;
@@ -55,7 +56,8 @@ final class TransactionImpl implements Transaction {
     }
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    int amount, int fee, Long referencedTransactionId, byte[] signature, Long blockId, int height, Long id, Long senderId, Attachment attachment)
+                    int amount, int fee, Long referencedTransactionId, byte[] signature, Long blockId, int height,
+                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
         this.blockId = blockId;
@@ -63,6 +65,8 @@ final class TransactionImpl implements Transaction {
         this.id = id;
         this.senderId = senderId;
         this.attachment = attachment;
+        this.hash = hash == null ? null : Convert.toHexString(hash);
+        this.blockTimestamp = blockTimestamp;
     }
 
     @Override
@@ -111,6 +115,11 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public Long getBlockId() {
+        return blockId;
+    }
+
+    @Override
     public Block getBlock() {
         if (block == null) {
             block = BlockDb.findBlock(blockId);
@@ -122,11 +131,17 @@ final class TransactionImpl implements Transaction {
         this.block = block;
         this.blockId = block.getId();
         this.height = block.getHeight();
+        this.blockTimestamp = block.getTimestamp();
     }
 
     @Override
     public int getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public int getBlockTimestamp() {
+        return blockTimestamp;
     }
 
     @Override
@@ -232,23 +247,23 @@ final class TransactionImpl implements Transaction {
     @Override
     public JSONObject getJSONObject() {
 
-        JSONObject transaction = new JSONObject();
+        JSONObject json = new JSONObject();
 
-        transaction.put("type", type.getType());
-        transaction.put("subtype", type.getSubtype());
-        transaction.put("timestamp", timestamp);
-        transaction.put("deadline", deadline);
-        transaction.put("senderPublicKey", Convert.toHexString(senderPublicKey));
-        transaction.put("recipient", Convert.toUnsignedLong(recipientId));
-        transaction.put("amount", amount);
-        transaction.put("fee", fee);
-        transaction.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
-        transaction.put("signature", Convert.toHexString(signature));
+        json.put("type", type.getType());
+        json.put("subtype", type.getSubtype());
+        json.put("timestamp", timestamp);
+        json.put("deadline", deadline);
+        json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
+        json.put("recipient", Convert.toUnsignedLong(recipientId));
+        json.put("amount", amount);
+        json.put("fee", fee);
+        json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
+        json.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
-            transaction.put("attachment", attachment.getJSON());
+            json.put("attachment", attachment.getJSON());
         }
 
-        return transaction;
+        return json;
     }
 
     @Override

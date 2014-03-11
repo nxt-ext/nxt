@@ -127,7 +127,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                     if (transaction.getSenderId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", Users.getIndex(transaction));
-                        myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                        myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
                         myTransaction.put("sentAmount", transaction.getAmount());
@@ -135,18 +135,18 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                             myTransaction.put("receivedAmount", transaction.getAmount());
                         }
                         myTransaction.put("fee", transaction.getFee());
-                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());
+                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());
                         myTransaction.put("id", transaction.getStringId());
                         myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
                     } else if (transaction.getRecipientId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", Users.getIndex(transaction));
-                        myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                        myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
                         myTransaction.put("receivedAmount", transaction.getAmount());
                         myTransaction.put("fee", transaction.getFee());
-                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());
+                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());
                         myTransaction.put("id", transaction.getStringId());
                         myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
                     }

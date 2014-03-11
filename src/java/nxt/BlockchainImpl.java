@@ -185,6 +185,11 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public Transaction getTransaction(String hash) {
+        return TransactionDb.findTransaction(hash);
+    }
+
+    @Override
     public boolean hasTransaction(Long transactionId) {
         return TransactionDb.hasTransaction(transactionId);
     }
