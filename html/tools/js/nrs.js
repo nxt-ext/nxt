@@ -471,7 +471,7 @@
 	    	NRS.login(password);
 	   		$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
 	    	$("#account_phrase_generator_panel textarea").val("");
-	    	PassPhraseGenerator.passPhrase = "";
+	    	PassPhraseGenerator.reset();
     		$("#account_phrase_generator_panel .step_3 .callout").hide();
     	}    
     }

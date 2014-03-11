@@ -61,6 +61,8 @@ var PassPhraseGenerator = {
 		    
 		    this.passPhrase = words.join(" ");
 		    
+		    crypto.getRandomValues(random);
+		    
 		    $container.find(".step_2 textarea").val(this.passPhrase).prop("readonly", true);
 		    
 		    setTimeout(function() {
@@ -75,6 +77,8 @@ var PassPhraseGenerator = {
 			$container.find(".step_1").show();
 			
 			$(".center").center();
+			
+			Math.seedrandom();
 			
 			$("html").on("mousemove", function(e) {
 				var seed = [e.pageX, e.pageY, +new Date];
@@ -103,6 +107,8 @@ var PassPhraseGenerator = {
 						words.push(PassPhraseGenerator.words[number]);
 					}
 					
+					Math.seedrandom();
+					
 					PassPhraseGenerator.passPhrase = words.join(" ");
 											
 					$container.find(".step_2 textarea").val(PassPhraseGenerator.passPhrase).prop("readonly", true);
@@ -111,11 +117,10 @@ var PassPhraseGenerator = {
 				}
 			});
 		}
+	},
+	
+	reset: function() {
+		this.passPhrase = "";
+		this.seeds = 0;
 	}
-	/*
-	$("#new_passphrase .btn").on('click', function(e) {
-		e.preventDefault();
-	    var wordCount = parseInt($(this).attr('data-word-count'));
-		Passphrase.generate(wordCount);
-	});*/
 }
