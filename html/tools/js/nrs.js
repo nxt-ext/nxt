@@ -317,13 +317,15 @@
 	NRS.transactionsPageType = null;
 	NRS.downloadingBlockchain = false;
 	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17];
+	NRS.isTestNet = false;
 	
     NRS.init = function() {  
 	    if (location.port && location.port != "6876") {
 		    $(".testnet_only").hide();
 	    } else {
-		    $(".testnet_only").show();
-			$("#testnet_login").show();
+			NRS.isTestNet = true;
+			NRS.blockchainCalculationServers = [9, 10];
+		    $(".testnet_only, #testnet_login").show();
 	    }
 				
     	NRS.createDatabase();
@@ -811,13 +813,19 @@
 	    	return;
     	}
     	
-		var key = Math.floor((Math.random()*NRS.blockchainCalculationServers.length) + 1);
+		var key = Math.floor((Math.random()*NRS.blockchainCalculationServers.length));
 		var value = NRS.blockchainCalculationServers[key];
 		
 		NRS.blockchainCalculationServers.splice(key, 1);
 		
     	try {
-			NRS.sendOutsideRequest("http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getState", function(response) {
+    		if (NRS.isTestNet) {
+	    		var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getState";
+    		} else {
+    			var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getState";
+    		}
+    		    		
+			NRS.sendOutsideRequest(url, function(response) {
 				if (response.numberOfBlocks && response.time && response.numberOfBlocks > NRS.state.numberOfBlocks && Math.abs(NRS.state.time - response.time) < 120) {
 					NRS.blockchainExpectedBlocks = response.numberOfBlocks;
 					if (callback) {
@@ -1031,6 +1039,7 @@
 		    if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60*60*30) {
 		    	NRS.downloadingBlockchain = false;
 		    	$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
+				$.growl("The block chain is now up to date.", {"type": "success"});
 		    	NRS.checkAliasVersions();
 	    	} else {
 		    	NRS.updateBlockchainDownloadProgress();
