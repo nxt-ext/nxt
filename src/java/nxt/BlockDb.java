@@ -23,7 +23,7 @@ final class BlockDb {
             rs.close();
             return block;
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
             throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!");
         }
@@ -36,7 +36,7 @@ final class BlockDb {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
@@ -53,7 +53,7 @@ final class BlockDb {
             rs.close();
             return id;
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.toString(), e);
         }
     }
 

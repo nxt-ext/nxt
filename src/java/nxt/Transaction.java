@@ -16,9 +16,13 @@ public interface Transaction extends Comparable<Transaction> {
 
     int getHeight();
 
+    Long getBlockId();
+
     Block getBlock();
 
     int getTimestamp();
+
+    int getBlockTimestamp();
 
     short getDeadline();
 

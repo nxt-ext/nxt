@@ -433,7 +433,7 @@ public final class Users {
                 for (Transaction transaction : transactions) {
                     JSONObject addedConfirmedTransaction = new JSONObject();
                     addedConfirmedTransaction.put("index", Users.getIndex(transaction));
-                    addedConfirmedTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                    addedConfirmedTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     addedConfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     addedConfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
