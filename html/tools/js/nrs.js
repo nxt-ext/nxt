@@ -1801,7 +1801,7 @@
    		var lastGroup = "";
    		var ungrouped = true;
    		var isClosedGroup = false;
-   		
+   		   		
    		for (var i=0; i<assets.length; i++) {
    			var assetId = assets[i].id;
    			
@@ -1812,8 +1812,10 @@
    				
    				if (NRS.closedGroups.indexOf(to_check) != -1) {
 	   				isClosedGroup = true;
+   				} else {
+   					isClosedGroup = false;
    				}
-   				   				
+   				   				   				
    				if (asset.groupName) {
    					ungrouped = false;
 		   			rows += "<a href='#' class='list-group-item list-group-item-header' data-context='asset_exchange_sidebar_group_context' data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + " <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
