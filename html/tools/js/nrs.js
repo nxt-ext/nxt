@@ -319,6 +319,7 @@
 	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17];
 	NRS.isTestNet = false;
 	NRS.fetchingModalData = false;
+	NRS.closedGroups = [];
 	
     NRS.init = function() {  
 	    if (location.port && location.port != "6876") {
@@ -1799,6 +1800,7 @@
    		
    		var lastGroup = "";
    		var ungrouped = true;
+   		var isClosedGroup = false;
    		
    		for (var i=0; i<assets.length; i++) {
    			var assetId = assets[i].id;
@@ -1806,17 +1808,23 @@
    			var asset = NRS.assets[assetId];
    			
    			if (asset.groupName.toLowerCase() != lastGroup) {
+   				var to_check = (asset.groupName ? asset.groupName : "undefined");
+   				
+   				if (NRS.closedGroups.indexOf(to_check) != -1) {
+	   				isClosedGroup = true;
+   				}
+   				   				
    				if (asset.groupName) {
    					ungrouped = false;
-		   			rows += "<a href='#' class='list-group-item list-group-item-header' data-context='asset_exchange_sidebar_group_context' data-groupname='" + asset.groupName.escapeHTML() + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + "</h4></a>";
+		   			rows += "<a href='#' class='list-group-item list-group-item-header' data-context='asset_exchange_sidebar_group_context' data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + " <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
    				} else {
    					ungrouped = true;
-	   				rows += "<a href='#' class='list-group-item list-group-item-header no-context'><h4 class='list-group-item-heading'>UNGROUPED</h4></a>";
+	   				rows += "<a href='#' class='list-group-item list-group-item-header no-context' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>UNGROUPED <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
    				}
 	   			lastGroup = asset.groupName.toLowerCase();
    			}
    			    				   			
-   			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-asset='" + String(assetId).escapeHTML() + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>Quantity: " + NRS.formatAmount(asset.quantity) + "</p></a>";
+   			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-asset='" + String(assetId).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-wuuut='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>Quantity: " + NRS.formatAmount(asset.quantity) + "</p></a>";
    		}
    		
    		var currentActiveAsset = $("#asset_exchange_sidebar a.active");
@@ -1850,12 +1858,46 @@
     
     $("#asset_exchange_sidebar").on("click", "a", function(e, data) {
     	e.preventDefault();
-    	
-    	var assetId = $(this).data("asset").escapeHTML();
-    	
+    	    	
+    	var assetId = $(this).data("asset");
+    	    	
     	if (!assetId) {
+    		if (NRS.databaseSupport) {
+	    	  	var group = $(this).data("groupname");
+	    	  	var closed = $(this).data("closed");
+	    	  	
+	    	  	if (!group) {
+	    	  		var $links = $("#asset_exchange_sidebar a.list-group-item-ungrouped");
+	    	  	} else {
+	    	  		var $links = $("#asset_exchange_sidebar a.list-group-item-grouped[data-groupname=" + group.escapeHTML() + "]");
+	    	  	}
+	    	  	
+	    	  	if (!group) {
+		    	  	group = "undefined";
+	    	  	}
+	    	  	
+		  		if (closed) {
+		  			var pos = NRS.closedGroups.indexOf(group);
+		  			if (pos >= 0) {
+			  			NRS.closedGroups.splice(pos);
+		  			}
+	    	  		$(this).data("closed", "");
+	    	  		$(this).find("i").removeClass("fa-angle-right").addClass("fa-angle-down");
+	    	  		$links.show();
+		  		} else {
+		  			NRS.closedGroups.push(group);
+	    	  		$(this).data("closed", true);
+	    	  		$(this).find("i").removeClass("fa-angle-down").addClass("fa-angle-right");
+	    	  		$links.hide();
+	    	  	}
+	    	  	
+	    	  	NRS.database.update("data", {"contents": NRS.closedGroups.join("#")}, [{"id": "closed_groups"}]);
+			}
+		  	
 	    	return;
     	}
+    	
+    	assetId = assetId.escapeHTML();
     	
     	NRS.abortOutstandingRequests(true);
     	
@@ -5359,6 +5401,13 @@
 			NRS.database = new WebDB("NXT", schema, 2, 4, function() {
 				NRS.databaseSupport = true;
 				NRS.loadContacts();
+    			NRS.database.select("data", [{"id": "closed_groups"}], function(result) {
+    				if (result.length) {
+	    				NRS.closedGroups = result[0].contents.split("#");
+    				} else {
+					    NRS.database.insert("data", {id: "closed_groups", contents: ""});
+    				}
+    			});
 			});
 		} catch (err) {
 			NRS.database = null;
