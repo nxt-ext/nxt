@@ -5529,10 +5529,7 @@
     	return b.timestamp - a.timestamp;
     }
            
-    NRS.forms.errorMessages.startForging = {"5": "You cannot forge. Either your balance is 0, your account is too new, or you have typed an incorrect secret phrase."};
-    NRS.forms.errorMessages.cancelOrder = {"5": "Unknown order or incorrect secret phrase."};
-    NRS.forms.errorMessages.placeBidOrder = {"6": "Not enough funds or incorrect secret phrase."};
-    NRS.forms.errorMessages.placeAskOrder = {"6": "Not enough funds or incorrect secret phrase."};
+    NRS.forms.errorMessages.startForging = {"5": "You cannot forge. Either your balance is 0 or your account is too new (you must wait a day or so)."};
 
     NRS.forms.startForgingComplete = function(response, data) {
     	if ("deadline" in response) {
@@ -5647,80 +5644,103 @@
     	} else {
 	        data = data || {};
         }
-        
-        if (typeof data == "string") {
-        	data += "&random=" + Math.random();
-        } else {
-	        data.random = Math.random();
+            		      	
+     	if ("secretPhrase" in data && requestType != "getAccountId") {	     	
+	     	//check to see if secretPhrase supplied matches logged in account
+			NRS.sendRequest("getAccountId", {"secretPhrase": data.secretPhrase}, function(response) {
+				if (!response.errorCode) {
+					if (response.accountId != NRS.account) {
+				  		response.errorCode = 1;
+				  		response.errorDescription = "Incorrect secret phrase.";
+				  		if (callback) {
+					  		callback(response, {});
+				  		}
+					} else {
+			  			//ok, accountId matches..continue with the real request.
+						NRS.processAjaxRequest(requestType, data, callback, async);
+			  		
+					}
+				} else {
+					callback(response, {});
+				}
+			});
+     	} else {	     	
+	     	NRS.processAjaxRequest(requestType, data, callback, async);
      	}
+    }
+    
+    NRS.processAjaxRequest = function(requestType, data, callback, async) {
+		if (typeof data == "string") {
+			data += "&random=" + Math.random();
+		} else {
+			data.random = Math.random();
+		}
+		
+		if (data["_extra"]) {
+			var extra = data["_extra"];
+			delete data["_extra"];
+		} else {
+			var extra = null;
+		}
+		
+		var beforeSend = null;
+		    
+		//means it is a page request, not a global request.. Page requests can be aborted.
+		if (requestType.slice(-1) == "+") {
+			requestType = requestType.slice(0, -1);
+			
+			beforeSend = NRS.beforeSendRequest;
+		} else {
+			//not necessary... we can just use the above code..
+			var plusCharacter = requestType.indexOf("+");
+			
+			if (plusCharacter > 0) {
+				var subType = requestType.substr(plusCharacter);
+				requestType = requestType.substr(0, plusCharacter);
+		 	 	beforeSend = NRS.beforeSendRequest;
+			}
+		}
      	
-     	if (data["_extra"]) {
-     		var extra = data["_extra"];
-     		delete data["_extra"];
-     	} else {
-     		var extra = null;
-     	}
+     	var type = ("secretPhrase" in data ? "POST" : "GET");
      	
-     	var beforeSend = null;
-     	    
-     	//means it is a page request, not a global request.. Page requests can be aborted.
-     	    	
-     	if (requestType.slice(-1) == "+") {
-     		requestType = requestType.slice(0, -1);
-     		
-     		beforeSend = NRS.beforeSendRequest;
-     	} else {
-     		//not necessary... we can just use the above code..
-	     	var plusCharacter = requestType.indexOf("+");
-	     	
-	     	if (plusCharacter > 0) {
-	     		var subType = requestType.substr(plusCharacter);
-		     	requestType = requestType.substr(0, plusCharacter);
-		     	
-			 	beforeSend = NRS.beforeSendRequest;
-	     	}
-     	}
-     	     	             
-	    var type = ("secretPhrase" in data ? "POST" : "GET");
-             	
-		$.support.cors = true;
+     	$.support.cors = true;
 
-        $.ajax({
-          url: NRS.server + '/nxt?requestType=' + requestType,
-          crossDomain: true,
-          dataType: 'json',
-          type: type,
-          timeout: 10000, //10 seconds
-          async: (async === undefined ? true : async),
-          beforeSend: beforeSend,
-          data: data
-        }).done(function(json) {  
-        	if (json.errorCode && !json.errorDescription) {
-        		json.errorDescription = "Unknown error occured.";
-        	}    
-        	        	
-        	if (callback) {
-        		if (extra) {
-        			data["_extra"] = extra;
-        		}
-        		callback(json, data);
-        	}
-        }).fail(function(xhr, textStatus, error) {
-        	if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
-        		if (type == "POST") {
-	        		$.growl("Could not connect.", {"type": "danger", "offset": 10});
-	        	}
-        	} 
-        	        	
-        	if (error == "abort") {
-        		return;
-        	} else if (callback) {
-        		if (error == "timeout") {
-	        		error = "The request timed out. Warning: This does not mean the request did not go through. You should wait for the next block and see if your request has been processed.";
-        		}
-         		callback({"errorCode": -1, "errorDescription": error}, {});
-        	}
-        });
+		$.ajax({
+			url: NRS.server + "/nxt?requestType=" + requestType,
+			crossDomain: true,
+			dataType: "json",
+			type: type,
+			timeout: 10000, //10 seconds
+			async: (async === undefined ? true : async),
+			beforeSend: beforeSend,
+			data: data
+		}).done(function(json) {  
+			if (json.errorCode && !json.errorDescription) {
+				json.errorDescription = "Unknown error occured.";
+			}    
+			        	
+			if (callback) {
+				if (extra) {
+					data["_extra"] = extra;
+				}
+				callback(json, data);
+			}
+		}).fail(function(xhr, textStatus, error) {
+			if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
+				if (type == "POST") {
+		    		$.growl("Could not connect.", {"type": "danger", "offset": 10});
+		    	}
+			} 
+			        	
+			if (error == "abort") {
+				return;
+			} else if (callback) {
+				if (error == "timeout") {
+		    		error = "The request timed out. Warning: This does not mean the request did not go through. You should wait for the next block and see if your request has been processed.";
+				}
+		 		callback({"errorCode": -1, "errorDescription": error}, {});
+			}
+		});
     }
     
     $(".modal").on("shown.bs.modal", function() {
