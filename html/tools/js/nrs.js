@@ -467,7 +467,7 @@
     }
     
     NRS.verifyGeneratedPassphrase = function() {    	
-    	var password = $("#account_phrase_generator_panel .step_3 textarea").val();
+    	var password = $.trim($("#account_phrase_generator_panel .step_3 textarea").val());
     	    	
     	if (password != PassPhraseGenerator.passPhrase) {    		
 	    	$("#account_phrase_generator_panel .step_3 .callout").show();
