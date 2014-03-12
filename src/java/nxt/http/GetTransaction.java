@@ -54,10 +54,10 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
             response = transaction.getJSONObject();
             response.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
             response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
+            response.put("blockTimestamp", transaction.getBlockTimestamp());
         }
         response.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         response.put("hash", transaction.getHash());
-        response.put("blockTimestamp", transaction.getBlockTimestamp());
 
 
         return response;
