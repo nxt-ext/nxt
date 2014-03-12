@@ -103,8 +103,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     JSONArray transactionsData = new JSONArray();
 
                     int curTime = Convert.getEpochTime();
-                    for (Transaction transaction : nonBroadcastedTransactions.values()) {
-                        if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
+                    for (TransactionImpl transaction : nonBroadcastedTransactions.values()) {
+                        boolean isNotValid = false;
+                        try {
+                            transaction.validateAttachment();
+                        } catch (NxtException.ValidationException e) {
+                            isNotValid = true;
+                        }
+                        if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime
+                                || isNotValid) {
                             nonBroadcastedTransactions.remove(transaction.getId());
                         } else if (transaction.getTimestamp() < curTime - 30) {
                             transactionsData.add(transaction.getJSONObject());

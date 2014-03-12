@@ -788,7 +788,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 BlockImpl currentBlock;
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {
-                    currentBlock = BlockDb.findBlock(con, rs);
+                    currentBlock = BlockDb.loadBlock(con, rs);
                     if (! currentBlock.getId().equals(currentBlockId)) {
                         throw new NxtException.ValidationException("Database blocks in the wrong order!");
                     }

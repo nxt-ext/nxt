@@ -19,7 +19,7 @@ final class TransactionDb {
             ResultSet rs = pstmt.executeQuery();
             Transaction transaction = null;
             if (rs.next()) {
-                transaction = findTransaction(con, rs);
+                transaction = loadTransaction(con, rs);
             }
             rs.close();
             return transaction;
@@ -37,7 +37,7 @@ final class TransactionDb {
             ResultSet rs = pstmt.executeQuery();
             Transaction transaction = null;
             if (rs.next()) {
-                transaction = findTransaction(con, rs);
+                transaction = loadTransaction(con, rs);
             }
             rs.close();
             return transaction;
@@ -59,7 +59,7 @@ final class TransactionDb {
         }
     }
 
-    static TransactionImpl findTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
 
             byte type = rs.getByte("type");
@@ -98,7 +98,7 @@ final class TransactionDb {
             pstmt.setLong(1, blockId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                list.add(findTransaction(con, rs));
+                list.add(loadTransaction(con, rs));
             }
             rs.close();
             return list;

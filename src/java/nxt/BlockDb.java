@@ -18,7 +18,7 @@ final class BlockDb {
             ResultSet rs = pstmt.executeQuery();
             BlockImpl block = null;
             if (rs.next()) {
-                block = findBlock(con, rs);
+                block = loadBlock(con, rs);
             }
             rs.close();
             return block;
@@ -57,7 +57,7 @@ final class BlockDb {
         }
     }
 
-    static BlockImpl findBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
