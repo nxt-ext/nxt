@@ -3142,6 +3142,10 @@ nrs_update_hashes {
 label .popover-content {
 	font-weight:normal;
 }
+
+#account_id:hover {
+	cursor:pointer;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

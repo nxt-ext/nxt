@@ -5381,6 +5381,18 @@
 	    	
 	    	$("#account_id").html(NRS.account);
 	    	
+	    	var client = new ZeroClipboard($("#account_id"), {
+				moviePath: "js/ZeroClipboard.swf"
+			});
+
+			client.on("load", function(client) {
+				client.setText(NRS.account);
+
+				client.on("complete", function(client, args) {
+					$.growl("Your account ID has been copied to the clipboard.", {"type": "success"});
+				});
+			});
+
 	    	var passwordNotice = "";
 	    	
 	    	 if (password.length < 35) {
