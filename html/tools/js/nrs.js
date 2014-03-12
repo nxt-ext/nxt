@@ -5394,18 +5394,18 @@
 	    		$("#account_nr_assets").html("0");
     		} else {
     			if (NRS.databaseSupport) {
-    				NRS.database.select("data", [{"id": "asset_balances"}], function(asset_balance) {
+    				NRS.database.select("data", [{"id": "asset_balances_" + NRS.account}], function(asset_balance) {
 						if (asset_balance.length) {
 						    var previous_balances = asset_balance[0].contents;
 						    var current_balances = JSON.stringify(NRS.accountBalance.assetBalances);
 						    						    
 						    if (previous_balances != current_balances) {
 							    previous_balances = JSON.parse(previous_balances);
-								NRS.database.update("data", {contents: current_balances}, [{id: "asset_balances"}]);
+								NRS.database.update("data", {contents: current_balances}, [{id: "asset_balances_" + NRS.account}]);
 								NRS.checkAssetDifferences(NRS.accountBalance.assetBalances, previous_balances);
 						    } 
 						} else {
-					    	NRS.database.insert("data", {id: "asset_balances", contents: JSON.stringify(NRS.accountBalance.assetBalances)});
+					    	NRS.database.insert("data", {id: "asset_balances_" + NRS.account, contents: JSON.stringify(NRS.accountBalance.assetBalances)});
 						}
 					});
 				} else if (previousAccountBalance && previousAccountBalance.assetBalances) {
