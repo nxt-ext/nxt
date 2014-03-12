@@ -4772,7 +4772,29 @@
 		
 		return {"stop": true};
 	}
-	        
+	
+	//todo later: http://twitter.github.io/typeahead.js/
+	$("span.recipient_selector button").on("click", function(e) {	
+		if (!Object.keys(NRS.contacts).length) {
+			e.preventDefault();
+			e.stopPropagation();
+			return;
+		}
+		
+		var $list = $(this).parent().find("ul");
+				
+		$list.empty();
+				
+		for (var accountId in NRS.contacts) {
+			$list.append("<li><a href='#' data-contact='" + NRS.contacts[accountId].name.escapeHTML() + "'>" + NRS.contacts[accountId].name.escapeHTML() + "</a></li>");	
+		}
+	});
+	
+	$("span.recipient_selector").on("click", "ul li a", function(e) {
+		e.preventDefault();
+		$(this).closest("form").find("input[name=recipient],input[name=account_id]").val($(this).data("contact")).trigger("blur");
+	});
+	
     NRS.pages.polls = function() {
     	NRS.pageLoading();
     	
