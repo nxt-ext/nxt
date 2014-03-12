@@ -3,6 +3,7 @@ package nxt.util;
 import nxt.Constants;
 
 import java.math.BigInteger;
+import java.util.Date;
 
 public final class Convert {
 
@@ -63,6 +64,10 @@ public final class Convert {
         return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
     }
 
+    public static Date fromEpochTime(int epochTime) {
+        return new Date(epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L);
+    }
+
     public static Long zeroToNull(long l) {
         return l == 0 ? null : l;
     }
@@ -76,7 +81,11 @@ public final class Convert {
     }
 
     public static String emptyToNull(String s) {
-        return s == null || s.trim().length() == 0 ? null : s;
+        return s == null || s.length() == 0 ? null : s;
+    }
+
+    public static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {
