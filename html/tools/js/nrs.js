@@ -5209,6 +5209,10 @@
 								
 								callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
 							}
+							
+							if (response.type == "success" || response.type == "warning") {
+								accountInputField.val(contact.accountId);
+							}
 						});
 					} else {
 						NRS.checkRecipientAlias(account, modal);
