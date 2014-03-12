@@ -3,7 +3,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
@@ -45,7 +45,7 @@ public final class IssueAsset extends CreateTransaction {
 
         String normalizedName = name.toLowerCase();
         for (int i = 0; i < normalizedName.length(); i++) {
-            if (Nxt.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
+            if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                 return INCORRECT_ASSET_NAME;
             }
         }
@@ -60,7 +60,7 @@ public final class IssueAsset extends CreateTransaction {
         int quantity;
         try {
             quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity > Nxt.MAX_ASSET_QUANTITY) {
+            if (quantity <= 0 || quantity > Constants.MAX_ASSET_QUANTITY) {
                 return INCORRECT_ASSET_QUANTITY;
             }
         } catch (NumberFormatException e) {

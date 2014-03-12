@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
@@ -46,7 +46,7 @@ public final class SendMessage extends CreateTransaction {
         } catch (RuntimeException e) {
             return INCORRECT_ARBITRARY_MESSAGE;
         }
-        if (message.length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+        if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
             return INCORRECT_ARBITRARY_MESSAGE;
         }
 

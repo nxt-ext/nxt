@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
@@ -50,11 +50,11 @@ public final class CreatePoll extends CreateTransaction {
             return MISSING_OPTIONSAREBINARY;
         }
 
-        if (nameValue.length() > Nxt.MAX_POLL_NAME_LENGTH) {
+        if (nameValue.length() > Constants.MAX_POLL_NAME_LENGTH) {
             return INCORRECT_POLL_NAME_LENGTH;
         }
 
-        if (descriptionValue.length() > Nxt.MAX_POLL_DESCRIPTION_LENGTH) {
+        if (descriptionValue.length() > Constants.MAX_POLL_DESCRIPTION_LENGTH) {
             return INCORRECT_POLL_DESCRIPTION_LENGTH;
         }
 
@@ -64,7 +64,7 @@ public final class CreatePoll extends CreateTransaction {
             if (optionValue == null) {
                 break;
             }
-            if (optionValue.length() > Nxt.MAX_POLL_OPTION_LENGTH) {
+            if (optionValue.length() > Constants.MAX_POLL_OPTION_LENGTH) {
                 return INCORRECT_POLL_OPTION_LENGTH;
             }
             options.add(optionValue.trim());

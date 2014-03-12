@@ -1,6 +1,5 @@
 package nxt.http;
 
-import nxt.Block;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;

@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
@@ -56,7 +56,7 @@ public final class TransferAsset extends CreateTransaction {
         int quantity;
         try {
             quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity >= Nxt.MAX_ASSET_QUANTITY) {
+            if (quantity <= 0 || quantity >= Constants.MAX_ASSET_QUANTITY) {
                 return INCORRECT_QUANTITY;
             }
         } catch (NumberFormatException e) {

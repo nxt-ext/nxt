@@ -1,6 +1,7 @@
 package nxt.user;
 
 import nxt.Account;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -70,7 +71,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
 
             return response;
 
-        } else if (amount <= 0 || amount > Nxt.MAX_BALANCE) {
+        } else if (amount <= 0 || amount > Constants.MAX_BALANCE) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
@@ -82,7 +83,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
 
             return response;
 
-        } else if (fee <= 0 || fee > Nxt.MAX_BALANCE) {
+        } else if (fee <= 0 || fee > Constants.MAX_BALANCE) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");

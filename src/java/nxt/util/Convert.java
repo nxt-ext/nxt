@@ -1,6 +1,6 @@
 package nxt.util;
 
-import nxt.Nxt;
+import nxt.Constants;
 
 import java.math.BigInteger;
 
@@ -60,7 +60,7 @@ public final class Convert {
     }
 
     public static int getEpochTime() {
-        return (int)((System.currentTimeMillis() - Nxt.EPOCH_BEGINNING + 500) / 1000);
+        return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
     }
 
     public static Long zeroToNull(long l) {

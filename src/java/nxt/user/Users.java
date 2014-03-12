@@ -3,6 +3,7 @@ package nxt.user;
 import nxt.Account;
 import nxt.Block;
 import nxt.BlockchainProcessor;
+import nxt.Constants;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Transaction;
@@ -81,7 +82,7 @@ public final class Users {
 
         boolean enableUIServer = Nxt.getBooleanProperty("nxt.enableUIServer");
         if (enableUIServer) {
-            final int port = Nxt.isTestnet ? TESTNET_UI_PORT : Nxt.getIntProperty("nxt.uiServerPort");
+            final int port = Constants.isTestnet ? TESTNET_UI_PORT : Nxt.getIntProperty("nxt.uiServerPort");
             final String host = Nxt.getStringProperty("nxt.uiServerHost");
             final Server userServer = new Server();
             ServerConnector connector;
@@ -485,7 +486,7 @@ public final class Users {
                 addedOrphanedBlock.put("height", block.getHeight());
                 addedOrphanedBlock.put("version", block.getVersion());
                 addedOrphanedBlock.put("block", block.getStringId());
-                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.INITIAL_BASE_TARGET)));
+                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
                 addedOrphanedBlocks.add(addedOrphanedBlock);
                 response.put("addedOrphanedBlocks", addedOrphanedBlocks);
                 Users.sendNewDataToAll(response);
@@ -508,7 +509,7 @@ public final class Users {
                 addedRecentBlock.put("height", block.getHeight());
                 addedRecentBlock.put("version", block.getVersion());
                 addedRecentBlock.put("block", block.getStringId());
-                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.INITIAL_BASE_TARGET)));
+                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
                 addedRecentBlocks.add(addedRecentBlock);
                 response.put("addedRecentBlocks", addedRecentBlocks);
                 Users.sendNewDataToAll(response);

@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Account;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.JSON;
 import nxt.util.Listener;
@@ -85,11 +86,11 @@ public final class Peers {
 
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
         myAddress = Nxt.getStringProperty("nxt.myAddress");
-        if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && ! Nxt.isTestnet) {
+        if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && ! Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
         myPeerServerPort = Nxt.getIntProperty("nxt.peerServerPort");
-        if (myPeerServerPort == TESTNET_PEER_PORT && ! Nxt.isTestnet) {
+        if (myPeerServerPort == TESTNET_PEER_PORT && ! Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
         shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress");
@@ -113,7 +114,7 @@ public final class Peers {
 
         JSONObject json = new JSONObject();
         if (Peers.myAddress != null && Peers.myAddress.length() > 0) {
-            if (! Nxt.isTestnet) {
+            if (! Constants.isTestnet) {
                 if (Peers.myAddress.indexOf(':') > 0) {
                     json.put("announcedAddress", Peers.myAddress);
                 } else {
@@ -136,7 +137,7 @@ public final class Peers {
         myPeerInfoRequest = JSON.prepareRequest(json);
 
         Set<String> addresses = new HashSet<>();
-        String wellKnownPeersString = Nxt.isTestnet ? Nxt.getStringProperty("nxt.testnetPeers") : Nxt.getStringProperty("nxt.wellKnownPeers");
+        String wellKnownPeersString = Constants.isTestnet ? Nxt.getStringProperty("nxt.testnetPeers") : Nxt.getStringProperty("nxt.wellKnownPeers");
         if (wellKnownPeersString != null && wellKnownPeersString.length() > 0) {
             for (String address : wellKnownPeersString.split(";")) {
                 address = address.trim();
@@ -144,7 +145,7 @@ public final class Peers {
                     addresses.add(address);
                 }
             }
-        } else if (! Nxt.isTestnet) {
+        } else if (! Constants.isTestnet) {
             Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org, nxtbase.com and mynxt.info nodes");
             for (int i = 1; i <= 12; i++) {
                 if (ThreadLocalRandom.current().nextInt(4) == 1) {
@@ -204,7 +205,7 @@ public final class Peers {
             if (Peers.shareMyAddress) {
                 final Server peerServer = new Server();
                 ServerConnector connector = new ServerConnector(peerServer);
-                final int port = Nxt.isTestnet ? TESTNET_PEER_PORT : Peers.myPeerServerPort;
+                final int port = Constants.isTestnet ? TESTNET_PEER_PORT : Peers.myPeerServerPort;
                 connector.setPort(port);
                 final String host = Nxt.getStringProperty("nxt.peerServerHost");
                 connector.setHost(host);
@@ -423,7 +424,7 @@ public final class Peers {
         PeerImpl peer = peers.get(peerAddress);
         if (peer == null) {
             peer = new PeerImpl(peerAddress, announcedPeerAddress);
-            if (Nxt.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
+            if (Constants.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
                 Logger.logDebugMessage("Peer " + peerAddress + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");
                 return null;
             }

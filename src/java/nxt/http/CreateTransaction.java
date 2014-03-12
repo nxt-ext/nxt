@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -69,7 +70,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
-            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
+            if (fee <= 0 || fee >= Constants.MAX_BALANCE) {
                 return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {

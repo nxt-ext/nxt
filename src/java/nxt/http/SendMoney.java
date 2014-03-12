@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
@@ -42,7 +42,7 @@ public final class SendMoney extends CreateTransaction {
         int amount;
         try {
             amount = Integer.parseInt(amountValue);
-            if (amount <= 0 || amount >= Nxt.MAX_BALANCE) {
+            if (amount <= 0 || amount >= Constants.MAX_BALANCE) {
                 return INCORRECT_AMOUNT;
             }
         } catch (NumberFormatException e) {
