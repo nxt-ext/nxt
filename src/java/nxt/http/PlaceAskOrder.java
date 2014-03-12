@@ -2,7 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
@@ -42,7 +42,7 @@ public final class PlaceAskOrder extends CreateTransaction {
         long price;
         try {
             price = Long.parseLong(priceValue);
-            if (price <= 0 || price > Nxt.MAX_BALANCE * 100L) {
+            if (price <= 0 || price > Constants.MAX_BALANCE * 100L) {
                 return INCORRECT_PRICE;
             }
         } catch (NumberFormatException e) {
@@ -59,7 +59,7 @@ public final class PlaceAskOrder extends CreateTransaction {
         int quantity;
         try {
             quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity > Nxt.MAX_ASSET_QUANTITY) {
+            if (quantity <= 0 || quantity > Constants.MAX_ASSET_QUANTITY) {
                 return INCORRECT_QUANTITY;
             }
         } catch (NumberFormatException e) {

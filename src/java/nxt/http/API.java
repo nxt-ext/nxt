@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
@@ -46,7 +47,7 @@ public final class API {
 
         boolean enableAPIServer = Nxt.getBooleanProperty("nxt.enableAPIServer");
         if (enableAPIServer) {
-            final int port = Nxt.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
+            final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
             final Server apiServer = new Server();
             ServerConnector connector;

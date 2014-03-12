@@ -103,7 +103,7 @@ public final class Account {
     public int getEffectiveBalance() {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-        if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3 && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
                 return (int)(getBalance() / 100);
@@ -296,9 +296,9 @@ public final class Account {
                     && i < guaranteedBalances.size() - 1
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-                if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Nxt.TRANSPARENT_FORGING_BLOCK_5) {
+                if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Constants.TRANSPARENT_FORGING_BLOCK_5) {
                     gb.balance += amount; // because of a bug which leads to a fork
-                } else if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
+                } else if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
                     gb.balance += amount;
                 }
             } else if (amount < 0) {

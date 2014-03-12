@@ -180,7 +180,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (transaction.getAmount() <= 0 || transaction.getAmount() >= Nxt.MAX_BALANCE) {
+                if (transaction.getAmount() <= 0 || transaction.getAmount() >= Constants.MAX_BALANCE) {
                     throw new NxtException.ValidationException("Invalid ordinary payment: " + transaction.getAttachment().getJSON());
                 }
             }
@@ -219,7 +219,7 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 int messageLength = buffer.getInt();
-                if (messageLength > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid arbitrary message length: " + messageLength);
                 }
                 byte[] message = new byte[messageLength];
@@ -243,11 +243,11 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ARBITRARY_MESSAGES_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ARBITRARY_MESSAGES_BLOCK) {
                     throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.getAttachment();
-                if (transaction.getAmount() != 0 || attachment.getMessage().length > Nxt.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                if (transaction.getAmount() != 0 || attachment.getMessage().length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid arbitrary message: " + attachment.getJSON());
                 }
             }
@@ -264,13 +264,13 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 int aliasLength = buffer.get();
-                if (aliasLength > Nxt.MAX_ALIAS_LENGTH * 3) {
+                if (aliasLength > Constants.MAX_ALIAS_LENGTH * 3) {
                     throw new NxtException.ValidationException("Max alias length exceeded");
                 }
                 byte[] alias = new byte[aliasLength];
                 buffer.get(alias);
                 int uriLength = buffer.getShort();
-                if (uriLength > Nxt.MAX_ALIAS_URI_LENGTH * 3) {
+                if (uriLength > Constants.MAX_ALIAS_URI_LENGTH * 3) {
                     throw new NxtException.ValidationException("Max alias URI length exceeded");
                 }
                 byte[] uri = new byte[uriLength];
@@ -317,17 +317,17 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ALIAS_SYSTEM_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Aliases not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || attachment.getAliasName().length() == 0
-                        || attachment.getAliasName().length() > Nxt.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Nxt.MAX_ALIAS_URI_LENGTH) {
+                        || attachment.getAliasName().length() > Constants.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
                     throw new NxtException.ValidationException("Invalid alias assignment: " + attachment.getJSON());
                 }
                 String normalizedAlias = attachment.getAliasName().toLowerCase();
                 for (int i = 0; i < normalizedAlias.length(); i++) {
-                    if (Nxt.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
+                    if (Constants.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                         throw new NxtException.ValidationException("Invalid alias name: " + normalizedAlias);
                     }
                 }
@@ -356,7 +356,7 @@ public abstract class TransactionType {
 
                 try {
                     int pollNameBytesLength = buffer.getShort();
-                    if (pollNameBytesLength > 4 * Nxt.MAX_POLL_NAME_LENGTH) {
+                    if (pollNameBytesLength > 4 * Constants.MAX_POLL_NAME_LENGTH) {
                         throw new NxtException.ValidationException("Error parsing poll name");
                     }
                     byte[] pollNameBytes = new byte[pollNameBytesLength];
@@ -368,7 +368,7 @@ public abstract class TransactionType {
 
                 try {
                     int pollDescriptionBytesLength = buffer.getShort();
-                    if (pollDescriptionBytesLength > 4 * Nxt.MAX_POLL_DESCRIPTION_LENGTH) {
+                    if (pollDescriptionBytesLength > 4 * Constants.MAX_POLL_DESCRIPTION_LENGTH) {
                         throw new NxtException.ValidationException("Error parsing poll description");
                     }
                     byte[] pollDescriptionBytes = new byte[pollDescriptionBytesLength];
@@ -383,7 +383,7 @@ public abstract class TransactionType {
                     pollOptions = new String[numberOfOptions];
                     for (int i = 0; i < numberOfOptions; i++) {
                         int pollOptionBytesLength = buffer.getShort();
-                        if (pollOptionBytesLength > 4 * Nxt.MAX_POLL_OPTION_LENGTH) {
+                        if (pollOptionBytesLength > 4 * Constants.MAX_POLL_OPTION_LENGTH) {
                             throw new NxtException.ValidationException("Error parsing poll options");
                         }
                         byte[] pollOptionBytes = new byte[pollOptionBytesLength];
@@ -442,16 +442,16 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.getAttachment();
                 for (int i = 0; i < attachment.getPollOptions().length; i++) {
-                    if (attachment.getPollOptions()[i].length() > Nxt.MAX_POLL_OPTION_LENGTH) {
+                    if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH) {
                         throw new NxtException.ValidationException("Invalid poll options length: " + attachment.getJSON());
                     }
                 }
-                if (attachment.getPollName().length() > Nxt.MAX_POLL_NAME_LENGTH || attachment.getPollDescription().length() > Nxt.MAX_POLL_DESCRIPTION_LENGTH
+                if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
                         || attachment.getPollOptions().length > 100 || transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Invalid poll attachment: " + attachment.getJSON());
                 }
@@ -521,7 +521,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.VOTING_SYSTEM_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 if (transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
@@ -622,22 +622,23 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || transaction.getFee() < Nxt.ASSET_ISSUANCE_FEE
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || transaction.getFee() < Constants.ASSET_ISSUANCE_FEE
                         || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
-                        || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
+                        || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY) {
                     throw new NxtException.ValidationException("Invalid asset issuance: " + attachment.getJSON());
                 }
                 String normalizedName = attachment.getName().toLowerCase();
                 for (int i = 0; i < normalizedName.length(); i++) {
-                    if (Nxt.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
+                    if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                         throw new NxtException.ValidationException("Invalid asset name: " + normalizedName);
                     }
                 }
-                if (Asset.getAsset(normalizedName) != null) {
+                Asset asset = Asset.getAsset(normalizedName);
+                if (asset != null && ! asset.getId().equals(transaction.getId())) {
                     throw new NxtException.ValidationException("Asset " + normalizedName + " already exists");
                 }
             }
@@ -717,11 +718,11 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                if (transaction.getAmount() != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY) {
+                if (transaction.getAmount() != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY) {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or quantity: " + attachment.getJSON());
                 }
             }
@@ -752,13 +753,13 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0
-                        || attachment.getQuantity() <= 0 || attachment.getQuantity() > Nxt.MAX_ASSET_QUANTITY
-                        || attachment.getPrice() <= 0 || attachment.getPrice() > Nxt.MAX_BALANCE * 100L) {
+                        || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY
+                        || attachment.getPrice() <= 0 || attachment.getPrice() > Constants.MAX_BALANCE * 100L) {
                     throw new NxtException.ValidationException("Invalid asset order placement: " + attachment.getJSON());
                 }
             }
@@ -887,7 +888,7 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Nxt.ASSET_EXCHANGE_BLOCK) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0) {

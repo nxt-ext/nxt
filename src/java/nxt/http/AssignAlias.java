@@ -4,7 +4,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Alias;
 import nxt.Attachment;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -36,19 +36,19 @@ public final class AssignAlias extends CreateTransaction {
         }
 
         alias = alias.trim();
-        if (alias.length() == 0 || alias.length() > Nxt.MAX_ALIAS_LENGTH) {
+        if (alias.length() == 0 || alias.length() > Constants.MAX_ALIAS_LENGTH) {
             return INCORRECT_ALIAS_LENGTH;
         }
 
         String normalizedAlias = alias.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
-            if (Nxt.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
+            if (Constants.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                 return INCORRECT_ALIAS;
             }
         }
 
         uri = uri.trim();
-        if (uri.length() > Nxt.MAX_ALIAS_URI_LENGTH) {
+        if (uri.length() > Constants.MAX_ALIAS_URI_LENGTH) {
             return INCORRECT_URI_LENGTH;
         }
 

@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.Block;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -28,7 +29,7 @@ final class GetNextBlocks extends PeerServlet.PeerRequestHandler {
         List<? extends Block> blocks = Nxt.getBlockchain().getBlocksAfter(blockId, 1440);
 
         for (Block block : blocks) {
-            int length = Nxt.BLOCK_HEADER_LENGTH + block.getPayloadLength();
+            int length = Constants.BLOCK_HEADER_LENGTH + block.getPayloadLength();
             if (totalLength + length > 1048576) {
                 break;
             }

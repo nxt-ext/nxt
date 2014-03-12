@@ -160,7 +160,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         return;
                     }
                     JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                    if (transactionsData == null) {
+                    if (transactionsData == null || transactionsData.size() == 0) {
                         return;
                     }
                     processPeerTransactions(transactionsData, false);

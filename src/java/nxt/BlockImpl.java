@@ -32,7 +32,7 @@ final class BlockImpl implements Block {
 
     private byte[] blockSignature;
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
-    private long baseTarget = Nxt.INITIAL_BASE_TARGET;
+    private long baseTarget = Constants.INITIAL_BASE_TARGET;
     private volatile Long nextBlockId;
     private int height = -1;
     private volatile Long id;
@@ -44,11 +44,11 @@ final class BlockImpl implements Block {
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
             throws NxtException.ValidationException {
 
-        if (transactions.size() > Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+        if (transactions.size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
             throw new NxtException.ValidationException("attempted to create a block with " + transactions.size() + " transactions");
         }
 
-        if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
+        if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
             throw new NxtException.ValidationException("attempted to create a block with payloadLength " + payloadLength);
         }
 
@@ -372,15 +372,15 @@ final class BlockImpl implements Block {
     private void calculateBaseTarget(BlockImpl previousBlock) {
 
         if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlockId == null) {
-            baseTarget = Nxt.INITIAL_BASE_TARGET;
+            baseTarget = Constants.INITIAL_BASE_TARGET;
             cumulativeDifficulty = BigInteger.ZERO;
         } else {
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
                     .divide(BigInteger.valueOf(60)).longValue();
-            if (newBaseTarget < 0 || newBaseTarget > Nxt.MAX_BASE_TARGET) {
-                newBaseTarget = Nxt.MAX_BASE_TARGET;
+            if (newBaseTarget < 0 || newBaseTarget > Constants.MAX_BASE_TARGET) {
+                newBaseTarget = Constants.MAX_BASE_TARGET;
             }
             if (newBaseTarget < curBaseTarget / 2) {
                 newBaseTarget = curBaseTarget / 2;
@@ -390,7 +390,7 @@ final class BlockImpl implements Block {
             }
             long twofoldCurBaseTarget = curBaseTarget * 2;
             if (twofoldCurBaseTarget < 0) {
-                twofoldCurBaseTarget = Nxt.MAX_BASE_TARGET;
+                twofoldCurBaseTarget = Constants.MAX_BASE_TARGET;
             }
             if (newBaseTarget > twofoldCurBaseTarget) {
                 newBaseTarget = twofoldCurBaseTarget;

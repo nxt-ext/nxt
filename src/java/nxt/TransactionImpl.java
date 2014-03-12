@@ -38,7 +38,7 @@ final class TransactionImpl implements Transaction {
                     int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY)) ? (deadline != 0 || fee != 0) : (deadline < 1 || fee <= 0)
-                || fee > Nxt.MAX_BALANCE || amount < 0 || amount > Nxt.MAX_BALANCE || type == null) {
+                || fee > Constants.MAX_BALANCE || amount < 0 || amount > Constants.MAX_BALANCE || type == null) {
             throw new NxtException.ValidationException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
                     + ", deadline: " + deadline + ", fee: " + fee + ", amount: " + amount);
         }

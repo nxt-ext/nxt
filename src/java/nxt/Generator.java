@@ -144,7 +144,7 @@ public final class Generator {
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
-            if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+            if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
                 byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), secretPhrase);
                 generationSignatureHash = digest.digest(generationSignature);
             } else {
