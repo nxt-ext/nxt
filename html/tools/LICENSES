@@ -15,3 +15,4 @@ jquery.xdomainrequest.js - MIT - https://github.com/MoonScript/jQuery-ajaxTransp
 bootstrap-colorpicker.js - Apache2 - http://mjolnic.github.io/bootstrap-colorpicker
 passphrasegenerator.js - custom - based on https://github.com/michenriksen/diceware (UNLICENSE) and https://github.com/ggozad/mnemonic.js (MIT)
 seedrandom.js - MIT - https://github.com/davidbau/seedrandom
+ZeroClipboard.js/.swf - MIT - http://zeroclipboard.org/
