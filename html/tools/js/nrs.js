@@ -4606,6 +4606,10 @@
 		} else if (!data.account_id) {
 			return {"error": "Account ID is a required field."};
 		}
+		    	
+    	if (/^\d+$/.test(data.name)) {
+    		return {"error": "Contact name must contain alphabetic characters."};
+    	}
 				
 		if (data.account_id.charAt(0) == '@') {
 			var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
