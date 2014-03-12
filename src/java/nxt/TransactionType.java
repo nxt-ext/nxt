@@ -637,7 +637,8 @@ public abstract class TransactionType {
                         throw new NxtException.ValidationException("Invalid asset name: " + normalizedName);
                     }
                 }
-                if (Asset.getAsset(normalizedName) != null) {
+                Asset asset = Asset.getAsset(normalizedName);
+                if (asset != null && ! asset.getId().equals(transaction.getId())) {
                     throw new NxtException.ValidationException("Asset " + normalizedName + " already exists");
                 }
             }
