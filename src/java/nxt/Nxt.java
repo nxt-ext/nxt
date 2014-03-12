@@ -15,7 +15,7 @@ import java.util.TimeZone;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.8.8";
+    public static final String VERSION = "0.8.9";
 
     public static final int BLOCK_HEADER_LENGTH = 224;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -42,7 +42,7 @@ public final class Nxt {
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
     public static final int TRANSPARENT_FORGING_BLOCK_5 = 67000;
-    public static final int ASSET_EXCHANGE_BLOCK; // = 111111;
+    public static final int ASSET_EXCHANGE_BLOCK; // = 211111;
     public static final int VOTING_SYSTEM_BLOCK; // = 222222;
 
     public static final long EPOCH_BEGINNING;
@@ -95,7 +95,7 @@ public final class Nxt {
 
     static {
         isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
-        ASSET_EXCHANGE_BLOCK = isTestnet ? 0 : 111111;
+        ASSET_EXCHANGE_BLOCK = isTestnet ? 0 : 211111;
         VOTING_SYSTEM_BLOCK = isTestnet ? 0 : 222222;
     }
 
