@@ -3341,11 +3341,25 @@
        return {"requestType": "sendMessage", "data": data};
     }
     
-    NRS.forms.sendMessageComplete = function(response, data) {   
+    NRS.forms.sendMoneyComplete = function(response, data) {  
+    	if (!(data["_extra"] && data["_extra"].convertedAccount)) {
+	    	$.growl("NXT has been sent! <a href='#' data-account='" + String(data.recipient).escapeHTML() + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {"type": "success"});
+    	} else {
+    		$.growl("NXT has been sent!", {"type": "success"});
+    	}
+    }
+    
+    NRS.forms.sendMessageComplete = function(response, data) {    	
     	data.transaction = response.transaction;
     	data.message = data._extra.message;
     	delete data["_extra"];
     	delete data.secretPhrase;
+    	
+    	if (!(data["_extra"] && data["_extra"].convertedAccount)) {
+	    	$.growl("Your message has been sent! <a href='#' data-account='" + String(data.recipient).escapeHTML() + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {"type": "success"});
+    	} else {
+    		$.growl("Your message has been sent!", {"type": "success"});
+    	}
     	
     	NRS.tentative.messages.push(data);
     	
@@ -5112,6 +5126,7 @@
 					return;
 				} else {
 					data.recipient = convertedAccountId;
+					data["_extra"] = {"convertedAccount": true};
 				}
 			}
 		}
@@ -5143,8 +5158,10 @@
 	    		 	$modal.modal("hide");	
 				}
 				
-    		 	$.growl(successMessage.escapeHTML(), { type: 'success' });
-    		 	
+				if (successMessage) {
+	    		 	$.growl(successMessage.escapeHTML(), { type: 'success' });
+				}
+				
     		 	var formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
     		 	
     		 	if (typeof formCompleteFunction == 'function') {
@@ -5190,6 +5207,7 @@
 		var account = $invoker.data("account");
 		
 		if (account) {
+			account = String(account);
 			$(this).find("input[name=recipient], input[name=account_id]").val(account.unescapeHTML()).trigger("blur");
 		}
     });
