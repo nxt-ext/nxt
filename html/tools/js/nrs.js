@@ -473,7 +473,7 @@
 	    	$("#account_phrase_generator_panel .step_3 .callout").show();
     	} else {
 	    	NRS.login(password, function() {
-	   			$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
+	   			$.growl("Secret phrase confirmed successfully, you are now logged in.", {"type": "success"});
 	   		});
 	    	PassPhraseGenerator.reset();
 	    	$("#account_phrase_generator_panel textarea").val("");
@@ -502,7 +502,7 @@
     	} else {
     		$("#registration_password, #registration_password_repeat").val("");
     		NRS.login(password, function() {
-				$.growl("Secret phrase confirmed successfully, you are now logged in. Your account number is displayed in the sidebar.", {"type": "success"});
+				$.growl("Secret phrase confirmed successfully, you are now logged in.", {"type": "success"});
 			});
     	}
     });
@@ -1117,7 +1117,7 @@
 			$("#account_balance_table").hide();
 			
 			if (NRS.accountBalance.errorCode == 5) {
-				$("#account_balance_warning").html("Your account is brand new. You should buy some coins to fund it with. Your account ID is <strong>" + NRS.account + "</strong>").show();
+				$("#account_balance_warning").html("Your account is brand new. You should fund it with some coins. Your account ID is <strong>" + NRS.account + "</strong>").show();
 			} else {
 				$("#account_balance_warning").html(NRS.accountBalance.errorDescription.escapeHTML()).show();
 			}
@@ -5453,7 +5453,19 @@
     		if (response.errorCode) {
 	    		$("#account_balance").html("0");
 	    		$("#account_nr_assets").html("0");
-    		} else {
+	    		
+				if (NRS.accountBalance.errorCode == 5) {
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + NRS.account + "</strong>").show();
+				} else {
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountBalance.errorDescription.escapeHTML()).show();
+				}
+    		} else {    			
+    			if (!NRS.accountBalance.publicKey) {
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("<b>Warning!</b>: Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue.").show();
+    			} else {
+	    			$("#dashboard_message").hide();
+    			}
+    			
     			if (NRS.databaseSupport) {
     				NRS.database.select("data", [{"id": "asset_balances_" + NRS.account}], function(asset_balance) {
 						if (asset_balance.length) {
@@ -5500,11 +5512,6 @@
 	    	
 	    	if (firstRun) {
 		    	$("#account_balance, #account_nr_assets").removeClass("loading_dots");
-		    			    	
-				if (!response.errorCode && !response.publicKey) {
-	    			$("#public_key_warning").html("<b>Warning!</b> Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue.").show();
-	    		}
-
 	    	}
     	});
     }
