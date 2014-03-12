@@ -318,6 +318,7 @@
 	NRS.downloadingBlockchain = false;
 	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17];
 	NRS.isTestNet = false;
+	NRS.fetchingModalData = false;
 	
     NRS.init = function() {  
 	    if (location.port && location.port != "6876") {
@@ -1308,47 +1309,55 @@
     NRS.userInfoModal = {"user": 0};
     
     $("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table").on("click", "a[data-user]", function(e) {
-	    	e.preventDefault();
+		e.preventDefault();
+    	
+    	if (NRS.fetchingModalData) {
+	    	return;
+    	}
+    	
+    	NRS.fetchingModalData = true;
+    	
+    	NRS.userInfoModal.user = $(this).data("user");
+    	
+    	$("#user_info_modal_account").html(String(NRS.userInfoModal.user).escapeHTML());
+    	
+    	$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
+    	
+    	if (NRS.userInfoModal.user in NRS.contacts) {
+	    	$("#user_info_modal_add_as_contact").hide();
+    	} else {
+	    	$("#user_info_modal_add_as_contact").show();
+    	}
+
+    	NRS.sendRequest("getAccount", {"account": NRS.userInfoModal.user}, function(response) {
+	    	var balance;
 	    	
-	    	NRS.userInfoModal.user = $(this).data("user");
-	    	
-	    	$("#user_info_modal_account").html(String(NRS.userInfoModal.user).escapeHTML());
-	    	
-	    	$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
-	    	
-	    	if (NRS.userInfoModal.user in NRS.contacts) {
-		    	$("#user_info_modal_add_as_contact").hide();
+	    	if (response.balance > 0) {
+	    		balance = response.balance;
 	    	} else {
-		    	$("#user_info_modal_add_as_contact").show();
+	    		balance = response.effectiveBalance;
 	    	}
-	
-	    	NRS.sendRequest("getAccount", {"account": NRS.userInfoModal.user}, function(response) {
-		    	var balance;
-		    	
-		    	if (response.balance > 0) {
-		    		balance = response.balance;
-		    	} else {
-		    		balance = response.effectiveBalance;
-		    	}
-	
-		    	if (!balance) {
-		    		balance = 0;
-		    	}
-	
-		    	balance /= 100;
-	
-		    	if (balance == 0) {
-		    		$("#user_info_modal_balance").html("0");
-		    	} else {
-		    		$("#user_info_modal_balance").html(NRS.formatAmount(balance) + " NXT");
-		    	}	
-		    		
-		    	$("#user_info_modal").modal("show");
-	    	});
+
+	    	if (!balance) {
+	    		balance = 0;
+	    	}
+
+	    	balance /= 100;
+
+	    	if (balance == 0) {
+	    		$("#user_info_modal_balance").html("0");
+	    	} else {
+	    		$("#user_info_modal_balance").html(NRS.formatAmount(balance) + " NXT");
+	    	}	
+	    		
+	    	$("#user_info_modal").modal("show");
 	    	
-			$("#user_info_modal_transactions").show();
-	    
-	    	NRS.userInfoModal.transactions();
+	    	NRS.fetchingModalData = false;
+    	});
+    	
+		$("#user_info_modal_transactions").show();
+    
+    	NRS.userInfoModal.transactions();
     });   
     
     $("#user_info_modal").on("hidden.bs.modal", function(e) {
@@ -1593,6 +1602,12 @@
     $("#blocks_table, #dashboard_blocks_table").on("click", "a[data-block]", function(event) {
     	event.preventDefault();
     	
+    	if (NRS.fetchingModalData) {
+	    	return;
+    	}
+    	
+    	NRS.fetchingModalData = true;
+    	
     	var blockHeight = $(this).data("block");
     	
     	var block = $(NRS.blocks).filter(function(){
@@ -1619,10 +1634,13 @@
 
 					   	$("#block_info_transactions_table tbody").empty().append(rows);
 				    	$("#block_info_modal").modal("show");
-
+				    	
+				    	NRS.fetchingModalData = false;
 		   			}
 	   			});
 	   		}
+	   	} else {
+		   	NRS.fetchingModalData = false;
 	   	}
 	}); 
           
@@ -4315,6 +4333,12 @@
 	$("#transactions_table, #dashboard_transactions_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
 		
+		if (NRS.fetchingModalData) {
+			return;
+		}
+		
+		NRS.fetchingModalData = true;
+		
 		var async = false;
 		
 		var transactionId = $(this).data("transaction");
@@ -4402,6 +4426,7 @@
 						
 							$("#transaction_info_title").html(transactionType);
 							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
 						});
 						
 						break;
@@ -4417,6 +4442,7 @@
 							
 							$("#transaction_info_title").html(transactionType);
 							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
 						});
 						
 						break;
@@ -4432,6 +4458,7 @@
 							
 							$("#transaction_info_title").html(transactionType);
 							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
 						});
 												
 						break;
@@ -4449,7 +4476,10 @@
 									
 									$("#transaction_info_title").html(transactionType);
 									$("#transaction_info_modal").modal("show");
+									NRS.fetchingModalData = false;
 								});
+							} else {
+								NRS.fetchingModalData = false;
 							}
 						});
 						
@@ -4468,7 +4498,10 @@
 									
 									$("#transaction_info_title").html(transactionType);
 									$("#transaction_info_modal").modal("show");
+									NRS.fetchingModalData = false;
 								});
+							} else {
+								NRS.fetchingModalData = false;
 							}
 						});
 						
@@ -4477,12 +4510,14 @@
 			}
 		
 			if (!transactionType) {
+				NRS.fetchingModalData = false;
 				return;
 			}
 			
 			if (!async) {
 				$("#transaction_info_title").html(transactionType);
 				$("#transaction_info_modal").modal("show");
+				NRS.fetchingModalData = false;
 			}
 		});
 	}); 
@@ -5119,7 +5154,7 @@
 						callback({"type": "danger", "message": "There is a problem with the recipient account: " + response.errorDescription});
 					}
 				} else {
-					callback({"type": "warning", "message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction." + (response.balance == 0 ? " The account has a zero balance." : " The account has a balance of "  + NRS.formatAmount(response.balance/100) + " NXT.") + " Please double check your recipient address before submitting."});
+					callback({"type": "warning", "message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction." + (response.balance == 0 ? " The account has a zero balance." : " The account has a balance of " + NRS.formatAmount(response.balance/100).unescapeHTML() + " NXT.") + " Please double check your recipient address before submitting."});
 				}
 			}
 		});
