@@ -38,4 +38,7 @@ avoid misleading invalid transaction errors.
 Corrected handling of transactions with identical timestamps in block
 generation and in the NRS client UI.
 
+Added ASSET_BALANCE and UNCONFIRMED_ASSET_BALANCE events to Account,
+fixed possible problem with asset balance calculation.
+
 
