@@ -1554,16 +1554,22 @@
 								<textarea class="form-control" id="issue_asset_description" name="description" rows="3" tabindex="2"></textarea>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_asset_quantity">QUANTITY</label>
 						                <input type="number" name="quantity" id="issue_asset_quantity" class="form-control" placeholder="Quantity" tabindex="3">
 									</div>
 								</div>
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
-										<label for="issue_asset_fee">FEE</label>
+										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle" style="color:red"></i></label>
 										<input type="number" name="fee" id="issue_asset_fee" class="form-control" placeholder="Fee" data-default="1000" value="1000" tabindex="4">
+									</div>
+								</div>
+								<div class="col-xs-4 col-sm-4 col-md-4">
+									<div class="form-group">
+										<label for="issue_asset_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="4">
 									</div>
 								</div>
 							</div>
