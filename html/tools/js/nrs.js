@@ -5683,7 +5683,7 @@
 					asset.difference = input["_extra"].difference;
 										
 					if (asset.difference > 0) {
-						$.growl("You bought " + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + ".", {"type": "success"});
+						$.growl("You received " + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + ".", {"type": "success"});
 					} else {
 						$.growl("You sold " + NRS.formatAmount(asset.difference) + " " +  asset.name.escapeHTML() + ( asset.difference == 1 ? " asset" : "assets") + ".", {"type": "success"});
 					}
