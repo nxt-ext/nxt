@@ -93,6 +93,15 @@ public final class JSONResponses {
         NOT_ENOUGH_FUNDS = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware NOT_ENOUGH_ASSETS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 6);
+        response.put("errorDescription", "Not enough assets");
+        NOT_ENOUGH_ASSETS = JSON.prepare(response);
+    }
+
+
     public static final JSONStreamAware ASSET_NAME_ALREADY_USED;
     static {
         JSONObject response = new JSONObject();

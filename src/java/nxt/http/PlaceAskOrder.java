@@ -15,7 +15,7 @@ import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.MISSING_PRICE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.NOT_ENOUGH_ASSETS;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class PlaceAskOrder extends CreateTransaction {
@@ -73,7 +73,7 @@ public final class PlaceAskOrder extends CreateTransaction {
 
         Integer assetBalance = account.getUnconfirmedAssetBalance(asset);
         if (assetBalance == null || quantity > assetBalance) {
-            return NOT_ENOUGH_FUNDS;
+            return NOT_ENOUGH_ASSETS;
         }
 
         Attachment attachment = new Attachment.ColoredCoinsAskOrderPlacement(asset, quantity, price);
