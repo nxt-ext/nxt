@@ -5462,18 +5462,6 @@
 	    	
 	    	$("#account_id").html(NRS.account);
 	    	
-	    	var client = new ZeroClipboard($("#account_id"), {
-				moviePath: "js/ZeroClipboard.swf"
-			});
-
-			client.on("load", function(client) {
-				client.setText(NRS.account);
-
-				client.on("complete", function(client, args) {
-					$.growl("Your account ID has been copied to the clipboard.", {"type": "success"});
-				});
-			});
-
 	    	var passwordNotice = "";
 	    	
 	    	 if (password.length < 35) {
@@ -5502,6 +5490,8 @@
 	    	//NRS.getAccountAliases();
 	    	    	    
 	    	NRS.unlock();
+	    	
+	    	NRS.setupClipboardFunctionality();
 	    	
 	    	if (callback) {
 		    	callback();
@@ -5539,6 +5529,52 @@
 	    	});
 
     	});
+    }
+    
+    NRS.setupClipboardFunctionality = function() {
+    	if (NRS.server) {
+	    	var $el = $("#account_id_dropdown .dropdown-menu a");
+    	} else {
+	    	var $el = $("#account_id");
+    	}
+    	
+		var clipboard = new ZeroClipboard($el, {
+			moviePath: "js/ZeroClipboard.swf"
+		});
+		
+    	if (NRS.server) {    		
+			clipboard.on("dataRequested", function (client, args) {
+				switch ($(this).data("type")) {
+					case "account_id": 
+						client.setText(NRS.account);
+						break;
+					case "message_link": 
+						client.setText(document.URL.replace(/#.*$/, "") + "#message:" + NRS.account);
+						break;
+					case "send_link":
+						client.setText(document.URL.replace(/#.*$/, "") + "#send:" + NRS.account);
+						break;
+				}
+			});
+    	} else {
+    		$el.removeClass("dropdown-toggle").data("toggle", "");
+    		$("#account_id_dropdown").remove(".dropdown-menu");
+
+    		clipboard.on("dataRequested", function(client, args) {
+	    		client.setText(NRS.account);
+    		});
+    	}
+    		
+		clipboard.on("complete", function(client, args) {
+			$.growl("Copied to the clipboard successfully.", {"type": "success"});
+		});
+
+		clipboard.on("noflash", function (client, args) {
+			$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {"type": "danger"});
+		});
+		clipboard.on("wrongflash", function(client, args) {
+			$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
+		});
     }
     
     NRS.checkLocationHash = function(password) {    	

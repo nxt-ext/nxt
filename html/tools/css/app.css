@@ -3152,6 +3152,14 @@ label .popover-content {
 #account_id:hover {
 	cursor:pointer;
 }
+#account_id_dropdown ul.dropdown-menu>li>a {
+	padding:3px 8px;
+}
+.dropdown-menu > li > a.zeroclipboard-is-hover {
+  background-color: #3c8dbc;
+  color: #f9f9f9;
+}
+
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad
