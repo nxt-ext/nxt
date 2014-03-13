@@ -650,41 +650,44 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             for (TransactionImpl transaction : sortedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.get(transaction.getId()) == null && payloadLength + transactionLength <= Constants.MAX_PAYLOAD_LENGTH) {
-
-                    Long sender = transaction.getSenderId();
-                    Long accumulatedAmount = accumulatedAmounts.get(sender);
-                    if (accumulatedAmount == null) {
-                        accumulatedAmount = 0L;
-                    }
-
-                    long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
-                    if (accumulatedAmount + amount <= Account.getAccount(sender).getBalance()) {
-
-                        if (transaction.getTimestamp() > blockTimestamp + 15 || (transaction.getExpiration() < blockTimestamp)) {
-                            continue;
-                        }
-
-                        if (transaction.isDuplicate(duplicates)) {
-                            continue;
-                        }
-
-                        try {
-                            transaction.validateAttachment();
-                        } catch (NxtException.ValidationException e) {
-                            continue;
-                        }
-
-                        accumulatedAmounts.put(sender, accumulatedAmount + amount);
-
-                        newTransactions.put(transaction.getId(), transaction);
-                        payloadLength += transactionLength;
-                        totalAmount += transaction.getAmount();
-                        totalFee += transaction.getFee();
-
-                    }
+                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                    continue;
                 }
+
+                Long sender = transaction.getSenderId();
+                Long accumulatedAmount = accumulatedAmounts.get(sender);
+                if (accumulatedAmount == null) {
+                    accumulatedAmount = 0L;
+                }
+
+                long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
+                if (accumulatedAmount + amount > Account.getAccount(sender).getBalance()) {
+                    continue;
+                }
+
+                if (transaction.getTimestamp() > blockTimestamp + 15 || (transaction.getExpiration() < blockTimestamp)) {
+                    continue;
+                }
+
+                if (transaction.isDuplicate(duplicates)) {
+                    continue;
+                }
+
+                try {
+                    transaction.validateAttachment();
+                } catch (NxtException.ValidationException e) {
+                    continue;
+                }
+
+                accumulatedAmounts.put(sender, accumulatedAmount + amount);
+
+                newTransactions.put(transaction.getId(), transaction);
+                payloadLength += transactionLength;
+                totalAmount += transaction.getAmount();
+                totalFee += transaction.getFee();
+
             }
+
             if (newTransactions.size() == prevNumberOfNewTransactions) {
                 break;
             }
