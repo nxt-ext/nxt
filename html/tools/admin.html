@@ -517,5 +517,24 @@
     </table>
     <div class="result"></div>
 </form>
+<hr>
+<b>Get Transaction:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getTransaction"/>
+    <table>
+        <tr>
+            <td>Transaction:</td>
+            <td><input type="text" name="transaction"/></td>
+        </tr>
+        <tr>
+            <td>Hash:</td>
+            <td><input type="text" name="hash"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
 </body>
 </html>
