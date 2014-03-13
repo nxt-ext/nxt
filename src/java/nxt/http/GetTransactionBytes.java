@@ -1,7 +1,6 @@
 package nxt.http;
 
-import nxt.Block;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -13,7 +12,7 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class GetTransactionBytes extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
 
     static final GetTransactionBytes instance = new GetTransactionBytes();
 
@@ -22,35 +21,32 @@ public final class GetTransactionBytes extends HttpRequestDispatcher.HttpRequest
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
-        String transaction = req.getParameter("transaction");
-        if (transaction == null) {
+        String transactionValue = req.getParameter("transaction");
+        if (transactionValue == null) {
             return MISSING_TRANSACTION;
         }
 
         Long transactionId;
-        Transaction transactionData;
+        Transaction transaction;
         try {
-            transactionId = Convert.parseUnsignedLong(transaction);
-            transactionData = Blockchain.getTransaction(transactionId);
+            transactionId = Convert.parseUnsignedLong(transactionValue);
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
 
+        transaction = Nxt.getBlockchain().getTransaction(transactionId);
         JSONObject response = new JSONObject();
-        if (transactionData == null) {
-            transactionData = Blockchain.getUnconfirmedTransaction(transactionId);
-            if (transactionData == null) {
+        if (transaction == null) {
+            transaction = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
+            if (transaction == null) {
                 return UNKNOWN_TRANSACTION;
-            } else {
-                response.put("bytes", Convert.toHexString(transactionData.getBytes()));
             }
         } else {
-            response.put("bytes", Convert.toHexString(transactionData.getBytes()));
-            Block block = transactionData.getBlock();
-            response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
-
+            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
         }
+        response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
         return response;
+
     }
 
 }

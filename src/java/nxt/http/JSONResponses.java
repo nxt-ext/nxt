@@ -1,15 +1,15 @@
 package nxt.http;
 
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 public final class JSONResponses {
 
-    public static final JSONStreamAware INCORRECT_ALIAS_LENGTH = incorrect("alias", "(length must be in [1.." + Nxt.MAX_ALIAS_LENGTH + "] range)");
+    public static final JSONStreamAware INCORRECT_ALIAS_LENGTH = incorrect("alias", "(length must be in [1.." + Constants.MAX_ALIAS_LENGTH + "] range)");
     public static final JSONStreamAware INCORRECT_ALIAS = incorrect("alias", "(must contain only digits and latin letters)");
-    public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Nxt.MAX_ALIAS_URI_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Constants.MAX_ALIAS_URI_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_SECRET_PHRASE = missing("secretPhrase");
     public static final JSONStreamAware MISSING_ALIAS = missing("alias");
     public static final JSONStreamAware MISSING_URI = missing("uri");
@@ -67,7 +67,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
-    public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than \"" + Nxt.MAX_ARBITRARY_MESSAGE_LENGTH + "\" bytes)");
+    public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than " + Constants.MAX_ARBITRARY_MESSAGE_LENGTH + " bytes)");
     public static final JSONStreamAware MISSING_AMOUNT = missing("amount");
     public static final JSONStreamAware INCORRECT_AMOUNT = incorrect("amount");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
@@ -75,9 +75,9 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_MAXNUMBEROFOPTIONS = missing("maxNumberOfOptions");
     public static final JSONStreamAware MISSING_OPTIONSAREBINARY = missing("optionsAreBinary");
     public static final JSONStreamAware MISSING_POLL = missing("poll");
-    public static final JSONStreamAware INCORRECT_POLL_NAME_LENGTH = incorrect("name", "(length must be not longer than " + Nxt.MAX_POLL_NAME_LENGTH + " characters)");
-    public static final JSONStreamAware INCORRECT_POLL_DESCRIPTION_LENGTH = incorrect("description", "(length must be not longer than " + Nxt.MAX_POLL_DESCRIPTION_LENGTH + " characters)");
-    public static final JSONStreamAware INCORRECT_POLL_OPTION_LENGTH = incorrect("option", "(length must be not longer than " + Nxt.MAX_POLL_OPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_POLL_NAME_LENGTH = incorrect("name", "(length must be not longer than " + Constants.MAX_POLL_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_POLL_DESCRIPTION_LENGTH = incorrect("description", "(length must be not longer than " + Constants.MAX_POLL_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_POLL_OPTION_LENGTH = incorrect("option", "(length must be not longer than " + Constants.MAX_POLL_OPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_MINNUMBEROFOPTIONS = incorrect("minNumberOfOptions");
     public static final JSONStreamAware INCORRECT_MAXNUMBEROFOPTIONS = incorrect("maxNumberOfOptions");
     public static final JSONStreamAware INCORRECT_OPTIONSAREBINARY = incorrect("optionsAreBinary");
@@ -92,6 +92,15 @@ public final class JSONResponses {
         response.put("errorDescription", "Not enough funds");
         NOT_ENOUGH_FUNDS = JSON.prepare(response);
     }
+
+    public static final JSONStreamAware NOT_ENOUGH_ASSETS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 6);
+        response.put("errorDescription", "Not enough assets");
+        NOT_ENOUGH_ASSETS = JSON.prepare(response);
+    }
+
 
     public static final JSONStreamAware ASSET_NAME_ALREADY_USED;
     static {
@@ -117,6 +126,23 @@ public final class JSONResponses {
         ERROR_INCORRECT_REQUEST = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware NOT_FORGING;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Account is not forging");
+        NOT_FORGING = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware POST_REQUIRED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 1);
+        response.put("errorDescription", "This request is only accepted using POST!");
+        POST_REQUIRED = JSON.prepare(response);
+    }
+
+
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -125,13 +151,13 @@ public final class JSONResponses {
     }
 
     private static JSONStreamAware incorrect(String paramName) {
-        return incorrect(paramName, "");
+        return incorrect(paramName, null);
     }
 
     private static JSONStreamAware incorrect(String paramName, String details) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 4);
-        response.put("errorDescription", "Incorrect \"" + paramName + "\" " + details);
+        response.put("errorDescription", "Incorrect \"" + paramName + (details != null ? "\" " + details : "\""));
         return JSON.prepare(response);
     }
 

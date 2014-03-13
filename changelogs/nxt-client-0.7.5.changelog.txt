@@ -1,0 +1,19 @@
+Release 0.7.5
+
+http://download.nxtcrypto.org/nxt-client-0.7.5.zip
+
+sha256: 66adc8379a8f6e3fba7797fbc94b8b62f3e486ea5b6e9877f064c4b0d1f2584d
+
+
+Change log:
+
+Various performance and memory usage improvements.
+
+Improved validation of peer addresses and handling of peer connection
+status changes. User interface improvements related to peer display.
+
+Additional optimizations in getMilestoneBlockIds, backwards compatible.
+
+Further clean up of the core nxt classes from all UI related parameters.
+
+

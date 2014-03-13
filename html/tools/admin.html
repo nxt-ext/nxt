@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>NRS</title>
+    <style type="text/css">
+        table {border-collapse: collapse;}
+        td {padding: 10px;}
+        .result {white-space: pre; font-family: monospace;}
+    </style>
+    <script type="text/javascript">
+        function submitForm(form) {
+            var url = '/nxt';
+            var params = '';
+            for (i = 0; i < form.elements.length; i++) {
+                if (! form.elements[i].name) {
+                    continue;
+                }
+                if (i > 0) {
+                    params += '&';
+                }
+                params += encodeURIComponent(form.elements[i].name);
+                params += '=';
+                params += encodeURIComponent(form.elements[i].value);
+            }
+            var request = new XMLHttpRequest();
+            request.open("POST", url, false);
+            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            request.send(params);
+            var result = JSON.stringify(JSON.parse(request.responseText), null, 4);
+            form.getElementsByClassName("result")[0].textContent = result;
+            return false;
+        }
+        function getAccountBalances(form) {
+            var accounts = form.elements["accounts"].value.split('\n');
+            var balance = 0;
+            var result = '<table><tr><th>account</th><th>balance</th></tr>';
+            for (i = 0; i < accounts.length; i++) {
+                account = accounts[i].trim();
+                if (account != '') {
+                    var accountBalance = getBalance(accounts[i]) / 100;
+                    result += '<tr><td>';
+                    result += account;
+                    result += ':</td><td>';
+                    result += formatAmount(accountBalance);
+                    result += '</td></tr>';
+                    balance += accountBalance;
+                }
+            }
+            result += '<tr><td>total:</td><td>';
+            result += formatAmount(balance);
+            result += '</td></tr></table>';
+            form.getElementsByClassName("result")[0].innerHTML = result;
+            return false;
+        }
+        function getBalance(account) {
+            var request = new XMLHttpRequest();
+            request.open("GET", '/nxt?requestType=getBalance&account=' + account, false);
+            request.send();
+            return JSON.parse(request.responseText).balance;
+        }
+        function formatAmount(amount) {
+            var digits=[], formattedAmount = "", i;
+            do {
+                digits[digits.length] = amount % 10;
+                amount = Math.floor(amount / 10);
+            } while (amount > 0);
+            for (i = 0; i < digits.length; i++) {
+                if (i > 0 && i % 3 == 0) {
+                    formattedAmount = "'" + formattedAmount;
+                }
+                formattedAmount = digits[i] + formattedAmount;
+            }
+            return formattedAmount;
+        }
+    </script>
+</head>
+<body>
+<h3>Nxt admin tools</h3>
+<b>Generate Hallmark:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="markHost"/>
+    <table>
+        <tr>
+            <td>Public IP:</td>
+            <td><input type="text" name="host"/></td>
+        </tr>
+        <tr>
+            <td>Weight:</td>
+            <td><input type="number" name="weight" value="100"/></td>
+        </tr>
+        <tr>
+            <td>Date:</td>
+            <td><input type="text" name="date" value="2013-12-10"/></td>
+        </tr>
+        <tr>
+            <td>Secret Phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Verify Hallmark:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="decodeHallmark"/>
+    <table>
+        <tr>
+            <td>Hallmark:</td>
+            <td><input type="text" name="hallmark"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Generate Token:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="generateToken"/>
+    <table>
+        <tr>
+            <td>Website:</td>
+            <td><input type="text" name="website"/></td>
+        </tr>
+        <tr>
+            <td>Secret Phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Verify Token:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="decodeToken"/>
+    <table>
+        <tr>
+            <td>Token:</td>
+            <td><input type="text" name="token"/></td>
+        </tr>
+        <tr>
+            <td>Website:</td>
+            <td><input type="text" name="website"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Peers:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getPeers"/>
+    <table>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Peer Info:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getPeer"/>
+    <table>
+        <tr>
+            <td>Peer:</td>
+            <td><input type="text" name="peer"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get State:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getState"/>
+    <table>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get My Info:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getMyInfo"/>
+    <table>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Balance:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getBalance"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAccount"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Multiple Account Balances:</b><br/>
+<form action="/nxt" method="GET" onsubmit="return getAccountBalances(this);">
+    <table>
+        <tr>
+            <td>Accounts (enter one per line):</td>
+            <td><textarea name="accounts" style="width: 100%; height: auto;" rows="6"></textarea></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Guaranteed Account Balance:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getGuaranteedBalance"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td>Number of confirmations:</td>
+            <td><input type="number" name="numberOfConfirmations"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Public Key:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAccountPublicKey"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Aliases:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="listAccountAliases"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Alias URI:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAliasURI"/>
+    <table>
+        <tr>
+            <td>Alias:</td>
+            <td><input type="text" name="alias"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Send Money:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="sendMoney"/>
+    <table>
+        <tr>
+            <td>Recipient:</td>
+            <td><input type="text" name="recipient"/></td>
+        </tr>
+        <tr>
+            <td>Amount:</td>
+            <td><input type="text" name="amount"/></td>
+        </tr>
+        <tr>
+            <td>Fee:</td>
+            <td><input type="text" name="fee"/></td>
+        </tr>
+        <tr>
+            <td>Deadline:</td>
+            <td><input type="text" name="deadline"/></td>
+        </tr>
+        <tr>
+            <td>Secret phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td>Public key:</td>
+            <td><input type="text" name="publicKey"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Start Forging:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="startForging"/>
+    <table>
+        <tr>
+            <td>Secret phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Stop Forging:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="stopForging"/>
+    <table>
+        <tr>
+            <td>Secret phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Forging Deadline:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getForging"/>
+    <table>
+        <tr>
+            <td>Secret phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Ask Order Ids:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAccountCurrentAskOrderIds"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td>Asset:</td>
+            <td><input type="text" name="asset"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Bid Order Ids:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAccountCurrentBidOrderIds"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td>Asset:</td>
+            <td><input type="text" name="asset"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Ask Order:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAskOrder"/>
+    <table>
+        <tr>
+            <td>Order:</td>
+            <td><input type="text" name="order"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Bid Order:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getBidOrder"/>
+    <table>
+        <tr>
+            <td>Order:</td>
+            <td><input type="text" name="order"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Ask Order Ids:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAskOrderIds"/>
+    <table>
+        <tr>
+            <td>Asset:</td>
+            <td><input type="text" name="asset"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Bid Order Ids:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getBidOrderIds"/>
+    <table>
+        <tr>
+            <td>Asset:</td>
+            <td><input type="text" name="asset"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Asset:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAsset"/>
+    <table>
+        <tr>
+            <td>Asset:</td>
+            <td><input type="text" name="asset"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Account Transaction Ids:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getAccountTransactionIds"/>
+    <table>
+        <tr>
+            <td>Account:</td>
+            <td><input type="text" name="account"/></td>
+        </tr>
+        <tr>
+            <td>Timestamp:</td>
+            <td><input type="text" name="timestamp" value="0"/></td>
+        </tr>
+        <tr>
+            <td>Type:</td>
+            <td><input type="text" name="type"/></td>
+        </tr>
+        <tr>
+            <td>Subtype:</td>
+            <td><input type="text" name="subtype"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Get Transaction:</b><br/>
+<form action="/nxt" method="POST" onsubmit="return submitForm(this);">
+    <input type="hidden" name="requestType" value="getTransaction"/>
+    <table>
+        <tr>
+            <td>Transaction:</td>
+            <td><input type="text" name="transaction"/></td>
+        </tr>
+        <tr>
+            <td>Hash:</td>
+            <td><input type="text" name="hash"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+</body>
+</html>

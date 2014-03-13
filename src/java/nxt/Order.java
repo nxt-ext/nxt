@@ -20,7 +20,6 @@ public abstract class Order {
         Bid.sortedBidOrders.clear();
     }
 
-    // called only from Blockchain.apply(Block) which is already synchronized on Blockchain.class
     private static void matchOrders(Long assetId) {
 
         SortedSet<Ask> sortedAssetAskOrders = Ask.sortedAskOrders.get(assetId);
@@ -42,19 +41,20 @@ public abstract class Order {
             int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
             long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
-            Trade.addTrade(assetId, Blockchain.getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
+            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
 
             if ((((Order)askOrder).quantity -= quantity) == 0) {
                 Ask.removeOrder(askOrder.getId());
             }
-
             askOrder.getAccount().addToBalanceAndUnconfirmedBalance(quantity * price);
+            askOrder.getAccount().addToAssetBalance(assetId, -quantity);
 
             if ((((Order)bidOrder).quantity -= quantity) == 0) {
                 Bid.removeOrder(bidOrder.getId());
             }
-
             bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
+            bidOrder.getAccount().addToBalance(-quantity * price);
+            bidOrder.getAccount().addToUnconfirmedBalance(quantity * (bidOrder.getPrice() - price));
 
         }
 
@@ -74,7 +74,7 @@ public abstract class Order {
         this.assetId = assetId;
         this.quantity = quantity;
         this.price = price;
-        this.height = Blockchain.getLastBlock().getHeight();
+        this.height = Nxt.getBlockchain().getLastBlock().getHeight();
     }
 
     public Long getId() {
@@ -139,7 +139,6 @@ public abstract class Order {
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
-            senderAccount.addToAssetAndUnconfirmedAssetBalance(assetId, -quantity);
             Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
             if (askOrders.putIfAbsent(order.getId(), order) != null) {
                 throw new IllegalStateException("Ask order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
@@ -199,7 +198,6 @@ public abstract class Order {
         }
 
         static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
-            senderAccount.addToBalanceAndUnconfirmedBalance(-quantity * price);
             Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
             if (bidOrders.putIfAbsent(order.getId(), order) != null) {
                 throw new IllegalStateException("Bid order id " + Convert.toUnsignedLong(order.getId()) + " already exists");

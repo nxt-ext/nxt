@@ -12,7 +12,7 @@ import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-public final class GetAccountPublicKey extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetAccountPublicKey extends APIServlet.APIRequestHandler {
 
     static final GetAccountPublicKey instance = new GetAccountPublicKey();
 

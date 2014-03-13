@@ -1,0 +1,106 @@
+Release 0.6.0
+
+http://download.nxtcrypto.org/nxt-client-0.6.0.zip
+
+sha256: 40154756de464c9587b738c84f14a4a06dfb02476507f1a2383cbe03dc5bd48b
+
+Change log:
+
+Fixed a critical bug. Everybody should upgrade immediately.
+The fix in 0.5.12 was not enough.
+
+A more detailed changelog will follow tomorrow, or you can
+figure it out yourself. Now I go to sleep.
+
+Did I mention that everyone should upgrade?
+
+More detailed change log of 0.6.0:
+
+The critical bugfix will still be disclosed later. This is only to document
+the other changes from 0.5.12 to 0.6.0, as there are plenty of them.
+
+The 0.5.x branch is really painful for me to work with, after getting used to
+the fully refactored code in 0.6.x and 0.7.x. Therefore, I decided to stop
+maintaining 0.5.x completely and move on to 0.6.x.
+
+The last bugfix in 0.5.12 was not sufficient, and all forging users should
+upgrade to 0.6.0 as soon as possible. 0.5.12 is broken and will not be fixed.
+
+The 0.6.x branch still uses serialized object files, however those are not
+backwards compatible with 0.5.x. Old blocks.nxt and transactions.nxt files
+from 0.5.x will be imported automatically and converted to the new format
+the first time 0.6.0 is run.
+
+The blockchainStoragePath parameter in web.xml is no longer needed.
+
+The code has been significantly refactored and is no longer a single java file.
+All classes previously nested in Nxt have been moved out to their own files.
+
+Everything is under a top level nxt package, and as a result the servlet-class
+parameter in web.xml has to be changed to nxt.Nxt. Sorry that I forgot to
+mention that when releasing 0.6.0:
+
+<servlet-name>Nxt</servlet-name>
+<servlet-class>nxt.Nxt</servlet-class>
+
+There are three subpackages, nxt.user, nxt.peer, and nxt.http, with request
+handlers in separate classes for all the UI, peer to peer, and http API
+requests respectively. This completely replaces the old huge switch/case
+statements in the servlet doGet and doPost methods.
+
+All the business logic has been moved out of the Nxt servlet class.
+
+A new Transaction.Type class hierarchy has been added to handle all logic
+for transaction validation, transaction attachment handling, and transaction
+application. This completely replaces the switch statements that used to
+hold the transaction validation and processing logic.
+
+Transaction undo, on block pop-off, has been implemented for transactions which
+can be undone. For all others, an UndoNotSupportedException triggers a full
+blockchain rescan.
+
+A custom NxtException exception hierarchy is now used to help with block and
+transaction validation. Most transaction and block parameters are now enforced
+to be valid in the Transaction and Block constructors, which makes it sort of
+difficult to forget to validate them.
+
+Many minor and not so minor performance and memory optimizations, based on
+actual profiling measurements, have been applied.
+
+All field and method access modifiers have been reviewed. No java field or method
+is more accessible than it needs to be. Everything that can be private, is now
+private. Everything that should be final, is now final.
+
+All JSON response and error handling has been cleaned up and optimized.
+
+Unnecessary to and from ByteBuffer conversions in block and transaction processing
+have been removed.
+
+A deadline limit of not more than 1440 minutes for new transactions is now enforced.
+
+Peers that submit invalid block or transaction data are automatically blacklisted.
+
+Java API documentation is now available at http://localhost:7874/doc/ , all APIs
+are subject to change as it is work in progress.
+
+Minor UI changes: added warnings to the unlock account dialog and message.html,
+added sendMoney to admin.html.
+
+New or improved APIs:
+
+getAccount
+parameter: account (the account id)
+returns: publicKey (if known), balance, effectiveBalance, all asset balances
+
+getAsset
+parameter: asset (the asset id)
+returns: accountId of the asset issuer, asset name, description and quantity
+
+getAssetIds
+returns: all existing asset id's.
+
+getAskOrderIds and getBidOrderIds now require an asset parameter, and return
+the order id's for that asset only.
+
+
+

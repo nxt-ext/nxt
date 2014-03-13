@@ -8,7 +8,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetPollIds extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetPollIds extends APIServlet.APIRequestHandler {
 
     static final GetPollIds instance = new GetPollIds();
 

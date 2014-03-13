@@ -1,7 +1,6 @@
 package nxt.http;
 
-import nxt.Block;
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -13,7 +12,7 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class GetTransaction extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetTransaction extends APIServlet.APIRequestHandler {
 
     static final GetTransaction instance = new GetTransaction();
 
@@ -22,37 +21,44 @@ public final class GetTransaction extends HttpRequestDispatcher.HttpRequestHandl
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
-        String transaction = req.getParameter("transaction");
-        if (transaction == null) {
+        String transactionIdString = Convert.emptyToNull(req.getParameter("transaction"));
+        String transactionHash = Convert.emptyToNull(req.getParameter("hash"));
+        if (transactionIdString == null && transactionHash == null) {
             return MISSING_TRANSACTION;
         }
 
-        Long transactionId;
-        Transaction transactionData;
+        Long transactionId = null;
+        Transaction transaction;
         try {
-
-            transactionId = Convert.parseUnsignedLong(transaction);
-            transactionData = Blockchain.getTransaction(transactionId);
+            if (transactionIdString != null) {
+                transactionId = Convert.parseUnsignedLong(transactionIdString);
+                transaction = Nxt.getBlockchain().getTransaction(transactionId);
+            } else {
+                transaction = Nxt.getBlockchain().getTransaction(transactionHash);
+                if (transaction == null) {
+                    return UNKNOWN_TRANSACTION;
+                }
+            }
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
 
         JSONObject response;
-        if (transactionData == null) {
-            transactionData = Blockchain.getUnconfirmedTransaction(transactionId);
-            if (transactionData == null) {
+        if (transaction == null) {
+            transaction = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
+            if (transaction == null) {
                 return UNKNOWN_TRANSACTION;
-            } else {
-                response = transactionData.getJSONObject();
-                response.put("sender", Convert.toUnsignedLong(transactionData.getSenderId()));
             }
+            response = transaction.getJSONObject();
         } else {
-            response = transactionData.getJSONObject();
-            response.put("sender", Convert.toUnsignedLong(transactionData.getSenderId()));
-            Block block = transactionData.getBlock();
-            response.put("block", block.getStringId());
-            response.put("confirmations", Blockchain.getLastBlock().getHeight() - block.getHeight() + 1);
+            response = transaction.getJSONObject();
+            response.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
+            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
+            response.put("blockTimestamp", transaction.getBlockTimestamp());
         }
+        response.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+        response.put("hash", transaction.getHash());
+
 
         return response;
     }

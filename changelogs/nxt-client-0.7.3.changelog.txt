@@ -1,0 +1,63 @@
+Release 0.7.3
+
+http://download.nxtcrypto.org/nxt-client-0.7.3.zip
+
+sha256: 8dccdaaf16d5f6714a96b05e08a918462cc3d549db66c7f52e81bc51b30894ae
+
+
+Change log:
+
+The 0.6.x series is no longer supported. Starting with this release,
+only the database version will be developed.
+
+Optimized the getMilestoneBlockIds protocol. This is the peer to peer
+request that currently puts the most load on the public nodes, and is a
+cause of a large amount of unnecessary outbound traffic. However, for
+backwards compatibility, version 0.7.3 still supports both the old
+and the improved getMilestoneBlockIds protocols, so when older clients
+connect to 0.7.3 nodes they will still cause unnecessary load and
+extra traffic, unfortunately.
+
+WARNING: Support for the old getMilestoneBlockIds protocol will be
+removed in 0.7.4. You don't need to upgrade immediately, but if
+you don't do it before 0.7.4 comes out, your older version nodes
+will not be able to request blocks and catch up with the blockchain.
+Better upgrade sooner than later.
+
+More and more refactoring. Completely separated the user interface logic
+from the core business logic. Nothing in the core nxt package depends on
+the classes in the nxt.user package anymore. Instead, a Listeners
+framework is used, so that the UI can register to be notified of the
+events in the core that it needs to know about. This is also intended to
+be used by Java client API developers.
+
+Added some more indexes to the database tables to improve performance.
+These will be created automatically the first time this version is
+started with your existing database - no need to start from scratch,
+no need to delete your old nxt_db directory.
+
+Privacy related change: Before this release, newly generated blocks
+and new transactions were broadcasted to peers twice. This could allow
+your peers to deduce that your node was the generator of the block or
+transaction in question. This is now fixed. Note that somebody with
+the ability to monitor all your internet traffic will still be able to
+tell that it was you who generated a block, because the generating node
+sends the block before having received it from any other peer. I don't
+see a physically possible way to avoid that, yet. Also note that the
+transaction re-broadcasting feature will continue to re-broadcast your
+transactions until they are received back from at least one other node,
+but will not do that with transactions received from other nodes. This
+could still be used to deduce that your node was the source of a
+transaction, in case the initial attempt to send it failed, and it was
+re-broadcasted (but somebody already observed the failed first attempt).
+
+Separated block forging logic into a Generator class, which can also
+be used by Java API clients to start and stop forging.
+
+Added startForging and stopForging API requests.
+Parameters: secretPhrase, required for both starting and stopping.
+
+Fixed minor bugs. Fixed a bug in peer download traffic monitoring.
+
+
+

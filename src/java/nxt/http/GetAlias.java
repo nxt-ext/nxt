@@ -11,7 +11,7 @@ import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 
-public final class GetAlias extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetAlias extends APIServlet.APIRequestHandler {
 
     static final GetAlias instance = new GetAlias();
 

@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.peer.Hallmark;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -16,7 +16,7 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_WEIGHT;
 
 
-public final class MarkHost extends HttpRequestDispatcher.HttpRequestHandler {
+public final class MarkHost extends APIServlet.APIRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 
@@ -46,7 +46,7 @@ public final class MarkHost extends HttpRequestDispatcher.HttpRequestHandler {
         int weight;
         try {
             weight = Integer.parseInt(weightValue);
-            if (weight <= 0 || weight > Nxt.MAX_BALANCE) {
+            if (weight <= 0 || weight > Constants.MAX_BALANCE) {
                 return INCORRECT_WEIGHT;
             }
         } catch (NumberFormatException e) {
@@ -65,6 +65,11 @@ public final class MarkHost extends HttpRequestDispatcher.HttpRequestHandler {
             return INCORRECT_DATE;
         }
 
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Blockchain;
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION_BYTES;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES;
 
-public final class BroadcastTransaction extends HttpRequestDispatcher.HttpRequestHandler {
+public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
@@ -29,9 +29,9 @@ public final class BroadcastTransaction extends HttpRequestDispatcher.HttpReques
         try {
 
             byte[] bytes = Convert.parseHexString(transactionBytes);
-            Transaction transaction = Transaction.getTransaction(bytes);
+            Transaction transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
 
-            Blockchain.broadcast(transaction);
+            Nxt.getTransactionProcessor().broadcast(transaction);
 
             JSONObject response = new JSONObject();
             response.put("transaction", transaction.getStringId());
@@ -40,6 +40,11 @@ public final class BroadcastTransaction extends HttpRequestDispatcher.HttpReques
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION_BYTES;
         }
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

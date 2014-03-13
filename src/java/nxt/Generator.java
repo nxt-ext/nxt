@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
+import nxt.util.ThreadPool;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Generator {
 
     public static enum Event {
-        GENERATION_DEADLINE
+        GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
@@ -27,7 +28,7 @@ public final class Generator {
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
 
-    static final Runnable generateBlockThread = new Runnable() {
+    private static final Runnable generateBlockThread = new Runnable() {
 
         @Override
         public void run() {
@@ -50,6 +51,11 @@ public final class Generator {
 
     };
 
+    static {
+        ThreadPool.scheduleThread(generateBlockThread, 1);
+    }
+
+    static void init() {}
 
     public static boolean addListener(Listener<Generator> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
@@ -71,7 +77,14 @@ public final class Generator {
         }
         Generator generator = new Generator(secretPhrase, publicKey, account);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
-        return old != null ? old : generator;
+        if (old != null) {
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(account.getId()) + " is already forging");
+            return old;
+        }
+        listeners.notify(generator, Event.START_FORGING);
+        Logger.logDebugMessage("Account " + Convert.toUnsignedLong(account.getId()) + " started forging, deadline "
+                + generator.getDeadline() + " seconds");
+        return generator;
     }
 
     public static Generator stopForging(String secretPhrase) {
@@ -79,6 +92,8 @@ public final class Generator {
         if (generator != null) {
             lastBlocks.remove(generator.account);
             hits.remove(generator.account);
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccount().getId()) + " stopped forging");
+            listeners.notify(generator, Event.STOP_FORGING);
         }
         return generator;
     }
@@ -99,12 +114,17 @@ public final class Generator {
     private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
+        // need to store publicKey in addition to account, because the account may not have had its publicKey set yet
         this.account = account;
         forge(); // initialize deadline
     }
 
     public byte[] getPublicKey() {
         return publicKey;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 
     public long getDeadline() {
@@ -118,13 +138,13 @@ public final class Generator {
             return;
         }
 
-        Block lastBlock = Blockchain.getLastBlock();
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
         if (! lastBlock.equals(lastBlocks.get(account))) {
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
-            if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+            if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
                 byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), secretPhrase);
                 generationSignatureHash = digest.digest(generationSignature);
             } else {
@@ -137,10 +157,10 @@ public final class Generator {
             lastBlocks.put(account, lastBlock);
             hits.put(account, hit);
 
-            long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance()))).longValue();
-            long elapsed = Math.max(Convert.getEpochTime() - lastBlock.getTimestamp(), 0);
+            long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue();
+            long elapsed = Convert.getEpochTime() - lastBlock.getTimestamp();
 
-            deadline = total - elapsed;
+            deadline = Math.max(total - elapsed, 0);
 
             listeners.notify(this, Event.GENERATION_DEADLINE);
 
@@ -150,7 +170,7 @@ public final class Generator {
         if (elapsedTime > 0) {
             BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance)).multiply(BigInteger.valueOf(elapsedTime));
             if (hits.get(account).compareTo(target) < 0) {
-                Blockchain.generateBlock(secretPhrase);
+                BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
             }
         }
 

@@ -1,0 +1,13 @@
+Because one release per day is not enough, here comes 0.5.2:
+
+http://download.nxtcrypto.org/nxt-client-0.5.2.zip
+
+sha256: 530951bef607935f80326fcd5c50b888498a9b726c6d2bd7127a77395b4404fc
+
+
+Change log:
+
+Added validation of numberOfTransactions and payloadLength to prevent
+OutOfMemory attacks.
+
+

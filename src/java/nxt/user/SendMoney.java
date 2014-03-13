@@ -1,7 +1,7 @@
 package nxt.user;
 
 import nxt.Account;
-import nxt.Blockchain;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -14,7 +14,7 @@ import java.io.IOException;
 
 import static nxt.user.JSONResponses.NOTIFY_OF_ACCEPTED_TRANSACTION;
 
-final class SendMoney extends UserRequestHandler {
+public final class SendMoney extends UserServlet.UserRequestHandler {
 
     static final SendMoney instance = new SendMoney();
 
@@ -71,7 +71,7 @@ final class SendMoney extends UserRequestHandler {
 
             return response;
 
-        } else if (amount <= 0 || amount > Nxt.MAX_BALANCE) {
+        } else if (amount <= 0 || amount > Constants.MAX_BALANCE) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
@@ -83,7 +83,7 @@ final class SendMoney extends UserRequestHandler {
 
             return response;
 
-        } else if (fee <= 0 || fee > Nxt.MAX_BALANCE) {
+        } else if (fee <= 0 || fee > Constants.MAX_BALANCE) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
@@ -124,14 +124,20 @@ final class SendMoney extends UserRequestHandler {
 
         } else {
 
-            final Transaction transaction = Transaction.newTransaction(Convert.getEpochTime(), deadline, user.getPublicKey(), recipient, amount, fee, null);
+            final Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, user.getPublicKey(),
+                    recipient, amount, fee, null);
             transaction.sign(user.getSecretPhrase());
 
-            Blockchain.broadcast(transaction);
+            Nxt.getTransactionProcessor().broadcast(transaction);
 
             return NOTIFY_OF_ACCEPTED_TRANSACTION;
 
         }
+    }
+
+    @Override
+    boolean requirePost() {
+        return true;
     }
 
 }

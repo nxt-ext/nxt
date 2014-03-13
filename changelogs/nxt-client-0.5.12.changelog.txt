@@ -1,0 +1,11 @@
+Release 0.5.12
+
+http://download.nxtcrypto.org/nxt-client-0.5.12.zip
+
+sha256: 30856c5f76b4194d40ece68d480956999ff8072b7b6a78b0be7d9da535dc969a
+
+Change log:
+
+Fixed a critical bug. Everybody should upgrade immediately.
+
+

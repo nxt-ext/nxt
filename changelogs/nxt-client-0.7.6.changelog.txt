@@ -1,0 +1,30 @@
+Release 0.7.6
+
+http://download.nxtcrypto.org/nxt-client-0.7.6.zip
+
+sha256: c219d6a13c870ea7f454fe1e91efe6c6098bed767156aa8921aad0bebe9fe79a
+
+
+Change log:
+
+Compact the database at every shutdown. This should help reduce the size
+of the nxt_db directory after the first run, check the before and after
+disk usage.
+
+Prevent duplicate peer listings in the known peers and blacklisted peers
+frames.
+
+Prevent a potential duplicate account key attack, of the type described
+here:
+https://bitcointalk.org/index.php?topic=397183.msg4569817#msg4569817
+
+Added Voting System, not yet enabled.
+
+Some refactoring of the Block and Transaction classes.
+
+Asset exchange bugfixes from the test network and more API requests.
+
+Improved validation of transactions to prevent wrong blacklisting of
+peers, and to better enforce transaction validity.
+
+

@@ -1,0 +1,27 @@
+Release 0.8.3
+
+http://download.nxtcrypto.org/nxt-client-0.8.3.zip
+
+sha256: 9a59c60336e01e87a3a1484697dd35a57d8782747145f8049496e19cbffdd537
+
+
+Change log:
+
+Fixed UI problems with display and updates of My Transactions.
+Consistent counting of transaction confirmations. Transactions included
+in the last block are considered having 0 confirmations.
+
+When a block is pushed, the BLOCK_PUSHED event is now emitted before
+the REMOVED_UNCONFIRMED_TRANSACTIONS and ADDED_CONFIRMED_TRANSACTIONS
+events.
+
+Added BlockchainProcessor.RESCAN_BEGIN and RESCAN_END events, triggered
+before and after a re-scan (not the regular start-up scan).
+
+Fixed a few null pointers caused by bad peer data.
+
+Improved handling of peer addresses and hallmarks.
+
+Added blacklisted status to peer info.
+
+

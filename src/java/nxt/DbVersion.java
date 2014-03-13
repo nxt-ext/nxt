@@ -1,8 +1,11 @@
 package nxt;
 
+import nxt.util.Convert;
+import nxt.util.DbIterator;
 import nxt.util.Logger;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -27,11 +30,9 @@ final class DbVersion {
                 Logger.logMessage("Initializing an empty database");
                 stmt.executeUpdate("CREATE TABLE version (next_update INT NOT NULL)");
                 stmt.executeUpdate("INSERT INTO version VALUES (1)");
+                con.commit();
             }
-            nextUpdate = update(nextUpdate);
-            stmt.executeUpdate("UPDATE version SET next_update=" + nextUpdate);
-            Logger.logMessage("Updated database is at level " + (nextUpdate - 1));
-            con.commit();
+            update(nextUpdate);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -41,8 +42,11 @@ final class DbVersion {
     private static void apply(String sql) {
         try (Connection con = Db.getConnection(); Statement stmt = con.createStatement()) {
             try {
-                Logger.logDebugMessage("Will apply sql:\n" + sql);
-                stmt.executeUpdate(sql);
+                if (sql != null) {
+                    Logger.logDebugMessage("Will apply sql:\n" + sql);
+                    stmt.executeUpdate(sql);
+                }
+                stmt.executeUpdate("UPDATE version SET next_update = (SELECT next_update + 1 FROM version)");
                 con.commit();
             } catch (SQLException e) {
                 con.rollback();
@@ -53,7 +57,7 @@ final class DbVersion {
         }
     }
 
-    private static int update(int nextUpdate) {
+    private static void update(int nextUpdate) {
         switch (nextUpdate) {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id INT IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
@@ -98,7 +102,34 @@ final class DbVersion {
             case 15:
                 apply("ALTER TABLE transaction DROP COLUMN IF EXISTS index");
             case 16:
-                return 16; //NOTE: increment every time when adding a new update
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS block_timestamp INT");
+            case 17:
+                apply("UPDATE transaction SET block_timestamp = (SELECT timestamp FROM block WHERE block.id = transaction.block_id)");
+            case 18:
+                apply("ALTER TABLE transaction ALTER COLUMN block_timestamp SET NOT NULL");
+            case 19:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS hash BINARY(32)");
+            case 20:
+                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
+                     Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET hash = ? WHERE id = ?")) {
+                    while (iterator.hasNext()) {
+                        Transaction transaction = iterator.next();
+                        pstmt.setBytes(1, Convert.parseHexString(transaction.getHash()));
+                        pstmt.setLong(2, transaction.getId());
+                        pstmt.executeUpdate();
+                    }
+                    con.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 21:
+                apply("ALTER TABLE transaction ALTER COLUMN hash SET NOT NULL");
+            case 22:
+                apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
+            case 23:
+                return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
         }

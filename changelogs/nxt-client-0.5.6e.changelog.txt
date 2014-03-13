@@ -1,0 +1,48 @@
+Release 0.5.6e
+
+http://download.nxtcrypto.org/nxt-client-0.5.6e.zip
+
+sha256: 680490992bc853bcfb988683f7c4de2d41e44636f4911a95544fd44f2d663762
+
+Change log:
+
+Cleaned up error logging and exception handling. There are now two system
+properties that can be set to enable additional debug logging: nxt.debug
+and nxt.enableStackTraces. Those are defined in start.d/nxt.ini:
+
+	# Enable debug messages
+	#-Dnxt.debug
+
+	# Also enable exception stack traces
+	-Dnxt.enableStackTraces
+
+	# Disable all jetty warnings and info
+	-Dorg.eclipse.jetty.LEVEL=OFF
+
+By default, nxt.debug is disabled. If you watch your log, please do
+enable debug output by uncommenting the -Dnxt.debug line in nxt.ini,
+and report any bugs using our JIRA issue tracker at Bitbucket:
+
+https://bitbucket.org/JeanLucPicard/nxt-public/issues
+
+Please avoid submitting duplicate issues, check if a very similar bug
+has already been reported first.
+
+The nxt.enableStackTraces parameter activates printing out exception
+stack traces in the log, independently of the nxt.debug setting, you
+should leave it turned on.
+
+With nxt.debug commented out, Nxt will still print some messages to
+the log, but much fewer. If there is a critical exception, it will
+be logged even if nxt.debug is not enabled.
+
+The noisy Jetty logging of warnings is disabled and the log should be
+much cleaner now. If you enjoy seeing the Jetty warnings, comment out
+the -Dorg.eclipse.jetty.LEVEL=OFF line in start.d/nxt.ini, but don't
+report those as bugs.
+
+The reason this release is considered experimental is that I have
+upgraded Jetty from 9.1.0 to 9.1.1.v20140108. People are encouraged
+to try it to see if there are any incompatibilities with different
+systems and Java versions.
+

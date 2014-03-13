@@ -1,0 +1,18 @@
+Release 0.5.11
+
+http://download.nxtcrypto.org/nxt-client-0.5.11.zip
+
+sha256: 2157335852e7b5013229f5b73f5f156b1b72a116f8625fc73d4de80a0f7ffa11
+
+Change log:
+
+Fixed performance problems in getState, getEffectiveBalance and
+getGuaranteedBalance. The getGuaranteedBalance calculation now
+uses a different algorithm and may in some cases give different
+results than the 0.5.10 guaranteedBalance calculation which had 
+some bugs, so it is advisable that everyone upgrades to 0.5.11
+to avoid the risk of a fork.
+
+Fixed a bug with setting the public keys of accounts that forged
+blocks without having any outgoing transactions.
+

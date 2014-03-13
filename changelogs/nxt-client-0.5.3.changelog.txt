@@ -1,0 +1,16 @@
+Released 0.5.3:
+
+http://download.nxtcrypto.org/nxt-client-0.5.3.zip
+
+sha256: 23fc36fba166e00299003407169a26515e6d67c8094b5a06f9c795cc62ca83a7
+
+Change log:
+
+Fixed blockchain rescanning. Clear unconfirmed transactions on rescan.
+
+Better recipient account number validation. Do not accepts account
+numbers that overflow or negative account numbers. Should prevent at
+lest some cases of transactions being sent to wrong recipients due
+to user error.
+
+

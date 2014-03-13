@@ -1,0 +1,19 @@
+Stable release 0.5.5:
+
+http://download.nxtcrypto.org/nxt-client-0.5.5.zip
+
+sha256: aa20fb32fe7e6cda7debee59928d5aea8ff7c581c58a56ff68e8252eaf9368c7
+
+Change log:
+
+Added getGuaranteedBalance API:
+http://localhost:7874/nxt?requestType=getGuaranteedBalance&account=account&numberOfConfirmations=numberOfConfirmations
+returns the balance of an account only considering transactions with confimration count >= numberOfConfirmations.
+
+The API requests getAccountBlockIds and getAccountTransactionIds now return sorted results.
+
+Added getAccountPublicKey and getGuaranteedBalance to admin.html page.
+
+More performance optimizations.
+
+

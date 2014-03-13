@@ -1,0 +1,21 @@
+Transaction re-broadcasting has been broken for a few releases,
+should work again now.
+
+Fixed the update of the NRS UI transaction confirmation count.
+
+Check for unconfirmed transaction becoming invalid, and if so,
+remove them from the unconfirmed transactions pool.
+
+Added a few more well known testnet peers in default properties.
+
+Converted run.bat to CRLF line endings format.
+
+Asset exchange specific bugfixes:
+
+Order cancellations should update unconfirmed balances only.
+
+On block pop-off, asset balances should not be updated.
+
+When a trade is executed at a price lower than the bid order,
+correct the bidder unconfirmed balance for the difference.
+

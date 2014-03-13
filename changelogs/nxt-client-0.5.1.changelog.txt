@@ -1,0 +1,33 @@
+Released version 0.5.1:
+
+http://download.nxtcrypto.org/nxt-client-0.5.1.zip
+http://info.nxtcrypto.org/nxt-client-0.5.1.zip
+
+
+sha256: 4c6ee12c5be7b49e0622afe2b64a0735c1355e58760f525f4a7dc4688882b656
+
+
+Note the new URL, after this one new releases will be hosted only at
+download.nxtcrypto.org instead of info.nxtcrypto.org.
+
+Please test the http://localhost:7874/update.html tool to download and verify
+the package.
+
+This is mostly a bugfix release. Change log:
+
+Possible fix for
+https://bitcointalk.org/index.php?topic=397183.msg4343616#msg4343616 ,
+needs more testing. Please report any occurencies of negative Recent blocks
+and balances, and include the log errors if that happens.
+
+Fixed blacklisting of hallmarked peers.
+
+Accounts with negative balances can't forge.
+
+Improved account public key verification.
+
+Updated update.html to the newest version and changed download url.
+
+Fixed missing transaction id's in My Transactions.
+
+

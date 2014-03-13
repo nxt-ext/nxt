@@ -1,0 +1,5 @@
+More bugfixes related to unconfirmed balance calculation.
+
+Minor fixes to avoid some harmless exceptions.
+
+

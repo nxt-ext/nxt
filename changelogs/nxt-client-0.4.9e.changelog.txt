@@ -1,0 +1,57 @@
+Version 0.4.9e is available for download from:
+
+http://info.nxtcrypto.org/nxt-client-0.4.9e.zip
+
+sha256: 4e12df42f9f4727fa34eb62483880c0b2b93f45dfff4b4db8fdc293aecb815e9
+
+From the blockchain, the alias for the sha256 sum is NRSbetaversion:
+
+https://localhost:7875/nxt?requestType=getAliasURI&alias=nrsbetaversion
+
+This is to be considered EXPERIMENTAL release. There are quite a few changes so be careful.
+Stay with the stable 0.4.8 version if you don't want to take chances. But our flagship
+NCC-1701-D has been running 0.4.9e since yesterday without issues.
+
+Change Log:
+
+Many concurrency related fixes and optimization. Those should significantly improve performance
+and stability and decrease the likelihood of the client being stuck and needing a restart.
+
+Performance optimizations, reducing the number of temporary objects being created in the peer
+networking, making sure connections are properly closed. Memory requirements are lower now,
+my servers never exceed 1.5 GB. You should be able to run it on a 2 GB VPS node with -Xmx1536M
+without problems now. If you don't attract a lot of traffic (don't publish your IP), memory
+will even stay below 1GB.
+
+Unlocking an account now makes sure to automatically lock out all other instances of the same
+account on the same server. In other words, if you open several browser windows to the same
+server (localhost), you can only be logged in to the same account in one of them at a time.
+This does not prevent you however from unlocking the same account on multiple machines (but
+you shouldn't be doing that).
+
+Generate authorization token will also ask for a secret phrase confirmation again.
+
+As you may or may have not noticed, Transparent Forging has already started. My last minute
+decision to start at 32000 somehow didn't make it in the package I released as 0.4.8 (I make
+mistakes too), so 0.4.8 got released with the switchover still at 30000. So block 30000 it is
+now, and we are already there.
+
+Minor changes: Added Get Account Aliases, Get Alias URI, and Get Multiple Account Balances
+features to the https://localhost:7875/admin.html page. Added a few more well-known nodes to
+the default in the web.xml.
+
+There is one serious security issue which is not completely fixed in 0.4.9e. All requests URLs
+are being cached by the browser, and even though they don't appear in the browsing history
+(which is why we didn't discover the problem earlier), they are still in the browser cache.
+Check for yourself using about:cache on firefox.
+This is bad, as it means your secret phrase is being written out to disk as plain text in the
+browser cache. And I am sure javascript exploits will appear which will try to extract it from
+there. To really fix that, all API requests from the browser that include the secret phrase
+have to be sent as POST, rather than GET requests. But this will require some significant
+changes to the javascript client, which will take some time. As we don't plan to maintain the
+current javascript client, I am not sure if such rewriting should even be undertaken now.
+In 0.4.9e I at least added the response headers which prevent caching to disk. Firefox honors
+those, but still caches the request URLs to memory. To be safe, I strongly suggest using a
+separate browser profile only for accessing your Nxt client, or private browsing mode.
+Everybody using 0.4.8 and earlier should immediately delete their browser cache.
+

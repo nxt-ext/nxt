@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Account {
 
     public static enum Event {
-        BALANCE, UNCONFIRMED_BALANCE
+        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -81,7 +81,7 @@ public final class Account {
 
     private Account(Long id) {
         this.id = id;
-        this.height = Blockchain.getLastBlock().getHeight();
+        this.height = Nxt.getBlockchain().getLastBlock().getHeight();
     }
 
     public Long getId() {
@@ -102,8 +102,8 @@ public final class Account {
 
     public int getEffectiveBalance() {
 
-        Block lastBlock = Blockchain.getLastBlock();
-        if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
+        Block lastBlock = Nxt.getBlockchain().getLastBlock();
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3 && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
                 return (int)(getBalance() / 100);
@@ -126,13 +126,16 @@ public final class Account {
     }
 
     public synchronized long getGuaranteedBalance(final int numberOfConfirmations) {
-        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations >= Blockchain.getLastBlock().getHeight() || numberOfConfirmations < 0) {
+        if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
+            return 0;
+        }
+        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations < 0) {
             throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
         }
         if (guaranteedBalances.isEmpty()) {
             return 0;
         }
-        int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(Blockchain.getLastBlock().getHeight() - numberOfConfirmations, 0));
+        int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(Nxt.getBlockchain().getLastBlock().getHeight() - numberOfConfirmations, 0));
         if (i == -1) {
             return 0;
         }
@@ -188,7 +191,10 @@ public final class Account {
         return false;
     }
 
-    synchronized void apply(int height) {
+    synchronized void apply(byte[] key, int height) {
+        if (! setOrVerify(key, this.height)) {
+            throw new IllegalStateException("Generator public key mismatch");
+        }
         if (this.publicKey == null) {
             throw new IllegalStateException("Public key has not been set for account " + Convert.toUnsignedLong(id)
                     +" at height " + height + ", key height is " + keyHeight);
@@ -207,7 +213,7 @@ public final class Account {
         }
         if (this.height == height) {
             Logger.logDebugMessage("Removing account " + Convert.toUnsignedLong(id) + " which was created in the popped off block");
-            accounts.remove(this);
+            accounts.remove(this.getId());
         }
     }
 
@@ -215,33 +221,47 @@ public final class Account {
         return Convert.nullToZero(assetBalances.get(assetId));
     }
 
-    synchronized void addToAssetBalance(Long assetId, int quantity) {
-        Integer assetBalance = assetBalances.get(assetId);
-        if (assetBalance == null) {
-            assetBalances.put(assetId, quantity);
-        } else {
-            assetBalances.put(assetId, assetBalance + quantity);
+    void addToAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer assetBalance = assetBalances.get(assetId);
+            if (assetBalance == null) {
+                assetBalances.put(assetId, quantity);
+            } else {
+                assetBalances.put(assetId, assetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.ASSET_BALANCE);
     }
 
-    synchronized void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
-        Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
-        if (unconfirmedAssetBalance == null) {
-            unconfirmedAssetBalances.put(assetId, quantity);
-        } else {
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+    void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            if (unconfirmedAssetBalance == null) {
+                unconfirmedAssetBalances.put(assetId, quantity);
+            } else {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    synchronized void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
-        Integer assetBalance = assetBalances.get(assetId);
-        if (assetBalance == null) {
-            assetBalances.put(assetId, quantity);
-            unconfirmedAssetBalances.put(assetId, quantity);
-        } else {
-            assetBalances.put(assetId, assetBalance + quantity);
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalances.get(assetId) + quantity);
+    void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer assetBalance = assetBalances.get(assetId);
+            if (assetBalance == null) {
+                assetBalances.put(assetId, quantity);
+            } else {
+                assetBalances.put(assetId, assetBalance + quantity);
+            }
+            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            if (unconfirmedAssetBalance == null) {
+                unconfirmedAssetBalances.put(assetId, quantity);
+            } else {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.ASSET_BALANCE);
+        listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToBalance(long amount) {
@@ -270,15 +290,13 @@ public final class Account {
     }
 
     private synchronized void addToGuaranteedBalance(long amount) {
-        int blockchainHeight = Blockchain.getLastBlock().getHeight();
+        int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
         GuaranteedBalance last = null;
         if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
             // this only happens while last block is being popped off
             if (amount > 0) {
                 // this is a reversal of a withdrawal or a fee, so previous gb records need to be corrected
-                Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
-                while (iter.hasNext()) {
-                    GuaranteedBalance gb = iter.next();
+                for (GuaranteedBalance gb : guaranteedBalances) {
                     gb.balance += amount;
                 }
             } // deposits don't need to be reversed as they have never been applied to old gb records to begin with
@@ -292,9 +310,9 @@ public final class Account {
                     && i < guaranteedBalances.size() - 1
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-                if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Nxt.TRANSPARENT_FORGING_BLOCK_5) {
+                if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Constants.TRANSPARENT_FORGING_BLOCK_5) {
                     gb.balance += amount; // because of a bug which leads to a fork
-                } else if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
+                } else if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
                     gb.balance += amount;
                 }
             } else if (amount < 0) {

@@ -1,0 +1,12 @@
+Release 0.7.2
+
+http://download.nxtcrypto.org/nxt-client-0.7.2.zip
+
+sha256: e8788f9cb5a7eef825526767ea39318f3aa58374d749f86b8e893c612be5937b
+
+
+Change log:
+
+Improved performance of blockchain scan.
+
+

@@ -14,7 +14,7 @@ import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
-public final class GetBidOrderIds extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetBidOrderIds extends APIServlet.APIRequestHandler {
 
     static final GetBidOrderIds instance = new GetBidOrderIds();
 

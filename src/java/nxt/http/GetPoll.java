@@ -7,12 +7,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.MISSING_POLL;
 import static nxt.http.JSONResponses.UNKNOWN_POLL;
 
-public final class GetPoll extends HttpRequestDispatcher.HttpRequestHandler {
+public final class GetPoll extends APIServlet.APIRequestHandler {
 
     static final GetPoll instance = new GetPoll();
 
@@ -44,9 +45,7 @@ public final class GetPoll extends HttpRequestDispatcher.HttpRequestHandler {
             response.put("description", pollData.getDescription());
         }
         JSONArray options = new JSONArray();
-        for (String option : pollData.getOptions()) {
-            options.add(option);
-        }
+        Collections.addAll(options, pollData.getOptions());
         response.put("options", options);
         response.put("minNumberOfOptions", pollData.getMinNumberOfOptions());
         response.put("maxNumberOfOptions", pollData.getMaxNumberOfOptions());

@@ -1,0 +1,46 @@
+Release 0.7.0e - experimental
+
+http://download.nxtcrypto.org/nxt-client-0.7.0e.zip
+
+sha256: aa778bade323d2b3f4cf13c925aa7b541d57f0853a5828385b72254ac92010bc
+
+Change log:
+
+This is the first release using an embedded java database (H2) to store
+the blockchain, instead of serialized java object files. Because this is
+a major change, this version is to be considered experimental.
+
+The blocks.nxt and transactions.nxt and .bak files are no longer used.
+Furthermore, they will not be loaded at startup, when you start with
+empty database the very first time it will need to download the full
+blockchain from the network.
+
+The database is stored under the nxt_db directory, as of now it will
+take around 100 MB when downloaded. If anything goes wrong and you need
+to start fresh, it is safe to delete that nxt_db directory, it will be
+recreated.
+
+There are no changes in the web.xml file compared to 0.6.1. I will add
+parameters to tweak database settings later, if needed.
+
+The database will use 50% of the memory available to java for its cache.
+The actual value is printed out at startup.
+
+Currently only blocks and transactions are stored in database tables,
+everything else such as accounts, aliases, assets, orders, messages,
+is loaded at startup and then kept in memory. The amount of memory
+those take is still small, relative to what was needed for all blocks
+and transactions.
+
+At startup, the blockchain scan takes a bit longer, this is normal.
+If anything else is unusually slow, I will look into profiling and
+optimizing it.
+
+There are no new user-visible features compared to 0.6.1, the code is
+kept in sync now (including the critical bugfixes). Having both 0.6.1
+and 0.7.0e nodes on the network should not result in forks. I will
+maintain both the 0.6.x and 0.7.x branches for some time, until all
+major database related issues are discovered and fixed. Please report
+bugs, including the stack traces.
+
+

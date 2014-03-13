@@ -1,0 +1,8 @@
+Fixed incorrect setting of genesis block timestamp when
+local time is in the daylight savings period. This must
+have been the reason for users in the southern hemisphere
+being unable to forge.
+
+Since DST in the US starts March 09, it is critical that
+at least those in the US upgrade to 0.8.8 or 0.7.7.
+

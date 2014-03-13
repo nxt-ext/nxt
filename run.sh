@@ -1,1 +1,1 @@
-java -Xmx1024M -jar start.jar 
+java -cp nxt.jar:lib/*:conf nxt.Nxt

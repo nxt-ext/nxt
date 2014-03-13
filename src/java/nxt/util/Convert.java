@@ -1,12 +1,14 @@
 package nxt.util;
 
-import nxt.Nxt;
+import nxt.Constants;
 
 import java.math.BigInteger;
+import java.util.Date;
 
 public final class Convert {
 
-    public static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+    private static final char[] hexChars = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
 
     private Convert() {} //never
@@ -29,10 +31,8 @@ public final class Convert {
     public static String toHexString(byte[] bytes) {
         char[] chars = new char[bytes.length * 2];
         for (int i = 0; i < bytes.length; i++) {
-            int char1 = (bytes[i] & 0xFF) >> 4;
-            chars[i * 2] = (char) (char1 > 9 ? char1 + 0x57 : char1 + 0x30);
-            int char2 = (bytes[i] & 0xF);
-            chars[i * 2 + 1] = (char) (char2 > 9 ? char2 + 0x57 : char2 + 0x30);
+            chars[i * 2] = hexChars[((bytes[i] >> 4) & 0xF)];
+            chars[i * 2 + 1] = hexChars[(bytes[i] & 0xF)];
         }
         return String.valueOf(chars);
     }
@@ -61,7 +61,11 @@ public final class Convert {
     }
 
     public static int getEpochTime() {
-        return (int)((System.currentTimeMillis() - Nxt.epochBeginning + 500) / 1000);
+        return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
+    }
+
+    public static Date fromEpochTime(int epochTime) {
+        return new Date(epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L);
     }
 
     public static Long zeroToNull(long l) {
@@ -74,6 +78,14 @@ public final class Convert {
 
     public static int nullToZero(Integer i) {
         return i == null ? 0 : i;
+    }
+
+    public static String emptyToNull(String s) {
+        return s == null || s.length() == 0 ? null : s;
+    }
+
+    public static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {

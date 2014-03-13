@@ -1,0 +1,25 @@
+Release 0.8.2e
+
+http://download.nxtcrypto.org/nxt-client-0.8.2e.zip
+
+sha256: cd0ceda97fd1752d6fa2877bd4a343570f8b62ae1de2009cd7688087c619c3d4
+
+
+Change log:
+
+Mostly minor fixes for problems reported with 0.8.1e.
+
+Fixed hallmark string in json peer info.
+
+Improved Logger, added removeListener methods.
+
+Don't set Content-lenght headers when using XMLHttpRequest to send POST
+requests.
+
+Added jetty-security jar.
+
+Moved worker_sha256.js to tools.
+
+Also add random mynxt.info nodes to default wellKnownPeers.
+
+
