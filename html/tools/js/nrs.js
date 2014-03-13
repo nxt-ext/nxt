@@ -3136,7 +3136,7 @@
 								var extra = "";
 								
 								if (sorted_message.user in NRS.contacts) {
-									extra = " data-context='messages_sidebar_update_context'";	
+									extra = " data-contact='" + NRS.getAccountTitle(sorted_message.user) + "' data-context='messages_sidebar_update_context'";	
 								}
 				                    
 				                menu += "<li><a href='#' data-account='" + String(sorted_message.user).escapeHTML() + "'><strong>" + NRS.getAccountTitle(sorted_message.user) + "</strong><br />" + NRS.formatTimestamp(sorted_message.timestamp) + "</a></li>";
@@ -3245,8 +3245,11 @@
     	NRS.closeContextMenu();
     	
     	if (option == "add_contact") {
-    		$("#add_contact_account_id").val(account);
+    		$("#add_contact_account_id").val(account).trigger("blur");
 	    	$("#add_contact_modal").modal("show");
+		} else if (option == "send_nxt") {
+			$("#send_money_recipient").val(account).trigger("blur");
+			$("#send_money_modal").modal("show");
 		}
     });
     
@@ -3260,6 +3263,9 @@
 		
 		if (option == "update_contact") {
 			$("#update_contact_modal").modal("show");
+		} else if (option == "send_nxt") {
+			$("#send_money_recipient").val(NRS.selectedContext.data("contact")).trigger("blur");
+			$("#send_money_modal").modal("show");
 		}
 
     });
