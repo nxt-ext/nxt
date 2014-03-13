@@ -213,7 +213,14 @@ final class TransactionImpl implements Transaction {
         if (timestamp > o.getTimestamp()) {
             return 1;
         }
+        if (getId() < o.getId()) {
+            return -1;
+        }
+        if (getId() > o.getId()) {
+            return 1;
+        }
         return 0;
+
     }
 
     static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;

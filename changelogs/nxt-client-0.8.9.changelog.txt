@@ -30,4 +30,12 @@ block_timestamp columns to the transaction table.
 Transactions that have become invalid will now also be removed from the
 re-broadcasting pool.
 
+Moved all global constants to Constants.java.
+
+Improved transaction validation for Asset Issuance transactions to
+avoid misleading invalid transaction errors.
+
+Corrected handling of transactions with identical timestamps in block
+generation and in the NRS client UI.
+
 
