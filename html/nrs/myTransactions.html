@@ -49,10 +49,10 @@
 						element.className = "block";
 						element.title = "Block";
 					} else {
-						if (!transaction.receivedAmount) {
+						if (transaction.receivedAmount == null) {
 							element.className = "recipient";
 							element.title = "Recipient";
-						} else if (!transaction.sentAmount) {
+						} else if (transaction.sentAmount == null) {
 							element.className = "sender";
 							element.title = "Sender";
 						} else {
