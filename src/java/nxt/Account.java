@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Account {
 
     public static enum Event {
-        BALANCE, UNCONFIRMED_BALANCE
+        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -221,33 +221,47 @@ public final class Account {
         return Convert.nullToZero(assetBalances.get(assetId));
     }
 
-    synchronized void addToAssetBalance(Long assetId, int quantity) {
-        Integer assetBalance = assetBalances.get(assetId);
-        if (assetBalance == null) {
-            assetBalances.put(assetId, quantity);
-        } else {
-            assetBalances.put(assetId, assetBalance + quantity);
+    void addToAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer assetBalance = assetBalances.get(assetId);
+            if (assetBalance == null) {
+                assetBalances.put(assetId, quantity);
+            } else {
+                assetBalances.put(assetId, assetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.ASSET_BALANCE);
     }
 
-    synchronized void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
-        Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
-        if (unconfirmedAssetBalance == null) {
-            unconfirmedAssetBalances.put(assetId, quantity);
-        } else {
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+    void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            if (unconfirmedAssetBalance == null) {
+                unconfirmedAssetBalances.put(assetId, quantity);
+            } else {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    synchronized void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
-        Integer assetBalance = assetBalances.get(assetId);
-        if (assetBalance == null) {
-            assetBalances.put(assetId, quantity);
-            unconfirmedAssetBalances.put(assetId, quantity);
-        } else {
-            assetBalances.put(assetId, assetBalance + quantity);
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalances.get(assetId) + quantity);
+    void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer assetBalance = assetBalances.get(assetId);
+            if (assetBalance == null) {
+                assetBalances.put(assetId, quantity);
+            } else {
+                assetBalances.put(assetId, assetBalance + quantity);
+            }
+            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            if (unconfirmedAssetBalance == null) {
+                unconfirmedAssetBalances.put(assetId, quantity);
+            } else {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.ASSET_BALANCE);
+        listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToBalance(long amount) {
