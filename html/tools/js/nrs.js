@@ -5498,7 +5498,11 @@
 	    	if (callback) {
 		    	callback();
 	    	}
-	    		       		       	
+	    	
+	    	NRS.checkLocationHash(password);
+	    		       		
+			$(window).on("hashchange", NRS.checkLocationHash);
+			
 	    	NRS.sendRequest('getAccountTransactionIds', {"account": NRS.account, "timestamp": 0}, function(response) {
 				if (response.transactionIds && response.transactionIds.length) {
 		    		var transactionIds = response.transactionIds.reverse().slice(0, 10);
@@ -5528,6 +5532,37 @@
 
     	});
     }
+    
+    NRS.checkLocationHash = function(password) {    	
+    	if (window.location.hash) {	    		
+	    	var hash = window.location.hash.replace("#", "").split(":")
+	    			 
+	   		if (hash.length == 2) {
+		    	if (hash[0] == "message") {
+		    		var $modal = $("#send_message_modal");
+		    	} else if (hash[0] == "send") {
+			    	var $modal = $("#send_money_modal");
+		    	} else {
+			    	var $modal = "";
+		    	}
+		    				    	
+		    	if ($modal) {
+		    		var account_id = String($.trim(hash[1]));
+		    		if (!/^\d+$/.test(account_id) && account_id.indexOf("@") !== 0) {
+			    		account_id = "@" + account_id;
+		    		}
+		    		
+					$modal.find("input[name=recipient]").val(account_id.unescapeHTML()).trigger("blur");
+					if (password && typeof password == "string") {
+						$modal.find("input[name=secretPhrase]").val(password);
+					}
+					$modal.modal("show");
+				}
+			}
+			
+	    	window.location.hash = "#";
+		}
+	}
     
     NRS.getAccountBalance = function(firstRun) {
     	NRS.sendRequest("getAccount", {"account": NRS.account}, function(response) {    
