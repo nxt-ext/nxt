@@ -3135,6 +3135,12 @@ nrs_update_hashes {
 	display:none;
 }
 
+#show_console {
+	position:fixed;
+	bottom:0px;
+	right:3px;
+}
+
 .lockscreen #downloading_blockchain {
 	display:none !important;
 }

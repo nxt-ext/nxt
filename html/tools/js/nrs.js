@@ -865,6 +865,7 @@
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60*60*30) {
 		    	NRS.downloadingBlockchain = true;
 		    	$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
+		    	$("#show_console").hide();
 		    	NRS.calculateBlockchainDownloadTime(function() {
 		    		NRS.updateBlockchainDownloadProgress();
 		    	});
@@ -1041,6 +1042,7 @@
 		    if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60*60*30) {
 		    	NRS.downloadingBlockchain = false;
 		    	$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
+		    	$("#show_console").show();
 				$.growl("The block chain is now up to date.", {"type": "success"});
 		    	NRS.checkAliasVersions();
 	    	} else {
@@ -5759,6 +5761,64 @@
     	}
     });
     
+    NRS.showConsole = function() {	    
+	    NRS.console = window.open("", "console", "width=750,height=400,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+	    $(NRS.console.document.head).html("<title>Console</title><style type='text/css'>body { background:black; color:white; font-family:courier-new,courier;font-size:14px; } pre { font-size:14px; }</style>");
+	    $(NRS.console.document.body).html("Console opened. Logging started...<div id='console'></div>");
+    }
+    
+    NRS.addToConsole = function(text, type) {
+    	if (!NRS.console) {
+	    	return;
+    	}
+    	if (!NRS.console.document || !NRS.console.document.body) {
+	    	NRS.console = null;
+	    	return;
+    	}
+    	
+    	var color = "";
+    	
+    	switch (type) {
+	    	case "url": 
+	    		color = "#29FD2F";
+	    		break;
+	    	case "post":
+	    		color = "lightgray";
+	    		break;
+	    	case "error":
+	    		color = "red";
+	    		break;
+    	}
+
+	    $(NRS.console.document.body).find("#console").append("<pre" + (color ? " style='color:" + color + "'" : "") + ">" + text.escapeHTML() + "</pre>");
+    }
+    
+    NRS.queryStringToObject = function(qs) {    	
+    	qs = qs.split("&");
+    	
+    	if (!qs) {
+    		return {};
+    	}    	
+    		    
+	    var obj = {};
+	    
+	    for (var i=0; i <qs.length; ++i) {
+	        var p = qs[i].split('=');
+	        	        
+	        if (p.length != 2) {
+	        	continue;
+	        }
+	        
+	        obj[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+	    }
+	    
+	    if ("secretPhrase" in obj) {
+		    obj.secretPhrase = "***";
+	    }
+	    	    
+	    return obj;
+	}
+    
     $(document).ajaxComplete(function(event, xhr, settings) {	
     	if (xhr._page && xhr.statusText != "abort") {
     		var index = $.inArray(xhr, NRS.xhrPool);
@@ -5864,12 +5924,6 @@
     }
     
     NRS.processAjaxRequest = function(requestType, data, callback, async) {
-		if (typeof data == "string") {
-			data += "&random=" + Math.random();
-		} else {
-			data.random = Math.random();
-		}
-		
 		if (data["_extra"]) {
 			var extra = data["_extra"];
 			delete data["_extra"];
@@ -5896,11 +5950,20 @@
 		}
      	
      	var type = ("secretPhrase" in data ? "POST" : "GET");
-     	
+     	var url = NRS.server + "/nxt?requestType=" + requestType;
+	 	
+	 	if (type == "GET") {
+		 	if (typeof data == "string") {
+				data += "&random=" + Math.random();
+			} else {
+				data.random = Math.random();
+			}
+	 	}
+	 	
      	$.support.cors = true;
-
+	 	
 		$.ajax({
-			url: NRS.server + "/nxt?requestType=" + requestType,
+			url: url,
 			crossDomain: true,
 			dataType: "json",
 			type: type,
@@ -5909,6 +5972,22 @@
 			beforeSend: beforeSend,
 			data: data
 		}).done(function(json) {  
+			if (NRS.console) {
+				var url = this.url.replace(/&random=[\.\d]+/, "", this.url);
+				
+				NRS.addToConsole(url + " (" + this.type + ") " + new Date().toString(), "url");
+								
+				if (this.data) {
+					if (typeof this.data == "string") {
+						var d = NRS.queryStringToObject(this.data);
+						NRS.addToConsole(JSON.stringify(d, null, "\t"), "post");
+					} else {
+						NRS.addToConsole(JSON.stringify(this.data, null, "\t"), "post");
+					}
+				}
+				NRS.addToConsole(JSON.stringify(json, null, "\t"), json.errorCode);
+			}
+			
 			if (json.errorCode && !json.errorDescription) {
 				json.errorDescription = "Unknown error occured.";
 			}    
@@ -5920,6 +5999,21 @@
 				callback(json, data);
 			}
 		}).fail(function(xhr, textStatus, error) {
+			if (NRS.console) {
+				var url = this.url.replace(/&random=[\.\d]+/, "", this.url);
+
+				NRS.addToConsole(url + " (" + this.type + ") " + new Date().toString(), "url");
+				if (this.data) {
+					if (typeof this.data == "string") {
+						var d = NRS.queryStringToObject(this.data);
+						NRS.addToConsole(JSON.stringify(d, null, "\t"), "post");
+					} else {
+						NRS.addToConsole(JSON.stringify(this.data, null, "\t"), "post");
+					}
+				}
+				NRS.addToConsole(error, "error");
+			}
+
 			if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
 				if (type == "POST") {
 		    		$.growl("Could not connect.", {"type": "danger", "offset": 10});
