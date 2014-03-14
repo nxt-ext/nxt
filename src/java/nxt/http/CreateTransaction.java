@@ -33,7 +33,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (publicKeyString == null) {
             return null;
         }
-        return Account.getAccount(Convert.parseHexString(publicKeyString));
+        try {
+            return Account.getAccount(Convert.parseHexString(publicKeyString));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
