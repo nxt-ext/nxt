@@ -8,7 +8,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
@@ -19,6 +21,13 @@ public final class GetAskOrderIds extends APIServlet.APIRequestHandler {
     static final GetAskOrderIds instance = new GetAskOrderIds();
 
     private GetAskOrderIds() {}
+
+    private static final List<String> parameters = Arrays.asList("asset", "limit");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

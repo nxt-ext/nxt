@@ -13,6 +13,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -24,6 +28,16 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
+    private static final List<String> commonParameters = Collections.unmodifiableList(Arrays.asList(
+            "secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"));
+
+    static List<String> addCommonParameters(List<String> myParameters) {
+        List<String> result = new ArrayList<>();
+        result.addAll(myParameters);
+        result.addAll(commonParameters);
+        return result;
+    }
+
     final Account getAccount(HttpServletRequest req) {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase != null) {
@@ -33,7 +47,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (publicKeyString == null) {
             return null;
         }
-        return Account.getAccount(Convert.parseHexString(publicKeyString));
+        try {
+            return Account.getAccount(Convert.parseHexString(publicKeyString));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
@@ -70,7 +88,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
-            if (fee <= 0 || fee >= Constants.MAX_BALANCE) {
+            if (fee < minimumFee() || fee >= Constants.MAX_BALANCE) {
                 return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
@@ -113,6 +131,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     @Override
     final boolean requirePost() {
         return true;
+    }
+
+    int minimumFee() {
+        return 1;
     }
 
 }

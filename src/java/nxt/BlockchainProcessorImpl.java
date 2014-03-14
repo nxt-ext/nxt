@@ -701,19 +701,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         byte[] payloadHash = digest.digest();
-        byte[] generationSignature;
 
         BlockImpl previousBlock = blockchain.getLastBlock();
         if (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-            generationSignature = Crypto.sign(previousBlock.getGenerationSignature(), secretPhrase);
-        } else {
-            digest.update(previousBlock.getGenerationSignature());
-            generationSignature = digest.digest(publicKey);
+            Logger.logDebugMessage("Generate block below " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+            return;
         }
 
+        digest.update(previousBlock.getGenerationSignature());
+        byte[] generationSignature = digest.digest(publicKey);
+
         BlockImpl block;
-        int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
-        byte[] previousBlockHash = version == 1 ? null : Crypto.sha256().digest(previousBlock.getBytes());
+        //int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
+        int version = 2;
+        byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
 
         try {
 
@@ -790,15 +791,22 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
                 BlockImpl currentBlock;
                 ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    currentBlock = BlockDb.loadBlock(con, rs);
-                    if (! currentBlock.getId().equals(currentBlockId)) {
-                        throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                try {
+                    while (rs.next()) {
+                        currentBlock = BlockDb.loadBlock(con, rs);
+                        if (! currentBlock.getId().equals(currentBlockId)) {
+                            throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                        }
+                        blockchain.setLastBlock(currentBlock);
+                        transactionProcessor.apply(currentBlock);
+                        blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                        currentBlockId = currentBlock.getNextBlockId();
                     }
-                    blockchain.setLastBlock(currentBlock);
-                    transactionProcessor.apply(currentBlock);
-                    blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
-                    currentBlockId = currentBlock.getNextBlockId();
+                } catch (RuntimeException e) {
+                    Logger.logDebugMessage(e.toString(), e);
+                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
+                    BlockDb.deleteBlock(currentBlockId);
+                    scan();
                 }
             } catch (NxtException.ValidationException|SQLException e) {
                 throw new RuntimeException(e.toString(), e);

@@ -5,6 +5,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_WEBSITE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
@@ -16,6 +18,13 @@ public final class GenerateToken extends APIServlet.APIRequestHandler {
     static final GenerateToken instance = new GenerateToken();
 
     private GenerateToken() {}
+
+    private static final List<String> parameters = Arrays.asList("website", "secretPhrase");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

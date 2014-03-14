@@ -10,6 +10,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -22,6 +24,13 @@ public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
     static final GetAccountBlockIds instance = new GetAccountBlockIds();
 
     private GetAccountBlockIds() {}
+
+    private static final List<String> parameters = Arrays.asList("account", "timestamp");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -55,7 +64,7 @@ public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
         }
 
         JSONArray blockIds = new JSONArray();
-        try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getAllBlocks(accountData, timestamp)) {
+        try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getBlocks(accountData, timestamp)) {
             while (iterator.hasNext()) {
                 Block block = iterator.next();
                 blockIds.add(block.getStringId());

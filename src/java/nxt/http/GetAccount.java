@@ -7,6 +7,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
@@ -18,6 +20,13 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
     static final GetAccount instance = new GetAccount();
 
     private GetAccount() {}
+
+    private static final List<String> parameters = Arrays.asList("account");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -56,10 +65,22 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
             }
             if (assetBalances.size() > 0) {
-
                 response.put("assetBalances", assetBalances);
+            }
+
+            JSONArray unconfirmedAssetBalances = new JSONArray();
+            for (Map.Entry<Long, Integer> unconfirmedAssetBalanceEntry : accountData.getUnconfirmedAssetBalances().entrySet()) {
+
+                JSONObject unconfirmedAssetBalance = new JSONObject();
+                unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(unconfirmedAssetBalanceEntry.getKey()));
+                unconfirmedAssetBalance.put("unconfirmedBalance", unconfirmedAssetBalanceEntry.getValue());
+                unconfirmedAssetBalances.add(unconfirmedAssetBalance);
 
             }
+            if (unconfirmedAssetBalances.size() > 0) {
+                response.put("unconfirmedAssetBalances", unconfirmedAssetBalances);
+            }
+
         }
         return response;
     }

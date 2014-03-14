@@ -8,6 +8,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
@@ -18,6 +20,13 @@ public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHan
     static final GetAccountCurrentBidOrderIds instance = new GetAccountCurrentBidOrderIds();
 
     private GetAccountCurrentBidOrderIds() {}
+
+    private static final List<String> parameters = Arrays.asList("account", "asset");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

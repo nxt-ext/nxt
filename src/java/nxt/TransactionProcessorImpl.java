@@ -203,7 +203,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public void broadcast(Transaction transaction) {
+    public void broadcast(Transaction transaction) throws NxtException.ValidationException {
+        if (! ((TransactionImpl)transaction).verify()) {
+            throw new NxtException.ValidationException("Transaction signature verification failed");
+        }
         processTransactions(Arrays.asList((TransactionImpl)transaction), true);
         nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
         Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());

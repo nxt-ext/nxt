@@ -6,6 +6,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_NUMBER_OF_CONFIRMATIONS;
@@ -17,6 +19,13 @@ public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
     static final GetGuaranteedBalance instance = new GetGuaranteedBalance();
 
     private GetGuaranteedBalance() {}
+
+    private static final List<String> parameters = Arrays.asList("account", "numberOfConfirmations");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
