@@ -77,4 +77,9 @@ public final class IssueAsset extends CreateTransaction {
 
     }
 
+    @Override
+    final int minimumFee() {
+        return Constants.ASSET_ISSUANCE_FEE;
+    }
+
 }

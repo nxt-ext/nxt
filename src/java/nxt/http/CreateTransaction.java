@@ -70,7 +70,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
-            if (fee <= 0 || fee >= Constants.MAX_BALANCE) {
+            if (fee < minimumFee() || fee >= Constants.MAX_BALANCE) {
                 return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
@@ -113,6 +113,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     @Override
     final boolean requirePost() {
         return true;
+    }
+
+    int minimumFee() {
+        return 1;
     }
 
 }
