@@ -7,6 +7,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_HALLMARK;
 import static nxt.http.JSONResponses.MISSING_HALLMARK;
@@ -16,6 +18,13 @@ public final class DecodeHallmark extends APIServlet.APIRequestHandler {
     static final DecodeHallmark instance = new DecodeHallmark();
 
     private DecodeHallmark() {}
+
+    private static final List<String> parameters = Arrays.asList("hallmark");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

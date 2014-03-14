@@ -380,6 +380,9 @@ public abstract class TransactionType {
 
                 try {
                     int numberOfOptions = buffer.get();
+                    if (numberOfOptions > 100) {
+                        throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
+                    }
                     pollOptions = new String[numberOfOptions];
                     for (int i = 0; i < numberOfOptions; i++) {
                         int pollOptionBytesLength = buffer.getShort();

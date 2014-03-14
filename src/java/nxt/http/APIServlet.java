@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
@@ -27,11 +28,12 @@ public final class APIServlet extends HttpServlet {
         boolean requirePost() {
             return false;
         }
+        abstract List<String> getParameters();
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
 
-    private static final Map<String,APIRequestHandler> apiRequestHandlers;
+    static final Map<String,APIRequestHandler> apiRequestHandlers;
 
     static {
 

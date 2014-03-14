@@ -13,6 +13,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -23,6 +27,16 @@ import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
+
+    private static final List<String> commonParameters = Collections.unmodifiableList(Arrays.asList(
+            "secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"));
+
+    static List<String> addCommonParameters(List<String> myParameters) {
+        List<String> result = new ArrayList<>();
+        result.addAll(myParameters);
+        result.addAll(commonParameters);
+        return result;
+    }
 
     final Account getAccount(HttpServletRequest req) {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));

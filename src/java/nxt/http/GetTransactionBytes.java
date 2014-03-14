@@ -7,6 +7,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
@@ -17,6 +19,13 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
     static final GetTransactionBytes instance = new GetTransactionBytes();
 
     private GetTransactionBytes() {}
+
+    private static final List<String> parameters = Arrays.asList("transaction");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

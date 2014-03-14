@@ -8,6 +8,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_BLOCK;
 import static nxt.http.JSONResponses.MISSING_BLOCK;
@@ -18,6 +20,13 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
     static final GetBlock instance = new GetBlock();
 
     private GetBlock() {}
+
+    private static final List<String> parameters = Arrays.asList("block");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

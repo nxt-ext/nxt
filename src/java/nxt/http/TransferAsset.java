@@ -8,6 +8,8 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
@@ -23,6 +25,14 @@ public final class TransferAsset extends CreateTransaction {
     static final TransferAsset instance = new TransferAsset();
 
     private TransferAsset() {}
+
+    private static final List<String> parameters = addCommonParameters(Arrays.asList(
+            "recipient", "asset", "quantity"));
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

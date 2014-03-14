@@ -8,6 +8,8 @@ import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.ASSET_NAME_ALREADY_USED;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_DESCRIPTION;
@@ -24,6 +26,14 @@ public final class IssueAsset extends CreateTransaction {
     static final IssueAsset instance = new IssueAsset();
 
     private IssueAsset() {}
+
+    private static final List<String> parameters = addCommonParameters(Arrays.asList(
+            "name", "description", "quantity"));
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

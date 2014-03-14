@@ -100,6 +100,7 @@ public final class API {
 
             ServletHandler apiHandler = new ServletHandler();
             apiHandler.addServletWithMapping(APIServlet.class, "/nxt");
+            apiHandler.addServletWithMapping(APITestServlet.class, "/test");
 
             if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
                 FilterHolder filterHolder = apiHandler.addFilterWithMapping(CrossOriginFilter.class, "/*", FilterMapping.DEFAULT);

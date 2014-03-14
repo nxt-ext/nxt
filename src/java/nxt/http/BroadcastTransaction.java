@@ -8,6 +8,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION_BYTES;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION_BYTES;
@@ -17,6 +19,13 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {}
+
+    private static final List<String> parameters = Arrays.asList("transactionBytes");
+
+    @Override
+    List<String> getParameters() {
+        return parameters;
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
