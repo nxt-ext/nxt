@@ -701,19 +701,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         byte[] payloadHash = digest.digest();
-        byte[] generationSignature;
 
         BlockImpl previousBlock = blockchain.getLastBlock();
         if (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-            generationSignature = Crypto.sign(previousBlock.getGenerationSignature(), secretPhrase);
-        } else {
-            digest.update(previousBlock.getGenerationSignature());
-            generationSignature = digest.digest(publicKey);
+            Logger.logDebugMessage("Generate block below " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+            return;
         }
 
+        digest.update(previousBlock.getGenerationSignature());
+        byte[] generationSignature = digest.digest(publicKey);
+
         BlockImpl block;
-        int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
-        byte[] previousBlockHash = version == 1 ? null : Crypto.sha256().digest(previousBlock.getBytes());
+        //int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
+        int version = 2;
+        byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
 
         try {
 
