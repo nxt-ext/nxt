@@ -524,6 +524,10 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
+                Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting)transaction.getAttachment();
+                if (attachment.getPollId() == null || attachment.getPollVote() == null) {
+                    throw new NxtException.ValidationException("Invalid vote casting attachment: " + attachment.getJSON());
+                }
                 if (transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Invalid vote casting amount or recipient");
                 }
@@ -722,7 +726,8 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                if (transaction.getAmount() != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY) {
+                if (transaction.getAmount() != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY
+                        || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or quantity: " + attachment.getJSON());
                 }
             }
@@ -759,7 +764,7 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0
                         || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY
-                        || attachment.getPrice() <= 0 || attachment.getPrice() > Constants.MAX_BALANCE * 100L) {
+                        || attachment.getPrice() <= 0 || attachment.getPrice() > Constants.MAX_BALANCE * 100L || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset order placement: " + attachment.getJSON());
                 }
             }
@@ -894,6 +899,11 @@ public abstract class TransactionType {
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0) {
                     throw new NxtException.ValidationException("Invalid asset order cancellation amount or recipient");
                 }
+                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation)transaction.getAttachment();
+                if (attachment.getOrderId() == null) {
+                    throw new NxtException.ValidationException("Invalid order cancellation attachment: " + attachment.getJSON());
+                }
+
             }
 
             @Override

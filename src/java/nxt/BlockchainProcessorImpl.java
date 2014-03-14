@@ -791,15 +791,22 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
                 BlockImpl currentBlock;
                 ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    currentBlock = BlockDb.loadBlock(con, rs);
-                    if (! currentBlock.getId().equals(currentBlockId)) {
-                        throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                try {
+                    while (rs.next()) {
+                        currentBlock = BlockDb.loadBlock(con, rs);
+                        if (! currentBlock.getId().equals(currentBlockId)) {
+                            throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                        }
+                        blockchain.setLastBlock(currentBlock);
+                        transactionProcessor.apply(currentBlock);
+                        blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                        currentBlockId = currentBlock.getNextBlockId();
                     }
-                    blockchain.setLastBlock(currentBlock);
-                    transactionProcessor.apply(currentBlock);
-                    blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
-                    currentBlockId = currentBlock.getNextBlockId();
+                } catch (RuntimeException e) {
+                    Logger.logDebugMessage(e.toString(), e);
+                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
+                    BlockDb.deleteBlock(currentBlockId);
+                    scan();
                 }
             } catch (NxtException.ValidationException|SQLException e) {
                 throw new RuntimeException(e.toString(), e);
