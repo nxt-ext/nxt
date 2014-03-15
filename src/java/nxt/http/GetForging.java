@@ -17,7 +17,9 @@ public final class GetForging extends APIServlet.APIRequestHandler {
 
     static final GetForging instance = new GetForging();
 
-    private GetForging() {}
+    private GetForging() {
+        super("secretPhrase");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

@@ -27,7 +27,10 @@ public final class CreatePoll extends CreateTransaction {
 
     static final CreatePoll instance = new CreatePoll();
 
-    private CreatePoll() {}
+    private CreatePoll() {
+        super("name", "description", "minNumberOfOptions", "maxNumberOfOptions", "optionsAreBinary",
+                "option1", "option2", "option3"); // hardcoded to 3 options for testing
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {

@@ -22,7 +22,9 @@ public final class TransferAsset extends CreateTransaction {
 
     static final TransferAsset instance = new TransferAsset();
 
-    private TransferAsset() {}
+    private TransferAsset() {
+        super("recipient", "asset", "quantity");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

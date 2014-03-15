@@ -161,6 +161,10 @@ public final class Account {
         return Collections.unmodifiableMap(assetBalances);
     }
 
+    public Map<Long, Integer> getUnconfirmedAssetBalances() {
+        return Collections.unmodifiableMap(unconfirmedAssetBalances);
+    }
+
     // returns true iff:
     // this.publicKey is set to null (in which case this.publicKey also gets set to key)
     // or

@@ -16,7 +16,9 @@ public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
 
     static final GetGuaranteedBalance instance = new GetGuaranteedBalance();
 
-    private GetGuaranteedBalance() {}
+    private GetGuaranteedBalance() {
+        super("account", "numberOfConfirmations");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

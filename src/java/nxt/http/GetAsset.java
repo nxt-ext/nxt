@@ -15,7 +15,9 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
 
     static final GetAsset instance = new GetAsset();
 
-    private GetAsset() {}
+    private GetAsset() {
+        super("asset");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

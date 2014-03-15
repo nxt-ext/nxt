@@ -15,7 +15,9 @@ public final class GetAskOrder extends APIServlet.APIRequestHandler {
 
     static final GetAskOrder instance = new GetAskOrder();
 
-    private GetAskOrder() {}
+    private GetAskOrder() {
+        super("order");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

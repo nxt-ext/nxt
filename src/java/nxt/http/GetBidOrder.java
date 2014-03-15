@@ -15,7 +15,9 @@ public final class GetBidOrder extends APIServlet.APIRequestHandler {
 
     static final GetBidOrder instance = new GetBidOrder();
 
-    private GetBidOrder() {}
+    private GetBidOrder() {
+        super("order");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

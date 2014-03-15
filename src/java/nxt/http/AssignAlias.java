@@ -22,7 +22,9 @@ public final class AssignAlias extends CreateTransaction {
 
     static final AssignAlias instance = new AssignAlias();
 
-    private AssignAlias() {}
+    private AssignAlias() {
+        super("alias", "uri");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

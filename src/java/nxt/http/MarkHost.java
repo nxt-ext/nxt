@@ -20,7 +20,9 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 
-    private MarkHost() {}
+    private MarkHost() {
+        super("secretPhrase", "host", "weight", "date");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

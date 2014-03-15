@@ -66,12 +66,7 @@ final class BlockchainImpl implements Blockchain {
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
-            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
-                @Override
-                public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return BlockDb.loadBlock(con, rs);
-                }
-            });
+            return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
@@ -79,23 +74,28 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public DbIterator<BlockImpl> getAllBlocks(Account account, int timestamp) {
+    public DbIterator<BlockImpl> getBlocks(Account account, int timestamp) {
         Connection con = null;
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE timestamp >= ? AND generator_id = ? ORDER BY db_id ASC");
             pstmt.setInt(1, timestamp);
             pstmt.setLong(2, account.getId());
-            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
-                @Override
-                public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return BlockDb.loadBlock(con, rs);
-                }
-            });
+            return getBlocks(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    @Override
+    public DbIterator<BlockImpl> getBlocks(Connection con, PreparedStatement pstmt) {
+        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<BlockImpl>() {
+            @Override
+            public BlockImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                return BlockDb.loadBlock(con, rs);
+            }
+        });
     }
 
     @Override
@@ -211,12 +211,7 @@ final class BlockchainImpl implements Blockchain {
         try {
             con = Db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction ORDER BY db_id ASC");
-            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
-                @Override
-                public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return TransactionDb.loadTransaction(con, rs);
-                }
-            });
+            return getTransactions(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
@@ -224,12 +219,12 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public DbIterator<TransactionImpl> getAllTransactions(Account account, byte type, byte subtype, int timestamp) {
-        return getAllTransactions(account, type, subtype, timestamp, Boolean.TRUE);
+    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp) {
+        return getTransactions(account, type, subtype, timestamp, Boolean.TRUE);
     }
 
     @Override
-    public DbIterator<TransactionImpl> getAllTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending) {
+    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending) {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
@@ -285,16 +280,21 @@ final class BlockchainImpl implements Blockchain {
                     pstmt.setByte(++i, subtype);
                 }
             }
-            return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
-                @Override
-                public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
-                    return TransactionDb.loadTransaction(con, rs);
-                }
-            });
+            return getTransactions(con, pstmt);
         } catch (SQLException e) {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    @Override
+    public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
+        return new DbIterator<>(con, pstmt, new DbIterator.ResultSetReader<TransactionImpl>() {
+            @Override
+            public TransactionImpl get(Connection con, ResultSet rs) throws NxtException.ValidationException {
+                return TransactionDb.loadTransaction(con, rs);
+            }
+        });
     }
 
 }

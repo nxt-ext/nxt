@@ -17,7 +17,9 @@ public final class ListAccountAliases extends APIServlet.APIRequestHandler {
 
     static final ListAccountAliases instance = new ListAccountAliases();
 
-    private ListAccountAliases() {}
+    private ListAccountAliases() {
+        super("account");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

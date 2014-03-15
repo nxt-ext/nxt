@@ -15,7 +15,9 @@ public final class GenerateToken extends APIServlet.APIRequestHandler {
 
     static final GenerateToken instance = new GenerateToken();
 
-    private GenerateToken() {}
+    private GenerateToken() {
+        super("website", "secretPhrase");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

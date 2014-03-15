@@ -123,7 +123,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
             SortedSet<JSONObject> myTransactionsSet = new TreeSet<>(myTransactionsComparator);
 
             int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
-            try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getAllBlocks(account, 0)) {
+            try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getBlocks(account, 0)) {
                 while (blockIterator.hasNext()) {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
@@ -140,7 +140,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                 }
             }
 
-            try (DbIterator<? extends Transaction> transactionIterator = Nxt.getBlockchain().getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
+            try (DbIterator<? extends Transaction> transactionIterator = Nxt.getBlockchain().getTransactions(account, (byte) -1, (byte) -1, 0, null)) {
                 while (transactionIterator.hasNext()) {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {

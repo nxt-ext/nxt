@@ -16,7 +16,9 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
 
     static final GetTransaction instance = new GetTransaction();
 
-    private GetTransaction() {}
+    private GetTransaction() {
+        super("transaction", "hash");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

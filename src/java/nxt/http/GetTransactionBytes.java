@@ -16,7 +16,9 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
 
     static final GetTransactionBytes instance = new GetTransactionBytes();
 
-    private GetTransactionBytes() {}
+    private GetTransactionBytes() {
+        super("transaction");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

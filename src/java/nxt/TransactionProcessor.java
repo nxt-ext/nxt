@@ -19,7 +19,7 @@ public interface TransactionProcessor extends Observable<List<Transaction>,Trans
 
     Transaction getUnconfirmedTransaction(Long transactionId);
 
-    void broadcast(Transaction transaction);
+    void broadcast(Transaction transaction) throws NxtException.ValidationException;
 
     void processPeerTransactions(JSONObject request);
 

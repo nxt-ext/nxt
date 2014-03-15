@@ -34,6 +34,9 @@ public final class Generator {
         public void run() {
 
             try {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+                    return;
+                }
                 try {
                     for (Generator generator : generators.values()) {
                         generator.forge();
@@ -142,15 +145,14 @@ public final class Generator {
 
         if (! lastBlock.equals(lastBlocks.get(account))) {
 
-            MessageDigest digest = Crypto.sha256();
-            byte[] generationSignatureHash;
             if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-                byte[] generationSignature = Crypto.sign(lastBlock.getGenerationSignature(), secretPhrase);
-                generationSignatureHash = digest.digest(generationSignature);
-            } else {
-                digest.update(lastBlock.getGenerationSignature());
-                generationSignatureHash = digest.digest(publicKey);
+                Logger.logDebugMessage("Forging below block " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+                return;
             }
+
+            MessageDigest digest = Crypto.sha256();
+            digest.update(lastBlock.getGenerationSignature());
+            byte[] generationSignatureHash = digest.digest(publicKey);
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 

@@ -16,7 +16,9 @@ public final class DecodeToken extends APIServlet.APIRequestHandler {
 
     static final DecodeToken instance = new DecodeToken();
 
-    private DecodeToken() {}
+    private DecodeToken() {
+        super("website", "token");
+    }
 
     @Override
     public JSONStreamAware processRequest(HttpServletRequest req) {

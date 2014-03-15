@@ -14,7 +14,9 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
 
     static final GetPeer instance = new GetPeer();
 
-    private GetPeer() {}
+    private GetPeer() {
+        super("peer");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

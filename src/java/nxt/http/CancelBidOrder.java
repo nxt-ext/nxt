@@ -18,7 +18,9 @@ public final class CancelBidOrder extends CreateTransaction {
 
     static final CancelBidOrder instance = new CancelBidOrder();
 
-    private CancelBidOrder() {}
+    private CancelBidOrder() {
+        super("order");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

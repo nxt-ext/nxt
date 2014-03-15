@@ -18,7 +18,9 @@ public final class CastVote extends CreateTransaction {
 
     static final CastVote instance = new CastVote();
 
-    private CastVote() {}
+    private CastVote() {
+        super("poll", "vote1", "vote2", "vote3"); // hardcoded to 3 votes for testing
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {

@@ -23,7 +23,9 @@ public final class IssueAsset extends CreateTransaction {
 
     static final IssueAsset instance = new IssueAsset();
 
-    private IssueAsset() {}
+    private IssueAsset() {
+        super("name", "description", "quantity");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
@@ -75,6 +77,11 @@ public final class IssueAsset extends CreateTransaction {
         Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
         return createTransaction(req, account, attachment);
 
+    }
+
+    @Override
+    final int minimumFee() {
+        return Constants.ASSET_ISSUANCE_FEE;
     }
 
 }

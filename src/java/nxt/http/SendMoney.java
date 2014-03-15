@@ -18,7 +18,9 @@ public final class SendMoney extends CreateTransaction {
 
     static final SendMoney instance = new SendMoney();
 
-    private SendMoney() {}
+    private SendMoney() {
+        super("recipient", "amount");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

@@ -17,7 +17,9 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
 
     static final GetPoll instance = new GetPoll();
 
-    private GetPoll() {}
+    private GetPoll() {
+        super("poll");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

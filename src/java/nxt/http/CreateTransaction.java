@@ -13,6 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -24,6 +25,17 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
+    private static String[] addCommonParameters(String[] parameters) {
+        String[] result = Arrays.copyOf(parameters, parameters.length + 5);
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"}, 0,
+                result, parameters.length, 5);
+        return result;
+    }
+
+    CreateTransaction(String... parameters) {
+        super(addCommonParameters(parameters));
+    }
+
     final Account getAccount(HttpServletRequest req) {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase != null) {
@@ -33,7 +45,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         if (publicKeyString == null) {
             return null;
         }
-        return Account.getAccount(Convert.parseHexString(publicKeyString));
+        try {
+            return Account.getAccount(Convert.parseHexString(publicKeyString));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
@@ -45,7 +61,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                                             int amount, Attachment attachment) throws NxtException.ValidationException {
         String deadlineValue = req.getParameter("deadline");
         String feeValue = req.getParameter("fee");
-        String referencedTransactionValue = req.getParameter("referencedTransaction");
+        String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
@@ -70,7 +86,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
-            if (fee <= 0 || fee >= Constants.MAX_BALANCE) {
+            if (fee < minimumFee() || fee >= Constants.MAX_BALANCE) {
                 return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
@@ -113,6 +129,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     @Override
     final boolean requirePost() {
         return true;
+    }
+
+    int minimumFee() {
+        return 1;
     }
 
 }

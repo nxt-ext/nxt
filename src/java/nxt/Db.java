@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-final class Db {
+public final class Db {
 
     private static volatile JdbcConnectionPool cp;
     private static volatile int maxActiveConnections;
@@ -42,7 +42,7 @@ final class Db {
         }
     }
 
-    static Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         Connection con = cp.getConnection();
         con.setAutoCommit(false);
         int activeConnections = cp.getActiveConnections();

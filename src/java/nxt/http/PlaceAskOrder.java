@@ -22,7 +22,9 @@ public final class PlaceAskOrder extends CreateTransaction {
 
     static final PlaceAskOrder instance = new PlaceAskOrder();
 
-    private PlaceAskOrder() {}
+    private PlaceAskOrder() {
+        super("asset", "quantity", "price");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {

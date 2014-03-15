@@ -19,7 +19,9 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
 
     static final GetTrades instance = new GetTrades();
 
-    private GetTrades() {}
+    private GetTrades() {
+        super("asset", "firstIndex", "lastIndex");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
