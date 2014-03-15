@@ -7,9 +7,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.MISSING_POLL;
@@ -19,13 +17,8 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
 
     static final GetPoll instance = new GetPoll();
 
-    private GetPoll() {}
-
-    private static final List<String> parameters = Arrays.asList("poll");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetPoll() {
+        super("poll");
     }
 
     @Override

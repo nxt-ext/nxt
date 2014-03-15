@@ -7,8 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
@@ -19,13 +17,8 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
     static final GetAccount instance = new GetAccount();
 
-    private GetAccount() {}
-
-    private static final List<String> parameters = Arrays.asList("account");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetAccount() {
+        super("account");
     }
 
     @Override

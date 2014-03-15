@@ -10,8 +10,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS_LENGTH;
@@ -24,14 +22,8 @@ public final class AssignAlias extends CreateTransaction {
 
     static final AssignAlias instance = new AssignAlias();
 
-    private AssignAlias() {}
-
-    private static final List<String> parameters = addCommonParameters(Arrays.asList(
-            "alias", "uri"));
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private AssignAlias() {
+        super("alias", "uri");
     }
 
     @Override

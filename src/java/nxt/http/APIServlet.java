@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +25,23 @@ import static nxt.http.JSONResponses.POST_REQUIRED;
 public final class APIServlet extends HttpServlet {
 
     abstract static class APIRequestHandler {
+
+        private final List<String> parameters;
+
+        APIRequestHandler(String... parameters) {
+            this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+        }
+
+        final List<String> getParameters() {
+            return parameters;
+        }
+
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
+
         boolean requirePost() {
             return false;
         }
-        abstract List<String> getParameters();
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");

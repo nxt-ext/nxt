@@ -7,19 +7,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.List;
 
 public final class GetPollIds extends APIServlet.APIRequestHandler {
 
     static final GetPollIds instance = new GetPollIds();
 
     private GetPollIds() {}
-
-    @Override
-    List<String> getParameters() {
-        return Collections.emptyList();
-    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

@@ -6,8 +6,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.MISSING_ORDER;
@@ -17,13 +15,8 @@ public final class GetBidOrder extends APIServlet.APIRequestHandler {
 
     static final GetBidOrder instance = new GetBidOrder();
 
-    private GetBidOrder() {}
-
-    private static final List<String> parameters = Arrays.asList("order");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetBidOrder() {
+        super("order");
     }
 
     @Override

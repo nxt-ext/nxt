@@ -6,8 +6,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
@@ -16,13 +14,8 @@ public final class GetAliasURI extends APIServlet.APIRequestHandler {
 
     static final GetAliasURI instance = new GetAliasURI();
 
-    private GetAliasURI() {}
-
-    private static final List<String> parameters = Arrays.asList("alias");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetAliasURI() {
+        super("alias");
     }
 
     @Override

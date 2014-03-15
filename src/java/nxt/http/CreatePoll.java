@@ -8,7 +8,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_MAXNUMBEROFOPTIONS;
@@ -28,15 +27,9 @@ public final class CreatePoll extends CreateTransaction {
 
     static final CreatePoll instance = new CreatePoll();
 
-    private CreatePoll() {}
-
-    private static final List<String> parameters = addCommonParameters(Arrays.asList(
-            "name", "description", "minNumberOfOptions", "maxNumberOfOptions", "optionsAreBinary",
-            "option1", "option2", "option3")); // hardcoded to 3 options for testing
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private CreatePoll() {
+        super("name", "description", "minNumberOfOptions", "maxNumberOfOptions", "optionsAreBinary",
+                "option1", "option2", "option3"); // hardcoded to 3 options for testing
     }
 
     @Override

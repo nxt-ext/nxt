@@ -8,8 +8,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
@@ -19,13 +17,8 @@ public final class ListAccountAliases extends APIServlet.APIRequestHandler {
 
     static final ListAccountAliases instance = new ListAccountAliases();
 
-    private ListAccountAliases() {}
-
-    private static final List<String> parameters = Arrays.asList("account");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private ListAccountAliases() {
+        super("account");
     }
 
     @Override

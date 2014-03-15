@@ -8,8 +8,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.INCORRECT_VOTE;
@@ -20,14 +18,8 @@ public final class CastVote extends CreateTransaction {
 
     static final CastVote instance = new CastVote();
 
-    private CastVote() {}
-
-    private static final List<String> parameters = addCommonParameters(Arrays.asList(
-            "poll", "vote1", "vote2", "vote3")); // hardcoded to 3 votes for testing
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private CastVote() {
+        super("poll", "vote1", "vote2", "vote3"); // hardcoded to 3 votes for testing
     }
 
     @Override
