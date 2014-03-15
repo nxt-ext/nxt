@@ -1,0 +1,35 @@
+Better transaction attachment validation. Blocks that incorrectly
+got accepted but later fail to be processed for any reason, will
+be deleted from the database.
+
+Better validation of minimum fee for different transaction type.
+
+GetAccount API will also return unconfirmed asset balances.
+
+BroadcastTransaction now verifies the signature of received
+transaction bytes before broadcasting the transaction.
+
+Removed forging code no longer in use. Generating blocks below
+height 30000 (transparent forging phase 1) is no longer supported.
+
+Made Db.getConnection() public and added Blockchain.getBlocks and
+getTransactions methods taking PreparedStatement as parameter,
+for use by Java API clients.
+
+Added an APITestServlet for manual debugging and testing of the
+API. All http API calls will now automatically be listed under:
+
+http://localhost:7876/test
+
+or if you need to try only a specific one, e.g. getBalance:
+
+http://localhost:7876/test?requestType=getBalance
+
+Unlike the admin.html page, this listing is automatically
+generated and will include all available API calls without
+having to be manually updated when a new one is added.
+
+Applied the patch to Curve25519.sign() suggested by DoctorEvil.
+Block and transaction signing should no longer fail to verify.
+
+
