@@ -8,8 +8,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.MISSING_ORDER;
@@ -20,13 +18,8 @@ public final class CancelBidOrder extends CreateTransaction {
 
     static final CancelBidOrder instance = new CancelBidOrder();
 
-    private CancelBidOrder() {}
-
-    private static final List<String> parameters = addCommonParameters(Arrays.asList("order"));
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private CancelBidOrder() {
+        super("order");
     }
 
     @Override

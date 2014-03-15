@@ -13,10 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -28,14 +25,15 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
-    private static final List<String> commonParameters = Collections.unmodifiableList(Arrays.asList(
-            "secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"));
-
-    static List<String> addCommonParameters(List<String> myParameters) {
-        List<String> result = new ArrayList<>();
-        result.addAll(myParameters);
-        result.addAll(commonParameters);
+    private static String[] addCommonParameters(String[] parameters) {
+        String[] result = Arrays.copyOf(parameters, parameters.length + 5);
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"}, 0,
+                result, parameters.length, 5);
         return result;
+    }
+
+    CreateTransaction(String... parameters) {
+        super(addCommonParameters(parameters));
     }
 
     final Account getAccount(HttpServletRequest req) {
@@ -63,7 +61,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                                             int amount, Attachment attachment) throws NxtException.ValidationException {
         String deadlineValue = req.getParameter("deadline");
         String feeValue = req.getParameter("fee");
-        String referencedTransactionValue = req.getParameter("referencedTransaction");
+        String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 

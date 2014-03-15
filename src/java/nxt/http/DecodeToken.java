@@ -7,8 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_WEBSITE;
 import static nxt.http.JSONResponses.MISSING_TOKEN;
@@ -18,13 +16,8 @@ public final class DecodeToken extends APIServlet.APIRequestHandler {
 
     static final DecodeToken instance = new DecodeToken();
 
-    private DecodeToken() {}
-
-    private static final List<String> parameters = Arrays.asList("website", "token");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private DecodeToken() {
+        super("website", "token");
     }
 
     @Override

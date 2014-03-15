@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
@@ -20,13 +19,8 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
 
     static final GetTrades instance = new GetTrades();
 
-    private GetTrades() {}
-
-    private static final List<String> parameters = Arrays.asList("asset", "firstIndex", "lastIndex");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetTrades() {
+        super("asset", "firstIndex", "lastIndex");
     }
 
     @Override

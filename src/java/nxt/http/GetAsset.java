@@ -6,8 +6,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.MISSING_ASSET;
@@ -17,13 +15,8 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
 
     static final GetAsset instance = new GetAsset();
 
-    private GetAsset() {}
-
-    private static final List<String> parameters = Arrays.asList("asset");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetAsset() {
+        super("asset");
     }
 
     @Override

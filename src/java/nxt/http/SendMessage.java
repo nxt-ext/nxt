@@ -8,8 +8,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
@@ -21,14 +19,8 @@ public final class SendMessage extends CreateTransaction {
 
     static final SendMessage instance = new SendMessage();
 
-    private SendMessage() {}
-
-    private static final List<String> parameters = addCommonParameters(Arrays.asList(
-            "recipient", "message"));
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private SendMessage() {
+        super("recipient", "message");
     }
 
     @Override

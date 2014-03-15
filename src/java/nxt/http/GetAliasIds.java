@@ -7,8 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
 import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
@@ -17,13 +15,8 @@ public final class GetAliasIds extends APIServlet.APIRequestHandler {
 
     static final GetAliasIds instance = new GetAliasIds();
 
-    private GetAliasIds() {}
-
-    private static final List<String> parameters = Arrays.asList("timestamp");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetAliasIds() {
+        super("timestamp");
     }
 
     @Override

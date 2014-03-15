@@ -6,8 +6,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_DATE;
 import static nxt.http.JSONResponses.INCORRECT_HOST;
@@ -22,14 +20,8 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 
-    private MarkHost() {}
-
-    private static final List<String> parameters = Arrays.asList(
-            "secretPhrase", "host", "weight", "date");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private MarkHost() {
+        super("secretPhrase", "host", "weight", "date");
     }
 
     @Override

@@ -313,12 +313,15 @@ final class BlockImpl implements Block {
             }
 
             Account account = Account.getAccount(getGeneratorId());
-            if (account == null || account.getEffectiveBalance() <= 0) {
+            long effectiveBalance = account == null ? 0 : account.getEffectiveBalance();
+            if (effectiveBalance <= 0) {
                 return false;
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
-            BigInteger target = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+            BigInteger target = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget())
+                    .multiply(BigInteger.valueOf(effectiveBalance))
+                    .multiply(BigInteger.valueOf(elapsedTime));
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;

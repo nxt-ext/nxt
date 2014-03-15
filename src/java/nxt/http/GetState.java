@@ -16,7 +16,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.List;
 
 public final class GetState extends APIServlet.APIRequestHandler {
@@ -24,11 +23,6 @@ public final class GetState extends APIServlet.APIRequestHandler {
     static final GetState instance = new GetState();
 
     private GetState() {}
-
-    @Override
-    List<String> getParameters() {
-        return Collections.emptyList();
-    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

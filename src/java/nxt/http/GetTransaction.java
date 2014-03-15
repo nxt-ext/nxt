@@ -7,8 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
@@ -18,13 +16,8 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
 
     static final GetTransaction instance = new GetTransaction();
 
-    private GetTransaction() {}
-
-    private static final List<String> parameters = Arrays.asList("transaction", "hash");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetTransaction() {
+        super("transaction", "hash");
     }
 
     @Override

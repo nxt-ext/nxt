@@ -284,6 +284,7 @@ final class TransactionImpl implements Transaction {
 
         try {
             while (!verify()) {
+                Logger.logMessage("ERROR: Failed to sign transaction, trying again");
                 timestamp++;
                 // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
                 signature = null;

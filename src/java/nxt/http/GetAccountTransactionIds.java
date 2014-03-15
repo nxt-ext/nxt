@@ -10,8 +10,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -23,14 +21,8 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 
-    private GetAccountTransactionIds() {}
-
-    private static final List<String> parameters = Arrays.asList(
-            "account", "timestamp", "type", "subtype");
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private GetAccountTransactionIds() {
+        super("account", "timestamp", "type", "subtype");
     }
 
     @Override

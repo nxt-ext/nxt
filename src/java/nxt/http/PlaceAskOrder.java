@@ -8,8 +8,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.List;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_PRICE;
@@ -24,14 +22,8 @@ public final class PlaceAskOrder extends CreateTransaction {
 
     static final PlaceAskOrder instance = new PlaceAskOrder();
 
-    private PlaceAskOrder() {}
-
-    private static final List<String> parameters = addCommonParameters(Arrays.asList(
-            "asset", "quantity", "price"));
-
-    @Override
-    List<String> getParameters() {
-        return parameters;
+    private PlaceAskOrder() {
+        super("asset", "quantity", "price");
     }
 
     @Override
