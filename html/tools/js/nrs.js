@@ -5722,13 +5722,13 @@
 			return;
 		} else if (nr <= 3) {
 			for (k in diff) {
-				NRS.sendRequest("getAsset", {"asset": k, "_extra": {"difference": diff[k]}}, function(asset, input) {
+				NRS.sendRequest("getAsset", {"asset": k, "_extra": {"difference": diff[k]}}, function(asset, input) {					
 					asset.difference = input["_extra"].difference;
-										
+					
 					if (asset.difference > 0) {
 						$.growl("You received " + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + ".", {"type": "success"});
 					} else {
-						$.growl("You sold " + NRS.formatAmount(asset.difference) + " " +  asset.name.escapeHTML() + ( asset.difference == 1 ? " asset" : "assets") + ".", {"type": "success"});
+						$.growl("You sold " + NRS.formatAmount(Math.abs(asset.difference)) + " " +  asset.name.escapeHTML() + ( asset.difference == 1 ? " asset" : "assets") + ".", {"type": "success"});
 					}
 				});
 			}
@@ -5962,10 +5962,12 @@
     	} else {
 	        data = data || {};
         }
-        
+                
         $.each(data, function(key, val) {
 	    	if (key != "secretPhrase") {
-	    		data[key] = $.trim(val);
+	    		if (typeof val == "string") {
+	    			data[key] = $.trim(val);
+	    		}
 	    	} 
         });
                         
