@@ -115,6 +115,8 @@ public final class Nxt {
     }
 
     public static void shutdown() {
+        API.shutdown();
+        Users.shutdown();
         Peers.shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
