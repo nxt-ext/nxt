@@ -320,7 +320,8 @@
 	NRS.isTestNet = false;
 	NRS.fetchingModalData = false;
 	NRS.closedGroups = [];
-
+	NRS.isLocalHost = false;
+	
     NRS.init = function() {  
    	    if (location.port && location.port != "6876") {
 		    $(".testnet_only").hide();
@@ -329,7 +330,11 @@
 			NRS.blockchainCalculationServers = [9, 10];
 		    $(".testnet_only, #testnet_login").show();
 	    }
-				
+					
+		if (!NRS.server && window.location.hostname.toLowerCase() == "localhost") {
+			NRS.isLocalHost = true;
+		}
+		
     	NRS.createDatabase();
     	
     	NRS.getState(function() {
@@ -5534,7 +5539,7 @@
     }
     
     NRS.setupClipboardFunctionality = function() {
-    	if (NRS.server) {
+    	if (!NRS.isLocalHost) {
 	    	var $el = $("#account_id_dropdown .dropdown-menu a");
     	} else {
 	    	var $el = $("#account_id");
@@ -5544,7 +5549,7 @@
 			moviePath: "js/ZeroClipboard.swf"
 		});
 		
-    	if (NRS.server) {    		
+    	if (!NRS.isLocalHost) {    		
 			clipboard.on("dataRequested", function (client, args) {
 				switch ($(this).data("type")) {
 					case "account_id": 
@@ -5963,7 +5968,7 @@
 	    		data[key] = $.trim(val);
 	    	} 
         });
-                
+                        
         //gets account id from secret phrase client side, used only for login.
         if (requestType == "getAccountId") {
         	var accountId = NRS.generateAccountId(data.secretPhrase, true);
@@ -6031,12 +6036,12 @@
 	 	
 	 	var secretPhrase = "";
 	 	
-	 	if (type == "POST") {
+	 	if (!NRS.isLocalHost && type == "POST") {
 		 	secretPhrase = data.secretPhrase;
 		 	delete data.secretPhrase;
 		 	data.publicKey = NRS.accountBalance.publicKey;
 	 	}
-	 		 		 	
+	 	
      	$.support.cors = true;
      		 	     		 	
 		$.ajax({
