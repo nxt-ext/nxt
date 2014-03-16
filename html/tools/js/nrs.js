@@ -3291,8 +3291,8 @@
 
     	var $btn = $("#inline_message_submit");
     	
-    	$btn.button("loading");    	
-    	
+    	$btn.button("loading");
+    	    	
     	var hex = NRS.convertToHex8(message);
     	var back = NRS.convertFromHex8(hex);
     	   	
@@ -3333,7 +3333,7 @@
         if (!message) {
 	        return {"error": "Message is a required field."};
         }
-        
+		
         var hex = NRS.convertToHex8(message);
         var back = NRS.convertFromHex8(hex);
            	
@@ -5957,6 +5957,12 @@
     	} else {
 	        data = data || {};
         }
+        
+        $.each(data, function(key, val) {
+	    	if (key != "secretPhrase") {
+	    		data[key] = $.trim(val);
+	    	} 
+        });
                 
         //gets account id from secret phrase client side, used only for login.
         if (requestType == "getAccountId") {
@@ -5970,10 +5976,8 @@
              	
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
-        	console.log("!!!!!!!!!!CHECKING ACCOUNT ID!!!!!!!!!!");
 		    var accountId = NRS.generateAccountId(data.secretPhrase);
 	    	
-	    	console.log("account id = " + accountId + " versus " + NRS.account);
 	    	if (accountId != NRS.account) {		    		
 	        	if (callback) {
 		        	callback({"errorCode": 1, "errorDescription": "Incorrect secret phrase."});
@@ -6120,7 +6124,7 @@
 	    var transaction = {};
 	    
 	    var currentPosition = 0;
-
+	    
 		var byteArray = converters.hexStringToByteArray(transactionBytes);
 				
 		transaction.type      = byteArray[0];
@@ -6172,9 +6176,11 @@
 				var message_length  = String(converters.byteArrayToSignedInt32(byteArray, pos));
 								
 				pos += 4;
-				
-				transaction.message = converters.byteArrayToToString(byteArray, pos, message_length);
-					
+								
+				var slice = byteArray.slice(pos, pos+message_length);
+								
+				transaction.message = converters.byteArrayToHexString(slice);
+									
 				if (transaction.message !== data.message) {
 					return false;
 				}
@@ -6246,7 +6252,7 @@
 				pos++;
 				
 				transaction.optionsAreBinary = String(byteArray[pos]);
-				
+																
 				if (transaction.name !== data.name || transaction.description !== data.description || transaction.minNumberOfOptions !== data.minNumberOfOptions || transaction.maxNumberOfOptions !== data.maxNumberOfOptions || transaction.optionsAreBinary !== data.optionsAreBinary) {
 					return false;
 				}
@@ -6282,9 +6288,7 @@
 						
 					pos++;
 				}
-				
-				console.log(transaction);
-				
+								
 				return false;
 				break;
 			case "issueAsset":	
