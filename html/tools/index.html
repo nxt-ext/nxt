@@ -1882,7 +1882,6 @@
 								<label for="register_alias_alias">ALIAS</label>
 								<input type="text" class="form-control" name="alias" id="register_alias_alias" placeholder="Alias" tabindex="1" />
 								<p id="register_alias_alias_noneditable" style="display:none"></p>
-								<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
 							</div>
 							<div class="form-group">
 								<label for="register_alias_uri" id="register_alias_uri_label">URI</label>
@@ -1909,6 +1908,7 @@
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
 			      		<input type="hidden" name="request_type" value="assignAlias" />
 			      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
 			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
@@ -2335,11 +2335,11 @@
 			<a href="#" onclick="NRS.showConsole();return false;" style="color:black;"><i class="fa fa-terminal" style="font-weight:bold"></i></a>
 		</div>
 				
+		<!--[if lte IE 9]>
 		<script type="text/javascript">
-		if (!window.addEventListener) {
-			document.getElementById("old_browser_warning").style.display = "block";
-		}
-		</script>		
+	    	document.getElementById("old_browser_warning").style.display = "block";
+		</script>
+		<![endif]-->		
         <script src="js/jquery-2.1.0.js"></script>
         <script src="js/bootstrap.js" type="text/javascript"></script>
 		<script src="js/jquery.rss.js" type="text/javascript"></script>
@@ -2348,9 +2348,13 @@
         <script src="js/growl.js" type="text/javascript"></script>
         <script src="js/ZeroClipboard.js" type="text/javascript"></script>
         <script src="js/bootstrap-colorpicker.js" type="text/javascript"></script>
-        <!--[if IE 9]>
-        <script src="js/jquery.xdomainrequest.js" type="text/javascript"></script>
-        <![endif]-->
+        <script src="js/jssha256.js" type="text/javascript"></script>
+        <script src="js/curve25519.js" type="text/javascript"></script>
+        <script src="js/converters.js" type="text/javascript"></script>
+        <script src="js/crypto.js" type="text/javascript"></script>
+        <script src="js/jsbn.js" type="text/javascript"></script>
+        <script src="js/jsbn2.js" type="text/javascript"></script>
+        <script src="js/bytes.js" type="text/javascript"></script>
         <script src="js/nrs.js" type="text/javascript"></script>    
     </body>
 </html>

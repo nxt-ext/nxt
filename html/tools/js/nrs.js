@@ -320,9 +320,9 @@
 	NRS.isTestNet = false;
 	NRS.fetchingModalData = false;
 	NRS.closedGroups = [];
-	
+
     NRS.init = function() {  
-	    if (location.port && location.port != "6876") {
+   	    if (location.port && location.port != "6876") {
 		    $(".testnet_only").hide();
 	    } else {
 			NRS.isTestNet = true;
@@ -739,6 +739,8 @@
 	    $("#nrs_update_hash_progress").css("width", "0%");
 	    $("#nrs_update_hash_progress").show();
 	    	    
+	    	    
+
 	    var worker = new Worker("js/worker_sha256.js");
 	    
 	    worker.onmessage = function(e) {
@@ -3026,11 +3028,11 @@
            	
         var data = {"name"		  	     : $("#create_poll_name").val(),
         			"description" 	     : $("#create_poll_description").val(),
-        			"optionsAreBinary"   : false, 
+        			"optionsAreBinary"   : "0", 
         			"minNumberOfOptions" : $("#create_poll_min_options").val(),
         			"maxNumberOfOptions" : $("#create_poll_max_options").val(),
-        			"fee"			     : 1,
-        			"deadline"		     : 24,
+        			"fee"			     : "1",
+        			"deadline"		     : "24",
         			"secretPhrase"	     : $("#create_poll_password").val()};
         		
 		for (var i=0; i<options.length; i++) {
@@ -3469,7 +3471,7 @@
     	var alias = $invoker.data("alias");
     	    	 
     	if (alias) {
-    		NRS.sendRequest("getAliasURI", {"alias": alias}, function(response) {
+    		NRS.sendRequest ("getAliasURI", {"alias": alias}, function(response) {
 	    	    if (/http:\/\//i.test(response.uri)) {
 	    			NRS.forms.setAliasType("uri");
 	    		} else if (/acct:(\d+)@nxt/.test(response.uri) || /nacc:(\d+)/.test(response.uri)) {
@@ -5120,7 +5122,7 @@
     	}
 
 		if (data.deadline) {
-			data.deadline *= 60; //hours to minutes
+			data.deadline = String(data.deadline * 60); //hours to minutes
 		}    
 		
 		if (data.recipient) {
@@ -5146,7 +5148,7 @@
 			return;
 		}
 			    	
-    	NRS.sendRequest(requestType, data, function(response) {
+    	NRS.sendRequest(requestType, data, function(response) {      		  		
     		if (response.errorCode) {   
     		    if (NRS.forms.errorMessages[requestType] && NRS.forms.errorMessages[requestType][response.errorCode]) {
     				$modal.find(".error_message").html(NRS.forms.errorMessages[requestType][response.errorCode].escapeHTML()).show();
@@ -5157,7 +5159,7 @@
     			}
     			$btn.button("reset");
     			$modal.modal("unlock");
-    		} else if (response.transaction) {
+    		} else if (response.hash) {
     			//should we add a fake transaction to the recent transactions?? or just wait until the next block comes!??
     			$btn.button("reset");
     			$modal.modal("unlock");
@@ -5803,15 +5805,37 @@
 	    $(NRS.console.document.body).html("Console opened. Logging started...<div id='console'></div>");
     }
     
-    NRS.addToConsole = function(text, type) {
+    NRS.addToConsole = function(url, type, data, response, error) {
     	if (!NRS.console) {
 	    	return;
     	}
+    	
     	if (!NRS.console.document || !NRS.console.document.body) {
 	    	NRS.console = null;
 	    	return;
     	}
     	
+    	url = url.replace(/&random=[\.\d]+/, "", url);
+
+		NRS.addToConsoleBody(url + " (" + type + ") " + new Date().toString(), "url");
+		
+		if (data) {			
+			if (typeof data == "string") {
+				var d = NRS.queryStringToObject(data);
+				NRS.addToConsoleBody(JSON.stringify(d, null, "\t"), "post");
+			} else {
+				NRS.addToConsoleBody(JSON.stringify(data, null, "\t"), "post");
+			}
+		}
+		
+		if (error) {
+			NRS.addToConsoleBody(response, "error");
+		} else {
+			NRS.addToConsoleBody(JSON.stringify(response, null, "\t"), (response.errorCode ? "error" : ""));
+		}
+    } 
+    
+    NRS.addToConsoleBody = function(text, type) {    	
     	var color = "";
     	
     	switch (type) {
@@ -5909,7 +5933,7 @@
           data: data
         }).done(function(json) {  
         	if (json.errorCode && !json.errorDescription) {
-        		json.errorDescription = "Unknown error occured.";
+        		json.errorDescription = (json.errorMessage ? json.errorMessage : "Unknown error occured.");
         	}    
         	if (callback) {
         		callback(json, data);
@@ -5922,7 +5946,6 @@
     }
     
     NRS.sendRequest = function(requestType, data, callback, async) {     
-    	//for some reason when downloading updates I get an undefined call to this method.. temp fix
     	if (requestType == undefined) {
     		return;
     	}    	  	
@@ -5934,29 +5957,35 @@
     	} else {
 	        data = data || {};
         }
-            		      	
-     	if ("secretPhrase" in data && requestType != "getAccountId") {	     	
-	     	//check to see if secretPhrase supplied matches logged in account
-			NRS.sendRequest("getAccountId", {"secretPhrase": data.secretPhrase}, function(response) {
-				if (!response.errorCode) {
-					if (response.accountId != NRS.account) {
-				  		response.errorCode = 1;
-				  		response.errorDescription = "Incorrect secret phrase.";
-				  		if (callback) {
-					  		callback(response, {});
-				  		}
-					} else {
-			  			//ok, accountId matches..continue with the real request.
-						NRS.processAjaxRequest(requestType, data, callback, async);
-			  		
-					}
-				} else {
-					callback(response, {});
-				}
-			});
-     	} else {	     	
+                
+        //gets account id from secret phrase client side, used only for login.
+        if (requestType == "getAccountId") {
+        	var accountId = NRS.generateAccountId(data.secretPhrase, true);
+        	        	
+        	if (callback) {
+	        	callback({"accountId": accountId});
+        	}
+        	return;
+        }
+             	
+        //check to see if secretPhrase supplied matches logged in account, if not - show error.
+        if ("secretPhrase" in data) {
+        	console.log("!!!!!!!!!!CHECKING ACCOUNT ID!!!!!!!!!!");
+		    var accountId = NRS.generateAccountId(data.secretPhrase);
+	    	
+	    	console.log("account id = " + accountId + " versus " + NRS.account);
+	    	if (accountId != NRS.account) {		    		
+	        	if (callback) {
+		        	callback({"errorCode": 1, "errorDescription": "Incorrect secret phrase."});
+	        	}
+	        	return;
+	    	} else {
+	    		//ok, accountId matches..continue with the real request.
+	        	NRS.processAjaxRequest(requestType, data, callback, async);
+	    	}
+        } else {
 	     	NRS.processAjaxRequest(requestType, data, callback, async);
-     	}
+        }
     }
     
     NRS.processAjaxRequest = function(requestType, data, callback, async) {
@@ -5975,7 +6004,7 @@
 			
 			beforeSend = NRS.beforeSendRequest;
 		} else {
-			//not necessary... we can just use the above code..
+			//not really necessary... we can just use the above code..
 			var plusCharacter = requestType.indexOf("+");
 			
 			if (plusCharacter > 0) {
@@ -5996,8 +6025,16 @@
 			}
 	 	}
 	 	
-     	$.support.cors = true;
+	 	var secretPhrase = "";
 	 	
+	 	if (type == "POST") {
+		 	secretPhrase = data.secretPhrase;
+		 	delete data.secretPhrase;
+		 	data.publicKey = NRS.accountBalance.publicKey;
+	 	}
+	 		 		 	
+     	$.support.cors = true;
+     		 	     		 	
 		$.ajax({
 			url: url,
 			crossDomain: true,
@@ -6007,47 +6044,59 @@
 			async: (async === undefined ? true : async),
 			beforeSend: beforeSend,
 			data: data
-		}).done(function(json) {  
+		}).done(function(response, status, xhr) {  
 			if (NRS.console) {
-				var url = this.url.replace(/&random=[\.\d]+/, "", this.url);
+				NRS.addToConsole(this.url, this.type, this.data, response);
+			}
+												
+			if (secretPhrase && response.transactionBytes && !response.errorCode) {
+				var publicKey = NRS.generatePublicKey(secretPhrase);
+				var signature = nxtCrypto.sign(response.transactionBytes, converters.stringToHexString(secretPhrase));
 				
-				NRS.addToConsole(url + " (" + this.type + ") " + new Date().toString(), "url");
-								
-				if (this.data) {
-					if (typeof this.data == "string") {
-						var d = NRS.queryStringToObject(this.data);
-						NRS.addToConsole(JSON.stringify(d, null, "\t"), "post");
+				if (!nxtCrypto.verify(signature, response.transactionBytes, publicKey)) {
+					if (callback) {						
+						callback({"errorCode": 1, "errorDescription": "Could not verify signature (client side)."}, data);
 					} else {
-						NRS.addToConsole(JSON.stringify(this.data, null, "\t"), "post");
+						$.growl("Could not verify signature.", {"type": "danger"});
+					}
+					return;
+				} else {
+					var payload = response.transactionBytes.substr(0,128) + signature + response.transactionBytes.substr(256);
+					
+					if (!NRS.verifyTransactionBytes(payload, requestType, data)) {
+						if (callback) {
+							callback({"errorCode": 1, "errorDescription": "Could not verify transaction bytes (server side)."}, data);
+						} else {
+							$.growl("Could not verify transaction bytes.", {"type": "danger"});
+						}
+						return;
+					} else {
+						if (callback) {
+							if (extra) {
+								data["_extra"] = extra;
+							}
+							
+							NRS.broadcastTransactionBytes(payload, callback, response, data);
+						} else {
+							NRS.broadcastTransactionBytes(payload);
+						}
 					}
 				}
-				NRS.addToConsole(JSON.stringify(json, null, "\t"), json.errorCode);
-			}
-			
-			if (json.errorCode && !json.errorDescription) {
-				json.errorDescription = "Unknown error occured.";
-			}    
-			        	
-			if (callback) {
-				if (extra) {
-					data["_extra"] = extra;
+			} else {
+				if (response.errorCode && !response.errorDescription) {
+					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
+				}    
+				        	
+				if (callback) {
+					if (extra) {
+						data["_extra"] = extra;
+					}
+					callback(response, data);
 				}
-				callback(json, data);
 			}
 		}).fail(function(xhr, textStatus, error) {
 			if (NRS.console) {
-				var url = this.url.replace(/&random=[\.\d]+/, "", this.url);
-
-				NRS.addToConsole(url + " (" + this.type + ") " + new Date().toString(), "url");
-				if (this.data) {
-					if (typeof this.data == "string") {
-						var d = NRS.queryStringToObject(this.data);
-						NRS.addToConsole(JSON.stringify(d, null, "\t"), "post");
-					} else {
-						NRS.addToConsole(JSON.stringify(this.data, null, "\t"), "post");
-					}
-				}
-				NRS.addToConsole(error, "error");
+				NRS.addToConsole(this.url, this.type, this.data, error, true);
 			}
 
 			if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
@@ -6065,6 +6114,312 @@
 		 		callback({"errorCode": -1, "errorDescription": error}, {});
 			}
 		});
+    }
+
+    NRS.verifyTransactionBytes = function(transactionBytes, requestType, data) {	    
+	    var transaction = {};
+	    
+	    var currentPosition = 0;
+
+		var byteArray = converters.hexStringToByteArray(transactionBytes);
+				
+		transaction.type      = byteArray[0];
+		transaction.subType   = byteArray[1];
+		transaction.timestamp = String(converters.byteArrayToSignedInt32(byteArray, 2));
+		transaction.deadline  = String(converters.byteArrayToSignedShort(byteArray, 6));
+		//sender public key == bytes 8 - 39
+		transaction.recipient = String(converters.byteArrayToBigInteger(byteArray, 40));
+		transaction.amount    = String(converters.byteArrayToSignedInt32(byteArray, 48));
+		transaction.fee 	  = String(converters.byteArrayToSignedInt32(byteArray, 52));
+		transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, 56));
+				
+		if (transaction.referencedTransaction == "0") {
+			transaction.referencedTransaction = null;
+		}
+		
+		//signature == 64 - 127
+
+		if (!("amount" in data)) {
+			data.amount = "0";
+		}
+		
+		if (!("recipient" in data)) {
+			//recipient == genesis
+			data.recipient = "1739068987193023818";
+		}
+		
+		if (transaction.deadline !== data.deadline || transaction.recipient !== data.recipient || transaction.amount !== data.amount || transaction.fee !== data.fee) {
+			return false;
+		}
+		
+		if ("referencedTransaction" in data && transaction.referencedTransaction != data.referencedTransaction) {
+			return false;
+		}
+		
+		var pos = 128;
+		
+		switch (requestType) {
+			case "sendMoney":
+				if (transaction.type !== 0 || transaction.subType !== 0) {
+					return false;
+				}
+				break;
+			case "sendMessage":	
+				if (transaction.type !== 1 || transaction.subType !== 0) {
+					return false;
+				}
+			
+				var message_length  = String(converters.byteArrayToSignedInt32(byteArray, pos));
+								
+				pos += 4;
+				
+				transaction.message = converters.byteArrayToToString(byteArray, pos, message_length);
+					
+				if (transaction.message !== data.message) {
+					return false;
+				}
+				break;
+			case "assignAlias":
+				if (transaction.type != 1 || transaction.subType != 1) {
+					return false;
+				}
+				
+				var alias_length  = parseInt(byteArray[pos], 10);
+				
+				pos++;
+				
+				transaction.alias = converters.byteArrayToString(byteArray, pos, alias_length);
+				
+				pos += alias_length;
+				
+				var uri_length = converters.byteArrayToSignedShort(byteArray, pos);
+				
+				pos+= 2;
+				
+				transaction.uri = converters.byteArrayToString(byteArray, pos, uri_length);
+				
+				if (transaction.alias !== data.alias || transaction.uri !== data.uri) {
+					return false;
+				}
+				break;
+			case "createPoll":
+				if (transaction.type !== 1 || transaction.subType !== 2) {
+					return false;
+				}
+				
+				var name_length = converters.byteArrayToSignedShort(byteArray, pos);
+				
+				pos += 2;
+				
+				transaction.name = converters.byteArrayToString(byteArray, pos, name_length);
+				
+				pos += name_length;
+				
+				var description_length = converters.byteArrayToSignedShort(byteArray, pos);
+				
+				pos += 2;
+				
+				transaction.description = converters.byteArrayToString(byteArray, pos, description_length);
+				
+				pos += description_length;
+				
+				var nr_options = byteArray[pos];
+											
+				pos++;
+	
+				for (var i=0; i<nr_options; i++) {
+					var option_length = converters.byteArrayToSignedShort(byteArray, pos);
+					
+					pos += 2;
+					
+					transaction["option" + i] = converters.byteArrayToString(byteArray, pos, option_length);
+					
+					pos += option_length;
+				}
+										
+				transaction.minNumberOfOptions = String(byteArray[pos]);
+				
+				pos++;
+				
+				transaction.maxNumberOfOptions = String(byteArray[pos]);
+				
+				pos++;
+				
+				transaction.optionsAreBinary = String(byteArray[pos]);
+				
+				if (transaction.name !== data.name || transaction.description !== data.description || transaction.minNumberOfOptions !== data.minNumberOfOptions || transaction.maxNumberOfOptions !== data.maxNumberOfOptions || transaction.optionsAreBinary !== data.optionsAreBinary) {
+					return false;
+				}
+				
+				for (var i=0; i<nr_options; i++) {
+					if (transaction["option" + i] !== data["option" + i]) {
+						return false;
+					}
+				}
+				
+				if (("option" + i) in data) {
+					return false;
+				}
+				
+				break;
+			case "castVote":	
+				if (transaction.type !== 1 || transaction.subType !== 3) {
+					return false;
+				}
+								
+				transaction.poll = String(converters.byteArrayToBigInteger(byteArray, pos));
+				
+				pos += 8;
+				
+				var vote_length = byteArray[pos];
+				
+				pos++;
+							
+				transaction.votes = [];
+				
+				for (var i=0; i<vote_length; i++) {
+					transaction.votes.push(bytesArray[pos]);
+						
+					pos++;
+				}
+				
+				console.log(transaction);
+				
+				return false;
+				break;
+			case "issueAsset":	
+				if (transaction.type !== 2 || transaction.subType !== 0) {
+					return false;
+				}
+					
+				var name_length = byteArray[pos];
+				
+				pos++;
+				
+				transaction.name = converters.byteArrayToString(byteArray, pos, name_length);
+				
+				pos += name_length;
+				
+				var description_length = converters.byteArrayToSignedShort(byteArray, pos); //6-7
+	
+				pos += 2;
+				
+				transaction.description = converters.byteArrayToString(byteArray, pos, description_length);
+	
+				pos += description_length;
+										
+				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos)); 
+				
+				if (transaction.name != data.name || transaction.description != data.description || transaction.quantity != data.quantity) {
+					return false;
+				}
+				break;
+			case "transferAsset":	
+				if (transaction.type !== 2 || transaction.subType !== 1) {
+					return false;
+				}
+				
+				transaction.asset  = String(converters.byteArrayToBigInteger(byteArray, pos));
+				
+				pos += 8;
+				
+				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
+				
+				if (transaction.asset != data.asset || transaction.quantity != data.quantity) {
+					return false;
+				}
+				break;
+			case "placeAskOrder":
+			case "placeBidOrder":
+				if (transaction.type !== 2) {
+					return false;
+				} else if (requestType == "placeAskOrder" && transaction.subType !== 2) {
+					return false;
+				} else if (requestType == "placeBidOrder" && transaction.subType !== 3) {
+					return false;
+				}
+				
+	        	transaction.asset = String(converters.byteArrayToBigInteger(byteArray, pos));	
+        	
+	        	pos += 8;
+	        	
+				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
+				
+				pos += 4;
+				
+				transaction.price = String(converters.byteArrayToBigInteger(byteArray, pos));
+								
+				if (transaction.asset !== data.asset || transaction.quantity !== data.quantity || transaction.price !== data.price) {
+					return false;
+				}
+				break;
+			case "cancelAskOrder":
+			case "cancelBidOrder":
+				if (transaction.type !== 2) {
+					return false;
+				} else if (requestType == "cancelAskOrder" && transaction.subType !== 4) {
+					return false;
+				} else if (requestType == "cancelBidOrder" && transaction.subType !== 5) {
+					return false;
+				}
+				
+				transaction.order = String(converters.byteArrayToBigInteger(byteArray, pos));
+        	
+	        	if (transaction.order !== data.order) {
+		        	return false;
+	        	}
+	        	
+	        	break;
+	        default:
+	        	//invalid requestType..
+	        	return false;
+		}
+		
+		return true;
+    }
+    
+    NRS.broadcastTransactionBytes = function(transactionData, callback, original_response, original_data) {
+	   	$.ajax({
+			url: NRS.server + "/nxt?requestType=broadcastTransaction",
+			crossDomain: true,
+			dataType: "json",
+			type: "POST",
+			timeout: 20000, //20 seconds
+			async: true,
+			data: {"transactionBytes": transactionData}
+		}).done(function(response, status, xhr) {  			
+			if (NRS.console) {
+				NRS.addToConsole(this.url, this.type, this.data, response);
+			}
+
+			if (callback) {
+				if (response.errorCode && !response.errorDescription) {
+					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
+					callback(response, original_data);
+				} else {
+					callback(original_response, original_data);
+				}    
+			}
+		}).fail(function(xhr, textStatus, error) {
+			if (NRS.console) {
+				NRS.addToConsole(this.url, this.type, this.data, error, true);
+			}
+			
+			if (callback) {
+				if (error == "timeout") {
+		    		error = "The request timed out. Warning: This does not mean the request did not go through. You should wait for the next block and see if your request has been processed.";
+				}
+		 		callback({"errorCode": -1, "errorDescription": error}, {});
+		 	}
+		});
+    }
+        
+    NRS.generatePublicKey = function(secretPhrase) {
+    	return nxtCrypto.getPublicKey(converters.stringToHexString(secretPhrase));
+    }   
+        
+    NRS.generateAccountId = function(secretPhrase) {   
+    	return nxtCrypto.getAccountId(secretPhrase);
     }
     
     $(".modal").on("shown.bs.modal", function() {
