@@ -275,25 +275,10 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void sign(String secretPhrase) {
-
         if (signature != null) {
             throw new IllegalStateException("Transaction already signed");
         }
-
         signature = Crypto.sign(getBytes(), secretPhrase);
-
-        try {
-            while (!verify()) {
-                Logger.logMessage("ERROR: Failed to sign transaction, trying again");
-                timestamp++;
-                // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
-                signature = null;
-                signature = Crypto.sign(getBytes(), secretPhrase);
-            }
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error signing transaction", e);
-        }
-
     }
 
     @Override
