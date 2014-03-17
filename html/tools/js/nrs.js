@@ -5634,7 +5634,7 @@
 				if (NRS.accountBalance.errorCode == 5) {
 					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + NRS.account + "</strong>").show();
 				} else {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountBalance.errorDescription.escapeHTML()).show();
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountBalance.errorDescription ? NRS.accountBalance.errorDescription.escapeHTML() : "An unknown error occured.").show();
 				}
     		} else {    			
     			if (!NRS.accountBalance.publicKey) {
