@@ -3159,6 +3159,13 @@ label .popover-content {
   background-color: #3c8dbc;
   color: #f9f9f9;
 }
+#remember_password_container {
+	color:#555555;
+	text-align:center;
+}
+#remember_password_container label {
+	font-weight:normal;
+}
 
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {

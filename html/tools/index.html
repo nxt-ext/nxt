@@ -273,7 +273,7 @@
 							           		</div>
 							           		<div class="row">
 							           			<div class="col-xs-5 col-sm-5 col-md-5">
-							           				<div class="form-group">
+							           				<div class="form-group secret_phrase">
 							           					<input type="password" class="form-control" id="inline_message_password" name="inline_message_password" placeholder="Secret Phrase">
 							           				</div>
 							           			</div>
@@ -1100,7 +1100,12 @@
 		                        </div>
 		                    </div>
 		                </div>
-		            </div>		
+		            </div>	
+		            
+		            <div id="remember_password_container">
+		            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember password during session</label>
+		            </div>
+		            
 		            <div id="registration_link">
 		            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();">Don't have an account? Click here to create one!</a>
 		            </div> 
@@ -1223,10 +1228,11 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<p>If you are sure you want to stop forging, type your secret phrase to confirm.
+							<p class="show_secret_phrase">If you are sure you want to stop forging, type your secret phrase to confirm.</p>
+							<p class="hide_secret_phrase" style="display:none">If you are sure you want to stop forging, click the button below to confirm.</p>
 							<div class="callout callout-danger" id="stop_forging_remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="stop_forging_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="stop_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
@@ -1251,10 +1257,11 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<p>If you want to start forging, type your secret phrase to confirm.
+							<p class="show_secret_phrase">If you want to start forging, type your secret phrase to confirm.</p>
+							<p class="hide_secret_phrase" style="display:none">If you you want to start forging, click the button below to confirm.</p>
 							<div class="callout callout-danger" id="start_forging_remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="start_forging_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="start_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
@@ -1299,7 +1306,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="cancel_order_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
@@ -1344,7 +1351,7 @@
 								<label>FEE</label>
 								<p id="asset_order_fee_paid"></p>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="asset_order_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="asset_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
@@ -1407,7 +1414,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="transfer_asset_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="5">
 							</div>
@@ -1580,7 +1587,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="issue_asset_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="5">
 							</div>
@@ -1670,7 +1677,7 @@
 								</div>
 							</div>
 	
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="create_poll_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="create_poll_password" class="form-control" placeholder="" tabindex="8">
 							</div>
@@ -1729,7 +1736,7 @@
 								</div>
 							</div>
 	
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="cast_vote_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
 							</div>
@@ -1787,7 +1794,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="send_money_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="5">
 							</div>
@@ -1844,7 +1851,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="send_message_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="5">
 							</div>
@@ -1903,7 +1910,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="register_alias_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="register_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
@@ -1936,7 +1943,7 @@
 								<label for="generate_token_website">WEBSITE</label>
 								<input type="text" class="form-control" name="website" id="generate_token_website" placeholder="Website URL" tabindex="1" value="http://" />
 							</div>
-							<div class="form-group">
+							<div class="form-group secret_phrase">
 								<label for="generate_token_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
 							</div>

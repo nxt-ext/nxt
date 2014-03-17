@@ -321,6 +321,7 @@
 	NRS.fetchingModalData = false;
 	NRS.closedGroups = [];
 	NRS.isLocalHost = false;
+	NRS.rememberPassword = false;
 	
     NRS.init = function() {  
    	    if (location.port && location.port != "6876") {
@@ -1212,6 +1213,9 @@
     }
     
     NRS.logout = function() {
+    	if (NRS.rememberPassword) {
+	    	sessionStorage.removeItem("secret");
+    	}
     	window.location.reload();
     }
 
@@ -3282,7 +3286,7 @@
     $("#inline_message_form").submit(function(e) {
     	e.preventDefault();
     	
-    	if ($("#inline_message_password").val() == "") {
+    	if (!NRS.rememberPassword && $("#inline_message_password").val() == "") {
     		$.growl("Secret phrase is a required field.", { "type": "danger" });
     		return;
     	}
@@ -5146,7 +5150,7 @@
 			}
 		}
 		
-		if ("secretPhrase" in data && !data.secretPhrase.length) {
+		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
 			$modal.find(".error_message").html("Secret phrase is a required field.").show();
 			$btn.button("reset");
 			$modal.modal("unlock");
@@ -5452,7 +5456,7 @@
 
     NRS.login = function(password, callback) {
     	$("#login_password, #registration_password, #registration_password_repeat").val("");
-    	    	
+    	
     	if (!password.length) {
     		$.growl("You must enter your secret phrase. If you don't have one, click the registration button below.", {"type": "danger", "offset": 10});
     		return;
@@ -5472,7 +5476,16 @@
 					$.growl("This account is already taken. Please choose another pass phrase.", {"type": "danger", "offset": 10});
 					return;	
 				}
-				
+								
+				if ($("#remember_password").is(":checked")) {
+					NRS.rememberPassword = true;
+					$("#remember_password").prop("checked", false);
+	    			sessionStorage.setItem("secret", password);
+	    			$.growl("Remember to log out at the end of your session so as to clear the password from memory.", {"type": "danger"});
+	    			$(".secret_phrase, .show_secret_phrase").hide();
+	    			$(".hide_secret_phrase").show();
+				}
+	    	
 		    	$("#account_id").html(NRS.account);
 		    		    	
 		    	var passwordNotice = "";
@@ -6012,8 +6025,7 @@
              	
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
-		    var accountId = NRS.generateAccountId(data.secretPhrase);
-	    	
+		    var accountId = NRS.generateAccountId(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase);	    	
 	    	if (accountId != NRS.account) {		    		
 	        	if (callback) {
 		        	callback({"errorCode": 1, "errorDescription": "Incorrect secret phrase."});
@@ -6068,9 +6080,16 @@
 	 	var secretPhrase = "";
 	 	
 	 	if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
-		 	secretPhrase = data.secretPhrase;
+	 		if (NRS.rememberPassword) {
+		 		secretPhrase = sessionStorage.getItem("secret");
+	 		} else {
+		 		secretPhrase = data.secretPhrase;
+		 	}
+		 	
 		 	delete data.secretPhrase;
 		 	data.publicKey = NRS.accountBalance.publicKey;
+	 	} else if (type == "POST" && NRS.rememberPassword) {
+		 	data.secretPhrase = sessionStorage.getItem("secret");
 	 	}
 	 	
      	$.support.cors = true;
