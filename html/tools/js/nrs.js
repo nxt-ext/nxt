@@ -3311,15 +3311,15 @@
     	   	
     	var data = {"recipient": $("#inline_message_recipient").val(), 
     				"message": hex,
-    				"fee": 1,
-    				"deadline": 1440,
+    				"fee": "1",
+    				"deadline": "1440",
     				"_extra": {"message": message},
     				"secretPhrase": $("#inline_message_password").val()};
     	
     	NRS.sendRequest("sendMessage", data, function(response, input) {
     		if (response.errorCode) {
     			$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", { type: "danger" });
-    		} else if (response.transaction) {
+    		} else if (response.hash) {
     			var message = input;
     			message.message = data["_extra"].message;
     			message.transaction = response.transaction;
@@ -6175,7 +6175,7 @@
 		});
     }
 
-    NRS.verifyTransactionBytes = function(transactionBytes, requestType, data) {	    
+    NRS.verifyTransactionBytes = function(transactionBytes, requestType, data) {	
 	    var transaction = {};
 	    
 	    var currentPosition = 0;
@@ -6206,7 +6206,7 @@
 			//recipient == genesis
 			data.recipient = "1739068987193023818";
 		}
-		
+				
 		if (transaction.deadline !== data.deadline || transaction.recipient !== data.recipient || transaction.amount !== data.amount || transaction.fee !== data.fee) {
 			return false;
 		}
@@ -6233,9 +6233,9 @@
 				pos += 4;
 								
 				var slice = byteArray.slice(pos, pos+message_length);
-								
+												
 				transaction.message = converters.byteArrayToHexString(slice);
-									
+													
 				if (transaction.message !== data.message) {
 					return false;
 				}
