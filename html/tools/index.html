@@ -1223,8 +1223,9 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p>If you are sure you want to stop forging, type your secret phrase to confirm.
+							<div class="callout callout-danger" id="stop_forging_remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="stop_forging_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="stop_forging_password" class="form-control" placeholder="" tabindex="1">
@@ -1250,8 +1251,9 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p>If you want to start forging, type your secret phrase to confirm.
+							<div class="callout callout-danger" id="start_forging_remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="start_forging_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="start_forging_password" class="form-control" placeholder="" tabindex="1">

@@ -5489,16 +5489,23 @@
 				
 				NRS.getAccountBalance(true);
 		    		    	 
-		    	NRS.sendRequest("startForging", {"secretPhrase": password}, function(response) {
-		    		if ("deadline" in response) {
-						$("#forging_indicator i.fa").removeClass("text-danger").addClass("text-success");
-						$("#forging_indicator span").html("Forging");
-		    		} else {
-						$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
-						$("#forging_indicator span").html("Not Forging");
-		    		}
-		    		$("#forging_indicator").show();
-		    	});
+				if (NRS.isLocalHost) {
+			    	NRS.sendRequest("startForging", {"secretPhrase": password}, function(response) {
+			    		if ("deadline" in response) {
+							$("#forging_indicator i.fa").removeClass("text-danger").addClass("text-success");
+							$("#forging_indicator span").html("Forging");
+			    		} else {
+							$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+							$("#forging_indicator span").html("Not Forging");
+			    		}
+			    		$("#forging_indicator").show();
+			    	});
+			    } else {
+			    	//forging requires password to be sent to the server, so we don't do it automatically if not localhost
+					$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+					$("#forging_indicator span").html("Not Forging");
+					$("#forging_indicator").show();
+			    }
 		    	    	 
 		    	//NRS.getAccountAliases();
 		    	    	    
@@ -5773,7 +5780,15 @@
     NRS.sortArray = function(a, b) {
     	return b.timestamp - a.timestamp;
     }
-           
+         
+	$("#start_forging_modal").on('show.bs.modal', function (e) {
+		if (!NRS.isLocalHost) {
+			$("#start_forging_remote_warning").show();
+		} else {
+			$("#start_forging_remote_warning").hide();
+		}
+	});
+
     NRS.forms.errorMessages.startForging = {"5": "You cannot forge. Either your balance is 0 or your account is too new (you must wait a day or so)."};
 
     NRS.forms.startForgingComplete = function(response, data) {
@@ -5785,6 +5800,14 @@
     		$.growl("Couldn't start forging, unknown error.", { type: 'danger' });
     	}
     }
+             
+	$("#stop_forging_modal").on('show.bs.modal', function (e) {
+		if (!NRS.isLocalHost) {
+			$("#stop_forging_remote_warning").show();
+		} else {
+			$("#stop_forging_remote_warning").hide();
+		}
+	});
     
     NRS.forms.stopForgingComplete = function(response, data) {
 	    $("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
@@ -6044,7 +6067,7 @@
 	 	
 	 	var secretPhrase = "";
 	 	
-	 	if (!NRS.isLocalHost && type == "POST") {
+	 	if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
 		 	secretPhrase = data.secretPhrase;
 		 	delete data.secretPhrase;
 		 	data.publicKey = NRS.accountBalance.publicKey;
