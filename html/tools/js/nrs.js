@@ -6199,7 +6199,7 @@
 			return false;
 		}
 		
-		if ("referencedTransaction" in data && transaction.referencedTransaction != data.referencedTransaction) {
+		if ("referencedTransaction" in data && transaction.referencedTransaction !== data.referencedTransaction) {
 			return false;
 		}
 		
@@ -6229,7 +6229,7 @@
 				}
 				break;
 			case "assignAlias":
-				if (transaction.type != 1 || transaction.subType != 1) {
+				if (transaction.type !== 1 || transaction.subType !== 1) {
 					return false;
 				}
 				
@@ -6357,7 +6357,7 @@
 										
 				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos)); 
 				
-				if (transaction.name != data.name || transaction.description != data.description || transaction.quantity != data.quantity) {
+				if (transaction.name !== data.name || transaction.description !== data.description || transaction.quantity !== data.quantity) {
 					return false;
 				}
 				break;
@@ -6372,7 +6372,7 @@
 				
 				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
 				
-				if (transaction.asset != data.asset || transaction.quantity != data.quantity) {
+				if (transaction.asset !== data.asset || transaction.quantity !== data.quantity) {
 					return false;
 				}
 				break;
