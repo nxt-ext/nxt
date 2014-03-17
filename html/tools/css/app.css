@@ -3166,6 +3166,9 @@ label .popover-content {
 #remember_password_container label {
 	font-weight:normal;
 }
+.popover {
+	z-index:9999999999;
+}
 
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {

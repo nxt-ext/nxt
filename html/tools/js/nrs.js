@@ -382,6 +382,8 @@
     			modal.find(".account_info").hide();
     		}
     	});
+    	
+    	$(".show_popover").popover({"trigger": "hover"});
     }
     
     NRS.checkServerTime = function() {
