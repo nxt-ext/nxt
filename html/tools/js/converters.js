@@ -94,6 +94,57 @@ var converters = function () {
 			var bytes = bytes.slice(opt_startIndex, opt_startIndex+length);
 			
 			return decodeURIComponent(escape(String.fromCharCode.apply(null, bytes)));
+		},
+		/**
+		 * Produces an array of the specified number of bytes to represent the integer
+		 * value. Default output encodes ints in little endian format. Handles signed
+		 * as well as unsigned integers. Due to limitations in JavaScript's number
+		 * format, x cannot be a true 64 bit integer (8 bytes).
+		 */
+		intToBytes_: function(x, numBytes, unsignedMax, opt_bigEndian) {
+		  var signedMax = Math.floor(unsignedMax / 2);
+		  var negativeMax = (signedMax + 1) * -1;
+		  console.log("x = " + x);
+		  console.log(signedMax);
+		  console.log(negativeMax);
+		  console.log(Math.floor(x));
+		  if (x != Math.floor(x) || x < negativeMax || x > unsignedMax) {
+		    throw new Error(
+		        x + ' is not a ' + (numBytes * 8) + ' bit integer');
+		  }
+		  var bytes = [];
+		  var current;
+		  // Number type 0 is in the positive int range, 1 is larger than signed int,
+		  // and 2 is negative int.
+		  var numberType = x >= 0 && x <= signedMax ? 0 :
+		      x > signedMax && x <= unsignedMax ? 1 : 2;
+		  if (numberType == 2) {
+		    x = (x * -1) - 1;
+		  }
+		  for (var i = 0; i < numBytes; i++) {
+		    if (numberType == 2) {
+		      current = 255 - (x % 256);
+		    } else {
+		      current = x % 256;
+		    }
+		
+		    if (opt_bigEndian) {
+		      bytes.unshift(current);
+		    } else {
+		      bytes.push(current);
+		    }
+		
+		    if (numberType == 1) {
+		      x = Math.floor(x / 256);
+		    } else {
+		      x = x >> 8;
+		    }
+		  }
+		  return bytes;
+		
+		},
+		int32ToBytes: function(x, opt_bigEndian) {
+			return converters.intToBytes_(x, 4, 4294967295, opt_bigEndian);
 		}
     }
 }();

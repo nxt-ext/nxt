@@ -336,6 +336,10 @@
 			NRS.isLocalHost = true;
 		}
 		
+		if (!NRS.isLocalHost) {
+			$(".remote_warning").show();
+		}
+		
     	NRS.createDatabase();
     	
     	NRS.getState(function() {
@@ -5793,14 +5797,6 @@
     NRS.sortArray = function(a, b) {
     	return b.timestamp - a.timestamp;
     }
-         
-	$("#start_forging_modal").on('show.bs.modal', function (e) {
-		if (!NRS.isLocalHost) {
-			$("#start_forging_remote_warning").show();
-		} else {
-			$("#start_forging_remote_warning").hide();
-		}
-	});
 
     NRS.forms.errorMessages.startForging = {"5": "You cannot forge. Either your balance is 0 or your account is too new (you must wait a day or so)."};
 
@@ -5813,15 +5809,7 @@
     		$.growl("Couldn't start forging, unknown error.", { type: 'danger' });
     	}
     }
-             
-	$("#stop_forging_modal").on('show.bs.modal', function (e) {
-		if (!NRS.isLocalHost) {
-			$("#stop_forging_remote_warning").show();
-		} else {
-			$("#stop_forging_remote_warning").hide();
-		}
-	});
-    
+                 
     NRS.forms.stopForgingComplete = function(response, data) {
 	    $("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
 	    $("#forging_indicator span").html("Not forging");
@@ -6021,7 +6009,7 @@
 	        	callback({"accountId": accountId});
         	}
         	return;
-        }
+        }         	
              	
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
@@ -6479,6 +6467,49 @@
         
     NRS.generateAccountId = function(secretPhrase) {   
     	return nxtCrypto.getAccountId(secretPhrase);
+    }
+    
+    //completely incorrect!
+    NRS.generateLocalToken = function(website, secretPhrase) {
+    	var token = NRS.generatePublicKey(secretPhrase);
+	
+		var timestamp 		= parseInt(((new Date()).getTime() - new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0)) + 5000) /1000, 10);
+		var timestampBytes  = converters.int32ToBytes(timestamp);
+		
+		token += String(timestampBytes[0]);
+		token += String(timestampBytes[1]);
+		token += String(timestampBytes[2]);
+		token += String(timestampBytes[3]);
+					
+		var signature = nxtCrypto.sign(website + token, secretPhrase);
+		
+		token = token.split("");
+		
+		var output = "";
+		
+		for (var i=0; i<100; i+=5) {
+			var number = ((token[i] & 0xFF)) | (((token[i + 1] & 0xFF)) << 8) | (((token[i + 2] & 0xFF)) << 16) | (((token[i + 3] & 0xFF)) << 24) | (((token[i + 4] & 0xFF)) << 32);
+			
+            if (number < 32) {
+                output += "0000000";
+            } else if (number < 1024) {
+               	output += "000000";
+            } else if (number < 32768) {
+                output += "00000";
+            } else if (number < 1048576) {
+                output += "0000";
+            } else if (number < 33554432) {
+				output += "000";
+            } else if (number < 1073741824) {
+				output += "00";
+            } else if (number < 34359738368) {
+               	output += "0";
+            }
+            
+            output += number.toString(32);
+		}
+		
+		return output;
     }
     
     $(".modal").on("shown.bs.modal", function() {
