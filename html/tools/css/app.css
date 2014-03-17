@@ -3169,6 +3169,9 @@ label .popover-content {
 .popover {
 	z-index:9999999999;
 }
+#buy_automatic_price.nonzero, #sell_automatic_price.nonzero {
+	cursor:pointer
+}
 
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {

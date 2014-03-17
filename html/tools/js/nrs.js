@@ -1987,8 +1987,10 @@
     		 		
     		if (balance == 0) {
 	    		$("#your_nxt_balance").html("0");
+	    		$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
     		} else {
 	    		$("#your_nxt_balance").html(NRS.formatAmount(balance));
+	    		$("#buy_automatic_price").addClass("nonzero").removeClass("zero");
     		}		
     		
     		var foundAssetBalance = false;
@@ -1999,6 +2001,11 @@
     				
     				if (asset.asset == assetId) {
     					$("#your_asset_balance").html(NRS.formatAmount(asset.balance));
+    					if (asset.balance == 0) {
+	    					$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
+    					} else {
+	    					$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
+    					}
     					foundAssetBalance = true;
     					break;
     				}
@@ -2276,6 +2283,22 @@
         }
     });
     
+    $("#sell_automatic_price").on("click", function(e) {
+    	var quantity = parseInt($("#your_asset_balance").text().replace("'", ""), 10);
+    	
+    	if (!quantity) {
+	    	return;
+    	}
+    	
+    	var price = $("#sell_asset_price").val();
+    	
+    	$("#sell_asset_quantity").val(quantity);
+
+    	if (price) {
+	    	$("#sell_asset_total").val(Math.round(price*quantity*100)/100);
+    	}
+    });
+    
    	$("#asset_exchange_ask_orders_table tbody").on("click", "td", function(e) {   		
    		var $target = $(e.target);
    		   		
@@ -2300,6 +2323,21 @@
 			box.find(".box-body").slideDown();
 		}
 	});
+	
+	$("#buy_automatic_price").on("click", function(e) {
+    	var quantity = parseInt($("#your_nxt_balance").text().replace("'", ""), 10);
+    	
+    	if (!quantity) {
+    		return;
+    	}
+    	var price = $("#buy_asset_price").val();
+    	
+    	$("#buy_asset_quantity").val(quantity);
+
+    	if (price) {
+	    	$("#buy_asset_total").val(Math.round(price*quantity*100)/100);
+    	}
+    });
 	
 	$("#asset_exchange_bid_orders_table tbody").on("click", "td", function(e) {	
 	    var $target = $(e.target);
