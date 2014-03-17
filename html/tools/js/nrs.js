@@ -2398,15 +2398,15 @@
 			var quantity = parseInt($("#buy_asset_quantity").val(), 10);
 			var fee = parseInt($("#buy_asset_fee").val(), 10);
 			
-			var description = "Buy <strong>" + NRS.formatAmount(quantity) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + " NXT</strong> each.";
-			var tooltipTitle = "As each asset is bought you will pay " + NRS.formatAmount(price) + " NXT, making a total of " + NRS.formatAmount(price*quantity, true) + " NXT once all assets have been bought.";
+			var description = "Buy <strong>" + NRS.formatAmount(quantity, false, true) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price, false, true) + " NXT</strong> each.";
+			var tooltipTitle = "As each asset is bought you will pay " + NRS.formatAmount(price, false, true) + " NXT, making a total of " + NRS.formatAmount(price*quantity, true, true) + " NXT once all assets have been bought.";
 		} else {
 			var price = Math.round(parseFloat($("#sell_asset_price").val())*100)/100;
 			var quantity = parseInt($("#sell_asset_quantity").val(), 10);
 			var fee = parseInt($("#sell_asset_fee").val(), 10);
 		
-			var description = "Sell <strong>" + NRS.formatAmount(quantity) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price) + " NXT</strong> each.";
-			var tooltipTitle = "As each asset is sold you will receive " + NRS.formatAmount(price) + " NXT, making a total of " + NRS.formatAmount(price*quantity, true) + " NXT once all assets have been sold.";
+			var description = "Sell <strong>" + NRS.formatAmount(quantity, false, true) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(price, false, true) + " NXT</strong> each.";
+			var tooltipTitle = "As each asset is sold you will receive " + NRS.formatAmount(price, false, true) + " NXT, making a total of " + NRS.formatAmount(price*quantity, true, true) + " NXT once all assets have been sold.";
 		}
 		
 		if (isNaN(price)) {
@@ -5265,7 +5265,7 @@
 						callback({"type": "danger", "message": "There is a problem with the recipient account: " + response.errorDescription});
 					}
 				} else {
-					callback({"type": "warning", "message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction." + (response.balance == 0 ? " The account has a zero balance." : " The account has a balance of " + NRS.formatAmount(response.balance/100).unescapeHTML() + " NXT.") + " Please double check your recipient address before submitting."});
+					callback({"type": "warning", "message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction." + (response.balance == 0 ? " The account has a zero balance." : " The account has a balance of " + NRS.formatAmount(response.balance/100, false, true) + " NXT.") + " Please double check your recipient address before submitting."});
 				}
 			}
 		});
@@ -6676,7 +6676,7 @@
         return formattedWeight.escapeHTML();
     }
     
-    NRS.formatAmount = function(amount, round) {
+    NRS.formatAmount = function(amount, round, no_escaping) {
     	if (round) {
     		amount = (Math.round(amount*100)/100);
     	}
@@ -6702,7 +6702,12 @@
             }
             formattedAmount = digits[i] + formattedAmount;
         }
-        return (formattedAmount + afterComma).escapeHTML();
+        
+        if (no_escaping) {
+	        return formattedAmount + afterComma;
+        } else {
+        	return (formattedAmount + afterComma).escapeHTML();
+        }
     }
 				
     NRS.formatTimestamp = function(timestamp, date_only) {
