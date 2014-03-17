@@ -5467,75 +5467,81 @@
 	    		return;
 	    	}
 	    	
-	    	$("#account_id").html(NRS.account);
-	    	
-	    	var passwordNotice = "";
-	    	
-	    	 if (password.length < 35) {
-			   	passwordNotice = "Your secret phrase is less than 35 characters long. This is not secure.";
-			 } else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-				 passwordNotice = "Your secret phrase does not contain numbers and uppercase letters. This is not secure.";
-			 } 
-				    
-			if (passwordNotice) {
-				$.growl("<strong>Warning</strong>: " + passwordNotice, {"type": "danger"});
-			}
-	    
-	    	NRS.getAccountBalance();
-	    		    	 
-	    	NRS.sendRequest("startForging", {"secretPhrase": password}, function(response) {
-	    		if ("deadline" in response) {
-					$("#forging_indicator i.fa").removeClass("text-danger").addClass("text-success");
-					$("#forging_indicator span").html("Forging");
-	    		} else {
-					$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
-					$("#forging_indicator span").html("Not Forging");
-	    		}
-	    		$("#forging_indicator").show();
-	    	});
-	    	    	 
-	    	//NRS.getAccountAliases();
-	    	    	    
-	    	NRS.unlock();
-	    	
-	    	NRS.setupClipboardFunctionality();
-	    	
-	    	if (callback) {
-		    	callback();
-	    	}
-	    	
-	    	NRS.checkLocationHash(password);
-	    		       		
-			$(window).on("hashchange", NRS.checkLocationHash);
-			
-	    	NRS.sendRequest('getAccountTransactionIds', {"account": NRS.account, "timestamp": 0}, function(response) {
-				if (response.transactionIds && response.transactionIds.length) {
-		    		var transactionIds = response.transactionIds.reverse().slice(0, 10);
-		    		var nrTransactions = 0;
-		    		var transactions = {};
-		    				    				    				
-		    		for (var i=0; i<transactionIds.length; i++) {
-		    			NRS.sendRequest('getTransaction', {"transaction": transactionIds[i]}, function(transaction, input) {		    				
-		    				nrTransactions++;
-		    				transactions[input.transaction] = transaction;
-		    						    				
-		    				if (nrTransactions == transactionIds.length) {
-			    				var transactionsArray = [];
-			    				
-			    				for (var i=0; i<nrTransactions; i++) {
-				    				transactionsArray.push(transactions[transactionIds[i]]);
-			    				}
-			    				
-			    				NRS.handleInitialTransactions(transactionsArray, transactionIds);
-		    				}
-		    			});
+	    	NRS.sendRequest("getAccountPublicKey", {"account": NRS.account}, function(response) {
+	    		if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password)) {
+					$.growl("This account is already taken. Please choose another pass phrase.", {"type": "danger", "offset": 10});
+					return;	
+				}
+				
+		    	$("#account_id").html(NRS.account);
+		    		    	
+		    	var passwordNotice = "";
+		    	
+		    	 if (password.length < 35) {
+				   	passwordNotice = "Your secret phrase is less than 35 characters long. This is not secure.";
+				 } else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
+					 passwordNotice = "Your secret phrase does not contain numbers and uppercase letters. This is not secure.";
+				 } 
+					    
+				if (passwordNotice) {
+					$.growl("<strong>Warning</strong>: " + passwordNotice, {"type": "danger"});
+				}
+				
+				NRS.getAccountBalance(true);
+		    		    	 
+		    	NRS.sendRequest("startForging", {"secretPhrase": password}, function(response) {
+		    		if ("deadline" in response) {
+						$("#forging_indicator i.fa").removeClass("text-danger").addClass("text-success");
+						$("#forging_indicator span").html("Forging");
+		    		} else {
+						$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+						$("#forging_indicator span").html("Not Forging");
 		    		}
-	    		} else {
-	    			NRS.dataLoadFinished($("#dashboard_transactions_table"));
-	    		}
+		    		$("#forging_indicator").show();
+		    	});
+		    	    	 
+		    	//NRS.getAccountAliases();
+		    	    	    
+		    	NRS.unlock();
+		    	
+		    	NRS.setupClipboardFunctionality();
+		    	
+		    	if (callback) {
+			    	callback();
+		    	}
+		    	
+		    	NRS.checkLocationHash(password);
+		    		       		
+				$(window).on("hashchange", NRS.checkLocationHash);
+				
+		    	NRS.sendRequest('getAccountTransactionIds', {"account": NRS.account, "timestamp": 0}, function(response) {
+					if (response.transactionIds && response.transactionIds.length) {
+			    		var transactionIds = response.transactionIds.reverse().slice(0, 10);
+			    		var nrTransactions = 0;
+			    		var transactions = {};
+			    				    				    				
+			    		for (var i=0; i<transactionIds.length; i++) {
+			    			NRS.sendRequest('getTransaction', {"transaction": transactionIds[i]}, function(transaction, input) {		    				
+			    				nrTransactions++;
+			    				transactions[input.transaction] = transaction;
+			    						    				
+			    				if (nrTransactions == transactionIds.length) {
+				    				var transactionsArray = [];
+				    				
+				    				for (var i=0; i<nrTransactions; i++) {
+					    				transactionsArray.push(transactions[transactionIds[i]]);
+				    				}
+				    				
+				    				NRS.handleInitialTransactions(transactionsArray, transactionIds);
+			    				}
+			    			});
+			    		}
+		    		} else {
+		    			NRS.dataLoadFinished($("#dashboard_transactions_table"));
+		    		}
+		    	});
 	    	});
-
-    	});
+	    });
     }
     
     NRS.setupClipboardFunctionality = function() {
