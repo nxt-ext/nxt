@@ -1849,7 +1849,8 @@
    				   				   				
    				if (asset.groupName) {
    					ungrouped = false;
-		   			rows += "<a href='#' class='list-group-item list-group-item-header' data-context='asset_exchange_sidebar_group_context' data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + " <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
+   				
+		   			rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'" + (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''") + " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + " <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
    				} else {
    					ungrouped = true;
 	   				rows += "<a href='#' class='list-group-item list-group-item-header no-context' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>UNGROUPED <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
@@ -1893,16 +1894,16 @@
     	e.preventDefault();
     	    	
     	var assetId = $(this).data("asset");
-    	    	
+    	    	    	    	
     	if (!assetId) {
     		if (NRS.databaseSupport) {
 	    	  	var group = $(this).data("groupname");
 	    	  	var closed = $(this).data("closed");
-	    	  	
+	    	  		    	  	
 	    	  	if (!group) {
 	    	  		var $links = $("#asset_exchange_sidebar a.list-group-item-ungrouped");
 	    	  	} else {
-	    	  		var $links = $("#asset_exchange_sidebar a.list-group-item-grouped[data-groupname=" + group.escapeHTML() + "]");
+	    	  		var $links = $("#asset_exchange_sidebar a.list-group-item-grouped[data-groupname='" + group.escapeHTML() + "']");
 	    	  	}
 	    	  	
 	    	  	if (!group) {
@@ -2570,6 +2571,10 @@
 	NRS.forms.assetExchangeChangeGroupName = function($modal) {   
 	    var oldGroupName = $("#asset_exchange_change_group_name_old").val();
 	    var newGroupName = $("#asset_exchange_change_group_name_new").val();
+	    	    
+	    if (!newGroupName.match(/^[a-z0-9 ]+$/i)) {
+	    	return {"error": "Only alphanumerical characters can be used in the group name."};
+	    }
 	    	    
 		NRS.database.update("assets", {"groupName": newGroupName}, [{"groupName": oldGroupName}], function() {
 			NRS.pages.asset_exchange();
@@ -6596,7 +6601,7 @@
 	    	return;
     	}
     	
-	 	NRS.closeContextMenu();
+	 	NRS.closeContextMenu();	 	
 	 	
 	 	if ($(this).hasClass("no-context")) {
 		 	return;
@@ -6609,11 +6614,11 @@
 	 	$(document).on("click.contextmenu", NRS.closeContextMenu);
 	 	
 	 	var contextMenu = $(this).data("context");
-	 	
+	 		 	
 	 	if (!contextMenu) {
 		 	contextMenu = $(this).closest(".list-group").attr("id") + "_context";
 		}
-		
+				
 		var $contextMenu = $("#" + contextMenu);
 		
 		if ($contextMenu.length) {
@@ -6638,10 +6643,10 @@
     });
     
     NRS.closeContextMenu = function(e) {
-    	if (!e || e.which == 3) {
+    	if (e && e.which == 3) {
 	    	return;
     	}
-
+    	
         $(".context_menu").hide();
         
         if (NRS.selectedContext) {
