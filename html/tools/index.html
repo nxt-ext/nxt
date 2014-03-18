@@ -47,7 +47,7 @@
                         <div class="pull-left info">
                         	<div class="pull-left info">
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
-	                        		ID: <span id="account_id" class="dropdown-toggle" data-toggle="dropdown" style="font-weight:bold"></span>
+	                        		ID: <span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
 										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
 										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
@@ -534,7 +534,16 @@
 						         		<div id="no_asset_selected" style="padding-top: 150px;text-align:center;">Please select an asset in the left sidebar.</div>
 						         		<div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;">Asset data loading, please wait...<br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 						         		<div id="asset_details" style="display:none">
-							            	<div style="float:right;color: #999999;"><strong>Account</strong>: <span id="asset_account"></span><br /><strong>Asset Id</strong>: <span id="asset_id"></span></div>
+							            	<div style="float:right;color: #999999;">
+							            		<strong>Account</strong>: <span id="asset_account"></span><br />
+					                        	<div id="asset_id_dropdown" class="dropdown" style="margin-bottom:10px;text-align:right;">
+					                        		<strong>Asset Id</strong>: <a href="#" id="asset_id" class="dropdown-toggle" data-toggle="dropdown"></a>
+													<ul class="dropdown-menu" role="menu" style="right:0;left:auto;text-align:left;">
+														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id">Copy Asset ID</a></li>
+														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link">Copy Asset Link</a></li>
+													</ul>
+												</div>
+							            	</div>
 							                <h3 style="margin-top:0" id="asset_name"></h3>
 							                <p id="asset_description"></p>
 							                <hr />

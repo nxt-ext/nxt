@@ -5636,38 +5636,45 @@
     }
     
     NRS.setupClipboardFunctionality = function() {
+    	var elements = "#asset_id_dropdown .dropdown-menu a";
+    	
     	if (!NRS.isLocalHost) {
-	    	var $el = $("#account_id_dropdown .dropdown-menu a");
+	    	elements += ", #account_id_dropdown .dropdown-menu a";
     	} else {
-	    	var $el = $("#account_id");
+	    	elements += ",#account_id";
     	}
+    	
+    	var $el = $(elements);
     	
 		var clipboard = new ZeroClipboard($el, {
 			moviePath: "js/ZeroClipboard.swf"
 		});
 		
-    	if (!NRS.isLocalHost) {    		
-			clipboard.on("dataRequested", function (client, args) {
-				switch ($(this).data("type")) {
-					case "account_id": 
-						client.setText(NRS.account);
-						break;
-					case "message_link": 
-						client.setText(document.URL.replace(/#.*$/, "") + "#message:" + NRS.account);
-						break;
-					case "send_link":
-						client.setText(document.URL.replace(/#.*$/, "") + "#send:" + NRS.account);
-						break;
-				}
-			});
-    	} else {
-    		$el.removeClass("dropdown-toggle").data("toggle", "");
-    		$("#account_id_dropdown").remove(".dropdown-menu");
+		
+		clipboard.on("dataRequested", function (client, args) {		
+			switch ($(this).data("type")) {
+				case "account_id": 
+					client.setText(NRS.account);
+					break;
+				case "message_link": 
+					client.setText(document.URL.replace(/#.*$/, "") + "#message:" + NRS.account);
+					break;
+				case "send_link":
+					client.setText(document.URL.replace(/#.*$/, "") + "#send:" + NRS.account);
+					break;
+				case "asset_id": 
+					client.setText($("#asset_id").text());
+					break;
+				case "asset_link": 
+					client.setText(document.URL.replace(/#.*/, "") + "#asset:" + $("#asset_id").text());
+					break;
+			}
+		});
 
-    		clipboard.on("dataRequested", function(client, args) {
-	    		client.setText(NRS.account);
-    		});
-    	}
+		if ($el.hasClass("dropdown-toggle")) {
+			$el.removeClass("dropdown-toggle").data("toggle", "");
+			$el.parent().remove(".dropdown-menu");
+		}
     		
 		clipboard.on("complete", function(client, args) {
 			$.growl("Copied to the clipboard successfully.", {"type": "success"});
