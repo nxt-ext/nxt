@@ -5772,7 +5772,16 @@
 	    			$("#account_balance").html("0");
 	    		}		
 	    		
-	    		var nr_assets = (response.assetBalances ? response.assetBalances.length : 0);
+	    		var nr_assets = 0;
+	    			    		
+	    		if (response.assetBalances) {
+		    		for (var i=0; i<response.assetBalances.length; i++) {
+			    		if (response.assetBalances[i].balance > 0) {
+				    		nr_assets++;
+			    		}
+		    		}
+	    		}
+
 	    		$("#account_nr_assets").html(nr_assets);
 	    	}
 	    	
