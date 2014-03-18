@@ -1798,6 +1798,18 @@
 	   			} else {
 	   				return 0;
 	   			}
+	   		} else if (a.groupName == "ignore list" && b.groupName == "ignore list") {
+	   			if (a.name > b.name) {
+	   				return 1;
+	   			} else if (a.name < b.name) {
+	   				return -1;
+	   			} else {
+	   				return 0;
+	   			}
+	   		} else if (a.groupName == "ignore list") {
+	   			return 1;
+	   		} else if (b.groupName == "ignore list") {
+	   			return -1;
    			} else if (!a.groupName) {
 	   			return 1;
    			} else if (!b.groupName) {
@@ -1816,7 +1828,7 @@
 	   			}
 	   		}
    		});
-   		
+   		   		
    		var lastGroup = "";
    		var ungrouped = true;
    		var isClosedGroup = false;
@@ -2621,6 +2633,11 @@
 						
 	    			$("#asset_exchange_group_modal").modal("show");
 				});
+			});
+		} else if (option == "add_to_ignore_list") {
+			NRS.database.update("assets", {"groupName": "Ignore List"}, [{"assetId": assetId}], function() {
+			    NRS.pages.asset_exchange();
+			   	$.growl("Asset added to ignore list successfully.", {"type": "success"});
 			});
 		} else if (option == "remove_from_group") {
 			NRS.database.update("assets", {"groupName": ""}, [{"assetId": assetId}], function() {
