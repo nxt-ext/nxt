@@ -3175,6 +3175,14 @@ label .popover-content {
 a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.active:focus {
 	z-index:auto;
 }
+.sidebar.dropdown-menu>li>a {
+	color:333 !important;
+}
+.left-side .user-panel .dropdown-menu>li>a { color:#333; }
+.left-side .user-panel .dropdown-menu>li>a.zeroclipboard-is-hover, .left-side .user-panel .dropdown-menu>li>a:hover {
+	color:#fff;
+}
+
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad
