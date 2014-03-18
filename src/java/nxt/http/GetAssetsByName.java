@@ -45,6 +45,7 @@ public final class GetAssetsByName extends APIServlet.APIRequestHandler {
                 assetJSON.put("description", asset.getDescription());
             }
             assetJSON.put("quantity", asset.getQuantity());
+            assetJSON.put("asset", Convert.toUnsignedLong(asset.getId()));
             assetJSON.put("numberOfTrades", Trade.getTrades(asset.getId()).size());
             assetsJSONArray.add(assetJSON);
         }
