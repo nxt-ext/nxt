@@ -13,7 +13,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.8.10";
+    public static final String VERSION = "0.8.11";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -115,6 +115,8 @@ public final class Nxt {
     }
 
     public static void shutdown() {
+        API.shutdown();
+        Users.shutdown();
         Peers.shutdown();
         ThreadPool.shutdown();
         Db.shutdown();

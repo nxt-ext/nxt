@@ -16,28 +16,32 @@ public final class Trade {
         return allTrades;
     }
 
-    static void addTrade(Long assetId, Long blockId, Long askOrderId, Long bidOrderId, int quantity, long price) {
+    static void addTrade(Long assetId, int timeStamp, Long blockId, Long askOrderId, Long bidOrderId, int quantity, long price) {
         List<Trade> assetTrades = trades.get(assetId);
         if (assetTrades == null) {
             assetTrades = new CopyOnWriteArrayList<>();
             // cfb: CopyOnWriteArrayList requires a lot of resources to grow but this happens only when a new block is pushed/applied, I can't decide if we should replace it with another class
             trades.put(assetId, assetTrades);
         }
-        assetTrades.add(new Trade(blockId, askOrderId, bidOrderId, quantity, price));
+        assetTrades.add(new Trade(blockId, timeStamp, assetId, askOrderId, bidOrderId, quantity, price));
     }
 
     static void clear() {
         trades.clear();
     }
 
+    private final int timeStamp;
+    private final Long assetId;
     private final Long blockId;
     private final Long askOrderId, bidOrderId;
     private final int quantity;
     private final long price;
 
-    private Trade(Long blockId, Long askOrderId, Long bidOrderId, int quantity, long price) {
+    private Trade(Long blockId, int timeStamp, Long assetId, Long askOrderId, Long bidOrderId, int quantity, long price) {
 
         this.blockId = blockId;
+        this.assetId = assetId;
+        this.timeStamp = timeStamp;
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
         this.quantity = quantity;
@@ -54,9 +58,17 @@ public final class Trade {
     public int getQuantity() { return quantity; }
 
     public long getPrice() { return price; }
+    
+    public Long getAssetId() { return assetId; }
+    
+    public int getTimeStamp() { return timeStamp; }
 
     public static List<Trade> getTrades(Long assetId) {
-        return Collections.unmodifiableList(trades.get(assetId));
+        List<Trade> assetTrades = trades.get(assetId);
+        if (assetTrades != null) {
+            return Collections.unmodifiableList(assetTrades);
+        }
+        return Collections.emptyList();
     }
 
 }

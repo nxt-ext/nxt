@@ -37,6 +37,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_ASSET = missing("asset");
     public static final JSONStreamAware UNKNOWN_ASSET = unknown("asset");
     public static final JSONStreamAware INCORRECT_ASSET = incorrect("asset");
+    public static final JSONStreamAware MISSING_ASSET_NAME = missing("assetName");
     public static final JSONStreamAware MISSING_BLOCK = missing("block");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
@@ -99,15 +100,6 @@ public final class JSONResponses {
         response.put("errorCode", 6);
         response.put("errorDescription", "Not enough assets");
         NOT_ENOUGH_ASSETS = JSON.prepare(response);
-    }
-
-
-    public static final JSONStreamAware ASSET_NAME_ALREADY_USED;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 8);
-        response.put("errorDescription", "Asset name is already used");
-        ASSET_NAME_ALREADY_USED = JSON.prepare(response);
     }
 
     public static final JSONStreamAware ERROR_NOT_ALLOWED;

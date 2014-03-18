@@ -617,17 +617,6 @@ public abstract class TransactionType {
                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
-                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                return ! myDuplicates.add(attachment.getName().toLowerCase());
-            }
-
-            @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
@@ -643,10 +632,6 @@ public abstract class TransactionType {
                     if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                         throw new NxtException.ValidationException("Invalid asset name: " + normalizedName);
                     }
-                }
-                Asset asset = Asset.getAsset(normalizedName);
-                if (asset != null && ! asset.getId().equals(transaction.getId())) {
-                    throw new NxtException.ValidationException("Asset " + normalizedName + " already exists");
                 }
             }
 

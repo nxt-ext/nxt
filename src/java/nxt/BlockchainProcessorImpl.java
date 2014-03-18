@@ -732,14 +732,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         block.setPrevious(previousBlock);
 
         try {
-            if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
-                pushBlock(block);
-                blockListeners.notify(block, Event.BLOCK_GENERATED);
-                Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
-            } else {
-                Logger.logMessage("ERROR: Failed to sign block");
-                Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated an incorrect block.");
-            }
+            pushBlock(block);
+            blockListeners.notify(block, Event.BLOCK_GENERATED);
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
         }
