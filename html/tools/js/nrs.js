@@ -2873,10 +2873,12 @@
     }
     
     $("body").on("click", "a[data-goto-asset]", function(e) {
-    	e.preventDefault();
+	   	e.preventDefault();
     	
-    	var asset = $(this).data("goto-asset");
-    	
+		NRS.goToAsset($(this).data("goto-asset"));
+    });
+    
+    NRS.goToAsset = function(asset) {
     	$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
     	$("#no_asset_selected, #asset_details").hide();
     	$("#loading_asset_data").show();
@@ -2892,7 +2894,7 @@
     		}
     	}
     	}]);    	
-    });
+    }
     
     /* OPEN ORDERS PAGE */
     NRS.pages.open_orders = function() {
@@ -5688,6 +5690,9 @@
 		    		var $modal = $("#send_message_modal");
 		    	} else if (hash[0] == "send") {
 			    	var $modal = $("#send_money_modal");
+		    	} else if (hash[0] == "asset") {
+		    		NRS.goToAsset(hash[1]);
+		    		return;
 		    	} else {
 			    	var $modal = "";
 		    	}
