@@ -331,9 +331,10 @@
 			NRS.blockchainCalculationServers = [9, 10];
 		    $(".testnet_only, #testnet_login").show();
 	    }
-					
-		if (!NRS.server && window.location.hostname.toLowerCase() == "localhost") {
-			NRS.isLocalHost = true;
+				
+		if (!NRS.server) {
+			var hostName = window.location.hostname.toLowerCase();
+			NRS.isLocalHost = (hostName == "localhost" || hostName == "127.0.0.1");
 		}
 		
 		if (!NRS.isLocalHost) {
