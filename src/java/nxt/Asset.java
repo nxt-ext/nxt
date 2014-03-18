@@ -2,15 +2,17 @@ package nxt;
 
 import nxt.util.Convert;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public final class Asset {
 
     private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, Asset> assetNameToAssetMappings = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, List<Asset>> assetNameToAssetMappings = new ConcurrentHashMap<>();
     private static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
 
     public static Collection<Asset> getAllAssets() {
@@ -21,8 +23,8 @@ public final class Asset {
         return assets.get(id);
     }
 
-    public static Asset getAsset(String name) {
-        return assetNameToAssetMappings.get(name);
+    public static List<Asset> getAssets(String name) {
+        return Collections.unmodifiableList(assetNameToAssetMappings.get(name));
     }
 
     static void addAsset(Long assetId, Long senderAccountId, String name, String description, int quantity) {
@@ -30,14 +32,18 @@ public final class Asset {
         if (Asset.assets.putIfAbsent(assetId, asset) != null) {
             throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
         }
-        if (Asset.assetNameToAssetMappings.putIfAbsent(name.toLowerCase(), asset) != null) {
-            throw new IllegalStateException("Asset with name " + name.toLowerCase() + " already exists");
+        List<Asset> assetList = assetNameToAssetMappings.get(name.toLowerCase());
+        if (assetList == null) {
+            assetList = new ArrayList<>();
+            assetNameToAssetMappings.put(name.toLowerCase(), assetList);
         }
+        assetList.add(asset);
     }
 
     static void removeAsset(Long assetId) {
         Asset asset = Asset.assets.remove(assetId);
-        Asset.assetNameToAssetMappings.remove(asset.getName());
+        List<Asset> assetList = assetNameToAssetMappings.get(asset.getName().toLowerCase());
+        assetList.remove(asset);
     }
 
     static void clear() {

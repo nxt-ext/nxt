@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
 import java.math.BigInteger;

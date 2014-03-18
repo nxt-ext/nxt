@@ -1,18 +1,17 @@
 package nxt.http;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-import nxt.Asset;
-import nxt.Nxt;
 import nxt.Trade;
-import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
+import java.util.List;
+
+import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
+import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 
 public final class GetAllTrades extends APIServlet.APIRequestHandler {
 
