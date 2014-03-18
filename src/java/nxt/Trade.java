@@ -59,12 +59,16 @@ public final class Trade {
 
     public long getPrice() { return price; }
     
-    public long getAssetId() { return assetId; }
+    public Long getAssetId() { return assetId; }
     
-    public long getTimeStamp() { return timeStamp; }
+    public int getTimeStamp() { return timeStamp; }
 
     public static List<Trade> getTrades(Long assetId) {
-        return Collections.unmodifiableList(trades.get(assetId));
+        List<Trade> assetTrades = trades.get(assetId);
+        if (assetTrades != null) {
+            return Collections.unmodifiableList(assetTrades);
+        }
+        return Collections.emptyList();
     }
 
 }
