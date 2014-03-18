@@ -2030,7 +2030,8 @@
     			
     			for (var i=0; i<askOrderIds.length; i++) {
     				NRS.sendRequest("getAskOrder+" + assetId, {"order": askOrderIds[i], "_extra": {"refresh": refresh}}, function(order, input) {    					
-    					askOrders[input.order] = order;
+						askOrders[input.order] = order;
+
     					nrAskOrders++;
     					
     					if (nrAskOrders == askOrderIds.length) {
@@ -2848,7 +2849,7 @@
     	}
     }
     
-    $("#my_assets_table, #open_ask_orders_table, #open_bid_orders_table").on("click", "a[data-goto-asset]", function(e) {
+    $("body").on("click", "a[data-goto-asset]", function(e) {
     	e.preventDefault();
     	
     	var asset = $(this).data("goto-asset");
@@ -5792,13 +5793,14 @@
 			return;
 		} else if (nr <= 3) {
 			for (k in diff) {
-				NRS.sendRequest("getAsset", {"asset": k, "_extra": {"difference": diff[k]}}, function(asset, input) {					
+				NRS.sendRequest("getAsset", {"asset": k, "_extra": {"id": k, "difference": diff[k]}}, function(asset, input) {					
 					asset.difference = input["_extra"].difference;
+					asset.id = input["_extra"].id;
 					
 					if (asset.difference > 0) {
-						$.growl("You received " + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + ".", {"type": "success"});
+						$.growl("You received <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + "</a>.", {"type": "success"});
 					} else {
-						$.growl("You sold " + NRS.formatAmount(Math.abs(asset.difference)) + " " +  asset.name.escapeHTML() + ( asset.difference == 1 ? " asset" : "assets") + ".", {"type": "success"});
+						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(Math.abs(asset.difference)) + " " +  asset.name.escapeHTML() + ( asset.difference == 1 ? " asset" : "assets") + "</a>.", {"type": "success"});
 					}
 				});
 			}
