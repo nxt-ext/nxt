@@ -1721,7 +1721,7 @@
     	}
     	
         $(".content.content-stretch:visible").width($(".page:visible").width());
-				
+						
 		if (NRS.databaseSupport) {
 			NRS.database.select("assets", null, function(dbAssets) {			
 				$.each(dbAssets, function(index, asset) {
@@ -3238,6 +3238,7 @@
     		} else {
     		    $("#no_message_selected").hide();
 				$("#no_messages_available").show();
+				$("#messages_sidebar").empty();
 	    		NRS.pageLoaded(callback);
     		}
     	});
