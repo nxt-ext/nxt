@@ -3172,6 +3172,9 @@ label .popover-content {
 	cursor:pointer
 }
 
+a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.active:focus {
+	z-index:auto;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad
