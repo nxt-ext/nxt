@@ -47,6 +47,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
             response.put("balance", accountData.getBalance());
             response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
+            response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
 
             JSONArray assetBalances = new JSONArray();
             for (Map.Entry<Long, Integer> assetBalanceEntry : accountData.getAssetBalances().entrySet()) {
