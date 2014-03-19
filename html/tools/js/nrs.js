@@ -322,6 +322,7 @@
 	NRS.closedGroups = [];
 	NRS.isLocalHost = false;
 	NRS.rememberPassword = false;
+	NRS.settings = {"submitOnEnter": true};
 	
     NRS.init = function() {  
    	    if (location.port && location.port != "6876") {
@@ -365,14 +366,18 @@
 	    	    NRS.login(password);
     	    }
     	});
-    	    	
-		$(".modal form input").keydown(function(e){
-			if (e.which == '13') {
+    	    	    	
+		$(".modal form input").keydown(function(e) {
+			if (e.which == "13") {
 				e.preventDefault();
-		  		return false;
+				if (NRS.settings.submitOnEnter && e.target.type != "textarea") {
+					$(this).submit();
+				} else {
+					return false;
+				}
 			}
 		});
-    	    	
+ 	
     	$("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id").blur(function() {
     		var value = $(this).val();
     		var modal = $(this).closest(".modal");
@@ -5147,15 +5152,29 @@
     	}
     });
         
-    
+    if (NRS.settings.submitOnEnter) {
+    	console.log("submit on enter");
+	    $(".modal form").on("submit", function(e) {
+	    	e.preventDefault();
+	    	NRS.submitForm($(this).closest(".modal"));
+	    });
+	}
+
     $(".modal button.btn-primary:not([data-dismiss=modal])").click(function() {
-    	var $btn = $(this);
-    	
+    	NRS.submitForm($(this).closest(".modal"), $(this));
+    });
+    
+    NRS.submitForm = function($modal, $btn) {
+    	if (!$btn) {
+    		$btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
+    	}
+    	    	
     	var $modal = $btn.closest(".modal");
     	
     	$modal.modal("lock");
-    	$btn.button("loading");    	
-    	
+    	$modal.find("button").prop("disabled", true); 	
+    	$btn.button("loading");   
+
     	var requestType    = $modal.find("input[name=request_type]").val();
     	var successMessage = $modal.find("input[name=success_message]").val();
     	var errorMessage   = $modal.find("input[name=error_message]").val();
@@ -5172,8 +5191,7 @@
 				return;
 			} else if (output.error) {
     			$modal.find(".error_message").html(output.error.escapeHTML()).show();
-    			$btn.button("reset");
-    			$modal.modal("unlock");
+    			NRS.unlockForm($modal, $btn);
     			return;
     		} else {
     			if (output.requestType) {
@@ -5189,9 +5207,7 @@
     				errorMessage = output.errorMessage;
     			}
     			if (output.stop) {
-    				$btn.button("reset");
-    				$modal.modal("unlock");
-    				$modal.modal("hide");
+    				NRS.unlockForm($modal, $btn, true);
 	    			return;
     			}
     		}
@@ -5211,8 +5227,7 @@
 				var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
 				if (!convertedAccountId || !/^\d+$/.test(convertedAccountId)) {
 					$modal.find(".error_message").html("Invalid account ID.").show();
-					$btn.button("reset");
-					$modal.modal("unlock");
+					NRS.unlockForm($modal, $btn);
 					return;
 				} else {
 					data.recipient = convertedAccountId;
@@ -5223,8 +5238,7 @@
 		
 		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
 			$modal.find(".error_message").html("Secret phrase is a required field.").show();
-			$btn.button("reset");
-			$modal.modal("unlock");
+			NRS.unlockForm($modal, $btn);
 			return;
 		}
 			    	
@@ -5237,12 +5251,10 @@
     			} else {
     				$modal.find(".error_message").html(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.").show();
     			}
-    			$btn.button("reset");
-    			$modal.modal("unlock");
+    			NRS.unlockForm($modal, $btn);
     		} else if (response.hash) {
     			//should we add a fake transaction to the recent transactions?? or just wait until the next block comes!??
-    			$btn.button("reset");
-    			$modal.modal("unlock");
+    			NRS.unlockForm($modal, $btn);
     			
     			if (!$modal.hasClass("modal-no-hide")) {
 	    		 	$modal.modal("hide");	
@@ -5268,8 +5280,7 @@
 						sentToFunction = true;
 						data.requestType = requestType;
 						
-						$btn.button("reset");
-						$modal.modal("unlock");
+						NRS.unlockForm($modal, $btn);
 						
 						if (!$modal.hasClass("modal-no-hide")) {
 							$modal.modal("hide");	
@@ -5281,15 +5292,24 @@
     			}
     			
     			if (!sentToFunction) {
-	    			$btn.button("reset");
-	    			$modal.modal("unlock");
-	    			$modal.modal("hide");
+    				NRS.unlockForm($modal, $btn, true);
 	    				
 	    			$.growl(errorMessage.escapeHTML(), { type: 'danger' });
 	    		}
     		}
     	});
-    });
+    }
+    
+    NRS.unlockForm = function($modal, $btn, hide) {
+    	$modal.find("button").prop("disabled", false);
+	    if ($btn) {
+		    $btn.button("reset");
+	    }
+	    $modal.modal("unlock");
+	    if (hide) {
+		    $modal.modal("hide");
+	    }
+    }
     
     $("#send_message_modal, #send_money_modal, #add_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
