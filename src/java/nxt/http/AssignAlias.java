@@ -65,10 +65,10 @@ public final class AssignAlias extends CreateTransaction {
             response.put("errorCode", 8);
             response.put("errorDescription", "\"" + alias + "\" is already used");
             return response;
-        } else {
-            Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
-            return createTransaction(req, account, attachment);
         }
+
+        Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
+        return createTransaction(req, account, attachment);
 
     }
 

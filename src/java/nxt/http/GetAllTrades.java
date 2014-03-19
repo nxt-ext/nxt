@@ -48,12 +48,15 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
 
             for (List<Trade> assetTrades : trades) {
                 for (Trade trade : assetTrades) {
-                    if (trade.getTimeStamp() >= timestamp) {
+                    if (trade.getTimestamp() >= timestamp) {
                         JSONObject tradeData = new JSONObject();
-                        tradeData.put("timestamp", trade.getTimeStamp());
+                        tradeData.put("timestamp", trade.getTimestamp());
                         tradeData.put("quantity", trade.getQuantity());
                         tradeData.put("price", trade.getPrice());
-                        tradeData.put("assetId", Convert.toUnsignedLong(trade.getAssetId()));
+                        tradeData.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
+                        tradeData.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
+                        tradeData.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
+                        tradeData.put("block", Convert.toUnsignedLong(trade.getBlockId()));
                         tradesData.add(tradeData);
                     }
                 }
