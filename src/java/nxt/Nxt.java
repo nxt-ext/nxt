@@ -9,6 +9,9 @@ import nxt.util.ThreadPool;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 public final class Nxt {
@@ -68,6 +71,21 @@ public final class Nxt {
             Logger.logMessage(name + " not defined, assuming null");
             return null;
         }
+    }
+
+    public static List<String> getStringListProperty(String name) {
+        String value = getStringProperty(name);
+        if (value == null || value.length() == 0) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        for (String s : value.split(";")) {
+            s = s.trim();
+            if (s.length() > 0) {
+                result.add(s);
+            }
+        }
+        return result;
     }
 
     public static Boolean getBooleanProperty(String name) {
@@ -140,6 +158,7 @@ public final class Nxt {
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
+            DebugTrace.init();
             Peers.init();
             Generator.init();
             API.init();
