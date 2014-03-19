@@ -6,7 +6,12 @@ with given assetName.
 Added getAllTrades API call returning all trades starting from
 a given timestamp (contributed by Antanst).
 
-getAsset now also includes numberOfTrades.
+Improved the JSON responses for several API calls:
+getAsset now also returns numberOfTrades. getAccount now also
+returns unconfirmedBalance. broadcastTransaction now also returns
+transaction hash. getAsk/BidOrder now also returns order height.
+Performance of getTrades should be greatly improved, and it also
+returns block id for each trade.
 
 Explicitly stop all jetty servers when Nxt.shutdown() is called.
 
