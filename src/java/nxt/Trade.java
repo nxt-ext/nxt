@@ -30,18 +30,18 @@ public final class Trade {
         trades.clear();
     }
 
-    private final int timeStamp;
+    private final int timestamp;
     private final Long assetId;
     private final Long blockId;
     private final Long askOrderId, bidOrderId;
     private final int quantity;
     private final long price;
 
-    private Trade(Long blockId, int timeStamp, Long assetId, Long askOrderId, Long bidOrderId, int quantity, long price) {
+    private Trade(Long blockId, int timestamp, Long assetId, Long askOrderId, Long bidOrderId, int quantity, long price) {
 
         this.blockId = blockId;
         this.assetId = assetId;
-        this.timeStamp = timeStamp;
+        this.timestamp = timestamp;
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
         this.quantity = quantity;
@@ -61,7 +61,7 @@ public final class Trade {
     
     public Long getAssetId() { return assetId; }
     
-    public int getTimeStamp() { return timeStamp; }
+    public int getTimestamp() { return timestamp; }
 
     public static List<Trade> getTrades(Long assetId) {
         List<Trade> assetTrades = trades.get(assetId);

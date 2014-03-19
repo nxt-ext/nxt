@@ -38,7 +38,7 @@ public abstract class Order {
                 break;
             }
 
-            int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
+            int quantity = Math.min(((Order)askOrder).quantity, ((Order)bidOrder).quantity);
             long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
             Block lastBlock=Nxt.getBlockchain().getLastBlock();
