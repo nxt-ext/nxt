@@ -338,6 +338,8 @@
 			NRS.isLocalHost = (hostName == "localhost" || hostName == "127.0.0.1");
 		}
 		
+		NRS.isLocalHost = false;
+		
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
 		}
@@ -5153,7 +5155,6 @@
     });
         
     if (NRS.settings.submitOnEnter) {
-    	console.log("submit on enter");
 	    $(".modal form").on("submit", function(e) {
 	    	e.preventDefault();
 	    	NRS.submitForm($(this).closest(".modal"));
@@ -5270,6 +5271,10 @@
     		 		data.requestType = requestType;
     		 		formCompleteFunction(response, data);
     		 	}
+    		 	
+    		 	if (NRS.accountBalance && !NRS.accountBalance.publicKey) {
+	    		 	$("#dashboard_message").hide();
+	    		}
     		} else {
     			var sentToFunction = false;
     			
@@ -5747,7 +5752,7 @@
     		var previousAccountBalance = NRS.accountBalance;
     				
     		NRS.accountBalance = response;
-    		    		
+    		    	    		    		
     		if (response.errorCode) {
 	    		$("#account_balance").html("0");
 	    		$("#account_nr_assets").html("0");
@@ -6182,7 +6187,12 @@
 		 	}
 		 	
 		 	delete data.secretPhrase;
-		 	data.publicKey = NRS.accountBalance.publicKey;
+		 	
+		 	if (NRS.accountBalance && NRS.accountBalance.publicKey) {
+			 	data.publicKey = NRS.accountBalance.publicKey;
+			 } else {
+				 data.publicKey = NRS.generatePublicKey(secretPhrase);
+			 }
 	 	} else if (type == "POST" && NRS.rememberPassword) {
 		 	data.secretPhrase = sessionStorage.getItem("secret");
 	 	}
