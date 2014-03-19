@@ -37,14 +37,14 @@
                 element = row.insertCell(2);
                 element.className = "text";
                 element.title = peer.announcedAddress;
-                element.innerHTML = peer.announcedAddress;
+                element.textContent = peer.announcedAddress;
                 element = row.insertCell(3);
                 element.className = "software";
                 element.title = "Software";
                 element = row.insertCell(4);
                 element.className = "text";
                 element.title = "Application (version)";
-                element.innerHTML = peer.software;
+                element.textContent = peer.software;
                 element = row.insertCell(5);
                 element.className = "remove";
                 element.title = "Remove blacklisted status";

@@ -64,6 +64,8 @@ public final class Users {
 
     static final Set<String> allowedUserHosts;
 
+    private static final Server userServer;
+
     static {
 
         String allowedUserHostsString = Nxt.getStringProperty("nxt.allowedUserHosts");
@@ -84,7 +86,7 @@ public final class Users {
         if (enableUIServer) {
             final int port = Constants.isTestnet ? TESTNET_UI_PORT : Nxt.getIntProperty("nxt.uiServerPort");
             final String host = Nxt.getStringProperty("nxt.uiServerHost");
-            final Server userServer = new Server();
+            userServer = new Server();
             ServerConnector connector;
 
             boolean enableSSL = Nxt.getBooleanProperty("nxt.uiSSL");
@@ -163,6 +165,7 @@ public final class Users {
             });
 
         } else {
+            userServer = null;
             Logger.logMessage("User interface server not enabled");
         }
 
@@ -605,6 +608,16 @@ public final class Users {
     }
 
     public static void init() {}
+
+    public static void shutdown() {
+        if (userServer != null) {
+            try {
+                userServer.stop();
+            } catch (Exception e) {
+                Logger.logDebugMessage("Failed to stop user interface server", e);
+            }
+        }
+    }
 
     private Users() {} // never
 

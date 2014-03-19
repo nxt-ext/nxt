@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Asset;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
@@ -9,7 +8,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.ASSET_NAME_ALREADY_USED;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_DESCRIPTION;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME_LENGTH;
@@ -52,9 +50,6 @@ public final class IssueAsset extends CreateTransaction {
             }
         }
 
-        if (Asset.getAsset(normalizedName) != null) {
-            return ASSET_NAME_ALREADY_USED;
-        }
         if (description != null && description.length() > 1000) {
             return INCORRECT_ASSET_DESCRIPTION;
         }

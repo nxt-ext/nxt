@@ -201,9 +201,11 @@ public final class Peers {
 
     private static class Init {
 
+        private final static Server peerServer;
+
         static {
             if (Peers.shareMyAddress) {
-                final Server peerServer = new Server();
+                peerServer = new Server();
                 ServerConnector connector = new ServerConnector(peerServer);
                 final int port = Constants.isTestnet ? TESTNET_PEER_PORT : Peers.myPeerServerPort;
                 connector.setPort(port);
@@ -238,6 +240,7 @@ public final class Peers {
                     }
                 });
             } else {
+                peerServer = null;
                 Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
             }
         }
@@ -370,7 +373,15 @@ public final class Peers {
     }
 
     public static void shutdown() {
+        if (Init.peerServer != null) {
+            try {
+                Init.peerServer.stop();
+            } catch (Exception e) {
+                Logger.logDebugMessage("Failed to stop peer server", e);
+            }
+        }
         ThreadPool.shutdownExecutor(sendToPeersService);
+
     }
 
     public static boolean addListener(Listener<Peer> listener, Event eventType) {

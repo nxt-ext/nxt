@@ -30,6 +30,8 @@ public final class API {
 
     static final Set<String> allowedBotHosts;
 
+    private static final Server apiServer;
+
     static {
         String allowedBotHostsString = Nxt.getStringProperty("nxt.allowedBotHosts");
         if (! allowedBotHostsString.equals("*")) {
@@ -49,7 +51,7 @@ public final class API {
         if (enableAPIServer) {
             final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
-            final Server apiServer = new Server();
+            apiServer = new Server();
             ServerConnector connector;
 
             boolean enableSSL = Nxt.getBooleanProperty("nxt.apiSSL");
@@ -129,12 +131,23 @@ public final class API {
             });
 
         } else {
+            apiServer = null;
             Logger.logMessage("API server not enabled");
         }
 
     }
 
     public static void init() {}
+
+    public static void shutdown() {
+        if (apiServer != null) {
+            try {
+                apiServer.stop();
+            } catch (Exception e) {
+                Logger.logDebugMessage("Failed to stop API server", e);
+            }
+        }
+    }
 
     private API() {} // never
 
