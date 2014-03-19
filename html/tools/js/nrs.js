@@ -322,7 +322,8 @@
 	NRS.closedGroups = [];
 	NRS.isLocalHost = false;
 	NRS.rememberPassword = false;
-	NRS.settings = {"submitOnEnter": true};
+	NRS.settings = {};
+	NRS.defaultSettings = {"submit_on_enter": false};
 	
     NRS.init = function() {  
    	    if (location.port && location.port != "6876") {
@@ -337,15 +338,15 @@
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = (hostName == "localhost" || hostName == "127.0.0.1");
 		}
-		
-		NRS.isLocalHost = false;
-		
+				
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
 		}
 		
-    	NRS.createDatabase();
-    	
+    	NRS.createDatabase(function() {
+	    	NRS.getSettings();
+    	});
+    	    	
     	NRS.getState(function() {
 	    	NRS.checkAliasVersions();
     	});
@@ -372,7 +373,7 @@
 		$(".modal form input").keydown(function(e) {
 			if (e.which == "13") {
 				e.preventDefault();
-				if (NRS.settings.submitOnEnter && e.target.type != "textarea") {
+				if (NRS.settings["submit_on_enter"] && e.target.type != "textarea") {
 					$(this).submit();
 				} else {
 					return false;
@@ -1214,7 +1215,7 @@
     	var userStyles = ["header", "sidebar", "page_header"];
     	
     	for (var i=0; i<userStyles.length; i++) {
-	    	var color = localStorage.getItem(userStyles[i] + "_color");
+	    	var color = NRS.settings[userStyles[i] + "_color"];
 	    	if (color) {
 	    		NRS.updateStyle(userStyles[i], color);
 	    	} 
@@ -1731,7 +1732,7 @@
         $(".content.content-stretch:visible").width($(".page:visible").width());
 						
 		if (NRS.databaseSupport) {
-			NRS.database.select("assets", null, function(dbAssets) {			
+			NRS.database.select("assets", null, function(error, dbAssets) {			
 				$.each(dbAssets, function(index, asset) {
 					NRS.assets[asset.assetId] = asset;
 				});
@@ -2605,12 +2606,12 @@
 		if (option == "add_to_group") {			
 			$("#asset_exchange_group_asset").val(assetId);
 																
-			NRS.database.select("assets", [{"assetId": assetId}], function(asset) {				
+			NRS.database.select("assets", [{"assetId": assetId}], function(error, asset) {				
 				asset = asset[0];
 												
 				$("#asset_exchange_group_title").html(String(asset.name).escapeHTML());
 			    	
-				NRS.database.select("assets", [], function(assets) {
+				NRS.database.select("assets", [], function(error, assets) {
 					
 					//NRS.database.execute("SELECT DISTINCT groupName FROM assets", [], function(groupNames) {					
 					var groupNames = [];
@@ -4012,7 +4013,7 @@
 			
 			var $span = $dropdown.closest(".btn-group.colors").find("span.text");
 						
-			var color = localStorage.getItem(style + "_color");
+			var color = NRS.settings[style + "_color"];
 		   			   	 
 			if (!color) {
 				colorTitle = "Default";
@@ -4301,7 +4302,7 @@
 	   	$span.html(colorTitle);
 	   		   		   		   	
 	   	if (color == "custom") { 
-		   	color = localStorage.getItem(scheme + "_color");
+		   	color = NRS.settings[scheme + "_color"];
 		   	
 		   	if (!color) {
 			   	color = "default"; //how??...
@@ -4409,10 +4410,10 @@
 	   		$("#" + scheme + "_custom_scheme_group").hide();
 	   		
 		   	if (color) {
-			   	localStorage.setItem(scheme + "_color", color);
+		   		NRS.updateSettings(scheme + "_color", color);
 			   	NRS.updateStyle(scheme, color);
 			}  else {
-			   	localStorage.removeItem(scheme + "_color");
+				NRS.updateSettings(scheme + "_color");
 			   	NRS.updateStyle(scheme);
 		   }
 		}
@@ -4446,6 +4447,43 @@
 	    });
 	    
 	    NRS.updateStyle(scheme, values);
+    }
+    
+    NRS.getSettings = function() {
+    	if (NRS.databaseSupport) {
+    		NRS.database.select("data", [{"id": "settings"}], function(error, result) {
+				if (result.length) {
+					NRS.settings = JSON.parse(result[0].contents);
+					if ($.isEmptyObject(NRS.settings)) {
+						NRS.settings = NRS.defaultSettings;
+					}
+				} else {
+				    NRS.database.insert("data", {id: "settings", contents: "{}"});
+				    NRS.settings = NRS.defaultSettings;
+				}
+			});
+		} else {
+		    NRS.settings = JSON.parse(localStorage.getItem("settings"));
+			if ($.isEmptyObject(NRS.settings)) {
+				NRS.settings = NRS.defaultSettings;
+			}
+		}
+    }
+    
+    NRS.updateSettings = function(key, value) {	   
+    	if (key) {
+    		if (value) {
+	    		NRS.settings[key] = value;
+	    	} else {
+	    		delete NRS.settings[key];
+	    	}
+    	}
+    	
+	    if (NRS.databaseSupport) {
+			NRS.database.update("data", {contents: JSON.stringify(NRS.settings)}, [{id: "settings"}]);
+	    } else {
+		    localStorage.setItem("settings", JSON.stringify(NRS.settings));
+	    }
     }
     
     $("#transactions_page_type li a").click(function(e) {
@@ -4690,7 +4728,7 @@
 	NRS.loadContacts = function() {
 		NRS.contacts = {};
 		
-		NRS.database.select("contacts", null, function(contacts) {			
+		NRS.database.select("contacts", null, function(error, contacts) {			
 			if (contacts.length) {
 				$.each(contacts, function(index, contact) {
 					NRS.contacts[contact.accountId] = contact;
@@ -4713,7 +4751,7 @@
 		$("#contacts_table_container").show();
 		$("#contact_page_database_error").hide();
 		
-		NRS.database.select("contacts", null, function(contacts) {			
+		NRS.database.select("contacts", null, function(error, contacts) {			
 			if (contacts.length) {
 				var rows = "";
 				
@@ -4777,13 +4815,13 @@
 		
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 		
-		NRS.database.select("contacts", [{"accountId": data.account_id}], function(contacts) {
+		NRS.database.select("contacts", [{"accountId": data.account_id}], function(error, contacts) {
 			if (contacts.length) {
 			    $modal.find(".error_message").html("A contact with this account ID already exists.").show();
     			$btn.button("reset");
     			$modal.modal("unlock");
 			} else {
-		    	NRS.database.insert("contacts", {name: data.name, email: data.email, accountId: data.account_id, description: data.description}, function() {
+		    	NRS.database.insert("contacts", {name: data.name, email: data.email, accountId: data.account_id, description: data.description}, function(error) {
 		    		NRS.contacts[data.account_id] = {name: data.name, email: data.email, accountId: data.account_id, description: data.description};
 		    		
 		    		$btn.button("reset");
@@ -4810,12 +4848,12 @@
 	$("#update_contact_modal").on('show.bs.modal', function (e) {
     	var $invoker = $(e.relatedTarget);
     	
-    	var contactId = $invoker.data("contact");
+    	var contactId = parseInt($invoker.data("contact"), 10);
     	
     	if (!contactId && NRS.selectedContext) {
 	    	var accountId = NRS.selectedContext.data("account");
 	    		    	
-	    	NRS.database.select("contacts", [{"accountId": accountId}], function(contact) {
+	    	NRS.database.select("contacts", [{"accountId": accountId}], function(error, contact) {
 		    	contact = contact[0];
 		    	
 		    	$("#update_contact_id").val(contact.id);
@@ -4827,7 +4865,7 @@
 	    } else {
 	    	$("#update_contact_id").val(contactId);
 	    	    	    	
-			NRS.database.select("contacts", [{"id": contactId}], function(contact) {
+			NRS.database.select("contacts", [{"id": contactId}], function(error, contact) {
 				contact = contact[0];
 				
 				$("#update_contact_name").val(contact.name);
@@ -4856,7 +4894,7 @@
 			}
 		}
 		
-		var contactId = $("#update_contact_id").val();
+		var contactId = parseInt($("#update_contact_id").val(), 10);
 				
 		if (!contactId) {
 			return {"error": "Invalid contact."};
@@ -4864,13 +4902,13 @@
 		
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 		
-		NRS.database.select("contacts", [{"accountId": data.account_id}], function(contacts) {
+		NRS.database.select("contacts", [{"accountId": data.account_id}], function(error, contacts) {
 			if (contacts.length && contacts[0].id != contactId) {
 			    $modal.find(".error_message").html("A contact with this account ID already exists.").show();
     			$btn.button("reset");
     			$modal.modal("unlock");
-			} else {
-		    	NRS.database.update("contacts", {name: data.name, email: data.email, accountId: data.account_id, description: data.description}, [{id: contactId}], function() {		    		
+			} else {				
+		    	NRS.database.update("contacts", {name: data.name, email: data.email, accountId: data.account_id, description: data.description}, [{"id": contactId}], function(error) {
 		    		if (contacts.length && data.account_id != contacts[0].accountId) {
 			    		delete NRS.contacts[contacts[0].accountId];
 		    		}
@@ -4904,7 +4942,7 @@
     
     	$("#delete_contact_id").val(contactId);
     	    	
-		NRS.database.select("contacts", [{"id": contactId}], function(contact) {
+		NRS.database.select("contacts", [{"id": contactId}], function(error, contact) {
 			contact = contact[0];
 			
 			$("#delete_contact_name").html(contact.name.escapeHTML());
@@ -4913,7 +4951,7 @@
     });
 
 	NRS.forms.deleteContact = function($modal) {
-		var id = $("#delete_contact_id").val();
+		var id = parseInt($("#delete_contact_id").val(), 10);
 		
 		NRS.database.delete("contacts", [{"id": id}], function() {
 			delete NRS.contacts[$("#delete_contact_account_id").val()];
@@ -5154,7 +5192,7 @@
     	}
     });
         
-    if (NRS.settings.submitOnEnter) {
+    if (NRS.settings["submit_on_enter"]) {
 	    $(".modal form").on("submit", function(e) {
 	    	e.preventDefault();
 	    	NRS.submitForm($(this).closest(".modal"));
@@ -5375,7 +5413,7 @@
     	    	
 		if (!(/^\d+$/.test(account))) {
 			if (NRS.databaseSupport && account.charAt(0) != '@') {
-				NRS.database.select("contacts", [{"name": account}], function(contact) {	
+				NRS.database.select("contacts", [{"name": account}], function(error, contact) {	
 					if (contact.length) {
 						contact = contact[0];
 						NRS.getAccountError(contact.accountId, function(response) {
@@ -5506,13 +5544,14 @@
 	    return hex;
 	}
 	
-	NRS.createDatabase = function() {
+	NRS.createDatabase = function(callback) {
 		if (indexedDB) {
 			indexedDB.deleteDatabase("NRS");
+			indexedDB.deleteDatabase("NXT");
 		}
 		var schema = {
 		    contacts:{
-		    	id: "INTEGER PRIMARY KEY AUTOINCREMENT",
+		    	id: {"primary": true, "autoincrement": true, "type": "NUMBER"},
 		        name: "VARCHAR(100) COLLATE NOCASE",
 		        email: "VARCHAR(200)",
 		        accountId: "VARCHAR(100)",
@@ -5520,29 +5559,35 @@
 		    },
 		    assets: {
 		    	account: "VARCHAR(100)",
-		        assetId: "VARCHAR(100)",
+		    	alias: "VARCHAR(100)",
+		        assetId: {"primary": true, "type": "VARCHAR(100)"},
 		        description: "TEXT",
 		        name: "VARCHAR(10)",
 		        quantity: "NUMBER",
 		        groupName: "VARCHAR(100)"
 		    },
 		    data: {
-		    	id: "VARCHAR(100)",
+		    	id: {"primary": true, "type": "VARCHAR(100)"},
 		    	contents: "TEXT"
 		    }
 		};
 		
 		try {
-			NRS.database = new WebDB("NXT", schema, 2, 4, function() {
-				NRS.databaseSupport = true;
-				NRS.loadContacts();
-    			NRS.database.select("data", [{"id": "closed_groups"}], function(result) {
-    				if (result.length) {
-	    				NRS.closedGroups = result[0].contents.split("#");
-    				} else {
-					    NRS.database.insert("data", {id: "closed_groups", contents: ""});
-    				}
-    			});
+			NRS.database = new WebDB("NXTDB", schema, 1, 4, function(error) {				
+				if (!error) {
+					NRS.databaseSupport = true;
+					NRS.loadContacts();
+	    			NRS.database.select("data", [{"id": "closed_groups"}], function(error, result) {
+	    				if (result.length) {
+		    				NRS.closedGroups = result[0].contents.split("#");
+	    				} else {
+						    NRS.database.insert("data", {id: "closed_groups", contents: ""});
+	    				}
+	    			});
+	    			if (callback) {
+		    			callback();
+	    			}
+				}
 			});
 		} catch (err) {
 			NRS.database = null;
@@ -5770,7 +5815,7 @@
     			}
     			
     			if (NRS.databaseSupport) {
-    				NRS.database.select("data", [{"id": "asset_balances_" + NRS.account}], function(asset_balance) {
+    				NRS.database.select("data", [{"id": "asset_balances_" + NRS.account}], function(error, asset_balance) {
 						if (asset_balance.length) {
 						    var previous_balances = asset_balance[0].contents;
 						    var current_balances = JSON.stringify(NRS.accountBalance.assetBalances);
