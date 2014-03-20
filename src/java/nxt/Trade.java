@@ -1,5 +1,8 @@
 package nxt;
 
+import nxt.util.Listener;
+import nxt.util.Listeners;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -9,11 +12,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class Trade {
 
+    public static enum Event {
+        TRADE
+    }
+
+    private static final Listeners<Trade,Event> listeners = new Listeners<>();
+
     private static final ConcurrentMap<Long, List<Trade>> trades = new ConcurrentHashMap<>();
     private static final Collection<List<Trade>> allTrades = Collections.unmodifiableCollection(trades.values());
 
     public static Collection<List<Trade>> getAllTrades() {
         return allTrades;
+    }
+
+    public static boolean addListener(Listener<Trade> listener, Event eventType) {
+        return listeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeListener(Listener<Trade> listener, Event eventType) {
+        return listeners.removeListener(listener, eventType);
     }
 
     static void addTrade(Long assetId, int timeStamp, Long blockId, Long askOrderId, Long bidOrderId, int quantity, long price) {
@@ -23,7 +40,9 @@ public final class Trade {
             // cfb: CopyOnWriteArrayList requires a lot of resources to grow but this happens only when a new block is pushed/applied, I can't decide if we should replace it with another class
             trades.put(assetId, assetTrades);
         }
-        assetTrades.add(new Trade(blockId, timeStamp, assetId, askOrderId, bidOrderId, quantity, price));
+        Trade trade = new Trade(blockId, timeStamp, assetId, askOrderId, bidOrderId, quantity, price);
+        assetTrades.add(trade);
+        listeners.notify(trade, Event.TRADE);
     }
 
     static void clear() {
