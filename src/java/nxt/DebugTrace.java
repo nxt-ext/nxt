@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-final class DebugTrace {
+public final class DebugTrace {
 
     static void init() {
         List<String> accountIds = Nxt.getStringListProperty("nxt.debugTraceAccounts");
@@ -34,7 +34,7 @@ final class DebugTrace {
         Logger.logDebugMessage("Debug tracing of " + accountIds.size() + " balances enabled");
     }
 
-    private static void addDebugTrace(List<String> accountIds, PrintWriter log) {
+    public static void addDebugTrace(List<String> accountIds, PrintWriter log) {
         final DebugTrace debugTrace = new DebugTrace(accountIds, log);
         final Map<String, String> headers = new HashMap<>();
         for (String entry : entries) {
@@ -65,10 +65,22 @@ final class DebugTrace {
                 debugTrace.log(headers);
             }
         }, BlockchainProcessor.Event.RESCAN_BEGIN);
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                debugTrace.trace(block, false);
+            }
+        }, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                debugTrace.trace(block, true);
+            }
+        }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
     }
 
-    private static final String[] entries = {"account", "balance", "unconfirmedBalance",
-            "asset", "quantity", "price", "totalPrice", "timestamp"};
+    private static final String[] entries = {"account", "balance", "unconfirmedBalance", "amount", "fee",
+            "asset", "quantity", "price", "totalPrice", "transaction", "timestamp"};
 
     private final Set<Long> accountIds;
     private final PrintWriter log;
@@ -81,42 +93,88 @@ final class DebugTrace {
         this.log = log;
     }
 
+    // Note: Trade events occur before the change in account balances
     private void trace(Trade trade) {
-        Account askAccount = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccount();
-        Account bidAccount = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccount();
-        if (accountIds.contains(askAccount.getId())) {
-            log(askAccount, trade);
-        } else if (accountIds.contains(bidAccount.getId())) {
-            log(bidAccount, trade);
+        Long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccount().getId();
+        Long bidAccountId = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccount().getId();
+        if (accountIds.contains(askAccountId)) {
+            log(getValues(askAccountId, trade, true));
+        }
+        if (accountIds.contains(bidAccountId)) {
+            log(getValues(bidAccountId, trade, false));
         }
     }
 
     private void trace(Account account) {
         if (accountIds.contains(account.getId())) {
-            log(account);
+            log(getValues(account.getId()));
         }
     }
 
-    private void log(Account account) {
-        Map<String,String> map = new HashMap<>();
-        map.put("account", Convert.toUnsignedLong(account.getId()));
-        map.put("balance", String.valueOf(account.getBalance()));
-        map.put("unconfirmedBalance", String.valueOf(account.getUnconfirmedBalance()));
-        map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
-        log(map);
+    private void trace(Block block, boolean isUndo) {
+        Long generatorId = block.getGeneratorId();
+        if (accountIds.contains(generatorId)) {
+            log(getValues(generatorId, block, isUndo));
+        }
+        for (Transaction transaction : block.getTransactions()) {
+            if (accountIds.contains(transaction.getSenderId())) {
+                log(getValues(transaction.getSenderId(), transaction, false, isUndo));
+            }
+            if (accountIds.contains(transaction.getRecipientId())) {
+                log(getValues(transaction.getRecipientId(), transaction, true, isUndo));
+            }
+        }
     }
 
-    private void log(Account account, Trade trade) {
+    private Map<String,String> getValues(Long accountId) {
         Map<String,String> map = new HashMap<>();
-        map.put("account", Convert.toUnsignedLong(account.getId()));
-        map.put("balance", String.valueOf(account.getBalance()));
-        map.put("unconfirmedBalance", String.valueOf(account.getUnconfirmedBalance()));
+        map.put("account", Convert.toUnsignedLong(accountId));
+        Account account = Account.getAccount(accountId);
+        map.put("balance", String.valueOf(account != null ? account.getBalance() : 0));
+        map.put("unconfirmedBalance", String.valueOf(account != null ? account.getUnconfirmedBalance() : 0));
+        map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        return map;
+    }
+
+    private Map<String,String> getValues(Long accountId, Trade trade, boolean isRecipient) {
+        Map<String,String> map = getValues(accountId);
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         map.put("quantity", String.valueOf(trade.getQuantity()));
         map.put("price", String.valueOf(trade.getPrice()));
-        map.put("totalPrice", String.valueOf(trade.getQuantity() * trade.getPrice()));
-        map.put("timestamp", String.valueOf(trade.getTimestamp()));
-        log(map);
+        map.put("totalPrice", String.valueOf((isRecipient ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
+        return map;
+    }
+
+    private Map<String,String> getValues(Long accountId, Transaction transaction, boolean isRecipient, boolean isUndo) {
+        Map<String,String> map = getValues(accountId);
+        long amount = transaction.getAmount();
+        long fee = transaction.getFee();
+        if (isRecipient) {
+            fee = 0; // fee doesn't affect recipient account
+            if (isUndo) {
+                amount = - amount;
+            }
+        } else {
+            // for sender the amounts are subtracted
+            if (! isUndo) {
+                amount = - amount;
+                fee = - fee;
+            }
+        }
+        map.put("amount", String.valueOf(amount * 100L));
+        map.put("fee", String.valueOf(fee * 100L));
+        map.put("transaction", transaction.getStringId());
+        return map;
+    }
+
+    private Map<String,String> getValues(Long accountId, Block block, boolean isUndo) {
+        Map<String,String> map = getValues(accountId);
+        long fee = block.getTotalFee();
+        if (isUndo) {
+            fee = - fee;
+        }
+        map.put("fee", String.valueOf(fee));
+        return map;
     }
 
     private void log(Map<String,String> map) {
