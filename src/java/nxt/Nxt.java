@@ -136,6 +136,7 @@ public final class Nxt {
         API.shutdown();
         Users.shutdown();
         Peers.shutdown();
+        TransactionProcessorImpl.getInstance().shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
         Logger.logMessage("Nxt server " + VERSION + " stopped.");
@@ -158,11 +159,11 @@ public final class Nxt {
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
-            DebugTrace.init();
             Peers.init();
             Generator.init();
             API.init();
             Users.init();
+            DebugTrace.init();
             ThreadPool.start();
 
             long currentTime = System.currentTimeMillis();

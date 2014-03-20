@@ -378,6 +378,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     }
 
+    void shutdown() {
+        Iterator<TransactionImpl> iter = unconfirmedTransactions.values().iterator();
+        while (iter.hasNext()) {
+            TransactionImpl transaction = iter.next();
+            transaction.undoUnconfirmed();
+            iter.remove();
+        }
+    }
+
     private void purgeExpiredHashes(int blockTimestamp) {
         Iterator<Map.Entry<String, TransactionHashInfo>> iterator = transactionHashes.entrySet().iterator();
         while (iterator.hasNext()) {

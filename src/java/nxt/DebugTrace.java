@@ -79,8 +79,9 @@ public final class DebugTrace {
         }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
     }
 
-    private static final String[] entries = {"account", "balance", "unconfirmedBalance", "amount", "fee",
-            "asset", "quantity", "price", "totalPrice", "transaction", "timestamp"};
+    private static final String[] entries = {"account", "balance", "unconfirmed balance",
+            "transaction amount", "transaction fee", "generation fee",
+            "asset", "quantity", "price", "asset cost", "transaction", "timestamp"};
 
     private final Set<Long> accountIds;
     private final PrintWriter log;
@@ -131,7 +132,7 @@ public final class DebugTrace {
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
         map.put("balance", String.valueOf(account != null ? account.getBalance() : 0));
-        map.put("unconfirmedBalance", String.valueOf(account != null ? account.getUnconfirmedBalance() : 0));
+        map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalance() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         return map;
     }
@@ -141,7 +142,7 @@ public final class DebugTrace {
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         map.put("quantity", String.valueOf(trade.getQuantity()));
         map.put("price", String.valueOf(trade.getPrice()));
-        map.put("totalPrice", String.valueOf((isRecipient ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
+        map.put("asset cost", String.valueOf((isRecipient ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
         return map;
     }
 
@@ -161,8 +162,8 @@ public final class DebugTrace {
                 fee = - fee;
             }
         }
-        map.put("amount", String.valueOf(amount * 100L));
-        map.put("fee", String.valueOf(fee * 100L));
+        map.put("transaction amount", String.valueOf(amount * 100L));
+        map.put("transaction fee", String.valueOf(fee * 100L));
         map.put("transaction", transaction.getStringId());
         return map;
     }
@@ -173,7 +174,7 @@ public final class DebugTrace {
         if (isUndo) {
             fee = - fee;
         }
-        map.put("fee", String.valueOf(fee));
+        map.put("generation fee", String.valueOf(fee));
         return map;
     }
 
