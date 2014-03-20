@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Asset;
+import nxt.Trade;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -15,7 +16,9 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
 
     static final GetAsset instance = new GetAsset();
 
-    private GetAsset() {}
+    private GetAsset() {
+        super("asset");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -25,9 +28,10 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
             return MISSING_ASSET;
         }
 
+        Long assetId;
         Asset assetData;
         try {
-            assetData = Asset.getAsset(Convert.parseUnsignedLong(asset));
+            assetData = Asset.getAsset(assetId = Convert.parseUnsignedLong(asset));
             if (assetData == null) {
                 return UNKNOWN_ASSET;
             }
@@ -42,6 +46,7 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
             response.put("description", assetData.getDescription());
         }
         response.put("quantity", assetData.getQuantity());
+        response.put("numberOfTrades", Trade.getTrades(assetId).size());
 
         return response;
     }

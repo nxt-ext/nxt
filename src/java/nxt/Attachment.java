@@ -55,7 +55,7 @@ public interface Attachment {
         public JSONStreamAware getJSON() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("message", Convert.toHexString(message));
+            attachment.put("message", message == null ? null : Convert.toHexString(message));
 
             return attachment;
 
@@ -226,7 +226,9 @@ public interface Attachment {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
             JSONArray options = new JSONArray();
-            Collections.addAll(options, this.pollOptions);
+            if (this.pollOptions != null) {
+                Collections.addAll(options, this.pollOptions);
+            }
             attachment.put("options", options);
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
@@ -293,11 +295,12 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
-            for (byte aPollVote : this.pollVote) {
-                vote.add(aPollVote);
+            if (this.pollVote != null) {
+                for (byte aPollVote : this.pollVote) {
+                    vote.add(aPollVote);
+                }
             }
             attachment.put("vote", vote);
-
             return attachment;
 
         }

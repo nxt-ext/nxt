@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.peer.Hallmark;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -20,7 +20,9 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
 
     static final MarkHost instance = new MarkHost();
 
-    private MarkHost() {}
+    private MarkHost() {
+        super("secretPhrase", "host", "weight", "date");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -46,7 +48,7 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
         int weight;
         try {
             weight = Integer.parseInt(weightValue);
-            if (weight <= 0 || weight > Nxt.MAX_BALANCE) {
+            if (weight <= 0 || weight > Constants.MAX_BALANCE) {
                 return INCORRECT_WEIGHT;
             }
         } catch (NumberFormatException e) {

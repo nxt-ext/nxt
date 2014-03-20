@@ -1,6 +1,7 @@
 package nxt.user;
 
 import nxt.Block;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.peer.Peer;
@@ -107,7 +108,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
             recentBlock.put("version", block.getVersion());
             recentBlock.put("block", block.getStringId());
             recentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000))
-                    .divide(BigInteger.valueOf(Nxt.INITIAL_BASE_TARGET)));
+                    .divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
 
             recentBlocks.add(recentBlock);
         }

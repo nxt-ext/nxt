@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Convert;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,14 +19,32 @@ final class TransactionDb {
             ResultSet rs = pstmt.executeQuery();
             Transaction transaction = null;
             if (rs.next()) {
-                transaction = findTransaction(con, rs);
+                transaction = loadTransaction(con, rs);
             }
             rs.close();
             return transaction;
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database, id = " + transactionId + ", does not pass validation!");
+            throw new RuntimeException("Transaction already in database, id = " + transactionId + ", does not pass validation!");
+        }
+    }
+
+    static Transaction findTransaction(String hash) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE hash = ?")) {
+            pstmt.setBytes(1, Convert.parseHexString(hash));
+            ResultSet rs = pstmt.executeQuery();
+            Transaction transaction = null;
+            if (rs.next()) {
+                transaction = loadTransaction(con, rs);
+            }
+            rs.close();
+            return transaction;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Transaction already in database, hash = " + hash + ", does not pass validation!");
         }
     }
 
@@ -35,11 +55,11 @@ final class TransactionDb {
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
-    static TransactionImpl findTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static TransactionImpl loadTransaction(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
 
             byte type = rs.getByte("type");
@@ -60,10 +80,12 @@ final class TransactionDb {
             Long id = rs.getLong("id");
             Long senderId = rs.getLong("sender_id");
             Attachment attachment = (Attachment)rs.getObject("attachment");
+            byte[] hash = rs.getBytes("hash");
+            int blockTimestamp = rs.getInt("block_timestamp");
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
-                    referencedTransactionId, signature, blockId, height, id, senderId, attachment);
+                    referencedTransactionId, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp);
 
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -76,7 +98,7 @@ final class TransactionDb {
             pstmt.setLong(1, blockId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                list.add(findTransaction(con, rs));
+                list.add(loadTransaction(con, rs));
             }
             rs.close();
             return list;
@@ -91,8 +113,9 @@ final class TransactionDb {
         try {
             for (Transaction transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
-                        + "amount, fee, referenced_transaction_id, height, block_id, signature, timestamp, type, subtype, sender_id, attachment) "
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "amount, fee, referenced_transaction_id, height, block_id, signature, timestamp, type, subtype, sender_id, attachment, "
+                        + "hash, block_timestamp) "
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -106,7 +129,7 @@ final class TransactionDb {
                         pstmt.setNull(++i, Types.BIGINT);
                     }
                     pstmt.setInt(++i, transaction.getHeight());
-                    pstmt.setLong(++i, transaction.getBlock().getId());
+                    pstmt.setLong(++i, transaction.getBlockId());
                     pstmt.setBytes(++i, transaction.getSignature());
                     pstmt.setInt(++i, transaction.getTimestamp());
                     pstmt.setByte(++i, transaction.getType().getType());
@@ -117,6 +140,8 @@ final class TransactionDb {
                     } else {
                         pstmt.setNull(++i, Types.JAVA_OBJECT);
                     }
+                    pstmt.setBytes(++i, Convert.parseHexString(transaction.getHash()));
+                    pstmt.setInt(++i, transaction.getBlockTimestamp());
                     pstmt.executeUpdate();
                 }
             }

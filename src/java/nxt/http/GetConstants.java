@@ -1,7 +1,7 @@
 package nxt.http;
 
+import nxt.Constants;
 import nxt.Genesis;
-import nxt.Nxt;
 import nxt.TransactionType;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -22,8 +22,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("genesisBlockId", Convert.toUnsignedLong(Genesis.GENESIS_BLOCK_ID));
         response.put("genesisAccountId", Convert.toUnsignedLong(Genesis.CREATOR_ID));
-        response.put("maxBlockPayloadLength", Nxt.MAX_PAYLOAD_LENGTH);
-        response.put("maxArbitraryMessageLength", Nxt.MAX_ARBITRARY_MESSAGE_LENGTH);
+        response.put("maxBlockPayloadLength", Constants.MAX_PAYLOAD_LENGTH);
+        response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH);
 
         JSONArray transactionTypes = new JSONArray();
         JSONObject transactionType = new JSONObject();

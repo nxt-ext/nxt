@@ -18,7 +18,9 @@ public final class GetAskOrderIds extends APIServlet.APIRequestHandler {
 
     static final GetAskOrderIds instance = new GetAskOrderIds();
 
-    private GetAskOrderIds() {}
+    private GetAskOrderIds() {
+        super("asset", "limit");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

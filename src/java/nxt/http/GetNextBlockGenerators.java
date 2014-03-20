@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Block;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -71,7 +72,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
             }
         }
 
-        if (curBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+        if (curBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
             return JSONResponses.FEATURE_NOT_AVAILABLE;
         }
 

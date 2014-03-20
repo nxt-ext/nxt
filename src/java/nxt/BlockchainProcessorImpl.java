@@ -458,19 +458,19 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException("Previous block id doesn't match");
                 }
 
-                if (block.getVersion() != (previousLastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
+                if (block.getVersion() != (previousLastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
 
-                if (previousLastBlock.getHeight() == Nxt.TRANSPARENT_FORGING_BLOCK) {
+                if (previousLastBlock.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK) {
                     byte[] checksum = calculateTransactionsChecksum();
                     if (CHECKSUM_TRANSPARENT_FORGING == null) {
                         Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
                     } else if (!Arrays.equals(checksum, CHECKSUM_TRANSPARENT_FORGING)) {
-                        Logger.logMessage("Checksum failed at block " + Nxt.TRANSPARENT_FORGING_BLOCK);
+                        Logger.logMessage("Checksum failed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
                         throw new BlockNotAcceptedException("Checksum failed");
                     } else {
-                        Logger.logMessage("Checksum passed at block " + Nxt.TRANSPARENT_FORGING_BLOCK);
+                        Logger.logMessage("Checksum passed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
                     }
                 }
 
@@ -643,48 +643,51 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         int blockTimestamp = Convert.getEpochTime();
 
-        while (payloadLength <= Nxt.MAX_PAYLOAD_LENGTH) {
+        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH) {
 
             int prevNumberOfNewTransactions = newTransactions.size();
 
             for (TransactionImpl transaction : sortedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.get(transaction.getId()) == null && payloadLength + transactionLength <= Nxt.MAX_PAYLOAD_LENGTH) {
-
-                    Long sender = transaction.getSenderId();
-                    Long accumulatedAmount = accumulatedAmounts.get(sender);
-                    if (accumulatedAmount == null) {
-                        accumulatedAmount = 0L;
-                    }
-
-                    long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
-                    if (accumulatedAmount + amount <= Account.getAccount(sender).getBalance()) {
-
-                        if (transaction.getTimestamp() > blockTimestamp + 15 || (transaction.getExpiration() < blockTimestamp)) {
-                            continue;
-                        }
-
-                        if (transaction.isDuplicate(duplicates)) {
-                            continue;
-                        }
-
-                        try {
-                            transaction.validateAttachment();
-                        } catch (NxtException.ValidationException e) {
-                            continue;
-                        }
-
-                        accumulatedAmounts.put(sender, accumulatedAmount + amount);
-
-                        newTransactions.put(transaction.getId(), transaction);
-                        payloadLength += transactionLength;
-                        totalAmount += transaction.getAmount();
-                        totalFee += transaction.getFee();
-
-                    }
+                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                    continue;
                 }
+
+                Long sender = transaction.getSenderId();
+                Long accumulatedAmount = accumulatedAmounts.get(sender);
+                if (accumulatedAmount == null) {
+                    accumulatedAmount = 0L;
+                }
+
+                long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
+                if (accumulatedAmount + amount > Account.getAccount(sender).getBalance()) {
+                    continue;
+                }
+
+                if (transaction.getTimestamp() > blockTimestamp + 15 || (transaction.getExpiration() < blockTimestamp)) {
+                    continue;
+                }
+
+                if (transaction.isDuplicate(duplicates)) {
+                    continue;
+                }
+
+                try {
+                    transaction.validateAttachment();
+                } catch (NxtException.ValidationException e) {
+                    continue;
+                }
+
+                accumulatedAmounts.put(sender, accumulatedAmount + amount);
+
+                newTransactions.put(transaction.getId(), transaction);
+                payloadLength += transactionLength;
+                totalAmount += transaction.getAmount();
+                totalFee += transaction.getFee();
+
             }
+
             if (newTransactions.size() == prevNumberOfNewTransactions) {
                 break;
             }
@@ -698,19 +701,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         byte[] payloadHash = digest.digest();
-        byte[] generationSignature;
 
         BlockImpl previousBlock = blockchain.getLastBlock();
-        if (previousBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
-            generationSignature = Crypto.sign(previousBlock.getGenerationSignature(), secretPhrase);
-        } else {
-            digest.update(previousBlock.getGenerationSignature());
-            generationSignature = digest.digest(publicKey);
+        if (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+            Logger.logDebugMessage("Generate block below " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+            return;
         }
 
+        digest.update(previousBlock.getGenerationSignature());
+        byte[] generationSignature = digest.digest(publicKey);
+
         BlockImpl block;
-        int version = previousBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
-        byte[] previousBlockHash = version == 1 ? null : Crypto.sha256().digest(previousBlock.getBytes());
+        //int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
+        int version = 2;
+        byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
 
         try {
 
@@ -728,13 +732,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         block.setPrevious(previousBlock);
 
         try {
-            if (block.verifyBlockSignature() && block.verifyGenerationSignature()) {
-                pushBlock(block);
-                blockListeners.notify(block, Event.BLOCK_GENERATED);
-                Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
-            } else {
-                Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated an incorrect block.");
-            }
+            pushBlock(block);
+            blockListeners.notify(block, Event.BLOCK_GENERATED);
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
         }
@@ -788,15 +788,22 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
                 BlockImpl currentBlock;
                 ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    currentBlock = BlockDb.findBlock(con, rs);
-                    if (! currentBlock.getId().equals(currentBlockId)) {
-                        throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                try {
+                    while (rs.next()) {
+                        currentBlock = BlockDb.loadBlock(con, rs);
+                        if (! currentBlock.getId().equals(currentBlockId)) {
+                            throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                        }
+                        blockchain.setLastBlock(currentBlock);
+                        transactionProcessor.apply(currentBlock);
+                        blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                        currentBlockId = currentBlock.getNextBlockId();
                     }
-                    blockchain.setLastBlock(currentBlock);
-                    transactionProcessor.apply(currentBlock);
-                    blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
-                    currentBlockId = currentBlock.getNextBlockId();
+                } catch (RuntimeException e) {
+                    Logger.logDebugMessage(e.toString(), e);
+                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
+                    BlockDb.deleteBlock(currentBlockId);
+                    scan();
                 }
             } catch (NxtException.ValidationException|SQLException e) {
                 throw new RuntimeException(e.toString(), e);

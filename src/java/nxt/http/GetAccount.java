@@ -17,7 +17,9 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
     static final GetAccount instance = new GetAccount();
 
-    private GetAccount() {}
+    private GetAccount() {
+        super("account");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -45,6 +47,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
             response.put("balance", accountData.getBalance());
             response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
+            response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
 
             JSONArray assetBalances = new JSONArray();
             for (Map.Entry<Long, Integer> assetBalanceEntry : accountData.getAssetBalances().entrySet()) {
@@ -56,10 +59,22 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
             }
             if (assetBalances.size() > 0) {
-
                 response.put("assetBalances", assetBalances);
+            }
+
+            JSONArray unconfirmedAssetBalances = new JSONArray();
+            for (Map.Entry<Long, Integer> unconfirmedAssetBalanceEntry : accountData.getUnconfirmedAssetBalances().entrySet()) {
+
+                JSONObject unconfirmedAssetBalance = new JSONObject();
+                unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(unconfirmedAssetBalanceEntry.getKey()));
+                unconfirmedAssetBalance.put("unconfirmedBalance", unconfirmedAssetBalanceEntry.getValue());
+                unconfirmedAssetBalances.add(unconfirmedAssetBalance);
 
             }
+            if (unconfirmedAssetBalances.size() > 0) {
+                response.put("unconfirmedAssetBalances", unconfirmedAssetBalances);
+            }
+
         }
         return response;
     }

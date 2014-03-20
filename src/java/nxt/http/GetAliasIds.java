@@ -15,7 +15,9 @@ public final class GetAliasIds extends APIServlet.APIRequestHandler {
 
     static final GetAliasIds instance = new GetAliasIds();
 
-    private GetAliasIds() {}
+    private GetAliasIds() {
+        super("timestamp");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

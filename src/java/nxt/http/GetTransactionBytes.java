@@ -1,6 +1,5 @@
 package nxt.http;
 
-import nxt.Block;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
@@ -17,36 +16,37 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
 
     static final GetTransactionBytes instance = new GetTransactionBytes();
 
-    private GetTransactionBytes() {}
+    private GetTransactionBytes() {
+        super("transaction");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
-        String transaction = req.getParameter("transaction");
-        if (transaction == null) {
+        String transactionValue = req.getParameter("transaction");
+        if (transactionValue == null) {
             return MISSING_TRANSACTION;
         }
 
         Long transactionId;
-        Transaction transactionData;
+        Transaction transaction;
         try {
-            transactionId = Convert.parseUnsignedLong(transaction);
-            transactionData = Nxt.getBlockchain().getTransaction(transactionId);
+            transactionId = Convert.parseUnsignedLong(transactionValue);
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
 
+        transaction = Nxt.getBlockchain().getTransaction(transactionId);
         JSONObject response = new JSONObject();
-        if (transactionData == null) {
-            transactionData = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
-            if (transactionData == null) {
+        if (transaction == null) {
+            transaction = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
+            if (transaction == null) {
                 return UNKNOWN_TRANSACTION;
             }
         } else {
-            Block block = transactionData.getBlock();
-            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - block.getHeight());
+            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
         }
-        response.put("transactionBytes", Convert.toHexString(transactionData.getBytes()));
+        response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
         return response;
 
     }

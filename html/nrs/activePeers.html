@@ -60,7 +60,7 @@
                 element.id = "announcedAddress" + peer.index;
                 element.className = "text";
                 element.title = peer.announcedAddress;
-                element.innerHTML = peer.announcedAddress;
+                element.textContent = peer.announcedAddress;
                 element = row.insertCell(4);
                 element.id = "weightIcon" + peer.index;
                 element.className = peer.weight > 0 ? "enabledWeight" : "disabledWeight";
@@ -93,7 +93,7 @@
                 element = row.insertCell(11);
                 element.className = "text";
                 element.title = "Application (version)";
-                element.innerHTML = peer.software;
+                element.textContent = peer.software;
                 element = row.insertCell(12);
                 element.id = "remove" + peer.index;
                 element.className = "remove";
@@ -129,7 +129,7 @@
                 if (peer.announcedAddress) {
                     element = document.getElementById("announcedAddress" + peer.index);
                     element.title = peer.announcedAddress;
-                    element.innerHTML = peer.announcedAddress;
+                    element.textContent = peer.announcedAddress;
                     element = document.getElementById("announcedAddressIcon" + peer.index);
                     if (peer.wellKnown) {
                         element.className = "wellKnown";

@@ -2,6 +2,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -12,6 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -23,16 +25,31 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
+    private static String[] addCommonParameters(String[] parameters) {
+        String[] result = Arrays.copyOf(parameters, parameters.length + 5);
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"}, 0,
+                result, parameters.length, 5);
+        return result;
+    }
+
+    CreateTransaction(String... parameters) {
+        super(addCommonParameters(parameters));
+    }
+
     final Account getAccount(HttpServletRequest req) {
-        String secretPhrase = req.getParameter("secretPhrase");
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         if (secretPhrase != null) {
             return Account.getAccount(Crypto.getPublicKey(secretPhrase));
         }
-        String publicKeyString = req.getParameter("publicKey");
+        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
         if (publicKeyString == null) {
             return null;
         }
-        return Account.getAccount(Convert.parseHexString(publicKeyString));
+        try {
+            return Account.getAccount(Convert.parseHexString(publicKeyString));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
@@ -44,9 +61,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                                             int amount, Attachment attachment) throws NxtException.ValidationException {
         String deadlineValue = req.getParameter("deadline");
         String feeValue = req.getParameter("fee");
-        String referencedTransactionValue = req.getParameter("referencedTransaction");
-        String secretPhrase = req.getParameter("secretPhrase");
-        String publicKeyValue = req.getParameter("publicKey");
+        String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
@@ -69,7 +86,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         int fee;
         try {
             fee = Integer.parseInt(feeValue);
-            if (fee <= 0 || fee >= Nxt.MAX_BALANCE) {
+            if (fee < minimumFee() || fee >= Constants.MAX_BALANCE) {
                 return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
@@ -90,8 +107,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         // shouldn't try to get publicKey from senderAccount as it may have not been set yet
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
-        Transaction transaction = Nxt.getTransactionProcessor().newTransaction(deadline, publicKey,
-                recipientId, amount, fee, referencedTransaction, attachment);
+        Transaction transaction = attachment == null ?
+                Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
+                        amount, fee, referencedTransaction)
+                :
+                Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
+                        amount, fee, referencedTransaction, attachment);
 
         JSONObject response = new JSONObject();
         if (secretPhrase != null) {
@@ -100,7 +121,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             response.put("transaction", transaction.getStringId());
         }
         response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
-        response.put("guid", Convert.toHexString(transaction.getGuid()));
+        response.put("hash", transaction.getHash());
         return response;
 
     }
@@ -108,6 +129,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     @Override
     final boolean requirePost() {
         return true;
+    }
+
+    int minimumFee() {
+        return 1;
     }
 
 }

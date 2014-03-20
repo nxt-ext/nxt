@@ -13,9 +13,10 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import static nxt.user.JSONResponses.LOCK_ACCOUNT;
 
@@ -24,6 +25,23 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
     static final UnlockAccount instance = new UnlockAccount();
 
     private UnlockAccount() {}
+
+    private static final Comparator<JSONObject> myTransactionsComparator = new Comparator<JSONObject>() {
+        @Override
+        public int compare(JSONObject o1, JSONObject o2) {
+            int t1 = ((Number)o1.get("timestamp")).intValue();
+            int t2 = ((Number)o2.get("timestamp")).intValue();
+            if (t1 < t2) {
+                return 1;
+            }
+            if (t1 > t2) {
+                return -1;
+            }
+            String id1 = (String)o1.get("id");
+            String id2 = (String)o2.get("id");
+            return id2.compareTo(id1);
+        }
+    };
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
@@ -102,10 +120,10 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
 
             }
 
-            SortedMap<Integer,JSONObject> myTransactionsMap = new TreeMap<>();
+            SortedSet<JSONObject> myTransactionsSet = new TreeSet<>(myTransactionsComparator);
 
             int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
-            try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getAllBlocks(account, 0)) {
+            try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getBlocks(account, 0)) {
                 while (blockIterator.hasNext()) {
                     Block block = blockIterator.next();
                     if (block.getTotalFee() > 0) {
@@ -116,18 +134,19 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("earnedAmount", block.getTotalFee());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - block.getHeight());
                         myTransaction.put("id", "-");
-                        myTransactionsMap.put(-block.getTimestamp(), myTransaction);
+                        myTransaction.put("timestamp", block.getTimestamp());
+                        myTransactionsSet.add(myTransaction);
                     }
                 }
             }
 
-            try (DbIterator<? extends Transaction> transactionIterator = Nxt.getBlockchain().getAllTransactions(account, (byte)-1, (byte)-1, 0, null)) {
+            try (DbIterator<? extends Transaction> transactionIterator = Nxt.getBlockchain().getTransactions(account, (byte) -1, (byte) -1, 0, null)) {
                 while (transactionIterator.hasNext()) {
                     Transaction transaction = transactionIterator.next();
                     if (transaction.getSenderId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", Users.getIndex(transaction));
-                        myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                        myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
                         myTransaction.put("sentAmount", transaction.getAmount());
@@ -135,25 +154,27 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                             myTransaction.put("receivedAmount", transaction.getAmount());
                         }
                         myTransaction.put("fee", transaction.getFee());
-                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());
+                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());
                         myTransaction.put("id", transaction.getStringId());
-                        myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
+                        myTransaction.put("timestamp", transaction.getTimestamp());
+                        myTransactionsSet.add(myTransaction);
                     } else if (transaction.getRecipientId().equals(accountId)) {
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", Users.getIndex(transaction));
-                        myTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                        myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
                         myTransaction.put("receivedAmount", transaction.getAmount());
                         myTransaction.put("fee", transaction.getFee());
-                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getBlock().getHeight());
+                        myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());
                         myTransaction.put("id", transaction.getStringId());
-                        myTransactionsMap.put(-transaction.getTimestamp(), myTransaction);
+                        myTransaction.put("timestamp", transaction.getTimestamp());
+                        myTransactionsSet.add(myTransaction);
                     }
                 }
             }
 
-            Iterator<JSONObject> iterator = myTransactionsMap.values().iterator();
+            Iterator<JSONObject> iterator = myTransactionsSet.iterator();
             while (myTransactions.size() < 1000 && iterator.hasNext()) {
                 myTransactions.add(iterator.next());
             }

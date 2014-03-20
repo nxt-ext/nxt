@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
 import java.math.BigInteger;
@@ -27,6 +26,7 @@ final class TransactionImpl implements Transaction {
     private volatile Block block;
     private byte[] signature;
     private int timestamp;
+    private int blockTimestamp = -1;
     private Attachment attachment;
     private volatile Long id;
     private volatile String stringId = null;
@@ -37,7 +37,7 @@ final class TransactionImpl implements Transaction {
                     int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY)) ? (deadline != 0 || fee != 0) : (deadline < 1 || fee <= 0)
-                || fee > Nxt.MAX_BALANCE || amount < 0 || amount > Nxt.MAX_BALANCE || type == null) {
+                || fee > Constants.MAX_BALANCE || amount < 0 || amount > Constants.MAX_BALANCE || type == null) {
             throw new NxtException.ValidationException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
                     + ", deadline: " + deadline + ", fee: " + fee + ", amount: " + amount);
         }
@@ -55,7 +55,8 @@ final class TransactionImpl implements Transaction {
     }
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    int amount, int fee, Long referencedTransactionId, byte[] signature, Long blockId, int height, Long id, Long senderId, Attachment attachment)
+                    int amount, int fee, Long referencedTransactionId, byte[] signature, Long blockId, int height,
+                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
         this.blockId = blockId;
@@ -63,6 +64,8 @@ final class TransactionImpl implements Transaction {
         this.id = id;
         this.senderId = senderId;
         this.attachment = attachment;
+        this.hash = hash == null ? null : Convert.toHexString(hash);
+        this.blockTimestamp = blockTimestamp;
     }
 
     @Override
@@ -111,6 +114,11 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public Long getBlockId() {
+        return blockId;
+    }
+
+    @Override
     public Block getBlock() {
         if (block == null) {
             block = BlockDb.findBlock(blockId);
@@ -122,11 +130,17 @@ final class TransactionImpl implements Transaction {
         this.block = block;
         this.blockId = block.getId();
         this.height = block.getHeight();
+        this.blockTimestamp = block.getTimestamp();
     }
 
     @Override
     public int getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public int getBlockTimestamp() {
+        return blockTimestamp;
     }
 
     @Override
@@ -198,7 +212,14 @@ final class TransactionImpl implements Transaction {
         if (timestamp > o.getTimestamp()) {
             return 1;
         }
+        if (getId() < o.getId()) {
+            return -1;
+        }
+        if (getId() > o.getId()) {
+            return 1;
+        }
         return 0;
+
     }
 
     static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
@@ -221,7 +242,7 @@ final class TransactionImpl implements Transaction {
         buffer.putInt(amount);
         buffer.putInt(fee);
         buffer.putLong(Convert.nullToZero(referencedTransactionId));
-        buffer.put(signature);
+        buffer.put(signature != null ? signature : new byte[64]);
         if (attachment != null) {
             buffer.put(attachment.getBytes());
         }
@@ -232,61 +253,42 @@ final class TransactionImpl implements Transaction {
     @Override
     public JSONObject getJSONObject() {
 
-        JSONObject transaction = new JSONObject();
+        JSONObject json = new JSONObject();
 
-        transaction.put("type", type.getType());
-        transaction.put("subtype", type.getSubtype());
-        transaction.put("timestamp", timestamp);
-        transaction.put("deadline", deadline);
-        transaction.put("senderPublicKey", Convert.toHexString(senderPublicKey));
-        transaction.put("recipient", Convert.toUnsignedLong(recipientId));
-        transaction.put("amount", amount);
-        transaction.put("fee", fee);
-        transaction.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
-        transaction.put("signature", Convert.toHexString(signature));
+        json.put("type", type.getType());
+        json.put("subtype", type.getSubtype());
+        json.put("timestamp", timestamp);
+        json.put("deadline", deadline);
+        json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
+        json.put("recipient", Convert.toUnsignedLong(recipientId));
+        json.put("amount", amount);
+        json.put("fee", fee);
+        json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
+        json.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
-            transaction.put("attachment", attachment.getJSON());
+            json.put("attachment", attachment.getJSON());
         }
 
-        return transaction;
+        return json;
     }
 
     @Override
     public void sign(String secretPhrase) {
-
         if (signature != null) {
             throw new IllegalStateException("Transaction already signed");
         }
-
-        signature = new byte[64]; // ugly but signature is needed by getBytes()
         signature = Crypto.sign(getBytes(), secretPhrase);
+    }
 
-        try {
-            while (!verify()) {
-                timestamp++;
-                // cfb: Sometimes EC-KCDSA generates unverifiable signatures (X*0 == Y*0 case), Crypto.sign() will be rewritten later
-                signature = new byte[64];
-                signature = Crypto.sign(getBytes(), secretPhrase);
+    @Override
+    public String getHash() {
+        if (hash == null) {
+            byte[] data = getBytes();
+            for (int i = 64; i < 128; i++) {
+                data[i] = 0;
             }
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error signing transaction", e);
+            hash = Convert.toHexString(Crypto.sha256().digest(data));
         }
-
-    }
-
-    @Override
-    public String getHash() { // cfb: This is not the real hash because the very last bit is set to 0b!
-        return Convert.toHexString(getGuid());
-    }
-
-    @Override
-    public byte[] getGuid() {
-        byte[] data = getBytes();
-        for (int i = 64; i < 128; i++) {
-            data[i] = 0;
-        }
-        byte[] hash = Crypto.sha256().digest(data);
-        hash[hash.length - 1] &= 0x7F; // cfb: transaction guids have the very last bit set to 0b
         return hash;
     }
 

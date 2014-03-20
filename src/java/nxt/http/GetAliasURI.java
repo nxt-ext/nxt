@@ -14,7 +14,9 @@ public final class GetAliasURI extends APIServlet.APIRequestHandler {
 
     static final GetAliasURI instance = new GetAliasURI();
 
-    private GetAliasURI() {}
+    private GetAliasURI() {
+        super("alias");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

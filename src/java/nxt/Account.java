@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class Account {
 
     public static enum Event {
-        BALANCE, UNCONFIRMED_BALANCE
+        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -105,11 +105,11 @@ public final class Account {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
-        if (publicKey == null && lastBlock.getHeight() >= Nxt.TRANSPARENT_FORGING_BLOCK_6) {
+        if (publicKey == null && lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6) {
             return 0; // cfb: Accounts with non-revealed public key are not allowed to generate blocks
         }
 
-        if (lastBlock.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK_3 && this.height < Nxt.TRANSPARENT_FORGING_BLOCK_2) {
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3 && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
                 return (int)(getBalance() / 100);
@@ -165,6 +165,10 @@ public final class Account {
 
     public Map<Long, Integer> getAssetBalances() {
         return Collections.unmodifiableMap(assetBalances);
+    }
+
+    public Map<Long, Integer> getUnconfirmedAssetBalances() {
+        return Collections.unmodifiableMap(unconfirmedAssetBalances);
     }
 
     // returns true iff:
@@ -227,33 +231,47 @@ public final class Account {
         return Convert.nullToZero(assetBalances.get(assetId));
     }
 
-    synchronized void addToAssetBalance(Long assetId, int quantity) {
-        Integer assetBalance = assetBalances.get(assetId);
-        if (assetBalance == null) {
-            assetBalances.put(assetId, quantity);
-        } else {
-            assetBalances.put(assetId, assetBalance + quantity);
+    void addToAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer assetBalance = assetBalances.get(assetId);
+            if (assetBalance == null) {
+                assetBalances.put(assetId, quantity);
+            } else {
+                assetBalances.put(assetId, assetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.ASSET_BALANCE);
     }
 
-    synchronized void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
-        Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
-        if (unconfirmedAssetBalance == null) {
-            unconfirmedAssetBalances.put(assetId, quantity);
-        } else {
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+    void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            if (unconfirmedAssetBalance == null) {
+                unconfirmedAssetBalances.put(assetId, quantity);
+            } else {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    synchronized void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
-        Integer assetBalance = assetBalances.get(assetId);
-        if (assetBalance == null) {
-            assetBalances.put(assetId, quantity);
-            unconfirmedAssetBalances.put(assetId, quantity);
-        } else {
-            assetBalances.put(assetId, assetBalance + quantity);
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalances.get(assetId) + quantity);
+    void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
+        synchronized (this) {
+            Integer assetBalance = assetBalances.get(assetId);
+            if (assetBalance == null) {
+                assetBalances.put(assetId, quantity);
+            } else {
+                assetBalances.put(assetId, assetBalance + quantity);
+            }
+            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            if (unconfirmedAssetBalance == null) {
+                unconfirmedAssetBalances.put(assetId, quantity);
+            } else {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+            }
         }
+        listeners.notify(this, Event.ASSET_BALANCE);
+        listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToBalance(long amount) {
@@ -302,9 +320,9 @@ public final class Account {
                     && i < guaranteedBalances.size() - 1
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-                if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Nxt.TRANSPARENT_FORGING_BLOCK_5) {
+                if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Constants.TRANSPARENT_FORGING_BLOCK_5) {
                     gb.balance += amount; // because of a bug which leads to a fork
-                } else if (blockchainHeight >= Nxt.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
+                } else if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
                     gb.balance += amount;
                 }
             } else if (amount < 0) {
@@ -365,7 +383,7 @@ public final class Account {
     public BigInteger getHit(String secretPhrase, Block block) {
         MessageDigest digest = Crypto.sha256();
         byte[] generationSignatureHash;
-        if (block.getHeight() < Nxt.TRANSPARENT_FORGING_BLOCK) {
+        if (block.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
             byte[] generationSignature = Crypto.sign(block.getGenerationSignature(), secretPhrase);
             generationSignatureHash = digest.digest(generationSignature);
         } else {

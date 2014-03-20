@@ -16,7 +16,9 @@ public final class GetAccountPublicKey extends APIServlet.APIRequestHandler {
 
     static final GetAccountPublicKey instance = new GetAccountPublicKey();
 
-    private GetAccountPublicKey() {}
+    private GetAccountPublicKey() {
+        super("account");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

@@ -14,7 +14,9 @@ public final class GetBalance extends APIServlet.APIRequestHandler {
 
     static final GetBalance instance = new GetBalance();
 
-    private GetBalance() {}
+    private GetBalance() {
+        super("account");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

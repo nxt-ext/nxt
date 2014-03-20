@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-final class Db {
+public final class Db {
 
     private static volatile JdbcConnectionPool cp;
     private static volatile int maxActiveConnections;
@@ -17,7 +17,7 @@ final class Db {
         if (maxCacheSize == 0) {
             maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
         }
-        String dbUrl = Nxt.isTestnet ? Nxt.getStringProperty("nxt.testDbUrl") : Nxt.getStringProperty("nxt.dbUrl");
+        String dbUrl = Constants.isTestnet ? Nxt.getStringProperty("nxt.testDbUrl") : Nxt.getStringProperty("nxt.dbUrl");
         if (! dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
         }
@@ -42,7 +42,7 @@ final class Db {
         }
     }
 
-    static Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         Connection con = cp.getConnection();
         con.setAutoCommit(false);
         int activeConnections = cp.getActiveConnections();

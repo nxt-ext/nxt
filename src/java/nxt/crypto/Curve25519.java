@@ -123,17 +123,32 @@ final class Curve25519 {
      * returns true on success, false on failure (use different x or h)
      */
     public static boolean sign(byte[] v, byte[] h, byte[] x, byte[] s) {
-        /* v = (x - h) s  mod q  */
-        byte[] tmp1=new byte[65];
-        byte[] tmp2=new byte[33];
-        int w;
-        int i;
-        for (i = 0; i < 32; i++)
-            v[i] = 0;
-        i = mula_small(v, x, 0, h, 32, -1);
-        mula_small(v, v, 0, ORDER, 32, (15-v[31])/16);
+        // v = (x - h) s  mod q
+        int w, i;
+        byte[] h1 = new byte[32], x1 = new byte[32];
+        byte[] tmp1 = new byte[64];
+        byte[] tmp2 = new byte[64];
+
+        // Don't clobber the arguments, be nice!
+        cpy32(h1, h);
+        cpy32(x1, x);
+
+        // Reduce modulo group order
+        byte[] tmp3=new byte[32];
+        divmod(tmp3, h1, 32, ORDER, 32);
+        divmod(tmp3, x1, 32, ORDER, 32);
+
+        // v = x1 - h1
+        // If v is negative, add the group order to it to become positive.
+        // If v was already positive we don't have to worry about overflow
+        // when adding the order because v < ORDER and 2*ORDER < 2^256
+        mula_small(v, x1, 0, h1, 32, -1);
+        mula_small(v, v , 0, ORDER, 32, 1);
+
+        // tmp1 = (x-h)*s mod q
         mula32(tmp1, v, s, 32, 1);
         divmod(tmp2, tmp1, 64, ORDER, 32);
+
         for (w = 0, i = 0; i < 32; i++)
             w |= v[i] = tmp1[i];
         return w != 0;

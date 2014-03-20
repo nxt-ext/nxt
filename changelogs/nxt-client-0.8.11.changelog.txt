@@ -1,0 +1,25 @@
+Allow non-unique asset names.
+
+Added getAssetsByName API call returning a list of all assets
+with given assetName.
+
+Added getAllTrades API call returning all trades starting from
+a given timestamp (contributed by Antanst).
+
+Improved the JSON responses for several API calls:
+getAsset now also returns numberOfTrades. getAccount now also
+returns unconfirmedBalance. broadcastTransaction now also returns
+transaction hash. getAsk/BidOrder now also returns order height.
+Performance of getTrades should be greatly improved, and it also
+returns block id for each trade.
+
+Explicitly stop all jetty servers when Nxt.shutdown() is called.
+
+Escape text inserted as peer software or peer announced address
+in the NRS client html, to prevent cross-site scripting and
+related attacks by malicious peers.
+
+Now that Crypto.sign() never produces bad signatures, no need
+for additional call to verify() after block sign, or for
+multiple transaction sign attempts.
+

@@ -38,10 +38,13 @@ public abstract class Order {
                 break;
             }
 
-            int quantity = ((Order)askOrder).quantity < ((Order)bidOrder).quantity ? ((Order)askOrder).quantity : ((Order)bidOrder).quantity;
+            int quantity = Math.min(((Order)askOrder).quantity, ((Order)bidOrder).quantity);
             long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
 
-            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock().getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
+            Block lastBlock=Nxt.getBlockchain().getLastBlock();
+            int timeStamp=lastBlock.getTimestamp();
+            
+            Trade.addTrade(assetId, timeStamp, lastBlock.getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
 
             if ((((Order)askOrder).quantity -= quantity) == 0) {
                 Ask.removeOrder(askOrder.getId());

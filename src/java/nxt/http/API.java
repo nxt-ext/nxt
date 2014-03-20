@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
@@ -21,6 +22,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class API {
@@ -29,26 +31,21 @@ public final class API {
 
     static final Set<String> allowedBotHosts;
 
+    private static final Server apiServer;
+
     static {
-        String allowedBotHostsString = Nxt.getStringProperty("nxt.allowedBotHosts");
-        if (! allowedBotHostsString.equals("*")) {
-            Set<String> hosts = new HashSet<>();
-            for (String allowedBotHost : allowedBotHostsString.split(";")) {
-                allowedBotHost = allowedBotHost.trim();
-                if (allowedBotHost.length() > 0) {
-                    hosts.add(allowedBotHost);
-                }
-            }
-            allowedBotHosts = Collections.unmodifiableSet(hosts);
+        List<String> allowedBotHostsList = Nxt.getStringListProperty("nxt.allowedBotHosts");
+        if (! allowedBotHostsList.contains("*")) {
+            allowedBotHosts = Collections.unmodifiableSet(new HashSet<>(allowedBotHostsList));
         } else {
             allowedBotHosts = null;
         }
 
         boolean enableAPIServer = Nxt.getBooleanProperty("nxt.enableAPIServer");
         if (enableAPIServer) {
-            final int port = Nxt.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
+            final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
-            final Server apiServer = new Server();
+            apiServer = new Server();
             ServerConnector connector;
 
             boolean enableSSL = Nxt.getBooleanProperty("nxt.apiSSL");
@@ -99,6 +96,7 @@ public final class API {
 
             ServletHandler apiHandler = new ServletHandler();
             apiHandler.addServletWithMapping(APIServlet.class, "/nxt");
+            apiHandler.addServletWithMapping(APITestServlet.class, "/test");
 
             if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
                 FilterHolder filterHolder = apiHandler.addFilterWithMapping(CrossOriginFilter.class, "/*", FilterMapping.DEFAULT);
@@ -127,12 +125,23 @@ public final class API {
             });
 
         } else {
+            apiServer = null;
             Logger.logMessage("API server not enabled");
         }
 
     }
 
     public static void init() {}
+
+    public static void shutdown() {
+        if (apiServer != null) {
+            try {
+                apiServer.stop();
+            } catch (Exception e) {
+                Logger.logDebugMessage("Failed to stop API server", e);
+            }
+        }
+    }
 
     private API() {} // never
 

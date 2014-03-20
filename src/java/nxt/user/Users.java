@@ -3,6 +3,7 @@ package nxt.user;
 import nxt.Account;
 import nxt.Block;
 import nxt.BlockchainProcessor;
+import nxt.Constants;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Transaction;
@@ -63,27 +64,22 @@ public final class Users {
 
     static final Set<String> allowedUserHosts;
 
+    private static final Server userServer;
+
     static {
 
-        String allowedUserHostsString = Nxt.getStringProperty("nxt.allowedUserHosts");
-        if (! allowedUserHostsString.equals("*")) {
-            Set<String> hosts = new HashSet<>();
-            for (String allowedUserHost : allowedUserHostsString.split(";")) {
-                allowedUserHost = allowedUserHost.trim();
-                if (allowedUserHost.length() > 0) {
-                    hosts.add(allowedUserHost);
-                }
-            }
-            allowedUserHosts = Collections.unmodifiableSet(hosts);
+        List<String> allowedUserHostsList = Nxt.getStringListProperty("nxt.allowedUserHosts");
+        if (! allowedUserHostsList.contains("*")) {
+            allowedUserHosts = Collections.unmodifiableSet(new HashSet<>(allowedUserHostsList));
         } else {
             allowedUserHosts = null;
         }
 
         boolean enableUIServer = Nxt.getBooleanProperty("nxt.enableUIServer");
         if (enableUIServer) {
-            final int port = Nxt.isTestnet ? TESTNET_UI_PORT : Nxt.getIntProperty("nxt.uiServerPort");
+            final int port = Constants.isTestnet ? TESTNET_UI_PORT : Nxt.getIntProperty("nxt.uiServerPort");
             final String host = Nxt.getStringProperty("nxt.uiServerHost");
-            final Server userServer = new Server();
+            userServer = new Server();
             ServerConnector connector;
 
             boolean enableSSL = Nxt.getBooleanProperty("nxt.uiSSL");
@@ -162,6 +158,7 @@ public final class Users {
             });
 
         } else {
+            userServer = null;
             Logger.logMessage("User interface server not enabled");
         }
 
@@ -433,7 +430,7 @@ public final class Users {
                 for (Transaction transaction : transactions) {
                     JSONObject addedConfirmedTransaction = new JSONObject();
                     addedConfirmedTransaction.put("index", Users.getIndex(transaction));
-                    addedConfirmedTransaction.put("blockTimestamp", transaction.getBlock().getTimestamp());
+                    addedConfirmedTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     addedConfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     addedConfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
@@ -485,7 +482,7 @@ public final class Users {
                 addedOrphanedBlock.put("height", block.getHeight());
                 addedOrphanedBlock.put("version", block.getVersion());
                 addedOrphanedBlock.put("block", block.getStringId());
-                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.INITIAL_BASE_TARGET)));
+                addedOrphanedBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
                 addedOrphanedBlocks.add(addedOrphanedBlock);
                 response.put("addedOrphanedBlocks", addedOrphanedBlocks);
                 Users.sendNewDataToAll(response);
@@ -508,7 +505,7 @@ public final class Users {
                 addedRecentBlock.put("height", block.getHeight());
                 addedRecentBlock.put("version", block.getVersion());
                 addedRecentBlock.put("block", block.getStringId());
-                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Nxt.INITIAL_BASE_TARGET)));
+                addedRecentBlock.put("baseTarget", BigInteger.valueOf(block.getBaseTarget()).multiply(BigInteger.valueOf(100000)).divide(BigInteger.valueOf(Constants.INITIAL_BASE_TARGET)));
                 addedRecentBlocks.add(addedRecentBlock);
                 response.put("addedRecentBlocks", addedRecentBlocks);
                 Users.sendNewDataToAll(response);
@@ -604,6 +601,16 @@ public final class Users {
     }
 
     public static void init() {}
+
+    public static void shutdown() {
+        if (userServer != null) {
+            try {
+                userServer.stop();
+            } catch (Exception e) {
+                Logger.logDebugMessage("Failed to stop user interface server", e);
+            }
+        }
+    }
 
     private Users() {} // never
 

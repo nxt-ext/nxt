@@ -2,33 +2,25 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Genesis;
-import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Order;
-import nxt.Transaction;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
-import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_ORDER;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
 public final class CancelBidOrder extends CreateTransaction {
 
     static final CancelBidOrder instance = new CancelBidOrder();
 
-    private CancelBidOrder() {}
+    private CancelBidOrder() {
+        super("order");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
@@ -47,7 +39,7 @@ public final class CancelBidOrder extends CreateTransaction {
 
         Account account = getAccount(req);
         if (account == null) {
-            return NOT_ENOUGH_FUNDS;
+            return UNKNOWN_ACCOUNT;
         }
 
         Order.Bid orderData = Order.Bid.getBidOrder(order);

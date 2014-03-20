@@ -2,36 +2,28 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Genesis;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
-import nxt.Transaction;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
-import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
-import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_ASSET;
-import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_PRICE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class PlaceBidOrder extends CreateTransaction {
 
     static final PlaceBidOrder instance = new PlaceBidOrder();
 
-    private PlaceBidOrder() {}
+    private PlaceBidOrder() {
+        super("asset", "quantity", "price");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
@@ -51,7 +43,7 @@ public final class PlaceBidOrder extends CreateTransaction {
         long price;
         try {
             price = Long.parseLong(priceValue);
-            if (price <= 0 || price > Nxt.MAX_BALANCE * 100L) {
+            if (price <= 0 || price > Constants.MAX_BALANCE * 100L) {
                 return INCORRECT_PRICE;
             }
         } catch (NumberFormatException e) {
@@ -68,7 +60,7 @@ public final class PlaceBidOrder extends CreateTransaction {
         int quantity;
         try {
             quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity > Nxt.MAX_ASSET_QUANTITY) {
+            if (quantity <= 0 || quantity > Constants.MAX_ASSET_QUANTITY) {
                 return INCORRECT_QUANTITY;
             }
         } catch (NumberFormatException e) {
@@ -77,7 +69,7 @@ public final class PlaceBidOrder extends CreateTransaction {
 
         Account account = getAccount(req);
         if (account == null) {
-            return NOT_ENOUGH_FUNDS;
+            return UNKNOWN_ACCOUNT;
         }
 
         Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);

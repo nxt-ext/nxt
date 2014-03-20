@@ -12,8 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
@@ -23,15 +25,28 @@ import static nxt.http.JSONResponses.POST_REQUIRED;
 public final class APIServlet extends HttpServlet {
 
     abstract static class APIRequestHandler {
+
+        private final List<String> parameters;
+
+        APIRequestHandler(String... parameters) {
+            this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+        }
+
+        final List<String> getParameters() {
+            return parameters;
+        }
+
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
+
         boolean requirePost() {
             return false;
         }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
 
-    private static final Map<String,APIRequestHandler> apiRequestHandlers;
+    static final Map<String,APIRequestHandler> apiRequestHandlers;
 
     static {
 
@@ -45,7 +60,6 @@ public final class APIServlet extends HttpServlet {
         map.put("createPoll", CreatePoll.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
-        map.put("findObject", FindObject.instance);
         map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
@@ -58,6 +72,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAliasURI", GetAliasURI.instance);
         map.put("getAsset", GetAsset.instance);
         map.put("getAssetIds", GetAssetIds.instance);
+        map.put("getAssetsByName", GetAssetsByName.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getConstants", GetConstants.instance);
@@ -71,9 +86,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
+        map.put("getAllTrades", GetAllTrades.instance);
         map.put("getTransaction", GetTransaction.instance);
         map.put("getTransactionBytes", GetTransactionBytes.instance);
-        map.put("getTransactionGuid", GetTransactionGuid.instance);
         map.put("getUnconfirmedTransactionIds", GetUnconfirmedTransactionIds.instance);
         map.put("getAccountCurrentAskOrderIds", GetAccountCurrentAskOrderIds.instance);
         map.put("getAccountCurrentBidOrderIds", GetAccountCurrentBidOrderIds.instance);

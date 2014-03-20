@@ -15,7 +15,9 @@ public final class GetBidOrder extends APIServlet.APIRequestHandler {
 
     static final GetBidOrder instance = new GetBidOrder();
 
-    private GetBidOrder() {}
+    private GetBidOrder() {
+        super("order");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -40,6 +42,7 @@ public final class GetBidOrder extends APIServlet.APIRequestHandler {
         response.put("asset", Convert.toUnsignedLong(orderData.getAssetId()));
         response.put("quantity", orderData.getQuantity());
         response.put("price", orderData.getPrice());
+        response.put("height", orderData.getHeight());
 
         return response;
 

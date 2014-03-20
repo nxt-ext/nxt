@@ -16,7 +16,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
 
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
-    private BroadcastTransaction() {}
+    private BroadcastTransaction() {
+        super("transactionBytes");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
@@ -31,10 +33,16 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
             byte[] bytes = Convert.parseHexString(transactionBytes);
             Transaction transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
 
-            Nxt.getTransactionProcessor().broadcast(transaction);
-
             JSONObject response = new JSONObject();
-            response.put("transaction", transaction.getStringId());
+
+            try {
+                Nxt.getTransactionProcessor().broadcast(transaction);
+                response.put("transaction", transaction.getStringId());
+                response.put("hash", transaction.getHash());
+            } catch (NxtException.ValidationException e) {
+                response.put("error", e.toString());
+            }
+
             return response;
 
         } catch (RuntimeException e) {

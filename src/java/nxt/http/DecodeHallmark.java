@@ -15,7 +15,9 @@ public final class DecodeHallmark extends APIServlet.APIRequestHandler {
 
     static final DecodeHallmark instance = new DecodeHallmark();
 
-    private DecodeHallmark() {}
+    private DecodeHallmark() {
+        super("hallmark");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

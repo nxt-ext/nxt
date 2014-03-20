@@ -14,7 +14,9 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
 
     static final GetAccountId instance = new GetAccountId();
 
-    private GetAccountId() {}
+    private GetAccountId() {
+        super("secretPhrase");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

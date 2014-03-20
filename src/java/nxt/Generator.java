@@ -34,6 +34,9 @@ public final class Generator {
         public void run() {
 
             try {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+                    return;
+                }
                 try {
                     for (Generator generator : generators.values()) {
                         generator.forge();
@@ -139,6 +142,11 @@ public final class Generator {
         }
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
+
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+            Logger.logDebugMessage("Forging below block " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+            return;
+        }
 
         if (! lastBlock.equals(lastBlocks.get(account))) {
 

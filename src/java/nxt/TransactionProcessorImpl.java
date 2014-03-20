@@ -45,7 +45,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
     private final ConcurrentMap<String, TransactionHashInfo> transactionHashes = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Long> transactionGuids = new ConcurrentHashMap<>();
     private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
@@ -104,8 +103,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     JSONArray transactionsData = new JSONArray();
 
                     int curTime = Convert.getEpochTime();
-                    for (Transaction transaction : nonBroadcastedTransactions.values()) {
-                        if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
+                    for (TransactionImpl transaction : nonBroadcastedTransactions.values()) {
+                        boolean isNotValid = false;
+                        try {
+                            transaction.validateAttachment();
+                        } catch (NxtException.ValidationException e) {
+                            isNotValid = true;
+                        }
+                        if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime
+                                || isNotValid) {
                             nonBroadcastedTransactions.remove(transaction.getId());
                         } else if (transaction.getTimestamp() < curTime - 30) {
                             transactionsData.add(transaction.getJSONObject());
@@ -154,7 +160,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         return;
                     }
                     JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                    if (transactionsData == null) {
+                    if (transactionsData == null || transactionsData.size() == 0) {
                         return;
                     }
                     processPeerTransactions(transactionsData, false);
@@ -197,7 +203,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public void broadcast(Transaction transaction) {
+    public void broadcast(Transaction transaction) throws NxtException.ValidationException {
+        if (! ((TransactionImpl)transaction).verify()) {
+            throw new NxtException.ValidationException("Transaction signature verification failed");
+        }
         processTransactions(Arrays.asList((TransactionImpl)transaction), true);
         nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
         Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
@@ -294,7 +303,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         doubleSpendingTransactions.clear();
         nonBroadcastedTransactions.clear();
         transactionHashes.clear();
-        transactionGuids.clear();
     }
 
     void apply(BlockImpl block) {
@@ -305,7 +313,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             transaction.apply();
             transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
-            transactionGuids.put(Convert.toHexString(transaction.getGuid()), transaction.getId());
         }
         purgeExpiredHashes(block.getTimestamp());
     }
@@ -317,7 +324,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
                 transactionHashes.remove(transaction.getHash());
             }
-            transactionGuids.remove(Convert.toHexString(transaction.getGuid()));
             unconfirmedTransactions.put(transaction.getId(), transaction);
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
@@ -469,11 +475,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             transactionListeners.notify(addedDoubleSpendingTransactions, Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
         }
 
-    }
-
-    @Override
-    public Long findTransaction(String guid) {
-        return transactionGuids.get(guid);
     }
 
 }

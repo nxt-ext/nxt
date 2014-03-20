@@ -32,7 +32,7 @@ final class BlockImpl implements Block {
 
     private byte[] blockSignature;
     private BigInteger cumulativeDifficulty = BigInteger.ZERO;
-    private long baseTarget = Nxt.INITIAL_BASE_TARGET;
+    private long baseTarget = Constants.INITIAL_BASE_TARGET;
     private volatile Long nextBlockId;
     private int height = -1;
     private volatile Long id;
@@ -44,11 +44,11 @@ final class BlockImpl implements Block {
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
             throws NxtException.ValidationException {
 
-        if (transactions.size() > Nxt.MAX_NUMBER_OF_TRANSACTIONS) {
+        if (transactions.size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
             throw new NxtException.ValidationException("attempted to create a block with " + transactions.size() + " transactions");
         }
 
-        if (payloadLength > Nxt.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
+        if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
             throw new NxtException.ValidationException("attempted to create a block with payloadLength " + payloadLength);
         }
 
@@ -246,30 +246,30 @@ final class BlockImpl implements Block {
     @Override
     public JSONObject getJSONObject() {
 
-        JSONObject block = new JSONObject();
+        JSONObject json = new JSONObject();
 
-        block.put("version", version);
-        block.put("timestamp", timestamp);
-        block.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
-        block.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
-        block.put("totalAmount", totalAmount);
-        block.put("totalFee", totalFee);
-        block.put("payloadLength", payloadLength);
-        block.put("payloadHash", Convert.toHexString(payloadHash));
-        block.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
-        block.put("generationSignature", Convert.toHexString(generationSignature));
+        json.put("version", version);
+        json.put("timestamp", timestamp);
+        json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
+        json.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
+        json.put("totalAmount", totalAmount);
+        json.put("totalFee", totalFee);
+        json.put("payloadLength", payloadLength);
+        json.put("payloadHash", Convert.toHexString(payloadHash));
+        json.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
+        json.put("generationSignature", Convert.toHexString(generationSignature));
         if (version > 1) {
-            block.put("previousBlockHash", Convert.toHexString(previousBlockHash));
+            json.put("previousBlockHash", Convert.toHexString(previousBlockHash));
         }
-        block.put("blockSignature", Convert.toHexString(blockSignature));
+        json.put("blockSignature", Convert.toHexString(blockSignature));
 
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : this.blockTransactions) {
             transactionsData.add(transaction.getJSONObject());
         }
-        block.put("transactions", transactionsData);
+        json.put("transactions", transactionsData);
 
-        return block;
+        return json;
 
     }
 
@@ -313,12 +313,15 @@ final class BlockImpl implements Block {
             }
 
             Account account = Account.getAccount(getGeneratorId());
-            if (account == null || account.getEffectiveBalance() <= 0) {
+            long effectiveBalance = account == null ? 0 : account.getEffectiveBalance();
+            if (effectiveBalance <= 0) {
                 return false;
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
-            BigInteger target = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget()).multiply(BigInteger.valueOf(account.getEffectiveBalance())).multiply(BigInteger.valueOf(elapsedTime));
+            BigInteger target = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget())
+                    .multiply(BigInteger.valueOf(effectiveBalance))
+                    .multiply(BigInteger.valueOf(elapsedTime));
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
@@ -372,15 +375,15 @@ final class BlockImpl implements Block {
     private void calculateBaseTarget(BlockImpl previousBlock) {
 
         if (this.getId().equals(Genesis.GENESIS_BLOCK_ID) && previousBlockId == null) {
-            baseTarget = Nxt.INITIAL_BASE_TARGET;
+            baseTarget = Constants.INITIAL_BASE_TARGET;
             cumulativeDifficulty = BigInteger.ZERO;
         } else {
             long curBaseTarget = previousBlock.baseTarget;
             long newBaseTarget = BigInteger.valueOf(curBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
                     .divide(BigInteger.valueOf(60)).longValue();
-            if (newBaseTarget < 0 || newBaseTarget > Nxt.MAX_BASE_TARGET) {
-                newBaseTarget = Nxt.MAX_BASE_TARGET;
+            if (newBaseTarget < 0 || newBaseTarget > Constants.MAX_BASE_TARGET) {
+                newBaseTarget = Constants.MAX_BASE_TARGET;
             }
             if (newBaseTarget < curBaseTarget / 2) {
                 newBaseTarget = curBaseTarget / 2;
@@ -390,7 +393,7 @@ final class BlockImpl implements Block {
             }
             long twofoldCurBaseTarget = curBaseTarget * 2;
             if (twofoldCurBaseTarget < 0) {
-                twofoldCurBaseTarget = Nxt.MAX_BASE_TARGET;
+                twofoldCurBaseTarget = Constants.MAX_BASE_TARGET;
             }
             if (newBaseTarget > twofoldCurBaseTarget) {
                 newBaseTarget = twofoldCurBaseTarget;

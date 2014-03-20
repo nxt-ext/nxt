@@ -2,7 +2,7 @@ package nxt.peer;
 
 import nxt.Account;
 import nxt.BlockchainProcessor;
-import nxt.Nxt;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.TransactionType;
 import nxt.util.Convert;
@@ -189,7 +189,7 @@ final class PeerImpl implements Peer {
         if (account == null) {
             return 0;
         }
-        return (int)(adjustedWeight * (account.getBalance() / 100) / Nxt.MAX_BALANCE);
+        return (int)(adjustedWeight * (account.getBalance() / 100) / Constants.MAX_BALANCE);
     }
 
     @Override
@@ -261,7 +261,7 @@ final class PeerImpl implements Peer {
                 log = "\"" + address + "\": " + stringWriter.toString();
             }
 
-            URL url = new URL("http://" + address + (port <= 0 ? ":" + (Nxt.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nxt");
+            URL url = new URL("http://" + address + (port <= 0 ? ":" + (Constants.isTestnet ? Peers.TESTNET_PEER_PORT : Peers.DEFAULT_PEER_PORT) : "") + "/nxt");
             connection = (HttpURLConnection)url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -420,7 +420,7 @@ final class PeerImpl implements Peer {
             }
 
             for (PeerImpl peer : groupedPeers) {
-                peer.adjustedWeight = Nxt.MAX_BALANCE * peer.getHallmarkWeight(mostRecentDate) / totalWeight;
+                peer.adjustedWeight = Constants.MAX_BALANCE * peer.getHallmarkWeight(mostRecentDate) / totalWeight;
                 Peers.notifyListeners(peer, Peers.Event.WEIGHT);
             }
 

@@ -1,0 +1,44 @@
+Client-side transaction signing support. All http API requests that
+create a new transaction, now accept either a secretPhrase or a 
+publicKey parameter. If secretPhrase is supplied, transaction is
+created, signed at the server, and broadcasted by the server as
+usual. If secretPhrase is not supplied, but a publicKey parameter
+is, as a hex encoded byte array, the transaction will be prepared
+by the server and returned in the JSON response as transactionBytes.
+This byte array can now be signed by the client, and then sent back
+to the server for broadcasting using the broadcastTransaction API.
+
+Transaction hashes, which can be used to uniquely identify transactions
+to avoid transaction signature malleability attacks, can now be
+obtained using Transaction.getHash(), and are also available in the
+JSON representaion of transactions. The hash can also be used to retrieve
+a transaction from the server, instead of using transaction id, by
+supplying a hash parameter to the getTransaction http API instead of
+transaction parameter.
+
+For improving performance, getBlockId and getBlockTimestamp Java API
+methods have been added to the Transaction class, to avoid the need
+to call getBlock which may require additional database query. Java
+clients should use those instead of going through getBlock.
+Similarly, the blockTimestamp field has been added to the JSON returned
+by getTransaction and the other API calls that return a transaction
+JSON, so http clients can also avoid unnecessary calls to getBlock.
+
+Upgrading to 0.8.9 will modify the database to add the hash and
+block_timestamp columns to the transaction table.
+
+Transactions that have become invalid will now also be removed from the
+re-broadcasting pool.
+
+Moved all global constants to Constants.java.
+
+Improved transaction validation for Asset Issuance transactions to
+avoid misleading invalid transaction errors.
+
+Corrected handling of transactions with identical timestamps in block
+generation and in the NRS client UI.
+
+Added ASSET_BALANCE and UNCONFIRMED_ASSET_BALANCE events to Account,
+fixed possible problem with asset balance calculation.
+
+

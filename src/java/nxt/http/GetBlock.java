@@ -17,7 +17,9 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
 
     static final GetBlock instance = new GetBlock();
 
-    private GetBlock() {}
+    private GetBlock() {
+        super("block");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

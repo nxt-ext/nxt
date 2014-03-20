@@ -17,7 +17,9 @@ public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHan
 
     static final GetAccountCurrentAskOrderIds instance = new GetAccountCurrentAskOrderIds();
 
-    private GetAccountCurrentAskOrderIds() {}
+    private GetAccountCurrentAskOrderIds() {
+        super("account", "asset");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

@@ -21,7 +21,9 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 
-    private GetAccountTransactionIds() {}
+    private GetAccountTransactionIds() {
+        super("account", "timestamp", "type", "subtype");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -68,7 +70,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
         }
 
         JSONArray transactionIds = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions(account, type, subtype, timestamp)) {
+        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, type, subtype, timestamp)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactionIds.add(transaction.getStringId());

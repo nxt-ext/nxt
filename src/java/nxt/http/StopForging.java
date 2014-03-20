@@ -13,7 +13,9 @@ public final class StopForging extends APIServlet.APIRequestHandler {
 
     static final StopForging instance = new StopForging();
 
-    private StopForging() {}
+    private StopForging() {
+        super("secretPhrase");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

@@ -7,7 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.Collections;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL;
@@ -18,7 +17,9 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
 
     static final GetPoll instance = new GetPoll();
 
-    private GetPoll() {}
+    private GetPoll() {
+        super("poll");
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
