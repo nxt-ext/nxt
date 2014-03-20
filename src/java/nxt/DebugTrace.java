@@ -23,21 +23,14 @@ public final class DebugTrace {
         if (accountIds.isEmpty() || logName == null) {
             return;
         }
-        PrintWriter log;
-        try {
-            log = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logName)))), true);
-        } catch (IOException e) {
-            Logger.logDebugMessage("Debug tracing to " + logName + " not possible", e);
-            throw new RuntimeException(e);
-        }
-        addDebugTrace(accountIds, log);
+        addDebugTrace(accountIds, logName);
         Logger.logDebugMessage("Debug tracing of " + accountIds.size() + " balances enabled");
     }
 
-    public static void addDebugTrace(List<String> accountIds, PrintWriter log) {
-        final DebugTrace debugTrace = new DebugTrace(accountIds, log);
+    public static void addDebugTrace(List<String> accountIds, String logName) {
+        final DebugTrace debugTrace = new DebugTrace(accountIds, logName);
         final Map<String, String> headers = new HashMap<>();
-        for (String entry : entries) {
+        for (String entry : columns) {
             headers.put(entry, entry);
         }
         debugTrace.log(headers);
@@ -62,6 +55,7 @@ public final class DebugTrace {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
+                debugTrace.resetLog();
                 debugTrace.log(headers);
             }
         }, BlockchainProcessor.Event.RESCAN_BEGIN);
@@ -79,49 +73,72 @@ public final class DebugTrace {
         }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
     }
 
-    private static final String[] entries = {"account", "balance", "unconfirmed balance",
+    // account must be the first column
+    private static final String[] columns = {"account", "balance", "unconfirmed balance",
             "transaction amount", "transaction fee", "generation fee",
             "asset", "quantity", "price", "asset cost", "transaction", "timestamp"};
 
     private final Set<Long> accountIds;
-    private final PrintWriter log;
+    private final String logName;
+    private PrintWriter log;
 
-    private DebugTrace(List<String> accountIds, PrintWriter log) {
+    private DebugTrace(List<String> accountIds, String logName) {
         this.accountIds = new HashSet<>();
         for (String accountId : accountIds) {
+            if ("*".equals(accountId)) {
+                this.accountIds.clear();
+                break;
+            }
             this.accountIds.add(Convert.parseUnsignedLong(accountId));
         }
-        this.log = log;
+        this.logName = logName;
+        resetLog();
+    }
+
+    void resetLog() {
+        if (log != null) {
+            log.close();
+        }
+        try {
+            log = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logName)))), true);
+        } catch (IOException e) {
+            Logger.logDebugMessage("Debug tracing to " + logName + " not possible", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean include(Long accountId) {
+        return accountIds.isEmpty() || accountIds.contains(accountId);
     }
 
     // Note: Trade events occur before the change in account balances
     private void trace(Trade trade) {
         Long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccount().getId();
         Long bidAccountId = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccount().getId();
-        if (accountIds.contains(askAccountId)) {
+        if (include(askAccountId)) {
             log(getValues(askAccountId, trade, true));
         }
-        if (accountIds.contains(bidAccountId)) {
+        if (include(bidAccountId)) {
             log(getValues(bidAccountId, trade, false));
         }
     }
 
     private void trace(Account account) {
-        if (accountIds.contains(account.getId())) {
+        if (include(account.getId())) {
             log(getValues(account.getId()));
         }
     }
 
     private void trace(Block block, boolean isUndo) {
         Long generatorId = block.getGeneratorId();
-        if (accountIds.contains(generatorId)) {
+        if (include(generatorId)) {
             log(getValues(generatorId, block, isUndo));
         }
         for (Transaction transaction : block.getTransactions()) {
-            if (accountIds.contains(transaction.getSenderId())) {
+            if (include(transaction.getSenderId())) {
                 log(getValues(transaction.getSenderId(), transaction, false, isUndo));
             }
-            if (accountIds.contains(transaction.getRecipientId())) {
+            if (include(transaction.getRecipientId())) {
                 log(getValues(transaction.getRecipientId(), transaction, true, isUndo));
             }
         }
@@ -174,14 +191,14 @@ public final class DebugTrace {
         if (isUndo) {
             fee = - fee;
         }
-        map.put("generation fee", String.valueOf(fee));
+        map.put("generation fee", String.valueOf(fee * 100L));
         return map;
     }
 
     private void log(Map<String,String> map) {
         StringBuilder buf = new StringBuilder();
-        for (String entry : entries) {
-            String value = map.get(entry);
+        for (String column : columns) {
+            String value = map.get(column);
             if (value != null) {
                 buf.append(value);
             }
