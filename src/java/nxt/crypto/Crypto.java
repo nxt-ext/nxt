@@ -10,7 +10,12 @@ import java.util.Arrays;
 
 public final class Crypto {
 
-    private static final SecureRandom secureRandom = new SecureRandom();
+    private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
+        @Override
+        protected SecureRandom initialValue() {
+            return new SecureRandom();
+        }
+    };
 
     private Crypto() {} //never
 
@@ -132,7 +137,7 @@ public final class Crypto {
     public static byte[] xorEncrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey) {
 
         byte[] nonce = new byte[32];
-        secureRandom.nextBytes(nonce); // cfb: May block as entropy is being gathered, for example, if they need to read from /dev/random on various unix-like operating systems
+        secureRandom.get().nextBytes(nonce); // cfb: May block as entropy is being gathered, for example, if they need to read from /dev/random on various unix-like operating systems
         xorProcess(data, position, length, myPrivateKey, theirPublicKey, nonce);
         return nonce;
 

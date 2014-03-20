@@ -318,6 +318,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void undo(BlockImpl block) throws TransactionType.UndoNotSupportedException {
+        block.undo();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
             TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
