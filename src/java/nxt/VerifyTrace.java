@@ -47,6 +47,8 @@ public final class VerifyTrace {
 
             Map<String,Map<String,Long>> totals = new HashMap<>();
             Map<String,Map<String,Map<String,Long>>> accountAssetTotals = new HashMap<>();
+            Map<String,Long> issuedAssetQuantities = new HashMap<>();
+            Map<String,Long> accountAssetQuantities = new HashMap<>();
 
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split("\t");
@@ -88,6 +90,9 @@ public final class VerifyTrace {
                         }
                         long previousValue = Convert.nullToZero(assetTotals.get(headers[i]));
                         assetTotals.put(headers[i], previousValue + Long.parseLong(value));
+                    }
+                    if ("asset quantity".equals(headers[i]) && issuedAssetQuantities.get(values[1]) == null) {
+                        issuedAssetQuantities.put(values[1], Long.parseLong(value));
                     }
                 }
             }
@@ -132,14 +137,32 @@ public final class VerifyTrace {
                         System.out.println("ERROR: asset balance doesn't match total asset quantity change!!!");
                         failed.add(accountId);
                     }
+                    Long previousAssetQuantity = Convert.nullToZero(accountAssetQuantities.get(assetId));
+                    accountAssetQuantities.put(assetId, previousAssetQuantity + assetBalance);
                 }
                 System.out.println();
+            }
+            Set<String> failedAssets = new HashSet<>();
+            for (Map.Entry<String,Long> assetEntry : issuedAssetQuantities.entrySet()) {
+                String assetId = assetEntry.getKey();
+                long issuedAssetQuantity = assetEntry.getValue();
+                if (issuedAssetQuantity != Convert.nullToZero(accountAssetQuantities.get(assetId))) {
+                    System.out.println("ERROR: asset " + assetId + " balances don't match, issued: " + issuedAssetQuantities
+                            + ", total of account balances: " + accountAssetQuantities.get(assetId));
+                    failedAssets.add(assetId);
+                }
             }
             if (failed.size() > 0) {
                 System.out.println("ERROR: " + failed.size() + " accounts have incorrect balances");
                 System.out.println(Arrays.toString(failed.toArray(new String[failed.size()])));
             } else {
                 System.out.println("SUCCESS: all " + totals.size() + " account balances and asset balances match the transaction and trade totals!");
+            }
+            if (failedAssets.size() > 0) {
+                System.out.println("ERROR: " + failedAssets.size() + " assets have incorrect balances");
+                System.out.println(Arrays.toString(failedAssets.toArray(new String[failedAssets.size()])));
+            } else {
+                System.out.println("SUCCESS: all " + issuedAssetQuantities.size() + " assets quantities are correct");
             }
 
         } catch (IOException e) {
