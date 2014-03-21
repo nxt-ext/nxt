@@ -5,7 +5,6 @@ import nxt.util.Convert;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,20 +22,20 @@ public final class VerifyTrace {
 
     private static String[] headers;
 
-    private static boolean isBalance(int columnIndex) {
-        return balanceHeaders.contains(headers[columnIndex]);
+    private static boolean isBalance(String header) {
+        return balanceHeaders.contains(header);
     }
 
-    private static boolean isDelta(int columnIndex) {
-        return deltaHeaders.contains(headers[columnIndex]);
+    private static boolean isDelta(String header) {
+        return deltaHeaders.contains(header);
     }
 
-    private static boolean isAssetQuantity(int columnIndex) {
-        return assetQuantityHeaders.contains(headers[columnIndex]);
+    private static boolean isAssetQuantity(String header) {
+        return assetQuantityHeaders.contains(header);
     }
 
-    private static boolean isDeltaAssetQuantity(int columnIndex) {
-        return deltaAssetQuantityHeaders.contains(headers[columnIndex]);
+    private static boolean isDeltaAssetQuantity(String header) {
+        return deltaAssetQuantityHeaders.contains(header);
     }
 
     public static void main(String[] args) {
@@ -52,7 +51,11 @@ public final class VerifyTrace {
 
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split("\t");
-                String accountId = values[0];
+                Map<String,String> valueMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    valueMap.put(headers[i], values[i]);
+                }
+                String accountId = valueMap.get("account");
                 Map<String,Long> accountTotals = totals.get(accountId);
                 if (accountTotals == null) {
                     accountTotals = new HashMap<>();
@@ -63,36 +66,38 @@ public final class VerifyTrace {
                     accountAssetMap = new HashMap<>();
                     accountAssetTotals.put(accountId, accountAssetMap);
                 }
-                for (int i = 0; i < values.length; i++) {
-                    String value = values[i];
+                if ("asset issuance".equals(valueMap.get("event"))) {
+                    String assetId = valueMap.get("asset");
+                    issuedAssetQuantities.put(assetId, Long.parseLong(valueMap.get("asset quantity")));
+                }
+                for (Map.Entry<String,String> mapEntry : valueMap.entrySet()) {
+                    String header = mapEntry.getKey();
+                    String value = mapEntry.getValue();
                     if (value == null || "".equals(value.trim())) {
                         continue;
                     }
-                    if (isBalance(i)) {
-                        accountTotals.put(headers[i], Long.parseLong(value));
-                    } else if (isDelta(i)) {
-                        long previousValue = Convert.nullToZero(accountTotals.get(headers[i]));
-                        accountTotals.put(headers[i], previousValue + Long.parseLong(value));
-                    } else if (isAssetQuantity(i)) {
-                        String assetId = values[1];
+                    if (isBalance(header)) {
+                        accountTotals.put(header, Long.parseLong(value));
+                    } else if (isDelta(header)) {
+                        long previousValue = Convert.nullToZero(accountTotals.get(header));
+                        accountTotals.put(header, previousValue + Long.parseLong(value));
+                    } else if (isAssetQuantity(header)) {
+                        String assetId = valueMap.get("asset");
                         Map<String,Long> assetTotals = accountAssetMap.get(assetId);
                         if (assetTotals == null) {
                             assetTotals = new HashMap<>();
                             accountAssetMap.put(assetId, assetTotals);
                         }
-                        assetTotals.put(headers[i], Long.parseLong(value));
-                    } else if (isDeltaAssetQuantity(i)) {
-                        String assetId = values[1];
+                        assetTotals.put(header, Long.parseLong(value));
+                    } else if (isDeltaAssetQuantity(header)) {
+                        String assetId = valueMap.get("asset");
                         Map<String,Long> assetTotals = accountAssetMap.get(assetId);
                         if (assetTotals == null) {
                             assetTotals = new HashMap<>();
                             accountAssetMap.put(assetId, assetTotals);
                         }
-                        long previousValue = Convert.nullToZero(assetTotals.get(headers[i]));
-                        assetTotals.put(headers[i], previousValue + Long.parseLong(value));
-                    }
-                    if ("asset quantity".equals(headers[i]) && issuedAssetQuantities.get(values[1]) == null) {
-                        issuedAssetQuantities.put(values[1], Long.parseLong(value));
+                        long previousValue = Convert.nullToZero(assetTotals.get(header));
+                        assetTotals.put(header, previousValue + Long.parseLong(value));
                     }
                 }
             }
@@ -162,7 +167,7 @@ public final class VerifyTrace {
                 System.out.println("ERROR: " + failedAssets.size() + " assets have incorrect balances");
                 System.out.println(Arrays.toString(failedAssets.toArray(new String[failedAssets.size()])));
             } else {
-                System.out.println("SUCCESS: all " + issuedAssetQuantities.size() + " assets quantities are correct");
+                System.out.println("SUCCESS: all " + issuedAssetQuantities.size() + " assets quantities are correct!");
             }
 
         } catch (IOException e) {

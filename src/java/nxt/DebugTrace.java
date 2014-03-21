@@ -25,7 +25,8 @@ public final class DebugTrace {
             return;
         }
         addDebugTrace(accountIds, logName);
-        Logger.logDebugMessage("Debug tracing of " + accountIds.size() + " balances enabled");
+        Logger.logDebugMessage("Debug tracing of " + (accountIds.contains("*") ? "ALL"
+                : String.valueOf(accountIds.size())) + " balances enabled");
     }
 
     public static void addDebugTrace(List<String> accountIds, String logName) {
@@ -86,13 +87,12 @@ public final class DebugTrace {
         }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
     }
 
-    // account and asset must be first two columns as VerifyTrace expects them there
     private static final String[] columns = {"account", "asset", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance",
             "transaction amount", "transaction fee", "generation fee",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity",
+            "asset quantity", "event",
             "transaction", "timestamp"};
 
     private final Set<Long> accountIds;
@@ -184,6 +184,7 @@ public final class DebugTrace {
         map.put("balance", String.valueOf(account != null ? account.getBalance() : 0));
         map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalance() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("event", "balance");
         return map;
     }
 
@@ -193,6 +194,7 @@ public final class DebugTrace {
         map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantity() : trade.getQuantity()));
         map.put("trade price", String.valueOf(trade.getPrice()));
         map.put("trade cost", String.valueOf((isAsk ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
+        map.put("event", "trade");
         return map;
     }
 
@@ -215,6 +217,7 @@ public final class DebugTrace {
         map.put("transaction amount", String.valueOf(amount * 100L));
         map.put("transaction fee", String.valueOf(fee * 100L));
         map.put("transaction", transaction.getStringId());
+        map.put("event", "transaction" + (isUndo ? " undo" : ""));
         return map;
     }
 
@@ -225,6 +228,7 @@ public final class DebugTrace {
             fee = - fee;
         }
         map.put("generation fee", String.valueOf(fee * 100L));
+        map.put("event", "block" + (isUndo ? " undo" : ""));
         return map;
     }
 
@@ -234,6 +238,7 @@ public final class DebugTrace {
         map.put("asset", Convert.toUnsignedLong(assetId));
         map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(quantity == null ? 0 : quantity));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("event", "asset balance");
         return map;
     }
 
@@ -246,6 +251,7 @@ public final class DebugTrace {
             Attachment.ColoredCoinsOrderPlacement orderPlacement = (Attachment.ColoredCoinsOrderPlacement)attachment;
             boolean isAsk = orderPlacement instanceof Attachment.ColoredCoinsAskOrderPlacement;
             map.put("asset", Convert.toUnsignedLong(orderPlacement.getAssetId()));
+            map.put("order", transaction.getStringId());
             map.put("order price", String.valueOf(orderPlacement.getPrice()));
             long quantity = orderPlacement.getQuantity();
             if (isAsk) {
@@ -269,6 +275,8 @@ public final class DebugTrace {
                 }
             }
             map.put("order cost", String.valueOf(orderCost));
+            String event = (isAsk ? "ask" : "bid") + " order" + (isUndo ? " undo" : "");
+            map.put("event", event);
         } else if (attachment instanceof Attachment.ColoredCoinsAssetIssuance) {
             if (isRecipient) {
                 return Collections.emptyMap();
@@ -276,6 +284,7 @@ public final class DebugTrace {
             Attachment.ColoredCoinsAssetIssuance assetIssuance = (Attachment.ColoredCoinsAssetIssuance)attachment;
             map.put("asset", transaction.getStringId());
             map.put("asset quantity", String.valueOf(isUndo ? -assetIssuance.getQuantity() : assetIssuance.getQuantity()));
+            map.put("event", "asset issuance" + (isUndo ? " undo" : ""));
         } else if (attachment instanceof Attachment.ColoredCoinsAssetTransfer) {
             Attachment.ColoredCoinsAssetTransfer assetTransfer = (Attachment.ColoredCoinsAssetTransfer)attachment;
             map.put("asset", Convert.toUnsignedLong(assetTransfer.getAssetId()));
@@ -290,6 +299,11 @@ public final class DebugTrace {
                 }
             }
             map.put("asset quantity", String.valueOf(quantity));
+            map.put("event", "asset transfer" + (isUndo ? " undo" : ""));
+        } else if (attachment instanceof Attachment.ColoredCoinsOrderCancellation) {
+            Attachment.ColoredCoinsOrderCancellation orderCancellation = (Attachment.ColoredCoinsOrderCancellation)attachment;
+            map.put("order", Convert.toUnsignedLong(orderCancellation.getOrderId()));
+            map.put("event", "order cancel");
         }
         return map;
     }
