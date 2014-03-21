@@ -152,7 +152,8 @@ public final class VerifyTrace {
                 String assetId = assetEntry.getKey();
                 long issuedAssetQuantity = assetEntry.getValue();
                 if (issuedAssetQuantity != Convert.nullToZero(accountAssetQuantities.get(assetId))) {
-                    System.out.println("ERROR: asset " + assetId + " balances don't match, issued: " + issuedAssetQuantities
+                    System.out.println("ERROR: asset " + assetId + " balances don't match, issued: "
+                            + issuedAssetQuantity
                             + ", total of account balances: " + accountAssetQuantities.get(assetId));
                     failedAssets.add(assetId);
                 }
