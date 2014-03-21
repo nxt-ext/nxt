@@ -119,6 +119,8 @@ public final class Crypto {
         }
 
         MessageDigest sha256 = sha256();
+        seed = sha256.digest(seed);
+
         for (int i = 0; i < length / 32; i++) {
             byte[] key = sha256.digest(seed);
             for (int j = 0; j < 32; j++) {
