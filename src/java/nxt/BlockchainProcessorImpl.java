@@ -575,6 +575,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new BlockNotAcceptedException(e.toString());
             }
 
+            blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
+
             transactionProcessor.apply(block);
 
             blockListeners.notify(block, Event.BLOCK_PUSHED);
@@ -606,10 +608,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logMessage("Previous block is null");
                     throw new IllegalStateException();
                 }
+                blockListeners.notify(block, Event.BEFORE_BLOCK_UNDO);
                 blockchain.setLastBlock(block, previousBlock);
-                Account generatorAccount = Account.getAccount(block.getGeneratorId());
-                generatorAccount.undo(block.getHeight());
-                generatorAccount.addToBalanceAndUnconfirmedBalance(-block.getTotalFee() * 100L);
                 transactionProcessor.undo(block);
                 BlockDb.deleteBlock(block.getId());
             } // synchronized
@@ -794,6 +794,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new NxtException.ValidationException("Database blocks in the wrong order!");
                         }
                         blockchain.setLastBlock(currentBlock);
+                        blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         transactionProcessor.apply(currentBlock);
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();

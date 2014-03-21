@@ -68,16 +68,9 @@ public final class Users {
 
     static {
 
-        String allowedUserHostsString = Nxt.getStringProperty("nxt.allowedUserHosts");
-        if (! allowedUserHostsString.equals("*")) {
-            Set<String> hosts = new HashSet<>();
-            for (String allowedUserHost : allowedUserHostsString.split(";")) {
-                allowedUserHost = allowedUserHost.trim();
-                if (allowedUserHost.length() > 0) {
-                    hosts.add(allowedUserHost);
-                }
-            }
-            allowedUserHosts = Collections.unmodifiableSet(hosts);
+        List<String> allowedUserHostsList = Nxt.getStringListProperty("nxt.allowedUserHosts");
+        if (! allowedUserHostsList.contains("*")) {
+            allowedUserHosts = Collections.unmodifiableSet(new HashSet<>(allowedUserHostsList));
         } else {
             allowedUserHosts = null;
         }

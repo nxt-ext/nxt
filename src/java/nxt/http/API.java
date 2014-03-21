@@ -22,6 +22,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class API {
@@ -33,16 +34,9 @@ public final class API {
     private static final Server apiServer;
 
     static {
-        String allowedBotHostsString = Nxt.getStringProperty("nxt.allowedBotHosts");
-        if (! allowedBotHostsString.equals("*")) {
-            Set<String> hosts = new HashSet<>();
-            for (String allowedBotHost : allowedBotHostsString.split(";")) {
-                allowedBotHost = allowedBotHost.trim();
-                if (allowedBotHost.length() > 0) {
-                    hosts.add(allowedBotHost);
-                }
-            }
-            allowedBotHosts = Collections.unmodifiableSet(hosts);
+        List<String> allowedBotHostsList = Nxt.getStringListProperty("nxt.allowedBotHosts");
+        if (! allowedBotHostsList.contains("*")) {
+            allowedBotHosts = Collections.unmodifiableSet(new HashSet<>(allowedBotHostsList));
         } else {
             allowedBotHosts = null;
         }

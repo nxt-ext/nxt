@@ -9,11 +9,14 @@ import nxt.util.ThreadPool;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.8.11";
+    public static final String VERSION = "0.8.12";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -70,6 +73,21 @@ public final class Nxt {
         }
     }
 
+    public static List<String> getStringListProperty(String name) {
+        String value = getStringProperty(name);
+        if (value == null || value.length() == 0) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        for (String s : value.split(";")) {
+            s = s.trim();
+            if (s.length() > 0) {
+                result.add(s);
+            }
+        }
+        return result;
+    }
+
     public static Boolean getBooleanProperty(String name) {
         String value = properties.getProperty(name);
         if (Boolean.TRUE.toString().equals(value)) {
@@ -118,6 +136,7 @@ public final class Nxt {
         API.shutdown();
         Users.shutdown();
         Peers.shutdown();
+        TransactionProcessorImpl.getInstance().shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
         Logger.logMessage("Nxt server " + VERSION + " stopped.");
@@ -144,6 +163,7 @@ public final class Nxt {
             Generator.init();
             API.init();
             Users.init();
+            DebugTrace.init();
             ThreadPool.start();
 
             long currentTime = System.currentTimeMillis();

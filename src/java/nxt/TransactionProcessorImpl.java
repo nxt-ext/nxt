@@ -318,6 +318,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void undo(BlockImpl block) throws TransactionType.UndoNotSupportedException {
+        block.undo();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
             TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
@@ -375,6 +376,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             transactionListeners.notify(addedConfirmedTransactions, TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
         }
 
+    }
+
+    void shutdown() {
+        Iterator<TransactionImpl> iter = unconfirmedTransactions.values().iterator();
+        while (iter.hasNext()) {
+            TransactionImpl transaction = iter.next();
+            transaction.undoUnconfirmed();
+            iter.remove();
+        }
     }
 
     private void purgeExpiredHashes(int blockTimestamp) {
