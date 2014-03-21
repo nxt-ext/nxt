@@ -7,3 +7,4 @@
 /keystore
 /nxt.jar
 /nxt_test_db/
+*.trace

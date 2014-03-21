@@ -1,0 +1,48 @@
+This release is only about testing and debugging. There is no need to
+upgrade if you are not interested in doing testing.
+
+Added DebugTrace.java, which uses listeners to monitor all changes to
+account balances and asset balances, and all the events that cause
+those changes - transactions, block generation fees, order placement,
+asset issuance, asset transfer, order cancellation, trade.
+
+This feature uses two new properties in nxt-default.properties:
+nxt.debugTraceLog=nxt.trace
+nxt.debugTraceAccounts=
+
+To enable tracing of account balances, set nxt.debugTraceAccounts to
+a list of account id's to be tracked, separated by "; " . The output
+will be saved to nxt.trace, or the file defined in nxt.debugTraceLog.
+Values in this file are tab-separated, to make it easy to import into
+a spreadsheet application.
+
+It is possible to enable tracing of all existing account balances, by
+setting nxt.debugTraceAccount=* .
+
+On restart, and also on rescan, the nxt.trace log will be overwritten.
+
+Added VerifyTrace.java, which can parse the nxt.trace file (or a file
+specified as a command line argument), and perform some verifications.
+Currently, it verifies that for each traced account, the final balance
+matches the total of all changes that affect that account, as
+recorded in the nxt.trace log. It also verifies that for each asset,
+the total of asset quantities in all accounts matches the original
+quantity of asset issued. This verification can be expected to fail if
+not all accounts that own an asset are included in debugTraceAccounts.
+
+To run VerifyTrace, use the verify.sh script. The Nxt server should be
+stopped first, so that the nxt.trace log does not continue to be
+updated while VerifyTrace is verifying it.
+
+Unconfirmed balances and unconfirmed asset balances are logged, but
+not verified by VerifyTrace, because the presense of open or partially
+filled orders can make that too complicated. It may be easier to
+program a spreadsheet application to handle such calculations.
+
+Added TRADE event, triggered when a Trade occurs. Note that the Trade
+event happens before the update of the account balances.
+
+Added BEFORE_BLOCK_APPLY and BEFORE_BLOCK_UNDO events, triggered just
+before the corresponding operations in block processing.
+
+

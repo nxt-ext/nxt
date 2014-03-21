@@ -137,14 +137,10 @@ public final class Peers {
         myPeerInfoRequest = JSON.prepareRequest(json);
 
         Set<String> addresses = new HashSet<>();
-        String wellKnownPeersString = Constants.isTestnet ? Nxt.getStringProperty("nxt.testnetPeers") : Nxt.getStringProperty("nxt.wellKnownPeers");
-        if (wellKnownPeersString != null && wellKnownPeersString.length() > 0) {
-            for (String address : wellKnownPeersString.split(";")) {
-                address = address.trim();
-                if (address.length() > 0) {
-                    addresses.add(address);
-                }
-            }
+        List<String> wellKnownPeersList = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
+                : Nxt.getStringListProperty("nxt.wellKnownPeers");
+        if (! wellKnownPeersList.isEmpty()) {
+            addresses.addAll(wellKnownPeersList);
         } else if (! Constants.isTestnet) {
             Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org, nxtbase.com and mynxt.info nodes");
             for (int i = 1; i <= 12; i++) {
@@ -165,17 +161,12 @@ public final class Peers {
         }
         wellKnownPeers = Collections.unmodifiableSet(addresses);
 
-        Set<String> blacklistedAddresses = new HashSet<>();
-        String knownBlacklistedPeersString = Nxt.getStringProperty("nxt.knownBlacklistedPeers");
-        if (knownBlacklistedPeersString != null && knownBlacklistedPeersString.length() > 0) {
-            for (String address : knownBlacklistedPeersString.split(";")) {
-                address = address.trim();
-                if (address.length() > 0) {
-                    blacklistedAddresses.add(address);
-                }
-            }
+        List<String> knownBlacklistedPeersList = Nxt.getStringListProperty("nxt.knownBlacklistedPeers");
+        if (knownBlacklistedPeersList.isEmpty()) {
+            knownBlacklistedPeers = Collections.emptySet();
+        } else {
+            knownBlacklistedPeers = Collections.unmodifiableSet(new HashSet<>(knownBlacklistedPeersList));
         }
-        knownBlacklistedPeers = Collections.unmodifiableSet(blacklistedAddresses);
 
         maxNumberOfConnectedPublicPeers = Nxt.getIntProperty("nxt.maxNumberOfConnectedPublicPeers");
         connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
