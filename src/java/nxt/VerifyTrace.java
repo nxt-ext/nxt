@@ -160,13 +160,13 @@ public final class VerifyTrace {
             }
             if (failed.size() > 0) {
                 System.out.println("ERROR: " + failed.size() + " accounts have incorrect balances");
-                System.out.println(Arrays.toString(failed.toArray(new String[failed.size()])));
+                System.out.println(failed);
             } else {
                 System.out.println("SUCCESS: all " + totals.size() + " account balances and asset balances match the transaction and trade totals!");
             }
             if (failedAssets.size() > 0) {
                 System.out.println("ERROR: " + failedAssets.size() + " assets have incorrect balances");
-                System.out.println(Arrays.toString(failedAssets.toArray(new String[failedAssets.size()])));
+                System.out.println(failedAssets);
             } else {
                 System.out.println("SUCCESS: all " + issuedAssetQuantities.size() + " assets quantities are correct!");
             }
