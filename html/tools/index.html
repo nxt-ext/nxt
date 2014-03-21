@@ -536,16 +536,18 @@
 						         		<div id="asset_details" style="display:none">
 							            	<div style="float:right;color: #999999;">
 							            		<strong>Account</strong>: <span id="asset_account"></span><br />
-					                        	<div id="asset_id_dropdown" class="dropdown" style="margin-bottom:10px;text-align:right;">
+					                        	<div id="asset_id_dropdown" class="dropdown" style="margin-bottom:0;text-align:right;">
 					                        		<strong>Asset Id</strong>: <a href="#" id="asset_id" class="dropdown-toggle" data-toggle="dropdown"></a>
 													<ul class="dropdown-menu" role="menu" style="right:0;left:auto;text-align:left;">
 														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id">Copy Asset ID</a></li>
 														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link">Copy Asset Link</a></li>
 													</ul>
 												</div>
+												<div id="asset_tags" style="display:none"></div>
 							            	</div>
 							                <h3 style="margin-top:0" id="asset_name"></h3>
 							                <p id="asset_description"></p>
+							                <a href="#" id="asset_url" target="_blank" style="display:none"></a>
 							                <hr />
 							                      
 							                <div class="row">
@@ -1562,7 +1564,7 @@
 		</div>
 		
 		<div class="modal fade" id="issue_asset_modal" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog">
+			<div class="modal-dialog modal-dialog-wide">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -1570,40 +1572,66 @@
 		      		</div>
 			      	<div class="modal-body">			
 						<form role="form">
+							<div class="callout callout-danger never_hide"><strong>Warning</strong>: Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="form-group">
-								<label for="issue_asset_name">NAME</label>
-								<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Asset Name"
-								        required autofocus tabindex="1" />
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="issue_asset_name">PREFIX (NAME) <i class="fa fa-question-circle show_popover" data-content="The prefix is the non-unique part of your asset name. Remember that other sellers can issue an asset with the same prefix. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
+</label>
+										<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Prefix" required autofocus tabindex="1" />
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="issue_asset_name">SUFFIX (ALIAS) <i class="fa fa-exclamation-circle show_popover" data-content="The suffix is the unique part of your asset name. It allows buyers to easily identify your asset. Set this to the name of an alias you control. Should be between 3 and 10 characters long." data-container="body" style="color:red"></i></label>
+										<input type="text" class="form-control" name="name" id="issue_asset_alias" placeholder="Suffix" required autofocus tabindex="2" />
+									</div>
+								</div>
 							</div>
 							<div class="form-group">
 								<label for="issue_asset_description">DESCRIPTION</label>
-								<textarea class="form-control" id="issue_asset_description" name="description" rows="3" tabindex="2"></textarea>
+								<textarea class="form-control" id="issue_asset_description" name="description" rows="3" tabindex="3"></textarea>
 							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="issue_asset_description">TAGS <i class="fa fa-question-circle show_popover" data-content="Add a maximum of 3 tags to classify your asset. Tags are user-defined categories. Separate the tags with a comma." data-container="body" style="color:#4CAA6E" ></i></label>
+										<input type="text" name="url" id="issue_asset_tags" class="form-control" placeholder="Comma separated categories" tabindex="7">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="issue_asset_description">URL</label>
+										<input type="text" name="url" id="issue_asset_url" class="form-control" placeholder="http://..." tabindex="8">
+									</div>
+								</div>
+							</div>
+
 							<div class="row">
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_asset_quantity">QUANTITY</label>
-						                <input type="number" name="quantity" id="issue_asset_quantity" class="form-control" placeholder="Quantity" tabindex="3">
+						                <input type="number" name="quantity" id="issue_asset_quantity" class="form-control" placeholder="Quantity" tabindex="4">
 									</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
-										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="Minimum fee is 1,000 Nxt" data-container="body" style="color:red"></i></label>
+										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt" data-container="body" style="color:red"></i></label>
 																				
-										<input type="number" name="fee" id="issue_asset_fee" class="form-control" placeholder="Fee" data-default="1000" value="1000" tabindex="4">
+										<input type="number" name="fee" id="issue_asset_fee" class="form-control" placeholder="Fee" data-default="1000" value="1000" tabindex="5">
 									</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_asset_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="4">
+										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="6">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="issue_asset_password">SECRET PHRASE</label>
-								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="9">
 							</div>
 						</form>
 			    	</div>

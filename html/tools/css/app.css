@@ -3183,6 +3183,14 @@ a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.acti
 	color:#fff;
 }
 
+a.list-group-item h4 span {
+	color:blue;
+}
+
+a.list-group-item.active h4 span {
+	color:yellow;
+}
+
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

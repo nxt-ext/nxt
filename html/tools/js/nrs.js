@@ -308,7 +308,8 @@
     NRS.selectedContext = null;
     NRS.database = null;
     NRS.databaseSupport = false;
-    NRS.assets = {};
+    NRS.assets = [];
+    NRS.assetIds = [];
     NRS.loadedBefore = [];
     NRS.contacts = {};
     NRS.tentative = {"aliases": [], "ask_orders": [], "bid_orders": [], "cancelled_orders": [], "messages": [], "polls": [], "transfer_assets": []};
@@ -1730,14 +1731,19 @@
     	}
     	
         $(".content.content-stretch:visible").width($(".page:visible").width());
-						
-		if (NRS.databaseSupport) {
-			NRS.database.select("assets", null, function(error, dbAssets) {			
-				$.each(dbAssets, function(index, asset) {
-					NRS.assets[asset.assetId] = asset;
-				});
 				
-				dbAssets = null;
+		NRS.assets = [];
+		NRS.assetIds = [];
+		
+		if (NRS.databaseSupport) {
+			//todo only select a few fields..
+			NRS.database.select("assets", null, function(error, assets) {			
+				$.each(assets, function(index, asset) {
+					NRS.assetIds.push(asset.assetId);
+					NRS.assets.push({"id": asset.assetId, "prefix": asset.name.toLowerCase(), "suffix": asset.alias.toLowerCase(), "groupName": asset.groupName.toLowerCase(), "quantity": asset.quantity});
+				});
+								
+				assets = null;
 	
 				NRS.loadAssetExchangeSidebar(callback, activeAsset);
 			});
@@ -1746,44 +1752,113 @@
 		}
     }    		
     
-    NRS.loadAssetExchangeSidebar = function(callback, activeAsset) {
+    NRS.loadAssetExchangeSidebar = function(callback, activeAsset) {    	
 		NRS.sendRequest("getAssetIds+", function(response) {
-    		if (response.assetIds && response.assetIds.length) {
+    		if (response.assetIds && response.assetIds.length) {    			
 	    		if (NRS.currentPage != "asset_exchange") {
 	    			return;
 	    		}
 	    		
-    			var assets = [];
     			var nr_assets = 0;
-    			
+    			var new_assets = [];
+
     			for (var i=0; i<response.assetIds.length; i++) {
-    				if (response.assetIds[i] in NRS.assets) {
-    					assets[nr_assets] = {"id": response.assetIds[i], "name": NRS.assets[response.assetIds[i]].name.toLowerCase(), "groupName": NRS.assets[response.assetIds[i]].groupName.toLowerCase()};
-    					
+    				if (NRS.databaseSupport && NRS.assetIds.indexOf(response.assetIds[i]) > -1) {
+    				    //already in database    					
     					nr_assets++;
     					
     					if (nr_assets == response.assetIds.length) {
-	    					NRS.assetExchangeSidebarLoaded(assets, callback, activeAsset);
+							NRS.saveNewAssets(new_assets, function() {
+								NRS.assetExchangeSidebarLoaded(callback, activeAsset);
+							});
     					}
 	    				continue;
     				} else {
-	    				NRS.sendRequest("getAsset+", {"asset": response.assetIds[i]}, function(asset, input) {
-	    				   asset.groupName = "";
-	    					
-	    				   NRS.assets[input.asset] = asset;
-	    				   assets[nr_assets] = {"id": input.asset, "name": asset.name.toLowerCase(), "groupName": asset.groupName.toLowerCase()};
-	    				   
-	    				   asset.assetId = input.asset;
-
-						   if (NRS.databaseSupport) {
-		    				   NRS.database.insert("assets", asset);
-						   }
-						   
-	    				   nr_assets++;
-	    				   
-	    				   if (nr_assets == response.assetIds.length) {
-	    				   		NRS.assetExchangeSidebarLoaded(assets, callback, activeAsset);
-	    				   }
+    					//not in database (or no database support), fetch
+	    				NRS.sendRequest("getAsset+", {"asset": response.assetIds[i], "_extra": {"position": i}}, function(asset, input) {
+	    					asset.groupName = "";
+							//asset.position  = input["_extra"].position;
+							asset.assetId   = input.asset;
+							
+							var metaData = null;
+										
+							if (asset.description && asset.description.charAt(0) == "{") {
+								try {
+									metaData = JSON.parse(asset.description);
+									
+									if (metaData.alias) {
+										//this is alias ID, not alias!
+										asset.alias = metaData.alias;
+									}
+									
+									if (metaData.url) {
+										asset.url = metaData.url;
+									}
+									if (metaData.imageUrl) {
+										asset.imageUrl = metaData.imageUrl;
+									}
+									if (metaData.tags) {
+										asset.tags = "," + metaData.tags.join(",") + ",";
+										asset.tags = asset.tags.toLowerCase();
+									}
+									if (metaData.description) {
+										asset.description = metaData.description;
+									}
+								} catch (e) {
+									
+								}
+							}
+							
+							if (!asset.alias) {
+								asset.alias = "";
+							}
+							if (!asset.url) {
+								asset.url = "";
+							}
+							if (!asset.imageUrl) {
+								asset.imageUrl = "";
+							}
+							if (!asset.tags) {
+								asset.tags = "";
+							}
+							
+							if (asset.alias) {								
+								NRS.sendRequest("getAlias+", {"alias": asset.alias, "_extra": {"asset": asset}}, function(alias) {
+									if (!alias || alias.errorCode || alias.account != asset.account) {
+										asset.alias = "";
+									} else if (String(alias.alias).match(/\d/)) {
+										//alias cannot contain numbers
+										asset.alias = "";
+									} else {
+										asset.alias = alias.alias;
+									}
+								
+									NRS.assets.push({"id": input.asset, "prefix": asset.name.toLowerCase(), "suffix": asset.alias.toLowerCase(), "groupName": "", "quantity": asset.quantity});
+																		
+									new_assets.push(asset);
+									
+									nr_assets++;
+									
+									if (nr_assets == response.assetIds.length) {
+										NRS.saveNewAssets(new_assets, function() {
+											NRS.assetExchangeSidebarLoaded(callback, activeAsset);
+										});
+									}
+	
+								});
+							} else {
+								NRS.assets.push({"id": input.asset, "prefix": asset.name.toLowerCase(), "suffix": "", "groupName": "", "quantity": asset.quantity});
+								
+								new_assets.push(asset);
+								
+								nr_assets++;
+																
+								if (nr_assets == response.assetIds.length) {
+									NRS.saveNewAssets(new_assets, function() {
+										NRS.assetExchangeSidebarLoaded(callback, activeAsset);
+									});
+								}
+							}
 	    				});
 	    				
 	    				if (NRS.currentPage != "asset_exchange") {
@@ -1795,25 +1870,55 @@
     	});
 	}
     		
-	NRS.assetExchangeSidebarLoaded = function(assets, callback, activeAsset) {
+	NRS.saveNewAssets = function(newAssets, callback) {
+		if (NRS.databaseSupport && newAssets.length) {
+			
+			for (var i=0; i<newAssets.length; i++) {
+				delete newAssets[i].numberOfTrades;
+			}
+						
+			NRS.database.insert("assets", newAssets, function(error) {
+				if (!error && callback) {
+					callback();
+				}
+			});
+		} else if (callback) {
+			callback();
+		}
+	}
+
+	NRS.assetExchangeSidebarLoaded = function(callback, activeAsset) {
 		var rows = "";
-		    				   		
-   		assets.sort(function(a, b) {
+		  
+		//can be shortened..
+   		NRS.assets.sort(function(a, b) {
    			if (!a.groupName && !b.groupName) {
-	   			if (a.name > b.name) {
+	   			if (a.prefix > b.prefix) {
 	   				return 1;
-	   			} else if (a.name < b.name) {
+	   			} else if (a.prefix < b.prefix) {
 	   				return -1;
 	   			} else {
-	   				return 0;
+	   				if (a.suffix > b.suffix) {
+		   				return 1;
+	   				} else if (a.suffix < b.suffix) {
+		   				return -1;
+	   				} else {
+	   					return 0;
+	   				}
 	   			}
 	   		} else if (a.groupName == "ignore list" && b.groupName == "ignore list") {
-	   			if (a.name > b.name) {
+	   			if (a.prefix > b.prefix) {
 	   				return 1;
-	   			} else if (a.name < b.name) {
+	   			} else if (a.prefix < b.prefix) {
 	   				return -1;
 	   			} else {
-	   				return 0;
+	   				if (a.suffix > b.suffix) {
+		   				return 1;
+	   				} else if (a.suffix < b.suffix) {
+		   				return -1;
+	   				} else {
+	   					return 0;
+	   				}
 	   			}
 	   		} else if (a.groupName == "ignore list") {
 	   			return 1;
@@ -1828,25 +1933,29 @@
    			} else if (a.groupName < b.groupName) {
 	   			return -1;
    			} else {
-	   			if (a.name > b.name) {
+	   			if (a.prefix > b.prefix) {
 	   				return 1;
-	   			} else if (a.name < b.name) {
+	   			} else if (a.prefix < b.prefix) {
 	   				return -1;
 	   			} else {
-	   				return 0;
+	   				if (a.suffix > b.suffix) {
+		   				return 1;
+	   				} else if (a.suffix < b.suffix) {
+		   				return -1;
+	   				} else {
+	   					return 0;
+	   				}
 	   			}
 	   		}
    		});
-   		   		
+	   	
    		var lastGroup = "";
    		var ungrouped = true;
    		var isClosedGroup = false;
-   		   		
-   		for (var i=0; i<assets.length; i++) {
-   			var assetId = assets[i].id;
-   			
-   			var asset = NRS.assets[assetId];
-   			
+   		   		   		   		
+   		for (var i=0; i<NRS.assets.length; i++) {   			   			
+   			var asset = NRS.assets[i];
+   			   			
    			if (asset.groupName.toLowerCase() != lastGroup) {
    				var to_check = (asset.groupName ? asset.groupName : "undefined");
    				
@@ -1867,9 +1976,9 @@
 	   			lastGroup = asset.groupName.toLowerCase();
    			}
    			    				   			
-   			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-asset='" + String(assetId).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-wuuut='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>Quantity: " + NRS.formatAmount(asset.quantity) + "</p></a>";
+   			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.prefix.escapeHTML() + (asset.suffix ? "<span>." + asset.suffix.escapeHTML() + '</span>' : "") + "</h4><p class='list-group-item-text'>Quantity: " + NRS.formatAmount(asset.quantity) + "</p></a>";
    		}
-   		
+   		   		
    		var currentActiveAsset = $("#asset_exchange_sidebar a.active");
 		
 		if (currentActiveAsset.length) {
@@ -1902,8 +2011,10 @@
     $("#asset_exchange_sidebar").on("click", "a", function(e, data) {
     	e.preventDefault();
     	    	
+    	var link = $(this);
+    	
     	var assetId = $(this).data("asset");
-    	    	    	    	
+    	   	    	    	
     	if (!assetId) {
     		if (NRS.databaseSupport) {
 	    	  	var group = $(this).data("groupname");
@@ -1943,19 +2054,75 @@
     	assetId = assetId.escapeHTML();
     	
     	NRS.abortOutstandingRequests(true);
-    	
-    	var asset = NRS.assets[assetId];
     	    	
+    	if (NRS.databaseSupport) {
+    		NRS.database.select("assets", [{"assetId": assetId}], function(error, asset) {
+	    		if (!error) {
+		    		NRS.loadAsset(asset[0], link, data);
+	    		}
+    		});
+    	} else {
+	    	NRS.sendRequest("getAsset", {"asset": assetId}, function(response, input) {	    		
+		    	if (!response.errorCode) {
+		    		response.assetId = input.asset;
+		    		response.alias = NRS.assets[link.data("cache")].suffix;
+		    				    		
+		    		var metaData = null;
+										
+					if (response.description && response.description.charAt(0) == "{") {
+						try {
+							metaData = JSON.parse(response.description);
+							
+							if (metaData.url) {
+								response.url = metaData.url;
+							}
+							if (metaData.imageUrl) {
+								response.imageUrl = metaData.imageUrl;
+							}
+							if (metaData.tags) {
+								response.tags = "," + metaData.tags.join(",") + ",";
+							}
+							if (metaData.description) {
+								response.description = metaData.description;
+							}
+						} catch (e) {
+							
+						}
+					}
+												
+					if (!response.alias) {
+						response.alias = "";
+					}
+					if (!response.url) {
+						response.url = "";
+					}
+					if (!response.imageUrl) {
+						response.imageUrl = "";
+					}
+					if (!response.tags) {
+						response.tags = "";
+					}
+
+			    	NRS.loadAsset(response, link, data);	
+		    	} 
+	    	});
+    	}
+    	
+    });
+    
+    NRS.loadAsset = function(asset, link, data) {   
+    	var assetId = asset.assetId;
+    	     	 
     	NRS.currentAsset = {"assetId": assetId};
 		NRS.currentSubPage = assetId;
 		
     	var asset_account = String(asset.account).escapeHTML();
 
 		var refresh = (data && data.refresh);
-				
+			
     	if (!refresh) {
 	    	$("#asset_exchange_sidebar a.active").removeClass("active");
-	    	$(this).addClass("active");
+	    	link.addClass("active");
 	    	
 	    	$("#no_asset_selected, #loading_asset_data").hide();
 	    	$("#asset_details").show();
@@ -1964,11 +2131,25 @@
     	    	    	    
     	    $("#asset_account").html("<a href='#' data-user='" + asset_account + "' class='user_info'>" + asset_account + "</a>");
 	    	$("#asset_id").html(assetId.escapeHTML());
-	    	$("#asset_name").html(String(asset.name).escapeHTML());
+	    	$("#asset_name").html(String(asset.name + (asset.alias ? "." + asset.alias : "")).escapeHTML());
 	    	$("#asset_description").html(String(asset.description).escapeHTML());    	
 	    	$(".asset_name").html(String(asset.name).escapeHTML());
 	    	$("#sell_asset_button").data("asset", assetId);
 	    	$("#buy_asset_button").data("asset", assetId);
+	    		    	
+	    	if (asset.tags) {
+	    		var tags = asset.tags.replace(/(^,)|(,$)/g, "");
+
+		    	$("#asset_tags").html("<strong>Tags</strong>: " + tags.escapeHTML()).show();
+	    	} else {
+		    	$("#asset_tags").hide();
+	    	}
+	    	
+	    	if (asset.url) {
+		    	$("#asset_url").prop("href", asset.url).text(asset.url).show();
+	    	} else {
+		    	$("#asset_url").hide();
+	    	}
 
 	    	$("#sell_asset_price").val("");
 			$("#buy_asset_price").val("");
@@ -2289,7 +2470,7 @@
     		   	NRS.dataLoadFinished($("#asset_exchange_trade_history_table"), !refresh);
     		}
     	});
-    });
+    }
     
     $("#buy_asset_box .box-header, #sell_asset_box .box-header").click(function(e) {
     	e.preventDefault();
@@ -2562,6 +2743,104 @@
 			$table.parent().parent().removeClass("data-empty").parent().addClass("no-padding");
 		}
 	}
+	
+	NRS.forms.issueAsset = function($modal) {		
+		var data = {"name": $("#issue_asset_name").val(), 
+					"alias": $("#issue_asset_alias").val(),
+					"description": $("#issue_asset_description").val(),
+					"quantity": $("#issue_asset_quantity").val(),
+					"fee": $("#issue_asset_fee").val(),
+					"deadline": $("#issue_asset_deadline").val(),
+					"tags": $("#issue_asset_tags").val(),
+					"url": $("#issue_asset_url").val(),
+					"secretPhrase": $("#issue_asset_password").val()};
+					
+		$.each(data, function(key, value) {
+			data[key] = $.trim(value);
+		});
+		
+		if (!data.description) {
+			return {"error": "Description is a required field."};
+		}
+				
+		if (data.alias || data.tags || data.url) {
+			var metaData = {};
+			
+			metaData.description = data.description;
+			
+			if (data.alias) {
+				if (data.alias.length < 3 || data.alias.length > 10) {
+					return {"error": "Incorrect \"suffix (alias)\" (length must be in [3..10] range)"};
+				} else if (!data.alias.match(/^[a-z]+$/i)) {
+					return {"error": "Incorrect \"suffix (alias)\" (must contain only latin letters)"};
+				} else {
+					//check if alias is owned by issuer, synchronous
+					
+					var error = "";
+					
+					NRS.sendRequest("getAliasId", {"alias": data.alias}, function(response) {
+						if (!response.id) {
+							error = "Incorrect \"suffix (alias)\" (does not exist)";
+						} else {
+							NRS.sendRequest("getAlias", {"alias": response.id}, function(response, input) {
+								if (response.account == NRS.account) {
+									metaData.alias = input.alias;
+								} else {
+									error = "Your account does not own this alias. It must be tied to your account.";
+								}
+							}, false);
+						}
+					}, false);
+					
+					if (error) {
+						return {"error": error};
+					}
+				}
+			}
+			
+			if (data.url) {
+				if (!data.url.match(/^https?:\/\//i)) {
+					return {"error": "URL must start with http / https"};
+				}
+				metaData.url = data.url;
+			}
+			
+			if (data.tags) {
+				data.tags = data.tags.toLowerCase();
+				
+				var tags = data.tags.split(",");
+				if (tags.length > 3) {
+					return {"error": "A maximum of 3 tags is allowed."};
+				} else {
+					var clean_tags = [];
+					
+					for (var i=0; i<tags.length; i++) {
+						var tag = $.trim(tags[i]);
+												
+						if (tag.length < 3 || tag.length > 20) {
+							return {"error": "Incorrect \"tag\" (length must be in [3..20] range)"};
+						} else if (!tag.match(/^[a-z]+$/i)) {
+							return {"error": "Incorrect \"tag\" (must contain only latin letters)"};
+						} else if (clean_tags.indexOf(tag) > -1) {
+							return {"error": "The same tag was inserted multiple times."};
+						} else {
+							clean_tags.push(tag);
+						}
+					}
+					
+					metaData.tags = clean_tags;
+				}
+			}		
+				
+			data.description = JSON.stringify(metaData);
+		}
+				
+		delete data.alias;
+		delete data.tags;
+		delete data.url;
+				        			
+		return {"data": data};
+    }
 	
 	$("#asset_exchange_sidebar_group_context").on("click", "a", function(e) {
 		e.preventDefault();
@@ -4728,7 +5007,7 @@
 	NRS.loadContacts = function() {
 		NRS.contacts = {};
 		
-		NRS.database.select("contacts", null, function(error, contacts) {			
+		NRS.database.select("contacts", null, function(error, contacts) {		
 			if (contacts.length) {
 				$.each(contacts, function(index, contact) {
 					NRS.contacts[contact.accountId] = contact;
@@ -5544,38 +5823,69 @@
 	    return hex;
 	}
 	
-	NRS.createDatabase = function(callback) {
-		if (indexedDB) {
-			indexedDB.deleteDatabase("NRS");
-			indexedDB.deleteDatabase("NXT");
-		}
+	NRS.createDatabase = function(callback) {	
 		var schema = {
-		    contacts:{
+		    contacts: {
 		    	id: {"primary": true, "autoincrement": true, "type": "NUMBER"},
 		        name: "VARCHAR(100) COLLATE NOCASE",
 		        email: "VARCHAR(200)",
-		        accountId: "VARCHAR(100)",
+		        accountId: "VARCHAR(20)",
 		        description: "TEXT"
 		    },
 		    assets: {
-		    	account: "VARCHAR(100)",
-		    	alias: "VARCHAR(100)",
-		        assetId: {"primary": true, "type": "VARCHAR(100)"},
+		    	account: "VARCHAR(20)",
+		        assetId: {"primary": true, "type": "VARCHAR(20)"},
 		        description: "TEXT",
 		        name: "VARCHAR(10)",
+				alias: "VARCHAR(10)",
+		        position: "NUMBER",
 		        quantity: "NUMBER",
-		        groupName: "VARCHAR(100)"
+		        groupName: "VARCHAR(30) COLLATE NOCASE",
+		        url: "VARCHAR(255)",
+		        imageUrl: "VARCHAR(255)",
+		        tags: "VARCHAR(65)",
 		    },
 		    data: {
-		    	id: {"primary": true, "type": "VARCHAR(100)"},
+		    	id: {"primary": true, "type": "VARCHAR(40)"},
 		    	contents: "TEXT"
 		    }
 		};
 		
+		var dbVersion = "1";
+		
 		try {
-			NRS.database = new WebDB("NXTDB", schema, 1, 4, function(error) {				
-				if (!error) {
+			NRS.database = new WebDB("NRSDB", schema, 1, 4, function(error) {
+				var go_on = true;
+				
+				/* temporary */	
+				if (localStorage.getItem("version") != dbVersion) {
+					if (indexedDB) {
+						localStorage.setItem("indexedDB_version", 1);
+						indexedDB.deleteDatabase("NRS");
+						indexedDB.deleteDatabase("NXT");
+						indexedDB.deleteDatabase("NXTDB");
+					} else {
+						go_on = false;
+						
+						NRS.database.drop("data", function(error) {
+							NRS.database.drop("contacts", function(error) {
+								NRS.database.drop("assets", function(error) {
+									if (!error) {
+										localStorage.setItem("version", dbVersion);
+										NRS.createDatabase(callback);
+									} else {
+										NRS.database = null;
+										NRS.databaseSupport = false;
+									}
+								});
+							});
+						});
+					}
+				}
+			
+				if (!error && go_on) {		
 					NRS.databaseSupport = true;
+										
 					NRS.loadContacts();
 	    			NRS.database.select("data", [{"id": "closed_groups"}], function(error, result) {
 	    				if (result.length) {
@@ -6137,7 +6447,7 @@
         });
     }
     
-    NRS.sendRequest = function(requestType, data, callback, async) {     
+    NRS.sendRequest = function(requestType, data, callback, async) {         	
     	if (requestType == undefined) {
     		return;
     	}    	  	
@@ -6185,7 +6495,7 @@
         }
     }
     
-    NRS.processAjaxRequest = function(requestType, data, callback, async) {
+    NRS.processAjaxRequest = function(requestType, data, callback, async) {    	
 		if (data["_extra"]) {
 			var extra = data["_extra"];
 			delete data["_extra"];
@@ -6244,7 +6554,7 @@
 	 	
      	$.support.cors = true;
      		 	     		 	
-		$.ajax({
+     	$.ajax({
 			url: url,
 			crossDomain: true,
 			dataType: "json",
@@ -6689,7 +6999,7 @@
     		}		
     	});
     	$(this).find("input[name=converted_account_id]").val("");
-    	$(this).find(".callout-danger, .error_message, .account_info").html("").hide();
+    	$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
     });
     
     $(".sidebar_context").on("contextmenu", "a", function(e) {

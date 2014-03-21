@@ -620,7 +620,7 @@
       if (_schema[table][column] === "NUMBER") {
         return value;
       } else {
-        return "'" + value + "'";
+        return "'" + (String(value).replace("'", "''")) + "'";
       }
     };
 
