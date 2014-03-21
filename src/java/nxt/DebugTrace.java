@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +53,18 @@ public final class DebugTrace {
                 debugTrace.trace(account);
             }
         }, Account.Event.UNCONFIRMED_BALANCE);
+        Account.addListener(new Listener<Account>() {
+            @Override
+            public void notify(Account account) {
+                debugTrace.traceAssets(account);
+            }
+        }, Account.Event.ASSET_BALANCE);
+        Account.addListener(new Listener<Account>() {
+            @Override
+            public void notify(Account account) {
+                debugTrace.traceAssets(account);
+            }
+        }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -73,10 +86,14 @@ public final class DebugTrace {
         }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
     }
 
-    // account must be the first column
-    private static final String[] columns = {"account", "balance", "unconfirmed balance",
+    // account and asset must be first two columns as VerifyTrace expects them there
+    private static final String[] columns = {"account", "asset", "balance", "unconfirmed balance",
+            "asset balance", "unconfirmed asset balance",
             "transaction amount", "transaction fee", "generation fee",
-            "asset", "quantity", "price", "asset cost", "transaction", "timestamp"};
+            "order", "order price", "order quantity", "order cost",
+            "trade price", "trade quantity", "trade cost",
+            "asset quantity",
+            "transaction", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -129,17 +146,33 @@ public final class DebugTrace {
         }
     }
 
+    private void traceAssets(Account account) {
+        if (!include(account.getId())) {
+            return;
+        }
+        for (Map.Entry<Long,Integer> mapEntry : account.getAssetBalances().entrySet()) {
+            log(getAssetValues(account.getId(), mapEntry.getKey(), mapEntry.getValue(), false));
+        }
+        for (Map.Entry<Long,Integer> mapEntry : account.getUnconfirmedAssetBalances().entrySet()) {
+            log(getAssetValues(account.getId(), mapEntry.getKey(), mapEntry.getValue(), true));
+        }
+    }
+
     private void trace(Block block, boolean isUndo) {
         Long generatorId = block.getGeneratorId();
         if (include(generatorId)) {
             log(getValues(generatorId, block, isUndo));
         }
         for (Transaction transaction : block.getTransactions()) {
-            if (include(transaction.getSenderId())) {
-                log(getValues(transaction.getSenderId(), transaction, false, isUndo));
+            Long senderId = transaction.getSenderId();
+            if (include(senderId)) {
+                log(getValues(senderId, transaction, false, isUndo));
+                log(getValues(senderId, transaction, transaction.getAttachment(), false, isUndo));
             }
-            if (include(transaction.getRecipientId())) {
-                log(getValues(transaction.getRecipientId(), transaction, true, isUndo));
+            Long recipientId = transaction.getRecipientId();
+            if (include(recipientId)) {
+                log(getValues(recipientId, transaction, true, isUndo));
+                log(getValues(recipientId, transaction, transaction.getAttachment(), true, isUndo));
             }
         }
     }
@@ -154,12 +187,12 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId, Trade trade, boolean isRecipient) {
+    private Map<String,String> getValues(Long accountId, Trade trade, boolean isAsk) {
         Map<String,String> map = getValues(accountId);
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
-        map.put("quantity", String.valueOf(trade.getQuantity()));
-        map.put("price", String.valueOf(trade.getPrice()));
-        map.put("asset cost", String.valueOf((isRecipient ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
+        map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantity() : trade.getQuantity()));
+        map.put("trade price", String.valueOf(trade.getPrice()));
+        map.put("trade cost", String.valueOf((isAsk ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
         return map;
     }
 
@@ -195,7 +228,76 @@ public final class DebugTrace {
         return map;
     }
 
+    private Map<String,String> getAssetValues(Long accountId, Long assetId, Integer quantity, boolean unconfirmed) {
+        Map<String,String> map = new HashMap<>();
+        map.put("account", Convert.toUnsignedLong(accountId));
+        map.put("asset", Convert.toUnsignedLong(assetId));
+        map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(quantity == null ? 0 : quantity));
+        map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        return map;
+    }
+
+    private Map<String,String> getValues(Long accountId, Transaction transaction, Attachment attachment, boolean isRecipient, boolean isUndo) {
+        Map<String,String> map = getValues(accountId);
+        if (attachment instanceof Attachment.ColoredCoinsOrderPlacement) {
+            if (isRecipient) {
+                return Collections.emptyMap();
+            }
+            Attachment.ColoredCoinsOrderPlacement orderPlacement = (Attachment.ColoredCoinsOrderPlacement)attachment;
+            boolean isAsk = orderPlacement instanceof Attachment.ColoredCoinsAskOrderPlacement;
+            map.put("asset", Convert.toUnsignedLong(orderPlacement.getAssetId()));
+            map.put("order price", String.valueOf(orderPlacement.getPrice()));
+            long quantity = orderPlacement.getQuantity();
+            if (isAsk) {
+                if (! isUndo) {
+                    quantity = - quantity;
+                }
+            } else {
+                if (isUndo) {
+                    quantity = - quantity;
+                }
+            }
+            map.put("order quantity", String.valueOf(quantity));
+            long orderCost = orderPlacement.getPrice() * orderPlacement.getQuantity();
+            if (isAsk) {
+                if (isUndo) {
+                    orderCost = - orderCost;
+                }
+            } else {
+                if (! isUndo) {
+                    orderCost = - orderCost;
+                }
+            }
+            map.put("order cost", String.valueOf(orderCost));
+        } else if (attachment instanceof Attachment.ColoredCoinsAssetIssuance) {
+            if (isRecipient) {
+                return Collections.emptyMap();
+            }
+            Attachment.ColoredCoinsAssetIssuance assetIssuance = (Attachment.ColoredCoinsAssetIssuance)attachment;
+            map.put("asset", transaction.getStringId());
+            map.put("asset quantity", String.valueOf(isUndo ? -assetIssuance.getQuantity() : assetIssuance.getQuantity()));
+        } else if (attachment instanceof Attachment.ColoredCoinsAssetTransfer) {
+            Attachment.ColoredCoinsAssetTransfer assetTransfer = (Attachment.ColoredCoinsAssetTransfer)attachment;
+            map.put("asset", Convert.toUnsignedLong(assetTransfer.getAssetId()));
+            int quantity = assetTransfer.getQuantity();
+            if (isRecipient) {
+                if (isUndo) {
+                    quantity = - quantity;
+                }
+            } else {
+                if (! isUndo) {
+                    quantity = - quantity;
+                }
+            }
+            map.put("asset quantity", String.valueOf(quantity));
+        }
+        return map;
+    }
+
     private void log(Map<String,String> map) {
+        if (map.isEmpty()) {
+            return;
+        }
         StringBuilder buf = new StringBuilder();
         for (String column : columns) {
             String value = map.get(column);
