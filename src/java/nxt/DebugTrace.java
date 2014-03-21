@@ -26,7 +26,7 @@ public final class DebugTrace {
         }
         addDebugTrace(accountIds, logName);
         Logger.logDebugMessage("Debug tracing of " + (accountIds.contains("*") ? "ALL"
-                : String.valueOf(accountIds.size())) + " balances enabled");
+                : String.valueOf(accountIds.size())) + " accounts enabled");
     }
 
     public static void addDebugTrace(List<String> accountIds, String logName) {
