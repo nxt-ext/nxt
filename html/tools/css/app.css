@@ -668,13 +668,15 @@ body > .header .logo .icon {
 .dropdown-menu > li > a > .ion {
   margin-right: 10px;
 }
-.dropdown-menu > li > a:hover {
-  background-color: #3c8dbc;
-  color: #f9f9f9;
-}
+
 /*Drodown in navbars*/
 .navbar .dropdown-menu > li > a { /*REMOVED skin-blue*/
   color: #444444;
+}
+
+.dropdown-menu > li > a:hover {
+  background-color: #3c8dbc;
+  color: #f9f9f9;
 }
 /*
     Navbar custom dropdown menu
@@ -3092,7 +3094,7 @@ nrs_update_hashes {
 	border-bottom:none !important;
 }
 
-.navbar li a {
+.navbar-right > ul > li > a {
     -webkit-transition: all 300ms linear;
     -moz-transition: all 300ms linear;
     -o-transition: all 300ms linear;
@@ -3189,6 +3191,10 @@ a.list-group-item h4 span {
 
 a.list-group-item.active h4 span {
 	color:yellow;
+}
+
+.show_logout {
+	display:none;
 }
 
 /*

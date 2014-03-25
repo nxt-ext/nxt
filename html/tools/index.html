@@ -35,7 +35,15 @@
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal">Send Message</a></li>
 	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#generate_token_modal">Generate Token</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
-                        <li class="dropdown"><a href="#" style="font-weight:bold" onclick="NRS.logout()">Log out</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
+                                <i class="fa fa-power-off"></i>
+                            </a>
+                            <ul class="dropdown-menu" role="menu">
+								<li><a role="menuitem" tabindex="-1" href="#" onclick="NRS.logout()">Log Out</a></li>
+								<li><a role="menuitem" tabindex="-1" href="#" onclick="NRS.logout(true)">Log Out &amp; Stop Forging</a></li>
+							</ul>
+						</li>
                     </ul>
                 </div>
             </nav>
@@ -1239,7 +1247,7 @@
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Confirm Forging Stop</h4>
+		        		<h4 class="modal-title">Confirm Forging Stop<span class="show_logout"> &amp; Logout</span></h4>
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
@@ -1257,7 +1265,7 @@
 			      		<input type="hidden" name="request_type" value="stopForging" />
 			      		<input type="hidden" name="success_message" value="Forging has been stopped." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Continue Forging</button>
-				        <button type="button" class="btn btn-primary" id="stop_forging_button" data-loading-text="Submitting...">Stop Forging</button>
+				        <button type="button" class="btn btn-primary" id="stop_forging_button" data-loading-text="Submitting...">Stop Forging <span class="show_logout">and Logout</span></button>
 			      	</div>
 		    	</div>
 			</div>
