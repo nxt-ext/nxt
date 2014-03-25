@@ -316,6 +316,7 @@
     NRS.tentativeAge = {"cancelled_orders": []};
 	NRS.accountBalance = {};
 	NRS.transactionsPageType = null;
+	NRS.blocksPageType = null;
 	NRS.downloadingBlockchain = false;
 	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17];
 	NRS.isTestNet = false;
@@ -4011,16 +4012,62 @@
     NRS.pages.blocks = function() {    
     	NRS.pageLoading();
    	    		    	   	    
-    	if (NRS.blocks.length < 100) {   	
-    		if (NRS.downloadingBlockchain) {
-    			NRS.blocksPageLoaded();
-    		} else {
-     			var previousBlock = NRS.blocks[NRS.blocks.length-1].previousBlock;
-	 			NRS.getBlock(previousBlock, NRS.finish100Blocks);
-	 		}
-    	} else {
-    		NRS.blocksPageLoaded();
-    	}	
+   	    $("#forged_blocks_warning").hide();
+
+		if (NRS.blocksPageType == "forged_blocks") {		
+			$("#forged_fees_total_box, #forged_blocks_total_box").show();
+			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").hide();
+						
+			NRS.sendRequest("getAccountBlockIds+", {"account": NRS.account, "timestamp": 0}, function(response) {
+				if (response.blockIds && response.blockIds.length) {
+	    			var blocks = [];
+	    			var nr_blocks = 0;
+	    			
+	    			var blockIds = response.blockIds.reverse().slice(0, 100);
+	    			
+	    			if (response.blockIds.length > 100) {
+		    			$("#blocks_page_forged_warning").show();
+	    			}		    			    			
+	    			
+	    			for (var i=0; i<blockIds.length; i++) {
+	    				NRS.sendRequest("getBlock+", {"block": blockIds[i], "_extra": {"nr": i}}, function(block, input) {
+	    					if (NRS.currentPage != "blocks") {
+	    						blocks = {};
+	    						return;
+	    					}
+	    					    					    					
+	    					blocks[input["_extra"].nr] = block;
+	    					nr_blocks++;
+	    					
+	    					if (nr_blocks == blockIds.length) {
+	    						NRS.blocksPageLoaded(blocks);
+	    					}
+	    				});
+	    				
+	    				if (NRS.currentPage != "blocks") {
+	    					blocks = {};
+	    					return;
+	    				}
+	    			}
+	    		} else {
+	    			NRS.blocksPageLoaded({});
+	    		}
+			});
+		} else {
+			$("#forged_fees_total_box, #forged_blocks_total_box").hide();
+			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").show();
+
+	    	if (NRS.blocks.length < 100) {   	
+	    		if (NRS.downloadingBlockchain) {
+	    			NRS.blocksPageLoaded(NRS.blocks);
+	    		} else {
+	     			var previousBlock = NRS.blocks[NRS.blocks.length-1].previousBlock;
+		 			NRS.getBlock(previousBlock, NRS.finish100Blocks);
+		 		}
+	    	} else {
+	    		NRS.blocksPageLoaded(NRS.blocks);
+	    	}	
+	    }
     }
 
     NRS.finish100Blocks = function(response) {
@@ -4028,18 +4075,18 @@
     	if (NRS.blocks.length < 100) {
     		NRS.getBlock(response.previousBlock, NRS.finish100Blocks);
     	} else {
-    		NRS.blocksPageLoaded();
+    		NRS.blocksPageLoaded(NRS.blocks);
     	}
     }
     
-    NRS.blocksPageLoaded = function() {    	
+    NRS.blocksPageLoaded = function(blocks) {    	
 	    var rows = "";
 	    var total_amount = 0;
 	    var total_fees = 0;
 	    var total_transactions = 0;
-    		
-		for (var i=0; i<NRS.blocks.length; i++) {
-			var block = NRS.blocks[i];
+	    		
+		for (var i=0; i<blocks.length; i++) {
+			var block = blocks[i];
 			
 			total_amount += block.totalAmount;
 			total_fees += block.totalFee;
@@ -4057,10 +4104,24 @@
 		$("#blocks_table tbody").empty().append(rows);
 		NRS.dataLoadFinished($("#blocks_table"));
 		
-		$("#blocks_average_fee").html(total_fees/100).removeClass("loading_dots");
+		$("#blocks_average_fee").html(NRS.formatAmount(total_fees/blocks.length, true)).removeClass("loading_dots");
 		$("#blocks_average_amount").html(NRS.formatAmount(Math.round(total_amount/100))).removeClass("loading_dots");
-		$("#blocks_transactions_per_hour").html(Math.round(total_transactions/(time/60)*60)).removeClass("loading_dots");
-		$("#blocks_average_generation_time").html(Math.round(time/100) + "s").removeClass("loading_dots");
+		
+		if (NRS.blocksPageType == "forged_blocks") {
+			if (blocks.length == 100) {
+				var blockCount = blocks.length + "+";
+				var feeTotal = NRS.formatAmount(total_fees, true) + "+";	
+			} else {
+				var blockCount = blocks.length;
+				var feeTotal = NRS.formatAmount(total_fees, true);
+			}
+			
+			$("#forged_blocks_total").html(blockCount).removeClass("loading_dots");
+			$("#forged_fees_total").html(feeTotal).removeClass("loading_dots");	
+		} else {
+			$("#blocks_transactions_per_hour").html(Math.round(total_transactions/(time/60)*60)).removeClass("loading_dots");
+			$("#blocks_average_generation_time").html(Math.round(time/100) + "s").removeClass("loading_dots");
+		}
 		
 		NRS.pageLoaded();
     }
@@ -4795,6 +4856,22 @@
     	NRS.pages.transactions();
     });
         
+    $("#blocks_page_type li a").click(function(e) {
+		e.preventDefault();
+	   
+		var type = $(this).data("type");
+	   
+		if (type) {
+			NRS.blocksPageType = type;
+		} else {
+			NRS.blocksPageType = null;
+		}
+				
+		$(this).parents(".btn-group").find(".text").text($(this).text());
+	   
+		NRS.pages.blocks();
+    });
+    
     NRS.createInfoTable = function(data) {
     	var rows = "";
     	
