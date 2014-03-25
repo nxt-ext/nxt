@@ -2297,7 +2297,7 @@
 			    					
 				    				var $rows = $("#asset_exchange_ask_orders_table tbody").find("tr");
 				
-									var rowToAdd = "<tr class='tentative' data-transaction='" + String(ask_order.transaction).escapeHTML() + "' data-quantity='" + String(ask_order.quantity).escapeHTML() + "' data-price='" + (ask_order.price/100) + "'><td>You - <strong>Tentative Order</strong></td><td>" + NRS.formatAmount(ask_order.quantity) + "</td><td>" + NRS.formatAmount(ask_order.price/100) + "</td><td>" + NRS.formatAmount((ask_order.price/100) * ask_order.quantity, true) + "</td></tr>";
+									var rowToAdd = "<tr class='tentative' data-transaction='" + String(ask_order.transaction).escapeHTML() + "' data-quantity='" + String(ask_order.quantity).escapeHTML() + "' data-price='" + (ask_order.price/100) + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatAmount(ask_order.quantity) + "</td><td>" + NRS.formatAmount(ask_order.price/100) + "</td><td>" + NRS.formatAmount((ask_order.price/100) * ask_order.quantity, true) + "</td></tr>";
 		
 									var rowAdded = false;
 		
@@ -2333,7 +2333,7 @@
 							continue;
 						}
 							
-						rows += "<tr class='tentative' data-transaction='" + String(ask_order.transaction).escapeHTML() + "' data-quantity='" + String(ask_order.quantity).escapeHTML() + "' data-price='" + (ask_order.price/100) + "'><td>You - <strong>Tentative Order</strong></td><td>" + NRS.formatAmount(ask_order.quantity) + "</td><td>" + NRS.formatAmount(ask_order.price/100) + "</td><td>" + NRS.formatAmount((ask_order.price/100) * ask_order.quantity, true) + "</td></tr>";
+						rows += "<tr class='tentative' data-transaction='" + String(ask_order.transaction).escapeHTML() + "' data-quantity='" + String(ask_order.quantity).escapeHTML() + "' data-price='" + (ask_order.price/100) + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatAmount(ask_order.quantity) + "</td><td>" + NRS.formatAmount(ask_order.price/100) + "</td><td>" + NRS.formatAmount((ask_order.price/100) * ask_order.quantity, true) + "</td></tr>";
 					}
 					
 					$("#asset_exchange_ask_orders_table tbody").empty().append(rows);
@@ -2411,7 +2411,7 @@
 			    								    					
 				    				var $rows = $("#asset_exchange_bid_orders_table tbody").find("tr");
 				
-									var rowToAdd = "<tr class='tentative' data-transaction='" + String(bid_order.transaction).escapeHTML() + "' data-quantity='" + String(bid_order.quantity).escapeHTML() + "' data-price='" + (bid_order.price/100) + "'><td>You - <strong>Tentative Order</strong></td><td>" + NRS.formatAmount(bid_order.quantity) + "</td><td>" + NRS.formatAmount(bid_order.price/100) + "</td><td>" + NRS.formatAmount((bid_order.price/100) * bid_order.quantity, true) + "</td></tr>";
+									var rowToAdd = "<tr class='tentative' data-transaction='" + String(bid_order.transaction).escapeHTML() + "' data-quantity='" + String(bid_order.quantity).escapeHTML() + "' data-price='" + (bid_order.price/100) + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatAmount(bid_order.quantity) + "</td><td>" + NRS.formatAmount(bid_order.price/100) + "</td><td>" + NRS.formatAmount((bid_order.price/100) * bid_order.quantity, true) + "</td></tr>";
 		
 									var rowAdded = false;
 		
@@ -2448,7 +2448,7 @@
 							continue;
 						}
 							
-						rows += "<tr class='tentative' data-transaction='" + String(bid_orders.transaction).escapeHTML() + "' data-quantity='" + String(bid_orders.quantity).escapeHTML() + "' data-price='" + (bid_orders.price/100) + "'><td>You - <strong>Tentative Order</strong></td><td>" + NRS.formatAmount(bid_orders.quantity) + "</td><td>" + NRS.formatAmount(bid_orders.price/100) + "</td><td>" + NRS.formatAmount((bid_orders.price/100) * bid_orders.quantity, true) + "</td></tr>";
+						rows += "<tr class='tentative' data-transaction='" + String(bid_orders.transaction).escapeHTML() + "' data-quantity='" + String(bid_orders.quantity).escapeHTML() + "' data-price='" + (bid_orders.price/100) + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatAmount(bid_orders.quantity) + "</td><td>" + NRS.formatAmount(bid_orders.price/100) + "</td><td>" + NRS.formatAmount((bid_orders.price/100) * bid_orders.quantity, true) + "</td></tr>";
 					}
 					
 					$("#asset_exchange_bid_orders_table tbody").empty().append(rows);
@@ -2726,7 +2726,7 @@
 				
 		var $rows = $table.find("tr");
 				
-		var rowToAdd = "<tr class='tentative' data-transaction='" + String(response.transaction).escapeHTML() + "' data-quantity='" + String(data.quantity).escapeHTML() + "' data-price='" + (data.price/100) + "'><td>You - <strong>Tentative Order</strong></td><td>" + NRS.formatAmount(data.quantity) + "</td><td>" + NRS.formatAmount(data.price/100) + "</td><td>" + NRS.formatAmount((data.price/100) * data.quantity, true) + "</td></tr>";
+		var rowToAdd = "<tr class='tentative' data-transaction='" + String(response.transaction).escapeHTML() + "' data-quantity='" + String(data.quantity).escapeHTML() + "' data-price='" + (data.price/100) + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatAmount(data.quantity) + "</td><td>" + NRS.formatAmount(data.price/100) + "</td><td>" + NRS.formatAmount((data.price/100) * data.quantity, true) + "</td></tr>";
 		
 		var rowAdded = false;
 		
@@ -3438,7 +3438,7 @@
         	        
 	        var now = parseInt(((new Date().getTime()) - date)/1000, 10);
 
-			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>Tentative</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + String(NRS.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(NRS.account) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
+			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>Pending</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + String(NRS.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(NRS.account) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
 	    	
 	    	$table.prepend(rowToAdd);
 	    	
@@ -3817,7 +3817,7 @@
 		    	for (var i=0; i<alias_count; i++) {
 		    		var alias = aliases[i];
 		    		
-		    		rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + alias.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + alias.alias.escapeHTML() + (alias.tentative ? " -  <strong>Tentative</strong>" : "") + "</td><td>" + (alias.uri.indexOf("http") === 0 ? "<a href='" + alias.uri.escapeHTML() + "' target='_blank'>" + alias.uri.escapeHTML() + "</a>" : alias.uri.escapeHTML()) + "</td><td><a href='#' data-toggle='modal' data-alias='" + alias.alias.escapeHTML() + "' data-target='#register_alias_modal'>Edit</a></td></tr>";
+		    		rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + alias.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + alias.alias.escapeHTML() + (alias.tentative ? " -  <strong>Pending</strong>" : "") + "</td><td>" + (alias.uri.indexOf("http") === 0 ? "<a href='" + alias.uri.escapeHTML() + "' target='_blank'>" + alias.uri.escapeHTML() + "</a>" : alias.uri.escapeHTML()) + "</td><td><a href='#' data-toggle='modal' data-alias='" + alias.alias.escapeHTML() + "' data-target='#register_alias_modal'>Edit</a></td></tr>";
 		    		if (!alias.uri) {
 		    			empty_alias_count++;
 		    		} else if (alias.uri.indexOf("http") === 0) { 
@@ -3968,7 +3968,7 @@
     		
     		if ($row.length) {
 	    		$row.addClass("tentative");
-	    		$row.find("td.alias").html(data.alias.escapeHTML()+ " - <strong>Tentative</strong>");
+	    		$row.find("td.alias").html(data.alias.escapeHTML()+ " - <strong>Pending</strong>");
 	    		
 	    		if (data.uri && data.uri.indexOf("http") === 0) {
 	    			$row.find("td.uri").html("<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + String(data.uri).escapeHTML() + "</a>");
@@ -3978,7 +3978,7 @@
     		} else {
 	    		var $rows = $table.find("tr");
 	    	
-	    		var rowToAdd = "<tr class='tentative' data-alias='" + data.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + data.alias.escapeHTML() + " -  <strong>Tentative</strong></td><td class='uri'>" + (data.uri && data.uri.indexOf("http") === 0 ? "<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + data.uri.escapeHTML() + "</a>" : String(data.uri).escapeHTML()) + "</td><td>Edit</td></tr>";
+	    		var rowToAdd = "<tr class='tentative' data-alias='" + data.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + data.alias.escapeHTML() + " -  <strong>Pending</strong></td><td class='uri'>" + (data.uri && data.uri.indexOf("http") === 0 ? "<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + data.uri.escapeHTML() + "</a>" : String(data.uri).escapeHTML()) + "</td><td>Edit</td></tr>";
 	    	
 	    		var rowAdded = false;
 	    	
@@ -5314,7 +5314,7 @@
 	    								pollDescription = pollDescription.substring(0, 100) + "...";
 	    							}
     							    	
-	    							rows += "<tr class='tentative'><td>" + poll.name.escapeHTML() + " - <strong>Tentative</strong></td><td>" + pollDescription.escapeHTML() + "</td><td><a href='#' data-user='" + String(NRS.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(NRS.account) + "</a></td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+	    							rows += "<tr class='tentative'><td>" + poll.name.escapeHTML() + " - <strong>Pending</strong></td><td>" + pollDescription.escapeHTML() + "</td><td><a href='#' data-user='" + String(NRS.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(NRS.account) + "</a></td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
     							}
     						}	
     							    			    						
