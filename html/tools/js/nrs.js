@@ -4110,10 +4110,10 @@
 		if (NRS.blocksPageType == "forged_blocks") {
 			if (blocks.length == 100) {
 				var blockCount = blocks.length + "+";
-				var feeTotal = NRS.formatAmount(total_fees, true) + "+";	
+				var feeTotal = NRS.formatAmount(total_fees, false) + "+";	
 			} else {
 				var blockCount = blocks.length;
-				var feeTotal = NRS.formatAmount(total_fees, true);
+				var feeTotal = NRS.formatAmount(total_fees, false);
 			}
 			
 			$("#forged_blocks_total").html(blockCount).removeClass("loading_dots");
@@ -5751,9 +5751,9 @@
     }
     
     NRS.getAccountError = function(accountId, callback) {    	
-		NRS.sendRequest("getAccount", {"account": accountId}, function(response) {						
+		NRS.sendRequest("getAccount", {"account": accountId}, function(response) {	
 			if (response.publicKey) {
-				callback({"type": "success"});
+				callback({"type": "info", "message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.balance/100, false, true) + "NXT."});
 			} else {
 				if (response.errorCode) {
 					if (response.errorCode == 4) {
@@ -5764,7 +5764,7 @@
 						callback({"type": "danger", "message": "There is a problem with the recipient account: " + response.errorDescription});
 					}
 				} else {
-					callback({"type": "warning", "message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction." + (response.balance == 0 ? " The account has a zero balance." : " The account has a balance of " + NRS.formatAmount(response.balance/100, false, true) + " NXT.") + " Please double check your recipient address before submitting."});
+					callback({"type": "warning", "message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of " + NRS.formatAmount(response.balance/100, false, true) + " NXT. Please double check your recipient address before submitting."});
 				}
 			}
 		});
@@ -5780,41 +5780,53 @@
     	
     	account = $.trim(account);
     	    	
-		if (!(/^\d+$/.test(account))) {
-			if (NRS.databaseSupport && account.charAt(0) != '@') {
-				NRS.database.select("contacts", [{"name": account}], function(error, contact) {	
-					if (contact.length) {
-						contact = contact[0];
-						NRS.getAccountError(contact.accountId, function(response) {
-							if (response.type == "success") {
-								callout.removeClass(classes).addClass("callout-info").html("The contact links to account <strong>" + String(contact.accountId).escapeHTML() + "</strong>, which has a public key.").show();
-							} else {
-								var message = "The contact links to account <strong>" + String(contact.accountId).escapeHTML() + "</strong>. " + response.message.escapeHTML();
-								
-								callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
-							}
-							
-							if (response.type == "success" || response.type == "warning") {
-								accountInputField.val(contact.accountId);
-							}
-						});
-					} else {
-						NRS.checkRecipientAlias(account, modal);
+    	//solomon reed. Btw, this regex can be shortened..
+		if (/^(NXT\-)?[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(account)) {
+			account = account.replace(/^NXT\-/i, "");
+			
+			var address = new NxtAddress();
+			
+			if (address.set(account)) {
+				account = address.account_id();
+				
+				NRS.getAccountError(account, function(response) {
+					callout.removeClass(classes).addClass("callout-" + response.type).html("The address translates to account <strong>" + String(account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which")).show();
+					if (response.type == "info" || response.type == "warning") {
+						accountInputField.val(contact.accountId);
 					}
 				});
 			} else {
+				callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, please adjust.").show();
+			}
+		} else if (!(/^\d+$/.test(account))) {
+			if (NRS.databaseSupport && account.charAt(0) != '@') {
+				NRS.database.select("contacts", [{"name": account}], function(error, contact) {	
+					if (!error && contact.length) {
+						contact = contact[0];
+						NRS.getAccountError(contact.accountId, function(response) {
+							callout.removeClass(classes).addClass("callout-" + response.type).html("The contact links to account <strong>" + String(contact.accountId).escapeHTML() + "</strong>. " + response.message.escapeHTML()).show();
+							
+							if (response.type == "info" || response.type == "warning") {
+								accountInputField.val(contact.accountId);
+							}
+						});
+					} else if (/^[a-z0-9]+$/i.test(account)) {
+						NRS.checkRecipientAlias(account, modal);
+					} else {
+						callout.removeClass(classes).addClass("callout-danger").html("The recipient account is malformed, please adjust.").show();
+					}
+				});
+			} else if (/^[a-z0-9@]+$/i.test(account)) {
 				if (account.charAt(0) == '@') {
 					account = account.substring(1);
 					NRS.checkRecipientAlias(account, modal);
 				}
+			} else {
+				callout.removeClass(classes).addClass("callout-danger").html("The recipient account is malformed, please adjust.").show();
 			}
 		} else {
 			NRS.getAccountError(account, function(response) {
-				if (response.type == "success") {
-					callout.removeClass(classes).addClass("callout-info").html("The account has a public key.").show();
-				} else {
-					callout.removeClass(classes).addClass("callout-" + response.type).html(response.message.escapeHTML()).show();
-				}
+				callout.removeClass(classes).addClass("callout-" + response.type).html(response.message.escapeHTML()).show();
 			});
 		}
     }
@@ -5823,18 +5835,15 @@
 	    var classes = "callout-info callout-danger callout-warning";
 	    var callout = modal.find(".account_info").first();
     	var accountInputField = modal.find("input[name=converted_account_id]");
+    	
+    	accountInputField.val("");
 
 		NRS.sendRequest("getAliasId", {"alias": account}, function(response) {
 			if (response.id) {
 				NRS.sendRequest("getAlias", {"alias": response.id}, function(response) {
 					if (response.errorCode) {
 						callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
-					} else {
-						/*
-						if (response.timestamp < currentTime - 60*60*24) {
-						
-						}*/
-						
+					} else {						
 						if (response.uri) {
 							var alias = response.uri;
 							var timestamp = response.timestamp;
@@ -5851,13 +5860,7 @@
 							if (match && match[1]) {
 								NRS.getAccountError(match[1], function(response) {
 									accountInputField.val(match[1].escapeHTML());
-									if (response.type == "success") {
-										callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, which has a public key. The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-info").show();
-									} else {
-										var message = "The alias links to account <strong>" + match[1].escapeHTML() + "</strong> and was last adjusted on " + NRS.formatTimestamp(timestamp) + ". " + response.message.escapeHTML();
-										
-										callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
-									}
+									callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + "The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
 								});
 							} else {
 								callout.removeClass(classes).addClass("callout-danger").html("The alias does not link to an account. " + (!alias ? "The URI is empty." : "The URI is '" + alias.escapeHTML() + "'")).show();
@@ -7253,6 +7256,13 @@
     	if (round) {
     		amount = (Math.round(amount*100)/100);
     	}
+    	    	
+    	var negative = "";
+    	
+    	if (amount < 0) {
+	    	amount = Math.abs(amount);
+	    	negative = "-";
+    	}
     	
     	amount = "" + amount;
     	
@@ -7277,9 +7287,9 @@
         }
         
         if (no_escaping) {
-	        return formattedAmount + afterComma;
+	        return negative + formattedAmount + afterComma;
         } else {
-        	return (formattedAmount + afterComma).escapeHTML();
+        	return (negative + formattedAmount + afterComma).escapeHTML();
         }
     }
 				
