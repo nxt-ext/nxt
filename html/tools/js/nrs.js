@@ -2127,7 +2127,7 @@
     NRS.loadAsset = function(asset, link, data) {   
     	var assetId = asset.assetId;
     	     	 
-    	NRS.currentAsset = {"assetId": assetId};
+    	NRS.currentAsset = {"assetId": assetId, "quantity": asset.quantity};
 		NRS.currentSubPage = assetId;
 		
     	var asset_account = String(asset.account).escapeHTML();
@@ -2678,6 +2678,9 @@
 		if (price == 0 || quantity == 0) {
 	   		$.growl("Please fill in an amount and price.", {"type": "danger"});
 			return e.preventDefault();
+		} else 	if (quantity > NRS.currentAsset.quantity) {
+			$.growl("Order quantity is greater than asset quantity in existence.", {"type": "danger"});
+			return e.preventDefault();
 		}
 		
 		if (isNaN(fee)) {
@@ -2708,6 +2711,10 @@
 	NRS.forms.orderAsset = function($modal) {		
 		var orderType = $("#asset_order_type").val();
 				
+		if (parseInt($("#asset_order_quantity").val(), 10) > NRS.currentAsset.quantity) {
+			return {"error": "Order quantity is greater than asset quantity in existence."};
+		}
+		
 		return {"requestType": orderType, "successMessage": $modal.find("input[name=success_message]").val().replace("__", (orderType == "placeBidOrder" ? "buy" : "sell"))};
 	}
 	
