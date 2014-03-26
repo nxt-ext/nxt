@@ -992,7 +992,7 @@
 			
 			NRS.lastTransactions = transactionIds.toString();
 			NRS.lastTransactionsTimestamp = newTransactions[newTransactions.length-1].timestamp;
-	
+				
 			NRS.incoming.updateDashboardTransactions(newTransactions, transactionIds);
 
 			if (NRS.tentative) {
@@ -1006,12 +1006,12 @@
 										
 					for (var key in NRS.tentative[category]) {													
 						if (type == "string") {
-							var transactionId = NRS.tentative[category][key];
+							var hash = NRS.tentative[category][key];
 						} else {
-							var transactionId = NRS.tentative[category][key].transaction;
+							var hash = NRS.tentative[category][key].hash;
 						}
 											
-						if ($.inArray(transactionId, transactionIds) != -1) {
+						if ($.inArray(hash, hashes) != -1) {
 							to_delete.push(key);
 						} else {
 							var age = 0;
@@ -2720,6 +2720,7 @@
 	
 	NRS.forms.orderAssetComplete = function(response, data) {
 		data.transaction = response.transaction;
+		data.hash = response.hash;
 		data.order = response.transaction;
 		data.assetName = $("#asset_name").html();
 		delete data.secretPhrase;
@@ -3163,6 +3164,7 @@
     //TENTATIVE
     NRS.forms.transferAssetComplete = function(response, data) {
     	data.transaction = response.transaction;
+    	data.hash = response.hash;
     	delete data.secretPhrase;
     	
     	NRS.tentative["transfer_assets"].push(data);
@@ -3434,6 +3436,7 @@
         var now = parseInt(((new Date().getTime()) - date)/1000, 10);
 
 		data.transaction = response.transaction;
+		data.hash = response.hash;
 		data.timestamp = now;
 		delete data.secretPhrase;
 		
@@ -3749,6 +3752,7 @@
     
     NRS.forms.sendMessageComplete = function(response, data) {    	
     	data.transaction = response.transaction;
+    	data.hash = response.hash;
     	data.message = data._extra.message;
     	delete data["_extra"];
     	delete data.secretPhrase;
@@ -3965,8 +3969,9 @@
         
     NRS.forms.assignAliasComplete = function(response, data) {
     	data.transaction = response.transaction;
+    	data.hash = response.hash;
     	delete data.secretPhrase;
-    	
+    	    	
     	NRS.tentative["aliases"].push(data);
     	
     	if (NRS.currentPage == "aliases") {
@@ -6354,6 +6359,8 @@
 				var receiving = transaction.recipient == NRS.account;
 				var account = (receiving ? String(transaction.sender).escapeHTML() : String(transaction.recipient).escapeHTML());
 
+				//todo transactionIds!!
+				
 				rows += "<tr><td>" + (transaction.attachment ? "<a href='#' data-transaction='" + String(transactionIds[i]).escapeHTML() + "' style='font-weight:bold'>" + NRS.formatTimestamp(transaction.timestamp) + "</a>" : NRS.formatTimestamp(transaction.timestamp)) + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) +  "</span></td><td>" + (account != NRS.genesis ? "<a href='#' data-user='" + account + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a>" : "Genesis") + "</td><td data-confirmations='" + String(transaction.confirmations).escapeHTML() + "' data-initial='true'>" + (transaction.confirmations > 10 ? "10+" : String(transaction.confirmations).escapeHTML()) + "</td></tr>";
 			}
 			
