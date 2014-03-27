@@ -3268,7 +3268,6 @@
     	var orders = [];
     	    	
     	NRS.sendRequest(getCurrentOrderIds, {"account": NRS.account, "timestamp": 0}, function(response) {
-    	
     		if (response[orderIds] && response[orderIds].length) {
     			var nr_orders = 0;
     			    			
@@ -3299,7 +3298,9 @@
     								nr_orders_complete++;
     								
     								if (nr_orders_complete == nr_orders) {
-    									NRS.openOrdersLoaded(orders, lowercase, callback);
+    									NRS.getUnconfirmedOrders(type, function(unconfirmedOrders) {
+    										NRS.openOrdersLoaded(orders.concat(unconfirmedOrders), lowercase, callback);
+    									});
     								}
     							});
     							
@@ -3315,21 +3316,25 @@
     				}
     			}
     		} else {
-    			NRS.openOrdersLoaded([], lowercase, callback);
+    			NRS.getUnconfirmedOrders(type, function(unconfirmedOrders) {    				
+    				NRS.openOrdersLoaded(unconfirmedOrders, lowercase, callback);
+    			});
     		}
     	});
     }
     
-    NRS.openOrdersLoaded = function(orders, type, callback) {    	
-		if (NRS.unconfirmedTransactions.length) {
+    NRS.getUnconfirmedOrders = function(type, callback) {
+    	if (NRS.unconfirmedTransactions.length) {    		
+    		var unconfirmedOrders = [];
+    		
 			for (var i=0; i<NRS.unconfirmedTransactions.length; i++) {
 				var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 				
 				if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == (type == "ask" ? 2 : 3)) {
-					orders.push({
+					unconfirmedOrders.push({
 						"account": unconfirmedTransaction.sender,
 						"asset": unconfirmedTransaction.attachment.asset,
-						"assetName": "todo",
+						"assetName": "",
 						"height": 0, 
 						"order": unconfirmedTransaction.id,
 						"price": unconfirmedTransaction.attachment.price,
@@ -3338,8 +3343,30 @@
 					})
 				}
 			}
+			
+			if (unconfirmedOrders.length == 0) {
+				callback([]);
+			} else {
+				var nr_orders = 0;
+								
+				for (var i=0; i<unconfirmedOrders.length; i++) {
+					NRS.sendRequest("getAsset+", {"asset": unconfirmedOrders[i].asset, "_extra": {"id": i}}, function(asset, input) {
+						unconfirmedOrders[input["_extra"].id].assetName = asset.name;
+						
+						nr_orders++;
+						
+						if (nr_orders == unconfirmedOrders.length) {
+							callback(unconfirmedOrders);
+						}
+					});
+				}
+			}
+		} else {
+			callback([]);
 		}
-				
+	}
+    
+    NRS.openOrdersLoaded = function(orders, type, callback) {    			
 		if (!orders.length) {
 		    $("#open_" + type + "_orders_table tbody").empty();
     		NRS.dataLoadFinished($("#open_" + type + "_orders_table"));
