@@ -2586,11 +2586,11 @@
 				var refresh = input["_extra"].refresh;
 
     			var rows = "";
-    			
+    			    			
     			for (var i=0; i<nrTrades; i++) {
     				trades[i].price /= 100;
     				
-    				rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatAmount(trades[i].quantity) + "</td><td class='asset_price'>" + NRS.formatAmount(trades[i].price) + "</td><td>" + NRS.formatAmount(trades[i].price * trades[i].quantity, true) + "</td><td>" + String(trades[i].askOrderId).escapeHTML() + "</td><td>" + String(trades[i].bidOrderId).escapeHTML() + "</td></tr>";
+    				rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatAmount(trades[i].quantity) + "</td><td class='asset_price'>" + NRS.formatAmount(trades[i].price) + "</td><td>" + NRS.formatAmount(trades[i].price * trades[i].quantity, true) + "</td><td>" + String(trades[i].askOrder).escapeHTML() + "</td><td>" + String(trades[i].bidOrder).escapeHTML() + "</td></tr>";
     			}
     			
     			$("#asset_exchange_trade_history_table tbody").empty().append(rows);
