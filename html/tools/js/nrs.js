@@ -4158,12 +4158,14 @@
 			$("#forged_fees_total_box, #forged_blocks_total_box").hide();
 			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").show();
 
-	    	if (NRS.blocks.length < 100) {   	
-	    		if (NRS.downloadingBlockchain) {
-	    			NRS.blocksPageLoaded(NRS.blocks);
+			if (NRS.blocks.length < 100) {
+				if (NRS.downloadingBlockchain) {
+					NRS.blocksPageLoaded(NRS.blocks);
 	    		} else {
 	     			var previousBlock = NRS.blocks[NRS.blocks.length-1].previousBlock;
-		 			NRS.getBlock(previousBlock, NRS.finish100Blocks);
+					//if previous block is undefined, dont try add it
+					if (typeof previousBlock !== "undefined")
+						NRS.getBlock(previousBlock, NRS.finish100Blocks);
 		 		}
 	    	} else {
 	    		NRS.blocksPageLoaded(NRS.blocks);
@@ -4173,7 +4175,7 @@
 
     NRS.finish100Blocks = function(response) {
         NRS.blocks.push(response);
-    	if (NRS.blocks.length < 100) {
+		if (NRS.blocks.length < 100 && typeof response.previousBlock !== "undefined") {
     		NRS.getBlock(response.previousBlock, NRS.finish100Blocks);
     	} else {
     		NRS.blocksPageLoaded(NRS.blocks);
