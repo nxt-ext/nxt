@@ -1161,4 +1161,41 @@ public interface Attachment {
 
     }
 
+    public final static class AccountControlEffectiveBalanceLeasing implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        public AccountControlEffectiveBalanceLeasing() {
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONStreamAware getJSON() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.AccountControl.EFFECTIVE_BALANCE_LEASING;
+        }
+
+    }
+
 }

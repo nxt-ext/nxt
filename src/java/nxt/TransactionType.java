@@ -15,18 +15,23 @@ public abstract class TransactionType {
     private static final byte TYPE_MESSAGING = 1;
     private static final byte TYPE_COLORED_COINS = 2;
     private static final byte TYPE_DIGITAL_GOODS = 3;
+    private static final byte TYPE_ACCOUNT_CONTROL = 4;
+
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
+
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
     private static final byte SUBTYPE_MESSAGING_POLL_CREATION = 2;
     private static final byte SUBTYPE_MESSAGING_VOTE_CASTING = 3;
     private static final byte SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT = 4;
+
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT = 2;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
+
     private static final byte SUBTYPE_DIGITAL_GOODS_LISTING = 0;
     private static final byte SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
     private static final byte SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE = 2;
@@ -35,6 +40,8 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_DELIVERY = 5;
     private static final byte SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
+
+    private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
@@ -1625,6 +1632,59 @@ public abstract class TransactionType {
 
     }
 
+    public static abstract class AccountControl extends TransactionType {
+
+        private AccountControl() {}
+
+        @Override
+        public final byte getType() {
+            return TransactionType.TYPE_ACCOUNT_CONTROL;
+        }
+
+        @Override
+        final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
+
+        @Override
+        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+        public static final TransactionType EFFECTIVE_BALANCE_LEASING = new AccountControl() {
+
+            @Override
+            public final byte getSubtype() { return TransactionType.SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING; }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Reversal of effective balance leasing not supported");
+            }
+
+            @Override
+            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
+                    throw new NotYetEnabledException("Effective balance leasing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+        };
+
+    }
 
     public static final class UndoNotSupportedException extends NxtException {
 
