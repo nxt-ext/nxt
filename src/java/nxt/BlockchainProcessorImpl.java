@@ -130,17 +130,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                                 if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
                                     try {
-
                                         pushBlock(block);
-
                                     } catch (BlockNotAcceptedException e) {
                                         peer.blacklist(e);
                                         return;
                                     }
                                 } else if (! BlockDb.hasBlock(block.getId())) {
-
                                     forkBlocks.add(block);
-
                                 }
 
                             }
