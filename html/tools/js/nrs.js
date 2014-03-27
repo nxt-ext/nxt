@@ -2794,9 +2794,6 @@
 		if (price == 0 || quantity == 0) {
 	   		$.growl("Please fill in an amount and price.", {"type": "danger"});
 			return e.preventDefault();
-		} else 	if (quantity > NRS.currentAsset.quantity) {
-			$.growl("Order quantity is greater than asset quantity in existence.", {"type": "danger"});
-			return e.preventDefault();
 		}
 		
 		if (isNaN(fee)) {
@@ -2826,11 +2823,7 @@
 	//https://news.ycombinator.com/item?id=7224225
 	NRS.forms.orderAsset = function($modal) {		
 		var orderType = $("#asset_order_type").val();
-				
-		if (parseInt($("#asset_order_quantity").val(), 10) > NRS.currentAsset.quantity) {
-			return {"error": "Order quantity is greater than asset quantity in existence."};
-		}
-		
+						
 		return {"requestType": orderType, "successMessage": $modal.find("input[name=success_message]").val().replace("__", (orderType == "placeBidOrder" ? "buy" : "sell"))};
 	}
 	
@@ -5881,7 +5874,7 @@
 			return;
 		}
 			    	
-    	NRS.sendRequest(requestType, data, function(response) {      		  		
+    	NRS.sendRequest(requestType, data, function(response) {        		  		  		
     		if (response.errorCode) {   
     		    if (NRS.forms.errorMessages[requestType] && NRS.forms.errorMessages[requestType][response.errorCode]) {
     				$modal.find(".error_message").html(NRS.forms.errorMessages[requestType][response.errorCode].escapeHTML()).show();
