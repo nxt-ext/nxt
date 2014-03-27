@@ -26,8 +26,8 @@ public final class GetAllOpenOrders extends APIServlet.APIRequestHandler {
             for (Order.Ask order : askOrders) {
                 JSONObject orderData = new JSONObject();
                 orderData.put("type", "ask");
-                orderData.put("assetId", Convert.toUnsignedLong(order.getAssetId()));
-                orderData.put("accountId", Convert.toUnsignedLong(order.getAccount().getId()));
+                orderData.put("asset", Convert.toUnsignedLong(order.getAssetId()));
+                orderData.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
                 orderData.put("quantity", order.getQuantity());
                 orderData.put("price", order.getPrice());
                 orderData.put("height", order.getHeight());
@@ -36,8 +36,8 @@ public final class GetAllOpenOrders extends APIServlet.APIRequestHandler {
             for (Order.Bid order : bidOrders) {
                 JSONObject orderData = new JSONObject();
                 orderData.put("type", "bid");
-                orderData.put("assetId", Convert.toUnsignedLong(order.getAssetId()));
-                orderData.put("accountId", Convert.toUnsignedLong(order.getAccount().getId()));
+                orderData.put("asset", Convert.toUnsignedLong(order.getAssetId()));
+                orderData.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
                 orderData.put("quantity", order.getQuantity());
                 orderData.put("price", order.getPrice());
                 orderData.put("height", order.getHeight());
