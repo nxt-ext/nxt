@@ -1660,10 +1660,20 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                short period;
+
+                period = buffer.getShort();
+
+                transaction.setAttachment(new Attachment.AccountControlEffectiveBalanceLeasing(period));
+                validateAttachment(transaction);
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                short period = ((Long)attachmentData.get("period")).shortValue();
+
+                transaction.setAttachment(new Attachment.AccountControlEffectiveBalanceLeasing(period));
+                validateAttachment(transaction);
             }
 
             @Override
@@ -1679,6 +1689,11 @@ public abstract class TransactionType {
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
                     throw new NotYetEnabledException("Effective balance leasing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
+                if (transaction.getAmount() != 0
+                        || attachment.getPeriod() <= 0) {
+                    throw new NxtException.ValidationException("Invalid effective balance leasing: " + attachment.getJSON());
                 }
             }
 

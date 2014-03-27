@@ -1165,12 +1165,15 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public AccountControlEffectiveBalanceLeasing() {
+        private final short period;
+
+        public AccountControlEffectiveBalanceLeasing(short period) {
+            this.period = period;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 2;
         }
 
         @Override
@@ -1178,6 +1181,7 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putShort(period);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1188,12 +1192,17 @@ public interface Attachment {
         @Override
         public JSONStreamAware getJSON() {
             JSONObject attachment = new JSONObject();
+            attachment.put("period", period);
             return attachment;
         }
 
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.AccountControl.EFFECTIVE_BALANCE_LEASING;
+        }
+
+        public short getPeriod() {
+            return period;
         }
 
     }
