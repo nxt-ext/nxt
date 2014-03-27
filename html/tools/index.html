@@ -65,7 +65,15 @@
 	                            <a href="#" id="forging_indicator" style="display:none;font-size:13px;"><i class="fa fa-circle text-success" style="font-size:12px;"></i> <span>Forging</span></a>
                         	</div>
                         </div>
-                    </div>                    
+                    </div>       
+                    <form action="#" method="get" class="sidebar-form" id="id_search">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" placeholder="Search by ID...">
+                            <span class="input-group-btn">
+                                <button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div>
+                    </form>             
                     <ul class="sidebar-menu">
                         <li class="active" id="dashboard_link"><a href="#" data-page="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
                         <li><a href="#" data-page="transactions"><i class="fa fa-briefcase"></i> <span>Transactions</span></a></li>
@@ -2049,23 +2057,41 @@
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Block Transactions</h4>
+		        		<h4 class="modal-title">Block <strong><span id="block_info_modal_block"></span></strong> Info</h4>
 		     		</div>
-			      	<div class="modal-body">			
-						<table class="table table-striped" id="block_info_transactions_table" style="margin-bottom:0">
-							<thead>
-						    <tr>
-						        <th>Date</th>
-						        <th>Amount</th>
-						        <th>Fee</th>
-						        <th>To</th>
-						        <th>From</th>
-						    </tr>
-						    </thead>
-						    <tbody>
-						    	
-						    </tbody>
-						</table>
+			      	<div class="modal-body">	
+			      		<div class="tabbable">
+							<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+								<li class="active"><a href="#block_info_transactions_tab" data-toggle="tab" id="block_info_transactions_tab_link">Transactions</a></li>
+								<li><a href="#block_info_details_tab" data-toggle="tab">Block Details</a></li>
+							</ul>
+							<div class="tab-content">
+							    <div class="tab-pane active" id="block_info_transactions_tab">
+									<table class="table table-striped" id="block_info_transactions_table" style="margin-bottom:0">
+										<thead>
+									    <tr>
+									        <th>Date</th>
+									        <th>Amount</th>
+									        <th>Fee</th>
+									        <th>To</th>
+									        <th>From</th>
+									    </tr>
+									    </thead>
+									    <tbody>
+									    	
+									    </tbody>
+									</table>
+									<div id="block_info_transactions_none" style="display:none;">No transactions in this block.</div>
+							    </div>
+							    <div class="tab-pane" id="block_info_details_tab">
+									<table class="table table-striped" id="block_info_details_table" style="margin-bottom:0">
+									    <tbody>
+									    	
+									    </tbody>
+									</table>
+							    </div>
+							</div>
+			      		</div>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 						<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -2079,15 +2105,34 @@
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title" id="transaction_info_title">Transaction Info</h4>
+		        		<h4 class="modal-title">Transaction <strong><span id="transaction_info_modal_transaction"></span></strong> Info</h4>
 		     		</div>
 			      	<div class="modal-body">
-			      		<div id="transaction_info_output" style="display: none;"></div>	
-			      		<table class="table table-striped" id="transaction_info_table" style="display:none;margin-bottom: 0;">
-			      		    <tbody>
-			      		    	
-			      		    </tbody>
-			      		</table>
+			      		<div class="tabbable">
+							<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+								<li class="active"><a href="#transaction_info_tab" data-toggle="tab" id="transaction_info_tab_link">Info</a></li>
+								<li><a href="#transaction_info_details_tab" data-toggle="tab">Transaction Details</a></li>
+							</ul>
+							<div class="tab-content">
+							    <div class="tab-pane active" id="transaction_info_tab">
+							    
+									<div id="transaction_info_output" style="display: none;"></div>	
+									
+						      		<table class="table table-striped" id="transaction_info_table" style="display:none;margin-bottom: 0;">
+						      		    <tbody>
+						      		    	
+						      		    </tbody>
+						      		</table>
+							    </div>
+							    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
+									<table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">
+									    <tbody>
+									    	
+									    </tbody>
+									</table>
+							    </div>
+							</div>
+			      		</div>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 						<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -2095,7 +2140,6 @@
 				</div>
 			</div>
 		</div>
-		
 		
 		<div class="modal fade" id="user_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-wide">
@@ -2108,10 +2152,10 @@
 				     	<div class="callout callout-info">This account has a balance of <strong><span id="user_info_modal_balance"></span></strong>.</div>
 				     	 	
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
-						  <li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
-						  <li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
-						  <li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
-						  <li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
+							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
+							<li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
+							<li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
+							<li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
 						</ul>
 
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_transactions" style="display:none;max-height:350px;overflow:auto;">

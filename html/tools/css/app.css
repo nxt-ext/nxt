@@ -3197,6 +3197,9 @@ a.list-group-item.active h4 span {
 	display:none;
 }
 
+#id_search {
+	margin-top:0;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad
