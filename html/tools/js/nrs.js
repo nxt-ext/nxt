@@ -328,6 +328,7 @@
 	NRS.unconfirmedTransactions = [];
 	NRS.unconfirmedTransactionIds = "";
 	NRS.unconfirmedTransactionsChange = true;
+	NRS.firstAssetPageLoad = true;
 	
     NRS.init = function() {  
    	    if (location.port && location.port != "6876") {
@@ -1897,6 +1898,22 @@
     		if (response.assetIds && response.assetIds.length) {    			
 	    		if (NRS.currentPage != "asset_exchange") {
 	    			return;
+	    		}
+	    		
+	    		if (NRS.databaseSupport && NRS.firstAssetPageLoad) {	    			
+		    		for (var i=0; i<NRS.assetIds.length; i++) {
+			    		if (response.assetIds.indexOf(NRS.assetIds[i]) == -1) {
+				    		//something is wrong, the asset ID provided by the database does not exist in the list of asset IDS returned by the server. 
+				    		//Possible if the user is using a different blockchain. We will clear the DB.
+				    		NRS.assetIds = [];
+				    		NRS.assets = [];
+				    		
+				    		NRS.database.delete("assets", []);
+				    		break;
+			    		}
+		    		}
+		    		
+		    		NRS.firstAssetPageLoad = false;
 	    		}
 	    		
     			var nr_assets = 0;
