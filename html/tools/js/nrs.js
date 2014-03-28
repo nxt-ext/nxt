@@ -6223,39 +6223,9 @@
 		    }
 		};
 		
-		var dbVersion = "1";
-		
 		try {
-			NRS.database = new WebDB("NRSDB", schema, 1, 4, function(error) {
-				var go_on = true;
-				
-				/* temporary */	
-				if (localStorage.getItem("version") != dbVersion) {
-					if (indexedDB) {
-						localStorage.setItem("indexedDB_version", 1);
-						indexedDB.deleteDatabase("NRS");
-						indexedDB.deleteDatabase("NXT");
-						indexedDB.deleteDatabase("NXTDB");
-					} else {
-						go_on = false;
-						
-						NRS.database.drop("data", function(error) {
-							NRS.database.drop("contacts", function(error) {
-								NRS.database.drop("assets", function(error) {
-									if (!error) {
-										localStorage.setItem("version", dbVersion);
-										NRS.createDatabase(callback);
-									} else {
-										NRS.database = null;
-										NRS.databaseSupport = false;
-									}
-								});
-							});
-						});
-					}
-				}
-			
-				if (!error && go_on) {		
+			NRS.database = new WebDB("NRS_DB", schema, 1, 4, function(error, db) {
+				if (!error) {		
 					NRS.databaseSupport = true;
 										
 					NRS.loadContacts();

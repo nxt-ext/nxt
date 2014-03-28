@@ -112,6 +112,9 @@
     SCHEMA_KEY = "indexedDB_schema";
 
     function indexedDB(name, schema, version, callback) {
+		VERSION_KEY += "_" + name;
+		SCHEMA_KEY += "_" + name;
+
       var openRequest, _schema;
       if (version == null) {
         version = 1;
@@ -120,6 +123,7 @@
         callback.call(callback, "IndexedDB not supported", null);
       }
       this.version = parseInt(localStorage[VERSION_KEY]);
+            
       if ((this.version == null) || this.version < version || isNaN(this.version)) {
         localStorage[VERSION_KEY] = this.version = parseInt(version);
       }
