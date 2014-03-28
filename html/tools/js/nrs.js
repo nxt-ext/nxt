@@ -6362,12 +6362,10 @@
     }
        
     NRS.setupClipboardFunctionality = function() {
-    	var elements = "#asset_id_dropdown .dropdown-menu a";
+    	var elements = "#asset_id_dropdown .dropdown-menu a, #account_id_dropdown .dropdown-menu a";
     	
-    	if (!NRS.isLocalHost) {
-	    	elements += ", #account_id_dropdown .dropdown-menu a";
-    	} else {
-	    	elements += ",#account_id";
+    	if (NRS.isLocalHost) {
+    		$("#account_id_dropdown li.remote_only").remove();
     	}
     	
     	var $el = $(elements);
@@ -6377,10 +6375,20 @@
 		});
 		
 		
-		clipboard.on("dataRequested", function (client, args) {		
+		clipboard.on("dataRequested", function (client, args) {					
 			switch ($(this).data("type")) {
 				case "account_id": 
 					client.setText(NRS.account);
+					break;
+				case "new_address_format": 
+					var address = new NxtAddress();
+					
+					if (address.set(NRS.account, true)) {
+						client.setText(address.toString());
+					} else {
+						client.setText(NRS.account);
+					}
+					
 					break;
 				case "message_link": 
 					client.setText(document.URL.replace(/#.*$/, "") + "#message:" + NRS.account);
