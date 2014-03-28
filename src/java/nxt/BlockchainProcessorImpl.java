@@ -299,15 +299,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 if (needsRescan) {
-                    // this relies on the database cascade trigger to delete all blocks after commonBlock
                     if (commonBlock.getNextBlockId() != null) {
                         Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                         Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-                        BlockDb.deleteBlock(commonBlock.getNextBlockId());
+                        BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
                     }
                     Logger.logMessage("Will do a re-scan");
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-                    scan();
+                    scan(false);
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
                     Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                 }
@@ -332,7 +331,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             @Override
             public void run() {
                 addGenesisBlock();
-                scan();
+                scan(true);
             }
         });
 
@@ -368,7 +367,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
             BlockDb.deleteAll();
             addGenesisBlock();
-            scan();
+            scan(false);
         }
     }
 
@@ -607,7 +606,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 blockListeners.notify(block, Event.BEFORE_BLOCK_UNDO);
                 blockchain.setLastBlock(block, previousBlock);
                 transactionProcessor.undo(block);
-                BlockDb.deleteBlock(block.getId());
+                BlockDb.deleteBlocksFrom(block.getId());
             } // synchronized
 
             blockListeners.notify(block, Event.BLOCK_POPPED);
@@ -768,7 +767,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private void scan() {
+    private void scan(final boolean verify) {
         synchronized (blockchain) {
             Logger.logMessage("Scanning blockchain...");
             Account.clear();
@@ -789,19 +788,30 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (! currentBlock.getId().equals(currentBlockId)) {
                             throw new NxtException.ValidationException("Database blocks in the wrong order!");
                         }
+                        if (verify && ! currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                            if (! (currentBlock.verifyBlockSignature())) {
+                                throw new NxtException.ValidationException("Block signature verification failed for " + currentBlock.getStringId());
+                            }
+                            for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                                if (! transaction.verify()) {
+                                    throw new NxtException.ValidationException("Transaction signature verification failed for " + transaction.getStringId());
+                                }
+                                transaction.validateAttachment();
+                            }
+                        }
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         transactionProcessor.apply(currentBlock);
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();
                     }
-                } catch (RuntimeException e) {
+                } catch (NxtException.ValidationException|RuntimeException e) {
                     Logger.logDebugMessage(e.toString(), e);
                     Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
-                    BlockDb.deleteBlock(currentBlockId);
-                    scan();
+                    BlockDb.deleteBlocksFrom(currentBlockId);
+                    scan(verify);
                 }
-            } catch (NxtException.ValidationException|SQLException e) {
+            } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
             Logger.logMessage("...done");

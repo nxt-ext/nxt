@@ -146,14 +146,22 @@ final class BlockDb {
         }
     }
 
-    // relying on cascade triggers in the database to delete also all subsequent blocks, and the transactions for all deleted blocks
-    static void deleteBlock(Long blockId) {
+    // relying on cascade triggers in the database to delete the transactions for all deleted blocks
+    static void deleteBlocksFrom(Long blockId) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("DELETE FROM block WHERE id = ?")) {
+             PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE db_id >= "
+             + "(SELECT db_id FROM block WHERE id = ?) ORDER BY db_id DESC");
+             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM block WHERE db_id = ?")) {
             try {
-                pstmt.setLong(1, blockId);
-                pstmt.executeUpdate();
+                pstmtSelect.setLong(1, blockId);
+                ResultSet rs = pstmtSelect.executeQuery();
                 con.commit();
+                while (rs.next()) {
+                    pstmtDelete.setInt(1, rs.getInt("db_id"));
+                    pstmtDelete.executeUpdate();
+                    con.commit();
+                }
+                rs.close();
             } catch (SQLException e) {
                 con.rollback();
                 throw e;
