@@ -1678,6 +1678,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
+                Account.getAccount(transaction.getSenderId()).leaseEffectiveBalance(transaction.getRecipientId(), attachment.getPeriod());
             }
 
             @Override
@@ -1691,8 +1693,9 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Effective balance leasing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
-                if (transaction.getAmount() != 0
-                        || attachment.getPeriod() <= 0) {
+                if (transaction.getRecipientId() == transaction.getSenderId()
+                        || transaction.getAmount() != 0
+                        || attachment.getPeriod() < 1440) {
                     throw new NxtException.ValidationException("Invalid effective balance leasing: " + attachment.getJSON());
                 }
             }

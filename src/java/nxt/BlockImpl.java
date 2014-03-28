@@ -352,6 +352,8 @@ final class BlockImpl implements Block {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(generatorPublicKey, this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
+
+        Account.reviewAllAccounts();
     }
 
     void undo() {
