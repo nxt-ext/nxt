@@ -306,7 +306,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     Logger.logMessage("Will do a re-scan");
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-                    scan(false);
+                    scan();
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
                     Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                 }
@@ -331,7 +331,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             @Override
             public void run() {
                 addGenesisBlock();
-                scan(true);
+                scan();
             }
         });
 
@@ -367,7 +367,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
             BlockDb.deleteAll();
             addGenesisBlock();
-            scan(false);
+            scan();
         }
     }
 
@@ -767,7 +767,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private void scan(final boolean verify) {
+    private void scan() {
         synchronized (blockchain) {
             Logger.logMessage("Scanning blockchain...");
             Account.clear();
@@ -788,17 +788,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (! currentBlock.getId().equals(currentBlockId)) {
                             throw new NxtException.ValidationException("Database blocks in the wrong order!");
                         }
-                        if (verify && ! currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                            if (! (currentBlock.verifyBlockSignature())) {
-                                throw new NxtException.ValidationException("Block signature verification failed for " + currentBlock.getStringId());
-                            }
-                            for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                if (! transaction.verify()) {
-                                    throw new NxtException.ValidationException("Transaction signature verification failed for " + transaction.getStringId());
-                                }
-                                transaction.validateAttachment();
-                            }
-                        }
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         transactionProcessor.apply(currentBlock);
@@ -809,7 +798,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage(e.toString(), e);
                     Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
                     BlockDb.deleteBlocksFrom(currentBlockId);
-                    scan(verify);
+                    scan();
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);

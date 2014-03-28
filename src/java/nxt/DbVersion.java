@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
 final class DbVersion {
 
@@ -129,6 +130,29 @@ final class DbVersion {
             case 22:
                 apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
             case 23:
+                try (DbIterator<BlockImpl> iterator = BlockchainImpl.getInstance().getAllBlocks()) {
+                    if (iterator.hasNext()) { // skip genesis
+                        if (! iterator.next().getId().equals(Genesis.GENESIS_BLOCK_ID)) {
+                            throw new IllegalStateException("First block is not genesis!");
+                        }
+                    }
+                    while (iterator.hasNext()) {
+                        BlockImpl block = iterator.next();
+                        BlockchainImpl.getInstance().setLastBlock(block);
+                        for (TransactionImpl transaction : block.getTransactions()) {
+                            try {
+                                transaction.validateAttachment();
+                            } catch (RuntimeException|NxtException.ValidationException e) {
+                                Logger.logDebugMessage("Failed to validate transaction: " + e.toString());
+                                Logger.logDebugMessage("Deleting blocks after " + block.getStringId());
+                                BlockDb.deleteBlocksFrom(block.getId());
+                                break;
+                            }
+                        }
+                    }
+                }
+                apply(null);
+            case 24:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
