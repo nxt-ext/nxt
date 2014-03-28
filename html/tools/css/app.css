@@ -2804,6 +2804,10 @@ a.list-group-item:hover {
 	padding-right: 0 !important;
 }
 
+tr.your-order td {
+	background-color: #FFFAF0 !important;
+}
+
 tr.tentative td {
 	font-style: italic !important;
 	background-color: #DAE3F2 !important;
@@ -2834,10 +2838,6 @@ tr.tentative-crossed td:before {
 
 tr.tentative-crossed td , tr.tentative-crossed td a {
 	color:red !important;
-}
-
-tr.your-order td {
-	background-color: #FFFAF0 !important;
 }
 
 .data-loading-container {
