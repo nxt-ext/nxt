@@ -3745,9 +3745,7 @@
         
     $("#messages_sidebar").on("click", "a", function(event) {
     	event.preventDefault();
-    	
-    	$("#inline_message_text").val("");
-    	
+    	    	
     	$("#messages_sidebar a.active").removeClass("active");
     	$(this).addClass("active");
     	
