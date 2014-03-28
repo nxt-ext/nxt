@@ -917,10 +917,9 @@
     }
     
     NRS.handleNewBlocks = function(response) {  
-    		
     	if (NRS.downloadingBlockchain) {
     		//new round started...
-    		if (NRS.temp.blocks.length == 0 && NRS.state.lastBlock != response.blockNr) {
+    		if (NRS.temp.blocks.length == 0 && NRS.state.lastBlock != response.id) {
 	    		return;
     		}
     	}
@@ -1223,7 +1222,7 @@
     			NRS.getBlock(blockID, callback, async);
     		} else {
 	    		if (callback) {
-	    			response.blockNr = blockID;
+	    			response.id = blockID;
     				callback(response);
     			}
     		}
