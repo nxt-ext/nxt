@@ -1403,7 +1403,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
-                DigitalGoodsStore.purchase(attachment.getGoodsId(), attachment.getQuantity(), attachment.getPrice(), attachment.getDeliveryDeadline(), attachment.getNote());
+                DigitalGoodsStore.purchase(transaction.getId(), transaction.getSenderId(), attachment.getGoodsId(), attachment.getQuantity(), attachment.getPrice(), attachment.getDeliveryDeadline(), attachment.getNote());
             }
 
             @Override
@@ -1423,11 +1423,6 @@ public abstract class TransactionType {
                         || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32) {
                     throw new NxtException.ValidationException("Invalid digital goods purchase: " + attachment.getJSON());
                 }
-            }
-
-            @Override
-            Collection<TransactionType> getPhasingTransactionTypes() {
-                return Arrays.asList(new TransactionType[]{DELIVERY});
             }
 
         };
@@ -1494,11 +1489,6 @@ public abstract class TransactionType {
                         || attachment.getDiscount() < 0 || attachment.getDiscount() > Constants.MAX_BALANCE) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSON());
                 }
-            }
-
-            @Override
-            Collection<TransactionType> getPhasedTransactionTypes() {
-                return Arrays.asList(new TransactionType[]{PURCHASE});
             }
 
         };

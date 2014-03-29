@@ -354,6 +354,7 @@ final class BlockImpl implements Block {
         generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
 
         Account.reviewAllAccounts();
+        DigitalGoodsStore.reviewAllPendingPurchases();
     }
 
     void undo() {

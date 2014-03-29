@@ -66,7 +66,7 @@ public final class Account {
     private final int height;
     private byte[] publicKey;
     private int keyHeight;
-    private long balance;
+    private long balance, lockedBalance;
     private long unconfirmedBalance;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
@@ -456,6 +456,22 @@ public final class Account {
                 }
             }
         }
+    }
+
+    public boolean addToLockedBalance(long amount) {
+        synchronized (this) {
+            if (amount > getBalance()) {
+                return false;
+            } else {
+                addToBalanceAndUnconfirmedBalance(-amount);
+                this.lockedBalance += amount;
+                return true;
+            }
+        }
+    }
+
+    public long getLockedBalance() {
+        return lockedBalance;
     }
 
 }
