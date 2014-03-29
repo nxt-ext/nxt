@@ -323,7 +323,7 @@
 	NRS.isLocalHost = false;
 	NRS.rememberPassword = false;
 	NRS.settings = {};
-	NRS.defaultSettings = {"submit_on_enter": false, "use_new_address_format": true};
+	NRS.defaultSettings = {"submit_on_enter": 0, "use_new_address_format": 1};
 	NRS.isForging = false;
 	NRS.unconfirmedTransactions = [];
 	NRS.unconfirmedTransactionIds = "";
@@ -4606,6 +4606,14 @@
 		
 			$span.html(colorTitle);
 		 }
+		 
+		 for (var key in NRS.settings) {
+			 if (!/_color/i.test(key)) {
+				 if ($("#settings_" + key).length) {
+					 $("#settings_" + key).val(NRS.settings[key]);
+				 }
+			 }
+		 }
      }
      
      NRS.cssGradient = function(start, stop) {
@@ -4902,6 +4910,8 @@
 			
 			var options = NRS.styleOptions[scheme];
 			
+			output = "<table class='settings'>";
+			
 			$.each(options, function(i, definition) {
 				var value = "";
 				var optional = false;
@@ -4966,20 +4976,22 @@
 				title = title.replace("Txt", "Text");
 									
 				if (type == "boolean") {
-					output += "<div class='form-group'><label class='control-label' style='text-align:left;width:160px;font-weight:normal;float:left'>" + title + "</label><div class='input-group' style='float:left'><input type='checkbox' name='" + key + "' value='1' class='form-control' " + (value ? " checked='checked'" : "") + " /></div></div>";
+					output += "<tr><td><label class='control-label' style='text-align:left;width:180px;font-weight:normal;'>" + title + "</label></td><td><div class='input-group' style='><input type='checkbox' name='" + key + "' value='1' class='form-control' " + (value ? " checked='checked'" : "") + " /></div></td></tr>";
 				} else if (type == "number") {
-					output += "<div class='form-group'><label class='control-label' style='text-align:left;width:160px;font-weight:normal;float:left'>" + title + "</label><div class='input-group' style='float:left'><input type='" + type + "' name='" + key + "' value='" + value + "' class='form-control' style='width:140px' " + (optional && !has_value ? " disabled" : "") + " />" + (optional ? " <input type=checkbox style='margin-left:10px' class='color_scheme_enable' " + (has_value ? " checked='checked'" : "") + " />" : "") + "</div></div>";
+					output += "<tr><td><label class='control-label' style='text-align:left;width:180px;font-weight:normal;'>" + title + "</label></td><td><div class='input-group' style=''><input type='" + type + "' name='" + key + "' value='" + value + "' class='form-control' style='width:140px' " + (optional && !has_value ? " disabled" : "") + " />" + (optional ? " <input type=checkbox style='margin-left:10px' class='color_scheme_enable' " + (has_value ? " checked='checked'" : "") + " />" : "") + "</div></td></tr>";
 				} else if (type == "select") {
-					output += "<div class='form-group'><label class='control-label' style='text-align:left;width:160px;font-weight:normal;float:left'>" + title + "</label><div class='input-group' style='float:left'><select name='" + key + "' class='form-control' style='width:140px' " + (optional && !has_value ? " disabled" : "") + ">";
+					output += "<tr><td><label class='control-label' style='text-align:left;width:180px;font-weight:normal;'>" + title + "</label></td><td><div class='input-group'><select name='" + key + "' class='form-control' style='width:140px' " + (optional && !has_value ? " disabled" : "") + ">";
 					for (var i=0; i<definition.values.length; i++) {
 						output += "<option value='" + definition.values[i] + "'>" + definition.values[i] + "</option>";
 					}
-					output += "</select>" + (optional ? " <input type=checkbox style='margin-left:10px' class='color_scheme_enable' " + (has_value ? " checked='checked'" : "") + " />" : "") + "</div></div>";
+					output += "</select>" + (optional ? " <input type=checkbox style='margin-left:10px' class='color_scheme_enable' " + (has_value ? " checked='checked'" : "") + " />" : "") + "</div></td></tr>";
 				} else {
-					output += "<div class='form-group'><label class='control-label' style='text-align:left;width:160px;font-weight:normal;float:left'>" + title + "</label><div class='input-group color_scheme_picker' style='float:left'><input type='text' name='" + key + "' value='" + value + "' class='form-control'" + (optional && !has_value ? " disabled" : "") + " style='width:100px' /><span class='input-group-addon'"  + (optional && !has_value ? " disabled" : "") + "><i></i></span>" + (optional ? " <input type=checkbox style='margin-left:10px' class='color_scheme_enable' " + (has_value ? " checked='checked'" : "") + " />" : "") + "</div></div>";
+					output += "<tr><td><label class='control-label' style='text-align:left;width:180px;font-weight:normal;'>" + title + "</label></td><td><div class='input-group color_scheme_picker'><input type='text' name='" + key + "' value='" + value + "' class='form-control'" + (optional && !has_value ? " disabled" : "") + " style='width:100px' /><span class='input-group-addon'"  + (optional && !has_value ? " disabled" : "") + "><i></i></span>" + (optional ? " <input type=checkbox style='margin-left:10px' class='color_scheme_enable' " + (has_value ? " checked='checked'" : "") + " />" : "") + "</div></td></tr>";
 				}
 		   	});
-		   			   			   	
+		   		
+		   	output += "</table>";
+		   		   			   	
 		   	$("#" + scheme +  "_custom_scheme").empty().append(output);
 		   	$("#" + scheme + "_custom_scheme .color_scheme_picker").colorpicker().on("changeColor", function(e) {
 			   	NRS.updateColorScheme(e);
@@ -5012,6 +5024,16 @@
 	   
 	   NRS.updateColorScheme(e);
     });
+    
+    $("#settings_box select").on("change", function(e) {
+	   e.preventDefault();
+	   
+	   var key = $(this).attr("name");
+	   var value = parseInt($(this).val(), 10);
+	   
+	   NRS.updateSettings(key, value);
+    });
+
     
     NRS.updateColorScheme = function(e) {
 		var $color_scheme = $(e.target).closest(".custom_color_scheme");
@@ -5052,35 +5074,54 @@
 		}
 	}
 	
-	NRS.applySettings = function() {		
-		if (NRS.settings["use_new_address_format"]) {
-			$("#block_info_modal, #transaction_info_modal").find(".modal-dialog").addClass("modal-dialog-wide");
-			$("#account_id_prefix").hide();
-		} else {
-			$("#account_id_prefix").show();
-		}
-		
-		if (NRS.account) {
-			$("#account_id").html(NRS.getAccountFormatted(NRS.account));
+	NRS.applySettings = function(key) {		
+		if (!key || key == "submit_on_enter") {
+			if (NRS.settings["submit_on_enter"]) {
+			    $(".modal form").on("submit.onEnter", function(e) {
+			    	e.preventDefault();
+			    	NRS.submitForm($(this).closest(".modal"));
+			    });
+			} else {
+				$(".modal form").off("submit.onEnter");
+			}
 		}
 
-		//todo: wider message sidebar
+		if (!key || key == "use_new_address_format") {	
+			if (NRS.settings["use_new_address_format"]) {
+				$("#block_info_modal, #transaction_info_modal").find(".modal-dialog").addClass("modal-dialog-wide");
+				$("#account_id_prefix").hide();
+			} else {
+				$("#account_id_prefix").show();
+			}
+			
+			if (NRS.account) {
+				$("#account_id").html(NRS.getAccountFormatted(NRS.account));
+			}
+			
+			var $dashboard_account_links = $("#dashboard_transactions_table a.user_info");
+			
+			$.each($dashboard_account_links, function(key, value) {
+				var account = $(this).data("user");
+				
+				$(this).html(NRS.getAccountFormatted(account));
+			});
+			
+			//todo: wider message sidebar
+		}
     }
     
-    NRS.updateSettings = function(key, value) {	   
+    NRS.updateSettings = function(key, value) {	 
     	if (key) {
-    		if (value) {
-	    		NRS.settings[key] = value;
-	    	} else {
-	    		delete NRS.settings[key];
-	    	}
+	    	NRS.settings[key] = value;
     	}
-    	
+    	    	
 	    if (NRS.databaseSupport) {
 			NRS.database.update("data", {contents: JSON.stringify(NRS.settings)}, [{id: "settings"}]);
 	    } else {
 		    localStorage.setItem("settings", JSON.stringify(NRS.settings));
 	    }
+	    
+	    NRS.applySettings(key);
     }
     
     $("#transactions_page_type li a").click(function(e) {
@@ -5872,13 +5913,6 @@
     	}
     });
         
-    if (NRS.settings["submit_on_enter"]) {
-	    $(".modal form").on("submit", function(e) {
-	    	e.preventDefault();
-	    	NRS.submitForm($(this).closest(".modal"));
-	    });
-	}
-
     $(".modal button.btn-primary:not([data-dismiss=modal])").click(function() {
     	NRS.submitForm($(this).closest(".modal"), $(this));
     });

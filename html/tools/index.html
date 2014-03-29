@@ -782,122 +782,156 @@
 						<style type="text/css">
 						/*form.settings_form > .form-group > .control-label { width: 120px; }*/
 						</style>
-					
-						<form class="form-horizontal settings_form" role="form" style="max-width:500px;margin-left:auto;margin-right:auto;">
-							<div class="form-group">
-								<label class="control-label" style="width:120px;float:left;margin-right:10px;text-align:right;">Header</label>
-								<div class="input-group">
-								    <div class="btn-group colors">
-										<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
-											<span class="text">Select Color Scheme</span> <span class="caret"></span>
-										</button>
-							        	<ul id="header_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="header"> 
-							          	</ul>
-									</div>
-								</div>
-							</div>
-							<div class="form-group" id="header_custom_scheme_group" style="display:none;margin-left:130px">
-								<div class="input-group custom_color_scheme" id="header_custom_scheme" data-scheme="header">
-								
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="control-label" style="width:120px;float:left;margin-right:10px;text-align:right;">Sidebar</label>
-								<div class="input-group" style="float:left">
-								    <div class="btn-group colors">
-										<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
-											<span class="text">Select Color Scheme</span> <span class="caret"></span>
-										</button>
-							        	<ul id="sidebar_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="sidebar"> 
-							          	</ul>
-									</div>
-								</div>
-							</div>
-							<div class="form-group" id="sidebar_custom_scheme_group" style="display:none;margin-left:130px">
-								<div class="input-group custom_color_scheme" id="sidebar_custom_scheme" data-scheme="sidebar">
-								
-								</div>
+						
+						<div class="box box-primary" id="settings_box">
+							<div class="box-header">
+							    <h3 class="box-title">General</h3>
 							</div>
 							
-							<!--
-							<div class="form-group">
-								<label class="control-label" style="width:120px;float:left;margin-right:10px;text-align:right;">Page BG</label>
-								<div class="input-group" style="float:left">
-								    <div class="btn-group colors">
-										<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
-											<span class="text">Select Color Scheme</span> <span class="caret"></span>
-										</button>
-							        	<ul id="background_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="background"> 
-							          	</ul>
-									</div>
-								</div>
-							</div>
-							<div class="form-group" id="background_custom_scheme_group" style="display:none;margin-left:130px;">
-								<div class="input-group custom_color_scheme" id="background_custom_scheme" data-scheme="background">
-								
-								</div>
-							</div>
-							
-							-->
-							
-							<div class="form-group">
-								<label class="control-label" style="width:120px;float:left;margin-right:10px;text-align:right;">Page Header</label>
-								<div class="input-group" style="float:left">
-								    <div class="btn-group colors">
-										<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
-											<span class="text">Select Color Scheme</span> <span class="caret"></span>
-										</button>
-							        	<ul id="page_header_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="page_header"> 
-							          	</ul>
-									</div>
-								</div>
-							</div>
-							<div class="form-group" id="page_header_custom_scheme_group" style="display:none;margin-left:130px;">
-								<div class="input-group custom_color_scheme" id="page_header_custom_scheme" data-scheme="page_header">
-								
-								</div>
-							</div>
-							
-							<!--
-							<div class="form-group">
-								<label class="control-label" style="width:120px;float:left;margin-right:10px;text-align:right;">Boxes</label>
-								<div class="input-group" style="float:left">
-								    <div class="btn-group colors">
-										<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
-											<span class="text">Select Color Scheme</span> <span class="caret"></span>
-										</button>
-							        	<ul id="box_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="box"> 
-							          	</ul>
-									</div>
-								</div>
-							</div>
-							<div class="form-group" id="box_custom_scheme_group" style="display:none;margin-left:130px;">
-								<div class="input-group custom_color_scheme" id="box_custom_scheme" data-scheme="box">
-								
-								</div>
+							<form role="form">
+							    <div class="box-body">
+							        <div class="form-group">
+							            <label for="settings_submit_on_enter">Submit Forms on Enter</label>
+							            <select name="submit_on_enter" id="settings_submit_on_enter" class="form-control" style="width:150px">
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							            <p class="help-block">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
+							        </div>
+							        <div class="form-group">
+							            <label for="settings_use_new_address_format">Use New Address Format</label>
+							            <select name="use_new_address_format" id="settings_use_new_address_format" class="form-control" style="width:150px">
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							            <p class="help-block">The new address format has built-in error detection.</p>
+							        </div>
+							    </div>
+							</form>
+						</div>
+                        
+                        <div class="box box-success" style="overflow:visible">
+							<div class="box-header">
+							    <h3 class="box-title">Theme Settings</h3>
 							</div>
 
-							<div class="form-group">
-								<label class="control-label" style="width:120px;float:left;margin-right:10px;text-align:right;">Tables</label>
-								<div class="input-group" style="float:left">
-								    <div class="btn-group colors">
-										<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
-											<span class="text">Select Color Scheme</span> <span class="caret"></span>
-										</button>
-							        	<ul id="table_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="table"> 
-							          	</ul>
+							<form role="form">
+							    <div class="box-body">
+									<div class="form-group">
+										<label class="control-label">Header</label>
+										<div class="input-group">
+										    <div class="btn-group colors">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
+													<span class="text">Select Color Scheme</span> <span class="caret"></span>
+												</button>
+									        	<ul id="header_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="header" data-container="body"> 
+									          	</ul>
+											</div>
+										</div>
 									</div>
-								</div>
-							</div>
-							<div class="form-group" id="table_custom_scheme_group" style="display:none;margin-left:130px;">
-								<div class="input-group custom_color_scheme" id="table_custom_scheme" data-scheme="table">
-								
-								</div>
-							</div>
-							
-							-->
-							
-						</form>
+									<div class="form-group" id="header_custom_scheme_group" style="display:none;">
+										<div class="input-group custom_color_scheme" id="header_custom_scheme" data-scheme="header">
+										
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="control-label">Sidebar</label>
+										<div class="input-group">
+										    <div class="btn-group colors">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
+													<span class="text">Select Color Scheme</span> <span class="caret"></span>
+												</button>
+									        	<ul id="sidebar_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="sidebar" data-container="body"> 
+									          	</ul>
+											</div>
+										</div>
+									</div>
+									<div class="form-group" id="sidebar_custom_scheme_group" style="display:none;">
+										<div class="input-group custom_color_scheme" id="sidebar_custom_scheme" data-scheme="sidebar">
+										
+										</div>
+									</div>
+									
+									<!--
+									<div class="form-group">
+										<label class="control-label">Page BG</label>
+										<div class="input-group">
+										    <div class="btn-group colors">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
+													<span class="text">Select Color Scheme</span> <span class="caret"></span>
+												</button>
+									        	<ul id="background_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="background" data-container="body"> 
+									          	</ul>
+											</div>
+										</div>
+									</div>
+									<div class="form-group" id="background_custom_scheme_group" style="display:none;">
+										<div class="input-group custom_color_scheme" id="background_custom_scheme" data-scheme="background">
+										
+										</div>
+									</div>
+									
+									-->
+									
+									<div class="form-group">
+										<label class="control-label">Page Header</label>
+										<div class="input-group">
+										    <div class="btn-group colors">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
+													<span class="text">Select Color Scheme</span> <span class="caret"></span>
+												</button>
+									        	<ul id="page_header_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="page_header" data-container="body"> 
+									          	</ul>
+											</div>
+										</div>
+									</div>
+									<div class="form-group" id="page_header_custom_scheme_group" style="display:none;">
+										<div class="input-group custom_color_scheme" id="page_header_custom_scheme" data-scheme="page_header">
+										
+										</div>
+									</div>
+									
+									<!--
+									<div class="form-group">
+										<label class="control-label">Boxes</label>
+										<div class="input-group">
+										    <div class="btn-group colors">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
+													<span class="text">Select Color Scheme</span> <span class="caret"></span>
+												</button>
+									        	<ul id="box_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="box" data-container="body"> 
+									          	</ul>
+											</div>
+										</div>
+									</div>
+									<div class="form-group" id="box_custom_scheme_group" style="display:none;">
+										<div class="input-group custom_color_scheme" id="box_custom_scheme" data-scheme="box">
+										
+										</div>
+									</div>
+		
+									<div class="form-group">
+										<label class="control-label">Tables</label>
+										<div class="input-group">
+										    <div class="btn-group colors">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="width:140px;text-align:left;">
+													<span class="text">Select Color Scheme</span> <span class="caret"></span>
+												</button>
+									        	<ul id="table_color_scheme" class="dropdown-menu color_scheme_editor" role="menu" data-scheme="table" data-container="body"> 
+									          	</ul>
+											</div>
+										</div>
+									</div>
+									<div class="form-group" id="table_custom_scheme_group" style="display:none;">
+										<div class="input-group custom_color_scheme" id="table_custom_scheme" data-scheme="table">
+										
+										</div>
+									</div>
+									
+									-->
+							    </div>
+							</form>
+                        </div>
 					</section>
                 </div>
                 

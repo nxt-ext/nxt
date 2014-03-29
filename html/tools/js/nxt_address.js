@@ -125,7 +125,7 @@ function NxtAddress()
 	
 			if((i & 3) == 3 && i < 13) out += '-';
 		}
-	
+			
 		return out;
 	}//__________________________
 
@@ -168,12 +168,14 @@ function NxtAddress()
 		if(typeof allow_accounts === 'undefined') allow_accounts = true;
 	
 		var len = 0; reset();
+		
+		adr = String(adr);
 	
 		adr = adr.replace(/(^\s+)|(\s+$)/g, '').toUpperCase();
 	
 		if(adr.indexOf('NXT-') == 0) adr = adr.substr(4);
 	
-		if(adr.match(/^\d{6,20}$/g)) // account id
+		if(adr.match(/^\d{1,20}$/g)) // account id
 		{
 			if(allow_accounts) return from_acc(adr);
 		}
