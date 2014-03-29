@@ -1173,7 +1173,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing)transaction.getAttachment();
-                DigitalGoodsStore.listGoods(transaction.getId(), attachment.getName(), attachment.getDescription(), attachment.getTags(), attachment.getQuantity(), attachment.getPrice());
+                DigitalGoodsStore.listGoods(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getDescription(), attachment.getTags(), attachment.getQuantity(), attachment.getPrice());
             }
 
             @Override
@@ -1241,7 +1241,8 @@ public abstract class TransactionType {
                 }
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmount() != 0) {
+                        || transaction.getAmount() != 0
+                        || !DigitalGoodsStore.isGoodsLegitOwner(attachment.getGoodsId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delisting: " + attachment.getJSON());
                 }
             }
@@ -1293,7 +1294,8 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmount() != 0
-                        || attachment.getPrice() <= 0 || attachment.getPrice() > Constants.MAX_BALANCE) {
+                        || attachment.getPrice() <= 0 || attachment.getPrice() > Constants.MAX_BALANCE
+                        || !DigitalGoodsStore.isGoodsLegitOwner(attachment.getGoodsId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods price change: " + attachment.getJSON());
                 }
             }
@@ -1345,7 +1347,8 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmount() != 0
-                        || attachment.getDeltaQuantity() < -Constants.MAX_DIGITAL_GOODS_QUANTITY || attachment.getDeltaQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY) {
+                        || attachment.getDeltaQuantity() < -Constants.MAX_DIGITAL_GOODS_QUANTITY || attachment.getDeltaQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
+                        || !DigitalGoodsStore.isGoodsLegitOwner(attachment.getGoodsId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods quantity change: " + attachment.getJSON());
                 }
             }
@@ -1486,7 +1489,8 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
                 if (transaction.getAmount() != 0
                         || attachment.getGoods().getData().length > 1000 || attachment.getGoods().getNonce().length != 32
-                        || attachment.getDiscount() < 0 || attachment.getDiscount() > Constants.MAX_BALANCE) {
+                        || attachment.getDiscount() < 0 || attachment.getDiscount() > Constants.MAX_BALANCE
+                        || !DigitalGoodsStore.isPurchasedGoodsLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSON());
                 }
             }
@@ -1546,7 +1550,8 @@ public abstract class TransactionType {
                 }
                 Attachment.DigitalGoodsRating attachment = (Attachment.DigitalGoodsRating)transaction.getAttachment();
                 if (transaction.getAmount() != 0
-                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32) {
+                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32
+                        || !DigitalGoodsStore.isPurchaseLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSON());
                 }
             }
@@ -1612,7 +1617,8 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
                 if (transaction.getAmount() != 0
                         || attachment.getRefund() < 0 || attachment.getRefund() > Constants.MAX_BALANCE
-                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32) {
+                        || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32
+                        || !DigitalGoodsStore.isPurchasedGoodsLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSON());
                 }
             }

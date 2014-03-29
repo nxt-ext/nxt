@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class DigitalGoodsStore {
 
     private static final class Goods {
+        private final Long accountId;
         private final String name;
         private final String description;
         private final String tags;
@@ -19,12 +20,17 @@ public final class DigitalGoodsStore {
 
         private boolean delisted;
 
-        public Goods(String name, String description, String tags, int quantity, long price) {
+        public Goods(Long accountId, String name, String description, String tags, int quantity, long price) {
+            this.accountId = accountId;
             this.name = name;
             this.description = description;
             this.tags = tags;
             this.quantity = quantity;
             this.price = price;
+        }
+
+        public Long getAccountId() {
+            return accountId;
         }
 
         public String getName() {
@@ -137,10 +143,6 @@ public final class DigitalGoodsStore {
         return pendingPurchases.get(purchaseId);
     }
 
-    public static void addGoods(Long goodsId, String name, String description, String tags, int quantity, long price) {
-        goods.put(goodsId, new Goods(name, description, tags, quantity, price));
-    }
-
     public static void addPurchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long price, int deliveryDeadline, XoredData note) {
         Purchase purchase = new Purchase(accountId, goodsId, quantity, price, deliveryDeadline, note);
         purchases.put(purchaseId, purchase);
@@ -152,8 +154,8 @@ public final class DigitalGoodsStore {
         purchases.clear();
     }
 
-    public static void listGoods(Long goodsId, String name, String description, String tags, int quantity, long price) {
-        goods.put(goodsId, new Goods(name, description, tags, quantity, price));
+    public static void listGoods(Long goodsId, Long accountId, String name, String description, String tags, int quantity, long price) {
+        goods.put(goodsId, new Goods(accountId, name, description, tags, quantity, price));
     }
 
     public static void delistGoods(Long goodsId) {
@@ -219,6 +221,33 @@ public final class DigitalGoodsStore {
                 getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
                 pendingPurchases.remove(pendingPurchaseEntry.getKey());
             }
+        }
+    }
+
+    public static boolean isGoodsLegitOwner(Long goodsId, Long accountId) {
+        Goods goods = getGoods(goodsId);
+        if (goods == null) {
+            return false;
+        } else {
+            return accountId.equals(goods.getAccountId());
+        }
+    }
+
+    public static boolean isPurchasedGoodsLegitOwner(Long purchaseId, Long accountId) {
+        Purchase purchase = getPurchase(purchaseId);
+        if (purchase == null) {
+            return false;
+        } else {
+            return accountId.equals(getGoods(purchase.getGoodsId()).getAccountId());
+        }
+    }
+
+    public static boolean isPurchaseLegitOwner(Long purchaseId, Long accountId) {
+        Purchase purchase = getPurchase(purchaseId);
+        if (purchase == null) {
+            return false;
+        } else {
+            return accountId.equals(purchase.getAccountId());
         }
     }
 
