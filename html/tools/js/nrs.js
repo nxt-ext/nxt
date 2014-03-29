@@ -323,7 +323,7 @@
 	NRS.isLocalHost = false;
 	NRS.rememberPassword = false;
 	NRS.settings = {};
-	NRS.defaultSettings = {"submit_on_enter": 0, "use_new_address_format": 1};
+	NRS.defaultSettings = {"submit_on_enter": 0, "use_new_address_format": 0};
 	NRS.isForging = false;
 	NRS.unconfirmedTransactions = [];
 	NRS.unconfirmedTransactionIds = "";
