@@ -3204,6 +3204,11 @@ a.list-group-item.active h4 span {
 table.settings td {
 	padding-bottom:5px;
 }
+
+.malformed_address {
+	font-weight:bold;
+	cursor:pointer;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

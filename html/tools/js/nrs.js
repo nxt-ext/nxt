@@ -6115,6 +6115,10 @@
 		});
     }    
     
+    NRS.correctAddressMistake = function(el) {
+    	$(el).closest(".modal-body").find("input[name=recipient],input[name=account_id]").val($(el).data("address")).trigger("blur");
+	}
+
     NRS.checkRecipient = function(account, modal) {
     	var classes = "callout-info callout-danger callout-warning";
     	
@@ -6132,16 +6136,28 @@
 			var address = new NxtAddress();
 			
 			if (address.set(account)) {
-				account = address.account_id();
+				var accountId = address.account_id();
 				
-				NRS.getAccountError(account, function(response) {
-					callout.removeClass(classes).addClass("callout-" + response.type).html("The recipient address translates to account <strong>" + String(account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which")).show();
+				NRS.getAccountError(accountId, function(response) {
+					callout.removeClass(classes).addClass("callout-" + response.type).html("The recipient address translates to account <strong>" + String(accountId).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which")).show();
 					if (response.type == "info" || response.type == "warning") {
-						accountInputField.val(contact.accountId);
+						accountInputField.val(accountId);
 					}
 				});
 			} else {
-				callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, please adjust.").show();
+				if (address.guess.length == 1) {
+				
+					callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, did you mean <span class='malformed_address' data-address='" + String(address.guess[0]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[0], account) + "</span> ?").show();
+				} else if (address.guess.length > 1) {
+					var html = "The recipient address is malformed, did you mean:<ul>";
+					for (var i=0; i<adr.guess.length; i++) {
+						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + adddress.format_guess(address.guess[i], account) + "</span></li>";
+					}
+					
+					callout.removeClass(classes).addClass("callout-danger").html(html).show();
+				} else {
+					callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, please adjust.").show();
+				}
 			}
 		} else if (!(/^\d+$/.test(account))) {
 			if (NRS.databaseSupport && account.charAt(0) != '@') {
