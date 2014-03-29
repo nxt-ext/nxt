@@ -323,7 +323,7 @@
 	NRS.isLocalHost = false;
 	NRS.rememberPassword = false;
 	NRS.settings = {};
-	NRS.defaultSettings = {"submit_on_enter": false};
+	NRS.defaultSettings = {"submit_on_enter": false, "use_new_address_format": true};
 	NRS.isForging = false;
 	NRS.unconfirmedTransactions = [];
 	NRS.unconfirmedTransactionIds = "";
@@ -1456,7 +1456,7 @@
    	    	NRS.fetchingModalData = true;
     	}
     	    	
-    	$("#user_info_modal_account").html(String(NRS.userInfoModal.user).escapeHTML());
+    	$("#user_info_modal_account").html(NRS.getAccountFormatted(NRS.userInfoModal.user));
     	
     	$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
 
@@ -3808,8 +3808,9 @@
     $("#messages_sidebar_context").on("click", "a", function(e) {
     	e.preventDefault();
     	
-    	var account = NRS.selectedContext.data("account");
+    	var account = NRS.getAccountFormatted(NRS.selectedContext.data("account"));
     	var option = $(this).data("option");
+    	    
     	    
     	NRS.closeContextMenu();
     	
@@ -3825,7 +3826,7 @@
     $("#messages_sidebar_update_context").on("click", "a", function(e) {
 	    e.preventDefault();
 	    
-	    var account = NRS.selectedContext.data("account");
+	    var account = NRS.getAccountFormatted(NRS.selectedContext.data("account"));
     	var option = $(this).data("option");
 		
 		NRS.closeContextMenu();
@@ -5040,13 +5041,30 @@
 				    NRS.database.insert("data", {id: "settings", contents: "{}"});
 				    NRS.settings = NRS.defaultSettings;
 				}
+				NRS.applySettings();
 			});
 		} else {
 		    NRS.settings = JSON.parse(localStorage.getItem("settings"));
 			if ($.isEmptyObject(NRS.settings)) {
 				NRS.settings = NRS.defaultSettings;
 			}
+			NRS.applySettings();
 		}
+	}
+	
+	NRS.applySettings = function() {		
+		if (NRS.settings["use_new_address_format"]) {
+			$("#block_info_modal, #transaction_info_modal").find(".modal-dialog").addClass("modal-dialog-wide");
+			$("#account_id_prefix").hide();
+		} else {
+			$("#account_id_prefix").show();
+		}
+		
+		if (NRS.account) {
+			$("#account_id").html(NRS.getAccountFormatted(NRS.account));
+		}
+
+		//todo: wider message sidebar
     }
     
     NRS.updateSettings = function(key, value) {	   
@@ -5365,6 +5383,20 @@
 			return NRS.contacts[accountId].name.escapeHTML();
 		} else if (accountId == NRS.account) {
 			return "You";
+		} else {
+			return NRS.getAccountFormatted(accountId);
+		}
+	}
+	
+	NRS.getAccountFormatted = function(accountId) {
+		if (NRS.settings["use_new_address_format"]) {
+			var address = new NxtAddress();
+			
+			if (address.set(accountId, true)) {
+				return address.toString().escapeHTML();
+			} else {
+				return String(accountId).escapeHTML();
+			}
 		} else {
 			return String(accountId).escapeHTML();
 		}
@@ -6008,7 +6040,7 @@
 		var account = $invoker.data("account");
 		
 		if (account) {
-			account = String(account);
+			account = NRS.getAccountFormatted(account);
 			$(this).find("input[name=recipient], input[name=account_id]").val(account.unescapeHTML()).trigger("blur");
 		}
     });
@@ -6069,7 +6101,7 @@
 				account = address.account_id();
 				
 				NRS.getAccountError(account, function(response) {
-					callout.removeClass(classes).addClass("callout-" + response.type).html("The address translates to account <strong>" + String(account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which")).show();
+					callout.removeClass(classes).addClass("callout-" + response.type).html("The recipient address translates to account <strong>" + String(account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which")).show();
 					if (response.type == "info" || response.type == "warning") {
 						accountInputField.val(contact.accountId);
 					}
@@ -6279,7 +6311,7 @@
 	    			$(".hide_secret_phrase").show();
 				}
 	    	
-		    	$("#account_id").html(NRS.account);
+		    	$("#account_id").html(NRS.getAccountFormatted(NRS.account));
 		    		    	
 		    	var passwordNotice = "";
 		    	
