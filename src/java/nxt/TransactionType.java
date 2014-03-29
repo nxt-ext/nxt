@@ -1596,7 +1596,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
-                DigitalGoodsStore.refund(attachment.getPurchaseId(), attachment.getRefund(), attachment.getNote());
+                DigitalGoodsStore.refund(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getRefund(), attachment.getNote());
             }
 
             @Override

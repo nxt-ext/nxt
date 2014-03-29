@@ -197,8 +197,17 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static void refund(Long purchaseId, long refund, XoredData note) {
-
+    public static void refund(Long accountId, Long purchaseId, long refund, XoredData note) {
+        Purchase purchase = getPurchase(purchaseId);
+        if (purchase != null) {
+            Account account = Account.getAccount(accountId);
+            synchronized (account) {
+                if (refund <= account.getBalance()) {
+                    account.addToBalanceAndUnconfirmedBalance(-refund);
+                    Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalance(refund);
+                }
+            }
+        }
     }
 
     public static void reviewAllPendingPurchases() {
