@@ -197,10 +197,6 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static void giveFeedback(Long purchaseId, XoredData note) {
-
-    }
-
     public static void refund(Long purchaseId, long refund, XoredData note) {
 
     }

@@ -1531,8 +1531,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.DigitalGoodsRating attachment = (Attachment.DigitalGoodsRating)transaction.getAttachment();
-                DigitalGoodsStore.giveFeedback(attachment.getPurchaseId(), attachment.getNote());
+                // cfb: No action required
             }
 
             @Override
