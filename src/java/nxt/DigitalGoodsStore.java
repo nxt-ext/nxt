@@ -133,6 +133,10 @@ public final class DigitalGoodsStore {
         return purchases.get(purchaseId);
     }
 
+    public static Purchase getPendingPurchase(Long purchaseId) {
+        return pendingPurchases.get(purchaseId);
+    }
+
     public static void addGoods(Long goodsId, String name, String description, String tags, int quantity, long price) {
         goods.put(goodsId, new Goods(name, description, tags, quantity, price));
     }
@@ -184,8 +188,13 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static void deliver(Long purchaseId, XoredData goods, long discount) {
-
+    public static void deliver(Long accountId, Long purchaseId, XoredData goods, long discount) {
+        Purchase purchase = getPendingPurchase(purchaseId);
+        if (purchase != null) {
+            if (Account.getAccount(purchase.getAccountId()).transferLockedBalance(purchase.getQuantity() * purchase.getPrice(), accountId, discount)) {
+                pendingPurchases.remove(purchaseId);
+            }
+        }
     }
 
     public static void giveFeedback(Long purchaseId, XoredData note) {

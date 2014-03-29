@@ -1470,7 +1470,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-                DigitalGoodsStore.deliver(attachment.getPurchaseId(), attachment.getGoods(), attachment.getDiscount());
+                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getGoods(), attachment.getDiscount());
             }
 
             @Override

@@ -474,4 +474,31 @@ public final class Account {
         return lockedBalance;
     }
 
+    public boolean transferLockedBalance(long amount, Long recipientId, long discount) {
+        synchronized (this) {
+            if (amount > getLockedBalance()) {
+                return false;
+            } else {
+                Account recipient = Account.getAccount(recipientId);
+                if (recipient == null) {
+                    return false;
+                } else {
+                    if (discount > 0) {
+                        synchronized (recipient) {
+                            if (discount > recipient.getBalance()) {
+                                return false;
+                            } else {
+                                recipient.addToBalanceAndUnconfirmedBalance(-discount);
+                                this.addToBalanceAndUnconfirmedBalance(discount);
+                            }
+                        }
+                    }
+                    this.lockedBalance -= amount;
+                    recipient.addToBalanceAndUnconfirmedBalance(amount);
+                    return true;
+                }
+            }
+        }
+    }
+
 }
