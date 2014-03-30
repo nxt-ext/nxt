@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public final class Account {
+public final class Account implements Currency {
 
     public static enum Event {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE
@@ -116,10 +116,12 @@ public final class Account {
         return publicKey;
     }
 
+    @Override
     public synchronized long getBalance() {
         return balance;
     }
 
+    @Override
     public synchronized long getUnconfirmedBalance() {
         return unconfirmedBalance;
     }
@@ -296,7 +298,8 @@ public final class Account {
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToBalance(long amount) {
+    @Override
+    public void addToBalance(long amount) {
         if (amount == 0) {
             return;
         }
@@ -307,7 +310,8 @@ public final class Account {
         listeners.notify(this, Event.BALANCE);
     }
 
-    void addToUnconfirmedBalance(long amount) {
+    @Override
+    public void addToUnconfirmedBalance(long amount) {
         if (amount == 0) {
             return;
         }
@@ -317,7 +321,8 @@ public final class Account {
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
 
-    void addToBalanceAndUnconfirmedBalance(long amount) {
+    @Override
+    public void addToBalanceAndUnconfirmedBalance(long amount) {
         if (amount == 0) {
             return;
         }
