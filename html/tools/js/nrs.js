@@ -341,7 +341,7 @@
 				
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
-			NRS.isLocalHost = (hostName == "localhost" || hostName == "127.0.0.1");
+			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 		}
 				
 		if (!NRS.isLocalHost) {
@@ -400,6 +400,17 @@
     	$(".show_popover").popover({"trigger": "hover"});
     }
     
+    NRS.isPrivateIP = function(ip) {
+    	if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+	    	return false;
+    	}
+		var parts = ip.split('.');
+		if (parts[0] === '10' || (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) ||  (parts[0] === '192' && parts[1] === '168')) {
+			return true;
+		}
+		return false;
+	}
+
     NRS.checkServerTime = function() {
     	$.ajax({
     	    url: 'http://www.convert-unix-time.com/api?timestamp=now&returnType=jsonp',
