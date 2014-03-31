@@ -16,7 +16,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.8.12";
+    public static final String VERSION = "0.9.0e";
 
     private static final Properties defaultProperties = new Properties();
     static {

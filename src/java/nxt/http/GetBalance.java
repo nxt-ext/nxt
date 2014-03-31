@@ -36,16 +36,16 @@ public final class GetBalance extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         if (accountData == null) {
 
-            response.put("balance", 0);
-            response.put("unconfirmedBalance", 0);
-            response.put("effectiveBalance", 0);
+            response.put("balanceNQT", 0);
+            response.put("unconfirmedBalanceNQT", 0);
+            response.put("effectiveBalanceNXT", 0);
 
         } else {
 
             synchronized (accountData) {
-                response.put("balance", accountData.getBalance());
-                response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
-                response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
+                response.put("balanceNQT", accountData.getBalanceNQT());
+                response.put("unconfirmedBalanceNQT", accountData.getUnconfirmedBalanceNQT());
+                response.put("effectiveBalanceNXT", accountData.getEffectiveBalanceNXT());
             }
 
         }

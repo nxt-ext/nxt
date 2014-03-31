@@ -184,8 +184,8 @@
 				    isNegative = true;
 				    amount = -amount;
 				}
-				var cents = amount % 100;
-				amount = Math.floor(amount / 100);
+				var fractionalPart = amount % 100000000;
+				amount = Math.floor(amount / 100000000);
 				do {
 					digits[digits.length] = amount % 10;
 					amount = Math.floor(amount / 10);
@@ -199,7 +199,12 @@
 				if (isNegative) {
 				    formattedAmount = "-" + formattedAmount;
 				}
-				return formattedAmount + "<span class='cents'>." + Math.floor(cents / 10) + "" + cents % 10 + "</span>";
+				var fractionalPartString = "";
+                for (i = fractionalPart.length; i < 8; i++) {
+                    fractionalPartString += "0";
+                }
+                fractionalPartString += fractionalPart;
+            	return formattedAmount + "<span class='cents'>." + fractionalPartString + "</span>";
 			}
 			
 			function generateAuthorizationToken() {
@@ -279,10 +284,10 @@
 				element = document.getElementById("input");
 				recipient = element.value;
 				element.readOnly = true;
-				element = document.getElementById("amount");
+				element = document.getElementById("amountNXT");
 				amount = element.value;
 				element.readOnly = true;
-				element = document.getElementById("fee");
+				element = document.getElementById("feeNXT");
 				fee = element.value;
 				element.readOnly = true;
 				element = document.getElementById("deadline");
@@ -292,7 +297,7 @@
 				secretPhrase = element.value;
 				element.readOnly = true;
 				document.getElementById("sendMoney").disabled = true;
-				sendRequest("sendMoney&recipient=" + recipient + "&amount=" + amount + "&fee=" + fee + "&deadline=" + deadline +
+				sendRequest("sendMoney&recipient=" + recipient + "&amountNXT=" + amountNXT + "&feeNXT=" + feeNXT + "&deadline=" + deadline +
 				    "&secretPhrase=" + encodeURIComponent(secretPhrase));
 			}
 			
@@ -356,7 +361,7 @@
 								break;
 							case "notifyOfIncorrectTransaction":
 								showMessage(response.message, function() {
-									showTransactionDialog(response.recipient, response.amount, response.fee, response.deadline);
+									showTransactionDialog(response.recipient, response.amountNXT, response.feeNXT, response.deadline);
 								});
 								break;
 							case "processInitialData":document.title = "NRS " + response.version;
@@ -386,16 +391,16 @@
 										if (object.sender == account) {
 											object2 = {"index": object.index, "blockTimestamp": object.blockTimestamp,
 											    "transactionTimestamp": object.transactionTimestamp, "account": object.recipient,
-											    "sentAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 0, "id": object.id};
+											    "sentAmountNQT": object.amountNQT, "feeNQT": object.feeNQT, "numberOfConfirmations": 0, "id": object.id};
 											if (object.recipient == account) {
-												object2.receivedAmount = object.amount;
+												object2.receivedAmountNQT = object.amountNQT;
 											}
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction(object2, true);
 										} else if (object.recipient == account) {
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction(
 											    {"index": object.index, "blockTimestamp": object.blockTimestamp,
 											    "transactionTimestamp": object.transactionTimestamp, "account": object.sender,
-											    "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": 0,
+											    "receivedAmountNQT": object.amountNQT, "feeNQT": object.feeNQT, "numberOfConfirmations": 0,
 											    "id": object.id}, true);
 										}
 									}
@@ -406,7 +411,7 @@
 										object = response.addedUnconfirmedTransactions[j];
 										if (object.sender == account) {
 											object2 = {"index": object.index, "transactionTimestamp": object.timestamp, "deadline": object.deadline,
-											    "account": object.recipient, "sentAmount": object.amount, "fee": object.fee,
+											    "account": object.recipient, "sentAmountNQT": object.amountNQT, "feeNQT": object.feeNQT,
 											    "numberOfConfirmations": -1, "id": object.id};
 											if (object.recipient == account) {
 												object2.receivedAmount = object.amount;
@@ -415,7 +420,7 @@
 										} else if (object.recipient == account) {
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": object.index,
 											    "transactionTimestamp": object.timestamp, "deadline": object.deadline, "account": object.sender,
-											    "receivedAmount": object.amount, "fee": object.fee, "numberOfConfirmations": -1, "id": object.id},
+											    "receivedAmountNQT": object.amountNQT, "feeNQT": object.feeNQT, "numberOfConfirmations": -1, "id": object.id},
 											    true);
 										}
 									}
@@ -453,7 +458,7 @@
 										object = response.addedRecentBlocks[j];
 										if (object.generator == account && object.totalFee > 0) {
 											document.getElementById("myTransactionsFrame").contentWindow.addTransaction({"index": "block" + object.index,
-											    "blockTimestamp": object.timestamp, "block": object.block, "earnedAmount": object.totalFee,
+											    "blockTimestamp": object.timestamp, "block": object.block, "earnedAmountNQT": object.totalFeeNQT,
 											    "numberOfConfirmations": 0, "id": "-"}, true);
 										}
 									}
@@ -468,9 +473,9 @@
 								requestAssets();
 								break;
 							case "setBalance":
-								document.getElementById("balance").innerHTML = formatAmount(response.balance);
-								document.getElementById("enabledSendMoney").style.display = response.balance > 0 ? "block" : "none";
-								document.getElementById("disabledSendMoney").style.display = response.balance > 0 ? "none" : "block";
+								document.getElementById("balance").innerHTML = formatAmount(response.balanceNQT);
+								document.getElementById("enabledSendMoney").style.display = response.balanceNQT > 0 ? "block" : "none";
+								document.getElementById("disabledSendMoney").style.display = response.balanceNQT > 0 ? "none" : "block";
 								break;
 							case "setBlockGenerationDeadline":
 								document.getElementById("recentBlocksFrame").contentWindow.setDeadline(response.deadline);
@@ -491,7 +496,7 @@
 								    "<div class='key' title='Click to authorize on a third-party website with this account' onclick='showAuthorizationDialog();'></div>";
 								element.style.display = "block";
 								element = document.getElementById("balance");
-								element.innerHTML = formatAmount(response.balance);
+								element.innerHTML = formatAmount(response.balanceNQT);
 								element.style.display = "block";
 								document.getElementById(response.balance > 0 ? "enabledSendMoney" : "disabledSendMoney").style.display = "block";
 								closeDialog();
@@ -583,10 +588,10 @@
 				document.getElementById("fee").value = fee;
 			}
 			
-			function showTransactionDialog(recipient, amount, fee, deadline) {
+			function showTransactionDialog(recipient, amountNXT, feeNXT, deadline) {
 				showDialog("Transaction", "<table><tr><td class='label' colspan='2'>Recipient</td></tr><tr><td class='input' colspan='2'><input id='input'></td></tr>" +
 				    "<tr><td class='label' style='padding-top: 0;'>Amount</td><td class='label' style='padding-top: 0;'>Fee</td></tr>" +
-				    "<tr><td class='input'><input type='number' id='amount' oninput='adjustFee();'></td><td class='input'><input type='number' id='fee'></td></tr>" +
+				    "<tr><td class='input'><input type='number' id='amountNXT' oninput='adjustFee();'></td><td class='input'><input type='number' id='feeNXT'></td></tr>" +
 				    "<tr><td class='label' colspan='2' style='padding-top: 0;'>Deadline (in hours)</td></tr><tr><td class='input'><input type='number' id='deadline' oninput='adjustDeadlineTime();'></td>" +
 				        "<td class='input'><input id='deadlineTime' readonly></td></tr>" +
 				    "<tr><td class='label' colspan='2'>Secret phrase</td></tr>" +

@@ -40,11 +40,11 @@ public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         if (accountData == null) {
-            response.put("guaranteedBalance", 0);
+            response.put("guaranteedBalanceNQT", 0);
         } else {
             try {
                 int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
-                response.put("guaranteedBalance", accountData.getGuaranteedBalance(numberOfConfirmations));
+                response.put("guaranteedBalanceNQT", accountData.getGuaranteedBalanceNQT(numberOfConfirmations));
             } catch (NumberFormatException e) {
                 return INCORRECT_NUMBER_OF_CONFIRMATIONS;
             }

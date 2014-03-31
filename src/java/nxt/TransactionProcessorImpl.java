@@ -224,15 +224,22 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             byte[] senderPublicKey = new byte[32];
             buffer.get(senderPublicKey);
             Long recipientId = buffer.getLong();
-            int amount = buffer.getInt();
-            int fee = buffer.getInt();
+            long amountNQT;
+            long feeNQT;
+            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.NQT_BLOCK) {
+                amountNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
+                feeNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
+            } else {
+                amountNQT = buffer.getLong();
+                feeNQT = buffer.getLong();
+            }
             Long referencedTransactionId = Convert.zeroToNull(buffer.getLong());
             byte[] signature = new byte[64];
             buffer.get(signature);
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
-                    fee, referencedTransactionId, signature);
+            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                    amountNQT, feeNQT, referencedTransactionId, signature);
 
             transactionType.loadAttachment(transaction, buffer);
 
@@ -245,16 +252,18 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
+                                      long amountNQT, long feeNQT, Long referencedTransactionId)
+            throws NxtException.ValidationException {
+        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
+                recipientId, amountNQT, feeNQT, referencedTransactionId, null);
     }
 
     @Override
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      int amount, int fee, Long referencedTransactionId, Attachment attachment)
+                                      long amountNQT, long feeNQT, Long referencedTransactionId, Attachment attachment)
             throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline, senderPublicKey, recipientId, amount, fee,
-                referencedTransactionId, null);
+        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
+                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, null);
         transaction.setAttachment(attachment);
         return transaction;
     }
@@ -270,13 +279,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
             Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
             if (recipientId == null) recipientId = 0L; // ugly
-            int amount = ((Long)transactionData.get("amount")).intValue();
-            int fee = ((Long)transactionData.get("fee")).intValue();
+            long amountNQT;
+            long feeNQT;
+            if (transactionData.get("amount") != null) {
+                amountNQT = Convert.safeMultiply(((Long) transactionData.get("amount")), Constants.ONE_NXT);
+                feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
+            } else {
+                amountNQT = ((Long) transactionData.get("amountNQT"));
+                feeNQT = ((Long) transactionData.get("feeNQT"));
+            }
             Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
             byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                    amountNQT, feeNQT,
                     referencedTransactionId, signature);
 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");

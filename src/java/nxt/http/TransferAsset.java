@@ -10,6 +10,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.INCORRECT_ASSET_TRANSFER_COMMENT;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_ASSET;
@@ -17,7 +18,6 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
-import static nxt.http.JSONResponses.INCORRECT_ASSET_TRANSFER_COMMENT;
 
 public final class TransferAsset extends CreateTransaction {
 

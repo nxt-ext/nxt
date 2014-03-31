@@ -478,13 +478,13 @@ public interface Attachment {
 
         private final Long assetId;
         private final int quantity;
-        private final long price;
+        private final long priceNQT;
 
-        private ColoredCoinsOrderPlacement(Long assetId, int quantity, long price) {
+        private ColoredCoinsOrderPlacement(Long assetId, int quantity, long priceNQT) {
 
             this.assetId = assetId;
             this.quantity = quantity;
-            this.price = price;
+            this.priceNQT = priceNQT;
 
         }
 
@@ -500,7 +500,7 @@ public interface Attachment {
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putInt(quantity);
-            buffer.putLong(price);
+            buffer.putLong(priceNQT);
 
             return buffer.array();
 
@@ -512,7 +512,7 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantity", quantity);
-            attachment.put("price", price);
+            attachment.put("priceNQT", priceNQT);
 
             return attachment;
 
@@ -526,8 +526,8 @@ public interface Attachment {
             return quantity;
         }
 
-        public long getPrice() {
-            return price;
+        public long getPriceNQT() {
+            return priceNQT;
         }
     }
 
@@ -535,8 +535,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsAskOrderPlacement(Long assetId, int quantity, long price) {
-            super(assetId, quantity, price);
+        public ColoredCoinsAskOrderPlacement(Long assetId, int quantity, long priceNQT) {
+            super(assetId, quantity, priceNQT);
         }
 
         @Override
@@ -550,8 +550,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsBidOrderPlacement(Long assetId, int quantity, long price) {
-            super(assetId, quantity, price);
+        public ColoredCoinsBidOrderPlacement(Long assetId, int quantity, long priceNQT) {
+            super(assetId, quantity, priceNQT);
         }
 
         @Override

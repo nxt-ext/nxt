@@ -8,6 +8,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.DUPLICATE_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_AMOUNT;
@@ -19,19 +20,23 @@ public final class SendMoney extends CreateTransaction {
     static final SendMoney instance = new SendMoney();
 
     private SendMoney() {
-        super("recipient", "amount");
+        super("recipient", "amountNXT", "amountNQT");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String recipientValue = req.getParameter("recipient");
-        String amountValue = req.getParameter("amount");
+        String amountValueNXT = Convert.emptyToNull(req.getParameter("amountNXT"));
+        String amountValueNQT = Convert.emptyToNull(req.getParameter("amountNQT"));
+
 
         if (recipientValue == null || "0".equals(recipientValue)) {
             return MISSING_RECIPIENT;
-        } else if (amountValue == null) {
+        } else if (amountValueNXT == null && amountValueNQT == null) {
             return MISSING_AMOUNT;
+        } else if (amountValueNXT != null && amountValueNQT != null) {
+            return DUPLICATE_AMOUNT;
         }
 
         Long recipient;
@@ -41,10 +46,10 @@ public final class SendMoney extends CreateTransaction {
             return INCORRECT_RECIPIENT;
         }
 
-        int amount;
+        long amountNQT;
         try {
-            amount = Integer.parseInt(amountValue);
-            if (amount <= 0 || amount >= Constants.MAX_BALANCE) {
+            amountNQT = amountValueNQT != null ? Long.parseLong(amountValueNQT) : Convert.parseNXT(amountValueNXT);
+            if (amountNQT <= 0 || amountNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
                 return INCORRECT_AMOUNT;
             }
         } catch (NumberFormatException e) {
@@ -56,7 +61,7 @@ public final class SendMoney extends CreateTransaction {
             return UNKNOWN_ACCOUNT;
         }
 
-        return createTransaction(req, account, recipient, amount, null);
+        return createTransaction(req, account, recipient, amountNQT, null);
 
     }
 

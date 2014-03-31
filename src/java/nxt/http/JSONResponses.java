@@ -13,7 +13,8 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SECRET_PHRASE = missing("secretPhrase");
     public static final JSONStreamAware MISSING_ALIAS = missing("alias");
     public static final JSONStreamAware MISSING_URI = missing("uri");
-    public static final JSONStreamAware MISSING_FEE = missing("fee");
+    public static final JSONStreamAware MISSING_FEE = missing("feeNXT", "feeNQT");
+    public static final JSONStreamAware DUPLICATE_FEE = duplicate("feeNXT", "feeNQT");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
     public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
@@ -48,7 +49,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_TRANSACTION = missing("transaction");
     public static final JSONStreamAware UNKNOWN_TRANSACTION = unknown("transaction");
     public static final JSONStreamAware INCORRECT_TRANSACTION = incorrect("transaction");
-    public static final JSONStreamAware INCORRECT_ASSET_ISSUANCE_FEE = incorrect("fee", "(must be not less than 1'000)");
+    public static final JSONStreamAware INCORRECT_ASSET_ISSUANCE_FEE = incorrect("fee", "(must be not less than 1'000 NXT)");
     public static final JSONStreamAware INCORRECT_ASSET_DESCRIPTION = incorrect("description", "(length must not exceed " + Constants.MAX_ASSET_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ASSET_NAME = incorrect("name", "(must contain only digits and latin letters)");
     public static final JSONStreamAware INCORRECT_ASSET_NAME_LENGTH = incorrect("name", "(length must be in [" + Constants.MIN_ASSET_NAME_LENGTH + ".." + Constants.MAX_ASSET_NAME_LENGTH + "] range)");
@@ -63,14 +64,16 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_HOST = incorrect("host", "(the length exceeds 100 chars limit)");
     public static final JSONStreamAware INCORRECT_WEIGHT = incorrect("weight");
     public static final JSONStreamAware INCORRECT_DATE = incorrect("date");
-    public static final JSONStreamAware MISSING_PRICE = missing("price");
+    public static final JSONStreamAware MISSING_PRICE = missing("priceNXT", "priceNQT");
+    public static final JSONStreamAware DUPLICATE_PRICE = duplicate("priceNXT", "priceNQT");
     public static final JSONStreamAware INCORRECT_PRICE = incorrect("price");
     public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransaction");
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
     public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than " + Constants.MAX_ARBITRARY_MESSAGE_LENGTH + " bytes)");
-    public static final JSONStreamAware MISSING_AMOUNT = missing("amount");
+    public static final JSONStreamAware MISSING_AMOUNT = missing("amountNXT", "amountNQT");
+    public static final JSONStreamAware DUPLICATE_AMOUNT = duplicate("amountNXT", "amountNQT");
     public static final JSONStreamAware INCORRECT_AMOUNT = incorrect("amount");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
     public static final JSONStreamAware MISSING_MINNUMBEROFOPTIONS = missing("minNumberOfOptions");
@@ -140,6 +143,20 @@ public final class JSONResponses {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
         response.put("errorDescription", "\"" + paramName + "\"" + " not specified");
+        return JSON.prepare(response);
+    }
+
+    private static JSONStreamAware missing(String paramNameA, String paramNameB) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 3);
+        response.put("errorDescription", "Either \"" + paramNameA + "\" or \"" + paramNameB + "\" must be specified");
+        return JSON.prepare(response);
+    }
+
+    private static JSONStreamAware duplicate(String paramNameA, String paramNameB) {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 3);
+        response.put("errorDescription", "Only one of \"" + paramNameA + "\" or \"" + paramNameB + "\" must be specified");
         return JSON.prepare(response);
     }
 

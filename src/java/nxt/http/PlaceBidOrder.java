@@ -9,6 +9,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.DUPLICATE_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
@@ -22,7 +23,7 @@ public final class PlaceBidOrder extends CreateTransaction {
     static final PlaceBidOrder instance = new PlaceBidOrder();
 
     private PlaceBidOrder() {
-        super("asset", "quantity", "price");
+        super("asset", "quantity", "priceNXT", "priceNQT");
     }
 
     @Override
@@ -30,20 +31,23 @@ public final class PlaceBidOrder extends CreateTransaction {
 
         String assetValue = req.getParameter("asset");
         String quantityValue = req.getParameter("quantity");
-        String priceValue = req.getParameter("price");
+        String priceValueNXT = Convert.emptyToNull(req.getParameter("priceNXT"));
+        String priceValueNQT = Convert.emptyToNull(req.getParameter("priceNQT"));
 
         if (assetValue == null) {
             return MISSING_ASSET;
         } else if (quantityValue == null) {
             return MISSING_QUANTITY;
-        } else if (priceValue == null) {
+        } else if (priceValueNXT == null && priceValueNQT == null) {
             return MISSING_PRICE;
+        } else if (priceValueNXT != null && priceValueNQT != null) {
+            return DUPLICATE_PRICE;
         }
 
-        long price;
+        long priceNQT;
         try {
-            price = Long.parseLong(priceValue);
-            if (price <= 0 || price > Constants.MAX_BALANCE * 100L) {
+            priceNQT = priceValueNQT != null ? Long.parseLong(priceValueNQT) : Convert.parseNXT(priceValueNXT);
+            if (priceNQT <= 0 || priceNQT > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
                 return INCORRECT_PRICE;
             }
         } catch (NumberFormatException e) {
@@ -72,7 +76,7 @@ public final class PlaceBidOrder extends CreateTransaction {
             return UNKNOWN_ACCOUNT;
         }
 
-        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, price);
+        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset, quantity, priceNQT);
         return createTransaction(req, account, attachment);
 
     }

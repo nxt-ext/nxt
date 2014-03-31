@@ -41,7 +41,7 @@ public final class GetBidOrder extends APIServlet.APIRequestHandler {
         response.put("account", Convert.toUnsignedLong(orderData.getAccount().getId()));
         response.put("asset", Convert.toUnsignedLong(orderData.getAssetId()));
         response.put("quantity", orderData.getQuantity());
-        response.put("price", orderData.getPrice());
+        response.put("priceNQT", orderData.getPriceNQT());
         response.put("height", orderData.getHeight());
 
         return response;

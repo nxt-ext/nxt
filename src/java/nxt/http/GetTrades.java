@@ -68,7 +68,7 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
                 tradeData.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
                 tradeData.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
                 tradeData.put("quantity", trade.getQuantity());
-                tradeData.put("price", trade.getPrice());
+                tradeData.put("priceNQT", trade.getPriceNQT());
                 tradeData.put("block", Convert.toUnsignedLong(trade.getBlockId()));
 
                 tradesData.add(tradeData);

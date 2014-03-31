@@ -65,8 +65,8 @@ final class BlockDb {
             if (rs.wasNull()) {
                 previousBlockId = null;
             }
-            int totalAmount = rs.getInt("total_amount");
-            int totalFee = rs.getInt("total_fee");
+            long totalAmountNQT = rs.getLong("total_amount");
+            long totalFeeNQT = rs.getLong("total_fee");
             int payloadLength = rs.getInt("payload_length");
             byte[] generatorPublicKey = rs.getBytes("generator_public_key");
             byte[] previousBlockHash = rs.getBytes("previous_block_hash");
@@ -84,7 +84,7 @@ final class BlockDb {
             Long id = rs.getLong("id");
             List<TransactionImpl> transactions = TransactionDb.findBlockTransactions(con, id);
 
-            BlockImpl block = new BlockImpl(version, timestamp, previousBlockId, totalAmount, totalFee, payloadLength, payloadHash,
+            BlockImpl block = new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                     generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions,
                     cumulativeDifficulty, baseTarget, nextBlockId, height, id);
 
@@ -114,8 +114,8 @@ final class BlockDb {
                 } else {
                     pstmt.setNull(++i, Types.BIGINT);
                 }
-                pstmt.setInt(++i, block.getTotalAmount());
-                pstmt.setInt(++i, block.getTotalFee());
+                pstmt.setLong(++i, block.getTotalAmountNQT());
+                pstmt.setLong(++i, block.getTotalFeeNQT());
                 pstmt.setInt(++i, block.getPayloadLength());
                 pstmt.setBytes(++i, block.getGeneratorPublicKey());
                 pstmt.setBytes(++i, block.getPreviousBlockHash());

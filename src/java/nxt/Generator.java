@@ -136,7 +136,7 @@ public final class Generator {
 
     private void forge() {
 
-        long effectiveBalance = account.getEffectiveBalance();
+        long effectiveBalance = account.getEffectiveBalanceNXT();
         if (effectiveBalance <= 0) {
             return;
         }

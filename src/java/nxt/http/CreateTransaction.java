@@ -20,6 +20,7 @@ import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
 import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.DUPLICATE_FEE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
@@ -27,7 +28,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + 5);
-        System.arraycopy(new String[]{"secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"}, 0,
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNXT", "feeNQT", "deadline", "referencedTransaction"}, 0,
                 result, parameters.length, 5);
         return result;
     }
@@ -58,17 +59,20 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId,
-                                            int amount, Attachment attachment) throws NxtException.ValidationException {
+                                            long amountNQT, Attachment attachment) throws NxtException.ValidationException {
         String deadlineValue = req.getParameter("deadline");
-        String feeValue = req.getParameter("fee");
+        String feeValueNXT = Convert.emptyToNull(req.getParameter("feeNXT"));
+        String feeValueNQT = Convert.emptyToNull(req.getParameter("feeNQT"));
         String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
-        } else if (feeValue == null) {
+        } else if (feeValueNXT == null && feeValueNQT == null) {
             return MISSING_FEE;
+        } else if (feeValueNXT != null && feeValueNQT != null) {
+            return DUPLICATE_FEE;
         } else if (deadlineValue == null) {
             return MISSING_DEADLINE;
         }
@@ -83,17 +87,21 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             return INCORRECT_DEADLINE;
         }
 
-        int fee;
+        long feeNQT;
         try {
-            fee = Integer.parseInt(feeValue);
-            if (fee < minimumFee() || fee >= Constants.MAX_BALANCE) {
+            feeNQT = feeValueNQT != null ? Long.parseLong(feeValueNQT) : Convert.parseNXT(feeValueNXT);
+            if (feeNQT < minimumFeeNQT() || feeNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
                 return INCORRECT_FEE;
             }
         } catch (NumberFormatException e) {
             return INCORRECT_FEE;
         }
 
-        if ((amount + fee) * 100L > senderAccount.getUnconfirmedBalance()) {
+        try {
+            if (Convert.safeAdd(amountNQT, feeNQT) > senderAccount.getUnconfirmedBalanceNQT()) {
+                return NOT_ENOUGH_FUNDS;
+            }
+        } catch (ArithmeticException e) {
             return NOT_ENOUGH_FUNDS;
         }
 
@@ -109,10 +117,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         Transaction transaction = attachment == null ?
                 Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                        amount, fee, referencedTransaction)
+                        amountNQT, feeNQT, referencedTransaction)
                 :
                 Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                        amount, fee, referencedTransaction, attachment);
+                        amountNQT, feeNQT, referencedTransaction, attachment);
 
         JSONObject response = new JSONObject();
         try {
@@ -136,8 +144,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return true;
     }
 
-    int minimumFee() {
-        return 1;
+    long minimumFeeNQT() {
+        return Constants.ONE_NXT;
     }
 
 }

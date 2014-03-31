@@ -397,7 +397,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
                 TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, 0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
-                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i], 0, null, Genesis.GENESIS_SIGNATURES[i]);
+                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, null, Genesis.GENESIS_SIGNATURES[i]);
                 transactionsMap.put(transaction.getId(), transaction);
             }
 
@@ -406,7 +406,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 digest.update(transaction.getBytes());
             }
 
-            BlockImpl genesisBlock = new BlockImpl(-1, 0, null, 1000000000, 0, transactionsMap.size() * 128, digest.digest(),
+            BlockImpl genesisBlock = new BlockImpl(-1, 0, null, Constants.MAX_BALANCE_NXT * Constants.ONE_NXT, 0, transactionsMap.size() * 128, digest.digest(),
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, new ArrayList<>(transactionsMap.values()));
 
             genesisBlock.setPrevious(null);
@@ -453,7 +453,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException("Previous block id doesn't match");
                 }
 
-                if (block.getVersion() != (previousLastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2)) {
+                if (block.getVersion() !=
+                        (previousLastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1
+                        : previousLastBlock.getHeight() < Constants.NQT_BLOCK ? 2
+                        : 3)) {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
 
@@ -486,7 +489,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Map<TransactionType, Set<String>> duplicates = new HashMap<>();
                 Map<Long, Long> accumulatedAmounts = new HashMap<>();
                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
-                int calculatedTotalAmount = 0, calculatedTotalFee = 0;
+                long calculatedTotalAmount = 0;
+                long calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
 
                 for (TransactionImpl transaction : block.getTransactions()) {
@@ -505,7 +509,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             && ! TransactionDb.hasTransaction(transaction.getReferencedTransactionId())
                             && Collections.binarySearch(block.getTransactionIds(), transaction.getReferencedTransactionId()) < 0)) {
                         throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
-                                +" for transaction " + transaction.getStringId());
+                                + " for transaction " + transaction.getStringId());
                     }
                     if (! transaction.verify()) {
                         throw new BlockNotAcceptedException("Signature verification failed for transaction " + transaction.getStringId());
@@ -522,17 +526,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new BlockNotAcceptedException(e.getMessage());
                     }
 
-                    calculatedTotalAmount += transaction.getAmount();
+                    calculatedTotalAmount += transaction.getAmountNQT();
 
                     transaction.updateTotals(accumulatedAmounts, accumulatedAssetQuantities);
 
-                    calculatedTotalFee += transaction.getFee();
+                    calculatedTotalFee += transaction.getFeeNQT();
 
                     digest.update(transaction.getBytes());
 
                 }
 
-                if (calculatedTotalAmount != block.getTotalAmount() || calculatedTotalFee != block.getTotalFee()) {
+                if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
                     throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
                 }
                 if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
@@ -540,7 +544,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
                     Account senderAccount = Account.getAccount(accumulatedAmountEntry.getKey());
-                    if (senderAccount.getBalance() < accumulatedAmountEntry.getValue()) {
+                    if (senderAccount.getBalanceNQT() < accumulatedAmountEntry.getValue()) {
                         throw new BlockNotAcceptedException("Not enough funds in sender account: " + Convert.toUnsignedLong(senderAccount.getId()));
                     }
                 }
@@ -632,8 +636,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
         Map<Long, Long> accumulatedAmounts = new HashMap<>();
 
-        int totalAmount = 0;
-        int totalFee = 0;
+        long totalAmountNQT = 0;
+        long totalFeeNQT = 0;
         int payloadLength = 0;
 
         int blockTimestamp = Convert.getEpochTime();
@@ -646,17 +650,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 int transactionLength = transaction.getSize();
                 if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
-                    continue;
-                }
-
-                Long sender = transaction.getSenderId();
-                Long accumulatedAmount = accumulatedAmounts.get(sender);
-                if (accumulatedAmount == null) {
-                    accumulatedAmount = 0L;
-                }
-
-                long amount = (transaction.getAmount() + transaction.getFee()) * 100L;
-                if (accumulatedAmount + amount > Account.getAccount(sender).getBalance()) {
                     continue;
                 }
 
@@ -674,12 +667,27 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
-                accumulatedAmounts.put(sender, accumulatedAmount + amount);
+                Long sender = transaction.getSenderId();
+                Long accumulatedAmount = accumulatedAmounts.get(sender);
+                if (accumulatedAmount == null) {
+                    accumulatedAmount = 0L;
+                }
+
+                try {
+                    long amount = Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT());
+                    if (Convert.safeAdd(accumulatedAmount, amount) > Account.getAccount(sender).getBalanceNQT()) {
+                        continue;
+                    }
+                    accumulatedAmounts.put(sender, Convert.safeAdd(accumulatedAmount, amount));
+                } catch (ArithmeticException e) {
+                    Logger.logDebugMessage("Transaction " + transaction.getStringId() + " causes overflow, skipping", e);
+                    continue;
+                }
 
                 newTransactions.put(transaction.getId(), transaction);
                 payloadLength += transactionLength;
-                totalAmount += transaction.getAmount();
-                totalFee += transaction.getFee();
+                totalAmountNQT += transaction.getAmountNQT();
+                totalFeeNQT += transaction.getFeeNQT();
 
             }
 
@@ -708,12 +716,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         BlockImpl block;
         //int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
-        int version = 2;
+        int version = previousBlock.getHeight() < Constants.NQT_BLOCK ? 2 : 3;
         byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
 
         try {
 
-            block = new BlockImpl(version, blockTimestamp, previousBlock.getId(), totalAmount, totalFee, payloadLength,
+            block = new BlockImpl(version, blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
                         payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(newTransactions.values()));
 
         } catch (NxtException.ValidationException e) {
@@ -741,8 +749,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             int version = ((Long)blockData.get("version")).intValue();
             int timestamp = ((Long)blockData.get("timestamp")).intValue();
             Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-            int totalAmount = ((Long)blockData.get("totalAmount")).intValue();
-            int totalFee = ((Long)blockData.get("totalFee")).intValue();
+            long totalAmountNQT;
+            long totalFeeNQT;
+            if (version < 3) {
+                totalAmountNQT = Convert.safeMultiply(((Long) blockData.get("totalAmount")), Constants.ONE_NXT);
+                totalFeeNQT = Convert.safeMultiply(((Long) blockData.get("totalFee")), Constants.ONE_NXT);
+            } else {
+                totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
+                totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
+            }
             int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
             byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
             byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
@@ -759,7 +774,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
             }
 
-            return new BlockImpl(version, timestamp, previousBlock, totalAmount, totalFee, payloadLength, payloadHash, generatorPublicKey,
+            return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
                     generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
 
         } catch (RuntimeException e) {

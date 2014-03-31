@@ -22,8 +22,8 @@ final class BlockImpl implements Block {
     private final Long previousBlockId;
     private final byte[] generatorPublicKey;
     private final byte[] previousBlockHash;
-    private final int totalAmount;
-    private final int totalFee;
+    private final long totalAmountNQT;
+    private final long totalFeeNQT;
     private final int payloadLength;
     private final byte[] generationSignature;
     private final byte[] payloadHash;
@@ -40,7 +40,7 @@ final class BlockImpl implements Block {
     private volatile Long generatorId;
 
 
-    BlockImpl(int version, int timestamp, Long previousBlockId, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash,
+    BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions)
             throws NxtException.ValidationException {
 
@@ -55,8 +55,8 @@ final class BlockImpl implements Block {
         this.version = version;
         this.timestamp = timestamp;
         this.previousBlockId = previousBlockId;
-        this.totalAmount = totalAmount;
-        this.totalFee = totalFee;
+        this.totalAmountNQT = totalAmountNQT;
+        this.totalFeeNQT = totalFeeNQT;
         this.payloadLength = payloadLength;
         this.payloadHash = payloadHash;
         this.generatorPublicKey = generatorPublicKey;
@@ -78,11 +78,11 @@ final class BlockImpl implements Block {
 
     }
 
-    BlockImpl(int version, int timestamp, Long previousBlockId, int totalAmount, int totalFee, int payloadLength, byte[] payloadHash,
+    BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
               byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions,
               BigInteger cumulativeDifficulty, long baseTarget, Long nextBlockId, int height, Long id)
             throws NxtException.ValidationException {
-        this(version, timestamp, previousBlockId, totalAmount, totalFee, payloadLength, payloadHash,
+        this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions);
         this.cumulativeDifficulty = cumulativeDifficulty;
         this.baseTarget = baseTarget;
@@ -117,13 +117,13 @@ final class BlockImpl implements Block {
     }
 
     @Override
-    public int getTotalAmount() {
-        return totalAmount;
+    public long getTotalAmountNQT() {
+        return totalAmountNQT;
     }
 
     @Override
-    public int getTotalFee() {
-        return totalFee;
+    public long getTotalFeeNQT() {
+        return totalFeeNQT;
     }
 
     @Override
@@ -224,14 +224,19 @@ final class BlockImpl implements Block {
 
     byte[] getBytes() {
 
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + 4 + 4 + 4 + 32 + 32 + (32 + 32) + 64);
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + 64);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(version);
         buffer.putInt(timestamp);
         buffer.putLong(Convert.nullToZero(previousBlockId));
         buffer.putInt(blockTransactions.size());
-        buffer.putInt(totalAmount);
-        buffer.putInt(totalFee);
+        if (version < 3) {
+            buffer.putInt((int)(totalAmountNQT / Constants.ONE_NXT));
+            buffer.putInt((int)(totalFeeNQT / Constants.ONE_NXT));
+        } else {
+            buffer.putLong(totalAmountNQT);
+            buffer.putLong(totalFeeNQT);
+        }
         buffer.putInt(payloadLength);
         buffer.put(payloadHash);
         buffer.put(generatorPublicKey);
@@ -252,8 +257,12 @@ final class BlockImpl implements Block {
         json.put("timestamp", timestamp);
         json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
         json.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
-        json.put("totalAmount", totalAmount);
-        json.put("totalFee", totalFee);
+        if (version < 3) {
+            json.put("totalAmount", totalAmountNQT / Constants.ONE_NXT);
+            json.put("totalFee", totalFeeNQT / Constants.ONE_NXT);
+        }
+        json.put("totalAmountNQT", totalAmountNQT);
+        json.put("totalFeeNQT", totalFeeNQT);
         json.put("payloadLength", payloadLength);
         json.put("payloadHash", Convert.toHexString(payloadHash));
         json.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
@@ -313,7 +322,7 @@ final class BlockImpl implements Block {
             }
 
             Account account = Account.getAccount(getGeneratorId());
-            long effectiveBalance = account == null ? 0 : account.getEffectiveBalance();
+            long effectiveBalance = account == null ? 0 : account.getEffectiveBalanceNXT();
             if (effectiveBalance <= 0) {
                 return false;
             }
@@ -351,13 +360,13 @@ final class BlockImpl implements Block {
     void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(generatorPublicKey, this.height);
-        generatorAccount.addToBalanceAndUnconfirmedBalance(totalFee * 100L);
+        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
     }
 
     void undo() {
         Account generatorAccount = Account.getAccount(getGeneratorId());
         generatorAccount.undo(getHeight());
-        generatorAccount.addToBalanceAndUnconfirmedBalance(-totalFee * 100L);
+        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(-totalFeeNQT);
     }
 
     void setPrevious(BlockImpl previousBlock) {

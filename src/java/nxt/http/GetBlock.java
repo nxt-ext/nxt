@@ -44,8 +44,8 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
         response.put("generator", Convert.toUnsignedLong(blockData.getGeneratorId()));
         response.put("timestamp", blockData.getTimestamp());
         response.put("numberOfTransactions", blockData.getTransactionIds().size());
-        response.put("totalAmount", blockData.getTotalAmount());
-        response.put("totalFee", blockData.getTotalFee());
+        response.put("totalAmountNQT", blockData.getTotalAmountNQT());
+        response.put("totalFeeNQT", blockData.getTotalFeeNQT());
         response.put("payloadLength", blockData.getPayloadLength());
         response.put("version", blockData.getVersion());
         response.put("baseTarget", Convert.toUnsignedLong(blockData.getBaseTarget()));

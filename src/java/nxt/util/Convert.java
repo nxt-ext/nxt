@@ -92,4 +92,94 @@ public final class Convert {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }
 
+    public static String toNXT(long nqt) {
+        long wholePart = nqt / Constants.ONE_NXT;
+        long fractionalPart = nqt % Constants.ONE_NXT;
+        if (fractionalPart == 0) {
+            return String.valueOf(wholePart);
+        }
+        StringBuilder buf = new StringBuilder();
+        buf.append(wholePart);
+        buf.append('.');
+        String fractionalPartString = String.valueOf(fractionalPart);
+        for (int i = fractionalPartString.length(); i < 8; i++) {
+            buf.append('0');
+        }
+        buf.append(fractionalPartString);
+        return buf.toString();
+    }
+
+    public static long parseNXT(String nxt) {
+        String[] s = nxt.split(".");
+        long wholePart = Long.parseLong(s[0]);
+        if (wholePart > Constants.MAX_BALANCE_NXT) {
+            throw new IllegalArgumentException("Value of " + nxt + " exceeds maximum possible NXT balance");
+        }
+        if (s.length == 1) {
+            return wholePart * Constants.ONE_NXT;
+        }
+        long fractionalPart = Long.parseLong(s[1]);
+        if (fractionalPart >= Constants.ONE_NXT) {
+            throw new IllegalArgumentException("Fractional part of " + nxt + " exceeds maximum NXT divisibility");
+        }
+        for (int i = s[1].length(); i < 8; i++) {
+            fractionalPart *= 10;
+        }
+        return wholePart * fractionalPart;
+    }
+
+    // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
+    public static long safeAdd(long left, long right)
+            throws ArithmeticException {
+        if (right > 0 ? left > Long.MAX_VALUE - right
+                : left < Long.MIN_VALUE - right) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left + right;
+    }
+
+    public static long safeSubtract(long left, long right)
+            throws ArithmeticException {
+        if (right > 0 ? left < Long.MIN_VALUE + right
+                : left > Long.MAX_VALUE + right) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left - right;
+    }
+
+    public static long safeMultiply(long left, long right)
+            throws ArithmeticException {
+        if (right > 0 ? left > Long.MAX_VALUE/right
+                || left < Long.MIN_VALUE/right
+                : (right < -1 ? left > Long.MIN_VALUE/right
+                || left < Long.MAX_VALUE/right
+                : right == -1
+                && left == Long.MIN_VALUE) ) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left * right;
+    }
+
+    public static long safeDivide(long left, long right)
+            throws ArithmeticException {
+        if ((left == Long.MIN_VALUE) && (right == -1)) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left / right;
+    }
+
+    public static long safeNegate(long a) throws ArithmeticException {
+        if (a == Long.MIN_VALUE) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return -a;
+    }
+
+    public static long safeAbs(long a) throws ArithmeticException {
+        if (a == Long.MIN_VALUE) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return Math.abs(a);
+    }
+
 }
