@@ -297,14 +297,13 @@ public final class Account {
     }
 
     void addToBalance(long amount) {
-        if (amount == 0) {
-            return;
-        }
         synchronized (this) {
             this.balance += amount;
             addToGuaranteedBalance(amount);
         }
-        listeners.notify(this, Event.BALANCE);
+        if (amount != 0) {
+            listeners.notify(this, Event.BALANCE);
+        }
     }
 
     void addToUnconfirmedBalance(long amount) {
@@ -318,16 +317,15 @@ public final class Account {
     }
 
     void addToBalanceAndUnconfirmedBalance(long amount) {
-        if (amount == 0) {
-            return;
-        }
         synchronized (this) {
             this.balance += amount;
             this.unconfirmedBalance += amount;
             addToGuaranteedBalance(amount);
         }
-        listeners.notify(this, Event.BALANCE);
-        listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        if (amount != 0) {
+            listeners.notify(this, Event.BALANCE);
+            listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        }
     }
 
     private synchronized void addToGuaranteedBalance(long amount) {
