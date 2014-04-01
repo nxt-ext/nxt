@@ -43,7 +43,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         }
         response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
 
-        response.put("numberOfBlocks", Nxt.getBlockchain().getBlockCount());
+        response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
         response.put("numberOfAssets", Asset.getAllAssets().size());

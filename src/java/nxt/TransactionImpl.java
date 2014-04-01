@@ -47,8 +47,9 @@ final class TransactionImpl implements Transaction {
                     + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
         }
 
-        if (amountNQT % Constants.ONE_NXT != 0 || feeNQT % Constants.ONE_NXT != 0) {
-            throw new NxtException.ValidationException("Fractional amounts or fees not yet supported!");
+        if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK
+                && (amountNQT % Constants.ONE_NXT != 0 || feeNQT % Constants.ONE_NXT != 0)) {
+            throw new TransactionType.NotYetEnabledException("Fractional amounts or fees not yet supported!");
         }
 
         this.timestamp = timestamp;
@@ -239,7 +240,8 @@ final class TransactionImpl implements Transaction {
 
     private boolean useNQT() {
         return this.height > Constants.NQT_BLOCK
-                && (this.height < Integer.MAX_VALUE || Nxt.getBlockchain().getLastBlock().getHeight() >= Constants.NQT_BLOCK);
+                && (this.height < Integer.MAX_VALUE
+                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
     }
 
     @Override
@@ -304,10 +306,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public String getHash() {
         if (hash == null) {
-            byte[] data = getBytes();
-            for (int i = 64; i < 128; i++) {
-                data[i] = 0;
-            }
+            byte[] data = zeroSignature(getBytes());
             hash = Convert.toHexString(Crypto.sha256().digest(data));
         }
         return hash;
@@ -328,11 +327,16 @@ final class TransactionImpl implements Transaction {
         if (account == null) {
             return false;
         }
-        byte[] data = getBytes();
-        for (int i = 64; i < 128; i++) {
+        byte[] data = zeroSignature(getBytes());
+        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
+    }
+
+    private byte[] zeroSignature(byte[] data) {
+        int start = useNQT() ? 72 : 64;
+        for (int i = start; i < start + 64; i++) {
             data[i] = 0;
         }
-        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
+        return data;
     }
 
     void validateAttachment() throws NxtException.ValidationException {
