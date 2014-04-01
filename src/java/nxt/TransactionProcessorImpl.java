@@ -32,8 +32,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    private final ConcurrentMap<Long, TransactionImpl> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, TransactionImpl> unconfirmedTransactionHashes = new ConcurrentHashMap<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
     private static class TransactionHashInfo {
@@ -64,6 +64,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             TransactionImpl transaction = iterator.next();
                             if (transaction.getExpiration() < curTime) {
                                 iterator.remove();
+                                unconfirmedTransactionHashes.remove(transaction.getHash());
                                 transaction.undoUnconfirmed();
                                 removedUnconfirmedTransactions.add(transaction);
                             }
@@ -309,7 +310,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void clear() {
         unconfirmedTransactions.clear();
-        doubleSpendingTransactions.clear();
+        unconfirmedTransactionHashes.clear();
         nonBroadcastedTransactions.clear();
         transactionHashes.clear();
     }
@@ -335,6 +336,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 transactionHashes.remove(transaction.getHash());
             }
             unconfirmedTransactions.put(transaction.getId(), transaction);
+            unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
         }
@@ -361,10 +363,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
             }
-            TransactionImpl removed = unconfirmedTransactions.remove(duplicateTransaction.getId());
-            if (removed != null) {
-                removed.undoUnconfirmed();
-                transactionListeners.notify(Arrays.asList((Transaction)removed), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+            TransactionImpl removedUnconfirmed = unconfirmedTransactions.remove(duplicateTransaction.getId());
+            if (removedUnconfirmed != null) {
+                unconfirmedTransactionHashes.remove(removedUnconfirmed.getHash());
+                removedUnconfirmed.undoUnconfirmed();
+                transactionListeners.notify(Arrays.asList((Transaction)removedUnconfirmed), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
             }
         }
         return duplicateTransaction;
@@ -378,9 +381,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             addedConfirmedTransactions.add(transaction);
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
+                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedUnconfirmedTransactions.add(removedTransaction);
             }
-            // TODO: Remove from double-spending transactions
         }
 
         if (removedUnconfirmedTransactions.size() > 0) {
@@ -442,26 +445,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     continue;
                 }
 
-                boolean doubleSpendingTransaction;
-
                 synchronized (BlockchainImpl.getInstance()) {
 
                     Long id = transaction.getId();
                     if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
-                            || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
+                            || ! transaction.verify()) {
                         continue;
                     }
 
-                    if (transactionHashes.containsKey(transaction.getHash())) {
+                    if (transactionHashes.containsKey(transaction.getHash())
+                            || unconfirmedTransactionHashes.containsKey(transaction.getHash())) {
                         continue;
                     }
 
-                    doubleSpendingTransaction = !transaction.applyUnconfirmed();
-
-                    if (doubleSpendingTransaction) {
-                        doubleSpendingTransactions.put(id, transaction);
-                        addedDoubleSpendingTransactions.add(transaction);
-                    } else {
+                    if (transaction.applyUnconfirmed()) {
                         if (sendToPeers) {
                             if (nonBroadcastedTransactions.containsKey(id)) {
                                 Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
@@ -472,7 +469,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
+                        unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
                         addedUnconfirmedTransactions.add(transaction);
+                    } else {
+                        addedDoubleSpendingTransactions.add(transaction);
                     }
                 }
 

@@ -297,14 +297,13 @@ public final class Account {
     }
 
     void addToBalanceNQT(long amountNQT) {
-        if (amountNQT == 0) {
-            return;
-        }
         synchronized (this) {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
         }
-        listeners.notify(this, Event.BALANCE);
+        if (amountNQT != 0) {
+            listeners.notify(this, Event.BALANCE);
+        }
     }
 
     void addToUnconfirmedBalanceNQT(long amountNQT) {
@@ -318,16 +317,15 @@ public final class Account {
     }
 
     void addToBalanceAndUnconfirmedBalanceNQT(long amountNQT) {
-        if (amountNQT == 0) {
-            return;
-        }
         synchronized (this) {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
         }
-        listeners.notify(this, Event.BALANCE);
-        listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        if (amountNQT != 0) {
+            listeners.notify(this, Event.BALANCE);
+            listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        }
     }
 
     private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
