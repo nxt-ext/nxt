@@ -24,7 +24,11 @@ public final class Asset {
     }
 
     public static List<Asset> getAssets(String name) {
-        return Collections.unmodifiableList(assetNameToAssetMappings.get(name));
+        List<Asset> assets = assetNameToAssetMappings.get(name.toLowerCase());
+        if (assets == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(assets);
     }
 
     static void addAsset(Long assetId, Long senderAccountId, String name, String description, int quantity) {

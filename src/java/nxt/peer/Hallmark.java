@@ -48,11 +48,8 @@ public final class Hallmark {
             buffer.putInt(date);
 
             byte[] data = buffer.array();
-            byte[] signature;
-            do {
-                data[data.length - 1] = (byte) ThreadLocalRandom.current().nextInt();
-                signature = Crypto.sign(data, secretPhrase);
-            } while (!Crypto.verify(signature, data, publicKey));
+            data[data.length - 1] = (byte) ThreadLocalRandom.current().nextInt();
+            byte[] signature = Crypto.sign(data, secretPhrase);
 
             return Convert.toHexString(data) + Convert.toHexString(signature);
 
