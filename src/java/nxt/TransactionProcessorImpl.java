@@ -8,7 +8,6 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -22,7 +21,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -36,7 +34,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private final ConcurrentMap<Long, TransactionImpl> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
-    private final Set<String> unconfirmedTransactionHashes = new ConcurrentHashSet<>();
+    private final ConcurrentMap<String, TransactionImpl> unconfirmedTransactionHashes = new ConcurrentHashMap<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
     private static class TransactionHashInfo {
@@ -323,7 +321,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 transactionHashes.remove(transaction.getHash());
             }
             unconfirmedTransactions.put(transaction.getId(), transaction);
-            unconfirmedTransactionHashes.add(transaction.getHash());
+            unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
         }
@@ -444,7 +442,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
 
                     if (transactionHashes.containsKey(transaction.getHash())
-                            || unconfirmedTransactionHashes.contains(transaction.getHash())) {
+                            || unconfirmedTransactionHashes.containsKey(transaction.getHash())) {
                         continue;
                     }
 
@@ -464,7 +462,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
-                        unconfirmedTransactionHashes.add(transaction.getHash());
+                        unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
                         addedUnconfirmedTransactions.add(transaction);
                     }
                 }
