@@ -1,13 +1,13 @@
 package nxt.http;
 
 import nxt.Order;
+import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
-import nxt.util.Convert;
 
 public final class GetAllOpenOrders extends APIServlet.APIRequestHandler {
 
