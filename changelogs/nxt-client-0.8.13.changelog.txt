@@ -1,0 +1,22 @@
+Prevent duplicate hash transactions in the unconfirmed transactions pool.
+
+Added a comment field to the Asset Transfer transaction type, up to 1000 chars.
+This will force a deletion of all blocks on testnet starting from the first one
+that contains an asset transfer transaction, the first time this new version
+is started.
+
+Added optional filtering by account to the getUnconfirmedTransactions API.
+
+Added getAllOpenOrders API request.
+
+Added AccountAsset Listeners to Account, to receive notification of asset
+balance changes specifying the asset that changed balance.
+
+Return an error on trying to broadcast an insufficient funds transaction,
+and do not try to re-broadcast such transactions.
+
+Improvements to the DebugTrace and VerifyTrace facility.
+
+Updated Jetty to version 9.1.3.
+
+

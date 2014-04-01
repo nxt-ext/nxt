@@ -40,7 +40,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
                 response.put("transaction", transaction.getStringId());
                 response.put("hash", transaction.getHash());
             } catch (NxtException.ValidationException e) {
-                response.put("error", e.toString());
+                response.put("error", e.getMessage());
             }
 
             return response;

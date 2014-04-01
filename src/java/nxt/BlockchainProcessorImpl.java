@@ -130,17 +130,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                                 if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
                                     try {
-
                                         pushBlock(block);
-
                                     } catch (BlockNotAcceptedException e) {
                                         peer.blacklist(e);
                                         return;
                                     }
                                 } else if (! BlockDb.hasBlock(block.getId())) {
-
                                     forkBlocks.add(block);
-
                                 }
 
                             }
@@ -303,11 +299,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 if (needsRescan) {
-                    // this relies on the database cascade trigger to delete all blocks after commonBlock
                     if (commonBlock.getNextBlockId() != null) {
                         Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                         Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-                        BlockDb.deleteBlock(commonBlock.getNextBlockId());
+                        BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
                     }
                     Logger.logMessage("Will do a re-scan");
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
@@ -611,7 +606,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 blockListeners.notify(block, Event.BEFORE_BLOCK_UNDO);
                 blockchain.setLastBlock(block, previousBlock);
                 transactionProcessor.undo(block);
-                BlockDb.deleteBlock(block.getId());
+                BlockDb.deleteBlocksFrom(block.getId());
             } // synchronized
 
             blockListeners.notify(block, Event.BLOCK_POPPED);
@@ -800,13 +795,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();
                     }
-                } catch (RuntimeException e) {
+                } catch (NxtException.ValidationException|RuntimeException e) {
                     Logger.logDebugMessage(e.toString(), e);
                     Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
-                    BlockDb.deleteBlock(currentBlockId);
+                    BlockDb.deleteBlocksFrom(currentBlockId);
                     scan();
                 }
-            } catch (NxtException.ValidationException|SQLException e) {
+            } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
             Logger.logMessage("...done");

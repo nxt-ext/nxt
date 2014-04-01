@@ -425,7 +425,7 @@ public abstract class TransactionType {
 
                 try {
                     int numberOfOptions = buffer.get();
-                    if (numberOfOptions > 100) {
+                    if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
                         throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
                     }
                     pollOptions = new String[numberOfOptions];
@@ -500,7 +500,7 @@ public abstract class TransactionType {
                     }
                 }
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > 100 || transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
+                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT || transaction.getAmount() != 0 || ! Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Invalid poll attachment: " + attachment.getJSON());
                 }
             }
@@ -523,7 +523,7 @@ public abstract class TransactionType {
                 try {
                     pollId = buffer.getLong();
                     int numberOfOptions = buffer.get();
-                    if (numberOfOptions > 100) {
+                    if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
                         throw new NxtException.ValidationException("Error parsing vote casting parameters");
                     }
                     pollVote = new byte[numberOfOptions];
@@ -673,13 +673,13 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 int nameLength = buffer.get();
-                if (nameLength > 30) {
+                if (nameLength > 3 * Constants.MAX_ASSET_NAME_LENGTH) {
                     throw new NxtException.ValidationException("Max asset name length exceeded");
                 }
                 byte[] name = new byte[nameLength];
                 buffer.get(name);
                 int descriptionLength = buffer.getShort();
-                if (descriptionLength > 300) {
+                if (descriptionLength > 3 * Constants.MAX_ASSET_DESCRIPTION_LENGTH) {
                     throw new NxtException.ValidationException("Max asset description length exceeded");
                 }
                 byte[] description = new byte[descriptionLength];
@@ -737,8 +737,10 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0 || transaction.getFee() < Constants.ASSET_ISSUANCE_FEE
-                        || attachment.getName().length() < 3 || attachment.getName().length() > 10 || attachment.getDescription().length() > 1000
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmount() != 0
+                        || transaction.getFee() < Constants.ASSET_ISSUANCE_FEE
+                        || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
+                        || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
                         || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY) {
                     throw new NxtException.ValidationException("Invalid asset issuance: " + attachment.getJSON());
                 }
@@ -763,15 +765,26 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long assetId = Convert.zeroToNull(buffer.getLong());
                 int quantity = buffer.getInt();
-                transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantity));
-                validateAttachment(transaction);
+                int commentLength = buffer.getShort();
+                if (commentLength > 3 * Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
+                    throw new NxtException.ValidationException("Max asset comment length exceeded");
+                }
+                byte[] comment = new byte[commentLength];
+                buffer.get(comment);
+                try {
+                    transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantity, new String(comment, "UTF-8").intern()));
+                    validateAttachment(transaction);
+                } catch (UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error in asset transfer", e);
+                }
             }
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                 int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantity));
+                String comment = (String)attachmentData.get("comment");
+                transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantity, comment));
                 validateAttachment(transaction);
             }
 
@@ -830,7 +843,7 @@ public abstract class TransactionType {
                 }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
                 if (transaction.getAmount() != 0 || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_ASSET_QUANTITY
-                        || attachment.getAssetId() == null) {
+                        || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or quantity: " + attachment.getJSON());
                 }
             }

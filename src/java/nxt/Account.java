@@ -18,6 +18,20 @@ public final class Account {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE
     }
 
+    public static class AccountAsset {
+
+        public final Long accountId;
+        public final Long assetId;
+        public final Integer quantity;
+
+        private AccountAsset(Long accountId, Long assetId, Integer quantity) {
+            this.accountId = accountId;
+            this.assetId = assetId;
+            this.quantity = quantity;
+        }
+
+    }
+
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
 
@@ -25,12 +39,22 @@ public final class Account {
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
+    private static final Listeners<AccountAsset,Event> assetListeners = new Listeners<>();
+
     public static boolean addListener(Listener<Account> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
 
     public static boolean removeListener(Listener<Account> listener, Event eventType) {
         return listeners.removeListener(listener, eventType);
+    }
+
+    public static boolean addAssetListener(Listener<AccountAsset> listener, Event eventType) {
+        return assetListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeAssetListener(Listener<AccountAsset> listener, Event eventType) {
+        return assetListeners.removeListener(listener, eventType);
     }
 
     public static Collection<Account> getAllAccounts() {
@@ -254,6 +278,7 @@ public final class Account {
             }
         }
         listeners.notify(this, Event.ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
     }
 
     void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
@@ -266,6 +291,7 @@ public final class Account {
             }
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
@@ -285,6 +311,8 @@ public final class Account {
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToBalance(long amount) {
@@ -292,10 +320,15 @@ public final class Account {
             this.balance += amount;
             addToGuaranteedBalance(amount);
         }
-        listeners.notify(this, Event.BALANCE);
+        if (amount != 0) {
+            listeners.notify(this, Event.BALANCE);
+        }
     }
 
     void addToUnconfirmedBalance(long amount) {
+        if (amount == 0) {
+            return;
+        }
         synchronized (this) {
             this.unconfirmedBalance += amount;
         }
@@ -308,8 +341,10 @@ public final class Account {
             this.unconfirmedBalance += amount;
             addToGuaranteedBalance(amount);
         }
-        listeners.notify(this, Event.BALANCE);
-        listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        if (amount != 0) {
+            listeners.notify(this, Event.BALANCE);
+            listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        }
     }
 
     private synchronized void addToGuaranteedBalance(long amount) {

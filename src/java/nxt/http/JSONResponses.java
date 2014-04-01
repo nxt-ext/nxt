@@ -49,9 +49,10 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_TRANSACTION = unknown("transaction");
     public static final JSONStreamAware INCORRECT_TRANSACTION = incorrect("transaction");
     public static final JSONStreamAware INCORRECT_ASSET_ISSUANCE_FEE = incorrect("fee", "(must be not less than 1'000)");
-    public static final JSONStreamAware INCORRECT_ASSET_DESCRIPTION = incorrect("description", "(length must be not longer than 1000 characters)");
+    public static final JSONStreamAware INCORRECT_ASSET_DESCRIPTION = incorrect("description", "(length must not exceed " + Constants.MAX_ASSET_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ASSET_NAME = incorrect("name", "(must contain only digits and latin letters)");
-    public static final JSONStreamAware INCORRECT_ASSET_NAME_LENGTH = incorrect("name", "(length must be in [3..10] range)");
+    public static final JSONStreamAware INCORRECT_ASSET_NAME_LENGTH = incorrect("name", "(length must be in [" + Constants.MIN_ASSET_NAME_LENGTH + ".." + Constants.MAX_ASSET_NAME_LENGTH + "] range)");
+    public static final JSONStreamAware INCORRECT_ASSET_TRANSFER_COMMENT = incorrect("comment", "(length must not exceed " + Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_NAME = missing("name");
     public static final JSONStreamAware MISSING_QUANTITY = missing("quantity");
     public static final JSONStreamAware INCORRECT_QUANTITY = incorrect("quantity");

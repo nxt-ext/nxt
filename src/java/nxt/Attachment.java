@@ -402,7 +402,7 @@ public interface Attachment {
         public ColoredCoinsAssetIssuance(String name, String description, int quantity) {
 
             this.name = name;
-            this.description = description == null ? "" : description;
+            this.description = Convert.nullToEmpty(description);
             this.quantity = quantity;
 
         }
@@ -476,28 +476,44 @@ public interface Attachment {
 
         private final Long assetId;
         private final int quantity;
+        private final String comment;
 
-        public ColoredCoinsAssetTransfer(Long assetId, int quantity) {
+        public ColoredCoinsAssetTransfer(Long assetId, int quantity, String comment) {
 
             this.assetId = assetId;
             this.quantity = quantity;
+            this.comment = Convert.nullToEmpty(comment);
 
         }
 
         @Override
         public int getSize() {
-            return 8 + 4;
+            try {
+                return 8 + 4 + 2 + comment.getBytes("UTF-8").length;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
         }
 
         @Override
         public byte[] getBytes() {
 
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(Convert.nullToZero(assetId));
-            buffer.putInt(quantity);
+            try {
+                byte[] commentBytes = this.comment.getBytes("UTF-8");
 
-            return buffer.array();
+                ByteBuffer buffer = ByteBuffer.allocate(8 + 4 + 2 + commentBytes.length);
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(Convert.nullToZero(assetId));
+                buffer.putInt(quantity);
+                buffer.putShort((short) commentBytes.length);
+                buffer.put(commentBytes);
+
+                return buffer.array();
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
 
         }
 
@@ -507,6 +523,7 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantity", quantity);
+            attachment.put("comment", comment);
 
             return attachment;
 
@@ -524,6 +541,11 @@ public interface Attachment {
         public int getQuantity() {
             return quantity;
         }
+
+        public String getComment() {
+            return comment;
+        }
+
     }
 
     abstract static class ColoredCoinsOrderPlacement implements Attachment, Serializable {
