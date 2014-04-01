@@ -8,6 +8,7 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -34,6 +36,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private final ConcurrentMap<Long, TransactionImpl> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
+    private final Set<String> unconfirmedTransactionHashes = new ConcurrentHashSet<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
     private static class TransactionHashInfo {
@@ -64,6 +67,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             TransactionImpl transaction = iterator.next();
                             if (transaction.getExpiration() < curTime) {
                                 iterator.remove();
+                                unconfirmedTransactionHashes.remove(transaction.getHash());
                                 transaction.undoUnconfirmed();
                                 removedUnconfirmedTransactions.add(transaction);
                             }
@@ -292,6 +296,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void clear() {
         unconfirmedTransactions.clear();
+        unconfirmedTransactionHashes.clear();
         doubleSpendingTransactions.clear();
         nonBroadcastedTransactions.clear();
         transactionHashes.clear();
@@ -318,6 +323,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 transactionHashes.remove(transaction.getHash());
             }
             unconfirmedTransactions.put(transaction.getId(), transaction);
+            unconfirmedTransactionHashes.add(transaction.getHash());
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
         }
@@ -344,6 +350,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
             }
+            TransactionImpl removedUnconfirmed = unconfirmedTransactions.remove(duplicateTransaction.getId());
+            if (removedUnconfirmed != null) {
+                unconfirmedTransactionHashes.remove(removedUnconfirmed.getHash());
+                removedUnconfirmed.undoUnconfirmed();
+                transactionListeners.notify(Arrays.asList((Transaction)removedUnconfirmed), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+            }
         }
         return duplicateTransaction;
     }
@@ -356,6 +368,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             addedConfirmedTransactions.add(transaction);
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
+                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedUnconfirmedTransactions.add(removedTransaction);
             }
             // TODO: Remove from double-spending transactions
@@ -430,7 +443,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         continue;
                     }
 
-                    if (transactionHashes.containsKey(transaction.getHash())) {
+                    if (transactionHashes.containsKey(transaction.getHash())
+                            || unconfirmedTransactionHashes.contains(transaction.getHash())) {
                         continue;
                     }
 
@@ -450,6 +464,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
+                        unconfirmedTransactionHashes.add(transaction.getHash());
                         addedUnconfirmedTransactions.add(transaction);
                     }
                 }
