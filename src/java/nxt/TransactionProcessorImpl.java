@@ -361,6 +361,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
             }
+            TransactionImpl removed = unconfirmedTransactions.remove(duplicateTransaction.getId());
+            if (removed != null) {
+                removed.undoUnconfirmed();
+                transactionListeners.notify(Arrays.asList((Transaction)removed), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+            }
         }
         return duplicateTransaction;
     }
