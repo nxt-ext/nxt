@@ -39,7 +39,7 @@ public final class IssueAsset extends CreateTransaction {
         }
 
         name = name.trim();
-        if (name.length() < 3 || name.length() > 10) {
+        if (name.length() < Constants.MIN_ASSET_NAME_LENGTH || name.length() > Constants.MAX_ASSET_NAME_LENGTH) {
             return INCORRECT_ASSET_NAME_LENGTH;
         }
 
@@ -50,7 +50,7 @@ public final class IssueAsset extends CreateTransaction {
             }
         }
 
-        if (description != null && description.length() > 1000) {
+        if (description != null && description.length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH) {
             return INCORRECT_ASSET_DESCRIPTION;
         }
 
