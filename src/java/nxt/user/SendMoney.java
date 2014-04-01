@@ -56,7 +56,6 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
             response.put("deadline", deadlineValue);
 
             return response;
-
         }
 
         if (! user.getSecretPhrase().equals(secretPhrase)) {

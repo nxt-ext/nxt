@@ -200,7 +200,7 @@
 				    formattedAmount = "-" + formattedAmount;
 				}
 				var fractionalPartString = "";
-                for (i = fractionalPart.length; i < 8; i++) {
+                for (i = ("" + fractionalPart).length; i < 8; i++) {
                     fractionalPartString += "0";
                 }
                 fractionalPartString += fractionalPart;
@@ -280,15 +280,15 @@
 			}
 			
 			function sendMoney() {
-				var element, recipient, amount, fee, deadline, secretPhrase;
+				var element, recipient, amountNXT, feeNXT, deadline, secretPhrase;
 				element = document.getElementById("input");
 				recipient = element.value;
 				element.readOnly = true;
 				element = document.getElementById("amountNXT");
-				amount = element.value;
+				amountNXT = element.value;
 				element.readOnly = true;
 				element = document.getElementById("feeNXT");
-				fee = element.value;
+				feeNXT = element.value;
 				element.readOnly = true;
 				element = document.getElementById("deadline");
 				deadline = element.value;
@@ -498,7 +498,7 @@
 								element = document.getElementById("balance");
 								element.innerHTML = formatAmount(response.balanceNQT);
 								element.style.display = "block";
-								document.getElementById(response.balance > 0 ? "enabledSendMoney" : "disabledSendMoney").style.display = "block";
+								document.getElementById(response.balanceNQT > 0 ? "enabledSendMoney" : "disabledSendMoney").style.display = "block";
 								closeDialog();
 								if (response.secretPhraseStrength < 4) {
 									showMessage("Your secret phrase is <b>too short</b><br>and can be easily picked by a hacker!");

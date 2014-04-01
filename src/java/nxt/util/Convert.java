@@ -3,6 +3,7 @@ package nxt.util;
 import nxt.Constants;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
 
 public final class Convert {
@@ -110,7 +111,7 @@ public final class Convert {
     }
 
     public static long parseNXT(String nxt) {
-        String[] s = nxt.split(".");
+        String[] s = nxt.split("\\.");
         long wholePart = Long.parseLong(s[0]);
         if (wholePart > Constants.MAX_BALANCE_NXT) {
             throw new IllegalArgumentException("Value of " + nxt + " exceeds maximum possible NXT balance");

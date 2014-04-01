@@ -173,7 +173,7 @@
                 }
                 if (fractionalPart != 0) {
                     formattedAmount += ".";
-                    for (i = fractionalPart.length; i < 8; i++) {
+                    for (i = ("" + fractionalPart).length; i < 8; i++) {
                         formattedAmount += "0";
                     }
                     formattedAmount += fractionalPart;
