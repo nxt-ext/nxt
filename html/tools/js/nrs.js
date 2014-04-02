@@ -4234,6 +4234,7 @@
 			} else {
 				$("#register_alias_uri").val("http://");
 			}
+			$("#register_alias_help").hide();
 		} else if (type == "account") {
 			$("#register_alias_uri_label").html("Account ID");
 			$("#register_alias_uri").prop("placeholder", "Account ID");
@@ -4251,6 +4252,7 @@
 			} else {
 				$("#register_alias_uri").val("");
 			}
+			$("#register_alias_help").html("The alias will reference the account number entered and can be used to send Nxt to, messages, etc..").show();
 		} else {
 			$("#register_alias_uri_label").html("Data");
 			$("#register_alias_uri").prop("placeholder", "Data");
@@ -4259,6 +4261,7 @@
 			} else {
 				$("#register_alias_uri").val("");
 			}
+			$("#register_alias_help").html("The alias can contain any data you want.").show();
 		}
     }
     
