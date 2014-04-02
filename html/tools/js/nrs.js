@@ -4450,6 +4450,22 @@
     		params.subtype = NRS.transactionsPageType.subtype;
     	}
     	
+    	var rows = "";
+				    						
+		if (NRS.unconfirmedTransactions.length) {
+			for (var j=0; j<NRS.unconfirmedTransactions.length; j++) {
+				var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
+				
+				if (NRS.transactionsPageType) {
+					if (unconfirmedTransaction.type != params.type || unconfirmedTransaction.subtype != params.subtype) {
+						continue;
+					}
+				}		
+													
+				rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
+			}
+		}
+
     	NRS.sendRequest("getAccountTransactionIds+", params, function(response) {
     		if (response.transactionIds && response.transactionIds.length) {
     			var transactions = {};
@@ -4471,22 +4487,6 @@
     					nr_transactions++;
     					
     					if (nr_transactions == transactionIds.length) {
-    						var rows = "";
-    						    						
-    						if (NRS.unconfirmedTransactions.length) {
-								for (var j=0; j<NRS.unconfirmedTransactions.length; j++) {
-									var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
-									
-									if (NRS.transactionsPageType) {
-										if (unconfirmedTransaction.type != params.type || unconfirmedTransaction.subtype != params.subtype) {
-											continue;
-										}
-									}		
-																		
-									rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
-								}
-    						}
-    						    						
     						for (var i=0; i<nr_transactions; i++) {
     							var transaction = transactions[transactionIds[i]];
     							    							
@@ -4507,7 +4507,8 @@
     				}
     			}
     		} else {
-				$("#transactions_table tbody").empty();
+
+				$("#transactions_table tbody").empty().append(rows);
 				NRS.dataLoadFinished($("#transactions_table"));
 				
 				NRS.pageLoaded();
