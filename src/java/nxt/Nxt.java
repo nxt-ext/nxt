@@ -155,7 +155,6 @@ public final class Nxt {
                 Logger.logDebugMessage("jetty logging disabled");
             }
 
-            Constants.init();
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();

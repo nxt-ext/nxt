@@ -55,8 +55,6 @@ public final class Constants {
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
 
-    static void init() {}
-
     private Constants() {} // never
 
 }
