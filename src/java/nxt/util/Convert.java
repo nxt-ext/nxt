@@ -93,6 +93,7 @@ public final class Convert {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }
 
+    /*
     public static String toNXT(long nqt) {
         long wholePart = nqt / Constants.ONE_NXT;
         long fractionalPart = nqt % Constants.ONE_NXT;
@@ -109,9 +110,13 @@ public final class Convert {
         buf.append(fractionalPartString);
         return buf.toString();
     }
+    */
 
     public static long parseNXT(String nxt) {
-        String[] s = nxt.split("\\.");
+        String[] s = nxt.trim().split("\\.");
+        if (s.length == 0 || s.length > 2) {
+            throw new NumberFormatException("Invalid amount: " + nxt);
+        }
         long wholePart = Long.parseLong(s[0]);
         if (wholePart > Constants.MAX_BALANCE_NXT) {
             throw new IllegalArgumentException("Value of " + nxt + " exceeds maximum possible NXT balance");
@@ -120,13 +125,13 @@ public final class Convert {
             return wholePart * Constants.ONE_NXT;
         }
         long fractionalPart = Long.parseLong(s[1]);
-        if (fractionalPart >= Constants.ONE_NXT) {
+        if (fractionalPart >= Constants.ONE_NXT || s[1].length() > 8) {
             throw new IllegalArgumentException("Fractional part of " + nxt + " exceeds maximum NXT divisibility");
         }
         for (int i = s[1].length(); i < 8; i++) {
             fractionalPart *= 10;
         }
-        return wholePart * fractionalPart;
+        return wholePart * Constants.ONE_NXT + fractionalPart;
     }
 
     // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
