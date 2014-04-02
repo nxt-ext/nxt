@@ -31,6 +31,19 @@ var nxtCrypto = function (curve25519, hash, converters) {
         return converters.byteArrayToHexString(curve25519.keygen(digest).p);
     }
     
+    function getPrivateKey (secretPhrase) {
+    	SHA256_init();
+		SHA256_write(converters.stringToByteArray(secretPhrase));		
+		return converters.shortArrayToHexString(curve25519_clamp(converters.byteArrayToShortArray(SHA256_finalize())));
+    }
+    
+    function curve25519_clamp(curve) {
+		curve[0] &= 0xFFF8;
+		curve[15] &= 0x7FFF;
+		curve[15] |= 0x4000;
+		return curve;
+	}
+
     function getAccountId (secretPhrase) {    	
 		var publicKey = getPublicKey(converters.stringToHexString(secretPhrase));
 		
@@ -112,6 +125,7 @@ var nxtCrypto = function (curve25519, hash, converters) {
 
     return {
         getPublicKey: getPublicKey,
+        getPrivateKey: getPrivateKey,
         getAccountId: getAccountId,
         sign: sign,
         verify: verify

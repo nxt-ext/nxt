@@ -3869,14 +3869,26 @@
     	var $btn = $("#inline_message_submit");
     	
     	$btn.button("loading");
-    	    	
+    	        	
     	var hex = NRS.convertToHex8(message);
     	var back = NRS.convertFromHex8(hex);
     	   	
     	if (back != message) {
     	   	hex =  NRS.convertToHex16("\uFEFF" + message);
     	}
-    	   	
+
+		/*
+    	if ($("#inline_message_encrypt").is(":checked")) {
+    		NRS.sendRequest("getAccountPublicKey", {"account": $("#inline_message_recipient").val()}, function(response) {
+    			if (!response.publicKey) {
+    				$.growl("Could not find public key for recipient, which is necessary for sending encrypted messages.", {"type": "danger"});
+    			}
+
+	    		hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : $("#inline_message_password").val(), response.publicKey, hex);
+    		}, false);
+	    	
+    	}*/
+    	
     	var data = {"recipient": $("#inline_message_recipient").val(), 
     				"message": hex,
     				"fee": "1",
@@ -3900,6 +3912,88 @@
     		$btn.button("reset");
     	});
     });
+        
+    /*
+	NRS.encryptMessage = function(secretPhrase, publicKey, message) {
+		var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
+		var publicKey = converters.hexStringToByteArray(publicKey);
+		var data = converters.hexStringToByteArray(message);
+		
+	    var salt = NRS.getSalt();
+	    var msg = NRS.transformData(privateKey, publicKey, data, salt);
+	    
+	    var msgObject = new Object(); 
+	    
+	    msgObject["salt"] = converters.byteArrayToHexString(salt);
+	    msgObject["msg"] = converters.byteArrayToHexString(msg);
+	    
+	    return msgObject;
+	}
+	
+	NRS.decryptMessage = function(secretPhrase, publicKey, msgObject) {
+		var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
+		var publicKey = converters.hexStringToByteArray(publicKey);
+		
+		var data = converters.stringToByteArray(msgObject["msg"]);
+		var salt = converters.stringToByteArray(msgObject["salt"]);
+				
+		var msg = NRS.transformData(privateKey, publicKey, data, salt);
+						
+		return converters.byteArrayToHexString(msg);
+	}
+	
+	NRS.getSalt = function() {
+		var salt = [0,0,0,0,0,0,0,0];
+		return salt;
+		
+		var date = new Date();
+		var millis = date.getTime();
+		for (var i=0; i<8; i++)
+		{
+			salt[i] = (millis & 0xff);
+			millis  = millis / 256;
+		}
+		
+		return salt;
+	}
+	
+	NRS.inverse = function(array) {
+		var result = new Array(array.length);
+		for (var i=0; i<array.length; i++) {
+			result[i] = (array[i] ^ 0xff);
+		}
+		
+		return result;
+	}
+		
+	NRS.transformData = function(privateKey, publicKey, data, salt) {
+		var key1 = converters.byteArrayToShortArray(privateKey);
+		var key2 = converters.byteArrayToShortArray(publicKey);
+				
+		var sharedKey = curve25519_(key1, key2);
+								
+	    var seeds = new Array();
+	    var keys = new Array();
+	    
+		SHA256_init();
+		SHA256_write(salt);
+		SHA256_write(sharedKey);
+		seeds.push(SHA256_finalize());
+		keys.push(NRS.inverse(seeds[0]));
+		var count = 1;
+		while (count*32 < data.length) {
+			seeds.push(SHA256_hash(seeds[count-1]));
+			keys.push(NRS.inverse(seeds[count++]));
+		}
+		
+		var transformedData = new Array();
+		for (var i=0; i<data.length; i++) {
+		    transformedData.push(data[i] ^ keys[~~(i/32)][i % 32]);
+		}
+		
+		return transformedData;
+	}
+	*/
     
     NRS.forms.sendMessage = function($modal) {
         var message = $.trim($("#send_message_message").val());

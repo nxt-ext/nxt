@@ -26,6 +26,8 @@ var converters = function () {
             return str;
         },
         stringToByteArray: function (str) {
+        	str = unescape(encodeURIComponent(str));
+
             var bytes = new Array(str.length);
             for (var i = 0; i < str.length; ++i)
                 bytes[i] = str.charCodeAt(i);
@@ -92,8 +94,34 @@ var converters = function () {
 			var index = this.checkBytesToIntInput(bytes, parseInt(length, 10), parseInt(opt_startIndex, 10));
 			
 			var bytes = bytes.slice(opt_startIndex, opt_startIndex+length);
-			
+						
 			return decodeURIComponent(escape(String.fromCharCode.apply(null, bytes)));
+		},
+		byteArrayToShortArray: function(byteArray) {
+			shortArray = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+			var i;
+			for (i=0; i<16; i++)
+			{
+				shortArray[i] = byteArray[i*2] | byteArray[i*2+1] << 8;
+			}
+			return shortArray;
+		},
+		shortArrayToByteArray: function(shortArray) {
+			byteArray = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+			var i;
+			for (i=0; i<16; i++) {
+				byteArray[2*i] = shortArray[i] & 0xff;
+				byteArray[2*i+1] = shortArray[i] >> 8;
+			}
+			
+			return byteArray;
+		},
+		shortArrayToHexString: function(ary) {
+		    var res = "";
+		    for(var i = 0; i < ary.length; i++) {
+		        res += nibbleToChar[(ary[i] >> 4) & 0x0f] + nibbleToChar[ary[i] & 0x0f] + nibbleToChar[(ary[i] >> 12) & 0x0f] + nibbleToChar[(ary[i] >> 8) & 0x0f];
+		    }
+		    return res;
 		},
 		/**
 		 * Produces an array of the specified number of bytes to represent the integer
@@ -104,10 +132,6 @@ var converters = function () {
 		intToBytes_: function(x, numBytes, unsignedMax, opt_bigEndian) {
 		  var signedMax = Math.floor(unsignedMax / 2);
 		  var negativeMax = (signedMax + 1) * -1;
-		  console.log("x = " + x);
-		  console.log(signedMax);
-		  console.log(negativeMax);
-		  console.log(Math.floor(x));
 		  if (x != Math.floor(x) || x < negativeMax || x > unsignedMax) {
 		    throw new Error(
 		        x + ' is not a ' + (numBytes * 8) + ' bit integer');
