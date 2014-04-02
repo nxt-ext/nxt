@@ -5509,11 +5509,10 @@
 					if (contactDescription.length > 100) {
 						contactDescription = contactDescription.substring(0, 100) + "...";
 					} else if (!contactDescription) {
-						contactDescription = "/";
+						contactDescription = "-";
 					}
-    							    	
-    							    	  							
-					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + String(contact.accountId).escapeHTML() + "' class='user_info'>" + String(contact.accountId).escapeHTML() + "</a></td><td>" + contact.email.escapeHTML() + "</td><td>" + contactDescription.escapeHTML() + "</td><td><a href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'><i class='fa fa-times-circle text-danger' title='Delete'></i></a></td></tr>";
+					    							    	  							
+					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + String(contact.accountId).escapeHTML() + "' class='user_info'>" + String(contact.accountId).escapeHTML() + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
 				});
 
 				$("#contacts_table tbody").empty().append(rows);
@@ -6095,6 +6094,11 @@
 		
 		if (account) {
 			account = NRS.getAccountFormatted(account);
+		} else {
+			account = $invoker.data("contact");
+		}
+		
+		if (account) {
 			$(this).find("input[name=recipient], input[name=account_id]").val(account.unescapeHTML()).trigger("blur");
 		}
     });
