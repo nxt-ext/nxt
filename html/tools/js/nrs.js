@@ -336,7 +336,7 @@
 	    } else {
 			NRS.isTestNet = true;
 			NRS.blockchainCalculationServers = [9, 10];
-		    $(".testnet_only, #testnet_login").show();
+		    $(".testnet_only, #testnet_login, #testnet_warning").show();
 	    }
 				
 		if (!NRS.server) {
