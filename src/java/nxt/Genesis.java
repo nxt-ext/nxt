@@ -2,7 +2,7 @@ package nxt;
 
 import java.math.BigInteger;
 
-public interface Genesis {
+public final class Genesis {
 
     public static final Long GENESIS_BLOCK_ID = 2680262203532249785L;
     public static final Long CREATOR_ID = 1739068987193023818L;
@@ -241,5 +241,7 @@ public interface Genesis {
     public static final byte[] GENESIS_BLOCK_SIGNATURE = new byte[]{
             105, -44, 38, -60, -104, -73, 10, -58, -47, 103, -127, -128, 53, 101, 39, -63, -2, -32, 48, -83, 115, 47, -65, 118, 114, -62, 38, 109, 22, 106, 76, 8, -49, -113, -34, -76, 82, 79, -47, -76, -106, -69, -54, -85, 3, -6, 110, 103, 118, 15, 109, -92, 82, 37, 20, 2, 36, -112, 21, 72, 108, 72, 114, 17
     };
+
+    private Genesis() {} // never
 
 }

@@ -479,8 +479,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (block.getId().equals(Long.valueOf(0L)) || BlockDb.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
                 }
-                if (! block.verifyGenerationSignature() || ! block.verifyBlockSignature()) {
-                    throw new BlockNotAcceptedException("Signature verification failed");
+                if (! block.verifyGenerationSignature()) {
+                    throw new BlockNotAcceptedException("Generation signature verification failed");
+                }
+                if (! block.verifyBlockSignature()) {
+                    throw new BlockNotAcceptedException("Block signature verification failed");
                 }
 
                 Map<TransactionType, Set<String>> duplicates = new HashMap<>();

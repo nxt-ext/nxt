@@ -22,8 +22,8 @@ public final class Generator {
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 
-    private static final ConcurrentMap<Account, Block> lastBlocks = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Account, BigInteger> hits = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Block> lastBlocks = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, BigInteger> hits = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<String, Generator> generators = new ConcurrentHashMap<>();
     private static final Collection<Generator> allGenerators = Collections.unmodifiableCollection(generators.values());
@@ -93,9 +93,9 @@ public final class Generator {
     public static Generator stopForging(String secretPhrase) {
         Generator generator = generators.remove(secretPhrase);
         if (generator != null) {
-            lastBlocks.remove(generator.account);
-            hits.remove(generator.account);
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccount().getId()) + " stopped forging");
+            lastBlocks.remove(generator.accountId);
+            hits.remove(generator.accountId);
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(generator.getAccountId()) + " stopped forging");
             listeners.notify(generator, Event.STOP_FORGING);
         }
         return generator;
@@ -109,7 +109,7 @@ public final class Generator {
         return allGenerators;
     }
 
-    private final Account account;
+    private final Long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
     private volatile long deadline;
@@ -117,8 +117,8 @@ public final class Generator {
     private Generator(String secretPhrase, byte[] publicKey, Account account) {
         this.secretPhrase = secretPhrase;
         this.publicKey = publicKey;
-        // need to store publicKey in addition to account, because the account may not have had its publicKey set yet
-        this.account = account;
+        // need to store publicKey in addition to accountId, because the account may not have had its publicKey set yet
+        this.accountId = account.getId();
         forge(); // initialize deadline
     }
 
@@ -126,8 +126,8 @@ public final class Generator {
         return publicKey;
     }
 
-    public Account getAccount() {
-        return account;
+    public Long getAccountId() {
+        return accountId;
     }
 
     public long getDeadline() {
@@ -136,6 +136,10 @@ public final class Generator {
 
     private void forge() {
 
+        Account account = Account.getAccount(accountId);
+        if (account == null) {
+            return;
+        }
         long effectiveBalance = account.getEffectiveBalance();
         if (effectiveBalance <= 0) {
             return;
@@ -148,12 +152,12 @@ public final class Generator {
             return;
         }
 
-        if (! lastBlock.equals(lastBlocks.get(account))) {
+        if (! lastBlock.equals(lastBlocks.get(accountId))) {
 
             BigInteger hit = account.getHit(secretPhrase, lastBlock);
 
-            lastBlocks.put(account, lastBlock);
-            hits.put(account, hit);
+            lastBlocks.put(accountId, lastBlock);
+            hits.put(accountId, hit);
 
             deadline = Math.max(account.getHitTime(hit, lastBlock) - Convert.getEpochTime(), 0);
 
@@ -164,7 +168,7 @@ public final class Generator {
         int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
         if (elapsedTime > 0) {
             BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance)).multiply(BigInteger.valueOf(elapsedTime));
-            if (hits.get(account).compareTo(target) < 0) {
+            if (hits.get(accountId).compareTo(target) < 0) {
                 BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
             }
         }
