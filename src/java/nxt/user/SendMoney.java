@@ -6,6 +6,7 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -46,7 +47,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
             deadline = (short)(Double.parseDouble(deadlineValue) * 60);
 
         } catch (RuntimeException e) {
-
+            Logger.logDebugMessage(e.toString());
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
             response.put("message", "One of the fields is filled incorrectly!");

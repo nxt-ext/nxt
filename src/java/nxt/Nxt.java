@@ -114,6 +114,9 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
+        if (! Constants.isTestnet) {
+            throw new RuntimeException("This version is still only for test net!!!");
+        }
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {

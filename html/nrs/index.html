@@ -91,8 +91,8 @@
 			}
 			
 			function adjustFee() {
-				var amount = parseInt(document.getElementById("amount").value);
-				document.getElementById("fee").value = isNaN(amount) ? "" : (amount < 500 ? 1 : Math.round(amount / 1000));
+				var amount = parseInt(document.getElementById("amountNXT").value);
+				document.getElementById("feeNXT").value = isNaN(amount) ? 1 : (amount < 500 ? 1 : Math.round(amount / 1000));
 			}
 			
 			function adjustSections(widgetIndex, widgetHeight, sections) {
