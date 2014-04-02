@@ -115,13 +115,18 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                         amount, fee, referencedTransaction, attachment);
 
         JSONObject response = new JSONObject();
-        if (secretPhrase != null) {
-            transaction.sign(secretPhrase);
-            Nxt.getTransactionProcessor().broadcast(transaction);
-            response.put("transaction", transaction.getStringId());
+        try {
+            if (secretPhrase != null) {
+                transaction.sign(secretPhrase);
+                Nxt.getTransactionProcessor().broadcast(transaction);
+                response.put("transaction", transaction.getStringId());
+
+            }
+            response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            response.put("hash", transaction.getHash());
+        } catch (NxtException.ValidationException e) {
+            response.put("error", e.getMessage());
         }
-        response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
-        response.put("hash", transaction.getHash());
         return response;
 
     }

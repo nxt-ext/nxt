@@ -54,16 +54,16 @@ public final class DebugTrace {
                 debugTrace.trace(account);
             }
         }, Account.Event.UNCONFIRMED_BALANCE);
-        Account.addListener(new Listener<Account>() {
+        Account.addAssetListener(new Listener<Account.AccountAsset>() {
             @Override
-            public void notify(Account account) {
-                debugTrace.traceAssets(account);
+            public void notify(Account.AccountAsset accountAsset) {
+                debugTrace.trace(accountAsset, false);
             }
         }, Account.Event.ASSET_BALANCE);
-        Account.addListener(new Listener<Account>() {
+        Account.addAssetListener(new Listener<Account.AccountAsset>() {
             @Override
-            public void notify(Account account) {
-                debugTrace.traceAssets(account);
+            public void notify(Account.AccountAsset accountAsset) {
+                debugTrace.trace(accountAsset, true);
             }
         }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
@@ -146,16 +146,11 @@ public final class DebugTrace {
         }
     }
 
-    private void traceAssets(Account account) {
-        if (!include(account.getId())) {
+    private void trace(Account.AccountAsset accountAsset, boolean unconfirmed) {
+        if (! include(accountAsset.accountId)) {
             return;
         }
-        for (Map.Entry<Long,Integer> mapEntry : account.getAssetBalances().entrySet()) {
-            log(getAssetValues(account.getId(), mapEntry.getKey(), mapEntry.getValue(), false));
-        }
-        for (Map.Entry<Long,Integer> mapEntry : account.getUnconfirmedAssetBalances().entrySet()) {
-            log(getAssetValues(account.getId(), mapEntry.getKey(), mapEntry.getValue(), true));
-        }
+        log(getValues(accountAsset.accountId, accountAsset, unconfirmed));
     }
 
     private void trace(Block block, boolean isUndo) {
@@ -199,7 +194,6 @@ public final class DebugTrace {
     }
 
     private Map<String,String> getValues(Long accountId, Transaction transaction, boolean isRecipient, boolean isUndo) {
-        Map<String,String> map = getValues(accountId);
         long amount = transaction.getAmount();
         long fee = transaction.getFee();
         if (isRecipient) {
@@ -214,6 +208,10 @@ public final class DebugTrace {
                 fee = - fee;
             }
         }
+        if (fee == 0 && amount == 0) {
+            return Collections.emptyMap();
+        }
+        Map<String,String> map = getValues(accountId);
         map.put("transaction amount", String.valueOf(amount * 100L));
         map.put("transaction fee", String.valueOf(fee * 100L));
         map.put("transaction", transaction.getStringId());
@@ -222,21 +220,24 @@ public final class DebugTrace {
     }
 
     private Map<String,String> getValues(Long accountId, Block block, boolean isUndo) {
-        Map<String,String> map = getValues(accountId);
         long fee = block.getTotalFee();
+        if (fee == 0) {
+            return Collections.emptyMap();
+        }
         if (isUndo) {
             fee = - fee;
         }
+        Map<String,String> map = getValues(accountId);
         map.put("generation fee", String.valueOf(fee * 100L));
         map.put("event", "block" + (isUndo ? " undo" : ""));
         return map;
     }
 
-    private Map<String,String> getAssetValues(Long accountId, Long assetId, Integer quantity, boolean unconfirmed) {
+    private Map<String,String> getValues(Long accountId, Account.AccountAsset accountAsset, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
-        map.put("asset", Convert.toUnsignedLong(assetId));
-        map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(quantity == null ? 0 : quantity));
+        map.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
+        map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(Convert.nullToZero(accountAsset.quantity)));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("event", "asset balance");
         return map;

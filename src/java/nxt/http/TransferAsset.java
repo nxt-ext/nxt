@@ -10,6 +10,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.INCORRECT_ASSET_TRANSFER_COMMENT;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_ASSET;
@@ -23,7 +24,7 @@ public final class TransferAsset extends CreateTransaction {
     static final TransferAsset instance = new TransferAsset();
 
     private TransferAsset() {
-        super("recipient", "asset", "quantity");
+        super("recipient", "asset", "quantity", "comment");
     }
 
     @Override
@@ -32,6 +33,7 @@ public final class TransferAsset extends CreateTransaction {
         String recipientValue = req.getParameter("recipient");
         String assetValue = req.getParameter("asset");
         String quantityValue = req.getParameter("quantity");
+        String comment = Convert.nullToEmpty(req.getParameter("comment")).trim();
 
         if (recipientValue == null || "0".equals(recipientValue)) {
             return MISSING_RECIPIENT;
@@ -65,6 +67,10 @@ public final class TransferAsset extends CreateTransaction {
             return INCORRECT_QUANTITY;
         }
 
+        if (comment.length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
+            return INCORRECT_ASSET_TRANSFER_COMMENT;
+        }
+
         Account account = getAccount(req);
         if (account == null) {
             return UNKNOWN_ACCOUNT;
@@ -75,7 +81,7 @@ public final class TransferAsset extends CreateTransaction {
             return NOT_ENOUGH_FUNDS;
         }
 
-        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity);
+        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity, comment);
         return createTransaction(req, account, recipient, 0, attachment);
 
     }
