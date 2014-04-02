@@ -7000,7 +7000,7 @@
           crossDomain: true,
           dataType: "json",
           type: "GET",
-          timeout: 10000,
+          timeout: 15000,
           async: (async === undefined ? true : async),
           data: data
         }).done(function(json) {  
@@ -7129,7 +7129,7 @@
 			crossDomain: true,
 			dataType: "json",
 			type: type,
-			timeout: 10000, //10 seconds
+			timeout: 15000, //15 seconds
 			async: (async === undefined ? true : async),
 			beforeSend: beforeSend,
 			data: data
@@ -7198,7 +7198,7 @@
 				return;
 			} else if (callback) {
 				if (error == "timeout") {
-		    		error = "The request timed out. Warning: This does not mean the request did not go through. You should wait for the next block and see if your request has been processed.";
+		    		error = "The request timed out. Warning: This does not mean the request did not go through. You should wait a couple of blocks and see if your request has been processed.";
 				}
 		 		callback({"errorCode": -1, "errorDescription": error}, {});
 			}
