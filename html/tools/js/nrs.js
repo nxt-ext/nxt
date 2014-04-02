@@ -1891,9 +1891,9 @@
 			NRS.database.select("assets", null, function(error, assets) {			
 				$.each(assets, function(index, asset) {
 					NRS.assetIds.push(asset.assetId);
-					NRS.assets.push({"id": asset.assetId, "prefix": asset.name.toLowerCase(), "suffix": asset.alias.toLowerCase(), "groupName": asset.groupName.toLowerCase(), "quantity": asset.quantity});
+					NRS.assets.push({"id": asset.assetId, "name": asset.name.toLowerCase(), "groupName": asset.groupName.toLowerCase(), "quantity": asset.quantity});
 				});
-								
+												
 				assets = null;
 	
 				NRS.loadAssetExchangeSidebar(callback, activeAsset);
@@ -1905,7 +1905,7 @@
     
     NRS.loadAssetExchangeSidebar = function(callback, activeAsset) {    	
 		NRS.sendRequest("getAssetIds+", function(response) {
-    		if (response.assetIds && response.assetIds.length) {    			
+    		if (response.assetIds && response.assetIds.length) {    	
 	    		if (NRS.currentPage != "asset_exchange") {
 	    			return;
 	    		}
@@ -1953,11 +1953,6 @@
 								try {
 									metaData = JSON.parse(asset.description);
 									
-									if (metaData.alias) {
-										//this is alias ID, not alias!
-										asset.alias = metaData.alias;
-									}
-									
 									if (metaData.url) {
 										asset.url = metaData.url;
 									}
@@ -1976,9 +1971,6 @@
 								}
 							}
 							
-							if (!asset.alias) {
-								asset.alias = "";
-							}
 							if (!asset.url) {
 								asset.url = "";
 							}
@@ -1989,42 +1981,16 @@
 								asset.tags = "";
 							}
 							
-							if (asset.alias) {								
-								NRS.sendRequest("getAlias+", {"alias": asset.alias, "_extra": {"asset": asset}}, function(alias) {
-									if (!alias || alias.errorCode || alias.account != asset.account) {
-										asset.alias = "";
-									} else if (String(alias.alias).match(/\d/)) {
-										//alias cannot contain numbers
-										asset.alias = "";
-									} else {
-										asset.alias = alias.alias;
-									}
+							NRS.assets.push({"id": input.asset, "name": asset.name.toLowerCase(), "groupName": "", "quantity": asset.quantity});
 								
-									NRS.assets.push({"id": input.asset, "prefix": asset.name.toLowerCase(), "suffix": asset.alias.toLowerCase(), "groupName": "", "quantity": asset.quantity});
-																		
-									new_assets.push(asset);
-									
-									nr_assets++;
-									
-									if (nr_assets == response.assetIds.length) {
-										NRS.saveNewAssets(new_assets, function() {
-											NRS.assetExchangeSidebarLoaded(callback, activeAsset);
-										});
-									}
-	
+							new_assets.push(asset);
+							
+							nr_assets++;
+															
+							if (nr_assets == response.assetIds.length) {
+								NRS.saveNewAssets(new_assets, function() {
+									NRS.assetExchangeSidebarLoaded(callback, activeAsset);
 								});
-							} else {
-								NRS.assets.push({"id": input.asset, "prefix": asset.name.toLowerCase(), "suffix": "", "groupName": "", "quantity": asset.quantity});
-								
-								new_assets.push(asset);
-								
-								nr_assets++;
-																
-								if (nr_assets == response.assetIds.length) {
-									NRS.saveNewAssets(new_assets, function() {
-										NRS.assetExchangeSidebarLoaded(callback, activeAsset);
-									});
-								}
 							}
 	    				});
 	    				
@@ -2056,36 +2022,15 @@
 
 	NRS.assetExchangeSidebarLoaded = function(callback, activeAsset) {
 		var rows = "";
-		  
-		//can be shortened..
-   		NRS.assets.sort(function(a, b) {
-   			if (!a.groupName && !b.groupName) {
-	   			if (a.prefix > b.prefix) {
+		
+		NRS.assets.sort(function(a, b) {
+   			if ((!a.groupName && !b.groupName) || (a.groupName == "ignore list" && b.groupName == "ignore list")) {
+	   			if (a.name > b.name) {
 	   				return 1;
-	   			} else if (a.prefix < b.prefix) {
+	   			} else if (a.name < b.name) {
 	   				return -1;
 	   			} else {
-	   				if (a.suffix > b.suffix) {
-		   				return 1;
-	   				} else if (a.suffix < b.suffix) {
-		   				return -1;
-	   				} else {
-	   					return 0;
-	   				}
-	   			}
-	   		} else if (a.groupName == "ignore list" && b.groupName == "ignore list") {
-	   			if (a.prefix > b.prefix) {
-	   				return 1;
-	   			} else if (a.prefix < b.prefix) {
-	   				return -1;
-	   			} else {
-	   				if (a.suffix > b.suffix) {
-		   				return 1;
-	   				} else if (a.suffix < b.suffix) {
-		   				return -1;
-	   				} else {
-	   					return 0;
-	   				}
+	   				return 0;
 	   			}
 	   		} else if (a.groupName == "ignore list") {
 	   			return 1;
@@ -2100,22 +2045,16 @@
    			} else if (a.groupName < b.groupName) {
 	   			return -1;
    			} else {
-	   			if (a.prefix > b.prefix) {
+	   			if (a.name > b.name) {
 	   				return 1;
-	   			} else if (a.prefix < b.prefix) {
+	   			} else if (a.name < b.name) {
 	   				return -1;
 	   			} else {
-	   				if (a.suffix > b.suffix) {
-		   				return 1;
-	   				} else if (a.suffix < b.suffix) {
-		   				return -1;
-	   				} else {
-	   					return 0;
-	   				}
+	   				return 0;
 	   			}
 	   		}
    		});
-	   	
+
    		var lastGroup = "";
    		var ungrouped = true;
    		var isClosedGroup = false;
@@ -2143,7 +2082,7 @@
 	   			lastGroup = asset.groupName.toLowerCase();
    			}
    			    				   			
-   			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.prefix.escapeHTML() + (asset.suffix ? "<span>." + asset.suffix.escapeHTML() + '</span>' : "") + "</h4><p class='list-group-item-text'>Quantity: " + NRS.formatAmount(asset.quantity) + "</p></a>";
+   			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>Quantity: " + NRS.formatAmount(asset.quantity) + "</p></a>";
    		}
    		   		
    		var currentActiveAsset = $("#asset_exchange_sidebar a.active");
@@ -2232,7 +2171,6 @@
 	    	NRS.sendRequest("getAsset", {"asset": assetId}, function(response, input) {	    		
 		    	if (!response.errorCode) {
 		    		response.assetId = input.asset;
-		    		response.alias = NRS.assets[link.data("cache")].suffix;
 		    				    		
 		    		var metaData = null;
 										
@@ -2257,9 +2195,6 @@
 						}
 					}
 												
-					if (!response.alias) {
-						response.alias = "";
-					}
 					if (!response.url) {
 						response.url = "";
 					}
@@ -2283,7 +2218,7 @@
     	NRS.currentAsset = {"assetId": assetId, "quantity": asset.quantity};
 		NRS.currentSubPage = assetId;
 		
-    	var asset_account = String(asset.account).escapeHTML();
+    	var asset_account = NRS.getAccountTitle(asset.account);
 
 		var refresh = (data && data.refresh);
 						
@@ -2298,7 +2233,7 @@
     	    	    	    
     	    $("#asset_account").html("<a href='#' data-user='" + asset_account + "' class='user_info'>" + asset_account + "</a>");
 	    	$("#asset_id").html(assetId.escapeHTML());
-	    	$("#asset_name").html(String(asset.name + (asset.alias ? "." + asset.alias : "")).escapeHTML());
+	    	$("#asset_name").html(String(asset.name).escapeHTML());
 	    	$("#asset_description").html(String(asset.description).escapeHTML());    	
 	    	$(".asset_name").html(String(asset.name).escapeHTML());
 	    	$("#sell_asset_button").data("asset", assetId);
@@ -2913,7 +2848,6 @@
 	
 	NRS.forms.issueAsset = function($modal) {		
 		var data = {"name": $("#issue_asset_name").val(), 
-					"alias": $("#issue_asset_alias").val(),
 					"description": $("#issue_asset_description").val(),
 					"quantity": $("#issue_asset_quantity").val(),
 					"fee": $("#issue_asset_fee").val(),
@@ -2930,41 +2864,11 @@
 			return {"error": "Description is a required field."};
 		}
 				
-		if (data.alias || data.tags || data.url) {
+		if (data.tags || data.url) {
 			var metaData = {};
 			
 			metaData.description = data.description;
-			
-			if (data.alias) {
-				if (data.alias.length < 3 || data.alias.length > 10) {
-					return {"error": "Incorrect \"suffix (alias)\" (length must be in [3..10] range)"};
-				} else if (!data.alias.match(/^[a-z]+$/i)) {
-					return {"error": "Incorrect \"suffix (alias)\" (must contain only latin letters)"};
-				} else {
-					//check if alias is owned by issuer, synchronous
-					
-					var error = "";
-					
-					NRS.sendRequest("getAliasId", {"alias": data.alias}, function(response) {
-						if (!response.id) {
-							error = "Incorrect \"suffix (alias)\" (does not exist)";
-						} else {
-							NRS.sendRequest("getAlias", {"alias": response.id}, function(response, input) {
-								if (response.account == NRS.account) {
-									metaData.alias = input.alias;
-								} else {
-									error = "Your account does not own this alias. It must be tied to your account.";
-								}
-							}, false);
-						}
-					}, false);
-					
-					if (error) {
-						return {"error": error};
-					}
-				}
-			}
-			
+						
 			if (data.url) {
 				if (!data.url.match(/^https?:\/\//i)) {
 					return {"error": "URL must start with http / https"};
@@ -3002,7 +2906,6 @@
 			data.description = JSON.stringify(metaData);
 		}
 				
-		delete data.alias;
 		delete data.tags;
 		delete data.url;
 				        			
@@ -6400,7 +6303,7 @@
 		        assetId: {"primary": true, "type": "VARCHAR(20)"},
 		        description: "TEXT",
 		        name: "VARCHAR(10)",
-				alias: "VARCHAR(10)",
+				//alias: "VARCHAR(10)",
 		        position: "NUMBER",
 		        quantity: "NUMBER",
 		        groupName: "VARCHAR(30) COLLATE NOCASE",

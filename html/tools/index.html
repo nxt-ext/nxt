@@ -1664,20 +1664,10 @@
 						<form role="form">
 							<div class="callout callout-danger never_hide"><strong>Warning</strong>: Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
-									<div class="form-group">
-										<label for="issue_asset_name">PREFIX (NAME) <i class="fa fa-question-circle show_popover" data-content="The prefix is the non-unique part of your asset name. Remember that other sellers can issue an asset with the same prefix. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
+							<div class="form-group">
+								<label for="issue_asset_name">ASSET NAME <i class="fa fa-question-circle show_popover" data-content="The asset name is non-unique. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
 </label>
-										<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Prefix" required autofocus tabindex="1" />
-									</div>
-								</div>
-								<div class="col-xs-6 col-sm-6 col-md-6">
-									<div class="form-group">
-										<label for="issue_asset_name">SUFFIX (ALIAS) <i class="fa fa-exclamation-circle show_popover" data-content="The suffix is the unique part of your asset name. It allows buyers to easily identify your asset. Set this to the name of an alias you control. Should be between 3 and 10 characters long." data-container="body" style="color:red"></i></label>
-										<input type="text" class="form-control" name="name" id="issue_asset_alias" placeholder="Suffix" required autofocus tabindex="2" />
-									</div>
-								</div>
+								<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Asset Name" required autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="issue_asset_description">DESCRIPTION</label>
@@ -1687,13 +1677,13 @@
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="issue_asset_description">TAGS <i class="fa fa-question-circle show_popover" data-content="Add a maximum of 3 tags to classify your asset. Tags are user-defined categories. Separate the tags with a comma." data-container="body" style="color:#4CAA6E" ></i></label>
-										<input type="text" name="url" id="issue_asset_tags" class="form-control" placeholder="Comma separated categories" tabindex="7">
+										<input type="text" name="url" id="issue_asset_tags" class="form-control" placeholder="Comma separated categories" tabindex="4">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="issue_asset_description">URL</label>
-										<input type="text" name="url" id="issue_asset_url" class="form-control" placeholder="http://..." tabindex="8">
+										<input type="text" name="url" id="issue_asset_url" class="form-control" placeholder="http://..." tabindex="5">
 									</div>
 								</div>
 							</div>
@@ -1702,20 +1692,20 @@
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_asset_quantity">QUANTITY</label>
-						                <input type="number" name="quantity" id="issue_asset_quantity" class="form-control" placeholder="Quantity" tabindex="4">
+						                <input type="number" name="quantity" id="issue_asset_quantity" class="form-control" placeholder="Quantity" tabindex="6">
 									</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt" data-container="body" style="color:red"></i></label>
 																				
-										<input type="number" name="fee" id="issue_asset_fee" class="form-control" placeholder="Fee" data-default="1000" value="1000" tabindex="5">
+										<input type="number" name="fee" id="issue_asset_fee" class="form-control" placeholder="Fee" data-default="1000" value="1000" tabindex="7">
 									</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
 									<div class="form-group">
 										<label for="issue_asset_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="6">
+										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="24" tabindex="8">
 									</div>
 								</div>
 							</div>
