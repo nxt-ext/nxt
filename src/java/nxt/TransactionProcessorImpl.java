@@ -15,7 +15,6 @@ import org.json.simple.JSONStreamAware;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -195,7 +194,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (! ((TransactionImpl)transaction).verify()) {
             throw new NxtException.ValidationException("Transaction signature verification failed");
         }
-        List<Transaction> validTransactions = processTransactions(Arrays.asList((TransactionImpl)transaction), true);
+        List<Transaction> validTransactions = processTransactions(Collections.singletonList((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
             nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
@@ -363,12 +362,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
             }
-            TransactionImpl removedUnconfirmed = unconfirmedTransactions.remove(duplicateTransaction.getId());
-            if (removedUnconfirmed != null) {
-                unconfirmedTransactionHashes.remove(removedUnconfirmed.getHash());
-                removedUnconfirmed.undoUnconfirmed();
-                transactionListeners.notify(Arrays.asList((Transaction)removedUnconfirmed), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
-            }
         }
         return duplicateTransaction;
     }
@@ -395,13 +388,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     }
 
-    void shutdown() {
-        Iterator<TransactionImpl> iter = unconfirmedTransactions.values().iterator();
-        while (iter.hasNext()) {
-            TransactionImpl transaction = iter.next();
-            transaction.undoUnconfirmed();
-            iter.remove();
+    void removeUnconfirmedTransactions(Collection<TransactionImpl> transactions) {
+        List<Transaction> removedList = new ArrayList<>();
+        for (TransactionImpl transaction : transactions) {
+            if (unconfirmedTransactions.remove(transaction.getId()) != null) {
+                transaction.undoUnconfirmed();
+                unconfirmedTransactionHashes.remove(transaction.getHash());
+                removedList.add(transaction);
+            }
         }
+        transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+    }
+
+    void shutdown() {
+        removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
     }
 
     private void purgeExpiredHashes(int blockTimestamp) {

@@ -3,7 +3,6 @@ package nxt.util;
 import nxt.Constants;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Date;
 
 public final class Convert {
