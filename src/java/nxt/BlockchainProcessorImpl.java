@@ -497,32 +497,35 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     // cfb: Block 303 contains a transaction which expired before the block timestamp
                     if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
                             || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() != 303)) {
-                        throw new BlockNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
+                        throw new TransactionNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
                                 + " for transaction " + transaction.getStringId() + ", current time is " + curTime
-                                + ", block timestamp is " + block.getTimestamp());
+                                + ", block timestamp is " + block.getTimestamp(), transaction);
                     }
                     if (TransactionDb.hasTransaction(transaction.getId())) {
-                        throw new BlockNotAcceptedException("Transaction " + transaction.getStringId() + " is already in the blockchain");
+                        throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
+                                + " is already in the blockchain", transaction);
                     }
                     if ((transaction.getReferencedTransactionId() != null
                             && ! TransactionDb.hasTransaction(transaction.getReferencedTransactionId())
                             && Collections.binarySearch(block.getTransactionIds(), transaction.getReferencedTransactionId()) < 0)) {
-                        throw new BlockNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
-                                +" for transaction " + transaction.getStringId());
+                        throw new TransactionNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
+                                + " for transaction " + transaction.getStringId(), transaction);
                     }
                     if (! transaction.verify()) {
-                        throw new BlockNotAcceptedException("Signature verification failed for transaction " + transaction.getStringId());
+                        throw new TransactionNotAcceptedException("Signature verification failed for transaction "
+                                + transaction.getStringId(), transaction);
                     }
                     if (transaction.getId().equals(Long.valueOf(0L))) {
-                        throw new BlockNotAcceptedException("Invalid transaction id");
+                        throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                     }
                     if (transaction.isDuplicate(duplicates)) {
-                        throw new BlockNotAcceptedException("Transaction is a duplicate: " + transaction.getStringId());
+                        throw new TransactionNotAcceptedException("Transaction is a duplicate: "
+                                + transaction.getStringId(), transaction);
                     }
                     try {
                         transaction.validateAttachment();
                     } catch (NxtException.ValidationException e) {
-                        throw new BlockNotAcceptedException(e.getMessage());
+                        throw new TransactionNotAcceptedException(e.getMessage(), transaction);
                     }
 
                     calculatedTotalAmount += transaction.getAmount();
@@ -561,9 +564,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 block.setPrevious(previousLastBlock);
 
-                Transaction duplicateTransaction = transactionProcessor.checkTransactionHashes(block);
+                TransactionImpl duplicateTransaction = transactionProcessor.checkTransactionHashes(block);
                 if (duplicateTransaction != null) {
-                    throw new BlockNotAcceptedException("Duplicate hash of transaction " + duplicateTransaction.getStringId());
+                    throw new TransactionNotAcceptedException("Duplicate hash of transaction "
+                            + duplicateTransaction.getStringId(), duplicateTransaction);
                 }
 
                 addBlock(block);
@@ -733,6 +737,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
+        } catch (TransactionNotAcceptedException e) {
+            Logger.logDebugMessage("Generate block failed: " + e.getMessage());
+            Transaction transaction = e.getTransaction();
+            Logger.logDebugMessage("Removing invalid transaction" + transaction);
+            transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
         }
