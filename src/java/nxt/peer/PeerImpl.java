@@ -189,7 +189,7 @@ final class PeerImpl implements Peer {
         if (account == null) {
             return 0;
         }
-        return (int)(adjustedWeight * account.getBalanceNQT() / (Constants.ONE_NXT * Constants.MAX_BALANCE_NXT));
+        return (int)(adjustedWeight * (account.getBalanceNQT() / Constants.ONE_NXT) / Constants.MAX_BALANCE_NXT);
     }
 
     @Override
