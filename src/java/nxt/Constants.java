@@ -36,7 +36,7 @@ public final class Constants {
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
     public static final int TRANSPARENT_FORGING_BLOCK_5 = 67000;
-    public static final int NQT_BLOCK = isTestnet ? 63000 : 110000;
+    public static final int NQT_BLOCK = isTestnet ? 63000 : 150000;
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : 211111;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : 222222;
 
