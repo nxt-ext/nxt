@@ -94,22 +94,18 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
             try {
                 try {
-                    JSONArray transactionsData = new JSONArray();
-
+                    List<Transaction> transactionList = new ArrayList<>();
                     int curTime = Convert.getEpochTime();
                     for (TransactionImpl transaction : nonBroadcastedTransactions.values()) {
                         if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
                             nonBroadcastedTransactions.remove(transaction.getId());
                         } else if (transaction.getTimestamp() < curTime - 30) {
-                            transactionsData.add(transaction.getJSONObject());
+                            transactionList.add(transaction);
                         }
                     }
 
-                    if (transactionsData.size() > 0) {
-                        JSONObject peerRequest = new JSONObject();
-                        peerRequest.put("requestType", "processTransactions");
-                        peerRequest.put("transactions", transactionsData);
-                        Peers.sendToSomePeers(peerRequest);
+                    if (transactionList.size() > 0) {
+                        Peers.sendToSomePeers(transactionList);
                     }
 
                 } catch (Exception e) {
@@ -431,7 +427,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private List<Transaction> processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
-        JSONArray sendToPeersTransactionsData = new JSONArray();
+        List<Transaction> sendToPeersTransactions = new ArrayList<>();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
 
@@ -465,7 +461,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                         + " that we generated, will not forward to peers");
                                 nonBroadcastedTransactions.remove(id);
                             } else {
-                                sendToPeersTransactionsData.add(transaction.getJSONObject());
+                                sendToPeersTransactions.add(transaction);
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
@@ -482,11 +478,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         }
 
-        if (sendToPeersTransactionsData.size() > 0) {
-            JSONObject peerRequest = new JSONObject();
-            peerRequest.put("requestType", "processTransactions");
-            peerRequest.put("transactions", sendToPeersTransactionsData);
-            Peers.sendToSomePeers(peerRequest);
+        if (sendToPeersTransactions.size() > 0) {
+            Peers.sendToSomePeers(sendToPeersTransactions);
         }
 
         if (addedUnconfirmedTransactions.size() > 0) {

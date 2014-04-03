@@ -61,17 +61,7 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         try {
             List<Trade> trades = Trade.getTrades(assetId);
             for (int i = firstIndex; i <= lastIndex && i < trades.size(); i++) {
-                Trade trade = trades.get(i);
-
-                JSONObject tradeData = new JSONObject();
-                tradeData.put("timestamp", trade.getTimestamp());
-                tradeData.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
-                tradeData.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
-                tradeData.put("quantity", trade.getQuantity());
-                tradeData.put("priceNQT", trade.getPriceNQT());
-                tradeData.put("block", Convert.toUnsignedLong(trade.getBlockId()));
-
-                tradesData.add(tradeData);
+                tradesData.add(JSONData.trade(trades.get(i)));
             }
         } catch (RuntimeException e) {
             response.put("error", e.toString());

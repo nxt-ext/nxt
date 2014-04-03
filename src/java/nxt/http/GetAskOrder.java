@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Order;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,14 +36,8 @@ public final class GetAskOrder extends APIServlet.APIRequestHandler {
             return INCORRECT_ORDER;
         }
 
-        JSONObject response = new JSONObject();
+        return JSONData.askOrder(orderData);
 
-        response.put("account", Convert.toUnsignedLong(orderData.getAccount().getId()));
-        response.put("asset", Convert.toUnsignedLong(orderData.getAssetId()));
-        response.put("quantity", orderData.getQuantity());
-        response.put("priceNQT", orderData.getPriceNQT());
-        response.put("height", orderData.getHeight());
-        return response;
     }
 
 }

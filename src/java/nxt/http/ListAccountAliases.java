@@ -44,10 +44,7 @@ public final class ListAccountAliases extends APIServlet.APIRequestHandler {
         JSONArray aliases = new JSONArray();
         for (Alias alias : Alias.getAllAliases()) {
             if (alias.getAccount().equals(accountData)) {
-                JSONObject aliasData = new JSONObject();
-                aliasData.put("alias", alias.getAliasName());
-                aliasData.put("uri", alias.getURI());
-                aliases.add(aliasData);
+                aliases.add(JSONData.alias(alias));
             }
         }
 

@@ -592,9 +592,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } // synchronized
 
         if (block.getTimestamp() >= Convert.getEpochTime() - 15) {
-            JSONObject request = block.getJSONObject();
-            request.put("requestType", "processBlock");
-            Peers.sendToSomePeers(request);
+            Peers.sendToSomePeers(block);
         }
 
     }

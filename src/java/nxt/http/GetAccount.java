@@ -39,15 +39,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             return INCORRECT_ACCOUNT;
         }
 
-        JSONObject response = new JSONObject();
+        JSONObject response = JSONData.accountBalance(accountData);
+
         synchronized (accountData) {
             if (accountData.getPublicKey() != null) {
                 response.put("publicKey", Convert.toHexString(accountData.getPublicKey()));
             }
-
-            response.put("balanceNQT", accountData.getBalanceNQT());
-            response.put("effectiveBalanceNXT", accountData.getEffectiveBalanceNXT());
-            response.put("unconfirmedBalanceNQT", accountData.getUnconfirmedBalanceNQT());
 
             JSONArray assetBalances = new JSONArray();
             for (Map.Entry<Long, Integer> assetBalanceEntry : accountData.getAssetBalances().entrySet()) {

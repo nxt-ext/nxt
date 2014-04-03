@@ -3,8 +3,6 @@ package nxt.http;
 import nxt.Block;
 import nxt.Nxt;
 import nxt.util.Convert;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,35 +37,8 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
             return INCORRECT_BLOCK;
         }
 
-        JSONObject response = new JSONObject();
-        response.put("height", blockData.getHeight());
-        response.put("generator", Convert.toUnsignedLong(blockData.getGeneratorId()));
-        response.put("timestamp", blockData.getTimestamp());
-        response.put("numberOfTransactions", blockData.getTransactionIds().size());
-        response.put("totalAmountNQT", blockData.getTotalAmountNQT());
-        response.put("totalFeeNQT", blockData.getTotalFeeNQT());
-        response.put("payloadLength", blockData.getPayloadLength());
-        response.put("version", blockData.getVersion());
-        response.put("baseTarget", Convert.toUnsignedLong(blockData.getBaseTarget()));
-        if (blockData.getPreviousBlockId() != null) {
-            response.put("previousBlock", Convert.toUnsignedLong(blockData.getPreviousBlockId()));
-        }
-        if (blockData.getNextBlockId() != null) {
-            response.put("nextBlock", Convert.toUnsignedLong(blockData.getNextBlockId()));
-        }
-        response.put("payloadHash", Convert.toHexString(blockData.getPayloadHash()));
-        response.put("generationSignature", Convert.toHexString(blockData.getGenerationSignature()));
-        if (blockData.getVersion() > 1) {
-            response.put("previousBlockHash", Convert.toHexString(blockData.getPreviousBlockHash()));
-        }
-        response.put("blockSignature", Convert.toHexString(blockData.getBlockSignature()));
-        JSONArray transactions = new JSONArray();
-        for (Long transactionId : blockData.getTransactionIds()) {
-            transactions.add(Convert.toUnsignedLong(transactionId));
-        }
-        response.put("transactions", transactions);
+        return JSONData.block(blockData);
 
-        return response;
     }
 
 }

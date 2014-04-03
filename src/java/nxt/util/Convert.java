@@ -92,7 +92,6 @@ public final class Convert {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }
 
-    /*
     public static String toNXT(long nqt) {
         long wholePart = nqt / Constants.ONE_NXT;
         long fractionalPart = nqt % Constants.ONE_NXT;
@@ -109,7 +108,6 @@ public final class Convert {
         buf.append(fractionalPartString);
         return buf.toString();
     }
-    */
 
     public static long parseNXT(String nxt) {
         String[] s = nxt.trim().split("\\.");

@@ -1,7 +1,5 @@
 package nxt;
 
-import org.json.simple.JSONObject;
-
 public interface Transaction extends Comparable<Transaction> {
 
     Long getId();
@@ -43,8 +41,6 @@ public interface Transaction extends Comparable<Transaction> {
     Attachment getAttachment();
 
     void sign(String secretPhrase);
-
-    JSONObject getJSONObject();
 
     byte[] getBytes();
 

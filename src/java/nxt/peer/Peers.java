@@ -1,8 +1,10 @@
 package nxt.peer;
 
 import nxt.Account;
+import nxt.Block;
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.Transaction;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -441,7 +443,24 @@ public final class Peers {
         return peers.remove(peer.getPeerAddress());
     }
 
-    public static void sendToSomePeers(final JSONObject request) {
+    public static void sendToSomePeers(Block block) {
+        JSONObject request = JSONData.block(block);
+        request.put("requestType", "processBlock");
+        sendToSomePeers(request);
+    }
+
+    public static void sendToSomePeers(List<Transaction> transactions) {
+        JSONObject request = new JSONObject();
+        JSONArray transactionsData = new JSONArray();
+        for (Transaction transaction : transactions) {
+            transactionsData.add(JSONData.transaction(transaction));
+        }
+        request.put("requestType", "processTransactions");
+        request.put("transactions", transactionsData);
+        sendToSomePeers(request);
+    }
+
+    private static void sendToSomePeers(final JSONObject request) {
 
         final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
 

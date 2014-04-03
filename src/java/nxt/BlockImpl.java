@@ -3,8 +3,6 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -246,40 +244,6 @@ final class BlockImpl implements Block {
         }
         buffer.put(blockSignature);
         return buffer.array();
-    }
-
-    @Override
-    public JSONObject getJSONObject() {
-
-        JSONObject json = new JSONObject();
-
-        json.put("version", version);
-        json.put("timestamp", timestamp);
-        json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
-        json.put("numberOfTransactions", blockTransactions.size()); //TODO: not used anymore, remove after a few releases
-        if (version < 3) {
-            json.put("totalAmount", totalAmountNQT / Constants.ONE_NXT);
-            json.put("totalFee", totalFeeNQT / Constants.ONE_NXT);
-        }
-        json.put("totalAmountNQT", totalAmountNQT);
-        json.put("totalFeeNQT", totalFeeNQT);
-        json.put("payloadLength", payloadLength);
-        json.put("payloadHash", Convert.toHexString(payloadHash));
-        json.put("generatorPublicKey", Convert.toHexString(generatorPublicKey));
-        json.put("generationSignature", Convert.toHexString(generationSignature));
-        if (version > 1) {
-            json.put("previousBlockHash", Convert.toHexString(previousBlockHash));
-        }
-        json.put("blockSignature", Convert.toHexString(blockSignature));
-
-        JSONArray transactionsData = new JSONArray();
-        for (Transaction transaction : this.blockTransactions) {
-            transactionsData.add(transaction.getJSONObject());
-        }
-        json.put("transactions", transactionsData);
-
-        return json;
-
     }
 
     void sign(String secretPhrase) {

@@ -2,7 +2,6 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -269,30 +268,6 @@ final class TransactionImpl implements Transaction {
         }
         return buffer.array();
 
-    }
-
-    @Override
-    public JSONObject getJSONObject() {
-
-        JSONObject json = new JSONObject();
-
-        json.put("type", type.getType());
-        json.put("subtype", type.getSubtype());
-        json.put("timestamp", timestamp);
-        json.put("deadline", deadline);
-        json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
-        json.put("recipient", Convert.toUnsignedLong(recipientId));
-        json.put("amount", amountNQT / Constants.ONE_NXT);
-        json.put("fee", feeNQT / Constants.ONE_NXT);
-        json.put("amountNQT", amountNQT);
-        json.put("feeNQT", feeNQT);
-        json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
-        json.put("signature", Convert.toHexString(signature));
-        if (attachment != null) {
-            json.put("attachment", attachment.getJSON());
-        }
-
-        return json;
     }
 
     @Override

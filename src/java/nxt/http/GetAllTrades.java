@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Trade;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -49,15 +48,7 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
             for (List<Trade> assetTrades : trades) {
                 for (Trade trade : assetTrades) {
                     if (trade.getTimestamp() >= timestamp) {
-                        JSONObject tradeData = new JSONObject();
-                        tradeData.put("timestamp", trade.getTimestamp());
-                        tradeData.put("quantity", trade.getQuantity());
-                        tradeData.put("priceNQT", trade.getPriceNQT());
-                        tradeData.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
-                        tradeData.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
-                        tradeData.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
-                        tradeData.put("block", Convert.toUnsignedLong(trade.getBlockId()));
-                        tradesData.add(tradeData);
+                        tradesData.add(JSONData.trade(trade));
                     }
                 }
             }
