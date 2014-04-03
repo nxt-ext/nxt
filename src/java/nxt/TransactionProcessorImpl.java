@@ -277,12 +277,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             if (recipientId == null) recipientId = 0L; // ugly
             long amountNQT;
             long feeNQT;
-            if (transactionData.get("amount") != null) {
-                amountNQT = Convert.safeMultiply(((Long) transactionData.get("amount")), Constants.ONE_NXT);
-                feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
-            } else {
+            if (transactionData.get("amountNQT") != null) {
                 amountNQT = ((Long) transactionData.get("amountNQT"));
                 feeNQT = ((Long) transactionData.get("feeNQT"));
+            } else {
+                amountNQT = Convert.safeMultiply(((Long) transactionData.get("amount")), Constants.ONE_NXT);
+                feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
             }
             Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
             byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
