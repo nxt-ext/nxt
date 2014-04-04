@@ -755,7 +755,7 @@ public abstract class TransactionType {
             final void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
                 int quantity = ((Long)attachmentData.get("quantity")).intValue();
-                long price = (Long)attachmentData.get("price");
+                long price = (Long)attachmentData.get("priceNQT");
                 transaction.setAttachment(makeAttachment(assetId, quantity, price));
                 validateAttachment(transaction);
             }
