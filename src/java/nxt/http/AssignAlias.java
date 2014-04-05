@@ -16,7 +16,6 @@ import static nxt.http.JSONResponses.INCORRECT_ALIAS_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_URI_LENGTH;
 import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.MISSING_URI;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class AssignAlias extends CreateTransaction {
 
@@ -27,7 +26,7 @@ public final class AssignAlias extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         String alias = req.getParameter("alias");
         String uri = req.getParameter("uri");
 
@@ -54,13 +53,10 @@ public final class AssignAlias extends CreateTransaction {
             return INCORRECT_URI_LENGTH;
         }
 
-        Account account = getAccount(req);
-        if (account == null) {
-            return UNKNOWN_ACCOUNT;
-        }
+        Account account = ParameterParser.getSenderAccount(req);
 
         Alias aliasData = Alias.getAlias(normalizedAlias);
-        if (aliasData != null && ! aliasData.getAccount().getId().equals(account.getId())) {
+        if (aliasData != null && !aliasData.getAccount().getId().equals(account.getId())) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 8);
             response.put("errorDescription", "\"" + alias + "\" is already used");

@@ -1,13 +1,11 @@
 package nxt.http;
 
+import nxt.NxtException;
 import nxt.Order;
-import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_ORDER;
-import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.UNKNOWN_ORDER;
 
 public final class GetBidOrder extends APIServlet.APIRequestHandler {
@@ -19,25 +17,13 @@ public final class GetBidOrder extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
-
-        String order = req.getParameter("order");
-        if (order == null) {
-            return MISSING_ORDER;
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        Long orderId = ParameterParser.getOrderId(req);
+        Order.Bid bidOrder = Order.Bid.getBidOrder(orderId);
+        if (bidOrder == null) {
+            return UNKNOWN_ORDER;
         }
-
-        Order.Bid orderData;
-        try {
-            orderData = Order.Bid.getBidOrder(Convert.parseUnsignedLong(order));
-            if (orderData == null) {
-                return UNKNOWN_ORDER;
-            }
-        } catch (RuntimeException e) {
-            return INCORRECT_ORDER;
-        }
-
-        return JSONData.bidOrder(orderData);
-
+        return JSONData.bidOrder(bidOrder);
     }
 
 }

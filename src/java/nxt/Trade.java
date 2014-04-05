@@ -33,14 +33,14 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    static void addTrade(Long assetId, int timeStamp, Long blockId, Long askOrderId, Long bidOrderId, int quantity, long priceNQT) {
+    static void addTrade(Long assetId, int timeStamp, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
         List<Trade> assetTrades = trades.get(assetId);
         if (assetTrades == null) {
             assetTrades = new CopyOnWriteArrayList<>();
             // cfb: CopyOnWriteArrayList requires a lot of resources to grow but this happens only when a new block is pushed/applied, I can't decide if we should replace it with another class
             trades.put(assetId, assetTrades);
         }
-        Trade trade = new Trade(blockId, timeStamp, assetId, askOrderId, bidOrderId, quantity, priceNQT);
+        Trade trade = new Trade(blockId, timeStamp, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
         assetTrades.add(trade);
         listeners.notify(trade, Event.TRADE);
     }
@@ -53,17 +53,17 @@ public final class Trade {
     private final Long assetId;
     private final Long blockId;
     private final Long askOrderId, bidOrderId;
-    private final int quantity;
+    private final long quantityQNT;
     private final long priceNQT;
 
-    private Trade(Long blockId, int timestamp, Long assetId, Long askOrderId, Long bidOrderId, int quantity, long priceNQT) {
+    private Trade(Long blockId, int timestamp, Long assetId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
 
         this.blockId = blockId;
         this.assetId = assetId;
         this.timestamp = timestamp;
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
-        this.quantity = quantity;
+        this.quantityQNT = quantityQNT;
         this.priceNQT = priceNQT;
 
     }
@@ -74,7 +74,7 @@ public final class Trade {
 
     public Long getBidOrderId() { return bidOrderId; }
 
-    public int getQuantity() { return quantity; }
+    public long getQuantityQNT() { return quantityQNT; }
 
     public long getPriceNQT() { return priceNQT; }
     

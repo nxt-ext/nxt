@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,38 +12,32 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_DESCRIPTION;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME_LENGTH;
-import static nxt.http.JSONResponses.INCORRECT_ASSET_QUANTITY;
-import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
+import static nxt.http.JSONResponses.INCORRECT_DECIMALS;
 import static nxt.http.JSONResponses.MISSING_NAME;
-import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class IssueAsset extends CreateTransaction {
 
     static final IssueAsset instance = new IssueAsset();
 
     private IssueAsset() {
-        super("name", "description", "quantity");
+        super("name", "description", "quantityQNT", "quantityINT", "decimals");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String name = req.getParameter("name");
         String description = req.getParameter("description");
-        String quantityValue = req.getParameter("quantity");
+        String decimalsValue = Convert.emptyToNull(req.getParameter("decimals"));
 
         if (name == null) {
             return MISSING_NAME;
-        } else if (quantityValue == null) {
-            return MISSING_QUANTITY;
         }
 
         name = name.trim();
         if (name.length() < Constants.MIN_ASSET_NAME_LENGTH || name.length() > Constants.MAX_ASSET_NAME_LENGTH) {
             return INCORRECT_ASSET_NAME_LENGTH;
         }
-
         String normalizedName = name.toLowerCase();
         for (int i = 0; i < normalizedName.length(); i++) {
             if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
@@ -54,22 +49,21 @@ public final class IssueAsset extends CreateTransaction {
             return INCORRECT_ASSET_DESCRIPTION;
         }
 
-        int quantity;
-        try {
-            quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity > Constants.MAX_ASSET_QUANTITY) {
-                return INCORRECT_ASSET_QUANTITY;
+        byte decimals = 0;
+        if (decimalsValue != null) {
+            try {
+                decimals = Byte.parseByte(decimalsValue);
+                if (decimals < 0 || decimals > 8) {
+                    return INCORRECT_DECIMALS;
+                }
+            } catch (NumberFormatException e) {
+                return INCORRECT_DECIMALS;
             }
-        } catch (NumberFormatException e) {
-            return INCORRECT_QUANTITY;
         }
 
-        Account account = getAccount(req);
-        if (account == null) {
-            return UNKNOWN_ACCOUNT;
-        }
-
-        Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantity);
+        long quantityQNT = ParameterParser.getQuantityQNT(req, decimals);
+        Account account = ParameterParser.getSenderAccount(req);
+        Attachment attachment = new Attachment.ColoredCoinsAssetIssuance(name, description, quantityQNT, decimals);
         return createTransaction(req, account, attachment);
 
     }

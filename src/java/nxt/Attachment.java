@@ -4,7 +4,6 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +15,7 @@ public interface Attachment {
 
     public int getSize();
     public byte[] getBytes();
-    public JSONStreamAware getJSON();
+    public JSONObject getJSONObject();
 
     TransactionType getTransactionType();
 
@@ -51,7 +50,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("message", message == null ? null : Convert.toHexString(message));
@@ -120,7 +119,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("alias", aliasName);
@@ -219,7 +218,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("name", this.pollName);
@@ -289,7 +288,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
@@ -321,20 +320,22 @@ public interface Attachment {
 
         private final String name;
         private final String description;
-        private final int quantity;
+        private final long quantityQNT;
+        private final byte decimals;
 
-        public ColoredCoinsAssetIssuance(String name, String description, int quantity) {
+        public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
 
             this.name = name;
             this.description = Convert.nullToEmpty(description);
-            this.quantity = quantity;
+            this.quantityQNT = quantityQNT;
+            this.decimals = decimals;
 
         }
 
         @Override
         public int getSize() {
             try {
-                return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 4;
+                return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 8 + 1;
             } catch (RuntimeException|UnsupportedEncodingException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -354,7 +355,8 @@ public interface Attachment {
                 buffer.put(name);
                 buffer.putShort((short)description.length);
                 buffer.put(description);
-                buffer.putInt(quantity);
+                buffer.putLong(quantityQNT);
+                buffer.put(decimals);
 
                 return buffer.array();
             } catch (RuntimeException|UnsupportedEncodingException e) {
@@ -365,12 +367,13 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("name", name);
             attachment.put("description", description);
-            attachment.put("quantity", quantity);
+            attachment.put("quantityQNT", quantityQNT);
+            attachment.put("decimals", decimals);
 
             return attachment;
 
@@ -389,8 +392,12 @@ public interface Attachment {
             return description;
         }
 
-        public int getQuantity() {
-            return quantity;
+        public long getQuantityQNT() {
+            return quantityQNT;
+        }
+
+        public byte getDecimals() {
+            return decimals;
         }
     }
 
@@ -399,13 +406,13 @@ public interface Attachment {
         static final long serialVersionUID = 0;
 
         private final Long assetId;
-        private final int quantity;
+        private final long quantityQNT;
         private final String comment;
 
-        public ColoredCoinsAssetTransfer(Long assetId, int quantity, String comment) {
+        public ColoredCoinsAssetTransfer(Long assetId, long quantityQNT, String comment) {
 
             this.assetId = assetId;
-            this.quantity = quantity;
+            this.quantityQNT = quantityQNT;
             this.comment = Convert.nullToEmpty(comment);
 
         }
@@ -413,7 +420,7 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                return 8 + 4 + 2 + comment.getBytes("UTF-8").length;
+                return 8 + 8 + 2 + comment.getBytes("UTF-8").length;
             } catch (RuntimeException|UnsupportedEncodingException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -429,7 +436,7 @@ public interface Attachment {
                 ByteBuffer buffer = ByteBuffer.allocate(8 + 4 + 2 + commentBytes.length);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(Convert.nullToZero(assetId));
-                buffer.putInt(quantity);
+                buffer.putLong(quantityQNT);
                 buffer.putShort((short) commentBytes.length);
                 buffer.put(commentBytes);
 
@@ -442,11 +449,11 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.toUnsignedLong(assetId));
-            attachment.put("quantity", quantity);
+            attachment.put("quantityQNT", quantityQNT);
             attachment.put("comment", comment);
 
             return attachment;
@@ -462,8 +469,8 @@ public interface Attachment {
             return assetId;
         }
 
-        public int getQuantity() {
-            return quantity;
+        public long getQuantityQNT() {
+            return quantityQNT;
         }
 
         public String getComment() {
@@ -477,20 +484,20 @@ public interface Attachment {
         static final long serialVersionUID = 0;
 
         private final Long assetId;
-        private final int quantity;
+        private final long quantityQNT;
         private final long priceNQT;
 
-        private ColoredCoinsOrderPlacement(Long assetId, int quantity, long priceNQT) {
+        private ColoredCoinsOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
 
             this.assetId = assetId;
-            this.quantity = quantity;
+            this.quantityQNT = quantityQNT;
             this.priceNQT = priceNQT;
 
         }
 
         @Override
         public int getSize() {
-            return 8 + 4 + 8;
+            return 8 + 8 + 8;
         }
 
         @Override
@@ -499,7 +506,7 @@ public interface Attachment {
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(Convert.nullToZero(assetId));
-            buffer.putInt(quantity);
+            buffer.putLong(quantityQNT);
             buffer.putLong(priceNQT);
 
             return buffer.array();
@@ -507,11 +514,11 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.toUnsignedLong(assetId));
-            attachment.put("quantity", quantity);
+            attachment.put("quantityQNT", quantityQNT);
             attachment.put("priceNQT", priceNQT);
 
             return attachment;
@@ -522,8 +529,8 @@ public interface Attachment {
             return assetId;
         }
 
-        public int getQuantity() {
-            return quantity;
+        public long getQuantityQNT() {
+            return quantityQNT;
         }
 
         public long getPriceNQT() {
@@ -535,8 +542,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsAskOrderPlacement(Long assetId, int quantity, long priceNQT) {
-            super(assetId, quantity, priceNQT);
+        public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
+            super(assetId, quantityQNT, priceNQT);
         }
 
         @Override
@@ -550,8 +557,8 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        public ColoredCoinsBidOrderPlacement(Long assetId, int quantity, long priceNQT) {
-            super(assetId, quantity, priceNQT);
+        public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
+            super(assetId, quantityQNT, priceNQT);
         }
 
         @Override
@@ -588,7 +595,7 @@ public interface Attachment {
         }
 
         @Override
-        public JSONStreamAware getJSON() {
+        public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
             attachment.put("order", Convert.toUnsignedLong(orderId));

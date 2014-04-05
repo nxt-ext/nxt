@@ -15,12 +15,10 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
-import static nxt.http.JSONResponses.DUPLICATE_FEE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
@@ -37,42 +35,21 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         super(addCommonParameters(parameters));
     }
 
-    final Account getAccount(HttpServletRequest req) {
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        if (secretPhrase != null) {
-            return Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        }
-        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
-        if (publicKeyString == null) {
-            return null;
-        }
-        try {
-            return Account.getAccount(Convert.parseHexString(publicKeyString));
-        } catch (RuntimeException e) {
-            return null;
-        }
-    }
-
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
-        throws NxtException.ValidationException {
+        throws NxtException {
         return createTransaction(req, senderAccount, Genesis.CREATOR_ID, 0, attachment);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId,
-                                            long amountNQT, Attachment attachment) throws NxtException.ValidationException {
+                                            long amountNQT, Attachment attachment)
+            throws NxtException {
         String deadlineValue = req.getParameter("deadline");
-        String feeValueNXT = Convert.emptyToNull(req.getParameter("feeNXT"));
-        String feeValueNQT = Convert.emptyToNull(req.getParameter("feeNQT"));
         String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
-        } else if (feeValueNXT == null && feeValueNQT == null) {
-            return MISSING_FEE;
-        } else if (feeValueNXT != null && feeValueNQT != null) {
-            return DUPLICATE_FEE;
         } else if (deadlineValue == null) {
             return MISSING_DEADLINE;
         }
@@ -87,13 +64,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             return INCORRECT_DEADLINE;
         }
 
-        long feeNQT;
-        try {
-            feeNQT = feeValueNQT != null ? Long.parseLong(feeValueNQT) : Convert.parseNXT(feeValueNXT);
-            if (feeNQT < minimumFeeNQT() || feeNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
-                return INCORRECT_FEE;
-            }
-        } catch (NumberFormatException e) {
+        long feeNQT = ParameterParser.getFeeNQT(req);
+        if (feeNQT < minimumFeeNQT()) {
             return INCORRECT_FEE;
         }
 

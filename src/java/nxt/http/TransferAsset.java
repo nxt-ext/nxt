@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Asset;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
@@ -9,79 +10,37 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_TRANSFER_COMMENT;
-import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
-import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
-import static nxt.http.JSONResponses.MISSING_ASSET;
-import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.MISSING_RECIPIENT;
-import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
+import static nxt.http.JSONResponses.NOT_ENOUGH_ASSETS;
 
 public final class TransferAsset extends CreateTransaction {
 
     static final TransferAsset instance = new TransferAsset();
 
     private TransferAsset() {
-        super("recipient", "asset", "quantity", "comment");
+        super("recipient", "asset", "quantityQNT", "quantityINT", "comment");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String recipientValue = req.getParameter("recipient");
-        String assetValue = req.getParameter("asset");
-        String quantityValue = req.getParameter("quantity");
+        Long recipient = ParameterParser.getRecipientId(req);
+
         String comment = Convert.nullToEmpty(req.getParameter("comment")).trim();
-
-        if (recipientValue == null || "0".equals(recipientValue)) {
-            return MISSING_RECIPIENT;
-        } else if (assetValue == null) {
-            return MISSING_ASSET;
-        } else if (quantityValue == null) {
-            return MISSING_QUANTITY;
-        }
-
-        Long recipient;
-        try {
-            recipient = Convert.parseUnsignedLong(recipientValue);
-        } catch (RuntimeException e) {
-            return INCORRECT_RECIPIENT;
-        }
-
-        Long asset;
-        try {
-            asset = Convert.parseUnsignedLong(assetValue);
-        } catch (RuntimeException e) {
-            return INCORRECT_ASSET;
-        }
-
-        int quantity;
-        try {
-            quantity = Integer.parseInt(quantityValue);
-            if (quantity <= 0 || quantity >= Constants.MAX_ASSET_QUANTITY) {
-                return INCORRECT_QUANTITY;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_QUANTITY;
-        }
-
         if (comment.length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
             return INCORRECT_ASSET_TRANSFER_COMMENT;
         }
 
-        Account account = getAccount(req);
-        if (account == null) {
-            return UNKNOWN_ACCOUNT;
+        Asset asset = ParameterParser.getAsset(req);
+        long quantityQNT = ParameterParser.getQuantityQNT(req, asset.getDecimals());
+        Account account = ParameterParser.getSenderAccount(req);
+
+        Long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
+        if (assetBalance == null || quantityQNT > assetBalance) {
+            return NOT_ENOUGH_ASSETS;
         }
 
-        Integer assetBalance = account.getUnconfirmedAssetBalance(asset);
-        if (assetBalance == null || quantity > assetBalance) {
-            return NOT_ENOUGH_FUNDS;
-        }
-
-        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset, quantity, comment);
+        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT, comment);
         return createTransaction(req, account, recipient, 0, attachment);
 
     }

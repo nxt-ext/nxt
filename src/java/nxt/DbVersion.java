@@ -147,6 +147,8 @@ final class DbVersion {
             case 31:
                 apply("UPDATE transaction SET fee = fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
             case 32:
+                apply(null);
+            case 33:
                 try (Connection con = Db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
                      ResultSet rs = pstmt.executeQuery()) {
@@ -169,7 +171,7 @@ final class DbVersion {
                     throw new RuntimeException(e.toString(), e);
                 }
                 apply(null);
-            case 33:
+            case 34:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

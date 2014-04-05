@@ -28,12 +28,12 @@ public final class Account {
 
         public final Long accountId;
         public final Long assetId;
-        public final Integer quantity;
+        public final Long quantityQNT;
 
-        private AccountAsset(Long accountId, Long assetId, Integer quantity) {
+        private AccountAsset(Long accountId, Long assetId, Long quantityQNT) {
             this.accountId = accountId;
             this.assetId = assetId;
-            this.quantity = quantity;
+            this.quantityQNT = quantityQNT;
         }
 
     }
@@ -100,8 +100,8 @@ public final class Account {
     private long unconfirmedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
-    private final Map<Long, Integer> assetBalances = new HashMap<>();
-    private final Map<Long, Integer> unconfirmedAssetBalances = new HashMap<>();
+    private final Map<Long, Long> assetBalances = new HashMap<>();
+    private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
 
     private Account(Long id) {
         this.id = id;
@@ -130,7 +130,7 @@ public final class Account {
         if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3 && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
-                return (int)(getBalanceNQT() / Constants.ONE_NXT);
+                return getBalanceNQT() / Constants.ONE_NXT;
             }
             if (lastBlock.getHeight() - this.height < 1440) {
                 return 0;
@@ -177,15 +177,15 @@ public final class Account {
 
     }
 
-    public synchronized Integer getUnconfirmedAssetBalance(Long assetId) {
+    public synchronized Long getUnconfirmedAssetBalanceQNT(Long assetId) {
         return unconfirmedAssetBalances.get(assetId);
     }
 
-    public Map<Long, Integer> getAssetBalances() {
+    public Map<Long, Long> getAssetBalancesQNT() {
         return Collections.unmodifiableMap(assetBalances);
     }
 
-    public Map<Long, Integer> getUnconfirmedAssetBalances() {
+    public Map<Long, Long> getUnconfirmedAssetBalancesQNT() {
         return Collections.unmodifiableMap(unconfirmedAssetBalances);
     }
 
@@ -245,49 +245,49 @@ public final class Account {
         }
     }
 
-    synchronized int getAssetBalance(Long assetId) {
+    synchronized long getAssetBalanceQNT(Long assetId) {
         return Convert.nullToZero(assetBalances.get(assetId));
     }
 
-    void addToAssetBalance(Long assetId, int quantity) {
+    void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Integer assetBalance = assetBalances.get(assetId);
+            Long assetBalance = assetBalances.get(assetId);
             if (assetBalance == null) {
-                assetBalances.put(assetId, quantity);
+                assetBalances.put(assetId, quantityQNT);
             } else {
-                assetBalances.put(assetId, assetBalance + quantity);
+                assetBalances.put(assetId, Convert.safeAdd(assetBalance, quantityQNT));
             }
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
     }
 
-    void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
+    void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
             if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantity);
+                unconfirmedAssetBalances.put(assetId, quantityQNT);
             } else {
-                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+                unconfirmedAssetBalances.put(assetId, Convert.safeAdd(unconfirmedAssetBalance, quantityQNT));
             }
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
+    void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Integer assetBalance = assetBalances.get(assetId);
+            Long assetBalance = assetBalances.get(assetId);
             if (assetBalance == null) {
-                assetBalances.put(assetId, quantity);
+                assetBalances.put(assetId, quantityQNT);
             } else {
-                assetBalances.put(assetId, assetBalance + quantity);
+                assetBalances.put(assetId, Convert.safeAdd(assetBalance, quantityQNT));
             }
-            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
             if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantity);
+                unconfirmedAssetBalances.put(assetId, quantityQNT);
             } else {
-                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+                unconfirmedAssetBalances.put(assetId, Convert.safeAdd(unconfirmedAssetBalance, quantityQNT));
             }
         }
         listeners.notify(this, Event.ASSET_BALANCE);

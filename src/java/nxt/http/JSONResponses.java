@@ -55,9 +55,11 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ASSET_NAME_LENGTH = incorrect("name", "(length must be in [" + Constants.MIN_ASSET_NAME_LENGTH + ".." + Constants.MAX_ASSET_NAME_LENGTH + "] range)");
     public static final JSONStreamAware INCORRECT_ASSET_TRANSFER_COMMENT = incorrect("comment", "(length must not exceed " + Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_NAME = missing("name");
-    public static final JSONStreamAware MISSING_QUANTITY = missing("quantity");
+    public static final JSONStreamAware MISSING_QUANTITY = missing("quantityQNT", "quantityINT");
+    public static final JSONStreamAware DUPLICATE_QUANTITY = duplicate("quantityQNT", "quantityINT");
     public static final JSONStreamAware INCORRECT_QUANTITY = incorrect("quantity");
     public static final JSONStreamAware INCORRECT_ASSET_QUANTITY = incorrect("quantity", "(must be in [1..1'000'000'000] range)");
+    public static final JSONStreamAware INCORRECT_DECIMALS = incorrect("decimals");
     public static final JSONStreamAware MISSING_HOST = missing("host");
     public static final JSONStreamAware MISSING_DATE = missing("date");
     public static final JSONStreamAware MISSING_WEIGHT = missing("weight");

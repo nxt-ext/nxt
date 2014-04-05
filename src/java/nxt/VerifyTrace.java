@@ -20,8 +20,6 @@ public final class VerifyTrace {
     private static final List<String> assetQuantityHeaders = Arrays.asList("asset balance", "unconfirmed asset balance");
     private static final List<String> deltaAssetQuantityHeaders = Arrays.asList("asset quantity", "trade quantity");
 
-    private static String[] headers;
-
     private static boolean isBalance(String header) {
         return balanceHeaders.contains(header);
     }
@@ -42,7 +40,7 @@ public final class VerifyTrace {
         String fileName = args.length == 1 ? args[0] : "nxt.trace";
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
-            headers = line.split("\t");
+            String[] headers = line.split("\t");
 
             Map<String,Map<String,Long>> totals = new HashMap<>();
             Map<String,Map<String,Map<String,Long>>> accountAssetTotals = new HashMap<>();

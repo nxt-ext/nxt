@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.NxtException;
 import nxt.Trade;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -8,9 +9,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.List;
-
-import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 
 public final class GetAllTrades extends APIServlet.APIRequestHandler {
 
@@ -21,25 +19,11 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
     }
     
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String timestampValue = req.getParameter("timestamp");
-        if (timestampValue == null) {
-            return MISSING_TIMESTAMP;
-        }
-
-        int timestamp;
-        try {
-            timestamp = Integer.parseInt(timestampValue);
-            if (timestamp < 0) {
-                return INCORRECT_TIMESTAMP;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_TIMESTAMP;
-        }
+        int timestamp = ParameterParser.getTimestamp(req);
 
         JSONObject response = new JSONObject();
-        
         JSONArray tradesData = new JSONArray();
 
         try {

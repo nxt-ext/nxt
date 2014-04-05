@@ -51,7 +51,7 @@ final class JSONData {
         json.put("referencedTransaction", Convert.toUnsignedLong(transaction.getReferencedTransactionId()));
         json.put("signature", Convert.toHexString(transaction.getSignature()));
         if (transaction.getAttachment() != null) {
-            json.put("attachment", transaction.getAttachment().getJSON());
+            json.put("attachment", transaction.getAttachment().getJSONObject());
         }
         return json;
     }
