@@ -188,8 +188,8 @@ public final class DebugTrace {
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantityQNT() : trade.getQuantityQNT()));
         map.put("trade price", String.valueOf(trade.getPriceNQT()));
-        map.put("trade cost", String.valueOf((isAsk ? trade.getQuantityQNT()
-                : - Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT()))));
+        long tradeCost = Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT());
+        map.put("trade cost", String.valueOf((isAsk ? tradeCost : - tradeCost)));
         map.put("event", "trade");
         return map;
     }
