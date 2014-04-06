@@ -29,7 +29,6 @@ import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.MISSING_PRICE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
-import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
@@ -46,7 +45,7 @@ final class ParameterParser {
         long amountNQT;
         try {
             amountNQT = amountValueNQT != null ? Long.parseLong(amountValueNQT) : Convert.parseNXT(amountValueNXT);
-        } catch (NumberFormatException e) {
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_AMOUNT);
         }
         if (amountNQT <= 0 || amountNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
@@ -66,7 +65,7 @@ final class ParameterParser {
         long feeNQT;
         try {
             feeNQT = feeValueNQT != null ? Long.parseLong(feeValueNQT) : Convert.parseNXT(feeValueNXT);
-        } catch (NumberFormatException e) {
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_FEE);
         }
         if (feeNQT <= 0 || feeNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
@@ -86,7 +85,7 @@ final class ParameterParser {
         long priceNQT;
         try {
             priceNQT = priceValueNQT != null ? Long.parseLong(priceValueNQT) : Convert.parseNXT(priceValueNXT);
-        } catch (NumberFormatException e) {
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PRICE);
         }
         String quantityINT = Convert.emptyToNull(req.getParameter("quantityINT"));
@@ -103,7 +102,7 @@ final class ParameterParser {
     }
 
     static Asset getAsset(HttpServletRequest req) throws ParameterException {
-        String assetValue = req.getParameter("asset");
+        String assetValue = Convert.emptyToNull(req.getParameter("asset"));
         if (assetValue == null) {
             throw new ParameterException(MISSING_ASSET);
         }
@@ -132,7 +131,7 @@ final class ParameterParser {
         try {
             quantityQNT = quantityValueQNT != null ? Long.parseLong(quantityValueQNT)
                     : Convert.parseQuantityINT(quantityValueINT, decimals);
-        } catch (NumberFormatException e) {
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_QUANTITY);
         }
         if (quantityQNT <= 0 || quantityQNT > Convert.safeMultiply(Constants.MAX_ASSET_QUANTITY, Convert.multiplier(decimals))) {
@@ -142,7 +141,7 @@ final class ParameterParser {
     }
 
     static Long getOrderId(HttpServletRequest req) throws ParameterException {
-        String orderValue = req.getParameter("order");
+        String orderValue = Convert.emptyToNull(req.getParameter("order"));
         if (orderValue == null) {
             throw new ParameterException(MISSING_ORDER);
         }
@@ -170,7 +169,7 @@ final class ParameterParser {
     }
 
     static Account getAccount(HttpServletRequest req) throws ParameterException {
-        String accountValue = req.getParameter("account");
+        String accountValue = Convert.emptyToNull(req.getParameter("account"));
         if (accountValue == null) {
             throw new ParameterException(MISSING_ACCOUNT);
         }
@@ -187,9 +186,9 @@ final class ParameterParser {
     }
 
     static int getTimestamp(HttpServletRequest req) throws ParameterException {
-        String timestampValue = req.getParameter("timestamp");
+        String timestampValue = Convert.emptyToNull(req.getParameter("timestamp"));
         if (timestampValue == null) {
-            throw new ParameterException(MISSING_TIMESTAMP);
+            return 0;
         }
         int timestamp;
         try {
@@ -204,7 +203,7 @@ final class ParameterParser {
     }
 
     static Long getRecipientId(HttpServletRequest req) throws ParameterException {
-        String recipientValue = req.getParameter("recipient");
+        String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
         if (recipientValue == null || "0".equals(recipientValue)) {
             throw new ParameterException(MISSING_RECIPIENT);
         }

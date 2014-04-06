@@ -33,14 +33,14 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
-    static void addTrade(Long assetId, int timeStamp, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
+    static void addTrade(Long assetId, int timestamp, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
         List<Trade> assetTrades = trades.get(assetId);
         if (assetTrades == null) {
             assetTrades = new CopyOnWriteArrayList<>();
             // cfb: CopyOnWriteArrayList requires a lot of resources to grow but this happens only when a new block is pushed/applied, I can't decide if we should replace it with another class
             trades.put(assetId, assetTrades);
         }
-        Trade trade = new Trade(blockId, timeStamp, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
+        Trade trade = new Trade(blockId, timestamp, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
         assetTrades.add(trade);
         listeners.notify(trade, Event.TRADE);
     }
