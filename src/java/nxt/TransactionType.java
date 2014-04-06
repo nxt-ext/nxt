@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class TransactionType {
+public abstract class TransactionType<T extends Attachment> {
 
     private static final byte TYPE_PAYMENT = 0;
     private static final byte TYPE_MESSAGING = 1;
@@ -73,7 +73,15 @@ public abstract class TransactionType {
         }
     }
 
-    private TransactionType() {}
+    private final Class<T> attachmentType;
+
+    private TransactionType(Class<T> attachmentType) {
+        this.attachmentType = attachmentType;
+    }
+
+    public T getAttachment(Transaction transaction) {
+        return attachmentType.cast(transaction.getAttachment());
+    }
 
     public abstract byte getType();
 
@@ -130,9 +138,11 @@ public abstract class TransactionType {
         return false;
     }
 
-    public static abstract class Payment extends TransactionType {
+    public static abstract class Payment extends TransactionType<Attachment> {
 
-        private Payment() {}
+        private Payment() {
+            super(Attachment.class);
+        }
 
         @Override
         public final byte getType() {
@@ -188,9 +198,11 @@ public abstract class TransactionType {
         };
     }
 
-    public static abstract class Messaging extends TransactionType {
+    public static abstract class Messaging<T extends Attachment> extends TransactionType<T> {
 
-        private Messaging() {}
+        private Messaging(Class<T> attachmentType) {
+            super(attachmentType);
+        }
 
         @Override
         public final byte getType() {
@@ -209,7 +221,8 @@ public abstract class TransactionType {
         final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                           Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
-        public final static TransactionType ARBITRARY_MESSAGE = new Messaging() {
+        public final static TransactionType ARBITRARY_MESSAGE
+                = new Messaging<Attachment.MessagingArbitraryMessage>(Attachment.MessagingArbitraryMessage.class) {
 
             @Override
             public final byte getSubtype() {
@@ -246,7 +259,7 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ARBITRARY_MESSAGES_BLOCK) {
                     throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.getAttachment();
+                Attachment.MessagingArbitraryMessage attachment = getAttachment(transaction);
                 if (transaction.getAmountNQT() != 0 || attachment.getMessage().length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
@@ -254,7 +267,8 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType ALIAS_ASSIGNMENT = new Messaging() {
+        public static final TransactionType ALIAS_ASSIGNMENT
+                = new Messaging<Attachment.MessagingAliasAssignment>(Attachment.MessagingAliasAssignment.class) {
 
             @Override
             public final byte getSubtype() {
@@ -294,8 +308,9 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
-                Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(), attachment.getAliasURI(), transaction.getBlockTimestamp());
+                Attachment.MessagingAliasAssignment attachment = getAttachment(transaction);
+                Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(),
+                        attachment.getAliasURI(), transaction.getBlockTimestamp());
             }
 
             @Override
@@ -311,7 +326,7 @@ public abstract class TransactionType {
                     myDuplicates = new HashSet<>();
                     duplicates.put(this, myDuplicates);
                 }
-                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
+                Attachment.MessagingAliasAssignment attachment = getAttachment(transaction);
                 return ! myDuplicates.add(attachment.getAliasName().toLowerCase());
             }
 
@@ -320,9 +335,12 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Aliases not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0 || attachment.getAliasName().length() == 0
-                        || attachment.getAliasName().length() > Constants.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
+                Attachment.MessagingAliasAssignment attachment = getAttachment(transaction);
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
+                        || attachment.getAliasName().length() == 0
+                        || attachment.getAliasName().length() > Constants.MAX_ALIAS_LENGTH
+                        || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
                     throw new NxtException.ValidationException("Invalid alias assignment: " + attachment.getJSONObject());
                 }
                 String normalizedAlias = attachment.getAliasName().toLowerCase();
@@ -339,7 +357,8 @@ public abstract class TransactionType {
 
         };
 
-        public final static TransactionType POLL_CREATION = new Messaging() {
+        public final static TransactionType POLL_CREATION
+                = new Messaging<Attachment.MessagingPollCreation>(Attachment.MessagingPollCreation.class) {
 
             @Override
             public final byte getSubtype() {
@@ -433,7 +452,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.getAttachment();
+                Attachment.MessagingPollCreation attachment = getAttachment(transaction);
                 Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(), attachment.getPollOptions(),
                         attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.isOptionsAreBinary());
             }
@@ -448,7 +467,7 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)transaction.getAttachment();
+                Attachment.MessagingPollCreation attachment = getAttachment(transaction);
                 for (int i = 0; i < attachment.getPollOptions().length; i++) {
                     if (attachment.getPollOptions()[i].length() > Constants.MAX_POLL_OPTION_LENGTH) {
                         throw new NxtException.ValidationException("Invalid poll options length: " + attachment.getJSONObject());
@@ -465,7 +484,8 @@ public abstract class TransactionType {
 
         };
 
-        public final static TransactionType VOTE_CASTING = new Messaging() {
+        public final static TransactionType VOTE_CASTING
+                = new Messaging<Attachment.MessagingVoteCasting>(Attachment.MessagingVoteCasting.class) {
 
             @Override
             public final byte getSubtype() {
@@ -512,7 +532,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting)transaction.getAttachment();
+                Attachment.MessagingVoteCasting attachment = getAttachment(transaction);
                 Poll poll = Poll.getPoll(attachment.getPollId());
                 if (poll != null) {
                     Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(), attachment.getPollVote());
@@ -530,7 +550,7 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting)transaction.getAttachment();
+                Attachment.MessagingVoteCasting attachment = getAttachment(transaction);
                 if (attachment.getPollId() == null || attachment.getPollVote() == null) {
                     throw new NxtException.ValidationException("Invalid vote casting attachment: " + attachment.getJSONObject());
                 }
@@ -542,16 +562,19 @@ public abstract class TransactionType {
         };
     }
 
-    public static abstract class ColoredCoins extends TransactionType {
+    public static abstract class ColoredCoins<T extends Attachment> extends TransactionType<T> {
 
-        private ColoredCoins() {}
+        private ColoredCoins(Class<T> attachmentType) {
+            super(attachmentType);
+        }
 
         @Override
         public final byte getType() {
             return TransactionType.TYPE_COLORED_COINS;
         }
 
-        public static final TransactionType ASSET_ISSUANCE = new ColoredCoins() {
+        public static final TransactionType ASSET_ISSUANCE
+                = new ColoredCoins<Attachment.ColoredCoinsAssetIssuance>(Attachment.ColoredCoinsAssetIssuance.class) {
 
             @Override
             public final byte getSubtype() {
@@ -600,7 +623,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetIssuance attachment = getAttachment(transaction);
                 Long assetId = transaction.getId();
                 Asset.addAsset(assetId, transaction.getSenderId(), attachment.getName(), attachment.getDescription(),
                         attachment.getQuantityQNT(), attachment.getDecimals());
@@ -609,7 +632,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetIssuance attachment = getAttachment(transaction);
                 Long assetId = transaction.getId();
                 senderAccount.addToAssetAndUnconfirmedAssetBalanceQNT(assetId, -attachment.getQuantityQNT());
                 Asset.removeAsset(assetId);
@@ -627,10 +650,11 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetIssuance attachment = getAttachment(transaction);
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
-                        || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
+                        || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH
+                        || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
                         || attachment.getDecimals() < 0 || attachment.getDecimals() > 8
                         || attachment.getQuantityQNT() <= 0
@@ -648,7 +672,8 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType ASSET_TRANSFER = new ColoredCoins() {
+        public static final TransactionType ASSET_TRANSFER
+                = new ColoredCoins<Attachment.ColoredCoinsAssetTransfer>(Attachment.ColoredCoinsAssetTransfer.class) {
 
             @Override
             public final byte getSubtype() {
@@ -684,7 +709,7 @@ public abstract class TransactionType {
 
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetTransfer attachment = getAttachment(transaction);
                 Long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance != null && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
@@ -695,21 +720,21 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetTransfer attachment = getAttachment(transaction);
                 senderAccount.addToAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
                 recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetTransfer attachment = getAttachment(transaction);
                 senderAccount.addToAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
                 recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
             }
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
+                Attachment.ColoredCoinsAssetTransfer attachment = getAttachment(transaction);
                 senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
@@ -717,7 +742,7 @@ public abstract class TransactionType {
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
+                Attachment.ColoredCoinsAssetTransfer attachment = getAttachment(transaction);
                 Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderId());
                 if (accountAccumulatedAssetQuantities == null) {
                     accountAccumulatedAssetQuantities = new HashMap<>();
@@ -736,8 +761,9 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0 || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH || attachment.getAssetId() == null) {
+                Attachment.ColoredCoinsAssetTransfer attachment = getAttachment(transaction);
+                if (transaction.getAmountNQT() != 0 || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH
+                        || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
                 Asset asset = Asset.getAsset(attachment.getAssetId());
@@ -749,7 +775,11 @@ public abstract class TransactionType {
 
         };
 
-        abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
+        abstract static class ColoredCoinsOrderPlacement<T extends Attachment.ColoredCoinsOrderPlacement> extends ColoredCoins<T> {
+
+            private ColoredCoinsOrderPlacement(Class<T> attachmentType) {
+                super(attachmentType);
+            }
 
             abstract Attachment.ColoredCoinsOrderPlacement makeAttachment(Long asset, long quantityQNT, long priceNQT);
 
@@ -776,7 +806,7 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsOrderPlacement attachment = getAttachment(transaction);
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT
                         || attachment.getAssetId() == null) {
@@ -791,7 +821,8 @@ public abstract class TransactionType {
 
         }
 
-        public static final TransactionType ASK_ORDER_PLACEMENT = new ColoredCoins.ColoredCoinsOrderPlacement() {
+        public static final TransactionType ASK_ORDER_PLACEMENT
+                = new ColoredCoins.ColoredCoinsOrderPlacement<Attachment.ColoredCoinsAskOrderPlacement>(Attachment.ColoredCoinsAskOrderPlacement.class) {
 
             @Override
             public final byte getSubtype() {
@@ -804,7 +835,7 @@ public abstract class TransactionType {
 
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsAskOrderPlacement attachment = getAttachment(transaction);
                 Long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance != null && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
@@ -815,7 +846,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsAskOrderPlacement attachment = getAttachment(transaction);
                 if (Asset.getAsset(attachment.getAssetId()) != null) {
                     Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(),
                             attachment.getQuantityQNT(), attachment.getPriceNQT());
@@ -824,7 +855,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsAskOrderPlacement attachment = getAttachment(transaction);
                 Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
                 if (askOrder == null || askOrder.getQuantityQNT() != attachment.getQuantityQNT() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
@@ -834,14 +865,14 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsAskOrderPlacement attachment = getAttachment(transaction);
                 senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
+                Attachment.ColoredCoinsAskOrderPlacement attachment = getAttachment(transaction);
                 Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderId());
                 if (accountAccumulatedAssetQuantities == null) {
                     accountAccumulatedAssetQuantities = new HashMap<>();
@@ -857,7 +888,8 @@ public abstract class TransactionType {
 
         };
 
-        public final static TransactionType BID_ORDER_PLACEMENT = new ColoredCoins.ColoredCoinsOrderPlacement() {
+        public final static TransactionType BID_ORDER_PLACEMENT
+                = new ColoredCoins.ColoredCoinsOrderPlacement<Attachment.ColoredCoinsBidOrderPlacement>(Attachment.ColoredCoinsBidOrderPlacement.class) {
 
             @Override
             public final byte getSubtype() {
@@ -870,7 +902,7 @@ public abstract class TransactionType {
 
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
+                Attachment.ColoredCoinsBidOrderPlacement attachment = getAttachment(transaction);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT())) {
                     senderAccount.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT()));
                     return true;
@@ -880,7 +912,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsBidOrderPlacement attachment = getAttachment(transaction);
                 if (Asset.getAsset(attachment.getAssetId()) != null) {
                     Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(),
                             attachment.getQuantityQNT(), attachment.getPriceNQT());
@@ -889,9 +921,10 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.getAttachment();
+                Attachment.ColoredCoinsBidOrderPlacement attachment = getAttachment(transaction);
                 Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
-                if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
+                if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT()
+                        || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Bid order already filled");
                 }
@@ -899,21 +932,25 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
+                Attachment.ColoredCoinsBidOrderPlacement attachment = getAttachment(transaction);
                 senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT()));
             }
 
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
+                Attachment.ColoredCoinsBidOrderPlacement attachment = getAttachment(transaction);
                 accumulatedAmounts.put(transaction.getSenderId(),
                         Convert.safeAdd(accumulatedAmount, Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT())));
             }
 
         };
 
-        abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
+        abstract static class ColoredCoinsOrderCancellation<T extends Attachment.ColoredCoinsOrderCancellation> extends ColoredCoins<T> {
+
+            private ColoredCoinsOrderCancellation(Class<T> attachmentType) {
+                super(attachmentType);
+            }
 
             @Override
             final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
@@ -923,7 +960,7 @@ public abstract class TransactionType {
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0) {
                     throw new NxtException.ValidationException("Invalid asset order cancellation amount or recipient");
                 }
-                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation)transaction.getAttachment();
+                Attachment.ColoredCoinsOrderCancellation attachment = getAttachment(transaction);
                 if (attachment.getOrderId() == null) {
                     throw new NxtException.ValidationException("Invalid order cancellation attachment: " + attachment.getJSONObject());
                 }
@@ -949,7 +986,8 @@ public abstract class TransactionType {
 
         }
 
-        public static final TransactionType ASK_ORDER_CANCELLATION = new ColoredCoins.ColoredCoinsOrderCancellation() {
+        public static final TransactionType ASK_ORDER_CANCELLATION
+                = new ColoredCoins.ColoredCoinsOrderCancellation<Attachment.ColoredCoinsAskOrderCancellation>(Attachment.ColoredCoinsAskOrderCancellation.class) {
 
             @Override
             public final byte getSubtype() {
@@ -970,7 +1008,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation)transaction.getAttachment();
+                Attachment.ColoredCoinsAskOrderCancellation attachment = getAttachment(transaction);
                 Order order = Order.Ask.removeOrder(attachment.getOrderId());
                 if (order != null) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(order.getAssetId(), order.getQuantityQNT());
@@ -979,7 +1017,8 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType BID_ORDER_CANCELLATION = new ColoredCoins.ColoredCoinsOrderCancellation() {
+        public static final TransactionType BID_ORDER_CANCELLATION
+                = new ColoredCoins.ColoredCoinsOrderCancellation<Attachment.ColoredCoinsBidOrderCancellation>(Attachment.ColoredCoinsBidOrderCancellation.class) {
 
             @Override
             public final byte getSubtype() {
@@ -1000,7 +1039,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation)transaction.getAttachment();
+                Attachment.ColoredCoinsBidOrderCancellation attachment = getAttachment(transaction);
                 Order order = Order.Bid.removeOrder(attachment.getOrderId());
                 if (order != null) {
                     senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(order.getQuantityQNT(), order.getPriceNQT()));
