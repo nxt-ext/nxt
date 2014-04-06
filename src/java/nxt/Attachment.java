@@ -349,7 +349,7 @@ public interface Attachment {
                 byte[] name = this.name.getBytes("UTF-8");
                 byte[] description = this.description.getBytes("UTF-8");
 
-                ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 4);
+                ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 8 + 1);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.put((byte)name.length);
                 buffer.put(name);
@@ -433,7 +433,7 @@ public interface Attachment {
             try {
                 byte[] commentBytes = this.comment.getBytes("UTF-8");
 
-                ByteBuffer buffer = ByteBuffer.allocate(8 + 4 + 2 + commentBytes.length);
+                ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 2 + commentBytes.length);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(Convert.nullToZero(assetId));
                 buffer.putLong(quantityQNT);

@@ -235,9 +235,9 @@ final class JSONData {
             if (decimals != null) {
                 json.put("quantityINT", Convert.toQuantityINT(quantityQNT, decimals));
             } else {
-                Long assetId = (Long) json.get("asset");
-                if (assetId != null) {
-                    Asset asset = Asset.getAsset(assetId);
+                String assetIdValue = (String)json.get("asset");
+                if (assetIdValue != null) {
+                    Asset asset = Asset.getAsset(Convert.parseUnsignedLong(assetIdValue));
                     if (asset != null) {
                         json.put("quantityINT", Convert.toQuantityINT(quantityQNT, asset.getDecimals()));
                     }
