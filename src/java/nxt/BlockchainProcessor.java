@@ -27,6 +27,21 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     }
 
+    public static class TransactionNotAcceptedException extends BlockNotAcceptedException {
+
+        private final TransactionImpl transaction;
+
+        TransactionNotAcceptedException(String message, TransactionImpl transaction) {
+            super(message);
+            this.transaction = transaction;
+        }
+
+        public Transaction getTransaction() {
+            return transaction;
+        }
+
+    }
+
     public static class BlockOutOfOrderException extends BlockNotAcceptedException {
 
         BlockOutOfOrderException(String message) {

@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,22 +30,8 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
             return UNKNOWN_PEER;
         }
 
-        JSONObject response = new JSONObject();
-        response.put("state", peer.getState().ordinal());
-        response.put("announcedAddress", peer.getAnnouncedAddress());
-        response.put("shareAddress", peer.shareAddress());
-        if (peer.getHallmark() != null) {
-            response.put("hallmark", peer.getHallmark().getHallmarkString());
-        }
-        response.put("weight", peer.getWeight());
-        response.put("downloadedVolume", peer.getDownloadedVolume());
-        response.put("uploadedVolume", peer.getUploadedVolume());
-        response.put("application", peer.getApplication());
-        response.put("version", peer.getVersion());
-        response.put("platform", peer.getPlatform());
-        response.put("blacklisted", peer.isBlacklisted());
+        return JSONData.peer(peer);
 
-        return response;
     }
 
 }

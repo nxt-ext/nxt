@@ -68,8 +68,8 @@ final class TransactionDb {
             short deadline = rs.getShort("deadline");
             byte[] senderPublicKey = rs.getBytes("sender_public_key");
             Long recipientId = rs.getLong("recipient_id");
-            int amount = rs.getInt("amount");
-            int fee = rs.getInt("fee");
+            long amountNQT = rs.getLong("amount");
+            long feeNQT = rs.getLong("fee");
             Long referencedTransactionId = rs.getLong("referenced_transaction_id");
             if (rs.wasNull()) {
                 referencedTransactionId = null;
@@ -84,7 +84,7 @@ final class TransactionDb {
             int blockTimestamp = rs.getInt("block_timestamp");
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+            return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
                     referencedTransactionId, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp);
 
         } catch (SQLException e) {
@@ -105,7 +105,8 @@ final class TransactionDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Transaction already in database for block_id = " + blockId + " does not pass validation!");
+            throw new RuntimeException("Transaction already in database for block_id = " + Convert.toUnsignedLong(blockId)
+                    + " does not pass validation!");
         }
     }
 
@@ -121,8 +122,8 @@ final class TransactionDb {
                     pstmt.setShort(++i, transaction.getDeadline());
                     pstmt.setBytes(++i, transaction.getSenderPublicKey());
                     pstmt.setLong(++i, transaction.getRecipientId());
-                    pstmt.setInt(++i, transaction.getAmount());
-                    pstmt.setInt(++i, transaction.getFee());
+                    pstmt.setLong(++i, transaction.getAmountNQT());
+                    pstmt.setLong(++i, transaction.getFeeNQT());
                     if (transaction.getReferencedTransactionId() != null) {
                         pstmt.setLong(++i, transaction.getReferencedTransactionId());
                     } else {

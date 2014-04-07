@@ -2,12 +2,9 @@ package nxt.http;
 
 import nxt.Poll;
 import nxt.util.Convert;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
 
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.MISSING_POLL;
@@ -39,26 +36,8 @@ public final class GetPoll extends APIServlet.APIRequestHandler {
             return INCORRECT_POLL;
         }
 
-        JSONObject response = new JSONObject();
-        if (pollData.getName().length() > 0) {
-            response.put("name", pollData.getName());
-        }
-        if (pollData.getDescription().length() > 0) {
-            response.put("description", pollData.getDescription());
-        }
-        JSONArray options = new JSONArray();
-        Collections.addAll(options, pollData.getOptions());
-        response.put("options", options);
-        response.put("minNumberOfOptions", pollData.getMinNumberOfOptions());
-        response.put("maxNumberOfOptions", pollData.getMaxNumberOfOptions());
-        response.put("optionsAreBinary", pollData.isOptionsAreBinary());
-        JSONArray voters = new JSONArray();
-        for (Long voterId : pollData.getVoters().keySet()) {
-            voters.add(Convert.toUnsignedLong(voterId));
-        }
-        response.put("voters", voters);
+        return JSONData.poll(pollData);
 
-        return response;
     }
 
 }

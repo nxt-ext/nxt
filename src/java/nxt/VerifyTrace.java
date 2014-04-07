@@ -20,8 +20,6 @@ public final class VerifyTrace {
     private static final List<String> assetQuantityHeaders = Arrays.asList("asset balance", "unconfirmed asset balance");
     private static final List<String> deltaAssetQuantityHeaders = Arrays.asList("asset quantity", "trade quantity");
 
-    private static String[] headers;
-
     private static boolean isBalance(String header) {
         return balanceHeaders.contains(header);
     }
@@ -42,7 +40,7 @@ public final class VerifyTrace {
         String fileName = args.length == 1 ? args[0] : "nxt.trace";
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
-            headers = line.split("\t");
+            String[] headers = line.split("\t");
 
             Map<String,Map<String,Long>> totals = new HashMap<>();
             Map<String,Map<String,Map<String,Long>>> accountAssetTotals = new HashMap<>();
@@ -80,7 +78,7 @@ public final class VerifyTrace {
                         accountTotals.put(header, Long.parseLong(value));
                     } else if (isDelta(header)) {
                         long previousValue = Convert.nullToZero(accountTotals.get(header));
-                        accountTotals.put(header, previousValue + Long.parseLong(value));
+                        accountTotals.put(header, Convert.safeAdd(previousValue, Long.parseLong(value)));
                     } else if (isAssetQuantity(header)) {
                         String assetId = valueMap.get("asset");
                         Map<String,Long> assetTotals = accountAssetMap.get(assetId);
@@ -97,7 +95,7 @@ public final class VerifyTrace {
                             accountAssetMap.put(assetId, assetTotals);
                         }
                         long previousValue = Convert.nullToZero(assetTotals.get(header));
-                        assetTotals.put(header, previousValue + Long.parseLong(value));
+                        assetTotals.put(header, Convert.safeAdd(previousValue, Long.parseLong(value)));
                     }
                 }
             }
@@ -114,7 +112,7 @@ public final class VerifyTrace {
                 long totalDelta = 0;
                 for (String header : deltaHeaders) {
                     long delta = Convert.nullToZero(accountValues.get(header));
-                    totalDelta += delta;
+                    totalDelta = Convert.safeAdd(totalDelta, delta);
                     System.out.println(header + ": " + delta);
                 }
                 System.out.println("total confirmed balance change: " + totalDelta);
@@ -134,7 +132,7 @@ public final class VerifyTrace {
                     long totalAssetDelta = 0;
                     for (String header : deltaAssetQuantityHeaders) {
                         long delta = Convert.nullToZero(assetValues.get(header));
-                        totalAssetDelta += delta;
+                        totalAssetDelta = Convert.safeAdd(totalAssetDelta, delta);
                     }
                     System.out.println("total confirmed asset quantity change: " + totalAssetDelta);
                     long assetBalance= assetValues.get("asset balance");
@@ -143,7 +141,7 @@ public final class VerifyTrace {
                         failed.add(accountId);
                     }
                     Long previousAssetQuantity = Convert.nullToZero(accountAssetQuantities.get(assetId));
-                    accountAssetQuantities.put(assetId, previousAssetQuantity + assetBalance);
+                    accountAssetQuantities.put(assetId, Convert.safeAdd(previousAssetQuantity, assetBalance));
                 }
                 System.out.println();
             }

@@ -78,7 +78,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
         List<Entry> entries = new LinkedList<>();
         for (Account account : Account.getAllAccounts()) {
-            long effectiveBalance = account.getEffectiveBalance();
+            long effectiveBalance = account.getEffectiveBalanceNXT();
             if (effectiveBalance > 0) {
                 byte[] publicKey = account.getPublicKey();
                 if (publicKey != null) {

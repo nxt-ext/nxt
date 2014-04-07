@@ -1,0 +1,16 @@
+Always return amounts in both NXT and NQT, represented in the JSON as strings.
+
+Refactoring of the JSON generating code, removed getJSONObject from Block and
+Transaction.
+
+Transactions causing block generation to fail will always be removed from the
+unconfirmed transactions pool.
+
+Fixed overflow in hallmark weight calculation.
+
+Fixed transaction JSON parsing bug.
+
+All testnet nodes should be updated to this release.
+
+
+

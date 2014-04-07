@@ -75,11 +75,11 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
         Account account = Account.getAccount(accountId);
         if (account == null) {
 
-            response.put("balance", 0);
+            response.put("balanceNQT", 0);
 
         } else {
 
-            response.put("balance", account.getUnconfirmedBalance());
+            response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
 
             JSONArray myTransactions = new JSONArray();
             byte[] accountPublicKey = account.getPublicKey();
@@ -92,11 +92,11 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
-                    myTransaction.put("sentAmount", transaction.getAmount());
+                    myTransaction.put("sentAmountNQT", transaction.getAmountNQT());
                     if (accountId.equals(transaction.getRecipientId())) {
-                        myTransaction.put("receivedAmount", transaction.getAmount());
+                        myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
                     }
-                    myTransaction.put("fee", transaction.getFee());
+                    myTransaction.put("feeNQT", transaction.getFeeNQT());
                     myTransaction.put("numberOfConfirmations", -1);
                     myTransaction.put("id", transaction.getStringId());
 
@@ -109,8 +109,8 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                     myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     myTransaction.put("deadline", transaction.getDeadline());
                     myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
-                    myTransaction.put("receivedAmount", transaction.getAmount());
-                    myTransaction.put("fee", transaction.getFee());
+                    myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
+                    myTransaction.put("feeNQT", transaction.getFeeNQT());
                     myTransaction.put("numberOfConfirmations", -1);
                     myTransaction.put("id", transaction.getStringId());
 
@@ -126,12 +126,12 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
             try (DbIterator<? extends Block> blockIterator = Nxt.getBlockchain().getBlocks(account, 0)) {
                 while (blockIterator.hasNext()) {
                     Block block = blockIterator.next();
-                    if (block.getTotalFee() > 0) {
+                    if (block.getTotalFeeNQT() > 0) {
                         JSONObject myTransaction = new JSONObject();
                         myTransaction.put("index", "block" + Users.getIndex(block));
                         myTransaction.put("blockTimestamp", block.getTimestamp());
                         myTransaction.put("block", block.getStringId());
-                        myTransaction.put("earnedAmount", block.getTotalFee());
+                        myTransaction.put("earnedAmountNQT", block.getTotalFeeNQT());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - block.getHeight());
                         myTransaction.put("id", "-");
                         myTransaction.put("timestamp", block.getTimestamp());
@@ -149,11 +149,11 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
-                        myTransaction.put("sentAmount", transaction.getAmount());
+                        myTransaction.put("sentAmountNQT", transaction.getAmountNQT());
                         if (accountId.equals(transaction.getRecipientId())) {
-                            myTransaction.put("receivedAmount", transaction.getAmount());
+                            myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
                         }
-                        myTransaction.put("fee", transaction.getFee());
+                        myTransaction.put("feeNQT", transaction.getFeeNQT());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());
                         myTransaction.put("id", transaction.getStringId());
                         myTransaction.put("timestamp", transaction.getTimestamp());
@@ -164,8 +164,8 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
-                        myTransaction.put("receivedAmount", transaction.getAmount());
-                        myTransaction.put("fee", transaction.getFee());
+                        myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
+                        myTransaction.put("feeNQT", transaction.getFeeNQT());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());
                         myTransaction.put("id", transaction.getStringId());
                         myTransaction.put("timestamp", transaction.getTimestamp());

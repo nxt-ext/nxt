@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.XoredData;
+import nxt.util.Convert;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -16,17 +17,17 @@ public final class DigitalGoodsStore {
         private final String description;
         private final String tags;
         private int quantity;
-        private long price;
+        private long priceNQT;
 
         private boolean delisted;
 
-        public Goods(Long accountId, String name, String description, String tags, int quantity, long price) {
+        public Goods(Long accountId, String name, String description, String tags, int quantity, long priceNQT) {
             this.accountId = accountId;
             this.name = name;
             this.description = description;
             this.tags = tags;
             this.quantity = quantity;
-            this.price = price;
+            this.priceNQT = priceNQT;
         }
 
         public Long getAccountId() {
@@ -58,12 +59,12 @@ public final class DigitalGoodsStore {
             }
         }
 
-        public long getPrice() {
-            return price;
+        public long getPriceNQT() {
+            return priceNQT;
         }
 
-        public void changePrice(long price) {
-            this.price = price;
+        public void changePrice(long priceNQT) {
+            this.priceNQT = priceNQT;
         }
 
         public void delist() {
@@ -79,15 +80,15 @@ public final class DigitalGoodsStore {
         private final Long accountId;
         private final Long goodsId;
         private final int quantity;
-        private final long price;
+        private final long priceNQT;
         private final int deliveryDeadline;
         private final XoredData note;
 
-        public Purchase(Long accountId, Long goodsId, int quantity, long price, int deliveryDeadline, XoredData note) {
+        public Purchase(Long accountId, Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
             this.accountId = accountId;
             this.goodsId = goodsId;
             this.quantity = quantity;
-            this.price = price;
+            this.priceNQT = priceNQT;
             this.deliveryDeadline = deliveryDeadline;
             this.note = note;
         }
@@ -104,8 +105,8 @@ public final class DigitalGoodsStore {
             return quantity;
         }
 
-        public long getPrice() {
-            return price;
+        public long getPriceNQT() {
+            return priceNQT;
         }
 
         public int getDeliveryDeadline() {
@@ -143,8 +144,9 @@ public final class DigitalGoodsStore {
         return pendingPurchases.get(purchaseId);
     }
 
-    public static void addPurchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long price, int deliveryDeadline, XoredData note) {
-        Purchase purchase = new Purchase(accountId, goodsId, quantity, price, deliveryDeadline, note);
+    public static void addPurchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
+                                   int deliveryDeadline, XoredData note) {
+        Purchase purchase = new Purchase(accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
         purchases.put(purchaseId, purchase);
         pendingPurchases.put(purchaseId, purchase);
     }
@@ -154,8 +156,9 @@ public final class DigitalGoodsStore {
         purchases.clear();
     }
 
-    public static void listGoods(Long goodsId, Long accountId, String name, String description, String tags, int quantity, long price) {
-        goods.put(goodsId, new Goods(accountId, name, description, tags, quantity, price));
+    public static void listGoods(Long goodsId, Long accountId, String name, String description, String tags,
+                                 int quantity, long priceNQT) {
+        goods.put(goodsId, new Goods(accountId, name, description, tags, quantity, priceNQT));
     }
 
     public static void delistGoods(Long goodsId) {
@@ -165,10 +168,10 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static void changePrice(Long goodsId, long price) {
+    public static void changePrice(Long goodsId, long priceNQT) {
         Goods goods = getGoods(goodsId);
         if (goods != null && !goods.isDelisted()) {
-            goods.changePrice(price);
+            goods.changePrice(priceNQT);
         }
     }
 
@@ -179,13 +182,15 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static void purchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long price, int deliveryDeadline, XoredData note) {
+    public static void purchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
+                                int deliveryDeadline, XoredData note) {
         Goods goods = getGoods(goodsId);
-        if (goods != null && !goods.isDelisted() && quantity <= goods.getQuantity() && price == goods.getPrice() && deliveryDeadline > Nxt.getBlockchain().getLastBlock().getHeight()) {
+        if (goods != null && !goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
+                && deliveryDeadline > Nxt.getBlockchain().getLastBlock().getHeight()) {
             Account account = Account.getAccount(accountId);
-            if (account.addToLockedBalance(quantity * price)) {
+            if (account.addToLockedBalanceNQT(Convert.safeMultiply(quantity, priceNQT))) {
                 goods.changeQuantity(-quantity);
-                addPurchase(purchaseId, accountId, goodsId, quantity, price, deliveryDeadline, note);
+                addPurchase(purchaseId, accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
             }
         }
     }
@@ -193,7 +198,8 @@ public final class DigitalGoodsStore {
     public static void deliver(Long accountId, Long purchaseId, XoredData goods, long discount) {
         Purchase purchase = getPendingPurchase(purchaseId);
         if (purchase != null) {
-            if (Account.getAccount(purchase.getAccountId()).transferLockedBalance(purchase.getQuantity() * purchase.getPrice(), accountId, discount)) {
+            if (Account.getAccount(purchase.getAccountId()).transferLockedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()),
+                    accountId, discount)) {
                 pendingPurchases.remove(purchaseId);
             }
         }
@@ -204,9 +210,9 @@ public final class DigitalGoodsStore {
         if (purchase != null) {
             Account account = Account.getAccount(accountId);
             synchronized (account) {
-                if (refund <= account.getBalance()) {
-                    account.addToBalanceAndUnconfirmedBalance(-refund);
-                    Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalance(refund);
+                if (refund <= account.getBalanceNQT()) {
+                    account.addToBalanceAndUnconfirmedBalanceNQT(-refund);
+                    Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(refund);
                 }
             }
         }
@@ -217,7 +223,8 @@ public final class DigitalGoodsStore {
         for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
             Purchase purchase = pendingPurchaseEntry.getValue();
             if (height > purchase.getDeliveryDeadline()) {
-                Account.getAccount(purchase.getAccountId()).addToLockedBalance(-purchase.getQuantity() * purchase.getPrice());
+                Account.getAccount(purchase.getAccountId()).addToLockedBalanceNQT(
+                        - Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                 getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
                 pendingPurchases.remove(pendingPurchaseEntry.getKey());
             }

@@ -170,7 +170,7 @@ public final class Users {
             public void notify(Account account) {
                 JSONObject response = new JSONObject();
                 response.put("response", "setBalance");
-                response.put("balance", account.getUnconfirmedBalance());
+                response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
                 byte[] accountPublicKey = account.getPublicKey();
                 for (User user : Users.users.values()) {
                     if (user.getSecretPhrase() != null && Arrays.equals(user.getPublicKey(), accountPublicKey)) {
@@ -411,8 +411,8 @@ public final class Users {
                     addedUnconfirmedTransaction.put("timestamp", transaction.getTimestamp());
                     addedUnconfirmedTransaction.put("deadline", transaction.getDeadline());
                     addedUnconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-                    addedUnconfirmedTransaction.put("amount", transaction.getAmount());
-                    addedUnconfirmedTransaction.put("fee", transaction.getFee());
+                    addedUnconfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
+                    addedUnconfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
                     addedUnconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     addedUnconfirmedTransaction.put("id", transaction.getStringId());
                     addedUnconfirmedTransactions.add(addedUnconfirmedTransaction);
@@ -434,8 +434,8 @@ public final class Users {
                     addedConfirmedTransaction.put("transactionTimestamp", transaction.getTimestamp());
                     addedConfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     addedConfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-                    addedConfirmedTransaction.put("amount", transaction.getAmount());
-                    addedConfirmedTransaction.put("fee", transaction.getFee());
+                    addedConfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
+                    addedConfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
                     addedConfirmedTransaction.put("id", transaction.getStringId());
                     addedConfirmedTransactions.add(addedConfirmedTransaction);
                 }
@@ -455,8 +455,8 @@ public final class Users {
                     newTransaction.put("timestamp", transaction.getTimestamp());
                     newTransaction.put("deadline", transaction.getDeadline());
                     newTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-                    newTransaction.put("amount", transaction.getAmount());
-                    newTransaction.put("fee", transaction.getFee());
+                    newTransaction.put("amountNQT", transaction.getAmountNQT());
+                    newTransaction.put("feeNQT", transaction.getFeeNQT());
                     newTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
                     newTransaction.put("id", transaction.getStringId());
                     newTransactions.add(newTransaction);
@@ -475,8 +475,8 @@ public final class Users {
                 addedOrphanedBlock.put("index", Users.getIndex(block));
                 addedOrphanedBlock.put("timestamp", block.getTimestamp());
                 addedOrphanedBlock.put("numberOfTransactions", block.getTransactionIds().size());
-                addedOrphanedBlock.put("totalAmount", block.getTotalAmount());
-                addedOrphanedBlock.put("totalFee", block.getTotalFee());
+                addedOrphanedBlock.put("totalAmountNQT", block.getTotalAmountNQT());
+                addedOrphanedBlock.put("totalFeeNQT", block.getTotalFeeNQT());
                 addedOrphanedBlock.put("payloadLength", block.getPayloadLength());
                 addedOrphanedBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
                 addedOrphanedBlock.put("height", block.getHeight());
@@ -498,8 +498,8 @@ public final class Users {
                 addedRecentBlock.put("index", Users.getIndex(block));
                 addedRecentBlock.put("timestamp", block.getTimestamp());
                 addedRecentBlock.put("numberOfTransactions", block.getTransactionIds().size());
-                addedRecentBlock.put("totalAmount", block.getTotalAmount());
-                addedRecentBlock.put("totalFee", block.getTotalFee());
+                addedRecentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
+                addedRecentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
                 addedRecentBlock.put("payloadLength", block.getPayloadLength());
                 addedRecentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
                 addedRecentBlock.put("height", block.getHeight());

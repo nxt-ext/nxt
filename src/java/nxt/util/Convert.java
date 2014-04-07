@@ -8,6 +8,7 @@ import java.util.Date;
 public final class Convert {
 
     private static final char[] hexChars = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+    private static final long[] multipliers = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
 
@@ -90,6 +91,121 @@ public final class Convert {
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
+    }
+
+    public static String toNXT(long nqt) {
+        return toStringFraction(nqt, 8);
+    }
+
+    public static long parseNXT(String nxt) {
+        return parseStringFraction(nxt, 8, Constants.MAX_BALANCE_NXT);
+    }
+
+    /*
+    public static String toQuantityINT(long quantityQNT, byte decimals) {
+        return toStringFraction(quantityQNT, decimals);
+    }
+
+    public static long parseQuantityINT(String quantityValueINT, byte decimals) {
+        return parseStringFraction(quantityValueINT, decimals, Constants.MAX_ASSET_QUANTITY);
+    }
+    */
+
+    private static String toStringFraction(long number, int decimals) {
+        long wholePart = number / multipliers[decimals];
+        long fractionalPart = number % multipliers[decimals];
+        if (fractionalPart == 0) {
+            return String.valueOf(wholePart);
+        }
+        StringBuilder buf = new StringBuilder();
+        buf.append(wholePart);
+        buf.append('.');
+        String fractionalPartString = String.valueOf(fractionalPart);
+        for (int i = fractionalPartString.length(); i < decimals; i++) {
+            buf.append('0');
+        }
+        buf.append(fractionalPartString);
+        return buf.toString();
+    }
+
+    private static long parseStringFraction(String value, int decimals, long maxValue) {
+        String[] s = value.trim().split("\\.");
+        if (s.length == 0 || s.length > 2) {
+            throw new NumberFormatException("Invalid number: " + value);
+        }
+        long wholePart = Long.parseLong(s[0]);
+        if (wholePart > maxValue) {
+            throw new IllegalArgumentException("Whole part of value exceeds maximum possible");
+        }
+        if (s.length == 1) {
+            return wholePart * multipliers[decimals];
+        }
+        long fractionalPart = Long.parseLong(s[1]);
+        if (fractionalPart >= multipliers[decimals] || s[1].length() > decimals) {
+            throw new IllegalArgumentException("Fractional part exceeds maximum allowed divisibility");
+        }
+        for (int i = s[1].length(); i < decimals; i++) {
+            fractionalPart *= 10;
+        }
+        return wholePart * multipliers[decimals] + fractionalPart;
+    }
+
+    public static long multiplier(byte decimal) {
+        return multipliers[decimal];
+    }
+
+    // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
+    public static long safeAdd(long left, long right)
+            throws ArithmeticException {
+        if (right > 0 ? left > Long.MAX_VALUE - right
+                : left < Long.MIN_VALUE - right) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left + right;
+    }
+
+    public static long safeSubtract(long left, long right)
+            throws ArithmeticException {
+        if (right > 0 ? left < Long.MIN_VALUE + right
+                : left > Long.MAX_VALUE + right) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left - right;
+    }
+
+    public static long safeMultiply(long left, long right)
+            throws ArithmeticException {
+        if (right > 0 ? left > Long.MAX_VALUE/right
+                || left < Long.MIN_VALUE/right
+                : (right < -1 ? left > Long.MIN_VALUE/right
+                || left < Long.MAX_VALUE/right
+                : right == -1
+                && left == Long.MIN_VALUE) ) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left * right;
+    }
+
+    public static long safeDivide(long left, long right)
+            throws ArithmeticException {
+        if ((left == Long.MIN_VALUE) && (right == -1)) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return left / right;
+    }
+
+    public static long safeNegate(long a) throws ArithmeticException {
+        if (a == Long.MIN_VALUE) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return -a;
+    }
+
+    public static long safeAbs(long a) throws ArithmeticException {
+        if (a == Long.MIN_VALUE) {
+            throw new ArithmeticException("Integer overflow");
+        }
+        return Math.abs(a);
     }
 
 }
