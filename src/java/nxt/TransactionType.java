@@ -340,7 +340,8 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
-                Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(), attachment.getAliasURI(), transaction.getBlockTimestamp());
+                Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(),
+                        attachment.getAliasURI(), transaction.getBlockTimestamp());
             }
 
             @Override
@@ -366,8 +367,10 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Aliases not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0 || attachment.getAliasName().length() == 0
-                        || attachment.getAliasName().length() > Constants.MAX_ALIAS_LENGTH || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
+                        || attachment.getAliasName().length() == 0
+                        || attachment.getAliasName().length() > Constants.MAX_ALIAS_LENGTH
+                        || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
                     throw new NxtException.ValidationException("Invalid alias assignment: " + attachment.getJSONObject());
                 }
                 String normalizedAlias = attachment.getAliasName().toLowerCase();
@@ -560,7 +563,8 @@ public abstract class TransactionType {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting)transaction.getAttachment();
                 Poll poll = Poll.getPoll(attachment.getPollId());
                 if (poll != null) {
-                    Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(), attachment.getPollVote());
+                    Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(),
+                            attachment.getPollVote());
                     poll.addVoter(transaction.getSenderId(), vote.getId());
                 }
             }
@@ -703,8 +707,9 @@ public abstract class TransactionType {
                 String name = (String)attachmentData.get("name");
                 String description = (String)attachmentData.get("description");
                 long quantityQNT = (Long)attachmentData.get("quantityQNT");
-                byte decimals = (Byte)attachmentData.get("decimals");
-                transaction.setAttachment(new Attachment.ColoredCoinsAssetIssuance(name.trim(), description.trim(), quantityQNT, decimals));
+                byte decimals = ((Long)attachmentData.get("decimals")).byteValue();
+                transaction.setAttachment(new Attachment.ColoredCoinsAssetIssuance(name.trim(), description.trim(),
+                        quantityQNT, decimals));
                 validateAttachment(transaction);
             }
 
@@ -745,7 +750,8 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
-                        || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
+                        || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH
+                        || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
                         || attachment.getDecimals() < 0 || attachment.getDecimals() > 8
                         || attachment.getQuantityQNT() <= 0
@@ -852,7 +858,9 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0 || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH || attachment.getAssetId() == null) {
+                if (transaction.getAmountNQT() != 0
+                        || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH
+                        || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
                 Asset asset = Asset.getAsset(attachment.getAssetId());
@@ -939,7 +947,8 @@ public abstract class TransactionType {
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
                 Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
-                if (askOrder == null || askOrder.getQuantityQNT() != attachment.getQuantityQNT() || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
+                if (askOrder == null || askOrder.getQuantityQNT() != attachment.getQuantityQNT()
+                        || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Ask order already filled");
                 }
@@ -1004,7 +1013,8 @@ public abstract class TransactionType {
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.getAttachment();
                 Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
-                if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT() || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
+                if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT()
+                        || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
                     throw new UndoNotSupportedException(transaction, "Bid order already filled");
                 }
@@ -1077,7 +1087,8 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                transaction.setAttachment(new Attachment.ColoredCoinsAskOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order"))));
+                transaction.setAttachment(new Attachment.ColoredCoinsAskOrderCancellation(
+                        Convert.parseUnsignedLong((String) attachmentData.get("order"))));
                 validateAttachment(transaction);
             }
 
@@ -1107,7 +1118,8 @@ public abstract class TransactionType {
 
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                transaction.setAttachment(new Attachment.ColoredCoinsBidOrderCancellation(Convert.parseUnsignedLong((String) attachmentData.get("order"))));
+                transaction.setAttachment(new Attachment.ColoredCoinsBidOrderCancellation(
+                        Convert.parseUnsignedLong((String) attachmentData.get("order"))));
                 validateAttachment(transaction);
             }
 
