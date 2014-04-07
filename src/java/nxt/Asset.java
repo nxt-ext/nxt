@@ -31,8 +31,8 @@ public final class Asset {
         return Collections.unmodifiableList(assets);
     }
 
-    static void addAsset(Long assetId, Long senderAccountId, String name, String description, int quantity) {
-        Asset asset = new Asset(assetId, senderAccountId, name, description, quantity);
+    static void addAsset(Long assetId, Long senderAccountId, String name, String description, long quantityQNT, byte decimals) {
+        Asset asset = new Asset(assetId, senderAccountId, name, description, quantityQNT, decimals);
         if (Asset.assets.putIfAbsent(assetId, asset) != null) {
             throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
         }
@@ -59,14 +59,16 @@ public final class Asset {
     private final Long accountId;
     private final String name;
     private final String description;
-    private final int quantity;
+    private final long quantityQNT;
+    private final byte decimals;
 
-    private Asset(Long assetId, Long accountId, String name, String description, int quantity) {
+    private Asset(Long assetId, Long accountId, String name, String description, long quantityQNT, byte decimals) {
         this.assetId = assetId;
         this.accountId = accountId;
         this.name = name;
         this.description = description;
-        this.quantity = quantity;
+        this.quantityQNT = quantityQNT;
+        this.decimals = decimals;
     }
 
     public Long getId() {
@@ -85,8 +87,12 @@ public final class Asset {
         return description;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public long getQuantityQNT() {
+        return quantityQNT;
+    }
+
+    public byte getDecimals() {
+        return decimals;
     }
 
 }

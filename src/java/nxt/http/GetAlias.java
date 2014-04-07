@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Alias;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,14 +36,7 @@ public final class GetAlias extends APIServlet.APIRequestHandler {
             return INCORRECT_ALIAS;
         }
 
-        JSONObject response = new JSONObject();
-        response.put("account", Convert.toUnsignedLong(aliasData.getAccount().getId()));
-        response.put("alias", aliasData.getAliasName());
-        if (aliasData.getURI().length() > 0) {
-            response.put("uri", aliasData.getURI());
-        }
-        response.put("timestamp", aliasData.getTimestamp());
-        return response;
+        return JSONData.alias(aliasData);
     }
 
 }

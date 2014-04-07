@@ -21,7 +21,6 @@ import static nxt.http.JSONResponses.MISSING_MAXNUMBEROFOPTIONS;
 import static nxt.http.JSONResponses.MISSING_MINNUMBEROFOPTIONS;
 import static nxt.http.JSONResponses.MISSING_NAME;
 import static nxt.http.JSONResponses.MISSING_OPTIONSAREBINARY;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class CreatePoll extends CreateTransaction {
 
@@ -94,10 +93,7 @@ public final class CreatePoll extends CreateTransaction {
             return INCORRECT_OPTIONSAREBINARY;
         }
 
-        Account account = getAccount(req);
-        if (account == null) {
-            return UNKNOWN_ACCOUNT;
-        }
+        Account account = ParameterParser.getSenderAccount(req);
 
         Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(),
                 options.toArray(new String[options.size()]), minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);

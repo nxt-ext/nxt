@@ -16,8 +16,8 @@ final class TransactionImpl implements Transaction {
     private final short deadline;
     private final byte[] senderPublicKey;
     private final Long recipientId;
-    private final int amount;
-    private final int fee;
+    private final long amountNQT;
+    private final long feeNQT;
     private final Long referencedTransactionId;
     private final TransactionType type;
 
@@ -34,20 +34,30 @@ final class TransactionImpl implements Transaction {
     private volatile String hash;
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    int amount, int fee, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
+                    long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
 
-        if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY)) ? (deadline != 0 || fee != 0) : (deadline < 1 || fee <= 0)
-                || fee > Constants.MAX_BALANCE || amount < 0 || amount > Constants.MAX_BALANCE || type == null) {
+        if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
+                ? (deadline != 0 || feeNQT != 0)
+                : (deadline < 1 || feeNQT < Constants.ONE_NXT)
+                || feeNQT > Constants.MAX_BALANCE_NQT
+                || amountNQT < 0
+                || amountNQT > Constants.MAX_BALANCE_NQT
+                || type == null) {
             throw new NxtException.ValidationException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
-                    + ", deadline: " + deadline + ", fee: " + fee + ", amount: " + amount);
+                    + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
+        }
+
+        if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK
+                && (amountNQT % Constants.ONE_NXT != 0 || feeNQT % Constants.ONE_NXT != 0)) {
+            throw new TransactionType.NotYetEnabledException("Fractional amounts or fees not yet supported!");
         }
 
         this.timestamp = timestamp;
         this.deadline = deadline;
         this.senderPublicKey = senderPublicKey;
         this.recipientId = recipientId;
-        this.amount = amount;
-        this.fee = fee;
+        this.amountNQT = amountNQT;
+        this.feeNQT = feeNQT;
         this.referencedTransactionId = referencedTransactionId;
         this.signature = signature;
         this.type = type;
@@ -55,10 +65,10 @@ final class TransactionImpl implements Transaction {
     }
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    int amount, int fee, Long referencedTransactionId, byte[] signature, Long blockId, int height,
+                    long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature, Long blockId, int height,
                     Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp)
             throws NxtException.ValidationException {
-        this(type, timestamp, deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, signature);
+        this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, signature);
         this.blockId = blockId;
         this.height = height;
         this.id = id;
@@ -84,13 +94,13 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public int getAmount() {
-        return amount;
+    public long getAmountNQT() {
+        return amountNQT;
     }
 
     @Override
-    public int getFee() {
-        return fee;
+    public long getFeeNQT() {
+        return feeNQT;
     }
 
     @Override
@@ -200,10 +210,10 @@ final class TransactionImpl implements Transaction {
             return 1;
         }
         // equivalent to: fee * 1048576L / getSize() > o.fee * 1048576L / o.getSize()
-        if (fee * ((TransactionImpl)o).getSize() > o.getFee() * getSize()) {
+        if (Convert.safeMultiply(feeNQT, ((TransactionImpl)o).getSize()) > Convert.safeMultiply(o.getFeeNQT(), getSize())) {
             return -1;
         }
-        if (fee * ((TransactionImpl)o).getSize() < o.getFee() * getSize()) {
+        if (Convert.safeMultiply(feeNQT, ((TransactionImpl)o).getSize()) < Convert.safeMultiply(o.getFeeNQT(), getSize())) {
             return 1;
         }
         if (timestamp < o.getTimestamp()) {
@@ -222,10 +232,16 @@ final class TransactionImpl implements Transaction {
 
     }
 
-    static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
+    private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
 
     int getSize() {
-        return TRANSACTION_BYTES_LENGTH + (attachment == null ? 0 : attachment.getSize());
+        return TRANSACTION_BYTES_LENGTH + (useNQT() ? 8 : 0) +  (attachment == null ? 0 : attachment.getSize());
+    }
+
+    private boolean useNQT() {
+        return this.height > Constants.NQT_BLOCK
+                && (this.height < Integer.MAX_VALUE
+                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
     }
 
     @Override
@@ -239,8 +255,13 @@ final class TransactionImpl implements Transaction {
         buffer.putShort(deadline);
         buffer.put(senderPublicKey);
         buffer.putLong(Convert.nullToZero(recipientId));
-        buffer.putInt(amount);
-        buffer.putInt(fee);
+        if (useNQT()) {
+            buffer.putLong(amountNQT);
+            buffer.putLong(feeNQT);
+        } else {
+            buffer.putInt((int)(amountNQT / Constants.ONE_NXT));
+            buffer.putInt((int)(feeNQT / Constants.ONE_NXT));
+        }
         buffer.putLong(Convert.nullToZero(referencedTransactionId));
         buffer.put(signature != null ? signature : new byte[64]);
         if (attachment != null) {
@@ -252,23 +273,22 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public JSONObject getJSONObject() {
-
         JSONObject json = new JSONObject();
-
         json.put("type", type.getType());
         json.put("subtype", type.getSubtype());
         json.put("timestamp", timestamp);
         json.put("deadline", deadline);
         json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
         json.put("recipient", Convert.toUnsignedLong(recipientId));
-        json.put("amount", amount);
-        json.put("fee", fee);
+        json.put("amount", amountNQT / Constants.ONE_NXT);
+        json.put("fee", feeNQT / Constants.ONE_NXT);
+        json.put("amountNQT", amountNQT);
+        json.put("feeNQT", feeNQT);
         json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
         json.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
-            json.put("attachment", attachment.getJSON());
+            json.put("attachment", attachment.getJSONObject());
         }
-
         return json;
     }
 
@@ -283,10 +303,7 @@ final class TransactionImpl implements Transaction {
     @Override
     public String getHash() {
         if (hash == null) {
-            byte[] data = getBytes();
-            for (int i = 64; i < 128; i++) {
-                data[i] = 0;
-            }
+            byte[] data = zeroSignature(getBytes());
             hash = Convert.toHexString(Crypto.sha256().digest(data));
         }
         return hash;
@@ -307,11 +324,16 @@ final class TransactionImpl implements Transaction {
         if (account == null) {
             return false;
         }
-        byte[] data = getBytes();
-        for (int i = 64; i < 128; i++) {
+        byte[] data = zeroSignature(getBytes());
+        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
+    }
+
+    private byte[] zeroSignature(byte[] data) {
+        int start = useNQT() ? 72 : 64;
+        for (int i = start; i < start + 64; i++) {
             data[i] = 0;
         }
-        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
+        return data;
     }
 
     void validateAttachment() throws NxtException.ValidationException {
@@ -358,7 +380,7 @@ final class TransactionImpl implements Transaction {
         if (accumulatedAmount == null) {
             accumulatedAmount = 0L;
         }
-        accumulatedAmounts.put(senderId, accumulatedAmount + (amount + fee) * 100L);
+        accumulatedAmounts.put(senderId, Convert.safeAdd(accumulatedAmount, Convert.safeAdd(amountNQT, feeNQT)));
         type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
     }
 

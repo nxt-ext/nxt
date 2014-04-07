@@ -155,6 +155,8 @@ public final class APIServlet extends HttpServlet {
 
             try {
                 response = apiRequestHandler.processRequest(req);
+            } catch (ParameterException e) {
+                response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
                 response = ERROR_INCORRECT_REQUEST;

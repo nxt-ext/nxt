@@ -140,7 +140,7 @@ public final class Generator {
         if (account == null) {
             return;
         }
-        long effectiveBalance = account.getEffectiveBalance();
+        long effectiveBalance = account.getEffectiveBalanceNXT();
         if (effectiveBalance <= 0) {
             return;
         }

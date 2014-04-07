@@ -40,6 +40,12 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public int getHeight() {
+        BlockImpl last = lastBlock.get();
+        return last == null ? 0 : last.getHeight();
+    }
+
+    @Override
     public BlockImpl getBlock(Long blockId) {
         return BlockDb.findBlock(blockId);
     }
@@ -47,17 +53,6 @@ final class BlockchainImpl implements Blockchain {
     @Override
     public boolean hasBlock(Long blockId) {
         return BlockDb.hasBlock(blockId);
-    }
-
-    @Override
-    public int getBlockCount() {
-        try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block")) {
-            ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            return rs.getInt(1);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
     }
 
     @Override

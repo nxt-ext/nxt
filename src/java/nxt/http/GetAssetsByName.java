@@ -1,8 +1,6 @@
 package nxt.http;
 
 import nxt.Asset;
-import nxt.Trade;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -38,16 +36,7 @@ public final class GetAssetsByName extends APIServlet.APIRequestHandler {
         JSONArray assetsJSONArray = new JSONArray();
         response.put("assets", assetsJSONArray);
         for (Asset asset : assets) {
-            JSONObject assetJSON = new JSONObject();
-            assetJSON.put("account", Convert.toUnsignedLong(asset.getAccountId()));
-            assetJSON.put("name", asset.getName());
-            if (asset.getDescription().length() > 0) {
-                assetJSON.put("description", asset.getDescription());
-            }
-            assetJSON.put("quantity", asset.getQuantity());
-            assetJSON.put("asset", Convert.toUnsignedLong(asset.getId()));
-            assetJSON.put("numberOfTrades", Trade.getTrades(asset.getId()).size());
-            assetsJSONArray.add(assetJSON);
+            assetsJSONArray.add(JSONData.asset(asset));
         }
         return response;
     }

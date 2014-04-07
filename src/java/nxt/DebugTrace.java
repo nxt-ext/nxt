@@ -176,8 +176,8 @@ public final class DebugTrace {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
-        map.put("balance", String.valueOf(account != null ? account.getBalance() : 0));
-        map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalance() : 0));
+        map.put("balance", String.valueOf(account != null ? account.getBalanceNQT() : 0));
+        map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalanceNQT() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("event", "balance");
         return map;
@@ -186,16 +186,17 @@ public final class DebugTrace {
     private Map<String,String> getValues(Long accountId, Trade trade, boolean isAsk) {
         Map<String,String> map = getValues(accountId);
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
-        map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantity() : trade.getQuantity()));
-        map.put("trade price", String.valueOf(trade.getPrice()));
-        map.put("trade cost", String.valueOf((isAsk ? trade.getQuantity() : -trade.getQuantity()) * trade.getPrice()));
+        map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantityQNT() : trade.getQuantityQNT()));
+        map.put("trade price", String.valueOf(trade.getPriceNQT()));
+        long tradeCost = Convert.safeMultiply(trade.getQuantityQNT(), trade.getPriceNQT());
+        map.put("trade cost", String.valueOf((isAsk ? tradeCost : - tradeCost)));
         map.put("event", "trade");
         return map;
     }
 
     private Map<String,String> getValues(Long accountId, Transaction transaction, boolean isRecipient, boolean isUndo) {
-        long amount = transaction.getAmount();
-        long fee = transaction.getFee();
+        long amount = transaction.getAmountNQT();
+        long fee = transaction.getFeeNQT();
         if (isRecipient) {
             fee = 0; // fee doesn't affect recipient account
             if (isUndo) {
@@ -212,15 +213,15 @@ public final class DebugTrace {
             return Collections.emptyMap();
         }
         Map<String,String> map = getValues(accountId);
-        map.put("transaction amount", String.valueOf(amount * 100L));
-        map.put("transaction fee", String.valueOf(fee * 100L));
+        map.put("transaction amount", String.valueOf(amount));
+        map.put("transaction fee", String.valueOf(fee));
         map.put("transaction", transaction.getStringId());
         map.put("event", "transaction" + (isUndo ? " undo" : ""));
         return map;
     }
 
     private Map<String,String> getValues(Long accountId, Block block, boolean isUndo) {
-        long fee = block.getTotalFee();
+        long fee = block.getTotalFeeNQT();
         if (fee == 0) {
             return Collections.emptyMap();
         }
@@ -228,7 +229,7 @@ public final class DebugTrace {
             fee = - fee;
         }
         Map<String,String> map = getValues(accountId);
-        map.put("generation fee", String.valueOf(fee * 100L));
+        map.put("generation fee", String.valueOf(fee));
         map.put("event", "block" + (isUndo ? " undo" : ""));
         return map;
     }
@@ -237,7 +238,7 @@ public final class DebugTrace {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         map.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
-        map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(Convert.nullToZero(accountAsset.quantity)));
+        map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(Convert.nullToZero(accountAsset.quantityQNT)));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("event", "asset balance");
         return map;
@@ -253,8 +254,8 @@ public final class DebugTrace {
             boolean isAsk = orderPlacement instanceof Attachment.ColoredCoinsAskOrderPlacement;
             map.put("asset", Convert.toUnsignedLong(orderPlacement.getAssetId()));
             map.put("order", transaction.getStringId());
-            map.put("order price", String.valueOf(orderPlacement.getPrice()));
-            long quantity = orderPlacement.getQuantity();
+            map.put("order price", String.valueOf(orderPlacement.getPriceNQT()));
+            long quantity = orderPlacement.getQuantityQNT();
             if (isAsk) {
                 if (! isUndo) {
                     quantity = - quantity;
@@ -265,7 +266,7 @@ public final class DebugTrace {
                 }
             }
             map.put("order quantity", String.valueOf(quantity));
-            long orderCost = orderPlacement.getPrice() * orderPlacement.getQuantity();
+            long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
             if (isAsk) {
                 if (isUndo) {
                     orderCost = - orderCost;
@@ -284,12 +285,12 @@ public final class DebugTrace {
             }
             Attachment.ColoredCoinsAssetIssuance assetIssuance = (Attachment.ColoredCoinsAssetIssuance)attachment;
             map.put("asset", transaction.getStringId());
-            map.put("asset quantity", String.valueOf(isUndo ? -assetIssuance.getQuantity() : assetIssuance.getQuantity()));
+            map.put("asset quantity", String.valueOf(isUndo ? -assetIssuance.getQuantityQNT() : assetIssuance.getQuantityQNT()));
             map.put("event", "asset issuance" + (isUndo ? " undo" : ""));
         } else if (attachment instanceof Attachment.ColoredCoinsAssetTransfer) {
             Attachment.ColoredCoinsAssetTransfer assetTransfer = (Attachment.ColoredCoinsAssetTransfer)attachment;
             map.put("asset", Convert.toUnsignedLong(assetTransfer.getAssetId()));
-            int quantity = assetTransfer.getQuantity();
+            long quantity = assetTransfer.getQuantityQNT();
             if (isRecipient) {
                 if (isUndo) {
                     quantity = - quantity;
