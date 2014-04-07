@@ -11,7 +11,7 @@ public final class SendMoney extends CreateTransaction {
     static final SendMoney instance = new SendMoney();
 
     private SendMoney() {
-        super("recipient", "amountNXT", "amountNQT");
+        super("recipient", "amountNQT");
     }
 
     @Override

@@ -10,9 +10,9 @@
 				var secretPhrase = document.getElementById("secretPhrase").value;
 				var alias = document.getElementById("alias").value;
 				var uri = document.getElementById("uri").value;
-				var fee = document.getElementById("fee").value;
+				var feeNQT = 100000000 * document.getElementById("feeNXT").value;
 				var deadline = document.getElementById("deadline").value;
-				sendRequest("requestType=assignAlias&secretPhrase=" + encodeURIComponent(secretPhrase) + "&alias=" + encodeURIComponent(alias) + "&uri=" + encodeURIComponent(uri) + "&fee=" + fee + "&deadline=" + deadline);
+				sendRequest("requestType=assignAlias&secretPhrase=" + encodeURIComponent(secretPhrase) + "&alias=" + encodeURIComponent(alias) + "&uri=" + encodeURIComponent(uri) + "&feeNQT=" + feeNQT + "&deadline=" + deadline);
 			}
 			function sendRequest(requestParameters) {
 				var request = new XMLHttpRequest();

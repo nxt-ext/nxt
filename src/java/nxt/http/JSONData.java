@@ -34,16 +34,12 @@ final class JSONData {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
-            json.put("balanceNXT", "0");
             json.put("unconfirmedBalanceNQT", "0");
-            json.put("unconfirmedBalanceNXT", "0");
             json.put("effectiveBalanceNXT", "0");
         } else {
             synchronized (account) { // to make sure balance and unconfirmedBalance are consistent
                 json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
-                json.put("balanceNXT", Convert.toNXT(account.getBalanceNQT()));
                 json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
-                json.put("unconfirmedBalanceNXT", Convert.toNXT(account.getUnconfirmedBalanceNQT()));
                 json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             }
         }
@@ -57,7 +53,6 @@ final class JSONData {
         json.put("description", asset.getDescription());
         json.put("decimals", asset.getDecimals());
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
-        json.put("quantityINT", Convert.toQuantityINT(asset.getQuantityQNT(), asset.getDecimals()));
         json.put("asset", Convert.toUnsignedLong(asset.getId()));
         json.put("numberOfTrades", Trade.getTrades(asset.getId()).size());
         return json;
@@ -81,12 +76,7 @@ final class JSONData {
         json.put("asset", Convert.toUnsignedLong(order.getAssetId()));
         json.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
         json.put("quantityQNT", String.valueOf(order.getQuantityQNT()));
-        Asset asset = Asset.getAsset(order.getAssetId());
-        if (asset != null) {
-            json.put("quantityINT", Convert.toQuantityINT(order.getQuantityQNT(), asset.getDecimals()));
-        }
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
-        json.put("priceNXT", Convert.toNXT(order.getPriceNQT()));
         json.put("height", order.getHeight());
         return json;
     }
@@ -99,8 +89,6 @@ final class JSONData {
         json.put("numberOfTransactions", block.getTransactionIds().size());
         json.put("totalAmountNQT", String.valueOf(block.getTotalAmountNQT()));
         json.put("totalFeeNQT", String.valueOf(block.getTotalFeeNQT()));
-        json.put("totalAmountNXT", Convert.toNXT(block.getTotalAmountNQT()));
-        json.put("totalFeeNXT", Convert.toNXT(block.getTotalFeeNQT()));
         json.put("payloadLength", block.getPayloadLength());
         json.put("version", block.getVersion());
         json.put("baseTarget", Convert.toUnsignedLong(block.getBaseTarget()));
@@ -183,12 +171,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("timestamp", trade.getTimestamp());
         json.put("quantityQNT", String.valueOf(trade.getQuantityQNT()));
-        Asset asset = Asset.getAsset(trade.getAssetId());
-        if (asset != null) {
-            json.put("quantityINT", Convert.toQuantityINT(trade.getQuantityQNT(), asset.getDecimals()));
-        }
         json.put("priceNQT", String.valueOf(trade.getPriceNQT()));
-        json.put("priceNXT", Convert.toNXT(trade.getPriceNQT()));
         json.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         json.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
         json.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
@@ -204,8 +187,6 @@ final class JSONData {
         json.put("deadline", transaction.getDeadline());
         json.put("senderPublicKey", Convert.toHexString(transaction.getSenderPublicKey()));
         json.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-        json.put("amountNXT", Convert.toNXT(transaction.getAmountNQT()));
-        json.put("feeNXT", Convert.toNXT(transaction.getFeeNQT()));
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
         json.put("referencedTransaction", Convert.toUnsignedLong(transaction.getReferencedTransactionId()));
@@ -232,23 +213,10 @@ final class JSONData {
         Long quantityQNT = (Long) json.remove("quantityQNT");
         if (quantityQNT != null) {
             json.put("quantityQNT", String.valueOf(quantityQNT));
-            Byte decimals = (Byte) json.get("decimals");
-            if (decimals != null) {
-                json.put("quantityINT", Convert.toQuantityINT(quantityQNT, decimals));
-            } else {
-                String assetIdValue = (String)json.get("asset");
-                if (assetIdValue != null) {
-                    Asset asset = Asset.getAsset(Convert.parseUnsignedLong(assetIdValue));
-                    if (asset != null) {
-                        json.put("quantityINT", Convert.toQuantityINT(quantityQNT, asset.getDecimals()));
-                    }
-                }
-            }
         }
         Long priceNQT = (Long) json.remove("priceNQT");
         if (priceNQT != null) {
             json.put("priceNQT", String.valueOf("priceNQT"));
-            json.put("priceNXT", Convert.toNXT(priceNQT));
         }
         return json;
     }

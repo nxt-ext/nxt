@@ -57,7 +57,7 @@
             var request = new XMLHttpRequest();
             request.open("GET", '/nxt?requestType=getBalance&account=' + account, false);
             request.send();
-            return JSON.parse(request.responseText).balanceNQT;
+            return parseInt(JSON.parse(request.responseText).balanceNQT);
         }
         function formatAmount(amount) {
             var digits=[], formattedAmount = "", i;

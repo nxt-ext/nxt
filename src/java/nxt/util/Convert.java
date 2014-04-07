@@ -101,6 +101,7 @@ public final class Convert {
         return parseStringFraction(nxt, 8, Constants.MAX_BALANCE_NXT);
     }
 
+    /*
     public static String toQuantityINT(long quantityQNT, byte decimals) {
         return toStringFraction(quantityQNT, decimals);
     }
@@ -108,6 +109,7 @@ public final class Convert {
     public static long parseQuantityINT(String quantityValueINT, byte decimals) {
         return parseStringFraction(quantityValueINT, decimals, Constants.MAX_ASSET_QUANTITY);
     }
+    */
 
     private static String toStringFraction(long number, int decimals) {
         long wholePart = number / multipliers[decimals];

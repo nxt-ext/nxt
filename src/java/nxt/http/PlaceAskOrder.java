@@ -15,15 +15,15 @@ public final class PlaceAskOrder extends CreateTransaction {
     static final PlaceAskOrder instance = new PlaceAskOrder();
 
     private PlaceAskOrder() {
-        super("asset", "quantityQNT", "quantityINT", "priceNXT", "priceNQT");
+        super("asset", "quantityQNT", "priceNQT");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Asset asset = ParameterParser.getAsset(req);
-        long priceNQT = ParameterParser.getPriceNQT(req, asset.getDecimals());
-        long quantityQNT = ParameterParser.getQuantityQNT(req, asset.getDecimals());
+        long priceNQT = ParameterParser.getPriceNQT(req);
+        long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
         Long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());

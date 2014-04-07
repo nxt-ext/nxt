@@ -1,7 +1,6 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Asset;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -37,8 +36,6 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 JSONObject assetBalance = new JSONObject();
                 assetBalance.put("asset", Convert.toUnsignedLong(assetBalanceEntry.getKey()));
                 assetBalance.put("balanceQNT", String.valueOf(assetBalanceEntry.getValue()));
-                assetBalance.put("balanceINT", Convert.toQuantityINT(assetBalanceEntry.getValue(),
-                        Asset.getAsset(assetBalanceEntry.getKey()).getDecimals()));
                 assetBalances.add(assetBalance);
 
             }
@@ -52,8 +49,6 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 JSONObject unconfirmedAssetBalance = new JSONObject();
                 unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(unconfirmedAssetBalanceEntry.getKey()));
                 unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(unconfirmedAssetBalanceEntry.getValue()));
-                unconfirmedAssetBalance.put("unconfirmedBalanceINT", Convert.toQuantityINT(unconfirmedAssetBalanceEntry.getValue(),
-                        Asset.getAsset(unconfirmedAssetBalanceEntry.getKey()).getDecimals()));
                 unconfirmedAssetBalances.add(unconfirmedAssetBalance);
 
             }

@@ -47,7 +47,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
             deadline = (short)(Double.parseDouble(deadlineValue) * 60);
 
         } catch (RuntimeException e) {
-            Logger.logDebugMessage(e.toString());
+
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
             response.put("message", "One of the fields is filled incorrectly!");
@@ -71,7 +71,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
 
             return response;
 
-        } else if (amountNQT <= 0 || amountNQT > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
+        } else if (amountNQT <= 0 || amountNQT > Constants.MAX_BALANCE_NQT) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");
@@ -83,7 +83,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
 
             return response;
 
-        } else if (feeNQT < Constants.ONE_NXT || feeNQT > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
+        } else if (feeNQT < Constants.ONE_NXT || feeNQT > Constants.MAX_BALANCE_NQT) {
 
             JSONObject response = new JSONObject();
             response.put("response", "notifyOfIncorrectTransaction");

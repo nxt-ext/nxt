@@ -1,5 +1,7 @@
 package nxt;
 
+import org.json.simple.JSONObject;
+
 import java.math.BigInteger;
 import java.util.List;
 
@@ -44,5 +46,7 @@ public interface Block {
     long getBaseTarget();
 
     BigInteger getCumulativeDifficulty();
+
+    JSONObject getJSONObject();
 
 }

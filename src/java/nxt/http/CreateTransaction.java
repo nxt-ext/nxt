@@ -26,7 +26,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + 5);
-        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNXT", "feeNQT", "deadline", "referencedTransaction"}, 0,
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNQT", "deadline", "referencedTransaction"}, 0,
                 result, parameters.length, 5);
         return result;
     }

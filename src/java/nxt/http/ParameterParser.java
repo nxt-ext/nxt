@@ -8,10 +8,6 @@ import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.DUPLICATE_AMOUNT;
-import static nxt.http.JSONResponses.DUPLICATE_FEE;
-import static nxt.http.JSONResponses.DUPLICATE_PRICE;
-import static nxt.http.JSONResponses.DUPLICATE_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
@@ -35,67 +31,51 @@ import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 final class ParameterParser {
 
     static long getAmountNQT(HttpServletRequest req) throws ParameterException {
-        String amountValueNXT = Convert.emptyToNull(req.getParameter("amountNXT"));
         String amountValueNQT = Convert.emptyToNull(req.getParameter("amountNQT"));
-        if (amountValueNXT == null && amountValueNQT == null) {
+        if (amountValueNQT == null) {
             throw new ParameterException(MISSING_AMOUNT);
-        } else if (amountValueNXT != null && amountValueNQT != null) {
-            throw new ParameterException(DUPLICATE_AMOUNT);
         }
         long amountNQT;
         try {
-            amountNQT = amountValueNQT != null ? Long.parseLong(amountValueNQT) : Convert.parseNXT(amountValueNXT);
+            amountNQT = Long.parseLong(amountValueNQT);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_AMOUNT);
         }
-        if (amountNQT <= 0 || amountNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
+        if (amountNQT <= 0 || amountNQT >= Constants.MAX_BALANCE_NQT) {
             throw new ParameterException(INCORRECT_AMOUNT);
         }
         return amountNQT;
     }
 
     static long getFeeNQT(HttpServletRequest req) throws ParameterException {
-        String feeValueNXT = Convert.emptyToNull(req.getParameter("feeNXT"));
         String feeValueNQT = Convert.emptyToNull(req.getParameter("feeNQT"));
-        if (feeValueNXT == null && feeValueNQT == null) {
+        if (feeValueNQT == null) {
             throw new ParameterException(MISSING_FEE);
-        } else if (feeValueNXT != null && feeValueNQT != null) {
-            throw new ParameterException(DUPLICATE_FEE);
         }
         long feeNQT;
         try {
-            feeNQT = feeValueNQT != null ? Long.parseLong(feeValueNQT) : Convert.parseNXT(feeValueNXT);
+            feeNQT = Long.parseLong(feeValueNQT);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_FEE);
         }
-        if (feeNQT <= 0 || feeNQT >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
+        if (feeNQT <= 0 || feeNQT >= Constants.MAX_BALANCE_NQT) {
             throw new ParameterException(INCORRECT_FEE);
         }
         return feeNQT;
     }
 
-    static long getPriceNQT(HttpServletRequest req, byte decimals) throws ParameterException {
-        String priceValueNXT = Convert.emptyToNull(req.getParameter("priceNXT"));
+    static long getPriceNQT(HttpServletRequest req) throws ParameterException {
         String priceValueNQT = Convert.emptyToNull(req.getParameter("priceNQT"));
-        if (priceValueNXT == null && priceValueNQT == null) {
+        if (priceValueNQT == null) {
             throw new ParameterException(MISSING_PRICE);
-        } else if (priceValueNXT != null && priceValueNQT != null) {
-            throw new ParameterException(DUPLICATE_PRICE);
         }
         long priceNQT;
         try {
-            priceNQT = priceValueNQT != null ? Long.parseLong(priceValueNQT) : Convert.parseNXT(priceValueNXT);
+            priceNQT = Long.parseLong(priceValueNQT);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PRICE);
         }
-        String quantityINT = Convert.emptyToNull(req.getParameter("quantityINT"));
-        if (quantityINT != null) { // quantity specified in whole units, recalculate price per QNT
-            if (priceNQT % Convert.multiplier(decimals) != 0) {
-                throw new ParameterException(INCORRECT_PRICE);
-            }
-            priceNQT = priceNQT / Convert.multiplier(decimals);
-        }
-        if (priceNQT <= 0 || priceNQT > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
+        if (priceNQT <= 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
             throw new ParameterException(INCORRECT_PRICE);
         }
         return priceNQT;
@@ -119,22 +99,18 @@ final class ParameterParser {
         return asset;
     }
 
-    static long getQuantityQNT(HttpServletRequest req, byte decimals) throws ParameterException {
+    static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
         String quantityValueQNT = Convert.emptyToNull(req.getParameter("quantityQNT"));
-        String quantityValueINT = Convert.emptyToNull(req.getParameter("quantityINT"));
-        if (quantityValueQNT == null && quantityValueINT == null) {
+        if (quantityValueQNT == null) {
             throw new ParameterException(MISSING_QUANTITY);
-        } else if (quantityValueQNT != null && quantityValueINT != null) {
-            throw new ParameterException(DUPLICATE_QUANTITY);
         }
         long quantityQNT;
         try {
-            quantityQNT = quantityValueQNT != null ? Long.parseLong(quantityValueQNT)
-                    : Convert.parseQuantityINT(quantityValueINT, decimals);
+            quantityQNT = Long.parseLong(quantityValueQNT);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_QUANTITY);
         }
-        if (quantityQNT <= 0 || quantityQNT > Convert.safeMultiply(Constants.MAX_ASSET_QUANTITY, Convert.multiplier(decimals))) {
+        if (quantityQNT <= 0 || quantityQNT > Constants.MAX_ASSET_QUANTITY_QNT) {
             throw new ParameterException(INCORRECT_QUANTITY);
         }
         return quantityQNT;

@@ -39,7 +39,7 @@ final class GetNextBlocks extends PeerServlet.PeerRequestHandler {
 
         JSONArray nextBlocksArray = new JSONArray();
         for (Block nextBlock : nextBlocks) {
-            nextBlocksArray.add(JSONData.block(nextBlock));
+            nextBlocksArray.add(nextBlock.getJSONObject());
         }
         response.put("nextBlocks", nextBlocksArray);
 

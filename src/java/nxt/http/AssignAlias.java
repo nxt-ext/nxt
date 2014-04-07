@@ -11,8 +11,8 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS_LENGTH;
+import static nxt.http.JSONResponses.INCORRECT_ALIAS_NAME;
 import static nxt.http.JSONResponses.INCORRECT_URI_LENGTH;
 import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.MISSING_URI;
@@ -44,7 +44,7 @@ public final class AssignAlias extends CreateTransaction {
         String normalizedAlias = alias.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
             if (Constants.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
-                return INCORRECT_ALIAS;
+                return INCORRECT_ALIAS_NAME;
             }
         }
 

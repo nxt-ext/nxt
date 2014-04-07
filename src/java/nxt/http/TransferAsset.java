@@ -18,7 +18,7 @@ public final class TransferAsset extends CreateTransaction {
     static final TransferAsset instance = new TransferAsset();
 
     private TransferAsset() {
-        super("recipient", "asset", "quantityQNT", "quantityINT", "comment");
+        super("recipient", "asset", "quantityQNT", "comment");
     }
 
     @Override
@@ -32,7 +32,7 @@ public final class TransferAsset extends CreateTransaction {
         }
 
         Asset asset = ParameterParser.getAsset(req);
-        long quantityQNT = ParameterParser.getQuantityQNT(req, asset.getDecimals());
+        long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
         Long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());

@@ -406,7 +406,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 digest.update(transaction.getBytes());
             }
 
-            BlockImpl genesisBlock = new BlockImpl(-1, 0, null, Constants.MAX_BALANCE_NXT * Constants.ONE_NXT, 0, transactionsMap.size() * 128, digest.digest(),
+            BlockImpl genesisBlock = new BlockImpl(-1, 0, null, Constants.MAX_BALANCE_NQT, 0, transactionsMap.size() * 128, digest.digest(),
                     Genesis.CREATOR_PUBLIC_KEY, new byte[64], Genesis.GENESIS_BLOCK_SIGNATURE, null, new ArrayList<>(transactionsMap.values()));
 
             genesisBlock.setPrevious(null);
@@ -761,12 +761,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
             long totalAmountNQT;
             long totalFeeNQT;
-            if (version < 3) {
-                totalAmountNQT = Convert.safeMultiply(((Long) blockData.get("totalAmount")), Constants.ONE_NXT);
-                totalFeeNQT = Convert.safeMultiply(((Long) blockData.get("totalFee")), Constants.ONE_NXT);
-            } else {
+            if (blockData.get("totalAmountNQT") != null) {
                 totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
                 totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
+            } else {
+                totalAmountNQT = Convert.safeMultiply(((Long) blockData.get("totalAmount")), Constants.ONE_NXT);
+                totalFeeNQT = Convert.safeMultiply(((Long) blockData.get("totalFee")), Constants.ONE_NXT);
             }
             int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
             byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));

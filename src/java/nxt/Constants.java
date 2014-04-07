@@ -10,13 +10,14 @@ public final class Constants {
     public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
     public static final long MAX_BALANCE_NXT = 1000000000;
     public static final long ONE_NXT = 100000000;
+    public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
     public static final long INITIAL_BASE_TARGET = 153722867;
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
-    public static final long MAX_ASSET_QUANTITY = 1000000000;
+    public static final long MAX_ASSET_QUANTITY_QNT = 1000000000L * 100000000L;
     public static final long ASSET_ISSUANCE_FEE_NQT = 1000 * ONE_NXT;
     public static final int MIN_ASSET_NAME_LENGTH = 3;
     public static final int MAX_ASSET_NAME_LENGTH = 10;

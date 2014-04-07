@@ -180,7 +180,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NXT * Constants.ONE_NXT) {
+                if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid ordinary payment: " + transaction.getAttachment().getJSONObject());
                 }
             }
@@ -634,7 +634,7 @@ public abstract class TransactionType {
                         || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
                         || attachment.getDecimals() < 0 || attachment.getDecimals() > 8
                         || attachment.getQuantityQNT() <= 0
-                        || attachment.getQuantityQNT() > Convert.safeMultiply(Constants.MAX_ASSET_QUANTITY, Convert.multiplier(attachment.getDecimals()))
+                        || attachment.getQuantityQNT() > Constants.MAX_ASSET_QUANTITY_QNT
                         ) {
                     throw new NxtException.ValidationException("Invalid asset issuance: " + attachment.getJSONObject());
                 }
@@ -741,8 +741,7 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
                 Asset asset = Asset.getAsset(attachment.getAssetId());
-                if (asset == null || attachment.getQuantityQNT() <= 0
-                        || attachment.getQuantityQNT() > Convert.safeMultiply(Constants.MAX_ASSET_QUANTITY, Convert.multiplier(asset.getDecimals()))) {
+                if (asset == null || attachment.getQuantityQNT() <= 0 || attachment.getQuantityQNT() > asset.getQuantityQNT()) {
                     throw new NxtException.ValidationException("Invalid asset transfer asset or quantity: " + attachment.getJSONObject());
                 }
             }
@@ -778,13 +777,12 @@ public abstract class TransactionType {
                 }
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
-                        || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT
+                        || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset order placement: " + attachment.getJSONObject());
                 }
                 Asset asset = Asset.getAsset(attachment.getAssetId());
-                if (asset == null || attachment.getQuantityQNT() <= 0
-                        || attachment.getQuantityQNT() > Convert.safeMultiply(Constants.MAX_ASSET_QUANTITY, Convert.multiplier(asset.getDecimals()))) {
+                if (asset == null || attachment.getQuantityQNT() <= 0 || attachment.getQuantityQNT() > asset.getQuantityQNT()) {
                     throw new NxtException.ValidationException("Invalid asset order placement asset or quantity: " + attachment.getJSONObject());
                 }
             }

@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
+import org.json.simple.JSONObject;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -38,9 +39,9 @@ final class TransactionImpl implements Transaction {
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
                 : (deadline < 1 || feeNQT < Constants.ONE_NXT)
-                || feeNQT > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT
+                || feeNQT > Constants.MAX_BALANCE_NQT
                 || amountNQT < 0
-                || amountNQT > Constants.MAX_BALANCE_NXT * Constants.ONE_NXT
+                || amountNQT > Constants.MAX_BALANCE_NQT
                 || type == null) {
             throw new NxtException.ValidationException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
                     + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
@@ -268,6 +269,27 @@ final class TransactionImpl implements Transaction {
         }
         return buffer.array();
 
+    }
+
+    @Override
+    public JSONObject getJSONObject() {
+        JSONObject json = new JSONObject();
+        json.put("type", type.getType());
+        json.put("subtype", type.getSubtype());
+        json.put("timestamp", timestamp);
+        json.put("deadline", deadline);
+        json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
+        json.put("recipient", Convert.toUnsignedLong(recipientId));
+        json.put("amount", amountNQT / Constants.ONE_NXT);
+        json.put("fee", feeNQT / Constants.ONE_NXT);
+        json.put("amountNQT", amountNQT);
+        json.put("feeNQT", feeNQT);
+        json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
+        json.put("signature", Convert.toHexString(signature));
+        if (attachment != null) {
+            json.put("attachment", attachment.getJSONObject());
+        }
+        return json;
     }
 
     @Override

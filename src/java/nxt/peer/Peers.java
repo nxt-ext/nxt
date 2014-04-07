@@ -444,7 +444,7 @@ public final class Peers {
     }
 
     public static void sendToSomePeers(Block block) {
-        JSONObject request = JSONData.block(block);
+        JSONObject request = block.getJSONObject();
         request.put("requestType", "processBlock");
         sendToSomePeers(request);
     }
@@ -453,7 +453,7 @@ public final class Peers {
         JSONObject request = new JSONObject();
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : transactions) {
-            transactionsData.add(JSONData.transaction(transaction));
+            transactionsData.add(transaction.getJSONObject());
         }
         request.put("requestType", "processTransactions");
         request.put("transactions", transactionsData);

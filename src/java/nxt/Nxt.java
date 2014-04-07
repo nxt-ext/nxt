@@ -16,7 +16,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "0.9.2e";
+    public static final String VERSION = "0.9.3e";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -114,9 +114,6 @@ public final class Nxt {
     }
 
     public static void main(String[] args) {
-        if (! Constants.isTestnet) {
-            throw new RuntimeException("This version is still only for test net!!!");
-        }
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {

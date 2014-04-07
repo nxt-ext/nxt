@@ -21,7 +21,7 @@ final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
 
-            transactionsData.add(JSONData.transaction(transaction));
+            transactionsData.add(transaction.getJSONObject());
 
         }
         response.put("unconfirmedTransactions", transactionsData);
