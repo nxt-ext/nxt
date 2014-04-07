@@ -31,33 +31,36 @@ public abstract class Order {
 
         while (!sortedAssetAskOrders.isEmpty() && !sortedAssetBidOrders.isEmpty()) {
 
-            Ask askOrder = sortedAssetAskOrders.first();
-            Bid bidOrder = sortedAssetBidOrders.first();
+            Order askOrder = sortedAssetAskOrders.first();
+            Order bidOrder = sortedAssetBidOrders.first();
 
-            if (askOrder.getPrice() > bidOrder.getPrice()) {
+            if (askOrder.getPriceNQT() > bidOrder.getPriceNQT()) {
                 break;
             }
 
-            int quantity = Math.min(((Order)askOrder).quantity, ((Order)bidOrder).quantity);
-            long price = askOrder.getHeight() < bidOrder.getHeight() || (askOrder.getHeight() == bidOrder.getHeight() && askOrder.getId() < bidOrder.getId()) ? askOrder.getPrice() : bidOrder.getPrice();
+            long quantityQNT = Math.min(askOrder.quantityQNT, bidOrder.quantityQNT);
+            long priceNQT = askOrder.getHeight() < bidOrder.getHeight()
+                    || (askOrder.getHeight() == bidOrder.getHeight()
+                    && askOrder.getId() < bidOrder.getId())
+                    ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
 
             Block lastBlock=Nxt.getBlockchain().getLastBlock();
-            int timeStamp=lastBlock.getTimestamp();
+            int timestamp=lastBlock.getTimestamp();
             
-            Trade.addTrade(assetId, timeStamp, lastBlock.getId(), askOrder.getId(), bidOrder.getId(), quantity, price);
+            Trade.addTrade(assetId, timestamp, lastBlock.getId(), askOrder.getId(), bidOrder.getId(), quantityQNT, priceNQT);
 
-            if ((((Order)askOrder).quantity -= quantity) == 0) {
+            if ((askOrder.quantityQNT = Convert.safeSubtract(askOrder.quantityQNT, quantityQNT)) == 0) {
                 Ask.removeOrder(askOrder.getId());
             }
-            askOrder.getAccount().addToBalanceAndUnconfirmedBalance(quantity * price);
-            askOrder.getAccount().addToAssetBalance(assetId, -quantity);
+            askOrder.getAccount().addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(quantityQNT, priceNQT));
+            askOrder.getAccount().addToAssetBalanceQNT(assetId, -quantityQNT);
 
-            if ((((Order)bidOrder).quantity -= quantity) == 0) {
+            if ((bidOrder.quantityQNT = Convert.safeSubtract(bidOrder.quantityQNT, quantityQNT)) == 0) {
                 Bid.removeOrder(bidOrder.getId());
             }
-            bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalance(assetId, quantity);
-            bidOrder.getAccount().addToBalance(-quantity * price);
-            bidOrder.getAccount().addToUnconfirmedBalance(quantity * (bidOrder.getPrice() - price));
+            bidOrder.getAccount().addToAssetAndUnconfirmedAssetBalanceQNT(assetId, quantityQNT);
+            bidOrder.getAccount().addToBalanceNQT(- Convert.safeMultiply(quantityQNT, priceNQT));
+            bidOrder.getAccount().addToUnconfirmedBalanceNQT(Convert.safeMultiply(quantityQNT, (bidOrder.getPriceNQT() - priceNQT)));
 
         }
 
@@ -66,17 +69,17 @@ public abstract class Order {
     private final Long id;
     private final Account account;
     private final Long assetId;
-    private final long price;
+    private final long priceNQT;
     private final long height;
 
-    private volatile int quantity;
+    private volatile long quantityQNT;
 
-    private Order(Long id, Account account, Long assetId, int quantity, long price) {
+    private Order(Long id, Account account, Long assetId, long quantityQNT, long priceNQT) {
         this.id = id;
         this.account = account;
         this.assetId = assetId;
-        this.quantity = quantity;
-        this.price = price;
+        this.quantityQNT = quantityQNT;
+        this.priceNQT = priceNQT;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
     }
 
@@ -92,12 +95,12 @@ public abstract class Order {
         return assetId;
     }
 
-    public long getPrice() {
-        return price;
+    public long getPriceNQT() {
+        return priceNQT;
     }
 
-    public final int getQuantity() {
-        return quantity;
+    public final long getQuantityQNT() {
+        return quantityQNT;
     }
 
     public long getHeight() {
@@ -141,8 +144,8 @@ public abstract class Order {
             return sortedOrders == null ? (SortedSet<Ask>)emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
         }
 
-        static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
-            Ask order = new Ask(transactionId, senderAccount, assetId, quantity, price);
+        static void addOrder(Long transactionId, Account senderAccount, Long assetId, long quantityQNT, long priceNQT) {
+            Ask order = new Ask(transactionId, senderAccount, assetId, quantityQNT, priceNQT);
             if (askOrders.putIfAbsent(order.getId(), order) != null) {
                 throw new IllegalStateException("Ask order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
             }
@@ -163,15 +166,15 @@ public abstract class Order {
             return askOrder;
         }
 
-        private Ask(Long orderId, Account account, Long assetId, int quantity, long price) {
-            super(orderId, account, assetId, quantity, price);
+        private Ask(Long orderId, Account account, Long assetId, long quantityQNT, long priceNQT) {
+            super(orderId, account, assetId, quantityQNT, priceNQT);
         }
 
         @Override
         public int compareTo(Ask o) {
-            if (this.getPrice() < o.getPrice()) {
+            if (this.getPriceNQT() < o.getPriceNQT()) {
                 return -1;
-            } else if (this.getPrice() > o.getPrice()) {
+            } else if (this.getPriceNQT() > o.getPriceNQT()) {
                 return 1;
             } else {
                 return super.compareTo(o);
@@ -200,8 +203,8 @@ public abstract class Order {
             return sortedOrders == null ? (SortedSet<Bid>)emptySortedSet : Collections.unmodifiableSortedSet(sortedOrders);
         }
 
-        static void addOrder(Long transactionId, Account senderAccount, Long assetId, int quantity, long price) {
-            Bid order = new Bid(transactionId, senderAccount, assetId, quantity, price);
+        static void addOrder(Long transactionId, Account senderAccount, Long assetId, long quantityQNT, long priceNQT) {
+            Bid order = new Bid(transactionId, senderAccount, assetId, quantityQNT, priceNQT);
             if (bidOrders.putIfAbsent(order.getId(), order) != null) {
                 throw new IllegalStateException("Bid order id " + Convert.toUnsignedLong(order.getId()) + " already exists");
             }
@@ -222,15 +225,15 @@ public abstract class Order {
             return bidOrder;
         }
 
-        private Bid(Long orderId, Account account, Long assetId, int quantity, long price) {
-            super(orderId, account, assetId, quantity, price);
+        private Bid(Long orderId, Account account, Long assetId, long quantityQNT, long priceNQT) {
+            super(orderId, account, assetId, quantityQNT, priceNQT);
         }
 
         @Override
         public int compareTo(Bid o) {
-            if (this.getPrice() > o.getPrice()) {
+            if (this.getPriceNQT() > o.getPriceNQT()) {
                 return -1;
-            } else if (this.getPrice() < o.getPrice()) {
+            } else if (this.getPriceNQT() < o.getPriceNQT()) {
                 return 1;
             } else {
                 return super.compareTo(o);

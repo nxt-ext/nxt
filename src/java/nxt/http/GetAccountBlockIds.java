@@ -3,19 +3,13 @@ package nxt.http;
 import nxt.Account;
 import nxt.Block;
 import nxt.Nxt;
-import nxt.util.Convert;
+import nxt.NxtException;
 import nxt.util.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
-import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
 
@@ -26,38 +20,13 @@ public final class GetAccountBlockIds extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String account = req.getParameter("account");
-        String timestampValue = req.getParameter("timestamp");
-        if (account == null) {
-            return MISSING_ACCOUNT;
-        } else if (timestampValue == null) {
-            return MISSING_TIMESTAMP;
-        }
-
-        Account accountData;
-        try {
-            accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-            if (accountData == null) {
-                return UNKNOWN_ACCOUNT;
-            }
-        } catch (RuntimeException e) {
-            return INCORRECT_ACCOUNT;
-        }
-
-        int timestamp;
-        try {
-            timestamp = Integer.parseInt(timestampValue);
-            if (timestamp < 0) {
-                return INCORRECT_TIMESTAMP;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_TIMESTAMP;
-        }
+        Account account = ParameterParser.getAccount(req);
+        int timestamp = ParameterParser.getTimestamp(req);
 
         JSONArray blockIds = new JSONArray();
-        try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getBlocks(accountData, timestamp)) {
+        try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getBlocks(account, timestamp)) {
             while (iterator.hasNext()) {
                 Block block = iterator.next();
                 blockIds.add(block.getStringId());

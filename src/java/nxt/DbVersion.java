@@ -129,29 +129,49 @@ final class DbVersion {
             case 22:
                 apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
             case 23:
-                try (DbIterator<BlockImpl> iterator = BlockchainImpl.getInstance().getAllBlocks()) {
-                    if (iterator.hasNext()) { // skip genesis
-                        if (! iterator.next().getId().equals(Genesis.GENESIS_BLOCK_ID)) {
-                            throw new IllegalStateException("First block is not genesis!");
-                        }
-                    }
-                    while (iterator.hasNext()) {
-                        BlockImpl block = iterator.next();
-                        BlockchainImpl.getInstance().setLastBlock(block);
-                        for (TransactionImpl transaction : block.getTransactions()) {
-                            try {
-                                transaction.validateAttachment();
-                            } catch (RuntimeException|NxtException.ValidationException e) {
-                                Logger.logDebugMessage("Failed to validate transaction: " + e.toString());
-                                Logger.logDebugMessage("Deleting blocks after " + block.getStringId());
-                                BlockDb.deleteBlocksFrom(block.getId());
-                                break;
-                            }
-                        }
-                    }
-                }
                 apply(null);
             case 24:
+                apply("ALTER TABLE block ALTER COLUMN total_amount BIGINT");
+            case 25:
+                apply("ALTER TABLE block ALTER COLUMN total_fee BIGINT");
+            case 26:
+                apply("ALTER TABLE transaction ALTER COLUMN amount BIGINT");
+            case 27:
+                apply("ALTER TABLE transaction ALTER COLUMN fee BIGINT");
+            case 28:
+                apply("UPDATE block SET total_amount = total_amount * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+            case 29:
+                apply("UPDATE block SET total_fee = total_fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+            case 30:
+                apply("UPDATE transaction SET amount = amount * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+            case 31:
+                apply("UPDATE transaction SET fee = fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+            case 32:
+                apply(null);
+            case 33:
+                try (Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
+                     ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        long blockId = rs.getLong("id");
+                        try {
+                            BlockImpl block = BlockDb.loadBlock(con, rs);
+                            BlockchainImpl.getInstance().setLastBlock(block);
+                            for (TransactionImpl transaction : block.getTransactions()) {
+                                transaction.validateAttachment();
+                            }
+                        } catch (RuntimeException|NxtException.ValidationException e) {
+                            Logger.logDebugMessage("Failed to validate block: " + e.toString());
+                            Logger.logDebugMessage("Deleting blocks after " + Convert.toUnsignedLong(blockId));
+                            BlockDb.deleteBlocksFrom(blockId);
+                            break;
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 34:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

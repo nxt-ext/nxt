@@ -1,15 +1,13 @@
 package nxt.http;
 
 import nxt.Alias;
+import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_TIMESTAMP;
 
 public final class GetAliasIds extends APIServlet.APIRequestHandler {
 
@@ -20,22 +18,9 @@ public final class GetAliasIds extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String timestampValue = req.getParameter("timestamp");
-        if (timestampValue == null) {
-            return MISSING_TIMESTAMP;
-        }
-
-        int timestamp;
-        try {
-            timestamp = Integer.parseInt(timestampValue);
-            if (timestamp < 0) {
-                return INCORRECT_TIMESTAMP;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_TIMESTAMP;
-        }
+        int timestamp = ParameterParser.getTimestamp(req);
 
         JSONArray aliasIds = new JSONArray();
         for (Alias alias : Alias.getAllAliases()) {

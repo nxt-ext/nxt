@@ -28,9 +28,9 @@ public interface Transaction extends Comparable<Transaction> {
 
     int getExpiration();
 
-    int getAmount();
+    long getAmountNQT();
 
-    int getFee();
+    long getFeeNQT();
 
     Long getReferencedTransactionId();
 
@@ -44,8 +44,8 @@ public interface Transaction extends Comparable<Transaction> {
 
     void sign(String secretPhrase);
 
-    JSONObject getJSONObject();
-
     byte[] getBytes();
+
+    JSONObject getJSONObject();
 
 }
