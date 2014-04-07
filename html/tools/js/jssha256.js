@@ -169,7 +169,7 @@ function SHA256_finalize() {
    and array_to_hex_string explicitly.
 */
 
-function SHA256_hash(msg) {
+function SHA256_hash(msg, no_hex) {
   var res;
   SHA256_init();
    
@@ -177,6 +177,10 @@ function SHA256_hash(msg) {
   
   res = SHA256_finalize();
     
+  if (no_hex) {
+	  return res;
+  }
+  
   return array_to_hex_string(res);
 }
 

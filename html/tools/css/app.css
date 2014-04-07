@@ -3209,6 +3209,15 @@ table.settings td {
 	font-weight:bold;
 	cursor:pointer;
 }
+
+.decryption_failed {
+	background:red !important;
+	color:white !important;
+}
+
+.decryption_failed::before {
+	border-right: 1.5em solid red !important;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

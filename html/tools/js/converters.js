@@ -25,9 +25,9 @@ var converters = function () {
 
             return str;
         },
-        stringToByteArray: function (str) {
-        	str = unescape(encodeURIComponent(str));
-
+        stringToByteArray: function (str) {  
+        	str = unescape(encodeURIComponent(str)); //temporary
+						
             var bytes = new Array(str.length);
             for (var i = 0; i < str.length; ++i)
                 bytes[i] = str.charCodeAt(i);
@@ -49,6 +49,9 @@ var converters = function () {
         },
         stringToHexString: function (str) {
             return this.byteArrayToHexString(this.stringToByteArray(str));
+        },
+        hexStringToString: function(hex) {
+	        return this.byteArrayToString(this.hexStringToByteArray(hex));
         },
         checkBytesToIntInput: function(bytes, numBytes, opt_startIndex) {
 			var startIndex = opt_startIndex || 0;
@@ -91,10 +94,12 @@ var converters = function () {
 		    return value;
 		},
 		byteArrayToString: function(bytes, opt_startIndex, length) {	
-			var index = this.checkBytesToIntInput(bytes, parseInt(length, 10), parseInt(opt_startIndex, 10));
+			if (opt_startIndex && length) {
+				var index = this.checkBytesToIntInput(bytes, parseInt(length, 10), parseInt(opt_startIndex, 10));
 			
-			var bytes = bytes.slice(opt_startIndex, opt_startIndex+length);
-						
+				bytes = bytes.slice(opt_startIndex, opt_startIndex+length);
+			}
+									
 			return decodeURIComponent(escape(String.fromCharCode.apply(null, bytes)));
 		},
 		byteArrayToShortArray: function(byteArray) {

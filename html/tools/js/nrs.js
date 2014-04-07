@@ -3569,6 +3569,8 @@
     				    		    				    			
     			for (var i=0; i<nrTransactions; i++) {
     				NRS.sendRequest("getTransaction+", {"transaction": transactionIds[i]}, function(response) {
+    					//check if error.
+    					
 						if (NRS.currentPage != "messages") {
 							return;
 						}
@@ -3671,9 +3673,7 @@
     	$(this).addClass("active");
     	
     	var otherUser = $(this).data("account");
-    	
-    	var messages = NRS.messages[otherUser];
-	
+    		
     	$("#no_message_selected, #no_messages_available").hide();
     	    	
     	$("#inline_message_recipient").val(otherUser);
@@ -3682,15 +3682,48 @@
     	var last_day = "";
     	var output = "<dl class='chat'>";
     	
+    	var messages = NRS.messages[otherUser];
+		
+		var otherUserPublicKey = null;
+		
     	if (messages) {
     		for (var i=0; i<messages.length; i++) {
-    			
     			var hex = messages[i].attachment.message;
+    			var decoded, extra;
+    			    			
+				if (hex.indexOf("4352595054454421") === 0) { //starts with CRYPTED!
+					if (!otherUserPublicKey) {
+						NRS.sendRequest("getAccountPublicKey", {"account": otherUser}, function(response) {
+							if (!response.publicKey) {
+								otherUserPublicKey = -1;
+							} else {
+								otherUserPublicKey = response.publicKey;
+							}
+						}, false);
+					}
+										
+					if (otherUserPublicKey != -1) {
+						decoded = NRS.decryptMessage(sessionStorage.getItem("secret"), otherUserPublicKey, hex);
+					} 			
+				} else {	
+					try {
+						decoded = converters.hexStringToString(hex);
+					} catch (err) {
+						//legacy...
+						if (hex.indexOf("feff") === 0) {
+	    					decoded = NRS.convertFromHex16(hex);
+						} else {
+							decoded = NRS.convertFromHex8(hex);
+						}
+					}
+	    		}
     			
-    			if (hex.indexOf("feff") === 0) {
-    				var decoded = NRS.convertFromHex16(hex);
+    			if (decoded) {
+    				decoded = nl2br(decoded.escapeHTML());
     			} else {
-    				var decoded = NRS.convertFromHex8(hex);
+	    			decoded = "<i class='fa fa-warning'></i> Could not decrypt message.";
+	    			extra = "decryption_failed";
+	    			
     			}
     			
     			var day = NRS.formatTimestamp(messages[i].timestamp, true);
@@ -3700,17 +3733,16 @@
 					last_day = day;
     			}
     			
-    			output += "<dd class='" + (messages[i].recipient == NRS.account ? "from" : "to") + "'><p>" + nl2br(decoded.escapeHTML()) +  "</p></dd>";
+    			output += "<dd class='" + (messages[i].recipient == NRS.account ? "from" : "to") + "'><p class='" + extra + "'>" + decoded +  "</p></dd>";
     		}
     	}    
-    	    	
+        	    	
     	if (NRS.unconfirmedTransactions.length) {
 	    	for (var i=0; i<NRS.unconfirmedTransactions.length; i++) {
 		    	var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 		    	
 		    	if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subtype == 0 && unconfirmedTransaction.recipient == otherUser) {
 		    	    var hex = unconfirmedTransaction.attachment.message;
-    			
 	    			if (hex.indexOf("feff") === 0) {
 	    				var decoded = NRS.convertFromHex16(hex);
 	    			} else {
@@ -3761,15 +3793,120 @@
 		}
 
     });
-    
+
+	NRS.encryptMessage = function(secretPhrase, publicKey, message) {
+		try {
+			var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));		
+			var publicKey = converters.hexStringToByteArray(publicKey);
+					
+			var messageBytes = converters.stringToByteArray(message);
+					
+			var xored = new XoredData().encrypt(messageBytes, privateKey, publicKey);
+	
+			return converters.stringToHexString("CRYPTED!") + converters.byteArrayToHexString(xored.nonce) + converters.byteArrayToHexString(xored.data);
+		} catch (e) {
+			return null;
+		}
+	}
+	
+	NRS.decryptMessage = function(secretPhrase, publicKey, message) {
+		if (typeof secretPhrase == "string") {
+			var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
+		} else {
+			var privateKey = secretPhrase;
+		}
+		if (typeof publicKey == "string") {
+			publicKey = converters.hexStringToByteArray(publicKey);
+		}
+		
+		if (message.indexOf("4352595054454421") === 0) { //starts with CRYPTED!
+			try {
+	    		var xored = new XoredData();
+	    		
+	    		var byteArray = converters.hexStringToByteArray(message);
+	    			    		
+	    		xored.nonce = byteArray.slice(8, 40);
+	    		xored.data = byteArray.slice(40);
+	    	
+				var decrypt = xored.decrypt(privateKey, publicKey);
+				
+				return converters.byteArrayToString(decrypt);
+			} catch (e) {
+				return null;
+			}
+    	} else {
+	    	return message;
+    	}
+	}
+	    
+    NRS.forms.sendMessage = function($modal) {
+        var data = {"recipient"    : $.trim($("#send_message_recipient").val()),
+	    			"fee"		   : $.trim($("#send_message_fee").val()),
+	    			"deadline"	   : $.trim($("#send_message_deadline").val()),
+	    			"secretPhrase" : $.trim($("#send_message_password").val())};
+
+        var message = $.trim($("#send_message_message").val());
+        
+        if (!message) {
+	        return {"error": "Message is a required field."};
+        }
+		
+		var hex   = "";
+        var error = "";
+                   	
+		if ($("#send_message_encrypt").is(":checked")) {
+    		NRS.sendRequest("getAccountPublicKey", {"account": $("#send_message_recipient").val()}, function(response) {    			
+    			if (!response.publicKey) {
+    				error = "Could not find public key for recipient, which is necessary for sending encrypted messages.";
+    				return;
+    			}
+    			    			
+	    		hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase, response.publicKey, message);
+	   		}, false);
+    	} else {
+    		hex = converters.stringToHexString("") + converters.stringToHexString(message);
+    		
+    		/*
+		    hex = NRS.convertToHex8(message);
+	        var back = NRS.convertFromHex8(hex);
+	           	
+	        if (back != message) {
+	           	hex =  NRS.convertToHex16("\uFEFF" + message);
+	        }*/
+    	}
+    	
+    	data["_extra"] = {"message": message};
+    	data["message"] = hex;
+		
+		if (error) {
+			return {"error": error};
+		}
+        			
+		return {"requestType": "sendMessage", "data": data};
+    }
+        
     $("#inline_message_form").submit(function(e) {
     	e.preventDefault();
     	
-    	if (!NRS.rememberPassword && $("#inline_message_password").val() == "") {
-    		$.growl("Secret phrase is a required field.", { "type": "danger" });
-    		return;
-    	}
-    	
+        var data = {"recipient"    : $.trim($("#inline_message_recipient").val()),
+					"fee"		   : "1",
+					"deadline"	   : "1440",
+					"secretPhrase" : $.trim($("#inline_message_password").val())};
+
+    	if (!NRS.rememberPassword) {
+    		if ($("#inline_message_password").val() == "") {
+	    		$.growl("Secret phrase is a required field.", {"type": "danger"});
+	    		return;
+			}
+			
+			var accountId = NRS.generateAccountId(data.secretPhrase);
+			    	
+	    	if (accountId != NRS.account) {		    
+	    		$.growl("Incorrect secret phrase.", {"type": "danger"});		
+	        	return;
+	    	}
+		}
+		
 		var message = $.trim($("#inline_message_text").val());
 
 		if (!message) {
@@ -3780,33 +3917,25 @@
     	var $btn = $("#inline_message_submit");
     	
     	$btn.button("loading");
-    	        	
-    	var hex = NRS.convertToHex8(message);
-    	var back = NRS.convertFromHex8(hex);
-    	   	
-    	if (back != message) {
-    	   	hex =  NRS.convertToHex16("\uFEFF" + message);
-    	}
+    	
+    	var hex   = "";
+        var error = "";
 
-		/*
-    	if ($("#inline_message_encrypt").is(":checked")) {
+    	if ($("#inline_message_encrypt").is(":checked")) {    		
     		NRS.sendRequest("getAccountPublicKey", {"account": $("#inline_message_recipient").val()}, function(response) {
     			if (!response.publicKey) {
     				$.growl("Could not find public key for recipient, which is necessary for sending encrypted messages.", {"type": "danger"});
     			}
-
-	    		hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : $("#inline_message_password").val(), response.publicKey, hex);
+    			
+	    		hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase, response.publicKey, message);
     		}, false);
-	    	
-    	}*/
+    	} else {
+	    	hex = converters.stringToHexString("") + converters.stringToHexString(message); //todo
+    	}
     	
-    	var data = {"recipient": $("#inline_message_recipient").val(), 
-    				"message": hex,
-    				"fee": "1",
-    				"deadline": "1440",
-    				"_extra": {"message": message},
-    				"secretPhrase": $("#inline_message_password").val()};
-    	
+    	data["_extra"] = {"message": message};
+    	data["message"] = hex;
+
     	NRS.sendRequest("sendMessage", data, function(response, input) {
     		if (response.errorCode) {
     			$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", { type: "danger" });
@@ -3814,7 +3943,9 @@
     			NRS.addUnconfirmedTransaction(response.transaction);
     			
     		 	$.growl("Message sent.", { type: "success" });
+    		 	
     		 	$("#inline_message_text").val("");
+    		 	
     		 	$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
     		 	//leave password alone until user moves to another page.
     		} else {
@@ -3823,112 +3954,6 @@
     		$btn.button("reset");
     	});
     });
-        
-    /*
-	NRS.encryptMessage = function(secretPhrase, publicKey, message) {
-		var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
-		var publicKey = converters.hexStringToByteArray(publicKey);
-		var data = converters.hexStringToByteArray(message);
-		
-	    var salt = NRS.getSalt();
-	    var msg = NRS.transformData(privateKey, publicKey, data, salt);
-	    
-	    var msgObject = new Object(); 
-	    
-	    msgObject["salt"] = converters.byteArrayToHexString(salt);
-	    msgObject["msg"] = converters.byteArrayToHexString(msg);
-	    
-	    return msgObject;
-	}
-	
-	NRS.decryptMessage = function(secretPhrase, publicKey, msgObject) {
-		var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
-		var publicKey = converters.hexStringToByteArray(publicKey);
-		
-		var data = converters.stringToByteArray(msgObject["msg"]);
-		var salt = converters.stringToByteArray(msgObject["salt"]);
-				
-		var msg = NRS.transformData(privateKey, publicKey, data, salt);
-						
-		return converters.byteArrayToHexString(msg);
-	}
-	
-	NRS.getSalt = function() {
-		var salt = [0,0,0,0,0,0,0,0];
-		return salt;
-		
-		var date = new Date();
-		var millis = date.getTime();
-		for (var i=0; i<8; i++)
-		{
-			salt[i] = (millis & 0xff);
-			millis  = millis / 256;
-		}
-		
-		return salt;
-	}
-	
-	NRS.inverse = function(array) {
-		var result = new Array(array.length);
-		for (var i=0; i<array.length; i++) {
-			result[i] = (array[i] ^ 0xff);
-		}
-		
-		return result;
-	}
-		
-	NRS.transformData = function(privateKey, publicKey, data, salt) {
-		var key1 = converters.byteArrayToShortArray(privateKey);
-		var key2 = converters.byteArrayToShortArray(publicKey);
-				
-		var sharedKey = curve25519_(key1, key2);
-								
-	    var seeds = new Array();
-	    var keys = new Array();
-	    
-		SHA256_init();
-		SHA256_write(salt);
-		SHA256_write(sharedKey);
-		seeds.push(SHA256_finalize());
-		keys.push(NRS.inverse(seeds[0]));
-		var count = 1;
-		while (count*32 < data.length) {
-			seeds.push(SHA256_hash(seeds[count-1]));
-			keys.push(NRS.inverse(seeds[count++]));
-		}
-		
-		var transformedData = new Array();
-		for (var i=0; i<data.length; i++) {
-		    transformedData.push(data[i] ^ keys[~~(i/32)][i % 32]);
-		}
-		
-		return transformedData;
-	}
-	*/
-    
-    NRS.forms.sendMessage = function($modal) {
-        var message = $.trim($("#send_message_message").val());
-        
-        if (!message) {
-	        return {"error": "Message is a required field."};
-        }
-		
-        var hex = NRS.convertToHex8(message);
-        var back = NRS.convertFromHex8(hex);
-           	
-        if (back != message) {
-           	hex =  NRS.convertToHex16("\uFEFF" + message);
-        }
-           	
-        var data = {"recipient": $("#send_message_recipient").val(), 
-        			"message": hex,    				
-        			"_extra": {"message": message},
-        			"fee": $("#send_message_fee").val(),
-        			"deadline": $("#send_message_deadline").val(),
-        			"secretPhrase": $("#send_message_password").val()};
-        			
-       return {"requestType": "sendMessage", "data": data};
-    }
     
     NRS.forms.sendMoneyComplete = function(response, data) {  
     	if (!(data["_extra"] && data["_extra"].convertedAccount) && !(data.recipient in NRS.contacts)) {
@@ -5249,12 +5274,24 @@
 				case 0:					
 					var hex = transaction.attachment.message;
 	
+					//password: return {"requestType": "sendMessage", "data": data};
+
 					var message;
 					
-					if (hex.indexOf("feff") === 0) {
-						message = NRS.convertFromHex16(hex);
-					} else {
-						message = NRS.convertFromHex8(hex);
+    				if (hex.indexOf("4352595054454421") === 0) { //starts with CRYPTED!
+    				    NRS.sendRequest("getAccountPublicKey", {"account": (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient)}, function(response) {
+			    			if (!response.publicKey) {
+			    				$.growl("Could not find public key for recipient, which is necessary for sending encrypted messages.", {"type": "danger"});
+			    			}
+	    				    		
+	    					message = NRS.decryptMessage("return {\"requestType\": \"sendMessage\", \"data\": data};", response.publicKey, hex);
+	    				}, false);
+    				} else {
+    					try {
+    				   		message = converters.hexStringToString(hex);
+    				   	} catch (err) {
+    				   		message = "Could not convert hex to string: " + hex;
+    				   	}
 					}
 					
 					var sender_info = "";
@@ -7474,16 +7511,31 @@
     	$(this).find("input[name=converted_account_id]").val("");
     });
     
+    //Reset form to initial state when modal is closed
     $(".modal").on("hidden.bs.modal", function(e) {
-    	$(this).find(":input:not([type=hidden])").each(function(index) {
+    	$(this).find(":input:not([type=hidden],button)").each(function(index) {
     		var default_value = $(this).data("default");
-    		if (default_value) {
-    			$(this).val(default_value);
-    		} else {
-    			$(this).val("");	
-    		}		
+    		var type = $(this).attr("type");
+
+			if (type == "checkbox") {
+				if (default_value == "checked") {
+					$(this).prop("checked", true);
+				} else {
+					$(this).prop("checked", false);
+				}
+			} else {
+	    		if (default_value) {
+	    			$(this).val(default_value);
+	    		} else {
+	    			$(this).val("");	
+	    		}
+	    	}	
     	});
+    	
+    	//Hidden form field
     	$(this).find("input[name=converted_account_id]").val("");
+    	
+    	//Hide/Reset any possible error messages
     	$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
     });
     
