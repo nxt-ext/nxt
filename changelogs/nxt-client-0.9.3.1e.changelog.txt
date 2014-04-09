@@ -1,0 +1,1 @@
+Fixed parsing of Issue Asset transactions, testnet nodes should upgrade.
