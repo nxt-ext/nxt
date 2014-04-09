@@ -270,6 +270,34 @@ final class Curve25519 {
         pack(t1[1], Y);
     }
 
+    public static boolean isCanonicalSignature(byte[] v) {
+        byte[] vCopy = java.util.Arrays.copyOfRange(v, 0, 32);
+        byte[] tmp = new byte[32];
+        divmod(tmp, vCopy, 32, ORDER, 32);
+        for (int i = 0; i < 32; i++){
+            if (v[i] != vCopy[i])
+                return false;
+        }
+        return true;
+    }
+
+    public static boolean isCanonicalPublicKey(byte[] publicKey) {
+        if ( publicKey.length != 32 ) {
+            return false;
+        }
+        long10 publicKeyUnpacked = new long10();
+        unpack(publicKeyUnpacked, publicKey);
+        byte[] publicKeyCopy = new byte[32];
+        pack(publicKeyUnpacked, publicKeyCopy);
+        for (int i = 0; i < 32; i++){
+            if (publicKeyCopy[i] != publicKey[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////
 
     /* sahn0:
