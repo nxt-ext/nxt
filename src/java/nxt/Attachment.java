@@ -319,11 +319,11 @@ public interface Attachment {
 
         static final long serialVersionUID = 0;
 
-        private final long minFeePerByte;
+        private final long minFeePerByteNQT;
         private final String[] uris;
 
-        public MessagingHubTerminalAnnouncement(long minFeePerByte, String[] uris) {
-            this.minFeePerByte = minFeePerByte;
+        public MessagingHubTerminalAnnouncement(long minFeePerByteNQT, String[] uris) {
+            this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
         }
 
@@ -347,7 +347,7 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(minFeePerByte);
+                buffer.putLong(minFeePerByteNQT);
                 buffer.put((byte) uris.length);
                 for (String uri : uris) {
                     byte[] uriBytes = uri.getBytes("UTF-8");
@@ -366,11 +366,9 @@ public interface Attachment {
         public JSONObject getJSONObject() {
 
             JSONObject attachment = new JSONObject();
-            attachment.put("minFeePerByte", minFeePerByte);
+            attachment.put("minFeePerByteNQT", minFeePerByteNQT);
             JSONArray uris = new JSONArray();
-            for (String uri : this.uris) {
-                uris.add(uri);
-            }
+            Collections.addAll(uris, this.uris);
             attachment.put("uris", uris);
             return attachment;
 
@@ -379,9 +377,10 @@ public interface Attachment {
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.HUB_TERMINAL_ANNOUNCEMENT;
-        } 
-        public long getMinFeePerByte() {
-            return minFeePerByte;
+        }
+
+        public long getMinFeePerByteNQT() {
+            return minFeePerByteNQT;
         }
 
         public String[] getUris() {
@@ -815,7 +814,7 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(goodsId.longValue());
+                buffer.putLong(goodsId);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1016,12 +1015,12 @@ public interface Attachment {
 
         private final Long purchaseId;
         private final XoredData goods;
-        private final long discount;
+        private final long discountNQT;
 
-        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discount) {
+        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discountNQT) {
             this.purchaseId = purchaseId;
             this.goods = goods;
-            this.discount = discount;
+            this.discountNQT = discountNQT;
         }
 
         @Override
@@ -1038,7 +1037,7 @@ public interface Attachment {
                 buffer.putShort((short)goods.getData().length);
                 buffer.put(goods.getData());
                 buffer.put(goods.getNonce());
-                buffer.putLong(discount);
+                buffer.putLong(discountNQT);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1052,7 +1051,7 @@ public interface Attachment {
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
             attachment.put("goods", Convert.toHexString(goods.getData()));
             attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
-            attachment.put("discount", discount);
+            attachment.put("discountNQT", discountNQT);
             return attachment;
         }
 
@@ -1065,7 +1064,7 @@ public interface Attachment {
 
         public XoredData getGoods() { return goods; }
 
-        public long getDiscount() { return discount; }
+        public long getDiscountNQT() { return discountNQT; }
 
     }
 
@@ -1132,12 +1131,12 @@ public interface Attachment {
         static final long serialVersionUID = 0;
 
         private final Long purchaseId;
-        private final long refund;
+        private final long refundNQT;
         private final XoredData note;
 
-        public DigitalGoodsRefund(Long purchaseId, long refund, XoredData note) {
+        public DigitalGoodsRefund(Long purchaseId, long refundNQT, XoredData note) {
             this.purchaseId = purchaseId;
-            this.refund = refund;
+            this.refundNQT = refundNQT;
             this.note = note;
         }
 
@@ -1157,7 +1156,7 @@ public interface Attachment {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(purchaseId);
-                buffer.putLong(refund);
+                buffer.putLong(refundNQT);
                 buffer.putShort((short)note.getData().length);
                 buffer.put(note.getData());
                 buffer.put(note.getNonce());
@@ -1172,7 +1171,7 @@ public interface Attachment {
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            attachment.put("refund", refund);
+            attachment.put("refundNQT", refundNQT);
             attachment.put("note", Convert.toHexString(note.getData()));
             attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
@@ -1185,7 +1184,7 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public long getRefund() { return refund; }
+        public long getRefundNQT() { return refundNQT; }
 
         public XoredData getNote() { return note; }
 

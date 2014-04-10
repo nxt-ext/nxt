@@ -195,24 +195,25 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static void deliver(Long accountId, Long purchaseId, XoredData goods, long discount) {
+    public static void deliver(Long accountId, Long purchaseId, XoredData goods, long discountNQT) {
         Purchase purchase = getPendingPurchase(purchaseId);
         if (purchase != null) {
-            if (Account.getAccount(purchase.getAccountId()).transferLockedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()),
-                    accountId, discount)) {
+            if (Account.getAccount(purchase.getAccountId()).transferLockedBalanceNQT(
+                    Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()),
+                    accountId, discountNQT)) {
                 pendingPurchases.remove(purchaseId);
             }
         }
     }
 
-    public static void refund(Long accountId, Long purchaseId, long refund, XoredData note) {
+    public static void refund(Long accountId, Long purchaseId, long refundNQT, XoredData note) {
         Purchase purchase = getPurchase(purchaseId);
         if (purchase != null) {
             Account account = Account.getAccount(accountId);
             synchronized (account) {
-                if (refund <= account.getBalanceNQT()) {
-                    account.addToBalanceAndUnconfirmedBalanceNQT(-refund);
-                    Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(refund);
+                if (refundNQT <= account.getBalanceNQT()) {
+                    account.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
+                    Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
                 }
             }
         }

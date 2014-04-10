@@ -10,9 +10,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.PriorityQueue;
 
 import static nxt.http.JSONResponses.INCORRECT_BLOCK;
 import static nxt.http.JSONResponses.UNKNOWN_BLOCK;
@@ -40,14 +38,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
             } else if (this.time > entry.time) {
                 return 1;
             } else {
-                long thisAccountId = this.account.getId().longValue(), thatAccountId = entry.account.getId().longValue();
-                if (thisAccountId < thatAccountId) {
-                    return -1;
-                } else if (thisAccountId > thatAccountId) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+                return this.account.getId().compareTo(entry.account.getId());
             }
         }
 
@@ -76,7 +67,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
             return JSONResponses.FEATURE_NOT_AVAILABLE;
         }
 
-        List<Entry> entries = new LinkedList<>();
+        PriorityQueue<Entry> entries = new PriorityQueue<>();
         for (Account account : Account.getAllAccounts()) {
             long effectiveBalance = account.getEffectiveBalanceNXT();
             if (effectiveBalance > 0) {
@@ -86,8 +77,6 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
                 }
             }
         }
-        Entry[] sortedEntries = entries.toArray(new Entry[0]);
-        Arrays.sort(sortedEntries);
 
         JSONObject response = new JSONObject();
         response.put("time", Convert.getEpochTime());
@@ -100,19 +89,15 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
         } catch (RuntimeException e) {
             limit = Integer.MAX_VALUE;
         }
-        try {
-            for (int i = 0; i < limit; i++) {
-                JSONObject generator = new JSONObject();
-                Entry entry = sortedEntries[i];
-                generator.put("account", Convert.toUnsignedLong(entry.account.getId()));
-                generator.put("time", entry.time);
-                generators.add(generator);
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {}
-
+        Entry entry;
+        while ((entry = entries.poll()) != null && generators.size() < limit) {
+            JSONObject generator = new JSONObject();
+            generator.put("account", Convert.toUnsignedLong(entry.account.getId()));
+            generator.put("time", entry.time);
+            generators.add(generator);
+        }
         response.put("generators", generators);
         return response;
-
     }
 
 }

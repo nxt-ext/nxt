@@ -8,7 +8,6 @@ import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;

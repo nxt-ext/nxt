@@ -7,7 +7,12 @@ import org.json.simple.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class TransactionType {
 
@@ -599,6 +604,7 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 long minFeePerByte = buffer.getLong();
                 String[] uris;
+                //TODO: enforce uri length and count limits
                 try {
                     int numberOfUris = buffer.get();
                     uris = new String[numberOfUris];
@@ -620,6 +626,7 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 long minFeePerByte = (Long)attachmentData.get("minFeePerByte");
                 String[] uris;
+                //TODO: enforce uri length and count limits
                 try {
                     JSONArray urisData = (JSONArray)attachmentData.get("uris");
                     uris = new String[urisData.size()];
@@ -652,7 +659,7 @@ public abstract class TransactionType {
                 Attachment.MessagingHubTerminalAnnouncement attachment = (Attachment.MessagingHubTerminalAnnouncement)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || attachment.getMinFeePerByte() < 0 || attachment.getMinFeePerByte() > Constants.MAX_BALANCE_NQT) { // cfb: "0" is allowed to show that another way to determine the min fee should be used
+                        || attachment.getMinFeePerByteNQT() < 0 || attachment.getMinFeePerByteNQT() > Constants.MAX_BALANCE_NQT) { // cfb: "0" is allowed to show that another way to determine the min fee should be used
                     throw new NxtException.ValidationException("Invalid hub terminal announcement: " + attachment.getJSONObject());
                 }
             }
@@ -1521,7 +1528,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getGoods(), attachment.getDiscount());
+                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getGoods(), attachment.getDiscountNQT());
             }
 
             @Override
@@ -1537,7 +1544,7 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0
                         || attachment.getGoods().getData().length > 1000 || attachment.getGoods().getNonce().length != 32
-                        || attachment.getDiscount() < 0 || attachment.getDiscount() > Constants.MAX_BALANCE_NQT
+                        || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || !DigitalGoodsStore.isPurchasedGoodsLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSONObject());
                 }
@@ -1649,7 +1656,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
-                DigitalGoodsStore.refund(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getRefund(), attachment.getNote());
+                DigitalGoodsStore.refund(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getRefundNQT(), attachment.getNote());
             }
 
             @Override
@@ -1664,7 +1671,7 @@ public abstract class TransactionType {
                 }
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0
-                        || attachment.getRefund() < 0 || attachment.getRefund() > Constants.MAX_BALANCE_NQT
+                        || attachment.getRefundNQT() < 0 || attachment.getRefundNQT() > Constants.MAX_BALANCE_NQT
                         || attachment.getNote().getData().length > 1000 || attachment.getNote().getNonce().length != 32
                         || !DigitalGoodsStore.isPurchasedGoodsLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSONObject());
