@@ -1,5 +1,6 @@
 package nxt.crypto;
 
+import nxt.util.Convert;
 import nxt.util.Logger;
 
 import javax.crypto.Cipher;
@@ -46,6 +47,10 @@ public final class Crypto {
             byte[] publicKey = new byte[32];
             Curve25519.keygen(publicKey, null, Crypto.sha256().digest(secretPhrase.getBytes("UTF-8")));
 
+            if (! Curve25519.isCanonicalPublicKey(publicKey)) {
+                throw new RuntimeException("Public key not canonical");
+            }
+
             return publicKey;
 
         } catch (RuntimeException|UnsupportedEncodingException e) {
@@ -82,6 +87,10 @@ public final class Crypto {
             System.arraycopy(v, 0, signature, 0, 32);
             System.arraycopy(h, 0, signature, 32, 32);
 
+            if (!Curve25519.isCanonicalSignature(signature)) {
+                throw new RuntimeException("Signature not canonical");
+            }
+
             return signature;
 
         } catch (RuntimeException|UnsupportedEncodingException e) {
@@ -94,6 +103,16 @@ public final class Crypto {
     public static boolean verify(byte[] signature, byte[] message, byte[] publicKey) {
 
         try {
+
+            if (!Curve25519.isCanonicalSignature(signature)) {
+                Logger.logDebugMessage("Rejecting non-canonical signature");
+                return false;
+            }
+
+            if (!Curve25519.isCanonicalPublicKey(publicKey)) {
+                Logger.logDebugMessage("Rejecting non-canonical public key");
+                return false;
+            }
 
             byte[] Y = new byte[32];
             byte[] v = new byte[32];

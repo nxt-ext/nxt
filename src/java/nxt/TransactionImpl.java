@@ -25,7 +25,7 @@ final class TransactionImpl implements Transaction {
     private Long blockId;
     private volatile Block block;
     private byte[] signature;
-    private int timestamp;
+    private final int timestamp;
     private int blockTimestamp = -1;
     private Attachment attachment;
     private volatile Long id;
