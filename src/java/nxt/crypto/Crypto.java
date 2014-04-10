@@ -1,6 +1,5 @@
 package nxt.crypto;
 
-import nxt.util.Convert;
 import nxt.util.Logger;
 
 import javax.crypto.Cipher;
@@ -100,16 +99,16 @@ public final class Crypto {
 
     }
 
-    public static boolean verify(byte[] signature, byte[] message, byte[] publicKey) {
+    public static boolean verify(byte[] signature, byte[] message, byte[] publicKey, boolean enforceCanonical) {
 
         try {
 
-            if (!Curve25519.isCanonicalSignature(signature)) {
+            if (enforceCanonical && !Curve25519.isCanonicalSignature(signature)) {
                 Logger.logDebugMessage("Rejecting non-canonical signature");
                 return false;
             }
 
-            if (!Curve25519.isCanonicalPublicKey(publicKey)) {
+            if (enforceCanonical && !Curve25519.isCanonicalPublicKey(publicKey)) {
                 Logger.logDebugMessage("Rejecting non-canonical public key");
                 return false;
             }

@@ -515,18 +515,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new TransactionNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
                                 + " for transaction " + transaction.getStringId(), transaction);
                     }
-                    if (! transaction.verify()
-                            && ! ((transaction.getStringId().equals("6120913904145250080")
-                                || transaction.getStringId().equals("1896974807766610966"))
-                            && previousLastBlock.getHeight() == 58293)
-                            && ! (transaction.getStringId().equals("1896974807766610966")
-                            && previousLastBlock.getHeight() == 61403)
-                            && ! (transaction.getStringId().equals("10865049595082244942")
-                            && previousLastBlock.getHeight() == 102357)
-                            && ! ((transaction.getStringId().equals("11716204975531966507")
-                                || transaction.getStringId().equals("15512775468067605612")
-                                || transaction.getStringId().equals("8643647337369844043"))
-                            && previousLastBlock.getHeight() == 102382)) {
+                    if (! transaction.verify()) {
                         throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                 + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                     }

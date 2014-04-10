@@ -24,7 +24,7 @@ final class TransactionImpl implements Transaction {
     private int height = Integer.MAX_VALUE;
     private Long blockId;
     private volatile Block block;
-    private byte[] signature;
+    private volatile byte[] signature;
     private final int timestamp;
     private int blockTimestamp = -1;
     private Attachment attachment;
@@ -325,7 +325,7 @@ final class TransactionImpl implements Transaction {
             return false;
         }
         byte[] data = zeroSignature(getBytes());
-        return Crypto.verify(signature, data, senderPublicKey) && account.setOrVerify(senderPublicKey, this.getHeight());
+        return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
 
     private byte[] zeroSignature(byte[] data) {
