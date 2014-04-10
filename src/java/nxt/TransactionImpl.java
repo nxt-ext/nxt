@@ -47,7 +47,7 @@ final class TransactionImpl implements Transaction {
                     + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
         }
 
-        if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK
+        if (Nxt.getBlockchain().getHeight() < Constants.FRACTIONAL_BLOCK
                 && (amountNQT % Constants.ONE_NXT != 0 || feeNQT % Constants.ONE_NXT != 0)) {
             throw new TransactionType.NotYetEnabledException("Fractional amounts or fees not yet supported!");
         }
