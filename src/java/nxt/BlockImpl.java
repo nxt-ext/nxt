@@ -298,7 +298,7 @@ final class BlockImpl implements Block {
         byte[] data2 = new byte[data.length - 64];
         System.arraycopy(data, 0, data2, 0, data2.length);
 
-        return Crypto.verify(blockSignature, data2, generatorPublicKey) && account.setOrVerify(generatorPublicKey, this.height);
+        return Crypto.verify(blockSignature, data2, generatorPublicKey, version >= 3) && account.setOrVerify(generatorPublicKey, this.height);
 
     }
 
@@ -311,7 +311,7 @@ final class BlockImpl implements Block {
                 throw new BlockchainProcessor.BlockOutOfOrderException("Can't verify signature because previous block is missing");
             }
 
-            if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey)) {
+            if (version == 1 && !Crypto.verify(generationSignature, previousBlock.generationSignature, generatorPublicKey, version >= 3)) {
                 return false;
             }
 
