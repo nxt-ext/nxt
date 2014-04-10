@@ -517,7 +517,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     if (! transaction.verify()) {
                         throw new TransactionNotAcceptedException("Signature verification failed for transaction "
-                                + transaction.getStringId(), transaction);
+                                + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                     }
                     if (transaction.getId().equals(Long.valueOf(0L))) {
                         throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
