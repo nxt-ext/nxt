@@ -40,7 +40,7 @@ public final class VerifyTrace {
         String fileName = args.length == 1 ? args[0] : "nxt.trace";
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
-            String[] headers = line.split("\t");
+            String[] headers = unquote(line.split(DebugTrace.SEPARATOR));
 
             Map<String,Map<String,Long>> totals = new HashMap<>();
             Map<String,Map<String,Map<String,Long>>> accountAssetTotals = new HashMap<>();
@@ -48,7 +48,7 @@ public final class VerifyTrace {
             Map<String,Long> accountAssetQuantities = new HashMap<>();
 
             while ((line = reader.readLine()) != null) {
-                String[] values = line.split("\t");
+                String[] values = unquote(line.split(DebugTrace.SEPARATOR));
                 Map<String,String> valueMap = new HashMap<>();
                 for (int i = 0; i < headers.length; i++) {
                     valueMap.put(headers[i], values[i]);
@@ -173,5 +173,16 @@ public final class VerifyTrace {
             System.out.println(e.toString());
             throw new RuntimeException(e);
         }
+    }
+
+    private static final String beginQuote = "^" + DebugTrace.QUOTE;
+    private static final String endQuote = DebugTrace.QUOTE + "$";
+
+    private static String[] unquote(String[] values) {
+        String[] result = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            result[i] = values[i].replaceFirst(beginQuote, "").replaceFirst(endQuote, "");
+        }
+        return result;
     }
 }
