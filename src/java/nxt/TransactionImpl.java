@@ -8,7 +8,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -272,6 +271,7 @@ final class TransactionImpl implements Transaction {
 
     }
 
+    /*
     @Override
     public Collection<TransactionType> getPhasingTransactionTypes() {
         return getType().getPhasingTransactionTypes();
@@ -281,6 +281,7 @@ final class TransactionImpl implements Transaction {
     public Collection<TransactionType> getPhasedTransactionTypes() {
         return getType().getPhasedTransactionTypes();
     }
+    */
 
     @Override
     public JSONObject getJSONObject() {

@@ -2,8 +2,6 @@ package nxt;
 
 import org.json.simple.JSONObject;
 
-import java.util.Collection;
-
 public interface Transaction extends Comparable<Transaction> {
 
     Long getId();
@@ -50,8 +48,10 @@ public interface Transaction extends Comparable<Transaction> {
 
     JSONObject getJSONObject();
 
+    /*
     Collection<TransactionType> getPhasingTransactionTypes();
 
     Collection<TransactionType> getPhasedTransactionTypes();
+    */
 
 }

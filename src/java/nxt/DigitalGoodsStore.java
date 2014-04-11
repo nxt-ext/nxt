@@ -16,8 +16,8 @@ public final class DigitalGoodsStore {
         private final String name;
         private final String description;
         private final String tags;
-        private int quantity;
-        private long priceNQT;
+        private volatile int quantity;
+        private volatile long priceNQT;
 
         private boolean delisted;
 
@@ -50,7 +50,7 @@ public final class DigitalGoodsStore {
             return quantity;
         }
 
-        public void changeQuantity(int deltaQuantity) {
+        void changeQuantity(int deltaQuantity) {
             quantity += deltaQuantity;
             if (quantity < 0) {
                 quantity = 0;
@@ -63,17 +63,18 @@ public final class DigitalGoodsStore {
             return priceNQT;
         }
 
-        public void changePrice(long priceNQT) {
+        void changePrice(long priceNQT) {
             this.priceNQT = priceNQT;
-        }
-
-        public void delist() {
-            delisted = true;
         }
 
         public boolean isDelisted() {
             return delisted;
         }
+
+        void delist() {
+            delisted = true;
+        }
+
     }
 
     private static final class Purchase {
@@ -234,29 +235,17 @@ public final class DigitalGoodsStore {
 
     public static boolean isGoodsLegitOwner(Long goodsId, Long accountId) {
         Goods goods = getGoods(goodsId);
-        if (goods == null) {
-            return false;
-        } else {
-            return accountId.equals(goods.getAccountId());
-        }
+        return goods != null && accountId.equals(goods.getAccountId());
     }
 
     public static boolean isPurchasedGoodsLegitOwner(Long purchaseId, Long accountId) {
         Purchase purchase = getPurchase(purchaseId);
-        if (purchase == null) {
-            return false;
-        } else {
-            return accountId.equals(getGoods(purchase.getGoodsId()).getAccountId());
-        }
+        return purchase != null && accountId.equals(getGoods(purchase.getGoodsId()).getAccountId());
     }
 
     public static boolean isPurchaseLegitOwner(Long purchaseId, Long accountId) {
         Purchase purchase = getPurchase(purchaseId);
-        if (purchase == null) {
-            return false;
-        } else {
-            return accountId.equals(purchase.getAccountId());
-        }
+        return purchase != null && accountId.equals(purchase.getAccountId());
     }
 
 }

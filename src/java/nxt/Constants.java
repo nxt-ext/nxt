@@ -16,18 +16,30 @@ public final class Constants {
 
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
+
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
+
     public static final long MAX_ASSET_QUANTITY_QNT = 1000000000L * 100000000L;
     public static final long ASSET_ISSUANCE_FEE_NQT = 1000 * ONE_NXT;
     public static final int MIN_ASSET_NAME_LENGTH = 3;
     public static final int MAX_ASSET_NAME_LENGTH = 10;
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_ASSET_TRANSFER_COMMENT_LENGTH = 1000;
+
     public static final int MAX_POLL_NAME_LENGTH = 100;
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;
     public static final int MAX_POLL_OPTION_COUNT = 100;
+
     public static final int MAX_DIGITAL_GOODS_QUANTITY = 1000000000;
+    public static final int MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH = 100;
+    public static final int MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH = 100;
+    public static final int MAX_DIGITAL_GOODS_NOTE_LENGTH = 1000;
+    public static final int MAX_DIGITAL_GOODS_LENGTH = 1000;
+
+    public static final int MAX_HUB_TERMINAL_ANNOUNCEMENT_URIS = 100;
+    public static final int MAX_HUB_TERMINAL_ANNOUNCEMENT_URI_LENGTH = 1000;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
 
