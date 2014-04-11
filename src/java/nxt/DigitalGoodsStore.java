@@ -11,23 +11,28 @@ import java.util.concurrent.ConcurrentMap;
 
 public final class DigitalGoodsStore {
 
-    private static final class Goods {
+    public static final class Goods {
+        private final Long id;
         private final Long accountId;
         private final String name;
         private final String description;
         private final String tags;
         private volatile int quantity;
         private volatile long priceNQT;
+        private volatile boolean delisted;
 
-        private boolean delisted;
-
-        public Goods(Long accountId, String name, String description, String tags, int quantity, long priceNQT) {
+        private Goods(Long id, Long accountId, String name, String description, String tags, int quantity, long priceNQT) {
+            this.id = id;
             this.accountId = accountId;
             this.name = name;
             this.description = description;
             this.tags = tags;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
+        }
+
+        public Long getId() {
+            return id;
         }
 
         public Long getAccountId() {
@@ -50,7 +55,7 @@ public final class DigitalGoodsStore {
             return quantity;
         }
 
-        void changeQuantity(int deltaQuantity) {
+        private void changeQuantity(int deltaQuantity) {
             quantity += deltaQuantity;
             if (quantity < 0) {
                 quantity = 0;
@@ -63,7 +68,7 @@ public final class DigitalGoodsStore {
             return priceNQT;
         }
 
-        void changePrice(long priceNQT) {
+        private void changePrice(long priceNQT) {
             this.priceNQT = priceNQT;
         }
 
@@ -71,13 +76,14 @@ public final class DigitalGoodsStore {
             return delisted;
         }
 
-        void delist() {
+        private void delist() {
             delisted = true;
         }
 
     }
 
-    private static final class Purchase {
+    public static final class Purchase {
+        private final Long id;
         private final Long accountId;
         private final Long goodsId;
         private final int quantity;
@@ -85,13 +91,18 @@ public final class DigitalGoodsStore {
         private final int deliveryDeadline;
         private final XoredData note;
 
-        public Purchase(Long accountId, Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+        private Purchase(Long id, Long accountId, Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+            this.id = id;
             this.accountId = accountId;
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadline = deliveryDeadline;
             this.note = note;
+        }
+
+        public Long getId() {
+            return id;
         }
 
         public Long getAccountId() {
@@ -145,45 +156,47 @@ public final class DigitalGoodsStore {
         return pendingPurchases.get(purchaseId);
     }
 
-    public static void addPurchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
+    private static void addPurchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
                                    int deliveryDeadline, XoredData note) {
-        Purchase purchase = new Purchase(accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
+        Purchase purchase = new Purchase(purchaseId, accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
         purchases.put(purchaseId, purchase);
         pendingPurchases.put(purchaseId, purchase);
     }
 
-    public static void clear() {
+    static void clear() {
         goods.clear();
         purchases.clear();
     }
 
-    public static void listGoods(Long goodsId, Long accountId, String name, String description, String tags,
+    static void listGoods(Long goodsId, Long accountId, String name, String description, String tags,
                                  int quantity, long priceNQT) {
-        goods.put(goodsId, new Goods(accountId, name, description, tags, quantity, priceNQT));
+        goods.put(goodsId, new Goods(goodsId, accountId, name, description, tags, quantity, priceNQT));
     }
 
-    public static void delistGoods(Long goodsId) {
+    //TODO: all those failures should cause an exception rather than fail silently
+
+    static void delistGoods(Long goodsId) {
         Goods goods = getGoods(goodsId);
         if (goods != null && !goods.isDelisted()) {
             goods.delist();
         }
     }
 
-    public static void changePrice(Long goodsId, long priceNQT) {
+    static void changePrice(Long goodsId, long priceNQT) {
         Goods goods = getGoods(goodsId);
         if (goods != null && !goods.isDelisted()) {
             goods.changePrice(priceNQT);
         }
     }
 
-    public static void changeQuantity(Long goodsId, int deltaQuantity) {
+    static void changeQuantity(Long goodsId, int deltaQuantity) {
         Goods goods = getGoods(goodsId);
         if (goods != null && !goods.isDelisted()) {
             goods.changeQuantity(deltaQuantity);
         }
     }
 
-    public static void purchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
+    static void purchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
                                 int deliveryDeadline, XoredData note) {
         Goods goods = getGoods(goodsId);
         if (goods != null && !goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
@@ -192,35 +205,33 @@ public final class DigitalGoodsStore {
             if (account.addToLockedBalanceNQT(Convert.safeMultiply(quantity, priceNQT))) {
                 goods.changeQuantity(-quantity);
                 addPurchase(purchaseId, accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
-            }
+            } //TODO: else?
         }
     }
 
-    public static void deliver(Long accountId, Long purchaseId, XoredData goods, long discountNQT) {
+    static void deliver(Long accountId, Long purchaseId, XoredData goods, long discountNQT) {
         Purchase purchase = getPendingPurchase(purchaseId);
         if (purchase != null) {
             if (Account.getAccount(purchase.getAccountId()).transferLockedBalanceNQT(
                     Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()),
                     accountId, discountNQT)) {
                 pendingPurchases.remove(purchaseId);
-            }
+            } //TODO: else?
         }
     }
 
-    public static void refund(Long accountId, Long purchaseId, long refundNQT, XoredData note) {
+    static void refund(Long accountId, Long purchaseId, long refundNQT, XoredData note) {
         Purchase purchase = getPurchase(purchaseId);
         if (purchase != null) {
             Account account = Account.getAccount(accountId);
-            synchronized (account) {
-                if (refundNQT <= account.getBalanceNQT()) {
-                    account.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
-                    Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
-                }
-            }
+            if (refundNQT <= account.getBalanceNQT()) {
+                account.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
+                Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
+            } //TODO: else?
         }
     }
 
-    public static void reviewAllPendingPurchases() {
+    static void reviewAllPendingPurchases() {
         int height = Nxt.getBlockchain().getLastBlock().getHeight();
         for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
             Purchase purchase = pendingPurchaseEntry.getValue();
@@ -233,17 +244,18 @@ public final class DigitalGoodsStore {
         }
     }
 
-    public static boolean isGoodsLegitOwner(Long goodsId, Long accountId) {
+    //TODO: get rid of those
+    static boolean isGoodsLegitOwner(Long goodsId, Long accountId) {
         Goods goods = getGoods(goodsId);
         return goods != null && accountId.equals(goods.getAccountId());
     }
 
-    public static boolean isPurchasedGoodsLegitOwner(Long purchaseId, Long accountId) {
+    static boolean isPurchasedGoodsLegitOwner(Long purchaseId, Long accountId) {
         Purchase purchase = getPurchase(purchaseId);
         return purchase != null && accountId.equals(getGoods(purchase.getGoodsId()).getAccountId());
     }
 
-    public static boolean isPurchaseLegitOwner(Long purchaseId, Long accountId) {
+    static boolean isPurchaseLegitOwner(Long purchaseId, Long accountId) {
         Purchase purchase = getPurchase(purchaseId);
         return purchase != null && accountId.equals(purchase.getAccountId());
     }

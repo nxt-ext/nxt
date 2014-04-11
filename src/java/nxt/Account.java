@@ -503,7 +503,7 @@ public final class Account {
         }
     }
 
-    public boolean addToLockedBalanceNQT(long amountNQT) {
+    boolean addToLockedBalanceNQT(long amountNQT) {
         synchronized (this) {
             if (amountNQT > getBalanceNQT()) {
                 return false;
@@ -519,8 +519,10 @@ public final class Account {
         return lockedBalanceNQT;
     }
 
-    public boolean transferLockedBalanceNQT(long amountNQT, Long recipientId, long discountNQT) {
-        synchronized (this) {
+    //TODO: this may return false for too many different reasons and no one will know why exactly if failed
+    // this logic does not belong to the Account class anyway
+    boolean transferLockedBalanceNQT(long amountNQT, Long recipientId, long discountNQT) {
+        synchronized (this) { //TODO: this is either not needed, or could deadlock
             if (amountNQT > getLockedBalanceNQT()) {
                 return false;
             } else {

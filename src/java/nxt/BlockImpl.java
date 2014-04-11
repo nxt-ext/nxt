@@ -357,6 +357,7 @@ final class BlockImpl implements Block {
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
 
         Account.reviewAllAccounts();
+        //TODO: BlockImpl should not depend on DigitalGoodsStore, use Listeners
         DigitalGoodsStore.reviewAllPendingPurchases();
     }
 
