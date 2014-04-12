@@ -131,7 +131,7 @@ public abstract class TransactionType {
 
     abstract void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException;
 
-    abstract void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException;
+    abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
     // return false iff double spending
     final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
@@ -237,7 +237,7 @@ public abstract class TransactionType {
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid ordinary payment: " + transaction.getAttachment().getJSONObject());
                 }
@@ -300,7 +300,7 @@ public abstract class TransactionType {
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ARBITRARY_MESSAGES_BLOCK) {
                     throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -322,13 +322,13 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 int aliasLength = buffer.get();
-                if (aliasLength > Constants.MAX_ALIAS_LENGTH * 3) {
+                if (aliasLength > 3 * Constants.MAX_ALIAS_LENGTH) {
                     throw new NxtException.ValidationException("Max alias length exceeded");
                 }
                 byte[] alias = new byte[aliasLength];
                 buffer.get(alias);
                 int uriLength = buffer.getShort();
-                if (uriLength > Constants.MAX_ALIAS_URI_LENGTH * 3) {
+                if (uriLength > 3 * Constants.MAX_ALIAS_URI_LENGTH) {
                     throw new NxtException.ValidationException("Max alias URI length exceeded");
                 }
                 byte[] uri = new byte[uriLength];
@@ -375,7 +375,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Aliases not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -417,7 +417,7 @@ public abstract class TransactionType {
 
                 try {
                     int pollNameBytesLength = buffer.getShort();
-                    if (pollNameBytesLength > 4 * Constants.MAX_POLL_NAME_LENGTH) {
+                    if (pollNameBytesLength > 3 * Constants.MAX_POLL_NAME_LENGTH) {
                         throw new NxtException.ValidationException("Error parsing poll name");
                     }
                     byte[] pollNameBytes = new byte[pollNameBytesLength];
@@ -429,7 +429,7 @@ public abstract class TransactionType {
 
                 try {
                     int pollDescriptionBytesLength = buffer.getShort();
-                    if (pollDescriptionBytesLength > 4 * Constants.MAX_POLL_DESCRIPTION_LENGTH) {
+                    if (pollDescriptionBytesLength > 3 * Constants.MAX_POLL_DESCRIPTION_LENGTH) {
                         throw new NxtException.ValidationException("Error parsing poll description");
                     }
                     byte[] pollDescriptionBytes = new byte[pollDescriptionBytesLength];
@@ -447,7 +447,7 @@ public abstract class TransactionType {
                     pollOptions = new String[numberOfOptions];
                     for (int i = 0; i < numberOfOptions; i++) {
                         int pollOptionBytesLength = buffer.getShort();
-                        if (pollOptionBytesLength > 4 * Constants.MAX_POLL_OPTION_LENGTH) {
+                        if (pollOptionBytesLength > 3 * Constants.MAX_POLL_OPTION_LENGTH) {
                             throw new NxtException.ValidationException("Error parsing poll options");
                         }
                         byte[] pollOptionBytes = new byte[pollOptionBytesLength];
@@ -505,7 +505,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -588,7 +588,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -621,7 +621,7 @@ public abstract class TransactionType {
                     uris = new String[numberOfUris];
                     for (int i = 0; i < uris.length; i++) {
                         int uriBytesLength = buffer.getShort();
-                        if (uriBytesLength > 4 * Constants.MAX_HUB_TERMINAL_ANNOUNCEMENT_URI_LENGTH) {
+                        if (uriBytesLength > 3 * Constants.MAX_HUB_TERMINAL_ANNOUNCEMENT_URI_LENGTH) {
                             throw new NxtException.ValidationException("Invalid URI length: " + uriBytesLength);
                         }
                         byte[] uriBytes = new byte[uriBytesLength];
@@ -665,7 +665,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
                     throw new NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -770,7 +770,7 @@ public abstract class TransactionType {
                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -880,7 +880,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -921,7 +921,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -1066,7 +1066,7 @@ public abstract class TransactionType {
         abstract static class ColoredCoinsOrderCancellation extends ColoredCoins {
 
             @Override
-            final void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
                     throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
@@ -1172,21 +1172,38 @@ public abstract class TransactionType {
         }
 
         @Override
-        final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             return true;
         }
 
         @Override
-        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
         @Override
-        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+        void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+
+        @Override
+        final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                throw new NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+            }
+            if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                    || transaction.getAmountNQT() != 0) {
+                throw new NxtException.ValidationException("Invalid digital goods transaction");
+            }
+            doValidateAttachment(transaction);
+        }
+
+        abstract void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException;
+
 
         public static final TransactionType LISTING = new DigitalGoods() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_LISTING; }
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_DIGITAL_GOODS_LISTING;
+            }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
@@ -1198,7 +1215,7 @@ public abstract class TransactionType {
 
                 try {
                     int nameBytesLength = buffer.getShort();
-                    if (nameBytesLength > 4 * Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH) {
+                    if (nameBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH) {
                         throw new NxtException.ValidationException("Invalid name length: " + nameBytesLength);
                     }
                     byte[] nameBytes = new byte[nameBytesLength];
@@ -1210,7 +1227,7 @@ public abstract class TransactionType {
 
                 try {
                     int descriptionBytesLength = buffer.getShort();
-                    if (descriptionBytesLength > 4 * Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH) {
+                    if (descriptionBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH) {
                         throw new NxtException.ValidationException("Invalid description length: " + descriptionBytesLength);
                     }
                     byte[] descriptionBytes = new byte[descriptionBytesLength];
@@ -1222,7 +1239,7 @@ public abstract class TransactionType {
 
                 try {
                     int tagsBytesLength = buffer.getShort();
-                    if (tagsBytesLength > 4 * Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH) {
+                    if (tagsBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH) {
                         throw new NxtException.ValidationException("Invalid tags length: " + tagsBytesLength);
                     }
                     byte[] tagsBytes = new byte[tagsBytesLength];
@@ -1233,7 +1250,6 @@ public abstract class TransactionType {
                 }
 
                 quantity = buffer.getInt();
-
                 price = buffer.getLong();
 
                 transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, price));
@@ -1261,18 +1277,13 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods listing not supported");
+                DigitalGoodsStore.undoListGoods(transaction.getId());
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
-                        || attachment.getName().length() == 0
+                if (attachment.getName().length() == 0
                         || attachment.getName().length() > Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH
                         || attachment.getTags().length() > Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH
@@ -1287,14 +1298,13 @@ public abstract class TransactionType {
         public static final TransactionType DELISTING = new DigitalGoods() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_DELISTING; }
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_DIGITAL_GOODS_DELISTING;
+            }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                Long goodsId;
-
-                goodsId = buffer.getLong();
-
+                Long goodsId = buffer.getLong();
                 transaction.setAttachment(new Attachment.DigitalGoodsDelisting(goodsId));
                 validateAttachment(transaction);
             }
@@ -1302,7 +1312,6 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long goodsId = (Long)attachmentData.get("goods");
-
                 transaction.setAttachment(new Attachment.DigitalGoodsDelisting(goodsId));
                 validateAttachment(transaction);
             }
@@ -1315,18 +1324,15 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods delisting not supported");
+                DigitalGoodsStore.undoDelistGoods(transaction.getId());
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods delisting not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
-                        || ! DigitalGoodsStore.isGoodsLegitOwner(attachment.getGoodsId(), transaction.getSenderId())) {
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                if (goods == null || goods.isDelisted()
+                        || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delisting: " + attachment.getJSONObject());
                 }
             }
@@ -1336,16 +1342,14 @@ public abstract class TransactionType {
         public static final TransactionType PRICE_CHANGE = new DigitalGoods() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE; }
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE;
+            }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                Long goodsId;
-                long priceNQT;
-
-                goodsId = buffer.getLong();
-                priceNQT = buffer.getLong();
-
+                Long goodsId = buffer.getLong();
+                long priceNQT = buffer.getLong();
                 transaction.setAttachment(new Attachment.DigitalGoodsPriceChange(goodsId, priceNQT));
                 validateAttachment(transaction);
             }
@@ -1354,7 +1358,6 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long goodsId = (Long)attachmentData.get("goods");
                 long priceNQT = (Long)attachmentData.get("priceNQT");
-
                 transaction.setAttachment(new Attachment.DigitalGoodsPriceChange(goodsId, priceNQT));
                 validateAttachment(transaction);
             }
@@ -1371,15 +1374,12 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods price change not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
-                        || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
-                        || ! DigitalGoodsStore.isGoodsLegitOwner(attachment.getGoodsId(), transaction.getSenderId())) {
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                if (attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
+                        || goods == null || goods.isDelisted()
+                        || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods price change: " + attachment.getJSONObject());
                 }
             }
@@ -1389,16 +1389,14 @@ public abstract class TransactionType {
         public static final TransactionType QUANTITY_CHANGE = new DigitalGoods() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE; }
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE;
+            }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                Long goodsId;
-                int deltaQuantity;
-
-                goodsId = buffer.getLong();
-                deltaQuantity = buffer.getInt();
-
+                Long goodsId = buffer.getLong();
+                int deltaQuantity = buffer.getInt();
                 transaction.setAttachment(new Attachment.DigitalGoodsQuantityChange(goodsId, deltaQuantity));
                 validateAttachment(transaction);
             }
@@ -1407,7 +1405,6 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long goodsId = (Long)attachmentData.get("goods");
                 int deltaQuantity = ((Long)attachmentData.get("deltaQuantity")).intValue();
-
                 transaction.setAttachment(new Attachment.DigitalGoodsQuantityChange(goodsId, deltaQuantity));
                 validateAttachment(transaction);
             }
@@ -1424,17 +1421,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods quantity change not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange)transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
-                        // TODO: do a better check here rather than applying the limits in DigitalGoodsStore.changeQuantity
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                if (goods == null
                         || attachment.getDeltaQuantity() < -Constants.MAX_DIGITAL_GOODS_QUANTITY
                         || attachment.getDeltaQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
-                        || !DigitalGoodsStore.isGoodsLegitOwner(attachment.getGoodsId(), transaction.getSenderId())) {
+                        || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods quantity change: " + attachment.getJSONObject());
                 }
             }
@@ -1444,7 +1437,9 @@ public abstract class TransactionType {
         public static final TransactionType PURCHASE = new DigitalGoods() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_DIGITAL_GOODS_PURCHASE; }
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_DIGITAL_GOODS_PURCHASE;
+            }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
@@ -1491,6 +1486,30 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
+                if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT())) {
+                    senderAccount.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
+                senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
+                accumulatedAmounts.put(transaction.getSenderId(),
+                        Convert.safeAdd(accumulatedAmount, Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT())));
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
                 DigitalGoodsStore.purchase(transaction.getId(), transaction.getSenderId(), attachment.getGoodsId(),
@@ -1499,20 +1518,23 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods purchase not supported");
+                Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
+                DigitalGoodsStore.undoPurchase(transaction.getId(), transaction.getSenderId(),
+                        attachment.getQuantity(), attachment.getPriceNQT());
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods purchase not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0
-                        || attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
+                DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
+                if (attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
-                        || attachment.getNote().getNonce().length != 32) {
+                        || attachment.getNote().getNonce().length != 32
+                        || goods == null || goods.isDelisted()
+                        // || attachment.getQuantity() > goods.getQuantity()
+                        // || attachment.getPriceNQT() != goods.getPriceNQT()
+                        || attachment.getDeliveryDeadline() < Nxt.getBlockchain().getLastBlock().getHeight()) {
                     throw new NxtException.ValidationException("Invalid digital goods purchase: " + attachment.getJSONObject());
                 }
             }
@@ -1566,26 +1588,24 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(),
-                        attachment.getGoods(), attachment.getDiscountNQT());
+                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getDiscountNQT());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods delivery not supported");
+                Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
+                DigitalGoodsStore.undoDeliver(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getDiscountNQT());
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods delivery not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0
-                        || attachment.getGoods().getData().length > Constants.MAX_DIGITAL_GOODS_LENGTH
+                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPendingPurchase(attachment.getPurchaseId());
+                if (attachment.getGoods().getData().length > Constants.MAX_DIGITAL_GOODS_LENGTH
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
-                        || ! DigitalGoodsStore.isPurchasedGoodsLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
+                        || purchase == null
+                        || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSONObject());
                 }
             }
@@ -1641,15 +1661,13 @@ public abstract class TransactionType {
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {}
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods feedback not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsRating attachment = (Attachment.DigitalGoodsRating)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0
-                        || attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
+                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(attachment.getPurchaseId());
+                if (attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
-                        || ! DigitalGoodsStore.isPurchaseLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
+                        || purchase == null
+                        || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSONObject());
                 }
             }
@@ -1700,28 +1718,51 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
+                if (senderAccount.getUnconfirmedBalanceNQT() >= attachment.getRefundNQT()) {
+                    senderAccount.addToUnconfirmedBalanceNQT(- attachment.getRefundNQT());
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
+                senderAccount.addToUnconfirmedBalanceNQT(attachment.getRefundNQT());
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
                 DigitalGoodsStore.refund(transaction.getSenderId(), attachment.getPurchaseId(),
-                        attachment.getRefundNQT(), attachment.getNote());
+                        attachment.getRefundNQT());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods refund not supported");
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
+                DigitalGoodsStore.undoRefund(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getRefundNQT());
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Digital goods refund not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
+                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
+                accumulatedAmounts.put(transaction.getSenderId(),
+                        Convert.safeAdd(accumulatedAmount, attachment.getRefundNQT()));
+            }
+
+            @Override
+            void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0
-                        || attachment.getRefundNQT() < 0 || attachment.getRefundNQT() > Constants.MAX_BALANCE_NQT
+                DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(attachment.getPurchaseId());
+                if (attachment.getRefundNQT() < 0 || attachment.getRefundNQT() > Constants.MAX_BALANCE_NQT
                         || attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
-                        || ! DigitalGoodsStore.isPurchasedGoodsLegitOwner(attachment.getPurchaseId(), transaction.getSenderId())) {
+                        || purchase == null
+                        || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSONObject());
                 }
             }
@@ -1786,7 +1827,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(TransactionImpl transaction) throws NxtException.ValidationException {
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
                     throw new NotYetEnabledException("Effective balance leasing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }

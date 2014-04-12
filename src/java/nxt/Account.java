@@ -503,49 +503,4 @@ public final class Account {
         }
     }
 
-    boolean addToLockedBalanceNQT(long amountNQT) {
-        synchronized (this) {
-            if (amountNQT > getBalanceNQT()) {
-                return false;
-            } else {
-                addToBalanceAndUnconfirmedBalanceNQT(-amountNQT);
-                this.lockedBalanceNQT = Convert.safeAdd(this.lockedBalanceNQT, amountNQT);
-                return true;
-            }
-        }
-    }
-
-    public long getLockedBalanceNQT() {
-        return lockedBalanceNQT;
-    }
-
-    //TODO: this may return false for too many different reasons and no one will know why exactly if failed
-    // this logic does not belong to the Account class anyway
-    boolean transferLockedBalanceNQT(long amountNQT, Long recipientId, long discountNQT) {
-        synchronized (this) { //TODO: this is either not needed, or could deadlock
-            if (amountNQT > getLockedBalanceNQT()) {
-                return false;
-            } else {
-                Account recipient = Account.getAccount(recipientId);
-                if (recipient == null) {
-                    return false;
-                } else {
-                    if (discountNQT > 0) {
-                        synchronized (recipient) {
-                            if (discountNQT > recipient.getBalanceNQT()) {
-                                return false;
-                            } else {
-                                recipient.addToBalanceAndUnconfirmedBalanceNQT(-discountNQT);
-                                this.addToBalanceAndUnconfirmedBalanceNQT(discountNQT);
-                            }
-                        }
-                    }
-                    this.lockedBalanceNQT = Convert.safeSubtract(this.lockedBalanceNQT, amountNQT);
-                    recipient.addToBalanceAndUnconfirmedBalanceNQT(amountNQT);
-                    return true;
-                }
-            }
-        }
-    }
-
 }

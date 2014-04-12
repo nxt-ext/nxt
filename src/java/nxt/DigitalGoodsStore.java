@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.XoredData;
 import nxt.util.Convert;
+import nxt.util.Listener;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -11,9 +12,42 @@ import java.util.concurrent.ConcurrentMap;
 
 public final class DigitalGoodsStore {
 
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
+                    Purchase purchase = pendingPurchaseEntry.getValue();
+                    if (block.getHeight() == purchase.getDeliveryDeadline()) {
+                        Account buyer = Account.getAccount(purchase.getBuyerId());
+                        buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
+                        getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+                        pendingPurchases.remove(pendingPurchaseEntry.getKey());
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+
+        // reverse any pending purchase expiration that was caused by the block that got popped off
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                for (Map.Entry<Long, Purchase> purchaseEntry : purchases.entrySet()) {
+                    Purchase purchase = purchaseEntry.getValue();
+                    if (block.getHeight() == purchase.getDeliveryDeadline()) {
+                        Account buyer = Account.getAccount(purchase.getBuyerId());
+                        buyer.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
+                        getGoods(purchase.getGoodsId()).changeQuantity(- purchase.getQuantity());
+                        pendingPurchases.put(purchaseEntry.getKey(), purchase);
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.BLOCK_POPPED);
+    }
+
     public static final class Goods {
         private final Long id;
-        private final Long accountId;
+        private final Long sellerId;
         private final String name;
         private final String description;
         private final String tags;
@@ -21,9 +55,9 @@ public final class DigitalGoodsStore {
         private volatile long priceNQT;
         private volatile boolean delisted;
 
-        private Goods(Long id, Long accountId, String name, String description, String tags, int quantity, long priceNQT) {
+        private Goods(Long id, Long sellerId, String name, String description, String tags, int quantity, long priceNQT) {
             this.id = id;
-            this.accountId = accountId;
+            this.sellerId = sellerId;
             this.name = name;
             this.description = description;
             this.tags = tags;
@@ -35,8 +69,8 @@ public final class DigitalGoodsStore {
             return id;
         }
 
-        public Long getAccountId() {
-            return accountId;
+        public Long getSellerId() {
+            return sellerId;
         }
 
         public String getName() {
@@ -76,25 +110,27 @@ public final class DigitalGoodsStore {
             return delisted;
         }
 
-        private void delist() {
-            delisted = true;
+        private void setDelisted(boolean delisted) {
+            this.delisted = delisted;
         }
 
     }
 
     public static final class Purchase {
         private final Long id;
-        private final Long accountId;
+        private final Long buyerId;
         private final Long goodsId;
+        private final Long sellerId;
         private final int quantity;
         private final long priceNQT;
         private final int deliveryDeadline;
         private final XoredData note;
 
-        private Purchase(Long id, Long accountId, Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+        private Purchase(Long id, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
             this.id = id;
-            this.accountId = accountId;
+            this.buyerId = buyerId;
             this.goodsId = goodsId;
+            this.sellerId = sellerId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadline = deliveryDeadline;
@@ -105,13 +141,15 @@ public final class DigitalGoodsStore {
             return id;
         }
 
-        public Long getAccountId() {
-            return accountId;
+        public Long getBuyerId() {
+            return buyerId;
         }
 
         public Long getGoodsId() {
             return goodsId;
         }
+
+        public Long getSellerId() { return sellerId; }
 
         public int getQuantity() {
             return quantity;
@@ -156,9 +194,9 @@ public final class DigitalGoodsStore {
         return pendingPurchases.get(purchaseId);
     }
 
-    private static void addPurchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
+    private static void addPurchase(Long purchaseId, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
                                    int deliveryDeadline, XoredData note) {
-        Purchase purchase = new Purchase(purchaseId, accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
+        Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT, deliveryDeadline, note);
         purchases.put(purchaseId, purchase);
         pendingPurchases.put(purchaseId, purchase);
     }
@@ -168,96 +206,115 @@ public final class DigitalGoodsStore {
         purchases.clear();
     }
 
-    static void listGoods(Long goodsId, Long accountId, String name, String description, String tags,
+    static void listGoods(Long goodsId, Long sellerId, String name, String description, String tags,
                                  int quantity, long priceNQT) {
-        goods.put(goodsId, new Goods(goodsId, accountId, name, description, tags, quantity, priceNQT));
+        goods.put(goodsId, new Goods(goodsId, sellerId, name, description, tags, quantity, priceNQT));
     }
 
-    //TODO: all those failures should cause an exception rather than fail silently
+    static void undoListGoods(Long goodsId) {
+        goods.remove(goodsId);
+    }
 
     static void delistGoods(Long goodsId) {
         Goods goods = getGoods(goodsId);
-        if (goods != null && !goods.isDelisted()) {
-            goods.delist();
+        if (! goods.isDelisted()) {
+            goods.setDelisted(true);
+        } else {
+            throw new IllegalStateException("Goods already delisted");
+        }
+    }
+
+    static void undoDelistGoods(Long goodsId) {
+        Goods goods = getGoods(goodsId);
+        if (goods.isDelisted()) {
+            goods.setDelisted(false);
+        } else {
+            throw new IllegalStateException("Goods were not delisted");
         }
     }
 
     static void changePrice(Long goodsId, long priceNQT) {
         Goods goods = getGoods(goodsId);
-        if (goods != null && !goods.isDelisted()) {
+        if (! goods.isDelisted()) {
             goods.changePrice(priceNQT);
+        } else {
+            throw new IllegalStateException("Can't change price of delisted goods");
         }
     }
 
     static void changeQuantity(Long goodsId, int deltaQuantity) {
         Goods goods = getGoods(goodsId);
-        if (goods != null && !goods.isDelisted()) {
+        if (! goods.isDelisted()) {
             goods.changeQuantity(deltaQuantity);
+        } else {
+            throw new IllegalStateException("Can't change quantity of delisted goods");
         }
     }
 
-    static void purchase(Long purchaseId, Long accountId, Long goodsId, int quantity, long priceNQT,
+    static void purchase(Long purchaseId, Long buyerId, Long goodsId, int quantity, long priceNQT,
                                 int deliveryDeadline, XoredData note) {
         Goods goods = getGoods(goodsId);
-        if (goods != null && !goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
+        if (! goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
                 && deliveryDeadline > Nxt.getBlockchain().getLastBlock().getHeight()) {
-            Account account = Account.getAccount(accountId);
-            if (account.addToLockedBalanceNQT(Convert.safeMultiply(quantity, priceNQT))) {
-                goods.changeQuantity(-quantity);
-                addPurchase(purchaseId, accountId, goodsId, quantity, priceNQT, deliveryDeadline, note);
-            } //TODO: else?
+            goods.changeQuantity(-quantity);
+            addPurchase(purchaseId, buyerId, goodsId, goods.getSellerId(), quantity, priceNQT, deliveryDeadline, note);
+        } else {
+            Account buyer = Account.getAccount(buyerId);
+            buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(quantity, priceNQT));
+            // restoring the unconfirmed balance if purchase not successful, however buyer still lost the transaction fees
         }
     }
 
-    static void deliver(Long accountId, Long purchaseId, XoredData goods, long discountNQT) {
-        Purchase purchase = getPendingPurchase(purchaseId);
+    static void undoPurchase(Long purchaseId, Long buyerId, int quantity, long priceNQT) {
+        Purchase purchase = purchases.remove(purchaseId);
         if (purchase != null) {
-            if (Account.getAccount(purchase.getAccountId()).transferLockedBalanceNQT(
-                    Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()),
-                    accountId, discountNQT)) {
-                pendingPurchases.remove(purchaseId);
-            } //TODO: else?
+            pendingPurchases.remove(purchaseId);
+            getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+        } else {
+            Account buyer = Account.getAccount(buyerId);
+            buyer.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(quantity, priceNQT));
         }
     }
 
-    static void refund(Long accountId, Long purchaseId, long refundNQT, XoredData note) {
-        Purchase purchase = getPurchase(purchaseId);
+    static void deliver(Long sellerId, Long purchaseId, long discountNQT) {
+        Purchase purchase = pendingPurchases.remove(purchaseId);
         if (purchase != null) {
-            Account account = Account.getAccount(accountId);
-            if (refundNQT <= account.getBalanceNQT()) {
-                account.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
-                Account.getAccount(purchase.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
-            } //TODO: else?
+            long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+            Account buyer = Account.getAccount(purchase.getBuyerId());
+            buyer.addToBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
+            buyer.addToUnconfirmedBalanceNQT(discountNQT);
+            Account seller = Account.getAccount(sellerId);
+            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
         }
     }
 
-    static void reviewAllPendingPurchases() {
-        int height = Nxt.getBlockchain().getLastBlock().getHeight();
-        for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
-            Purchase purchase = pendingPurchaseEntry.getValue();
-            if (height > purchase.getDeliveryDeadline()) {
-                Account.getAccount(purchase.getAccountId()).addToLockedBalanceNQT(
-                        - Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
-                getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-                pendingPurchases.remove(pendingPurchaseEntry.getKey());
-            }
+    static void undoDeliver(Long sellerId, Long purchaseId, long discountNQT) {
+        Purchase purchase = purchases.get(purchaseId);
+        if (purchase != null) {
+            pendingPurchases.put(purchaseId, purchase);
+            long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+            Account buyer = Account.getAccount(purchase.getBuyerId());
+            buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
+            buyer.addToUnconfirmedBalanceNQT(- discountNQT);
+            Account seller = Account.getAccount(sellerId);
+            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
         }
     }
 
-    //TODO: get rid of those
-    static boolean isGoodsLegitOwner(Long goodsId, Long accountId) {
-        Goods goods = getGoods(goodsId);
-        return goods != null && accountId.equals(goods.getAccountId());
+    static void refund(Long sellerId, Long purchaseId, long refundNQT) {
+        Purchase purchase = getPurchase(purchaseId);
+        Account seller = Account.getAccount(sellerId);
+        seller.addToBalanceNQT(-refundNQT);
+        Account buyer = Account.getAccount(purchase.getBuyerId());
+        buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
     }
 
-    static boolean isPurchasedGoodsLegitOwner(Long purchaseId, Long accountId) {
+    static void undoRefund(Long sellerId, Long purchaseId, long refundNQT) {
         Purchase purchase = getPurchase(purchaseId);
-        return purchase != null && accountId.equals(getGoods(purchase.getGoodsId()).getAccountId());
-    }
-
-    static boolean isPurchaseLegitOwner(Long purchaseId, Long accountId) {
-        Purchase purchase = getPurchase(purchaseId);
-        return purchase != null && accountId.equals(purchase.getAccountId());
+        Account seller = Account.getAccount(sellerId);
+        seller.addToBalanceNQT(refundNQT);
+        Account buyer = Account.getAccount(purchase.getBuyerId());
+        buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
     }
 
 }

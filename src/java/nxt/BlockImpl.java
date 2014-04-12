@@ -355,10 +355,7 @@ final class BlockImpl implements Block {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(generatorPublicKey, this.height);
         generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
-
         Account.reviewAllAccounts();
-        //TODO: BlockImpl should not depend on DigitalGoodsStore, use Listeners
-        DigitalGoodsStore.reviewAllPendingPurchases();
     }
 
     void undo() {
