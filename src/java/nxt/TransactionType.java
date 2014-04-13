@@ -28,6 +28,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_POLL_CREATION = 2;
     private static final byte SUBTYPE_MESSAGING_VOTE_CASTING = 3;
     private static final byte SUBTYPE_MESSAGING_HUB_ANNOUNCEMENT = 4;
+    private static final byte SUBTYPE_MESSAGING_ACCOUNT_INFO = 5;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -68,6 +69,8 @@ public abstract class TransactionType {
                         return Messaging.VOTE_CASTING;
                     case SUBTYPE_MESSAGING_HUB_ANNOUNCEMENT:
                         return Messaging.HUB_ANNOUNCEMENT;
+                    case SUBTYPE_MESSAGING_ACCOUNT_INFO:
+                        return Messaging.ACCOUNT_INFO;
                     default:
                         return null;
                 }
@@ -684,6 +687,71 @@ public abstract class TransactionType {
                     }
                     //TODO: also check URI validity here?
                 }
+            }
+
+        };
+
+        public static final Messaging ACCOUNT_INFO = new Messaging() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_INFO;
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                int nameLength = buffer.get();
+                if (nameLength > 3 * Constants.MAX_ACCOUNT_NAME_LENGTH) {
+                    throw new NxtException.ValidationException("Max account info name length exceeded");
+                }
+                byte[] name = new byte[nameLength];
+                buffer.get(name);
+                int descriptionLength = buffer.getShort();
+                if (descriptionLength > 3 * Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH) {
+                    throw new NxtException.ValidationException("Max account info description length exceeded");
+                }
+                byte[] description = new byte[descriptionLength];
+                buffer.get(description);
+                try {
+                    transaction.setAttachment(new Attachment.MessagingAccountInfo(new String(name, "UTF-8").intern(),
+                            new String(description, "UTF-8").intern()));
+                    validateAttachment(transaction);
+                } catch (RuntimeException|UnsupportedEncodingException e) {
+                    throw new NxtException.ValidationException("Error in asset issuance", e);
+                }
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                String name = (String)attachmentData.get("name");
+                String description = (String)attachmentData.get("description");
+                transaction.setAttachment(new Attachment.MessagingAccountInfo(name.trim(), description.trim()));
+                validateAttachment(transaction);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.NQT_BLOCK) {
+                    throw new NotYetEnabledException("Account info not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
+                        || attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
+                        || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH
+                        ) {
+                    throw new NxtException.ValidationException("Invalid account info issuance: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
+                senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException(transaction, "Undoing account info not supported");
             }
 
         };

@@ -142,15 +142,30 @@ public final class Account {
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
 
+    private volatile String name;
+    private volatile String description;
+
     private Account(Long id) {
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
-
         currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    void setAccountInfo(String name, String description) {
+        this.name = Convert.emptyToNull(name.trim());
+        this.description = Convert.emptyToNull(description.trim());
     }
 
     public synchronized byte[] getPublicKey() {
