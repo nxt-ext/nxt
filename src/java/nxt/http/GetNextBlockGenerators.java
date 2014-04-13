@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Block;
 import nxt.Constants;
+import nxt.Generator;
 import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -67,14 +68,11 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
             return JSONResponses.FEATURE_NOT_AVAILABLE;
         }
 
+        //TODO: rewrite to use only hub terminal announced accounts
         PriorityQueue<Entry> entries = new PriorityQueue<>();
         for (Account account : Account.getAllAccounts()) {
-            long effectiveBalance = account.getEffectiveBalanceNXT();
-            if (effectiveBalance > 0) {
-                byte[] publicKey = account.getPublicKey();
-                if (publicKey != null) {
-                    entries.add(new Entry(account, account.getHitTime(account.getHit(null, curBlock), curBlock)));
-                }
+            if (account.getEffectiveBalanceNXT() > 0 && account.getPublicKey() != null) {
+                entries.add(new Entry(account, Generator.getHitTime(account, curBlock)));
             }
         }
 

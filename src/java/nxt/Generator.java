@@ -8,6 +8,7 @@ import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
@@ -108,6 +109,27 @@ public final class Generator {
         return allGenerators;
     }
 
+    public static long getHitTime(Account account, Block block) {
+        return getHitTime(account.getEffectiveBalanceNXT(), getHit(account.getPublicKey(), block), block);
+    }
+
+    private static BigInteger getHit(byte[] publicKey, Block block) {
+        if (block.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+            throw new IllegalArgumentException("Not supported below Transparent Forging Block");
+        }
+        MessageDigest digest = Crypto.sha256();
+        digest.update(block.getGenerationSignature());
+        byte[] generationSignatureHash = digest.digest(publicKey);
+        return new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+    }
+
+    private static long getHitTime(long effectiveBalanceNXT, BigInteger hit, Block block) {
+        return block.getTimestamp()
+                + hit.divide(BigInteger.valueOf(block.getBaseTarget())
+                .multiply(BigInteger.valueOf(effectiveBalanceNXT))).longValue();
+    }
+
+
     private final Long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
@@ -153,12 +175,12 @@ public final class Generator {
 
         if (! lastBlock.equals(lastBlocks.get(accountId))) {
 
-            BigInteger hit = account.getHit(secretPhrase, lastBlock);
+            BigInteger hit = getHit(publicKey, lastBlock);
 
             lastBlocks.put(accountId, lastBlock);
             hits.put(accountId, hit);
 
-            deadline = Math.max(account.getHitTime(hit, lastBlock) - Convert.getEpochTime(), 0);
+            deadline = Math.max(getHitTime(account.getEffectiveBalanceNXT(), hit, lastBlock) - Convert.getEpochTime(), 0);
 
             listeners.notify(this, Event.GENERATION_DEADLINE);
 
