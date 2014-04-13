@@ -18,7 +18,7 @@ public final class DigitalGoodsStore {
             public void notify(Block block) {
                 for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
                     Purchase purchase = pendingPurchaseEntry.getValue();
-                    if (block.getHeight() == purchase.getDeliveryDeadline()) {
+                    if (block.getTimestamp() > purchase.getDeliveryDeadline()) {
                         Account buyer = Account.getAccount(purchase.getBuyerId());
                         buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                         getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
@@ -32,9 +32,11 @@ public final class DigitalGoodsStore {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
+                Block previousBlock = Nxt.getBlockchain().getLastBlock();
                 for (Map.Entry<Long, Purchase> purchaseEntry : purchases.entrySet()) {
                     Purchase purchase = purchaseEntry.getValue();
-                    if (block.getHeight() == purchase.getDeliveryDeadline()) {
+                    if (block.getTimestamp() > purchase.getDeliveryDeadline()
+                            && previousBlock.getTimestamp() <= purchase.getDeliveryDeadline()) {
                         Account buyer = Account.getAccount(purchase.getBuyerId());
                         buyer.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                         getGoods(purchase.getGoodsId()).changeQuantity(- purchase.getQuantity());

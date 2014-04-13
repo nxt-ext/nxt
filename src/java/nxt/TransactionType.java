@@ -1532,9 +1532,9 @@ public abstract class TransactionType {
                         || attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || goods == null || goods.isDelisted()
-                        // || attachment.getQuantity() > goods.getQuantity()
-                        // || attachment.getPriceNQT() != goods.getPriceNQT()
-                        || attachment.getDeliveryDeadline() < Nxt.getBlockchain().getLastBlock().getHeight()) {
+                        || attachment.getQuantity() > goods.getQuantity()
+                        || attachment.getPriceNQT() != goods.getPriceNQT()
+                        || attachment.getDeliveryDeadline() <= Nxt.getBlockchain().getLastBlock().getTimestamp()) {
                     throw new NxtException.ValidationException("Invalid digital goods purchase: " + attachment.getJSONObject());
                 }
             }
@@ -1795,14 +1795,13 @@ public abstract class TransactionType {
         public static final TransactionType EFFECTIVE_BALANCE_LEASING = new AccountControl() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING; }
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING;
+            }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                short period;
-
-                period = buffer.getShort();
-
+                short period = buffer.getShort();
                 transaction.setAttachment(new Attachment.AccountControlEffectiveBalanceLeasing(period));
                 validateAttachment(transaction);
             }
@@ -1810,7 +1809,6 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 short period = ((Long)attachmentData.get("period")).shortValue();
-
                 transaction.setAttachment(new Attachment.AccountControlEffectiveBalanceLeasing(period));
                 validateAttachment(transaction);
             }
