@@ -664,7 +664,7 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long assetId = Convert.zeroToNull(buffer.getLong());
-                int quantity = buffer.getInt();
+                long quantityQNT = buffer.getLong();
                 int commentLength = buffer.getShort();
                 if (commentLength > 3 * Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
                     throw new NxtException.ValidationException("Max asset comment length exceeded");
@@ -672,7 +672,8 @@ public abstract class TransactionType {
                 byte[] comment = new byte[commentLength];
                 buffer.get(comment);
                 try {
-                    transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantity, new String(comment, "UTF-8").intern()));
+                    transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantityQNT,
+                            new String(comment, "UTF-8").intern()));
                     validateAttachment(transaction);
                 } catch (UnsupportedEncodingException e) {
                     throw new NxtException.ValidationException("Error in asset transfer", e);
@@ -682,9 +683,9 @@ public abstract class TransactionType {
             @Override
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
-                int quantity = ((Long)attachmentData.get("quantity")).intValue();
+                long quantityQNT = (Long)attachmentData.get("quantityQNT");
                 String comment = (String)attachmentData.get("comment");
-                transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantity, comment));
+                transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantityQNT, comment));
                 validateAttachment(transaction);
             }
 
