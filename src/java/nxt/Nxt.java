@@ -63,13 +63,17 @@ public final class Nxt {
     }
 
     public static String getStringProperty(String name) {
+        return getStringProperty(name, null);
+    }
+
+    public static String getStringProperty(String name, String defaultValue) {
         String value = properties.getProperty(name);
-        if (value != null && ! "".equals(value = value.trim())) {
+        if (value != null && ! "".equals(value)) {
             Logger.logMessage(name + " = \"" + value + "\"");
             return value;
         } else {
-            Logger.logMessage(name + " not defined, assuming null");
-            return null;
+            Logger.logMessage(name + " not defined");
+            return defaultValue;
         }
     }
 

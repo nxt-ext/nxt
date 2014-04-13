@@ -106,7 +106,7 @@ final class TransactionDb {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
             throw new RuntimeException("Transaction already in database for block_id = " + Convert.toUnsignedLong(blockId)
-                    + " does not pass validation!");
+                    + " does not pass validation!", e);
         }
     }
 

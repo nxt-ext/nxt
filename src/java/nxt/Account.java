@@ -12,9 +12,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -36,6 +38,35 @@ public final class Account {
             this.quantityQNT = quantityQNT;
         }
 
+    }
+
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                int height = block.getHeight();
+                for (Account account : getAllAccounts()) {
+                    if (account.currentLeasingHeightFrom != Integer.MAX_VALUE) {
+                        if (height == account.currentLeasingHeightFrom) {
+                            Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                        } else if (height == account.currentLeasingHeightTo) {
+                            Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                            if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
+                                account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                            } else {
+                                account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
+                                account.currentLeasingHeightTo = account.nextLeasingHeightTo;
+                                account.currentLesseeId = account.nextLesseeId;
+                                account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                                if (height == account.currentLeasingHeightFrom) {
+                                    Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -94,22 +125,47 @@ public final class Account {
 
     private final Long id;
     private final int height;
-    private byte[] publicKey;
-    private int keyHeight;
+    private volatile byte[] publicKey;
+    private volatile int keyHeight;
     private long balanceNQT;
     private long unconfirmedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
+    private volatile int currentLeasingHeightFrom;
+    private volatile int currentLeasingHeightTo;
+    private volatile Long currentLesseeId;
+    private volatile int nextLeasingHeightFrom;
+    private volatile int nextLeasingHeightTo;
+    private volatile Long nextLesseeId;
+    private Set<Long> leaserIds = new HashSet<>();
+
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
+
+    private volatile String name;
+    private volatile String description;
 
     private Account(Long id) {
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
+        currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    void setAccountInfo(String name, String description) {
+        this.name = Convert.emptyToNull(name.trim());
+        this.description = Convert.emptyToNull(description.trim());
     }
 
     public synchronized byte[] getPublicKey() {
@@ -127,7 +183,14 @@ public final class Account {
     public long getEffectiveBalanceNXT() {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3 && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
+
+        if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
+                && (publicKey == null || keyHeight == -1 || lastBlock.getHeight() - keyHeight <= 1440)) {
+            return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
+        }
+
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3
+                && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
                 return getBalanceNQT() / Constants.ONE_NXT;
@@ -142,11 +205,22 @@ public final class Account {
                 }
             }
             return (getBalanceNQT() - receivedInlastBlock) / Constants.ONE_NXT;
-
-        } else {
-            return getGuaranteedBalanceNQT(1440) / Constants.ONE_NXT;
         }
 
+        if (lastBlock.getHeight() < currentLeasingHeightFrom) {
+                return (getGuaranteedBalanceNQT(1440) + getExtraEffectiveBalanceNQT()) / Constants.ONE_NXT;
+        }
+
+        return getExtraEffectiveBalanceNQT() / Constants.ONE_NXT;
+
+    }
+
+    private long getExtraEffectiveBalanceNQT() {
+        long extraEffectiveBalanceNQT = 0;
+        for (Long accountId : leaserIds) {
+            extraEffectiveBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
+        }
+        return extraEffectiveBalanceNQT;
     }
 
     public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
@@ -187,6 +261,30 @@ public final class Account {
 
     public Map<Long, Long> getUnconfirmedAssetBalancesQNT() {
         return Collections.unmodifiableMap(unconfirmedAssetBalances);
+    }
+
+    void leaseEffectiveBalance(Long lesseeId, short period) {
+        Account lessee = Account.getAccount(lesseeId);
+        if (lessee != null && lessee.getPublicKey() != null) {
+            Block lastBlock = Nxt.getBlockchain().getLastBlock();
+            if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
+
+                currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                currentLeasingHeightTo = currentLeasingHeightFrom + period;
+                currentLesseeId = lesseeId;
+                nextLeasingHeightFrom = Integer.MAX_VALUE;
+
+            } else {
+
+                nextLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                if (nextLeasingHeightFrom < currentLeasingHeightTo) {
+                    nextLeasingHeightFrom = currentLeasingHeightTo;
+                }
+                nextLeasingHeightTo = nextLeasingHeightFrom + period;
+                nextLesseeId = lesseeId;
+
+            }
+        }
     }
 
     // returns true iff:

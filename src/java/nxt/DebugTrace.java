@@ -18,6 +18,9 @@ import java.util.Set;
 
 public final class DebugTrace {
 
+    static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "");
+    static final String SEPARATOR = Nxt.getStringProperty("nxt.debugTraceSeparator", "\t");
+
     static void init() {
         List<String> accountIds = Nxt.getStringListProperty("nxt.debugTraceAccounts");
         String logName = Nxt.getStringProperty("nxt.debugTraceLog");
@@ -87,13 +90,12 @@ public final class DebugTrace {
         }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
     }
 
-    private static final String[] columns = {"account", "asset", "balance", "unconfirmed balance",
+    private static final String[] columns = {"height", "event", "account", "asset", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance",
             "transaction amount", "transaction fee", "generation fee",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity", "event",
-            "transaction", "timestamp"};
+            "asset quantity", "transaction", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -179,6 +181,7 @@ public final class DebugTrace {
         map.put("balance", String.valueOf(account != null ? account.getBalanceNQT() : 0));
         map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalanceNQT() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
         map.put("event", "balance");
         return map;
     }
@@ -240,6 +243,7 @@ public final class DebugTrace {
         map.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
         map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(Convert.nullToZero(accountAsset.quantityQNT)));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
         map.put("event", "asset balance");
         return map;
     }
@@ -318,9 +322,9 @@ public final class DebugTrace {
         for (String column : columns) {
             String value = map.get(column);
             if (value != null) {
-                buf.append(value);
+                buf.append(QUOTE).append(value).append(QUOTE);
             }
-            buf.append('\t');
+            buf.append(SEPARATOR);
         }
         log.println(buf.toString());
     }

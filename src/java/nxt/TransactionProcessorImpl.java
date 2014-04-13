@@ -317,6 +317,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             if (! unconfirmedTransactions.containsKey(transaction.getId())) {
                 transaction.applyUnconfirmed();
             }
+            //TODO: Phaser not yet implemented
+            //Phaser.processTransaction(transaction);
             transaction.apply();
             transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
         }

@@ -109,6 +109,27 @@ public final class Generator {
         return allGenerators;
     }
 
+    static long getHitTime(Account account, Block block) {
+        return getHitTime(account.getEffectiveBalanceNXT(), getHit(account.getPublicKey(), block), block);
+    }
+
+    private static BigInteger getHit(byte[] publicKey, Block block) {
+        if (block.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+            throw new IllegalArgumentException("Not supported below Transparent Forging Block");
+        }
+        MessageDigest digest = Crypto.sha256();
+        digest.update(block.getGenerationSignature());
+        byte[] generationSignatureHash = digest.digest(publicKey);
+        return new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+    }
+
+    private static long getHitTime(long effectiveBalanceNXT, BigInteger hit, Block block) {
+        return block.getTimestamp()
+                + hit.divide(BigInteger.valueOf(block.getBaseTarget())
+                .multiply(BigInteger.valueOf(effectiveBalanceNXT))).longValue();
+    }
+
+
     private final Long accountId;
     private final String secretPhrase;
     private final byte[] publicKey;
@@ -147,26 +168,19 @@ public final class Generator {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
+            Logger.logDebugMessage("Forging below block " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+            return;
+        }
+
         if (! lastBlock.equals(lastBlocks.get(accountId))) {
 
-            if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-                Logger.logDebugMessage("Forging below block " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
-                return;
-            }
-
-            MessageDigest digest = Crypto.sha256();
-            digest.update(lastBlock.getGenerationSignature());
-            byte[] generationSignatureHash = digest.digest(publicKey);
-
-            BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
+            BigInteger hit = getHit(publicKey, lastBlock);
 
             lastBlocks.put(accountId, lastBlock);
             hits.put(accountId, hit);
 
-            long total = hit.divide(BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance))).longValue();
-            long elapsed = Convert.getEpochTime() - lastBlock.getTimestamp();
-
-            deadline = Math.max(total - elapsed, 0);
+            deadline = Math.max(getHitTime(account.getEffectiveBalanceNXT(), hit, lastBlock) - Convert.getEpochTime(), 0);
 
             listeners.notify(this, Event.GENERATION_DEADLINE);
 

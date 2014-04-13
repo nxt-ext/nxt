@@ -29,6 +29,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             if (account.getPublicKey() != null) {
                 response.put("publicKey", Convert.toHexString(account.getPublicKey()));
             }
+            if (account.getName() != null) {
+                response.put("name", account.getName());
+            }
+            if (account.getDescription() != null) {
+                response.put("description", account.getDescription());
+            }
 
             JSONArray assetBalances = new JSONArray();
             for (Map.Entry<Long, Long> assetBalanceEntry : account.getAssetBalancesQNT().entrySet()) {

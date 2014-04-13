@@ -271,6 +271,18 @@ final class TransactionImpl implements Transaction {
 
     }
 
+    /*
+    @Override
+    public Collection<TransactionType> getPhasingTransactionTypes() {
+        return getType().getPhasingTransactionTypes();
+    }
+
+    @Override
+    public Collection<TransactionType> getPhasedTransactionTypes() {
+        return getType().getPhasedTransactionTypes();
+    }
+    */
+
     @Override
     public JSONObject getJSONObject() {
         JSONObject json = new JSONObject();

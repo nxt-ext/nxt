@@ -88,6 +88,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_POLL = incorrect("poll");
     public static final JSONStreamAware INCORRECT_VOTE = incorrect("vote");
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
+    public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -135,6 +137,14 @@ public final class JSONResponses {
         response.put("errorCode", 1);
         response.put("errorDescription", "This request is only accepted using POST!");
         POST_REQUIRED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware FEATURE_NOT_AVAILABLE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 9);
+        response.put("errorDescription", "Feature not available");
+        FEATURE_NOT_AVAILABLE = JSON.prepare(response);
     }
 
 

@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.XoredData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -311,6 +312,145 @@ public interface Attachment {
         public Long getPollId() { return pollId; }
 
         public byte[] getPollVote() { return pollVote; }
+
+    }
+
+    public final static class MessagingHubAnnouncement implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final long minFeePerByteNQT;
+        private final String[] uris;
+
+        public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
+            this.minFeePerByteNQT = minFeePerByteNQT;
+            this.uris = uris;
+        }
+
+        @Override
+        public int getSize() {
+            try {
+                int size = 8 + 1;
+                for (String uri : uris) {
+                    size += 2 + uri.getBytes("UTF-8").length;
+                }
+                return size;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
+        }
+
+        @Override
+        public byte[] getBytes() {
+
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(minFeePerByteNQT);
+                buffer.put((byte) uris.length);
+                for (String uri : uris) {
+                    byte[] uriBytes = uri.getBytes("UTF-8");
+                    buffer.putShort((short)uriBytes.length);
+                    buffer.put(uriBytes);
+                }
+                return buffer.array();
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+
+            JSONObject attachment = new JSONObject();
+            attachment.put("minFeePerByteNQT", minFeePerByteNQT);
+            JSONArray uris = new JSONArray();
+            Collections.addAll(uris, this.uris);
+            attachment.put("uris", uris);
+            return attachment;
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.HUB_ANNOUNCEMENT;
+        }
+
+        public long getMinFeePerByteNQT() {
+            return minFeePerByteNQT;
+        }
+
+        public String[] getUris() {
+            return uris;
+        }
+
+    }
+
+    public final static class MessagingAccountInfo implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final String name;
+        private final String description;
+
+        public MessagingAccountInfo(String name, String description) {
+            this.name = name;
+            this.description = description;
+        }
+
+        @Override
+        public int getSize() {
+            try {
+                return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                byte[] name = this.name.getBytes("UTF-8");
+                byte[] description = this.description.getBytes("UTF-8");
+
+                ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length);
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.put((byte)name.length);
+                buffer.put(name);
+                buffer.putShort((short)description.length);
+                buffer.put(description);
+
+                return buffer.array();
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("name", name);
+            attachment.put("description", description);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ACCOUNT_INFO;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
 
     }
 
@@ -635,6 +775,528 @@ public interface Attachment {
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.BID_ORDER_CANCELLATION;
+        }
+
+    }
+
+    public final static class DigitalGoodsListing implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final String name;
+        private final String description;
+        private final String tags;
+        private final int quantity;
+        private final long priceNQT;
+
+        public DigitalGoodsListing(String name, String description, String tags, int quantity, long priceNQT) {
+            this.name = name;
+            this.description = description;
+            this.tags = tags;
+            this.quantity = quantity;
+            this.priceNQT = priceNQT;
+        }
+
+        @Override
+        public int getSize() {
+            try {
+                return 2 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 2
+                        + tags.getBytes("UTF-8").length + 4 + 8;
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                byte[] nameBytes = name.getBytes("UTF-8");
+                buffer.putShort((short)nameBytes.length);
+                buffer.put(nameBytes);
+                byte[] descriptionBytes = description.getBytes("UTF-8");
+                buffer.putShort((short)descriptionBytes.length);
+                buffer.put(descriptionBytes);
+                byte[] tagsBytes = tags.getBytes("UTF-8");
+                buffer.putShort((short)tagsBytes.length);
+                buffer.put(tagsBytes);
+                buffer.putInt(quantity);
+                buffer.putLong(priceNQT);
+                return buffer.array();
+            } catch (RuntimeException|UnsupportedEncodingException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("name", name);
+            attachment.put("description", description);
+            attachment.put("tags", tags);
+            attachment.put("quantity", quantity);
+            attachment.put("priceNQT", priceNQT);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.LISTING;
+        }
+
+        public String getName() { return name; }
+
+        public String getDescription() { return description; }
+
+        public String getTags() { return tags; }
+
+        public int getQuantity() { return quantity; }
+
+        public long getPriceNQT() { return priceNQT; }
+
+    }
+
+    public final static class DigitalGoodsDelisting implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long goodsId;
+
+        public DigitalGoodsDelisting(Long goodsId) {
+            this.goodsId = goodsId;
+        }
+
+        @Override
+        public int getSize() {
+            return 8;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.DELISTING;
+        }
+
+        public Long getGoodsId() { return goodsId; }
+
+    }
+
+    public final static class DigitalGoodsPriceChange implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long goodsId;
+        private final long priceNQT;
+
+        public DigitalGoodsPriceChange(Long goodsId, long priceNQT) {
+            this.goodsId = goodsId;
+            this.priceNQT = priceNQT;
+        }
+
+        @Override
+        public int getSize() {
+            return 8 + 8;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId);
+                buffer.putLong(priceNQT);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            attachment.put("priceNQT", priceNQT);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.PRICE_CHANGE;
+        }
+
+        public Long getGoodsId() { return goodsId; }
+
+        public long getPriceNQT() { return priceNQT; }
+
+    }
+
+    public final static class DigitalGoodsQuantityChange implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long goodsId;
+        private final int deltaQuantity;
+
+        public DigitalGoodsQuantityChange(Long goodsId, int deltaQuantity) {
+            this.goodsId = goodsId;
+            this.deltaQuantity = deltaQuantity;
+        }
+
+        @Override
+        public int getSize() {
+            return 8 + 4;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId);
+                buffer.putInt(deltaQuantity);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            attachment.put("deltaQuantity", deltaQuantity);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.QUANTITY_CHANGE;
+        }
+
+        public Long getGoodsId() { return goodsId; }
+
+        public int getDeltaQuantity() { return deltaQuantity; }
+
+    }
+
+    public final static class DigitalGoodsPurchase implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long goodsId;
+        private final int quantity;
+        private final long priceNQT;
+        private final int deliveryDeadline;
+        private final XoredData note;
+
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+            this.goodsId = goodsId;
+            this.quantity = quantity;
+            this.priceNQT = priceNQT;
+            this.deliveryDeadline = deliveryDeadline;
+            this.note = note;
+        }
+
+        @Override
+        public int getSize() {
+            return 8 + 4 + 8 + 4 + 2 + note.getData().length + 32;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(goodsId);
+                buffer.putInt(quantity);
+                buffer.putLong(priceNQT);
+                buffer.putInt(deliveryDeadline);
+                buffer.putShort((short)note.getData().length);
+                buffer.put(note.getData());
+                buffer.put(note.getNonce());
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("goods", Convert.toUnsignedLong(goodsId));
+            attachment.put("quantity", quantity);
+            attachment.put("priceNQT", priceNQT);
+            attachment.put("deliveryDeadline", deliveryDeadline);
+            attachment.put("note", Convert.toHexString(note.getData()));
+            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.PURCHASE;
+        }
+
+        public Long getGoodsId() { return goodsId; }
+
+        public int getQuantity() { return quantity; }
+
+        public long getPriceNQT() { return priceNQT; }
+
+        public int getDeliveryDeadline() { return deliveryDeadline; }
+
+        public XoredData getNote() { return note; }
+
+    }
+
+    public final static class DigitalGoodsDelivery implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long purchaseId;
+        private final XoredData goods;
+        private final long discountNQT;
+
+        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discountNQT) {
+            this.purchaseId = purchaseId;
+            this.goods = goods;
+            this.discountNQT = discountNQT;
+        }
+
+        @Override
+        public int getSize() {
+            return 8 + 2 + goods.getData().length + 32 + 8;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(purchaseId);
+                buffer.putShort((short)goods.getData().length);
+                buffer.put(goods.getData());
+                buffer.put(goods.getNonce());
+                buffer.putLong(discountNQT);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
+            attachment.put("goods", Convert.toHexString(goods.getData()));
+            attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
+            attachment.put("discountNQT", discountNQT);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.DELIVERY;
+        }
+
+        public Long getPurchaseId() { return purchaseId; }
+
+        public XoredData getGoods() { return goods; }
+
+        public long getDiscountNQT() { return discountNQT; }
+
+    }
+
+    public final static class DigitalGoodsRating implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long purchaseId;
+        private final XoredData note;
+
+        public DigitalGoodsRating(Long purchaseId, XoredData note) {
+            this.purchaseId = purchaseId;
+            this.note = note;
+        }
+
+        @Override
+        public int getSize() {
+            try {
+                return 8 + 2 + note.getData().length + 32;
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(purchaseId);
+                buffer.putShort((short)note.getData().length);
+                buffer.put(note.getData());
+                buffer.put(note.getNonce());
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
+            attachment.put("note", Convert.toHexString(note.getData()));
+            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.FEEDBACK;
+        }
+
+        public Long getPurchaseId() { return purchaseId; }
+
+        public XoredData getNote() { return note; }
+
+    }
+
+    public final static class DigitalGoodsRefund implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final Long purchaseId;
+        private final long refundNQT;
+        private final XoredData note;
+
+        public DigitalGoodsRefund(Long purchaseId, long refundNQT, XoredData note) {
+            this.purchaseId = purchaseId;
+            this.refundNQT = refundNQT;
+            this.note = note;
+        }
+
+        @Override
+        public int getSize() {
+            try {
+                return 8 + 8 + 2 + note.getData().length + 32;
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return 0;
+            }
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(purchaseId);
+                buffer.putLong(refundNQT);
+                buffer.putShort((short)note.getData().length);
+                buffer.put(note.getData());
+                buffer.put(note.getNonce());
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
+            attachment.put("refundNQT", refundNQT);
+            attachment.put("note", Convert.toHexString(note.getData()));
+            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.DigitalGoods.REFUND;
+        }
+
+        public Long getPurchaseId() { return purchaseId; }
+
+        public long getRefundNQT() { return refundNQT; }
+
+        public XoredData getNote() { return note; }
+
+    }
+
+    public final static class AccountControlEffectiveBalanceLeasing implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
+
+        private final short period;
+
+        public AccountControlEffectiveBalanceLeasing(short period) {
+            this.period = period;
+        }
+
+        @Override
+        public int getSize() {
+            return 2;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putShort(period);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("period", period);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.AccountControl.EFFECTIVE_BALANCE_LEASING;
+        }
+
+        public short getPeriod() {
+            return period;
         }
 
     }
