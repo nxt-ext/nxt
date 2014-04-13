@@ -46,20 +46,20 @@ public final class Account {
             public void notify(Block block) {
                 int height = block.getHeight();
                 for (Account account : getAllAccounts()) {
-                    if (account.curEffectiveBalanceLeasingHeightFrom != Integer.MAX_VALUE) {
-                        if (height == account.curEffectiveBalanceLeasingHeightFrom) {
-                            Account.getAccount(account.curLesseeId).effectiveBalanceLeasers.add(account.getId());
-                        } else if (height == account.curEffectiveBalanceLeasingHeightTo) {
-                            Account.getAccount(account.curLesseeId).effectiveBalanceLeasers.remove(account.getId());
-                            if (account.nextEffectiveBalanceLeasingHeightFrom == Integer.MAX_VALUE) {
-                                account.curEffectiveBalanceLeasingHeightFrom = Integer.MAX_VALUE;
+                    if (account.currentLeasingHeightFrom != Integer.MAX_VALUE) {
+                        if (height == account.currentLeasingHeightFrom) {
+                            Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                        } else if (height == account.currentLeasingHeightTo) {
+                            Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                            if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
+                                account.currentLeasingHeightFrom = Integer.MAX_VALUE;
                             } else {
-                                account.curEffectiveBalanceLeasingHeightFrom = account.nextEffectiveBalanceLeasingHeightFrom;
-                                account.curEffectiveBalanceLeasingHeightTo = account.nextEffectiveBalanceLeasingHeightTo;
-                                account.curLesseeId = account.nextLesseeId;
-                                account.nextEffectiveBalanceLeasingHeightFrom = Integer.MAX_VALUE;
-                                if (height == account.curEffectiveBalanceLeasingHeightFrom) {
-                                    Account.getAccount(account.curLesseeId).effectiveBalanceLeasers.add(account.getId());
+                                account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
+                                account.currentLeasingHeightTo = account.nextLeasingHeightTo;
+                                account.currentLesseeId = account.nextLesseeId;
+                                account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                                if (height == account.currentLeasingHeightFrom) {
+                                    Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
                                 }
                             }
                         }
@@ -131,13 +131,13 @@ public final class Account {
     private long unconfirmedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
-    private volatile int curEffectiveBalanceLeasingHeightFrom;
-    private volatile int curEffectiveBalanceLeasingHeightTo;
-    private volatile Long curLesseeId;
-    private volatile int nextEffectiveBalanceLeasingHeightFrom;
-    private volatile int nextEffectiveBalanceLeasingHeightTo;
+    private volatile int currentLeasingHeightFrom;
+    private volatile int currentLeasingHeightTo;
+    private volatile Long currentLesseeId;
+    private volatile int nextLeasingHeightFrom;
+    private volatile int nextLeasingHeightTo;
     private volatile Long nextLesseeId;
-    private Set<Long> effectiveBalanceLeasers = new HashSet<>();
+    private Set<Long> leaserIds = new HashSet<>();
 
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
@@ -146,7 +146,7 @@ public final class Account {
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
 
-        curEffectiveBalanceLeasingHeightFrom = Integer.MAX_VALUE;
+        currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
     public Long getId() {
@@ -192,7 +192,7 @@ public final class Account {
             return (getBalanceNQT() - receivedInlastBlock) / Constants.ONE_NXT;
         }
 
-        if (lastBlock.getHeight() < curEffectiveBalanceLeasingHeightFrom) {
+        if (lastBlock.getHeight() < currentLeasingHeightFrom) {
                 return (getGuaranteedBalanceNQT(1440) + getExtraEffectiveBalanceNQT()) / Constants.ONE_NXT;
         }
 
@@ -202,7 +202,7 @@ public final class Account {
 
     private long getExtraEffectiveBalanceNQT() {
         long extraEffectiveBalanceNQT = 0;
-        for (Long accountId : effectiveBalanceLeasers) {
+        for (Long accountId : leaserIds) {
             extraEffectiveBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
         }
         return extraEffectiveBalanceNQT;
@@ -252,20 +252,20 @@ public final class Account {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
             Block lastBlock = Nxt.getBlockchain().getLastBlock();
-            if (curEffectiveBalanceLeasingHeightFrom == Integer.MAX_VALUE) {
+            if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
 
-                curEffectiveBalanceLeasingHeightFrom = lastBlock.getHeight() + 1440;
-                curEffectiveBalanceLeasingHeightTo = curEffectiveBalanceLeasingHeightFrom + period;
-                curLesseeId = lesseeId;
-                nextEffectiveBalanceLeasingHeightFrom = Integer.MAX_VALUE;
+                currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                currentLeasingHeightTo = currentLeasingHeightFrom + period;
+                currentLesseeId = lesseeId;
+                nextLeasingHeightFrom = Integer.MAX_VALUE;
 
             } else {
 
-                nextEffectiveBalanceLeasingHeightFrom = lastBlock.getHeight() + 1440;
-                if (nextEffectiveBalanceLeasingHeightFrom < curEffectiveBalanceLeasingHeightTo) {
-                    nextEffectiveBalanceLeasingHeightFrom = curEffectiveBalanceLeasingHeightTo;
+                nextLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                if (nextLeasingHeightFrom < currentLeasingHeightTo) {
+                    nextLeasingHeightFrom = currentLeasingHeightTo;
                 }
-                nextEffectiveBalanceLeasingHeightTo = nextEffectiveBalanceLeasingHeightFrom + period;
+                nextLeasingHeightTo = nextLeasingHeightFrom + period;
                 nextLesseeId = lesseeId;
 
             }
