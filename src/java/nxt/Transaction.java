@@ -48,4 +48,10 @@ public interface Transaction extends Comparable<Transaction> {
 
     JSONObject getJSONObject();
 
+    /*
+    Collection<TransactionType> getPhasingTransactionTypes();
+
+    Collection<TransactionType> getPhasedTransactionTypes();
+    */
+
 }

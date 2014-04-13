@@ -137,6 +137,14 @@ public final class JSONResponses {
         POST_REQUIRED = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware FEATURE_NOT_AVAILABLE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 9);
+        response.put("errorDescription", "Feature not available");
+        FEATURE_NOT_AVAILABLE = JSON.prepare(response);
+    }
+
 
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();

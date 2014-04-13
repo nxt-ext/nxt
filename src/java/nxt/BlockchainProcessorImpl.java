@@ -582,11 +582,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
 
             blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
-
             transactionProcessor.apply(block);
-
+            blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
             blockListeners.notify(block, Event.BLOCK_PUSHED);
-
             transactionProcessor.updateUnconfirmedTransactions(block);
 
         } // synchronized
@@ -802,6 +800,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Poll.clear();
             Trade.clear();
             Vote.clear();
+            DigitalGoodsStore.clear();
             transactionProcessor.clear();
             try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
@@ -816,6 +815,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         transactionProcessor.apply(currentBlock);
+                        blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();
                     }
