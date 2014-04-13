@@ -38,8 +38,9 @@ public final class Constants {
     public static final int MAX_DIGITAL_GOODS_NOTE_LENGTH = 1000;
     public static final int MAX_DIGITAL_GOODS_LENGTH = 1000;
 
-    public static final int MAX_HUB_TERMINAL_ANNOUNCEMENT_URIS = 100;
-    public static final int MAX_HUB_TERMINAL_ANNOUNCEMENT_URI_LENGTH = 1000;
+    public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
+    public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
+    public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
 

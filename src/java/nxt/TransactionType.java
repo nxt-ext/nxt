@@ -27,7 +27,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
     private static final byte SUBTYPE_MESSAGING_POLL_CREATION = 2;
     private static final byte SUBTYPE_MESSAGING_VOTE_CASTING = 3;
-    private static final byte SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT = 4;
+    private static final byte SUBTYPE_MESSAGING_HUB_ANNOUNCEMENT = 4;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -66,8 +66,8 @@ public abstract class TransactionType {
                         return Messaging.POLL_CREATION;
                     case SUBTYPE_MESSAGING_VOTE_CASTING:
                         return Messaging.VOTE_CASTING;
-                    case SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT:
-                        return Messaging.HUB_TERMINAL_ANNOUNCEMENT;
+                    case SUBTYPE_MESSAGING_HUB_ANNOUNCEMENT:
+                        return Messaging.HUB_ANNOUNCEMENT;
                     default:
                         return null;
                 }
@@ -604,10 +604,10 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType HUB_TERMINAL_ANNOUNCEMENT = new Messaging() {
+        public static final TransactionType HUB_ANNOUNCEMENT = new Messaging() {
 
             @Override
-            public final byte getSubtype() { return TransactionType.SUBTYPE_MESSAGING_HUB_TERMINAL_ANNOUNCEMENT; }
+            public final byte getSubtype() { return TransactionType.SUBTYPE_MESSAGING_HUB_ANNOUNCEMENT; }
 
             @Override
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
@@ -615,13 +615,13 @@ public abstract class TransactionType {
                 String[] uris;
                 try {
                     int numberOfUris = buffer.get();
-                    if (numberOfUris > Constants.MAX_HUB_TERMINAL_ANNOUNCEMENT_URIS) {
+                    if (numberOfUris > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
                         throw new NxtException.ValidationException("Invalid number of URIs: " + numberOfUris);
                     }
                     uris = new String[numberOfUris];
                     for (int i = 0; i < uris.length; i++) {
                         int uriBytesLength = buffer.getShort();
-                        if (uriBytesLength > 3 * Constants.MAX_HUB_TERMINAL_ANNOUNCEMENT_URI_LENGTH) {
+                        if (uriBytesLength > 3 * Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH) {
                             throw new NxtException.ValidationException("Invalid URI length: " + uriBytesLength);
                         }
                         byte[] uriBytes = new byte[uriBytesLength];
@@ -632,7 +632,7 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
                 }
 
-                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(minFeePerByte, uris));
+                transaction.setAttachment(new Attachment.MessagingHubAnnouncement(minFeePerByte, uris));
                 validateAttachment(transaction);
             }
 
@@ -650,18 +650,19 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
                 }
 
-                transaction.setAttachment(new Attachment.MessagingHubTerminalAnnouncement(minFeePerByte, uris));
+                transaction.setAttachment(new Attachment.MessagingHubAnnouncement(minFeePerByte, uris));
                 validateAttachment(transaction);
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                // TODO: cfb: @JLP, Any suggestions how it's better to store array of strings? It must be stored until next transaction doesn't rewrite the strings (for the same account).
+                Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement)transaction.getAttachment();
+                Hub.addOrUpdateHub(senderAccount.getId(), attachment.getMinFeePerByteNQT(), attachment.getUris());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of hub terminal announcement not supported");
+                Hub.removeHub(senderAccount.getId());
             }
 
             @Override
@@ -669,18 +670,19 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
                     throw new NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-                Attachment.MessagingHubTerminalAnnouncement attachment = (Attachment.MessagingHubTerminalAnnouncement)transaction.getAttachment();
+                Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement)transaction.getAttachment();
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
                         || attachment.getMinFeePerByteNQT() < 0 || attachment.getMinFeePerByteNQT() > Constants.MAX_BALANCE_NQT
-                        || attachment.getUris().length > Constants.MAX_HUB_TERMINAL_ANNOUNCEMENT_URIS) {
+                        || attachment.getUris().length > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
                         // cfb: "0" is allowed to show that another way to determine the min fee should be used
                     throw new NxtException.ValidationException("Invalid hub terminal announcement: " + attachment.getJSONObject());
                 }
                 for (String uri : attachment.getUris()) {
-                    if (uri.length() > Constants.MAX_HUB_TERMINAL_ANNOUNCEMENT_URI_LENGTH) {
+                    if (uri.length() > Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH) {
                         throw new NxtException.ValidationException("Invalid URI length: " + uri.length());
                     }
+                    //TODO: also check URI validity here?
                 }
             }
 

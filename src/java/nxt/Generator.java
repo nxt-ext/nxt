@@ -109,7 +109,7 @@ public final class Generator {
         return allGenerators;
     }
 
-    public static long getHitTime(Account account, Block block) {
+    static long getHitTime(Account account, Block block) {
         return getHitTime(account.getEffectiveBalanceNXT(), getHit(account.getPublicKey(), block), block);
     }
 

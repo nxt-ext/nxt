@@ -315,14 +315,14 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingHubTerminalAnnouncement implements Attachment, Serializable {
+    public final static class MessagingHubAnnouncement implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         private final long minFeePerByteNQT;
         private final String[] uris;
 
-        public MessagingHubTerminalAnnouncement(long minFeePerByteNQT, String[] uris) {
+        public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
             this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
         }
@@ -376,7 +376,7 @@ public interface Attachment {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.Messaging.HUB_TERMINAL_ANNOUNCEMENT;
+            return TransactionType.Messaging.HUB_ANNOUNCEMENT;
         }
 
         public long getMinFeePerByteNQT() {

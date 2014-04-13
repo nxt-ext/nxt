@@ -1,9 +1,8 @@
 package nxt.http;
 
-import nxt.Account;
 import nxt.Block;
 import nxt.Constants;
-import nxt.Generator;
+import nxt.Hub;
 import nxt.Nxt;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -11,10 +10,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.PriorityQueue;
-
-import static nxt.http.JSONResponses.INCORRECT_BLOCK;
-import static nxt.http.JSONResponses.UNKNOWN_BLOCK;
+import java.util.Iterator;
 
 public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
@@ -22,32 +18,10 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
     private GetNextBlockGenerators() {}
 
-    static final class Entry implements Comparable<Entry> {
-
-        final Account account;
-        final long time;
-
-        Entry(Account account, long time) {
-            this.account = account;
-            this.time = time;
-        }
-
-        @Override
-        public int compareTo(Entry entry) {
-            if (this.time < entry.time) {
-                return -1;
-            } else if (this.time > entry.time) {
-                return 1;
-            } else {
-                return this.account.getId().compareTo(entry.account.getId());
-            }
-        }
-
-    }
-
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
+        /* implement later, if needed
         Block curBlock;
 
         String block = req.getParameter("block");
@@ -63,23 +37,18 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
                 return INCORRECT_BLOCK;
             }
         }
+        */
 
+        Block curBlock = Nxt.getBlockchain().getLastBlock();
         if (curBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
             return JSONResponses.FEATURE_NOT_AVAILABLE;
         }
 
-        //TODO: rewrite to use only hub terminal announced accounts
-        PriorityQueue<Entry> entries = new PriorityQueue<>();
-        for (Account account : Account.getAllAccounts()) {
-            if (account.getEffectiveBalanceNXT() > 0 && account.getPublicKey() != null) {
-                entries.add(new Entry(account, Generator.getHitTime(account, curBlock)));
-            }
-        }
 
         JSONObject response = new JSONObject();
         response.put("time", Convert.getEpochTime());
         response.put("lastBlock", Convert.toUnsignedLong(curBlock.getId()));
-        JSONArray generators = new JSONArray();
+        JSONArray hubs = new JSONArray();
 
         int limit;
         try {
@@ -87,14 +56,21 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
         } catch (RuntimeException e) {
             limit = Integer.MAX_VALUE;
         }
-        Entry entry;
-        while ((entry = entries.poll()) != null && generators.size() < limit) {
-            JSONObject generator = new JSONObject();
-            generator.put("account", Convert.toUnsignedLong(entry.account.getId()));
-            generator.put("time", entry.time);
-            generators.add(generator);
+
+        Iterator<Hub.Hit> iterator = Hub.getHubHits(curBlock).iterator();
+        while (iterator.hasNext() && hubs.size() < limit) {
+            JSONObject hub = new JSONObject();
+            Hub.Hit hit = iterator.next();
+            hub.put("account", Convert.toUnsignedLong(hit.hub.getAccountId()));
+            hub.put("minFeePerByteNQT", hit.hub.getMinFeePerByteNQT());
+            hub.put("time", hit.hitTime);
+            JSONArray uris = new JSONArray();
+            uris.addAll(hit.hub.getUris());
+            hub.put("uris", uris);
+            hubs.add(hub);
         }
-        response.put("generators", generators);
+        
+        response.put("hubs", hubs);
         return response;
     }
 

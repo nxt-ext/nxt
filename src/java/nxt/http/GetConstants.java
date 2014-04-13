@@ -57,7 +57,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("description", "Vote casting");
         subtypes.add(subtype);
         subtype = new JSONObject();
-        subtype.put("value", TransactionType.Messaging.HUB_TERMINAL_ANNOUNCEMENT.getSubtype());
+        subtype.put("value", TransactionType.Messaging.HUB_ANNOUNCEMENT.getSubtype());
         subtype.put("description", "Hub terminal announcement");
         subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
