@@ -242,7 +242,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             return transaction;
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString());
+            throw new NxtException.ValidationException(e.toString(), e);
         }
     }
 

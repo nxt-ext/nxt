@@ -1133,14 +1133,14 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsRating implements Attachment, Serializable {
+    public final static class DigitalGoodsFeedback implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
 
         private final Long purchaseId;
         private final XoredData note;
 
-        public DigitalGoodsRating(Long purchaseId, XoredData note) {
+        public DigitalGoodsFeedback(Long purchaseId, XoredData note) {
             this.purchaseId = purchaseId;
             this.note = note;
         }
