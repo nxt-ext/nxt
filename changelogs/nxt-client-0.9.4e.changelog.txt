@@ -24,5 +24,9 @@ Jetty has been updated to version 9.1.4, and H2 to version 1.3.176. Make sure
 to delete the old versions from the lib directory first, if you do upgrades
 just by unpacking the zip file on top of an existing installation.
 
+Bugfixes and improvements in transaction validation. Existing transactions will
+be checked once at first start of this version, which may cause some turbulence
+on testnet as invalid blocks will be deleted.
+
 
 
