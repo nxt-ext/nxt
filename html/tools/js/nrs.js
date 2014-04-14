@@ -2683,18 +2683,18 @@
 
 		var $tr = $target.closest("tr");
 
-		var price = new BigInteger(String($tr.data("price")));
-		var quantity = new BigInteger(String($tr.data("quantity")));
-		var total = quantity.multiply(price);
+		var priceNQT = new BigInteger(String($tr.data("price")));
+		var quantityQNT = new BigInteger(String($tr.data("quantity")));
+		var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals));
 
-		$("#" + type + "_asset_price").val(NRS.convertToNXT(price));
-		$("#" + type + "_asset_quantity").val(NRS.convertToNXT(quantity));
-		$("#" + type + "_asset_total").val(NRS.convertToNXT(total));
+		$("#" + type + "_asset_price").val(NRS.convertToNXT(priceNQT));
+		$("#" + type + "_asset_quantity").val(NRS.convertToQNTf(quantityQNT, NRS.currentAsset.decimals));
+		$("#" + type + "_asset_total").val(NRS.convertToNXT(totalNQT));
 
 		if (type == "sell") {
-			var balance = $("#your_nxt_balance").text().replace("'", "");
+			var balanceNQT = new BigInteger(NRS.convertToNQT($("#your_nxt_balance").text().replace("'", "")));
 
-			if (total.compareTo(balance) > 0) {
+			if (totalNQT.compareTo(balanceNQT) > 0) {
 				$("#" + type + "_asset_total").css({
 					"background": "#ED4348",
 					"color": "white"
@@ -2725,8 +2725,21 @@
 			return;
 		}
 
+		if (price.compareTo(BigInteger.ZERO) <= 0) {
+			price = new BigInteger("1");
+			$("#" + type + "_asset_price").val(NRS.convertToNXT(price));
+		}
+
 		var quantity = balance.divide(price);
+
+		var maxQuantity = new BigInteger(NRS.currentAsset.quantityQNT);
+
 		var total = quantity.multiply(price);
+
+		if (quantity.compareTo(maxQuantity) > 0) {
+			quantity = maxQuantity;
+			total = quantity.multiply(price);
+		}
 
 		$("#" + type + "_asset_quantity").val(quantity.toString());
 		$("#" + type + "_asset_total").val(NRS.convertToNXT(total));
@@ -2738,49 +2751,6 @@
 			});
 		} else {
 			$("#" + type + "_asset_total").css({
-				"background": "",
-				"color": ""
-			});
-		}
-	});
-
-	$("#buy_automatic_price").on("click", function(e) {
-		var price = new BigInteger(NRS.convertToNQT(String($("#buy_asset_price").val())));
-		var nxtBalance = new BigInteger(NRS.convertToNQT($("#your_nxt_balance").text().replace("'", "")));
-
-		if (nxtBalance.compareTo(BigInteger.ZERO) <= 0) {
-			return;
-		}
-
-		if (price.compareTo(BigInteger.ZERO) <= 0) {
-			//check decimals and get lowest ask order
-			if (NRS.currentAsset.decimals) {
-				price = "0.";
-				for (var i = 0; i < NRS.currentAsset.decimals - 1; i++) {
-					price += "0";
-				}
-				price += "1";
-			} else {
-				price = "1";
-			}
-
-			$("#buy_asset_price").val(price);
-			price = new BigInteger(NRS.convertToNQT(price));
-		}
-
-		var quantity = nxtBalance.divide(price);
-		var total = quantity.multiply(price);
-
-		$("#buy_asset_quantity").val(quantity.toString());
-		$("#buy_asset_total").val(NRS.convertToNXT(total));
-
-		if (total.compareTo(nxtBalance) > 0) {
-			$("#buy_asset_total").css({
-				"background": "#ED4348",
-				"color": "white"
-			});
-		} else {
-			$("#buy_asset_total").css({
 				"background": "",
 				"color": ""
 			});
@@ -7080,11 +7050,11 @@
 				},
 				name: "VARCHAR(100) COLLATE NOCASE",
 				email: "VARCHAR(200)",
-				accountId: "VARCHAR(20)",
+				accountId: "VARCHAR(25)",
 				description: "TEXT"
 			},
 			assets: {
-				account: "VARCHAR(20)",
+				account: "VARCHAR(25)",
 				asset: {
 					"primary": true,
 					"type": "VARCHAR(25)"
@@ -7093,7 +7063,7 @@
 				name: "VARCHAR(10)",
 				position: "NUMBER",
 				decimals: "NUMBER",
-				quantityQNT: "NUMBER",
+				quantityQNT: "VARCHAR(15)",
 				groupName: "VARCHAR(30) COLLATE NOCASE"
 			},
 			data: {
@@ -7106,7 +7076,7 @@
 		};
 
 		try {
-			NRS.database = new WebDB("NRS", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS2", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -8546,6 +8516,32 @@
 		return formattedWeight.escapeHTML();
 	}
 
+	NRS.calculateOrderTotalNQT = function(quantityQNT, priceNQT, decimals) {
+		var totalNXT = NRS.calculateOrderTotal(quantityQNT, priceNQT, decimals);
+
+		return NRS.convertToNQT(totalNXT);
+	}
+
+	//what to do if order has more than 8 numbers after . ? (NQT max)
+	NRS.calculateOrderTotal = function(quantityQNT, priceNQT, decimals) {
+		var total = NRS.convertToNXT(quantityQNT.multiply(priceNQT));
+
+		if (decimals) {
+			var dot = total.indexOf(".");
+			if (dot != -1) {
+				//we converted to NXT, now we need to take into account the QNT decimals...
+				total = total.replace(".", "");
+				total = total.substring(0, dot - decimals) + "." + total.substring(dot - decimals);
+			} else {
+				total = total.substring(0, total.length - decimals) + "." + total.substring(total.length - decimals);
+			}
+		}
+
+		//if only 000 after . then remove.. 33*33=1089.00
+
+		return total;
+	}
+
 	NRS.convertToNXT = function(amount, returnAsObject) {
 		var negative = "";
 		var afterComma = "";
@@ -8586,24 +8582,76 @@
 		}
 	}
 
-	//what to do if order has more than 8 numbers after . ? (NQT max)
-	NRS.calculateOrderTotal = function(quantityQNT, priceNQT, decimals) {
-		var total = NRS.convertToNXT(quantityQNT.multiply(priceNQT));
+	NRS.convertToNQT = function(currency) {
+		currency = currency.toString();
 
-		if (decimals) {
-			var dot = total.indexOf(".");
-			if (dot != -1) {
-				//we converted to NXT, now we need to take into account the QNT decimals...
-				total = total.replace(".", "");
-				total = total.substring(0, dot - decimals) + "." + total.substring(dot - decimals);
-			} else {
-				total = total.substring(0, total.length - decimals) + "." + total.substring(total.length - decimals);
+		var parts = currency.split(".");
+
+		var integer = parts[0];
+
+		//no fractional part
+		if (parts.length == 1) {
+			var fraction = "00000000";
+		} else if (parts.length == 2) {
+			var fraction = parts[1];
+		} else {
+			//incorrect input
+			return -1;
+		}
+
+		for (var i = fraction.length; i < 8; i++) {
+			fraction += "0";
+		}
+
+		var bigInteger = integer + "" + fraction;
+
+		//in case there's a comma or something else in there.. at this point there should only be numbers
+		if (!/^\d+$/.test(bigInteger)) {
+			return -1;
+		}
+
+		//remove leading zeroes
+		bigInteger = bigInteger.replace(/^0+/, "");
+
+		if (bigInteger === "") {
+			bigInteger = "0";
+		}
+
+		return bigInteger;
+	}
+
+	NRS.convertToQNTf = function(quantity, decimals, returnAsObject) {
+		if (typeof quantity == "object") {
+			quantity = quantity.toString();
+		} else {
+			quantity = String(quantity);
+		}
+
+		if (quantity.length < decimals) {
+			for (var i = quantity.length; i < decimals; i++) {
+				quantity = "0" + quantity;
 			}
 		}
 
-		//if only 000 after . then remove.. 33*33=1089.00
+		var afterComma = "";
 
-		return total;
+		if (decimals) {
+			afterComma = "." + quantity.substring(quantity.length - decimals);
+			quantity = quantity.substring(0, quantity.length - decimals);
+
+			if (!quantity) {
+				quantity = "0";
+			}
+		}
+
+		if (returnAsObject) {
+			return {
+				"amount": quantity,
+				"afterComma": afterComma
+			};
+		} else {
+			return quantity + afterComma;
+		}
 	}
 
 	NRS.convertToQNT = function(quantity, decimals) {
@@ -8642,74 +8690,30 @@
 		return qnt.replace(/^0+/, "");
 	}
 
-	NRS.convertToNQT = function(currency) {
-		currency = currency.toString();
+	NRS.format = function(params, no_escaping) {
+		var amount = params.amount;
 
-		var parts = currency.split(".");
-
-		var integer = parts[0];
-
-		//no fractional part
-		if (parts.length == 1) {
-			var fraction = "00000000";
-		} else if (parts.length == 2) {
-			var fraction = parts[1];
-		} else {
-			//incorrect input
-			return -1;
-		}
-
-		for (var i = fraction.length; i < 8; i++) {
-			fraction += "0";
-		}
-
-		var bigInteger = integer + "" + fraction;
-
-		//in case there's a comma or something else in there.. at this point there should only be numbers
-		if (!/^\d+$/.test(bigInteger)) {
-			return -1;
-		}
-
-		//remove leading zeroes
-		return bigInteger.replace(/^0+/, "");
-	}
-
-	//remove decimals from QNT... probalby incorrect
-	NRS.formatQuantity = function(quantity, decimals) {
-		if (typeof quantity == "object") {
-			quantity = quantity.toString();
-		} else {
-			quantity = String(quantity);
-		}
-
-		if (quantity.length < decimals) {
-			for (var i = quantity.length; i < decimals; i++) {
-				quantity = "0" + quantity;
-			}
-		}
-
-		var afterComma = "";
-
-		if (decimals) {
-			afterComma = "." + quantity.substring(quantity.length - decimals);
-			quantity = quantity.substring(0, quantity.length - decimals);
-
-			if (!quantity) {
-				quantity = "0";
-			}
-		}
-
-		var digits = quantity.split("").reverse();
-		var formattedQuantity = "";
+		var digits = amount.split("").reverse();
+		var formattedAmount = "";
 
 		for (var i = 0; i < digits.length; i++) {
 			if (i > 0 && i % 3 == 0) {
-				formattedQuantity = "'" + formattedQuantity;
+				formattedAmount = "'" + formattedAmount;
 			}
-			formattedQuantity = digits[i] + formattedQuantity;
+			formattedAmount = digits[i] + formattedAmount;
 		}
 
-		return formattedQuantity + afterComma;
+		var output = (params.negative ? params.negative : "") + formattedAmount + params.afterComma;
+
+		if (!no_escaping) {
+			output = output.escapeHTML();
+		}
+
+		return output;
+	}
+
+	NRS.formatQuantity = function(quantity, decimals, no_escaping) {
+		return NRS.format(NRS.convertToQNTf(quantity, decimals, true), no_escaping);
 	}
 
 	NRS.formatAmount = function(amount, round, no_escaping) {
@@ -8749,22 +8753,11 @@
 			}
 		}
 
-		var digits = amount.split("").reverse();
-
-		for (var i = 0; i < digits.length; i++) {
-			if (i > 0 && i % 3 == 0) {
-				formattedAmount = "'" + formattedAmount;
-			}
-			formattedAmount = digits[i] + formattedAmount;
-		}
-
-		amount = null;
-
-		if (no_escaping) {
-			return negative + formattedAmount + afterComma;
-		} else {
-			return (negative + formattedAmount + afterComma).escapeHTML();
-		}
+		return NRS.format({
+			"negative": negative,
+			"amount": amount,
+			"afterComma": afterComma
+		}, no_escaping);
 	}
 
 	NRS.formatTimestamp = function(timestamp, date_only) {
