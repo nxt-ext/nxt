@@ -149,6 +149,9 @@ final class DbVersion {
             case 32:
                 apply(null);
             case 33:
+                apply(null);
+            case 34:
+                Logger.logDebugMessage("Validating existing transactions...");
                 try (Connection con = Db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
                      ResultSet rs = pstmt.executeQuery()) {
@@ -171,7 +174,7 @@ final class DbVersion {
                     throw new RuntimeException(e.toString(), e);
                 }
                 apply(null);
-            case 34:
+            case 35:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

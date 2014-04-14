@@ -12,6 +12,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ALIAS_NAME = incorrect("alias", "(must contain only digits and latin letters)");
     public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Constants.MAX_ALIAS_URI_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_SECRET_PHRASE = missing("secretPhrase");
+    public static final JSONStreamAware INCORRECT_PUBLIC_KEY = incorrect("publicKey");
     public static final JSONStreamAware MISSING_ALIAS = missing("alias");
     public static final JSONStreamAware MISSING_URI = missing("uri");
     public static final JSONStreamAware MISSING_FEE = missing("feeNQT");
@@ -147,6 +148,13 @@ public final class JSONResponses {
         FEATURE_NOT_AVAILABLE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 3);
+        response.put("errorDescription", "Either secretPhrase or publicKey must be specified");
+        MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = JSON.prepare(response);
+    }
 
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();
