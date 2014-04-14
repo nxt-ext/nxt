@@ -1,47 +1,6 @@
 (function($, NRS, undefined) {
 	"use strict";
 
-	function nl2br(str) {
-		return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br />$2');
-	}
-
-	var __entityMap = {
-		"&": "&amp;",
-		"<": "&lt;",
-		">": "&gt;",
-		'"': '&quot;',
-		"'": '&#39;',
-		"/": '&#x2F;'
-	};
-
-	String.prototype.escapeHTML = function() {
-		return String(this).replace(/[&<>"'\/]/g, function(s) {
-			return __entityMap[s];
-		});
-	}
-
-	String.prototype.unescapeHTML = function() {
-		return String(this).replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace('&quot;', '"').replace('&#39;', "'").replace('&#x2F;', "/");
-	}
-
-	function escapeHtml(string) {
-		return String(string).replace(/[&<>"'\/]/g, function(s) {
-			return entityMap[s];
-		});
-	}
-
-	Number.prototype.pad = function(size) {
-		var s = String(this);
-		if (typeof(size) !== "number") {
-			size = 2;
-		}
-
-		while (s.length < size) {
-			s = "0" + s;
-		}
-		return s;
-	}
-
 	// save the original function object
 	var _superModal = $.fn.modal;
 
@@ -3959,7 +3918,7 @@
 				}
 
 				if (decoded) {
-					decoded = nl2br(decoded.escapeHTML());
+					decoded = decoded.escapeHTML().nl2br();
 				} else {
 					decoded = "<i class='fa fa-warning'></i> Could not decrypt message.";
 					extra = "decryption_failed";
@@ -3989,7 +3948,7 @@
 						var decoded = NRS.convertFromHex8(hex);
 					}
 
-					output += "<dd class='to tentative'><p>" + nl2br(decoded.escapeHTML()) + "</p></dd>";
+					output += "<dd class='to tentative'><p>" + decoded.escapeHTML().nl2br() + "</p></dd>";
 				}
 			}
 		}
@@ -5913,7 +5872,7 @@
 						sender_info += "<strong>From</strong>: " + NRS.getAccountTitle(transaction.sender);
 					}
 
-					$("#transaction_info_output").html(nl2br(message.escapeHTML()) + "<br /><br />" + sender_info).show();
+					$("#transaction_info_output").html(message.escapeHTML().nl2br() + "<br /><br />" + sender_info).show();
 					break;
 				case 1:
 					var data = {
