@@ -14,6 +14,7 @@ import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.INCORRECT_PRICE;
+import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -25,6 +26,7 @@ import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.MISSING_PRICE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
@@ -129,19 +131,24 @@ final class ParameterParser {
     }
 
     static Account getSenderAccount(HttpServletRequest req) throws ParameterException {
+        Account account;
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        if (secretPhrase != null) {
-            return Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        }
         String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
-        if (publicKeyString == null) {
+        if (secretPhrase != null) {
+            account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+        } else if (publicKeyString != null) {
+            try {
+                account = Account.getAccount(Convert.parseHexString(publicKeyString));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_PUBLIC_KEY);
+            }
+        } else {
+            throw new ParameterException(MISSING_SECRET_PHRASE_OR_PUBLIC_KEY);
+        }
+        if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }
-        try {
-            return Account.getAccount(Convert.parseHexString(publicKeyString));
-        } catch (RuntimeException e) {
-            throw new ParameterException(UNKNOWN_ACCOUNT);
-        }
+        return account;
     }
 
     static Account getAccount(HttpServletRequest req) throws ParameterException {
