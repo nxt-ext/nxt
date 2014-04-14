@@ -53,7 +53,6 @@ function XoredData() {
     
     this.encrypt = function (plaintext, myPrivateKey, theirPublicKey) {
         var nonce = xorEncrypt(plaintext, 0, plaintext.length, myPrivateKey, theirPublicKey);
-		nonce = [145, 70, 101, 30, 97, 194, 148, 211, 182, 15, 200, 96, 76, 244, 45, 60, 53, 58, 91, 95, 146, 29, 79, 187, 81, 33, 213, 51, 174, 53, 55, 35];
         
         this.init(plaintext, nonce);
         return this;
