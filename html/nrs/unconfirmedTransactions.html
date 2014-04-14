@@ -49,13 +49,13 @@
 				element.title = "Amount";
 				element = row.insertCell(9);
 				element.className = "text";
-				element.innerHTML = formatAmount(transaction.amount);
+				element.innerHTML = formatAmount(transaction.amountNQT);
 				element = row.insertCell(10);
 				element.className = "fee";
 				element.title = "Fee";
 				element = row.insertCell(11);
 				element.className = "text";
-				element.innerHTML = formatAmount(transaction.fee);
+				element.innerHTML = formatAmount(transaction.feeNQT);
 				element = row.insertCell(12);
 				element.className = "info";
 				element.title = "Id: " + transaction.id;
@@ -71,21 +71,30 @@
 				}
 			}
 			
-			function formatAmount(amount) {
-				var digits=[], formattedAmount = "", i;
-				do {
-					digits[digits.length] = amount % 10;
-					amount = Math.floor(amount / 10);
-				} while (amount > 0);
-				for (i = 0; i < digits.length; i++) {
-					if (i > 0 && i % 3 == 0) {
-						formattedAmount = "'" + formattedAmount;
-					}
-					formattedAmount = digits[i] + formattedAmount;
-				}
-				return formattedAmount;
-			}
-			
+            function formatAmount(amount) {
+                var digits=[], formattedAmount = "", i;
+                var wholePart = Math.floor(amount / 100000000);
+                var fractionalPart = amount % 100000000;
+                do {
+                    digits[digits.length] = wholePart % 10;
+                    wholePart = Math.floor(wholePart / 10);
+                } while (wholePart > 0);
+                for (i = 0; i < digits.length; i++) {
+                    if (i > 0 && i % 3 == 0) {
+                        formattedAmount = "'" + formattedAmount;
+                    }
+                    formattedAmount = digits[i] + formattedAmount;
+                }
+                if (fractionalPart != 0) {
+                    formattedAmount += ".";
+                    for (i = ("" + fractionalPart).length; i < 8; i++) {
+                        formattedAmount += "0";
+                    }
+                    formattedAmount += fractionalPart;
+                }
+                return formattedAmount;
+            }
+
 			function formatDeadline(deadline) {
 				if (deadline == 0) {
 					return "No deadline";

@@ -12,9 +12,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -28,14 +30,43 @@ public final class Account {
 
         public final Long accountId;
         public final Long assetId;
-        public final Integer quantity;
+        public final Long quantityQNT;
 
-        private AccountAsset(Long accountId, Long assetId, Integer quantity) {
+        private AccountAsset(Long accountId, Long assetId, Long quantityQNT) {
             this.accountId = accountId;
             this.assetId = assetId;
-            this.quantity = quantity;
+            this.quantityQNT = quantityQNT;
         }
 
+    }
+
+    static {
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                int height = block.getHeight();
+                for (Account account : getAllAccounts()) {
+                    if (account.currentLeasingHeightFrom != Integer.MAX_VALUE) {
+                        if (height == account.currentLeasingHeightFrom) {
+                            Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                        } else if (height == account.currentLeasingHeightTo) {
+                            Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                            if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
+                                account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                            } else {
+                                account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
+                                account.currentLeasingHeightTo = account.nextLeasingHeightTo;
+                                account.currentLesseeId = account.nextLesseeId;
+                                account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                                if (height == account.currentLeasingHeightFrom) {
+                                    Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -94,62 +125,105 @@ public final class Account {
 
     private final Long id;
     private final int height;
-    private byte[] publicKey;
-    private int keyHeight;
-    private long balance;
-    private long unconfirmedBalance;
+    private volatile byte[] publicKey;
+    private volatile int keyHeight;
+    private long balanceNQT;
+    private long unconfirmedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
-    private final Map<Long, Integer> assetBalances = new HashMap<>();
-    private final Map<Long, Integer> unconfirmedAssetBalances = new HashMap<>();
+    private volatile int currentLeasingHeightFrom;
+    private volatile int currentLeasingHeightTo;
+    private volatile Long currentLesseeId;
+    private volatile int nextLeasingHeightFrom;
+    private volatile int nextLeasingHeightTo;
+    private volatile Long nextLesseeId;
+    private Set<Long> leaserIds = new HashSet<>();
+
+    private final Map<Long, Long> assetBalances = new HashMap<>();
+    private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
+
+    private volatile String name;
+    private volatile String description;
 
     private Account(Long id) {
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
+        currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
     public Long getId() {
         return id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    void setAccountInfo(String name, String description) {
+        this.name = Convert.emptyToNull(name.trim());
+        this.description = Convert.emptyToNull(description.trim());
+    }
+
     public synchronized byte[] getPublicKey() {
         return publicKey;
     }
 
-    public synchronized long getBalance() {
-        return balance;
+    public synchronized long getBalanceNQT() {
+        return balanceNQT;
     }
 
-    public synchronized long getUnconfirmedBalance() {
-        return unconfirmedBalance;
+    public synchronized long getUnconfirmedBalanceNQT() {
+        return unconfirmedBalanceNQT;
     }
 
-    public int getEffectiveBalance() {
+    public long getEffectiveBalanceNXT() {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3 && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
+
+        if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
+                && (publicKey == null || keyHeight == -1 || lastBlock.getHeight() - keyHeight <= 1440)) {
+            return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
+        }
+
+        if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3
+                && this.height < Constants.TRANSPARENT_FORGING_BLOCK_2) {
 
             if (this.height == 0) {
-                return (int)(getBalance() / 100);
+                return getBalanceNQT() / Constants.ONE_NXT;
             }
             if (lastBlock.getHeight() - this.height < 1440) {
                 return 0;
             }
-            int receivedInlastBlock = 0;
+            long receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.getTransactions()) {
                 if (transaction.getRecipientId().equals(id)) {
-                    receivedInlastBlock += transaction.getAmount();
+                    receivedInlastBlock += transaction.getAmountNQT();
                 }
             }
-            return (int)(getBalance() / 100) - receivedInlastBlock;
-
-        } else {
-            return (int)(getGuaranteedBalance(1440) / 100);
+            return (getBalanceNQT() - receivedInlastBlock) / Constants.ONE_NXT;
         }
+
+        if (lastBlock.getHeight() < currentLeasingHeightFrom) {
+                return (getGuaranteedBalanceNQT(1440) + getExtraEffectiveBalanceNQT()) / Constants.ONE_NXT;
+        }
+
+        return getExtraEffectiveBalanceNQT() / Constants.ONE_NXT;
 
     }
 
-    public synchronized long getGuaranteedBalance(final int numberOfConfirmations) {
+    private long getExtraEffectiveBalanceNQT() {
+        long extraEffectiveBalanceNQT = 0;
+        for (Long accountId : leaserIds) {
+            extraEffectiveBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
+        }
+        return extraEffectiveBalanceNQT;
+    }
+
+    public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
             return 0;
         }
@@ -177,16 +251,40 @@ public final class Account {
 
     }
 
-    public synchronized Integer getUnconfirmedAssetBalance(Long assetId) {
+    public synchronized Long getUnconfirmedAssetBalanceQNT(Long assetId) {
         return unconfirmedAssetBalances.get(assetId);
     }
 
-    public Map<Long, Integer> getAssetBalances() {
+    public Map<Long, Long> getAssetBalancesQNT() {
         return Collections.unmodifiableMap(assetBalances);
     }
 
-    public Map<Long, Integer> getUnconfirmedAssetBalances() {
+    public Map<Long, Long> getUnconfirmedAssetBalancesQNT() {
         return Collections.unmodifiableMap(unconfirmedAssetBalances);
+    }
+
+    void leaseEffectiveBalance(Long lesseeId, short period) {
+        Account lessee = Account.getAccount(lesseeId);
+        if (lessee != null && lessee.getPublicKey() != null) {
+            Block lastBlock = Nxt.getBlockchain().getLastBlock();
+            if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
+
+                currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                currentLeasingHeightTo = currentLeasingHeightFrom + period;
+                currentLesseeId = lesseeId;
+                nextLeasingHeightFrom = Integer.MAX_VALUE;
+
+            } else {
+
+                nextLeasingHeightFrom = lastBlock.getHeight() + 1440;
+                if (nextLeasingHeightFrom < currentLeasingHeightTo) {
+                    nextLeasingHeightFrom = currentLeasingHeightTo;
+                }
+                nextLeasingHeightTo = nextLeasingHeightFrom + period;
+                nextLesseeId = lesseeId;
+
+            }
+        }
     }
 
     // returns true iff:
@@ -245,49 +343,49 @@ public final class Account {
         }
     }
 
-    synchronized int getAssetBalance(Long assetId) {
+    synchronized long getAssetBalanceQNT(Long assetId) {
         return Convert.nullToZero(assetBalances.get(assetId));
     }
 
-    void addToAssetBalance(Long assetId, int quantity) {
+    void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Integer assetBalance = assetBalances.get(assetId);
+            Long assetBalance = assetBalances.get(assetId);
             if (assetBalance == null) {
-                assetBalances.put(assetId, quantity);
+                assetBalances.put(assetId, quantityQNT);
             } else {
-                assetBalances.put(assetId, assetBalance + quantity);
+                assetBalances.put(assetId, Convert.safeAdd(assetBalance, quantityQNT));
             }
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
     }
 
-    void addToUnconfirmedAssetBalance(Long assetId, int quantity) {
+    void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
             if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantity);
+                unconfirmedAssetBalances.put(assetId, quantityQNT);
             } else {
-                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+                unconfirmedAssetBalances.put(assetId, Convert.safeAdd(unconfirmedAssetBalance, quantityQNT));
             }
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToAssetAndUnconfirmedAssetBalance(Long assetId, int quantity) {
+    void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Integer assetBalance = assetBalances.get(assetId);
+            Long assetBalance = assetBalances.get(assetId);
             if (assetBalance == null) {
-                assetBalances.put(assetId, quantity);
+                assetBalances.put(assetId, quantityQNT);
             } else {
-                assetBalances.put(assetId, assetBalance + quantity);
+                assetBalances.put(assetId, Convert.safeAdd(assetBalance, quantityQNT));
             }
-            Integer unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
             if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantity);
+                unconfirmedAssetBalances.put(assetId, quantityQNT);
             } else {
-                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance + quantity);
+                unconfirmedAssetBalances.put(assetId, Convert.safeAdd(unconfirmedAssetBalance, quantityQNT));
             }
         }
         listeners.notify(this, Event.ASSET_BALANCE);
@@ -296,47 +394,47 @@ public final class Account {
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
-    void addToBalance(long amount) {
+    void addToBalanceNQT(long amountNQT) {
         synchronized (this) {
-            this.balance += amount;
-            addToGuaranteedBalance(amount);
+            this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
+            addToGuaranteedBalanceNQT(amountNQT);
         }
-        if (amount != 0) {
+        if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
         }
     }
 
-    void addToUnconfirmedBalance(long amount) {
-        if (amount == 0) {
+    void addToUnconfirmedBalanceNQT(long amountNQT) {
+        if (amountNQT == 0) {
             return;
         }
         synchronized (this) {
-            this.unconfirmedBalance += amount;
+            this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
         }
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
 
-    void addToBalanceAndUnconfirmedBalance(long amount) {
+    void addToBalanceAndUnconfirmedBalanceNQT(long amountNQT) {
         synchronized (this) {
-            this.balance += amount;
-            this.unconfirmedBalance += amount;
-            addToGuaranteedBalance(amount);
+            this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
+            this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
+            addToGuaranteedBalanceNQT(amountNQT);
         }
-        if (amount != 0) {
+        if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
             listeners.notify(this, Event.UNCONFIRMED_BALANCE);
         }
     }
 
-    private synchronized void addToGuaranteedBalance(long amount) {
+    private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
         int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
         GuaranteedBalance last = null;
         if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
             // this only happens while last block is being popped off
-            if (amount > 0) {
+            if (amountNQT > 0) {
                 // this is a reversal of a withdrawal or a fee, so previous gb records need to be corrected
                 for (GuaranteedBalance gb : guaranteedBalances) {
-                    gb.balance += amount;
+                    gb.balance += amountNQT;
                 }
             } // deposits don't need to be reversed as they have never been applied to old gb records to begin with
             last.ignore = true; // set dirty flag
@@ -350,12 +448,12 @@ public final class Account {
                     && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
                 trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
                 if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Constants.TRANSPARENT_FORGING_BLOCK_5) {
-                    gb.balance += amount; // because of a bug which leads to a fork
-                } else if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_5 && amount < 0) {
-                    gb.balance += amount;
+                    gb.balance += amountNQT; // because of a bug which leads to a fork
+                } else if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_5 && amountNQT < 0) {
+                    gb.balance += amountNQT;
                 }
-            } else if (amount < 0) {
-                gb.balance += amount; // subtract current block withdrawals from all previous gb records
+            } else if (amountNQT < 0) {
+                gb.balance += amountNQT; // subtract current block withdrawals from all previous gb records
             }
             // ignore deposits when updating previous gb records
         }
@@ -369,11 +467,11 @@ public final class Account {
         }
         if (guaranteedBalances.size() == 0 || last.height < blockchainHeight) {
             // this is the first transaction affecting this account in a newly added block
-            guaranteedBalances.add(new GuaranteedBalance(blockchainHeight, balance));
+            guaranteedBalances.add(new GuaranteedBalance(blockchainHeight, balanceNQT));
         } else if (last.height == blockchainHeight) {
             // following transactions for same account in a newly added block
             // for the current block, guaranteedBalance (0 confirmations) must be same as balance
-            last.balance = balance;
+            last.balance = balanceNQT;
             last.ignore = false;
         } else {
             // should have been handled in the block popped off case

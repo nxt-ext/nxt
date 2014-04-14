@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -8,10 +9,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
-
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 
@@ -22,39 +19,29 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String account = req.getParameter("account");
-        if (account == null) {
-            return MISSING_ACCOUNT;
-        }
+        Account account = ParameterParser.getAccount(req);
 
-        Account accountData;
-        try {
-            accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-            if (accountData == null) {
-                return UNKNOWN_ACCOUNT;
+        JSONObject response = JSONData.accountBalance(account);
+
+        synchronized (account) {
+            if (account.getPublicKey() != null) {
+                response.put("publicKey", Convert.toHexString(account.getPublicKey()));
             }
-        } catch (RuntimeException e) {
-            return INCORRECT_ACCOUNT;
-        }
-
-        JSONObject response = new JSONObject();
-        synchronized (accountData) {
-            if (accountData.getPublicKey() != null) {
-                response.put("publicKey", Convert.toHexString(accountData.getPublicKey()));
+            if (account.getName() != null) {
+                response.put("name", account.getName());
             }
-
-            response.put("balance", accountData.getBalance());
-            response.put("effectiveBalance", accountData.getEffectiveBalance() * 100L);
-            response.put("unconfirmedBalance", accountData.getUnconfirmedBalance());
+            if (account.getDescription() != null) {
+                response.put("description", account.getDescription());
+            }
 
             JSONArray assetBalances = new JSONArray();
-            for (Map.Entry<Long, Integer> assetBalanceEntry : accountData.getAssetBalances().entrySet()) {
+            for (Map.Entry<Long, Long> assetBalanceEntry : account.getAssetBalancesQNT().entrySet()) {
 
                 JSONObject assetBalance = new JSONObject();
                 assetBalance.put("asset", Convert.toUnsignedLong(assetBalanceEntry.getKey()));
-                assetBalance.put("balance", assetBalanceEntry.getValue());
+                assetBalance.put("balanceQNT", String.valueOf(assetBalanceEntry.getValue()));
                 assetBalances.add(assetBalance);
 
             }
@@ -63,11 +50,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             }
 
             JSONArray unconfirmedAssetBalances = new JSONArray();
-            for (Map.Entry<Long, Integer> unconfirmedAssetBalanceEntry : accountData.getUnconfirmedAssetBalances().entrySet()) {
+            for (Map.Entry<Long, Long> unconfirmedAssetBalanceEntry : account.getUnconfirmedAssetBalancesQNT().entrySet()) {
 
                 JSONObject unconfirmedAssetBalance = new JSONObject();
                 unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(unconfirmedAssetBalanceEntry.getKey()));
-                unconfirmedAssetBalance.put("unconfirmedBalance", unconfirmedAssetBalanceEntry.getValue());
+                unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(unconfirmedAssetBalanceEntry.getValue()));
                 unconfirmedAssetBalances.add(unconfirmedAssetBalance);
 
             }

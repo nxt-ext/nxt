@@ -1,15 +1,13 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.util.Convert;
+import nxt.NxtException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_NUMBER_OF_CONFIRMATIONS;
-import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_NUMBER_OF_CONFIRMATIONS;
 
 public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
@@ -21,30 +19,22 @@ public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String account = req.getParameter("account");
+        Account account = ParameterParser.getAccount(req);
+
         String numberOfConfirmationsValue = req.getParameter("numberOfConfirmations");
-        if (account == null) {
-            return MISSING_ACCOUNT;
-        } else if (numberOfConfirmationsValue == null) {
+        if (numberOfConfirmationsValue == null) {
             return MISSING_NUMBER_OF_CONFIRMATIONS;
         }
 
-        Account accountData;
-        try {
-            accountData = Account.getAccount(Convert.parseUnsignedLong(account));
-        } catch (RuntimeException e) {
-            return INCORRECT_ACCOUNT;
-        }
-
         JSONObject response = new JSONObject();
-        if (accountData == null) {
-            response.put("guaranteedBalance", 0);
+        if (account == null) {
+            response.put("guaranteedBalanceNQT", "0");
         } else {
             try {
                 int numberOfConfirmations = Integer.parseInt(numberOfConfirmationsValue);
-                response.put("guaranteedBalance", accountData.getGuaranteedBalance(numberOfConfirmations));
+                response.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(numberOfConfirmations)));
             } catch (NumberFormatException e) {
                 return INCORRECT_NUMBER_OF_CONFIRMATIONS;
             }

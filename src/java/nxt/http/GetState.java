@@ -36,14 +36,14 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         long totalEffectiveBalance = 0;
         for (Account account : Account.getAllAccounts()) {
-            long effectiveBalance = account.getEffectiveBalance();
-            if (effectiveBalance > 0) {
-                totalEffectiveBalance += effectiveBalance;
+            long effectiveBalanceNXT = account.getEffectiveBalanceNXT();
+            if (effectiveBalanceNXT > 0) {
+                totalEffectiveBalance += effectiveBalanceNXT;
             }
         }
-        response.put("totalEffectiveBalance", totalEffectiveBalance * 100L);
+        response.put("totalEffectiveBalanceNXT", totalEffectiveBalance);
 
-        response.put("numberOfBlocks", Nxt.getBlockchain().getBlockCount());
+        response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
         response.put("numberOfAssets", Asset.getAllAssets().size());
@@ -57,7 +57,6 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfPolls", Poll.getAllPolls().size());
         response.put("numberOfVotes", Vote.getVotes().size());
         response.put("numberOfPeers", Peers.getAllPeers().size());
-        //response.put("numberOfUsers", Users.getAllUsers().size()); no longer meaningful
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Nxt.getBlockchainProcessor().getLastBlockchainFeeder();
         response.put("lastBlockchainFeeder", lastBlockchainFeeder == null ? null : lastBlockchainFeeder.getAnnouncedAddress());

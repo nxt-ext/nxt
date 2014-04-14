@@ -19,7 +19,6 @@ import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
-import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
@@ -27,7 +26,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + 5);
-        System.arraycopy(new String[]{"secretPhrase", "publicKey", "fee", "deadline", "referencedTransaction"}, 0,
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNQT", "deadline", "referencedTransaction"}, 0,
                 result, parameters.length, 5);
         return result;
     }
@@ -36,39 +35,21 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         super(addCommonParameters(parameters));
     }
 
-    final Account getAccount(HttpServletRequest req) {
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        if (secretPhrase != null) {
-            return Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        }
-        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
-        if (publicKeyString == null) {
-            return null;
-        }
-        try {
-            return Account.getAccount(Convert.parseHexString(publicKeyString));
-        } catch (RuntimeException e) {
-            return null;
-        }
-    }
-
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
-        throws NxtException.ValidationException {
+        throws NxtException {
         return createTransaction(req, senderAccount, Genesis.CREATOR_ID, 0, attachment);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId,
-                                            int amount, Attachment attachment) throws NxtException.ValidationException {
+                                            long amountNQT, Attachment attachment)
+            throws NxtException {
         String deadlineValue = req.getParameter("deadline");
-        String feeValue = req.getParameter("fee");
         String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
-        } else if (feeValue == null) {
-            return MISSING_FEE;
         } else if (deadlineValue == null) {
             return MISSING_DEADLINE;
         }
@@ -83,17 +64,16 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             return INCORRECT_DEADLINE;
         }
 
-        int fee;
-        try {
-            fee = Integer.parseInt(feeValue);
-            if (fee < minimumFee() || fee >= Constants.MAX_BALANCE) {
-                return INCORRECT_FEE;
-            }
-        } catch (NumberFormatException e) {
+        long feeNQT = ParameterParser.getFeeNQT(req);
+        if (feeNQT < minimumFeeNQT()) {
             return INCORRECT_FEE;
         }
 
-        if ((amount + fee) * 100L > senderAccount.getUnconfirmedBalance()) {
+        try {
+            if (Convert.safeAdd(amountNQT, feeNQT) > senderAccount.getUnconfirmedBalanceNQT()) {
+                return NOT_ENOUGH_FUNDS;
+            }
+        } catch (ArithmeticException e) {
             return NOT_ENOUGH_FUNDS;
         }
 
@@ -109,10 +89,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         Transaction transaction = attachment == null ?
                 Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                        amount, fee, referencedTransaction)
+                        amountNQT, feeNQT, referencedTransaction)
                 :
                 Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                        amount, fee, referencedTransaction, attachment);
+                        amountNQT, feeNQT, referencedTransaction, attachment);
 
         JSONObject response = new JSONObject();
         try {
@@ -136,8 +116,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return true;
     }
 
-    int minimumFee() {
-        return 1;
+    long minimumFeeNQT() {
+        return Constants.ONE_NXT;
     }
 
 }

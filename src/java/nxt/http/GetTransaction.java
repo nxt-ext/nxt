@@ -3,7 +3,6 @@ package nxt.http;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -45,24 +44,16 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
             return INCORRECT_TRANSACTION;
         }
 
-        JSONObject response;
         if (transaction == null) {
             transaction = Nxt.getTransactionProcessor().getUnconfirmedTransaction(transactionId);
             if (transaction == null) {
                 return UNKNOWN_TRANSACTION;
             }
-            response = transaction.getJSONObject();
+            return JSONData.unconfirmedTransaction(transaction);
         } else {
-            response = transaction.getJSONObject();
-            response.put("block", Convert.toUnsignedLong(transaction.getBlockId()));
-            response.put("confirmations", Nxt.getBlockchain().getLastBlock().getHeight() - transaction.getHeight());
-            response.put("blockTimestamp", transaction.getBlockTimestamp());
+            return JSONData.transaction(transaction);
         }
-        response.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
-        response.put("hash", transaction.getHash());
 
-
-        return response;
     }
 
 }

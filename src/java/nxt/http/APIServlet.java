@@ -1,5 +1,6 @@
 package nxt.http;
 
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.JSON;
@@ -78,6 +79,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getConstants", GetConstants.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
+        if (Constants.isTestnet) {
+            map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
+        }
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
         map.put("getPoll", GetPoll.instance);
@@ -103,6 +107,7 @@ public final class APIServlet extends HttpServlet {
         map.put("placeBidOrder", PlaceBidOrder.instance);
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
+        map.put("setAccountInfo", SetAccountInfo.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
@@ -155,6 +160,8 @@ public final class APIServlet extends HttpServlet {
 
             try {
                 response = apiRequestHandler.processRequest(req);
+            } catch (ParameterException e) {
+                response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
                 Logger.logDebugMessage("Error processing API request", e);
                 response = ERROR_INCORRECT_REQUEST;

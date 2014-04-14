@@ -86,7 +86,7 @@ public final class Token {
             byte[] data = new byte[websiteBytes.length + 36];
             System.arraycopy(websiteBytes, 0, data, 0, websiteBytes.length);
             System.arraycopy(tokenBytes, 0, data, websiteBytes.length, 36);
-            boolean isValid = Crypto.verify(signature, data, publicKey);
+            boolean isValid = Crypto.verify(signature, data, publicKey, true);
 
             return new Token(publicKey, timestamp, isValid);
 

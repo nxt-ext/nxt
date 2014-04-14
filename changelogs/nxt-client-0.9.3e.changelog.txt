@@ -1,0 +1,28 @@
+Removed all quantityINT, balanceINT, amountNXT, priceNXT, feeNXT return values
+from the JSON API, and removed support for parsing of INT and NXT parameters.
+Only NQT (for amounts) and QNT (for quantities) units are supported now.
+
+Enabled running on main net. NQT_BLOCK is set to 150000 for main net, until
+then fractional amounts remain disabled. Integer NXT amounts and fees should
+work normally on main net too, and this release should be network compatible
+with 0.8.13 peers. NOTE: 0.7.* peers are no longer supported. Everyone should
+update to 0.8.13 as a stable version now, and be prepared to update to the 0.9
+branch when it is declared stable.
+
+As the NRS javascript UI will no longer be developed, and nobody has the time
+to convert it to use a BigInteger javascript library, it still accepts amounts
+and fees in NXT, which are converted to NQT on the server side. Return values
+are in NQT, and may result in overflow in the javascript for amounts exceeding
+2^53 NQT (around 90 million NXT). Such overflow should only affect the UI,
+inputs are handled as strings and converted to longs on the server side. Still,
+for transactions of such size, better stay with the stable 0.8.13 branch, or
+use a different client. 
+
+At first run on main net, just like it did on test net, the database version
+code will update the amounts and fees columns in the block and transaction
+tables to NQT, which will take some time. During that process the database
+size will temporarily increase a lot, to around 1 GB. It will shrink back at
+shutdown (which again takes some time), to around 180 MB.
+
+
+

@@ -13,7 +13,6 @@ import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_MESSAGE;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class SendMessage extends CreateTransaction {
 
@@ -24,7 +23,7 @@ public final class SendMessage extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String recipientValue = req.getParameter("recipient");
         String messageValue = req.getParameter("message");
@@ -52,10 +51,7 @@ public final class SendMessage extends CreateTransaction {
             return INCORRECT_ARBITRARY_MESSAGE;
         }
 
-        Account account = getAccount(req);
-        if (account == null) {
-            return UNKNOWN_ACCOUNT;
-        }
+        Account account = ParameterParser.getSenderAccount(req);
 
         Attachment attachment = new Attachment.MessagingArbitraryMessage(message);
         return createTransaction(req, account, recipient, 0, attachment);
