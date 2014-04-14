@@ -504,8 +504,8 @@
 
 		if (typeof PassPhraseGenerator == "undefined") {
 			$.when(
-				$.getScript("js/seedrandom.js"),
-				$.getScript("js/passphrasegenerator.js")
+				$.getScript("js/crypto/3rdparty/seedrandom.js"),
+				$.getScript("js/crypto/passphrasegenerator.js")
 			).done(function() {
 				$loading.hide();
 				$loaded.show();
@@ -808,7 +808,7 @@
 
 
 
-		var worker = new Worker("js/worker_sha256.js");
+		var worker = new Worker("js/crypto/sha256worker.js");
 
 		worker.onmessage = function(e) {
 			if (e.data.progress) {
@@ -7320,7 +7320,7 @@
 		var $el = $(elements);
 
 		var clipboard = new ZeroClipboard($el, {
-			moviePath: "js/ZeroClipboard.swf"
+			moviePath: "js/3rdparty/zeroclipboard.swf"
 		});
 
 
