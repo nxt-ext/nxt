@@ -640,5 +640,29 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	}
 
+	NRS.getAccountTitle = function(accountId) {
+		if (accountId in NRS.contacts) {
+			return NRS.contacts[accountId].name.escapeHTML();
+		} else if (accountId == NRS.account) {
+			return "You";
+		} else {
+			return NRS.getAccountFormatted(accountId);
+		}
+	}
+
+	NRS.getAccountFormatted = function(accountId) {
+		if (NRS.settings["use_new_address_format"]) {
+			var address = new NxtAddress();
+
+			if (address.set(accountId, true)) {
+				return address.toString().escapeHTML();
+			} else {
+				return String(accountId).escapeHTML();
+			}
+		} else {
+			return String(accountId).escapeHTML();
+		}
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
