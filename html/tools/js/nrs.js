@@ -94,17 +94,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.allowLoginViaEnter();
 
-		$(".modal form input").keydown(function(e) {
-			if (e.which == "13") {
-				e.preventDefault();
-				if (NRS.settings["submit_on_enter"] && e.target.type != "textarea") {
-					$(this).submit();
-				} else {
-					return false;
-				}
-			}
-		});
-
 		NRS.automaticallyCheckRecipient();
 
 		$(".show_popover").popover({

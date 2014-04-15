@@ -796,18 +796,5 @@ var NRS = (function(NRS, $, undefined) {
 		return rows;
 	}
 
-	NRS.unlockForm = function($modal, $btn, hide) {
-		$modal.find("button").prop("disabled", false);
-		if ($btn) {
-			$btn.button("reset");
-		}
-		$modal.modal("unlock");
-		if (hide) {
-			$modal.modal("hide");
-		}
-	}
-
-
-
 	return NRS;
 }(NRS || {}, jQuery));
