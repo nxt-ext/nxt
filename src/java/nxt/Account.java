@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -137,7 +136,7 @@ public final class Account {
     private volatile int nextLeasingHeightFrom;
     private volatile int nextLeasingHeightTo;
     private volatile Long nextLesseeId;
-    private Set<Long> leaserIds = new HashSet<>();
+    private Set<Long> leaserIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
 
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();

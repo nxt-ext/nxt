@@ -91,6 +91,8 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_POLL = unknown("poll");
     public static final JSONStreamAware INCORRECT_ACCOUNT_NAME_LENGTH = incorrect("name", "(length must be less than " + Constants.MAX_ACCOUNT_NAME_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware MISSING_PERIOD = missing("period");
+    public static final JSONStreamAware INCORRECT_PERIOD = incorrect("period", "(period must be at least 1440 blocks)");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
