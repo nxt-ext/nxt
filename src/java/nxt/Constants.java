@@ -54,7 +54,7 @@ public final class Constants {
     public static final int TRANSPARENT_FORGING_BLOCK_3 = 51000;
     public static final int TRANSPARENT_FORGING_BLOCK_4 = 64000;
     public static final int TRANSPARENT_FORGING_BLOCK_5 = 67000;
-    public static final int TRANSPARENT_FORGING_BLOCK_6 = Integer.MAX_VALUE;
+    public static final int TRANSPARENT_FORGING_BLOCK_6 = isTestnet ? 73000 : Integer.MAX_VALUE;
     public static final int NQT_BLOCK = isTestnet ? 63000 : Integer.MAX_VALUE;
     public static final int FRACTIONAL_BLOCK = isTestnet ? NQT_BLOCK : Integer.MAX_VALUE;
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : Integer.MAX_VALUE;
