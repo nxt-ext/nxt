@@ -7,6 +7,7 @@ import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
+import nxt.TransactionType;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
@@ -15,6 +16,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
+import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
@@ -84,26 +86,31 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             return INCORRECT_REFERENCED_TRANSACTION;
         }
 
+        JSONObject response = new JSONObject();
+
         // shouldn't try to get publicKey from senderAccount as it may have not been set yet
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
-        Transaction transaction = attachment == null ?
-                Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransaction)
-                :
-                Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransaction, attachment);
-
-        JSONObject response = new JSONObject();
         try {
+            Transaction transaction = attachment == null ?
+                    Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
+                            amountNQT, feeNQT, referencedTransaction)
+                    :
+                    Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
+                            amountNQT, feeNQT, referencedTransaction, attachment);
+
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("transaction", transaction.getStringId());
 
             }
+
             response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
             response.put("hash", transaction.getHash());
+
+        } catch (TransactionType.NotYetEnabledException e) {
+            return FEATURE_NOT_AVAILABLE;
         } catch (NxtException.ValidationException e) {
             response.put("error", e.getMessage());
         }

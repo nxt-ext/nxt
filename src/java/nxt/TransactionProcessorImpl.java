@@ -261,6 +261,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
                 senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, null);
         transaction.setAttachment(attachment);
+        transaction.validateAttachment();
         return transaction;
     }
 
