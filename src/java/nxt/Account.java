@@ -262,6 +262,34 @@ public final class Account {
         return Collections.unmodifiableMap(unconfirmedAssetBalances);
     }
 
+    public Long getCurrentLesseeId() {
+        return currentLesseeId;
+    }
+
+    public Long getNextLesseeId() {
+        return nextLesseeId;
+    }
+
+    public int getCurrentLeasingHeightFrom() {
+        return currentLeasingHeightFrom;
+    }
+
+    public int getCurrentLeasingHeightTo() {
+        return currentLeasingHeightTo;
+    }
+
+    public int getNextLeasingHeightFrom() {
+        return nextLeasingHeightFrom;
+    }
+
+    public int getNextLeasingHeightTo() {
+        return nextLeasingHeightTo;
+    }
+
+    public Set<Long> getLeaserIds() {
+        return Collections.unmodifiableSet(leaserIds);
+    }
+
     void leaseEffectiveBalance(Long lesseeId, short period) {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
