@@ -664,5 +664,150 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.setupClipboardFunctionality = function() {
+		var elements = "#asset_id_dropdown .dropdown-menu a, #account_id_dropdown .dropdown-menu a";
+
+		if (NRS.isLocalHost) {
+			$("#account_id_dropdown li.remote_only").remove();
+		}
+
+		var $el = $(elements);
+
+		var clipboard = new ZeroClipboard($el, {
+			moviePath: "js/3rdparty/zeroclipboard.swf"
+		});
+
+
+		clipboard.on("dataRequested", function(client, args) {
+			switch ($(this).data("type")) {
+				case "account_id":
+					client.setText(NRS.account);
+					break;
+				case "new_address_format":
+					var address = new NxtAddress();
+
+					if (address.set(NRS.account, true)) {
+						client.setText(address.toString());
+					} else {
+						client.setText(NRS.account);
+					}
+
+					break;
+				case "message_link":
+					client.setText(document.URL.replace(/#.*$/, "") + "#message:" + NRS.account);
+					break;
+				case "send_link":
+					client.setText(document.URL.replace(/#.*$/, "") + "#send:" + NRS.account);
+					break;
+				case "asset_id":
+					client.setText($("#asset_id").text());
+					break;
+				case "asset_link":
+					client.setText(document.URL.replace(/#.*/, "") + "#asset:" + $("#asset_id").text());
+					break;
+			}
+		});
+
+		if ($el.hasClass("dropdown-toggle")) {
+			$el.removeClass("dropdown-toggle").data("toggle", "");
+			$el.parent().remove(".dropdown-menu");
+		}
+
+		clipboard.on("complete", function(client, args) {
+			$.growl("Copied to the clipboard successfully.", {
+				"type": "success"
+			});
+		});
+
+		clipboard.on("noflash", function(client, args) {
+			$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {
+				"type": "danger"
+			});
+		});
+		clipboard.on("wrongflash", function(client, args) {
+			$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
+		});
+	}
+
+	NRS.dataLoadFinished = function($table, fadeIn) {
+		var $parent = $table.parent();
+
+		if (fadeIn) {
+			$parent.hide();
+		}
+
+		$parent.removeClass("data-loading");
+
+		var extra = $parent.data("extra");
+
+		if ($table.find("tbody tr").length > 0) {
+			$parent.removeClass("data-empty");
+			if ($parent.data("no-padding")) {
+				$parent.parent().addClass("no-padding");
+			}
+
+			if (extra) {
+				$(extra).show();
+			}
+		} else {
+			$parent.addClass("data-empty");
+			if ($parent.data("no-padding")) {
+				$parent.parent().removeClass("no-padding");
+			}
+			if (extra) {
+				$(extra).hide();
+			}
+		}
+
+		if (fadeIn) {
+			$parent.fadeIn();
+		}
+	}
+
+	NRS.createInfoTable = function(data, fixed) {
+		var rows = "";
+
+		for (var key in data) {
+			var value = data[key];
+
+			//no need to mess with input, already done if Formatted is at end of key
+			if (/Formatted$/i.test(key)) {
+				key = key.replace("Formatted", "");
+				value = String(value).escapeHTML();
+			} else if (key == "Quantity") {
+				if (NRS.useNQT) {
+					value = NRS.formatAmount(new BigInteger(value));
+				} else {
+					value = NRS.formatAmount(value);
+				}
+			} else if (key == "Price" || key == "Total") {
+				if (NRS.useNQT) {
+					value = NRS.formatAmount(new BigInteger(value)) + " NXT";
+				} else {
+					value = NRS.formatAmount(value / 100, true) + " NXT"; //ROUND
+				}
+			} else {
+				value = String(value).escapeHTML();
+			}
+
+			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key).escapeHTML() + ":</td><td style='width:90%;" + (/hash|signature|publicKey/i.test(key) ? "word-break:break-all" : "") + "'>" + value + "</td></tr>";
+		}
+
+		return rows;
+	}
+
+	NRS.unlockForm = function($modal, $btn, hide) {
+		$modal.find("button").prop("disabled", false);
+		if ($btn) {
+			$btn.button("reset");
+		}
+		$modal.modal("unlock");
+		if (hide) {
+			$modal.modal("hide");
+		}
+	}
+
+
+
 	return NRS;
 }(NRS || {}, jQuery));

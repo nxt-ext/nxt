@@ -1,4 +1,14 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.allowLoginViaEnter = function() {
+		$("#login_password").keypress(function(e) {
+			if (e.which == '13') {
+				e.preventDefault();
+				var password = $("#login_password").val();
+				NRS.login(password);
+			}
+		});
+	}
+
 	NRS.showLoginOrWelcomeScreen = function() {
 		if (localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();

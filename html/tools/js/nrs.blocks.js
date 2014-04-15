@@ -1,4 +1,168 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.getBlock = function(blockID, callback, async) {
+		NRS.sendRequest('getBlock', {
+			"block": blockID
+		}, function(response) {
+			if (response.errorCode && response.errorCode == -1) {
+				NRS.getBlock(blockID, callback, async);
+			} else {
+				if (callback) {
+					response.id = blockID;
+					callback(response);
+				}
+			}
+		}, (async == undefined ? true : async));
+	}
+
+	NRS.handleInitialBlocks = function(response) {
+		if (response.errorCode) {
+			return;
+		}
+
+		NRS.blocks.push(response);
+		if (NRS.blocks.length < 10 && response.previousBlock) {
+			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
+		} else {
+			NRS.lastBlockHeight = NRS.blocks[0].height;
+
+			NRS.useNQT = (NRS.isTestNet || NRS.lastBlockHeight >= 150000);
+
+			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 30) {
+				NRS.downloadingBlockchain = true;
+				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
+				$("#show_console").hide();
+				NRS.calculateBlockchainDownloadTime(function() {
+					NRS.updateBlockchainDownloadProgress();
+				});
+			}
+
+			var rows = "";
+
+			for (var i = 0; i < NRS.blocks.length; i++) {
+				var block = NRS.blocks[i];
+
+				if (NRS.useNQT) {
+					block.totalAmount = new BigInteger(block.totalAmountNQT);
+					block.totalFee = new BigInteger(block.totalFeeNQT);
+				}
+
+				rows += "<tr><td>" + (block.numberOfTransactions > 0 ? "<a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block' style='font-weight:bold'>" + String(block.height).escapeHTML() + "</a>" : String(block.height).escapeHTML()) + "</td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmount) + " + " + NRS.formatAmount(block.totalFee) + "</td><td>" + block.numberOfTransactions + "</td></tr>";
+			}
+
+			$("#dashboard_blocks_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#dashboard_blocks_table"));
+		}
+	}
+
+	NRS.handleNewBlocks = function(response) {
+		if (NRS.downloadingBlockchain) {
+			//new round started...
+			if (NRS.temp.blocks.length == 0 && NRS.state.lastBlock != response.id) {
+				return;
+			}
+		}
+
+		//we have all blocks 	
+		if (response.height - 1 == NRS.lastBlockHeight || NRS.temp.blocks.length == 99) {
+			var newBlocks = [];
+
+			//there was only 1 new block (response)
+			if (NRS.temp.blocks.length == 0) {
+				//remove oldest block, add newest block
+				NRS.blocks.unshift(response);
+				newBlocks.push(response);
+			} else {
+				NRS.temp.blocks.push(response);
+				//remove oldest blocks, add newest blocks
+				[].unshift.apply(NRS.blocks, NRS.temp.blocks);
+				newBlocks = NRS.temp.blocks;
+				NRS.temp.blocks = [];
+			}
+
+			if (NRS.blocks.length > 100) {
+				NRS.blocks = NRS.blocks.slice(0, 100);
+			}
+
+			//set new last block height
+			NRS.lastBlockHeight = NRS.blocks[0].height;
+
+			NRS.useNQT = (NRS.isTestNet || NRS.lastBlockHeight >= 150000);
+
+			NRS.incoming.updateDashboardBlocks(newBlocks);
+		} else {
+			NRS.temp.blocks.push(response);
+			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
+		}
+	}
+
+	//we always update the dashboard page..
+	NRS.incoming.updateDashboardBlocks = function(newBlocks) {
+		var newBlockCount = newBlocks.length;
+
+		if (newBlockCount > 10) {
+			newBlocks = newBlocks.slice(0, 10);
+			newBlockCount = newBlocks.length;
+		}
+
+		if (NRS.downloadingBlockchain) {
+			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 30) {
+				NRS.downloadingBlockchain = false;
+				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
+				$("#show_console").show();
+				$.growl("The block chain is now up to date.", {
+					"type": "success"
+				});
+				NRS.checkAliasVersions();
+			} else {
+				NRS.updateBlockchainDownloadProgress();
+			}
+		}
+
+		var rows = "";
+
+		for (var i = 0; i < newBlockCount; i++) {
+			var block = newBlocks[i];
+
+			if (NRS.useNQT) {
+				block.totalAmount = new BigInteger(block.totalAmountNQT);
+				block.totalFee = new BigInteger(block.totalFeeNQT);
+			}
+
+			rows += "<tr><td>" + (block.numberOfTransactions > 0 ? "<a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block' style='font-weight:bold'>" + String(block.height).escapeHTML() + "</a>" : String(block.height).escapeHTML()) + "</td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmount) + " + " + NRS.formatAmount(block.totalFee) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
+		}
+
+		if (newBlockCount == 1) {
+			$("#dashboard_blocks_table tbody tr:last").remove();
+		} else if (newBlockCount == 10) {
+			$("#dashboard_blocks_table tbody").empty();
+		} else {
+			$("#dashboard_blocks_table tbody tr").slice(10 - newBlockCount).remove();
+		}
+
+		$("#dashboard_blocks_table tbody").prepend(rows);
+
+		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
+		$("#dashboard_transactions_table tr.confirmed td.confirmations").each(function() {
+			if ($(this).data("incoming")) {
+				$(this).removeData("incoming");
+				return true;
+			}
+
+			var confirmations = parseInt($(this).data("confirmations"), 10);
+
+			if (confirmations <= 10) {
+				var nrConfirmations = confirmations + newBlocks.length;
+
+				$(this).data("confirmations", nrConfirmations);
+
+				if (nrConfirmations > 10) {
+					nrConfirmations = '10+';
+				}
+				$(this).html(nrConfirmations);
+			}
+		});
+	}
+
 	NRS.pages.blocks = function() {
 		NRS.pageLoading();
 

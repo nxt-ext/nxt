@@ -449,5 +449,52 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	});
 
+	NRS.forms.sendMessageComplete = function(response, data) {
+		NRS.addUnconfirmedTransaction(response.transaction);
+
+		data.message = data._extra.message;
+
+		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
+			$.growl("Your message has been sent! <a href='#' data-account='" + String(data.recipient).escapeHTML() + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
+				"type": "success"
+			});
+		} else {
+			$.growl("Your message has been sent!", {
+				"type": "success"
+			});
+		}
+
+		if (NRS.currentPage == "messages") {
+			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0)).getTime();
+
+			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
+
+			var $sidebar = $("#messages_sidebar");
+
+			var $existing = $sidebar.find("a.list-group-item[data-account=" + String(data.recipient).escapeHTML() + "]");
+
+			if ($existing.length) {
+				$sidebar.prepend($existing);
+				$existing.find("p.list-group-item-text").html(NRS.formatTimestamp(now));
+
+				if ($existing.hasClass("active")) {
+					$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data.message.escapeHTML() + "</p></dd>");
+				}
+			} else {
+				var accountTitle = NRS.getAccountTitle(data.recipient);
+
+				var extra = "";
+
+				if (accountTitle != data.recipient) {
+					extra = " data-context='messages_sidebar_update_context'";
+				}
+
+				var listGroupItem = "<a href='#' class='list-group-item' data-account='" + String(data.recipient).escapeHTML() + "'" + extra + "><h4 class='list-group-item-heading'>" + accountTitle + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(now) + "</p></a>";
+				$("#messages_sidebar").prepend(listGroupItem);
+			}
+		}
+	}
+
+
 	return NRS;
 }(NRS || {}, jQuery));
