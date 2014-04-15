@@ -1,0 +1,24 @@
+Added leaseBalance http API to allow leasing of effective balance. The "period"
+parameter, defined in number of blocks, determines the length of the lease.
+Minimum period is 1440 blocks, maximum 32767. The lease starts 1440 blocks
+after the leaseBalance request is submitted, not immediately. If a lease is
+currently in progress and a new lease is submitted, the new lease will take
+effect at the end of the current lease, but no earlier than 1440 blocks from
+the current block.
+
+During a lease, the whole guaranteed balance of the leasing account, with at
+least 1440 confirmations, is added to the effective balance of the recipient
+account.
+
+Forging fees are earned only by the recipient (lessee) account, and there is
+no mechanism in the blockchain to enforce that the lessee account distributes
+back any part of those fees, so it would be up to the forging pool owners to
+schedule and perform such redistributions.
+
+Information about lessees and lessors is added to the JSON result of the
+getAccount API.
+
+This feature will be enabled on testnet at block 73000 so that it can be
+fully tested.
+
+
