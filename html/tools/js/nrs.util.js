@@ -265,22 +265,47 @@ var NRS = (function(NRS, $, undefined) {
 
 	//what to do if order has more than 8 numbers after . ? (NQT max)
 	NRS.calculateOrderTotal = function(quantityQNT, priceNQT, decimals) {
+		if (typeof quantityQNT != "object") {
+			quantityQNT = new BigInteger(String(quantityQNT));
+		}
+
+		if (typeof priceNQT != "object") {
+			priceNQT = new BigInteger(String(priceNQT));
+		}
+
 		var total = NRS.convertToNXT(quantityQNT.multiply(priceNQT));
 
 		if (decimals) {
+			var afterComma = "";
+
 			var dot = total.indexOf(".");
 			if (dot != -1) {
 				//we converted to NXT, now we need to take into account the QNT decimals...
 				total = total.replace(".", "");
-				total = total.substring(0, dot - decimals) + "." + total.substring(dot - decimals);
+				afterComma = total.substring(dot - decimals);
+				total = total.substring(0, dot - decimals);
 			} else {
-				total = total.substring(0, total.length - decimals) + "." + total.substring(total.length - decimals);
+				afterComma = total.substring(total.length - decimals);
+				total = total.substring(0, total.length - decimals);
+			}
+
+			afterComma = afterComma.replace(/0+$/, "");
+
+			if (afterComma) {
+				total = total + "." + afterComma;
 			}
 		}
 
-		//if only 000 after . then remove.. 33*33=1089.00
-
 		return total;
+	}
+
+	NRS.calculatePercentage = function(a, b) {
+		a = new Big(a.toString());
+		b = new Big(b.toString());
+
+		var result = a.div(b).times(new Big("100"));
+
+		return result.toString();
 	}
 
 	NRS.convertToNXT = function(amount, returnAsObject) {
@@ -382,6 +407,12 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (!quantity) {
 				quantity = "0";
+			}
+
+			afterComma = afterComma.replace(/0+$/, "");
+
+			if (afterComma == ".") {
+				afterComma = "";
 			}
 		}
 

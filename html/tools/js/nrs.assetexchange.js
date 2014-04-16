@@ -357,13 +357,9 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAccount+" + assetId, {
 			"account": NRS.account
 		}, function(response) {
-			if (NRS.useNQT) {
-				var balance = new BigInteger(response.unconfirmedBalanceNQT);
-			} else {
-				var balance = response.unconfirmedBalance / 100;
-			}
+			var balance = new BigInteger(response.unconfirmedBalanceNQT);
 
-			if ((NRS.useNQT && balance.compareTo(BigInteger.ZERO) === 0) || (!NRS.useNQT && balance == 0)) {
+			if (balance.compareTo(BigInteger.ZERO) === 0) {
 				$("#your_nxt_balance").html("0");
 				$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
 			} else {
@@ -667,8 +663,6 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					//ROUND
-
 					$("#asset_exchange_bid_orders_table tbody").empty().append(rows);
 				} else {
 					$("#asset_exchange_bid_orders_table tbody").empty();
@@ -697,12 +691,12 @@ var NRS = (function(NRS, $, undefined) {
 				var rows = "";
 
 				for (var i = 0; i < nrTrades; i++) {
-					trades[i].price /= 100;
+					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
+					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
+					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT, NRS.currentAsset.decimals));
 
-					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatAmount(trades[i].quantity) + "</td><td class='asset_price'>" + NRS.formatAmount(trades[i].price) + "</td><td>" + NRS.formatAmount(trades[i].price * trades[i].quantity, true) + "</td><td>" + String(trades[i].askOrder).escapeHTML() + "</td><td>" + String(trades[i].bidOrder).escapeHTML() + "</td></tr>";
+					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatAmount(trades[i].priceNQT) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td><td>" + String(trades[i].askOrder).escapeHTML() + "</td><td>" + String(trades[i].bidOrder).escapeHTML() + "</td></tr>";
 				}
-
-				//ROUND
 
 				$("#asset_exchange_trade_history_table tbody").empty().append(rows);
 				NRS.dataLoadFinished($("#asset_exchange_trade_history_table"), !refresh);
@@ -1078,7 +1072,6 @@ var NRS = (function(NRS, $, undefined) {
 		};
 	}
 
-
 	$("#asset_exchange_sidebar_context").on("click", "a", function(e) {
 		e.preventDefault();
 
@@ -1212,6 +1205,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAccount+", {
 			"account": NRS.account
 		}, function(response) {
+			console.log(response);
+
 			if (response.assetBalances && response.assetBalances.length) {
 				var result = {
 					"assets": [],
@@ -1255,9 +1250,9 @@ var NRS = (function(NRS, $, undefined) {
 									return;
 								}
 
-								response.price /= 100;
+								response.priceNQT = new BigInteger(response.priceNQT);
 
-								result.ask_orders[input["_extra"].asset] = response.price;
+								result.ask_orders[input["_extra"].asset] = response.priceNQT;
 								count.ask_orders++;
 								if (NRS.checkMyAssetsPageLoaded(count)) {
 									NRS.myAssetsPageLoaded(result);
@@ -1292,9 +1287,9 @@ var NRS = (function(NRS, $, undefined) {
 									return;
 								}
 
-								response.price /= 100;
+								response.priceNQT = new BigInteger(response.priceNQT);
 
-								result.bid_orders[input["_extra"].asset] = response.price;
+								result.bid_orders[input["_extra"].asset] = response.priceNQT;
 								count.bid_orders++;
 								if (NRS.checkMyAssetsPageLoaded(count)) {
 									NRS.myAssetsPageLoaded(result);
@@ -1312,7 +1307,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getAsset+", {
 						"asset": response.assetBalances[i].asset,
 						"_extra": {
-							"balance": response.assetBalances[i].balance
+							"balanceQNT": response.assetBalances[i].balanceQNT
 						}
 					}, function(asset, input) {
 						if (NRS.currentPage != "my_assets") {
@@ -1320,7 +1315,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						asset.asset = input.asset;
-						asset.balance = input["_extra"].balance;
+						asset.balanceQNT = new BigInteger(input["_extra"].balanceQNT);
+						asset.quantityQNT = new BigInteger(asset.quantityQNT);
 
 						result.assets[count.assets] = asset;
 						count.assets++;
@@ -1365,27 +1361,35 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < result.assets.length; i++) {
 			var asset = result.assets[i];
 
-			var percentageAsset = parseFloat(asset.balance / asset.quantity);
-			percentageAsset = Math.round(percentageAsset * 10000000) / 100000;
+			var lowestAskOrder = result.ask_orders[asset.asset];
+			var highestBidOrder = result.bid_orders[asset.asset];
 
-			var lowest_ask_order = result.ask_orders[asset.asset];
-			var highest_bid_order = result.bid_orders[asset.asset];
+			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
 
-			var tentative = 0;
+			if (highestBidOrder != -1) {
+				var total = NRS.calculateOrderTotal(asset.quantityQNT, highestBidOrder, asset.decimals);
+			} else {
+				var total = 0;
+			}
+
+			var tentative = -1;
 
 			if (NRS.unconfirmedTransactions.length) {
 				for (var j = 0; j < NRS.unconfirmedTransactions.length; j++) {
 					var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
 
 					if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 1 && unconfirmedTransaction.attachment.asset == asset.asset) {
-						tentative += unconfirmedTransaction.attachment.quantity;
+						if (tentative == -1) {
+							tentative = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
+						} else {
+							tentative = tentative.add(new BigInteger(unconfirmedTransaction.attachment.quantityQNT));
+						}
 					}
 				}
 			}
 
-			rows += "<tr" + (tentative ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + asset.name.escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatAmount(asset.balance) + (tentative ? " - <span class='added_quantity'>" + NRS.formatAmount(tentative) + "</span>" : "") + "</td><td>" + NRS.formatAmount(asset.quantity) + "</td><td>" + percentageAsset + "%</td><td>" + (lowest_ask_order > 0 ? NRS.formatAmount(lowest_ask_order) : "/") + "</td><td>" + (highest_bid_order > 0 ? NRS.formatAmount(highest_bid_order) : "/") + "</td><td>" + (highest_bid_order > 0 ? NRS.formatAmount(highest_bid_order * asset.balance, true) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "'>Transfer</a></td></tr>";
+			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + asset.name.escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatAmount(lowestAskOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(highestBidOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(total) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "'>Transfer</a></td></tr>";
 		}
-		//ROUND
 
 		$("#my_assets_table tbody").empty().append(rows);
 		NRS.dataLoadFinished($("#my_assets_table"));
@@ -1516,6 +1520,7 @@ var NRS = (function(NRS, $, undefined) {
 									}
 
 									orders[input["_extra"].id].assetName = asset.name;
+									orders[input["_extra"].id].decimals = asset.decimals;
 
 									nr_orders_complete++;
 
@@ -1557,6 +1562,7 @@ var NRS = (function(NRS, $, undefined) {
 						"account": unconfirmedTransaction.sender,
 						"asset": unconfirmedTransaction.attachment.asset,
 						"assetName": "",
+						"decimals": 0,
 						"height": 0,
 						"order": unconfirmedTransaction.id,
 						"price": unconfirmedTransaction.attachment.price,
@@ -1579,6 +1585,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}, function(asset, input) {
 						unconfirmedOrders[input["_extra"].id].assetName = asset.name;
+						unconfirmedOrders[input["_extra"].id].decimals = asset.decimals;
 
 						nr_orders++;
 
@@ -1637,11 +1644,13 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			rows += "<tr data-order='" + String(completeOrder.order).escapeHTML() + "'" + (cancelled ? " class='tentative tentative-crossed'" : (completeOrder.tentative ? " class='tentative'" : "")) + "><td><a href='#' data-goto-asset='" + String(completeOrder.asset).escapeHTML() + "'>" + completeOrder.assetName.escapeHTML() + "</a></td><td>" + NRS.formatAmount(completeOrder.quantity) + "</td><td>" + NRS.formatAmount(completeOrder.price / 100) + "</td><td>" + NRS.formatAmount(completeOrder.quantity * (completeOrder.price / 100)) + "</td><td class='cancel'>" + (cancelled || completeOrder.tentative ? "/" : "<a href='#' data-toggle='modal' data-target='#cancel_order_modal' data-order='" + String(completeOrder.order).escapeHTML() + "' data-type='" + type + "'>Cancel</a>") + "</td></tr>";
+			completeOrder.priceNQT = new BigInteger(completeOrder.priceNQT);
+			completeOrder.quantityQNT = new BigInteger(completeOrder.quantityQNT);
+			completeOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(completeOrder.quantityQNT, completeOrder.priceNQT, completeOrder.decimals));
+
+			rows += "<tr data-order='" + String(completeOrder.order).escapeHTML() + "'" + (cancelled ? " class='tentative tentative-crossed'" : (completeOrder.tentative ? " class='tentative'" : "")) + "><td><a href='#' data-goto-asset='" + String(completeOrder.asset).escapeHTML() + "'>" + completeOrder.assetName.escapeHTML() + "</a></td><td>" + NRS.formatQuantity(completeOrder.quantityQNT, completeOrder.decimals) + "</td><td>" + NRS.formatAmount(completeOrder.priceNQT) + "</td><td>" + NRS.formatAmount(completeOrder.totalNQT) + "</td><td class='cancel'>" + (cancelled || completeOrder.tentative ? "/" : "<a href='#' data-toggle='modal' data-target='#cancel_order_modal' data-order='" + String(completeOrder.order).escapeHTML() + "' data-type='" + type + "'>Cancel</a>") + "</td></tr>";
 		}
 
-
-		//ROUND		
 		$("#open_" + type + "_orders_table tbody").empty().append(rows);
 
 		NRS.dataLoadFinished($("#open_" + type + "_orders_table"));

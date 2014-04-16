@@ -19,3 +19,4 @@ jsbn.js / jsbn2.js - BSD - http://www-cs-students.stanford.edu/~tjw/jsbn/
 jssha256.js - GPL - http://point-at-infinity.org/jssha256/
 nxt_address.js - public domain
 xoreddata.js - MIT - BloodyRookie
+big.js - MIT - https://github.com/MikeMcl/big.js
