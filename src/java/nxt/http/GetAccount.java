@@ -35,6 +35,23 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             if (account.getDescription() != null) {
                 response.put("description", account.getDescription());
             }
+            if (account.getCurrentLesseeId() != null) {
+                response.put("currentLessee", Convert.toUnsignedLong(account.getCurrentLesseeId()));
+                response.put("currentLeasingHeightFrom", account.getCurrentLeasingHeightFrom());
+                response.put("currentLeasingHeightTo", account.getCurrentLeasingHeightTo());
+                if (account.getNextLesseeId() != null) {
+                    response.put("nextLessee", Convert.toUnsignedLong(account.getNextLesseeId()));
+                    response.put("nextLeasingHeightFrom", account.getNextLeasingHeightFrom());
+                    response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
+                }
+            }
+            if (!account.getLeaserIds().isEmpty()) {
+                JSONArray leaserIds = new JSONArray();
+                for (Long leaserId : account.getLeaserIds()) {
+                    leaserIds.add(Convert.toUnsignedLong(leaserId));
+                }
+                response.put("lessors", leaserIds);
+            }
 
             JSONArray assetBalances = new JSONArray();
             for (Map.Entry<Long, Long> assetBalanceEntry : account.getAssetBalancesQNT().entrySet()) {

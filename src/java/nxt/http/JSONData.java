@@ -216,7 +216,7 @@ final class JSONData {
         }
         Long priceNQT = (Long) json.remove("priceNQT");
         if (priceNQT != null) {
-            json.put("priceNQT", String.valueOf("priceNQT"));
+            json.put("priceNQT", String.valueOf(priceNQT));
         }
         return json;
     }
