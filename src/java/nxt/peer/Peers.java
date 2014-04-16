@@ -186,6 +186,8 @@ public final class Peers {
             Peer peer = Peers.addPeer(address);
             if (peer != null) {
                 buf.append(peer.getPeerAddress()).append("; ");
+            } else {
+                Logger.logMessage("Invalid well known peer address: " + address);
             }
         }
         Logger.logDebugMessage("Well known peers: " + buf.toString());
@@ -407,7 +409,7 @@ public final class Peers {
             InetAddress inetAddress = InetAddress.getByName(host);
             return addPeer(inetAddress.getHostAddress(), announcedAddress);
         } catch (URISyntaxException | UnknownHostException e) {
-            Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
+            //Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
             return null;
         }
     }
