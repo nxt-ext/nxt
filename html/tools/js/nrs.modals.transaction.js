@@ -144,7 +144,7 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"Type": "Asset Issuance",
 						"Name": transaction.attachment.name,
-						"QuantityFormatted": NRS.formatQuantity(transaction.attachment.quantityQNT, transaction.attachment.decimals),
+						"Quantity": [transaction.attachment.quantityQNT, transaction.attachment.decimals],
 						"Decimals": transaction.attachment.decimals,
 						"Description": transaction.attachment.description
 					};
@@ -163,10 +163,13 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getAsset", {
 						"asset": transaction.attachment.asset
 					}, function(asset, input) {
+						console.log(transaction);
+						console.log(asset);
 						var data = {
 							"Type": "Asset Transfer",
 							"Asset Name": asset.name,
-							"Quantity": transaction.attachment.quantity
+							"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
+							"Comment": transaction.attachment.comment
 						};
 
 						data["Sender"] = NRS.getAccountTitle(transaction.sender);
@@ -189,9 +192,9 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"Type": "Ask Order Placement",
 							"Asset Name": asset.name,
-							"Quantity": transaction.attachment.quantity,
-							"Price": transaction.attachment.price,
-							"Total": transaction.attachment.quantity * transaction.attachment.price
+							"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
+							"Price": transaction.attachment.priceNQT,
+							"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals)
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -215,9 +218,9 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"Type": "Bid Order Placement",
 							"Asset Name": asset.name,
-							"Quantity": transaction.attachment.quantity,
-							"Price": transaction.attachment.price,
-							"Total": transaction.attachment.quantity * transaction.attachment.price
+							"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
+							"Price": transaction.attachment.priceNQT,
+							"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals)
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -245,9 +248,9 @@ var NRS = (function(NRS, $, undefined) {
 								var data = {
 									"Type": "Ask Order Cancellation",
 									"Asset Name": asset.name,
-									"Quantity": transaction.attachment.quantity,
-									"Price": transaction.attachment.price,
-									"Total": transaction.attachment.quantity * transaction.attachment.price
+									"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
+									"Price": transaction.attachment.priceNQT,
+									"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals)
 								};
 
 								if (transaction.sender != NRS.account) {
@@ -279,9 +282,9 @@ var NRS = (function(NRS, $, undefined) {
 								var data = {
 									"Type": "Bid Order Cancellation",
 									"Asset Name": asset.name,
-									"Quantity": transaction.attachment.quantity,
-									"Price": transaction.attachment.price,
-									"Total": transaction.attachment.quantity * transaction.attachment.price
+									"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
+									"Price": transaction.attachment.priceNQT,
+									"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals),
 								};
 
 								if (transaction.sender != NRS.account) {

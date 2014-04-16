@@ -21,6 +21,10 @@ String.prototype.nl2br = function() {
 	return String(this).replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br />$2');
 }
 
+String.prototype.capitalize = function() {
+	return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
 Number.prototype.pad = function(size) {
 	var s = String(this);
 	if (typeof(size) !== "number") {

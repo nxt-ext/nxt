@@ -1012,18 +1012,20 @@ var NRS = (function(NRS, $, undefined) {
 			return {
 				"error": "Description is a required field."
 			};
-		} else if (!/^\d+$/.test(data.quantityQNT)) {
+		} else if (!/^\d+$/.test(data.quantity)) {
 			return {
 				"error": "Quantity must be a whole numbrer."
 			};
 		} else {
-			if (data.decimals > 0) {
-				data.quantityQNT = String(data.quantityQNT);
+			data.quantityQNT = String(data.quantity);
 
+			if (data.decimals > 0) {
 				for (var i = 0; i < data.decimals; i++) {
 					data.quantityQNT += "0";
 				}
 			}
+
+			delete data.quantity;
 
 			return {
 				"data": data
@@ -1205,8 +1207,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAccount+", {
 			"account": NRS.account
 		}, function(response) {
-			console.log(response);
-
 			if (response.assetBalances && response.assetBalances.length) {
 				var result = {
 					"assets": [],
@@ -1388,7 +1388,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + asset.name.escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatAmount(lowestAskOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(highestBidOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(total) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "'>Transfer</a></td></tr>";
+			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatAmount(lowestAskOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(highestBidOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(total) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>Transfer</a></td></tr>";
 		}
 
 		$("#my_assets_table tbody").empty().append(rows);
@@ -1401,30 +1401,44 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages.my_assets();
 	}
 
-	$("#transfer_asset_modal").on('show.bs.modal', function(e) {
+	$("#transfer_asset_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var assetId = $invoker.data("asset");
+		var assetName = $invoker.data("name");
+		var decimals = $invoker.data("decimals");
+
+		console.log("decimas = " + decimals);
 
 		$("#transfer_asset_asset").val(assetId);
-		$("#transfer_asset_name").html(assetId);
+		$("#transfer_asset_decimals").val(decimals);
+		$("#transfer_asset_name").html(String(assetName).escapeHTML());
 	});
 
-	//TENTATIVE
+	NRS.forms.transferAsset = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		console.log(JSON.stringify(data));
+
+		try {
+			data.quantityQNT = NRS.convertToQNT(data.quantity, data.decimals);
+		} catch (e) {
+			return {
+				"error": "Incorrect quantity: " + e
+			};
+		}
+
+		delete data.quantity;
+		delete data.decimals;
+
+		return {
+			"data": data
+		};
+	}
+
 	NRS.forms.transferAssetComplete = function(response, data) {
 		NRS.addUnconfirmedTransaction(response.transaction);
-
-		var $row = $("#my_assets_table tr[data-asset='" + String(data.asset).escapeHTML() + "']");
-
-		if ($row.length) {
-			if ($row.hasClass("tentative")) {
-				var currentQuantity = parseInt($row.find("td.quantity span.added_quantity").html().replace("'", ""), 10);
-				$row.find("td.quantity span.added_quantity").html(NRS.formatAmount(parseInt(data.quantity, 10) + currentQuantity));
-			} else {
-				$row.addClass("tentative tentative-allow-links");
-				$row.find("td.quantity").html($row.find("td.quantity").html() + " - <span class='added_quantity'>" + NRS.formatAmount(data.quantity) + "</span>");
-			}
-		}
+		NRS.pages.my_assets();
 	}
 
 	$("body").on("click", "a[data-goto-asset]", function(e) {

@@ -1235,11 +1235,11 @@
 
 		            		<div class="form-group">
 		            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
-		            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" required=""></div>
+		            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
 		            		</div>
 		                    <div class="form-group">
 		                        <label for="registration_password_repeat" class="col-sm-3 control-label">Repeat</label>
-		                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" required=""></div>
+		                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
 		                    </div>
 		                    
 							<div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
@@ -1399,7 +1399,7 @@
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_order_fee">FEE</label>
-										<input type="number" name="feeNxt" id="cancel_order_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<input type="number" name="feeNXT" id="cancel_order_fee" class="form-control" step="any" min="0" placeholder="Fee" data-default="1" value="1" tabindex="2">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -1486,40 +1486,44 @@
 								<label>ASSET</label>
 								<p id="transfer_asset_name"></p>
 								<input type="hidden" name="asset" id="transfer_asset_asset" value="" />
+								<input type="hidden" name="decimals" id="transfer_asset_decimals" value="" />
 							</div>
 							<div class="form-group">
 								<label for="transfer_asset_recipient">RECIPIENT</label>
 								<div class="input-group">
-								    <input type="text" class="form-control" name="recipient" id="transfer_asset_recipient" placeholder="Recipient Account"
-								        required autofocus tabindex="1" />
+								    <input type="text" class="form-control" name="recipient" id="transfer_asset_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
 								    <span class="input-group-btn btn-group recipient_selector">
-								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>														<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>	<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
 								    </span>
 								</div>
+							</div>
+							<div class="form-group">
+								<label for="transfer_asset_comment">COMMENT</label>
+								<textarea class="form-control" id="transfer_asset_comment" name="comment" rows="3" tabindex="2" placeholder="Optional"></textarea>
 							</div>
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_asset_quantity">QUANTITY</label>
-						                <input type="number" name="quantity" id="transfer_asset_quantity" class="form-control" placeholder="Quantity" tabindex="2">
+						                <input type="number" name="quantity" id="transfer_asset_quantity" class="form-control" step="any" min="0" placeholder="Quantity" tabindex="3">
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3">
 									<div class="form-group">
 										<label for="transfer_asset_fee">FEE</label>
-										<input type="number" name="feeNxt" id="transfer_asset_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="0" placeholder="Fee" data-default="1" value="1" tabindex="4">
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3">
 									<div class="form-group">
 										<label for="transfer_asset_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="transfer_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="1" tabindex="4">
+										<input type="number" name="deadline" id="transfer_asset_deadline" class="form-control" placeholder="Deadline" data-default="24" value="1" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="transfer_asset_password">SECRET PHRASE</label>
-								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -1548,18 +1552,15 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="add_contact_name">NAME</label>
-								<input type="text" class="form-control" name="name" id="add_contact_name" placeholder="Contact Name"
-								        required autofocus tabindex="1" />
+								<input type="text" class="form-control" name="name" id="add_contact_name" placeholder="Contact Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="add_contact_account_id">ACCOUNT ID</label>
-								<input type="text" class="form-control" name="account_id" id="add_contact_account_id" placeholder="NXT Account ID"
-								        required tabindex="2" />
+								<input type="text" class="form-control" name="account_id" id="add_contact_account_id" placeholder="NXT Account ID" tabindex="2" />
 							</div>
 							<div class="form-group">
 								<label for="add_contact_email">EMAIL ADDRESS</label>
-								<input type="text" class="form-control" name="email" id="add_contact_email" placeholder="contact@email.com"
-								        tabindex="3" />
+								<input type="text" class="form-control" name="email" id="add_contact_email" placeholder="contact@email.com" tabindex="3" />
 							</div>
 							<div class="form-group">
 								<label for="add_contact_description">DESCRIPTION</label>
@@ -1592,13 +1593,11 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="update_contact_name">NAME</label>
-								<input type="text" class="form-control" name="name" id="update_contact_name" placeholder="Contact Name"
-								        required autofocus tabindex="1" />
+								<input type="text" class="form-control" name="name" id="update_contact_name" placeholder="Contact Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="update_contact_account_id">ACCOUNT ID</label>
-								<input type="text" class="form-control" name="account_id" id="update_contact_account_id" placeholder="NXT Account ID"
-								        required tabindex="2" />
+								<input type="text" class="form-control" name="account_id" id="update_contact_account_id" placeholder="NXT Account ID" tabindex="2" />
 							</div>
 							<div class="form-group">
 								<label for="update_contact_email">EMAIL ADDRESS</label>
@@ -1665,7 +1664,7 @@
 							<div class="form-group">
 								<label for="issue_asset_name">ASSET NAME <i class="fa fa-question-circle show_popover" data-content="The asset name is non-unique. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
 </label>
-								<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Asset Name" required autofocus tabindex="1" />
+								<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Asset Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="issue_asset_description">DESCRIPTION</label>
@@ -1674,15 +1673,15 @@
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
-										<label for="issue_asset_quantity_qnt">QUANTITY</label>
-						                <input type="number" name="quantityQNT" id="issue_asset_quantity_qnt" class="form-control" placeholder="Quantity" tabindex="4">
+										<label for="issue_asset_quantity">QUANTITY</label>
+						                <input type="number" name="quantity" id="issue_asset_quantity" class="form-control" min="1" placeholder="Quantity" tabindex="4">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="issue_asset_decimals">DECIMALS <i class="fa fa-question-circle show_popover" data-content="The maximum allowed number of digits after the asset
 quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></label>
-						                <input type="number" name="decimals" id="issue_asset_decimals" class="form-control" placeholder="Decimals" data-default="0" value="0" tabindex="5">
+						                <input type="number" name="decimals" id="issue_asset_decimals" class="form-control" min="0" placeholder="Decimals" data-default="0" value="0" tabindex="5">
 									</div>
 								</div>
 							</div>
@@ -1691,7 +1690,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									<div class="form-group">
 										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt" data-container="body" style="color:red"></i></label>
 																				
-										<input type="number" name="feeNxt" id="issue_asset_fee" class="form-control" placeholder="Fee" data-default="1000" value="1000" tabindex="6">
+										<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="0" data-default="1000" value="1000" tabindex="6">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -1730,8 +1729,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="create_poll_name">NAME</label>
-								<input type="text" class="form-control" name="name" id="create_poll_name" placeholder="Poll Name"
-								        required autofocus tabindex="1" />
+								<input type="text" class="form-control" name="name" id="create_poll_name" placeholder="Poll Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="create_poll_description">DESCRIPTION</label>
@@ -1765,13 +1763,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_min_options">MINIMUM NR OF CHOICES</label>
-										<input type="number" name="minNumberOfOptions" id="create_poll_min_options" class="form-control" placeholder="" data-default="1" value="1" tabindex="4">
+										<input type="number" name="minNumberOfOptions" id="create_poll_min_options" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="4">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_max_options">MAXIMUM NR OF CHOICES</label>
-										<input type="number" name="maxNumberOfOptions" id="create_poll_max_options" class="form-control" placeholder="" data-default="1" value="1" tabindex="5">
+										<input type="number" name="maxNumberOfOptions" id="create_poll_max_options" min="1" class="form-control" placeholder="" data-default="1" value="1" tabindex="5">
 									</div>
 								</div>
 							</div>
@@ -1780,7 +1778,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_fee">FEE</label>
-										<input type="number" name="feeNxt" id="create_poll_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="0" placeholder="Fee" data-default="1" value="1" tabindex="3">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -1823,8 +1821,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="cast_vote_poll_name">NAME</label>
-								<input type="text" class="form-control" name="name" id="cast_vote_poll_name" placeholder="Poll Name"
-								        required autofocus tabindex="1" />
+								<input type="text" class="form-control" name="name" id="cast_vote_poll_name" placeholder="Poll Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="cast_vote_poll_description">DESCRIPTION</label>
@@ -1881,8 +1878,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="send_money_recipient">RECIPIENT</label>
 								<div class="input-group">
-								    <input type="text" class="form-control" name="recipient" id="send_money_recipient" placeholder="Recipient Account"
-								        required autofocus tabindex="1" />
+								    <input type="text" class="form-control" name="recipient" id="send_money_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
 								    <span class="input-group-btn btn-group recipient_selector">
 								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>														<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
 								    </span>
@@ -1892,13 +1888,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_money_amount">AMOUNT</label>
-						                <input type="number" name="amountNxt" id="send_money_amount" class="form-control" placeholder="Amount" tabindex="2">
+						                <input type="number" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" tabindex="2">
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3">
 									<div class="form-group">
 										<label for="send_money_fee">FEE</label>
-										<input type="number" name="feeNxt" id="send_money_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="0" placeholder="Fee" data-default="1" value="1" tabindex="3">
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3">
@@ -1940,8 +1936,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="send_message_recipient">RECIPIENT</label>
 								<div class="input-group">
-								    <input type="text" class="form-control" name="recipient" id="send_message_recipient" placeholder="Recipient Account"
-								        required autofocus tabindex="1" />
+								    <input type="text" class="form-control" name="recipient" id="send_message_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
 								    <span class="input-group-btn btn-group recipient_selector">
 								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>														<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
 								    </span>
@@ -1956,7 +1951,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_message_fee">FEE</label>
-										<input type="number" name="feeNxt" id="send_message_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="0" placeholder="Fee" data-default="1" value="1" tabindex="3">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2016,7 +2011,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="register_alias_fee">FEE</label>
-										<input type="number" name="feeNxt" id="register_alias_fee" class="form-control" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="0" placeholder="Fee" data-default="1" value="1" tabindex="3">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">

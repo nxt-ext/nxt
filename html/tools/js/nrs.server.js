@@ -89,11 +89,11 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		var nxtFields = ["feeNxt", "amountNxt"];
+		var nxtFields = ["feeNXT", "amountNXT"];
 
 		for (var i = 0; i < nxtFields.length; i++) {
 			var nxtField = nxtFields[i];
-			var field = nxtField.replace("Nxt", "");
+			var field = nxtField.replace("NXT", "");
 
 			if (nxtField in data) {
 				if (NRS.useNQT) {
@@ -307,9 +307,14 @@ var NRS = (function(NRS, $, undefined) {
 		transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
 		//sender public key == bytes 8 - 39
 		transaction.recipient = String(converters.byteArrayToBigInteger(byteArray, 40));
-		transaction.amount = String(converters.byteArrayToSignedInt32(byteArray, 48));
-		transaction.fee = String(converters.byteArrayToSignedInt32(byteArray, 52));
-		transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, 56));
+		if (NRS.useNQT) {
+			transaction.amountNQT = String(converters.byteArrayToBigInteger(byteArray, 48));
+			transaction.feeNQT = String(converters.byteArrayToBigInteger(byteArray, 56));
+		} else {
+			transaction.amount = String(converters.byteArrayToSignedInt32(byteArray, 48));
+			transaction.fee = String(converters.byteArrayToSignedInt32(byteArray, 52));
+		}
+		transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, (NRS.useNQT ? 64 : 56)));
 
 		if (transaction.referencedTransaction == "0") {
 			transaction.referencedTransaction = null;
@@ -334,7 +339,11 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 
-		var pos = 128;
+		if (NRS.useNQT) {
+			var pos = 136;
+		} else {
+			var pos = 128;
+		}
 
 		switch (requestType) {
 			case "sendMoney":
@@ -486,9 +495,9 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += description_length;
 
-				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
+				transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
 
-				if (transaction.name !== data.name || transaction.description !== data.description || transaction.quantity !== data.quantity) {
+				if (transaction.name !== data.name || transaction.description !== data.description || transaction.quantityQNT !== data.quantityQNT) {
 					return false;
 				}
 				break;
@@ -501,9 +510,17 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 8;
 
-				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
+				transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
 
-				if (transaction.asset !== data.asset || transaction.quantity !== data.quantity) {
+				pos += 8;
+
+				var comment_length = converters.byteArrayToSignedShort(byteArray, pos);
+
+				pos += 2;
+
+				transaction.comment = converters.byteArrayToString(byteArray, pos, comment_length);
+
+				if (transaction.asset !== data.asset || transaction.quantityQNT !== data.quantityQNT || transaction.comment !== data.comment) {
 					return false;
 				}
 				break;
@@ -521,13 +538,13 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 8;
 
-				transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
+				transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
 
-				pos += 4;
+				pos += 8;
 
-				transaction.price = String(converters.byteArrayToBigInteger(byteArray, pos));
+				transaction.priceNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
 
-				if (transaction.asset !== data.asset || transaction.quantity !== data.quantity || transaction.price !== data.price) {
+				if (transaction.asset !== data.asset || transaction.quantityQNT !== data.quantityQNT || transaction.priceNQT !== data.priceNQT) {
 					return false;
 				}
 				break;

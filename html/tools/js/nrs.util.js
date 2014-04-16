@@ -427,6 +427,8 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.convertToQNT = function(quantity, decimals) {
+		console.log("decimals = " + decimals);
+
 		var parts = quantity.split(".");
 
 		var qnt = parts[0];
@@ -441,7 +443,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (parts.length == 2) {
 			var fraction = parts[1];
 			if (fraction.length > decimals) {
-				return -1;
+				throw "Fraction can only have " + decimals + " decimals max.";
 			} else if (fraction.length < decimals) {
 				for (var i = fraction.length; i < decimals; i++) {
 					fraction += "0";
@@ -449,13 +451,12 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			qnt += fraction;
 		} else {
-			//incorrect input
-			return -1;
+			throw "Incorrect input";
 		}
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(qnt)) {
-			return -1;
+			throw "Invalid input. Only numbers and a dot are accepted.";
 		}
 
 		//remove leading zeroes
@@ -805,20 +806,24 @@ var NRS = (function(NRS, $, undefined) {
 			if (/Formatted$/i.test(key)) {
 				key = key.replace("Formatted", "");
 				value = String(value).escapeHTML();
-			} else if (key == "Quantity") {
+			} else if (key == "Quantity" && $.isArray(value)) {
 				if (NRS.useNQT) {
-					value = NRS.formatAmount(new BigInteger(value));
-				} else {
+					if ($.isArray(value)) {
+						value = NRS.formatQuantity(value[0], value[1]);
+					} else {
+						value = NRS.formatQuantity(value, 0);
+					}
+				} else if (!NRS.useNQT) {
 					value = NRS.formatAmount(value);
 				}
-			} else if (key == "Price" || key == "Total") {
+			} else if (key == "Price" || key == "Total" || key == "Amount") {
 				if (NRS.useNQT) {
 					value = NRS.formatAmount(new BigInteger(value)) + " NXT";
 				} else {
 					value = NRS.formatAmount(value / 100, true) + " NXT"; //ROUND
 				}
 			} else {
-				value = String(value).escapeHTML();
+				value = String(value).escapeHTML().nl2br();
 			}
 
 			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key).escapeHTML() + ":</td><td style='width:90%;" + (/hash|signature|publicKey/i.test(key) ? "word-break:break-all" : "") + "'>" + value + "</td></tr>";

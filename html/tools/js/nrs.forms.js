@@ -35,6 +35,23 @@ var NRS = (function(NRS, $, undefined) {
 
 		var originalRequestType = requestType;
 
+		var $form = $modal.find("form:first");
+
+		var invalidElement = false;
+
+		$form.find(":input").each(function() {
+			if ($(this).is(":invalid")) {
+				$modal.find(".error_message").html($(this).attr("name").capitalize().escapeHTML() + " is invalid.").show();
+				NRS.unlockForm($modal, $btn);
+				invalidElement = true;
+				return false;
+			}
+		});
+
+		if (invalidElement) {
+			return;
+		}
+
 		if (typeof formFunction == 'function') {
 			var output = formFunction($modal);
 
