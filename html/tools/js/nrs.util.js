@@ -348,6 +348,26 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.amountToPrecision = function(amount, decimals) {
+		var parts = amount.split(".");
+
+		//no fractional part
+		if (parts.length == 1) {
+			return parts[0];
+		} else if (parts.length == 2) {
+			var fraction = parts[1];
+			fraction = fraction.replace(/0+$/, "");
+
+			if (fraction.length > decimals) {
+				fraction = fraction.substring(0, decimals);
+			}
+
+			return parts[0] + "." + fraction;
+		} else {
+			throw "Incorrect input";
+		}
+	}
+
 	NRS.convertToNQT = function(currency) {
 		currency = currency.toString();
 
@@ -427,8 +447,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.convertToQNT = function(quantity, decimals) {
-		console.log("decimals = " + decimals);
-
 		var parts = quantity.split(".");
 
 		var qnt = parts[0];
@@ -492,13 +510,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.formatAmount = function(amount, round, no_escaping) {
 		if (typeof amount == "undefined") {
 			return "0";
+		} else if (typeof amount == "string") {
+			amount = new BigInteger(amount);
 		}
 
 		var negative = "";
 		var afterComma = "";
 		var formattedAmount = "";
 
-		//BigInteger object
 		if (typeof amount == "object") {
 			var params = NRS.convertToNXT(amount, true);
 
@@ -830,6 +849,18 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return rows;
+	}
+
+	NRS.getSelectedText = function() {
+		var t = "";
+		if (window.getSelection) {
+			t = window.getSelection().toString();
+		} else if (document.getSelection) {
+			t = document.getSelection().toString();
+		} else if (document.selection) {
+			t = document.selection.createRange().text;
+		}
+		return t;
 	}
 
 	return NRS;
