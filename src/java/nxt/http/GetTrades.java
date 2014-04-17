@@ -1,18 +1,13 @@
 package nxt.http;
 
-import nxt.Asset;
+import nxt.NxtException;
 import nxt.Trade;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-
-import static nxt.http.JSONResponses.INCORRECT_ASSET;
-import static nxt.http.JSONResponses.MISSING_ASSET;
-import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 public final class GetTrades extends APIServlet.APIRequestHandler {
 
@@ -23,22 +18,9 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String asset = req.getParameter("asset");
-        if (asset == null) {
-            return MISSING_ASSET;
-        }
-
-        Long assetId;
-        try {
-            assetId = Convert.parseUnsignedLong(asset);
-            if (Asset.getAsset(assetId) == null) {
-                return UNKNOWN_ASSET;
-            }
-        } catch (RuntimeException e) {
-            return INCORRECT_ASSET;
-        }
+        Long assetId = ParameterParser.getAsset(req).getId();
 
         int firstIndex, lastIndex;
         try {
@@ -61,17 +43,7 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         try {
             List<Trade> trades = Trade.getTrades(assetId);
             for (int i = firstIndex; i <= lastIndex && i < trades.size(); i++) {
-                Trade trade = trades.get(i);
-
-                JSONObject tradeData = new JSONObject();
-                tradeData.put("timestamp", trade.getTimestamp());
-                tradeData.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
-                tradeData.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
-                tradeData.put("quantity", trade.getQuantity());
-                tradeData.put("price", trade.getPrice());
-                tradeData.put("block", Convert.toUnsignedLong(trade.getBlockId()));
-
-                tradesData.add(tradeData);
+                tradesData.add(JSONData.trade(trades.get(i)));
             }
         } catch (RuntimeException e) {
             response.put("error", e.toString());

@@ -15,7 +15,6 @@ import org.json.simple.JSONStreamAware;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -32,7 +31,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    private final ConcurrentMap<Long, TransactionImpl> doubleSpendingTransactions = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TransactionImpl> unconfirmedTransactionHashes = new ConcurrentHashMap<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
@@ -96,22 +94,18 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
             try {
                 try {
-                    JSONArray transactionsData = new JSONArray();
-
+                    List<Transaction> transactionList = new ArrayList<>();
                     int curTime = Convert.getEpochTime();
                     for (TransactionImpl transaction : nonBroadcastedTransactions.values()) {
                         if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
                             nonBroadcastedTransactions.remove(transaction.getId());
                         } else if (transaction.getTimestamp() < curTime - 30) {
-                            transactionsData.add(transaction.getJSONObject());
+                            transactionList.add(transaction);
                         }
                     }
 
-                    if (transactionsData.size() > 0) {
-                        JSONObject peerRequest = new JSONObject();
-                        peerRequest.put("requestType", "processTransactions");
-                        peerRequest.put("transactions", transactionsData);
-                        Peers.sendToSomePeers(peerRequest);
+                    if (transactionList.size() > 0) {
+                        Peers.sendToSomePeers(transactionList);
                     }
 
                 } catch (Exception e) {
@@ -196,7 +190,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (! ((TransactionImpl)transaction).verify()) {
             throw new NxtException.ValidationException("Transaction signature verification failed");
         }
-        List<Transaction> validTransactions = processTransactions(Arrays.asList((TransactionImpl)transaction), true);
+        List<Transaction> validTransactions = processTransactions(Collections.singletonList((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
             nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
@@ -226,38 +220,48 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             byte[] senderPublicKey = new byte[32];
             buffer.get(senderPublicKey);
             Long recipientId = buffer.getLong();
-            int amount = buffer.getInt();
-            int fee = buffer.getInt();
+            long amountNQT;
+            long feeNQT;
+            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.NQT_BLOCK) {
+                amountNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
+                feeNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
+            } else {
+                amountNQT = buffer.getLong();
+                feeNQT = buffer.getLong();
+            }
             Long referencedTransactionId = Convert.zeroToNull(buffer.getLong());
             byte[] signature = new byte[64];
             buffer.get(signature);
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount,
-                    fee, referencedTransactionId, signature);
+            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                    amountNQT, feeNQT, referencedTransactionId, signature);
 
             transactionType.loadAttachment(transaction, buffer);
 
             return transaction;
 
         } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString());
+            throw new NxtException.ValidationException(e.toString(), e);
         }
     }
 
     @Override
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      int amount, int fee, Long referencedTransactionId) throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey, recipientId, amount, fee, referencedTransactionId, null);
+                                      long amountNQT, long feeNQT, Long referencedTransactionId)
+            throws NxtException.ValidationException {
+        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
+                recipientId, amountNQT, feeNQT, referencedTransactionId, null);
     }
 
     @Override
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      int amount, int fee, Long referencedTransactionId, Attachment attachment)
+                                      long amountNQT, long feeNQT, Long referencedTransactionId, Attachment attachment)
             throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline, senderPublicKey, recipientId, amount, fee,
-                referencedTransactionId, null);
+        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
+                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, null);
         transaction.setAttachment(attachment);
+        transaction.validateAttachment();
         return transaction;
     }
 
@@ -272,13 +276,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
             Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
             if (recipientId == null) recipientId = 0L; // ugly
-            int amount = ((Long)transactionData.get("amount")).intValue();
-            int fee = ((Long)transactionData.get("fee")).intValue();
+            long amountNQT;
+            long feeNQT;
+            if (transactionData.get("amountNQT") != null) {
+                amountNQT = ((Long) transactionData.get("amountNQT"));
+                feeNQT = ((Long) transactionData.get("feeNQT"));
+            } else {
+                amountNQT = Convert.safeMultiply(((Long) transactionData.get("amount")), Constants.ONE_NXT);
+                feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
+            }
             Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
             byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amount, fee,
+            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                    amountNQT, feeNQT,
                     referencedTransactionId, signature);
 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
@@ -288,6 +300,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             return transaction;
 
         } catch (RuntimeException e) {
+            Logger.logDebugMessage(e.toString(), e);
             throw new NxtException.ValidationException(e.toString());
         }
     }
@@ -295,7 +308,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void clear() {
         unconfirmedTransactions.clear();
         unconfirmedTransactionHashes.clear();
-        doubleSpendingTransactions.clear();
         nonBroadcastedTransactions.clear();
         transactionHashes.clear();
     }
@@ -306,6 +318,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             if (! unconfirmedTransactions.containsKey(transaction.getId())) {
                 transaction.applyUnconfirmed();
             }
+            //TODO: Phaser not yet implemented
+            //Phaser.processTransaction(transaction);
             transaction.apply();
             transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
         }
@@ -348,12 +362,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                 }
             }
-            TransactionImpl removedUnconfirmed = unconfirmedTransactions.remove(duplicateTransaction.getId());
-            if (removedUnconfirmed != null) {
-                unconfirmedTransactionHashes.remove(removedUnconfirmed.getHash());
-                removedUnconfirmed.undoUnconfirmed();
-                transactionListeners.notify(Arrays.asList((Transaction)removedUnconfirmed), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
-            }
         }
         return duplicateTransaction;
     }
@@ -369,7 +377,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedUnconfirmedTransactions.add(removedTransaction);
             }
-            // TODO: Remove from double-spending transactions
         }
 
         if (removedUnconfirmedTransactions.size() > 0) {
@@ -381,13 +388,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     }
 
-    void shutdown() {
-        Iterator<TransactionImpl> iter = unconfirmedTransactions.values().iterator();
-        while (iter.hasNext()) {
-            TransactionImpl transaction = iter.next();
-            transaction.undoUnconfirmed();
-            iter.remove();
+    void removeUnconfirmedTransactions(Collection<TransactionImpl> transactions) {
+        List<Transaction> removedList = new ArrayList<>();
+        for (TransactionImpl transaction : transactions) {
+            if (unconfirmedTransactions.remove(transaction.getId()) != null) {
+                transaction.undoUnconfirmed();
+                unconfirmedTransactionHashes.remove(transaction.getHash());
+                removedList.add(transaction);
+            }
         }
+        transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+    }
+
+    void shutdown() {
+        removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
     }
 
     private void purgeExpiredHashes(int blockTimestamp) {
@@ -417,7 +431,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private List<Transaction> processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
-        JSONArray sendToPeersTransactionsData = new JSONArray();
+        List<Transaction> sendToPeersTransactions = new ArrayList<>();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
 
@@ -431,13 +445,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     continue;
                 }
 
-                boolean doubleSpendingTransaction;
-
                 synchronized (BlockchainImpl.getInstance()) {
 
                     Long id = transaction.getId();
                     if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
-                            || doubleSpendingTransactions.containsKey(id) || !transaction.verify()) {
+                            || ! transaction.verify()) {
                         continue;
                     }
 
@@ -446,24 +458,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         continue;
                     }
 
-                    doubleSpendingTransaction = !transaction.applyUnconfirmed();
-
-                    if (doubleSpendingTransaction) {
-                        doubleSpendingTransactions.put(id, transaction);
-                        addedDoubleSpendingTransactions.add(transaction);
-                    } else {
+                    if (transaction.applyUnconfirmed()) {
                         if (sendToPeers) {
                             if (nonBroadcastedTransactions.containsKey(id)) {
                                 Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
                                         + " that we generated, will not forward to peers");
                                 nonBroadcastedTransactions.remove(id);
                             } else {
-                                sendToPeersTransactionsData.add(transaction.getJSONObject());
+                                sendToPeersTransactions.add(transaction);
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
                         unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
                         addedUnconfirmedTransactions.add(transaction);
+                    } else {
+                        addedDoubleSpendingTransactions.add(transaction);
                     }
                 }
 
@@ -473,11 +482,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         }
 
-        if (sendToPeersTransactionsData.size() > 0) {
-            JSONObject peerRequest = new JSONObject();
-            peerRequest.put("requestType", "processTransactions");
-            peerRequest.put("transactions", sendToPeersTransactionsData);
-            Peers.sendToSomePeers(peerRequest);
+        if (sendToPeersTransactions.size() > 0) {
+            Peers.sendToSomePeers(sendToPeersTransactions);
         }
 
         if (addedUnconfirmedTransactions.size() > 0) {

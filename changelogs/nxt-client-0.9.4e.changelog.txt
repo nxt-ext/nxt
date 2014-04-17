@@ -1,0 +1,32 @@
+Added Digital Goods Store, Effective Balance Leasing, and Hub Terminal
+announcement features. Those are still untested, lack an http API, and are
+currently disabled even on testnet, so that not to interfere with the testing
+of the Asset Exchange.
+
+Enforce canonical signatures and canonical public keys, after NQT_BLOCK.
+
+Added setAccountInfo http API, which uses an Account Info transaction to set
+name and description properties of an account. Those fields, if set, will be
+returned as part of the getAccount JSON. Account Info will be enabled at
+NQT_BLOCK, so it should be working on test net after this release.
+
+Fixed a bug in Asset Transfer quantity handling that was preventing transaction
+confirmations on testnet.
+
+Two new properties in nxt-default.properties, to make it easier to import
+nxt.trace as csv file:
+# Separator character for trace log
+nxt.debugTraceSeparator=\t
+# Quote character for trace log
+nxt.debugTraceQuote="
+
+Jetty has been updated to version 9.1.4, and H2 to version 1.3.176. Make sure
+to delete the old versions from the lib directory first, if you do upgrades
+just by unpacking the zip file on top of an existing installation.
+
+Bugfixes and improvements in transaction validation. Existing transactions will
+be checked once at first start of this version, which may cause some turbulence
+on testnet as invalid blocks will be deleted.
+
+
+

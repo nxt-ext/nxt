@@ -27,9 +27,9 @@ public interface Block {
 
     Long getNextBlockId();
 
-    int getTotalAmount();
+    long getTotalAmountNQT();
 
-    int getTotalFee();
+    long getTotalFeeNQT();
 
     int getPayloadLength();
 

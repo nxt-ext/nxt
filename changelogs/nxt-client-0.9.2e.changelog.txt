@@ -1,0 +1,39 @@
+Fractional asset quantities. Enjoy another reset of testnet.
+
+When issuing an asset, the maximum allowed number of digits after the asset
+quantity decimal point can be specified as "decimals" parameter (allowed
+values 0 to 8). For example, this would be 2 for a currency like EUR, 8 for
+Bitcoin.
+
+Similar to prices, asset quantities can be specified either as quantityQNT,
+expressed in the smallest possible quantity unit ("quant") for the specific
+asset, or as quantityINT, expressed in whole asset units (which may however
+contain a fractional part despite its name).
+For example, 9.97 USD can be expressed as either quantityINT="9.97", or
+quantityQNT="997", assuming decimals=2 for USD.
+
+JSON responses containing quantities or asset balances are again returned in
+both quantityINT and quantityQNT, as strings.
+
+When placing an ask or bid order, if quantityQNT is specified, the price is
+interpreted to apply to QNT quantity units (regardless of whether the price
+itself was specified in NXT or in NQT). If quantityINT is specified, the
+price is interpreted to apply to INT quantity units.
+For example, a bid order for quantityQNT="300", priceNXT="2", for asset USD
+will be interpreted as $3.00 at 1 cent = 2 NXT, i.e. 200 NXT for one dollar,
+600 NXT total.
+If parameters are submitted as quantityINT="7", priceNXT="50", the order will
+be for $7.00 at 50 NXT for one dollar, 350 NXT total.
+
+Internally order matching and tracking of account asset balances is always
+done in quantityQNT. An unfortunate side effect for now is that when placing
+an order using quantityINT, the calculated price in NQT for one QNT unit must
+be an integer.
+So you cannot place an order for quantityINT="1", priceNXT="10.12345678"
+(or equivalently priceNQT="1012345678"), because then the price of one 
+quantityQNT will be 10123456.78 NQT. The priceNXT will have to be either
+10.12345600 or 10.12345700. If this is confusing, specify the order as
+quantityQNT="100", priceNQT="10123456".
+
+
+

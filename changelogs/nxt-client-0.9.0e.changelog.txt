@@ -1,0 +1,44 @@
+This is an experimental preview release, which will only run on testnet.
+It will refuse to start on main net, so don't try it there. However, all
+testnet nodes should be updated to 0.9.0e, so that we can start testing
+transactions with fractional NXT amounts.
+
+All transaction amounts and fees will begin to be handled in NQT, 10^-8 NXT,
+starting from the NQT_BLOCK, which for test net is set to height 63000.
+When we do the transition on main net, it will be done in several steps, to
+preserve compatibility with older versions, and of course not to reset the
+main blockchain. This should also be tried on testnet first, so expect at
+least one more reset of testnet later. But for this release on testnet,
+existing assets will again be deleted, blockchain reset back to block 63000,
+and fractional amounts and asset exchange enabled immediately at block 63000.
+
+Implementation details:
+Internally, all amounts are handled in NQT, using Java longs (64-bit). The
+database amount and fee columns will also be converted to NQT stored as
+BIGINT. This change is for both old (before NQT_BLOCK) and new transactions.
+Only when verifying the signatures, old transactions and blocks are
+represented in bytes using int (32-bit) instead of long amounts and fees.
+For peer to peer compatibility, transaction JSON for old transactions will
+contain amounts both in NQT and in NXT.
+To prevent overflows, all additions and multiplications of longs are done
+using precondition testing methods, Convert.safeAdd and Convert.safeMultiply,
+which check for possible overflow before doing the operation.
+
+All relevant Java APIs have been renamed to indicate that the value returned
+is in NQT, except for getEffectiveBalanceNXT which is only used when forging
+and there it is needed in NXT.
+
+The http API has been changed to accept amounts either in NQT or in NXT,
+with fractional amounts received as strings in the http request parameters
+and then parsed directly to longs. The returned JSON objects use NQT only.
+All relevant http parameter names and JSON parameters have been changed to
+indicate whether they are in NQT or NXT.
+
+Asset prices are also changed to use NQT, instead of NXT-cents. But I have
+not tested asset exchange transactions at all, I have only tested simple
+send money transactions, so expect bugs.
+
+Fractional asset quantities are not yet implemented.
+
+
+

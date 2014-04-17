@@ -1,9 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
 import nxt.Token;
-import nxt.util.Convert;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,12 +32,7 @@ public final class DecodeToken extends APIServlet.APIRequestHandler {
 
             Token token = Token.parseToken(tokenString, website.trim());
 
-            JSONObject response = new JSONObject();
-            response.put("account", Convert.toUnsignedLong(Account.getId(token.getPublicKey())));
-            response.put("timestamp", token.getTimestamp());
-            response.put("valid", token.isValid());
-
-            return response;
+            return JSONData.token(token);
 
         } catch (RuntimeException e) {
             return INCORRECT_WEBSITE;

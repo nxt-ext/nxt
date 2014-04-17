@@ -1,8 +1,10 @@
 package nxt.peer;
 
 import nxt.Account;
+import nxt.Block;
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.Transaction;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -184,6 +186,8 @@ public final class Peers {
             Peer peer = Peers.addPeer(address);
             if (peer != null) {
                 buf.append(peer.getPeerAddress()).append("; ");
+            } else {
+                Logger.logMessage("Invalid well known peer address: " + address);
             }
         }
         Logger.logDebugMessage("Well known peers: " + buf.toString());
@@ -405,7 +409,7 @@ public final class Peers {
             InetAddress inetAddress = InetAddress.getByName(host);
             return addPeer(inetAddress.getHostAddress(), announcedAddress);
         } catch (URISyntaxException | UnknownHostException e) {
-            Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
+            //Logger.logDebugMessage("Invalid peer address: " + announcedAddress + ", " + e.toString());
             return null;
         }
     }
@@ -441,7 +445,24 @@ public final class Peers {
         return peers.remove(peer.getPeerAddress());
     }
 
-    public static void sendToSomePeers(final JSONObject request) {
+    public static void sendToSomePeers(Block block) {
+        JSONObject request = block.getJSONObject();
+        request.put("requestType", "processBlock");
+        sendToSomePeers(request);
+    }
+
+    public static void sendToSomePeers(List<Transaction> transactions) {
+        JSONObject request = new JSONObject();
+        JSONArray transactionsData = new JSONArray();
+        for (Transaction transaction : transactions) {
+            transactionsData.add(transaction.getJSONObject());
+        }
+        request.put("requestType", "processTransactions");
+        request.put("transactions", transactionsData);
+        sendToSomePeers(request);
+    }
+
+    private static void sendToSomePeers(final JSONObject request) {
 
         final JSONStreamAware jsonRequest = JSON.prepareRequest(request);
 

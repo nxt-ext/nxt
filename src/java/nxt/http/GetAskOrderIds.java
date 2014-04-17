@@ -1,6 +1,6 @@
 package nxt.http;
 
-import nxt.Asset;
+import nxt.NxtException;
 import nxt.Order;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -9,10 +9,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Iterator;
-
-import static nxt.http.JSONResponses.INCORRECT_ASSET;
-import static nxt.http.JSONResponses.MISSING_ASSET;
-import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 public final class GetAskOrderIds extends APIServlet.APIRequestHandler {
 
@@ -23,23 +19,9 @@ public final class GetAskOrderIds extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String asset = req.getParameter("asset");
-        if (asset == null) {
-            return MISSING_ASSET;
-        }
-
-        long assetId;
-        try {
-            assetId = Convert.parseUnsignedLong(asset);
-        } catch (RuntimeException e) {
-            return INCORRECT_ASSET;
-        }
-
-        if (Asset.getAsset(assetId) == null) {
-            return UNKNOWN_ASSET;
-        }
+        Long assetId = ParameterParser.getAsset(req).getId();
 
         int limit;
         try {

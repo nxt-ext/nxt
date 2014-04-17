@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.INCORRECT_VOTE;
 import static nxt.http.JSONResponses.MISSING_POLL;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class CastVote extends CreateTransaction {
 
@@ -37,8 +36,9 @@ public final class CastVote extends CreateTransaction {
             pollData = Poll.getPoll(Convert.parseUnsignedLong(pollValue));
             if (pollData != null) {
                 numberOfOptions = pollData.getOptions().length;
+            } else {
+                return INCORRECT_POLL;
             }
-            else return INCORRECT_POLL;
         } catch (RuntimeException e) {
             return INCORRECT_POLL;
         }
@@ -55,10 +55,7 @@ public final class CastVote extends CreateTransaction {
             return INCORRECT_VOTE;
         }
 
-        Account account = getAccount(req);
-        if (account == null) {
-            return UNKNOWN_ACCOUNT;
-        }
+        Account account = ParameterParser.getSenderAccount(req);
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
         return createTransaction(req, account, attachment);

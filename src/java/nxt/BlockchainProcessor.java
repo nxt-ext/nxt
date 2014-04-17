@@ -9,7 +9,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
     public static enum Event {
         BLOCK_PUSHED, BLOCK_POPPED, BLOCK_GENERATED, BLOCK_SCANNED,
         RESCAN_BEGIN, RESCAN_END,
-        BEFORE_BLOCK_APPLY, BEFORE_BLOCK_UNDO
+        BEFORE_BLOCK_APPLY, AFTER_BLOCK_APPLY,
+        BEFORE_BLOCK_UNDO
     }
 
     Peer getLastBlockchainFeeder();
@@ -23,6 +24,21 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
         BlockNotAcceptedException(String message) {
             super(message);
+        }
+
+    }
+
+    public static class TransactionNotAcceptedException extends BlockNotAcceptedException {
+
+        private final TransactionImpl transaction;
+
+        TransactionNotAcceptedException(String message, TransactionImpl transaction) {
+            super(message);
+            this.transaction = transaction;
+        }
+
+        public Transaction getTransaction() {
+            return transaction;
         }
 
     }

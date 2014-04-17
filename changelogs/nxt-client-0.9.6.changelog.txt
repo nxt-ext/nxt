@@ -1,0 +1,17 @@
+Validate that lease recipient account has public key set before accepting
+lease transaction. This check will cause some minor rollback of testnet as
+blocks containing such lease transactions will be deleted.
+
+Optimizations in balance leasing. Keep negative values of guaranteed balance
+for internal calculations only, effective balance now always non-negative.
+Other minor bugfixes and improvements.
+
+Effective balance leasing will be enabled on main net at block 130000.
+This means all nodes should be updated to version 0.9.6 or later before that,
+or there will be a fork. We have until then to find and fix any serious bugs
+in balance leasing. And all clients to be used on main net should have switched
+to handle NQT amounts before that, as the 0.9 API only accepts amounts in NQT.
+The actual block of transition to NQT will be decided later.
+
+
+

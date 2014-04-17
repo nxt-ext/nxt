@@ -36,8 +36,8 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
             unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
             unconfirmedTransaction.put("deadline", transaction.getDeadline());
             unconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-            unconfirmedTransaction.put("amount", transaction.getAmount());
-            unconfirmedTransaction.put("fee", transaction.getFee());
+            unconfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
+            unconfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
             unconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
             unconfirmedTransaction.put("id", transaction.getStringId());
 
@@ -100,8 +100,8 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
             recentBlock.put("index", Users.getIndex(block));
             recentBlock.put("timestamp", block.getTimestamp());
             recentBlock.put("numberOfTransactions", block.getTransactionIds().size());
-            recentBlock.put("totalAmount", block.getTotalAmount());
-            recentBlock.put("totalFee", block.getTotalFee());
+            recentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
+            recentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
             recentBlock.put("payloadLength", block.getPayloadLength());
             recentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
             recentBlock.put("height", block.getHeight());
