@@ -790,9 +790,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
+    private volatile boolean validateAtScan = false;
+
+    void validateAtNextScan() {
+        validateAtScan = true;
+    }
+
     private void scan() {
         synchronized (blockchain) {
             Logger.logMessage("Scanning blockchain...");
+            if (validateAtScan) {
+                Logger.logDebugMessage("Also verifying signatures and validating transactions...");
+            }
             Account.clear();
             Alias.clear();
             Asset.clear();
@@ -812,6 +821,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (! currentBlock.getId().equals(currentBlockId)) {
                             throw new NxtException.ValidationException("Database blocks in the wrong order!");
                         }
+                        if (validateAtScan && ! currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                            if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
+                                throw new NxtException.ValidationException("Invalid block signature");
+                            }
+                            for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                                if (!transaction.verify()) {
+                                    throw new NxtException.ValidationException("Invalid transaction signature");
+                                }
+                                transaction.validateAttachment();
+                            }
+                        }
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         transactionProcessor.apply(currentBlock);
@@ -819,7 +839,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();
                     }
-                } catch (NxtException.ValidationException|RuntimeException e) {
+                } catch (NxtException|RuntimeException e) {
                     Logger.logDebugMessage(e.toString(), e);
                     Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
                     BlockDb.deleteBlocksFrom(currentBlockId);
@@ -828,6 +848,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
+            validateAtScan = false;
             Logger.logMessage("...done");
         }
     }

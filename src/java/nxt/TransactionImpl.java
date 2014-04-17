@@ -297,6 +297,14 @@ final class TransactionImpl implements Transaction {
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
         json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
+        // temporary, first step of making referenced txid a full hash
+        if (referencedTransactionId != null) {
+            Transaction referencedTransaction = BlockchainImpl.getInstance().getTransaction(referencedTransactionId);
+            if (referencedTransaction != null) {
+                json.put("referencedTransactionFullHash",
+                        Convert.toHexString(Crypto.sha256().digest(referencedTransaction.getBytes())));
+            }
+        }
         json.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
             json.put("attachment", attachment.getJSONObject());

@@ -151,30 +151,11 @@ final class DbVersion {
             case 33:
                 apply(null);
             case 34:
-                Logger.logDebugMessage("Validating existing transactions...");
-                try (Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC");
-                     ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        long blockId = rs.getLong("id");
-                        try {
-                            BlockImpl block = BlockDb.loadBlock(con, rs);
-                            BlockchainImpl.getInstance().setLastBlock(block);
-                            for (TransactionImpl transaction : block.getTransactions()) {
-                                transaction.validateAttachment();
-                            }
-                        } catch (RuntimeException|NxtException.ValidationException e) {
-                            Logger.logDebugMessage("Failed to validate block: " + e.toString());
-                            Logger.logDebugMessage("Deleting blocks after " + Convert.toUnsignedLong(blockId));
-                            BlockDb.deleteBlocksFrom(blockId);
-                            break;
-                        }
-                    }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
                 apply(null);
             case 35:
+                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                apply(null);
+            case 36:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
