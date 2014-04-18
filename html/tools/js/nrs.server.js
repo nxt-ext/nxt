@@ -242,9 +242,6 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					return;
 				} else {
-					console.log(response.transactionBytes);
-					console.log(response);
-
 					if (NRS.useNQT) {
 						var payload = response.transactionBytes.substr(0, 144) + signature + response.transactionBytes.substr(272);
 					} else {
@@ -344,7 +341,11 @@ var NRS = (function(NRS, $, undefined) {
 		//signature == 64 - 127
 
 		if (!("amount" in data)) {
-			data.amount = "0";
+			if (NRS.useNQT) {
+				data.amountNQT = "0";
+			} else {
+				data.amount = "0";
+			}
 		}
 
 		if (!("recipient" in data)) {
