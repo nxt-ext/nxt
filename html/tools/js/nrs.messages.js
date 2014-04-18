@@ -302,7 +302,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.sendMessage = function($modal) {
 		var data = {
 			"recipient": $.trim($("#send_message_recipient").val()),
-			"feeNxt": $.trim($("#send_message_fee").val()),
+			"feeNXT": $.trim($("#send_message_fee").val()),
 			"deadline": $.trim($("#send_message_deadline").val()),
 			"secretPhrase": $.trim($("#send_message_password").val())
 		};

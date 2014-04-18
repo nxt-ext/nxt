@@ -340,10 +340,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		//signature == 64 - 127
 
-		if (!("amount" in data)) {
-			if (NRS.useNQT) {
+		if (NRS.useNQT) {
+			if (!("amountNQT" in data)) {
 				data.amountNQT = "0";
-			} else {
+			}
+		} else {
+			if (!("amount" in data)) {
 				data.amount = "0";
 			}
 		}
@@ -630,6 +632,10 @@ var NRS = (function(NRS, $, undefined) {
 					response.errorDescription = response.error;
 					callback(response, original_data);
 				} else {
+					if ("transactionBytes" in original_response) {
+						delete original_response.transactionBytes;
+					}
+					original_response.transaction = response.transaction;
 					callback(original_response, original_data);
 				}
 			}
