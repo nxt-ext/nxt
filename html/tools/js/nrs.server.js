@@ -345,8 +345,18 @@ var NRS = (function(NRS, $, undefined) {
 			data.recipient = "1739068987193023818";
 		}
 
-		if (transaction.deadline !== data.deadline || transaction.recipient !== data.recipient || transaction.amount !== data.amount || transaction.fee !== data.fee) {
+		if (transaction.deadline !== data.deadline || transaction.recipient !== data.recipient) {
 			return false;
+		}
+
+		if (NRS.useNQT) {
+			if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
+				return false;
+			}
+		} else {
+			if (transaction.amount !== data.amount || transaction.fee !== data.fee) {
+				return false;
+			}
 		}
 
 		if ("referencedTransaction" in data && transaction.referencedTransaction !== data.referencedTransaction) {
@@ -606,6 +616,10 @@ var NRS = (function(NRS, $, undefined) {
 			if (callback) {
 				if (response.errorCode && !response.errorDescription) {
 					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
+					callback(response, original_data);
+				} else if (response.error) {
+					response.errorCode = 1;
+					response.errorDescription = response.error;
 					callback(response, original_data);
 				} else {
 					callback(original_response, original_data);
