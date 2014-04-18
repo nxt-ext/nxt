@@ -263,7 +263,6 @@ var NRS = (function(NRS, $, undefined) {
 		return NRS.convertToNQT(totalNXT);
 	}
 
-	//what to do if order has more than 8 numbers after . ? (NQT max)
 	NRS.calculateOrderTotal = function(quantityQNT, priceNQT, decimals) {
 		if (typeof quantityQNT != "object") {
 			quantityQNT = new BigInteger(String(quantityQNT));
@@ -349,6 +348,8 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.amountToPrecision = function(amount, decimals) {
+		amount = String(amount);
+
 		var parts = amount.split(".");
 
 		//no fractional part
@@ -369,11 +370,11 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.convertToNQT = function(currency) {
-		currency = currency.toString();
+		currency = String(currency);
 
 		var parts = currency.split(".");
 
-		var integer = parts[0];
+		var amount = parts[0];
 
 		//no fractional part
 		if (parts.length == 1) {
@@ -381,37 +382,32 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (parts.length == 2) {
 			var fraction = parts[1];
 		} else {
-			//incorrect input
-			return -1;
+			throw "Invalid input";
 		}
 
 		for (var i = fraction.length; i < 8; i++) {
 			fraction += "0";
 		}
 
-		var bigInteger = integer + "" + fraction;
+		var result = amount + "" + fraction;
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
-		if (!/^\d+$/.test(bigInteger)) {
-			return -1;
+		if (!/^\d+$/.test(result)) {
+			throw "Invalid input.";
 		}
 
 		//remove leading zeroes
-		bigInteger = bigInteger.replace(/^0+/, "");
+		result = result.replace(/^0+/, "");
 
-		if (bigInteger === "") {
-			bigInteger = "0";
+		if (result === "") {
+			result = "0";
 		}
 
-		return bigInteger;
+		return result;
 	}
 
 	NRS.convertToQNTf = function(quantity, decimals, returnAsObject) {
-		if (typeof quantity == "object") {
-			quantity = quantity.toString();
-		} else {
-			quantity = String(quantity);
-		}
+		quantity = String(quantity);
 
 		if (quantity.length < decimals) {
 			for (var i = quantity.length; i < decimals; i++) {
@@ -447,6 +443,8 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.convertToQNT = function(quantity, decimals) {
+		quantity = String(quantity);
+
 		var parts = quantity.split(".");
 
 		var qnt = parts[0];

@@ -91,21 +91,33 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		var nxtFields = ["feeNXT", "amountNXT"];
+		//convert NXT to NQT...
+		try {
+			var nxtFields = ["feeNXT", "amountNXT"];
 
-		for (var i = 0; i < nxtFields.length; i++) {
-			var nxtField = nxtFields[i];
-			var field = nxtField.replace("NXT", "");
+			for (var i = 0; i < nxtFields.length; i++) {
+				var nxtField = nxtFields[i];
+				var field = nxtField.replace("NXT", "");
 
-			if (nxtField in data) {
-				if (NRS.useNQT) {
-					data[field + "NQT"] = NRS.convertToNQT(data[nxtField]);
-				} else {
-					data[field] = data[nxtField];
+				if (nxtField in data) {
+					if (NRS.useNQT) {
+						data[field + "NQT"] = NRS.convertToNQT(data[nxtField]);
+					} else {
+						data[field] = data[nxtField];
+					}
+
+					delete data[nxtField];
 				}
-
-				delete data[nxtField];
 			}
+		} catch (err) {
+			if (callback) {
+				callback({
+					"errorCode": 1,
+					"errorDescription": err + " (Field: " + field + ")"
+				});
+			}
+
+			return;
 		}
 
 		//gets account id from secret phrase client side, used only for login.
