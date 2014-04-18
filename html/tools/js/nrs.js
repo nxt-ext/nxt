@@ -92,13 +92,19 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (NRS.state.lastBlock != response.lastBlock) {
 					NRS.tempBlocks = [];
 					NRS.state = response;
-					NRS.getAccountBalance();
+					if (NRS.account) {
+						NRS.getAccountBalance();
+					}
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
-					NRS.getNewTransactions();
+					if (NRS.account) {
+						NRS.getNewTransactions();
+					}
 				} else {
-					NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-						NRS.handleIncomingTransactions(unconfirmedTransactions, false);
-					});
+					if (NRS.account) {
+						NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
+						});
+					}
 				}
 
 				if (callback) {
