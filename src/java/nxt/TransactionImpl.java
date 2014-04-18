@@ -339,7 +339,7 @@ final class TransactionImpl implements Transaction {
         return getId().hashCode();
     }
 
-    boolean verify() {
+    public boolean verify() {
         Account account = Account.getAccount(getSenderId());
         if (account == null) {
             return false;

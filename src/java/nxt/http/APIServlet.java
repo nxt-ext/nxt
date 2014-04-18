@@ -104,6 +104,7 @@ public final class APIServlet extends HttpServlet {
         map.put("leaseBalance", LeaseBalance.instance);
         map.put("listAccountAliases", ListAccountAliases.instance);
         map.put("markHost", MarkHost.instance);
+        map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
         map.put("placeBidOrder", PlaceBidOrder.instance);
         map.put("sendMessage", SendMessage.instance);

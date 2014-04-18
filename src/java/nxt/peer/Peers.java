@@ -72,6 +72,7 @@ public final class Peers {
     private static final int pushThreshold;
     private static final int pullThreshold;
     private static final int sendToPeersLimit;
+    private static final boolean savePeers;
 
     static final JSONStreamAware myPeerInfoRequest;
     static final JSONStreamAware myPeerInfoResponse;
@@ -138,30 +139,13 @@ public final class Peers {
         json.put("requestType", "getInfo");
         myPeerInfoRequest = JSON.prepareRequest(json);
 
-        Set<String> addresses = new HashSet<>();
         List<String> wellKnownPeersList = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
                 : Nxt.getStringListProperty("nxt.wellKnownPeers");
-        if (! wellKnownPeersList.isEmpty()) {
-            addresses.addAll(wellKnownPeersList);
-        } else if (! Constants.isTestnet) {
-            Logger.logMessage("No wellKnownPeers defined, using random nxtcrypto.org, nxtbase.com and mynxt.info nodes");
-            for (int i = 1; i <= 12; i++) {
-                if (ThreadLocalRandom.current().nextInt(4) == 1) {
-                    addresses.add("vps" + i + ".nxtcrypto.org");
-                }
-            }
-            for (int i = 1; i <= 100; i++) {
-                if (ThreadLocalRandom.current().nextInt(10) == 1) {
-                    addresses.add("node" + i + ".nxtbase.com");
-                }
-            }
-            for (int i = 1; i <= 20; i++) {
-                if (ThreadLocalRandom.current().nextInt(4) == 1) {
-                    addresses.add("node" + i + ".mynxt.info");
-                }
-            }
+        if (wellKnownPeersList.isEmpty()) {
+            wellKnownPeers = Collections.emptySet();
+        } else {
+            wellKnownPeers = Collections.unmodifiableSet(new HashSet<>(wellKnownPeersList));
         }
-        wellKnownPeers = Collections.unmodifiableSet(addresses);
 
         List<String> knownBlacklistedPeersList = Nxt.getStringListProperty("nxt.knownBlacklistedPeers");
         if (knownBlacklistedPeersList.isEmpty()) {
@@ -181,16 +165,25 @@ public final class Peers {
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
 
-        StringBuilder buf = new StringBuilder();
-        for (String address : wellKnownPeers) {
-            Peer peer = Peers.addPeer(address);
-            if (peer != null) {
-                buf.append(peer.getPeerAddress()).append("; ");
-            } else {
-                Logger.logMessage("Invalid well known peer address: " + address);
+        if (! wellKnownPeers.isEmpty()) {
+            StringBuilder buf = new StringBuilder();
+            for (String address : wellKnownPeers) {
+                Peer peer = Peers.addPeer(address);
+                if (peer != null) {
+                    buf.append(peer.getPeerAddress()).append("; ");
+                } else {
+                    Logger.logMessage("Invalid well known peer address: " + address);
+                }
             }
+            Logger.logDebugMessage("Well known peers: " + buf.toString());
         }
-        Logger.logDebugMessage("Well known peers: " + buf.toString());
+
+        Logger.logDebugMessage("Loading known peers from the database...");
+        for (String savedPeer : PeerDb.loadPeers()) {
+            Peers.addPeer(savedPeer);
+        }
+        Logger.logDebugMessage("Known peers: " + peers.size());
+        savePeers = Nxt.getBooleanProperty("nxt.savePeers");
 
     }
 
@@ -330,6 +323,9 @@ public final class Peers {
                     for (Object announcedAddress : peers) {
                         addPeer((String) announcedAddress);
                     }
+                    if (savePeers) {
+                        updateSavedPeers();
+                    }
 
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error requesting peers from a peer", e);
@@ -340,6 +336,21 @@ public final class Peers {
                 System.exit(1);
             }
 
+        }
+
+        private void updateSavedPeers() {
+            Set<String> oldPeers = new HashSet<>(PeerDb.loadPeers());
+            Set<String> currentPeers = new HashSet<>();
+            for (Peer peer : Peers.peers.values()) {
+                if (peer.getAnnouncedAddress() != null && ! peer.isBlacklisted()) {
+                    currentPeers.add(peer.getAnnouncedAddress());
+                }
+            }
+            Set<String> toDelete = new HashSet<>(oldPeers);
+            toDelete.removeAll(currentPeers);
+            PeerDb.deletePeers(toDelete);
+            currentPeers.removeAll(oldPeers);
+            PeerDb.addPeers(currentPeers);
         }
 
     };
@@ -375,6 +386,13 @@ public final class Peers {
                 Logger.logDebugMessage("Failed to stop peer server", e);
             }
         }
+        /*
+        StringBuilder buf = new StringBuilder();
+        for (String address : PeerDb.loadPeers()) {
+            buf.append("('").append(address).append("'), ");
+        }
+        Logger.logDebugMessage(buf.toString());
+        */
         ThreadPool.shutdownExecutor(sendToPeersService);
 
     }
