@@ -857,6 +857,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		/*
 		if (!key || key == "use_new_address_format") {
 			if (NRS.settings["use_new_address_format"]) {
 				$("#block_info_modal, #transaction_info_modal").find(".modal-dialog").addClass("modal-dialog-wide");
@@ -878,7 +879,7 @@ var NRS = (function(NRS, $, undefined) {
 			});
 
 			//todo: wider message sidebar
-		}
+		}*/
 	}
 
 	NRS.updateSettings = function(key, value) {

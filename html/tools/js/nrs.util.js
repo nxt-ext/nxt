@@ -707,7 +707,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getAccountFormatted = function(accountId) {
-		if (NRS.settings["use_new_address_format"]) {
+		/*if (NRS.settings["use_new_address_format"]) {
 			var address = new NxtAddress();
 
 			if (address.set(accountId, true)) {
@@ -717,7 +717,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		} else {
 			return String(accountId).escapeHTML();
-		}
+		}*/
+		return String(accountId).escapeHTML();
 	}
 
 	NRS.setupClipboardFunctionality = function() {

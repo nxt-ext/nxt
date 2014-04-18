@@ -26,11 +26,12 @@ var NRS = (function(NRS, $, undefined) {
 
 			var address = new NxtAddress();
 
+			/*
 			if (address.set(NRS.account, true)) {
 				$("#account_balance_new_address_format").html(address.toString().escapeHTML());
 			} else {
 				$("#account_balance_new_address_format").html("/");
-			}
+			}*/
 
 			if (!NRS.accountBalance.publicKey) {
 				$("#account_balance_public_key").html("/");
