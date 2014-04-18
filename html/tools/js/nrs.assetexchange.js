@@ -732,16 +732,23 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $tr = $target.closest("tr");
 
-		var priceNQT = new BigInteger(String($tr.data("price")));
-		var quantityQNT = new BigInteger(String($tr.data("quantity")));
-		var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals));
-
-		$("#" + type + "_asset_price").val(NRS.convertToNXT(priceNQT));
-		$("#" + type + "_asset_quantity").val(NRS.convertToQNTf(quantityQNT, NRS.currentAsset.decimals));
-		$("#" + type + "_asset_total").val(NRS.convertToNXT(totalNQT));
+		try {
+			var priceNQT = new BigInteger(String($tr.data("price")));
+			var quantityQNT = new BigInteger(String($tr.data("quantity")));
+			var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals));
+			$("#" + type + "_asset_price").val(NRS.convertToNXT(priceNQT));
+			$("#" + type + "_asset_quantity").val(NRS.convertToQNTf(quantityQNT, NRS.currentAsset.decimals));
+			$("#" + type + "_asset_total").val(NRS.convertToNXT(totalNQT));
+		} catch (err) {
+			return;
+		}
 
 		if (type == "sell") {
-			var balanceNQT = new BigInteger(NRS.convertToNQT($("#your_nxt_balance").text().replace("'", "")));
+			try {
+				var balanceNQT = new BigInteger(NRS.convertToNQT($("#your_nxt_balance").text().replace("'", "")));
+			} catch (err) {
+				return;
+			}
 
 			if (totalNQT.compareTo(balanceNQT) > 0) {
 				$("#" + type + "_asset_total").css({
@@ -769,8 +776,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		var type = ($(this).attr("id") == "sell_automatic_price" ? "sell" : "buy");
 
-		var price = new Big(NRS.convertToNQT(String($("#" + type + "_asset_price").val())));
-		var balance = new Big(NRS.convertToNQT($("#your_" + (type == "buy" ? "nxt" : "asset") + "_balance").text().replace("'", "")));
+		try {
+			var price = new Big(NRS.convertToNQT(String($("#" + type + "_asset_price").val())));
+			var balance = new Big(NRS.convertToNQT($("#your_" + (type == "buy" ? "nxt" : "asset") + "_balance").text().replace("'", "")));
+		} catch (err) {
+			return;
+		}
 
 		if (balance.cmp(new Big("0")) <= 0) {
 			return;
@@ -784,15 +795,19 @@ var NRS = (function(NRS, $, undefined) {
 		var quantity;
 		var maxQuantity;
 
-		if (type == "sell") {
-			//need to compare always to nxt balance
-			var balanceNQT = new Big(NRS.convertToNQT($("#your_nxt_balance").text().replace("'", "")));
+		try {
+			if (type == "sell") {
+				//need to compare always to nxt balance
+				var balanceNQT = new Big(NRS.convertToNQT($("#your_nxt_balance").text().replace("'", "")));
 
-			quantity = new Big(NRS.amountToPrecision(balanceNQT.div(price).toString(), NRS.currentAsset.decimals));
-			maxQuantity = balance;
-		} else {
-			quantity = new Big(NRS.amountToPrecision(balance.div(price).toString(), 8));
-			maxQuantity = new Big(NRS.currentAsset.quantityQNT);
+				quantity = new Big(NRS.amountToPrecision(balanceNQT.div(price).toString(), NRS.currentAsset.decimals));
+				maxQuantity = balance;
+			} else {
+				quantity = new Big(NRS.amountToPrecision(balance.div(price).toString(), 8));
+				maxQuantity = new Big(NRS.currentAsset.quantityQNT);
+			}
+		} catch (err) {
+			return;
 		}
 
 		var total = quantity.times(price);
@@ -903,8 +918,13 @@ var NRS = (function(NRS, $, undefined) {
 	$("#sell_asset_quantity, #sell_asset_price, #buy_asset_quantity, #buy_asset_price").keyup(function(e) {
 		var orderType = $(this).data("type").toLowerCase();
 
-		var priceNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())));
-		var quantityQNT = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_asset_quantity").val()), NRS.currentAsset.decimals));
+		try {
+			var priceNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())));
+			var quantityQNT = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_asset_quantity").val()), NRS.currentAsset.decimals));
+		} catch (err) {
+			$("#" + orderType + "_asset_total").val("0");
+			return;
+		}
 
 		if (priceNQT.toString() == "0" || quantityQNT.toString() == "0") {
 			$("#" + orderType + "_asset_total").val("0");
@@ -924,11 +944,18 @@ var NRS = (function(NRS, $, undefined) {
 
 		orderType = orderType.toLowerCase();
 
-		var priceNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())));
-		var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_fee").val())));
-		var quantity = String($("#" + orderType + "_asset_quantity").val());
-		var quantityQNT = new BigInteger(NRS.convertToQNT(quantity, NRS.currentAsset.decimals));
-		var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals), false, true);
+		try {
+			var priceNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())));
+			var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_fee").val())));
+			var quantity = String($("#" + orderType + "_asset_quantity").val());
+			var quantityQNT = new BigInteger(NRS.convertToQNT(quantity, NRS.currentAsset.decimals));
+			var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals), false, true);
+		} catch (err) {
+			$.growl("Invalid input.", {
+				"type": "danger"
+			});
+			return e.preventDefault();
+		}
 
 		if (priceNQT.toString() == "0" || quantityQNT.toString() == "0") {
 			$.growl("Please fill in an amount and price.", {
