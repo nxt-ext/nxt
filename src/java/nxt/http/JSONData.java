@@ -196,6 +196,7 @@ final class JSONData {
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("hash", transaction.getHash());
+        json.put("transaction", transaction.getStringId());
         return json;
     }
 

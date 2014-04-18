@@ -44,6 +44,8 @@ public interface Transaction extends Comparable<Transaction> {
 
     void sign(String secretPhrase);
 
+    boolean verify();
+
     byte[] getBytes();
 
     JSONObject getJSONObject();
