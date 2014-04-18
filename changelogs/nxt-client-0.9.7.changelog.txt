@@ -1,0 +1,23 @@
+Added parseTransaction API, which takes transactionBytes and returns the JSON
+representation of the transaction, including a "verify" boolean whether the
+signature verified correctly. Note that the interpretation and validation of 
+the bytes is dependent on the current last block height - if it is before or
+after NQT_BLOCK.
+
+To avoid becoming dependent on a few centrally controlled public nodes, all
+known peers are now regularly saved in the database. When created from scratch,
+the database is seeded with 200-300 public peers hardcoded in the DbVersion
+code. After that, any time the node fetches new peers from the network, it will
+also save them to the peer table, and delete those that are blacklisted or
+unreachable at their announced address.
+
+This feature is optional, and the nxt.savePeers parameter can be set to false
+in nxt.properties, for those who don't want to leave any trace on their hard
+drive regarding which peers their node has been connecting to, to prevent
+possible network correlation attacks.
+
+The nxt.wellKnownPeers and nxt.testnetPeers parameters are still used, with 
+those peers always added to the database on startup.
+
+
+
