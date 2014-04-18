@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.xhrPool = [];
+
 	$(document).ajaxComplete(function(event, xhr, settings) {
 		if (xhr._page && xhr.statusText != "abort") {
 			var index = $.inArray(xhr, NRS.xhrPool);

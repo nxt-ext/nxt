@@ -511,6 +511,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (typeof amount == "undefined") {
 			return "0";
 		} else if (typeof amount == "string") {
+			//contains fraction
+			if (amount.indexOf(".") !== -1) {
+				amount = NRS.convertToNQT(amount);
+			}
+
 			amount = new BigInteger(amount);
 		}
 

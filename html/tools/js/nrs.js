@@ -1,59 +1,35 @@
 var NRS = (function(NRS, $, undefined) {
 	"use strict";
 
-	NRS.helpers = {};
+	NRS.server = "";
 	NRS.state = {};
 	NRS.blocks = [];
-	NRS.temp = {
-		"blocks": []
-	};
-	NRS.normalVersion = {};
-	NRS.betaVersion = {};
-	NRS.account = {};
-	NRS.currentPage = "dashboard";
-	NRS.newsRefresh = 0;
-	NRS.messages = {};
-	NRS.forms = {
-		"errorMessages": {}
-	};
-	NRS.lastBlockHeight = 0;
-	NRS.lastTransactionTimestamp = 0;
-	NRS.account = "";
-	NRS.server = "";
-	NRS.pages = {};
-	NRS.incoming = {};
-	NRS.lastTransactionsTimestamp = 0;
-	NRS.lastTransactions = "";
-	NRS.xhrPool = [];
 	NRS.genesis = "1739068987193023818";
-	NRS.selectedContext = null;
+
+	NRS.account = "";
+	NRS.accountBalance = {};
+
 	NRS.database = null;
 	NRS.databaseSupport = false;
-	NRS.assets = [];
-	NRS.assetIds = [];
-	NRS.loadedBefore = [];
+
+	NRS.settings = {};
 	NRS.contacts = {};
-	NRS.accountBalance = {};
-	NRS.transactionsPageType = null;
-	NRS.blocksPageType = null;
+
+	NRS.useNQT = false;
+	NRS.isTestNet = false;
+	NRS.isLocalHost = false;
+	NRS.isForging = false;
+
+	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
 	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12];
-	NRS.isTestNet = false;
-	NRS.fetchingModalData = false;
-	NRS.closedGroups = [];
-	NRS.isLocalHost = false;
+
 	NRS.rememberPassword = false;
-	NRS.settings = {};
-	NRS.defaultSettings = {
-		"submit_on_enter": 0,
-		"use_new_address_format": 0
-	};
-	NRS.isForging = false;
-	NRS.unconfirmedTransactions = [];
-	NRS.unconfirmedTransactionIds = "";
-	NRS.unconfirmedTransactionsChange = true;
-	NRS.firstAssetPageLoad = true;
-	NRS.useNQT = false;
+	NRS.selectedContext = null;
+
+	NRS.currentPage = "dashboard";
+	NRS.pages = {};
+	NRS.incoming = {};
 
 	NRS.init = function() {
 		if (location.port && location.port != "6876") {
@@ -114,7 +90,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
 				} else if (NRS.state.lastBlock != response.lastBlock) {
-					NRS.temp.blocks = [];
+					NRS.tempBlocks = [];
 					NRS.state = response;
 					NRS.getAccountBalance();
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
@@ -219,11 +195,9 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.pageLoading = function() {
-		if ($.inArray(NRS.currentPage, NRS.loadedBefore) != -1) {
-			$("#" + NRS.currentPage + "_page .content-header h1").append("<span class='loading_dots'><span>.</span><span>.</span><span>.</span></span>");
-		} else {
-			NRS.loadedBefore.push(NRS.currentPage);
-		}
+		var $pageHeader = $("#" + NRS.currentPage + "_page .content-header h1");
+		$pageHeader.find(".loading_dots").remove();
+		$pageHeader.append("<span class='loading_dots'><span>.</span><span>.</span><span>.</span></span>");
 	}
 
 	NRS.pageLoaded = function(callback) {

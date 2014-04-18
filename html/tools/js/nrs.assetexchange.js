@@ -1,4 +1,9 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.assets = [];
+	NRS.assetIds = [];
+	NRS.firstAssetPageLoad = true;
+	NRS.closedGroups = [];
+
 	NRS.pages.asset_exchange = function(callback) {
 		NRS.pageLoading();
 

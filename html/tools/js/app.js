@@ -105,21 +105,16 @@ $(function() {
 
 		//var contentHeaderHeight = $(".content-header:visible").first().outerHeight(true);
 
-		//   console.log("content header height = " + contentHeaderHeight);
-
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
 		if (content > height) {
 			//then set sidebar height to the wrapper
 			$(".left-side, html, body").css("min-height", content + "px");
 
-			//  console.log("setting height to " + (content-contentHeaderHeight-2));
-
 			// $(".bar").css("min-height", (content-contentHeaderHeight-2) + "px");
 		} else {
 			//Otherwise, set the sidebar to the height of the window
 			$(".left-side, html, body").css("min-height", height + "px");
-			//     console.log("setting height2 to " + (height-contentHeaderHeight-2));
 
 			//  $(".bar").css("min-height", (height-contentHeaderHeight-2) + "px");
 

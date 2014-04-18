@@ -1,4 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.blocksPageType = null;
+	NRS.tempBlocks = [];
+
 	NRS.getBlock = function(blockID, callback, async) {
 		NRS.sendRequest('getBlock', {
 			"block": blockID
@@ -57,26 +60,26 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.handleNewBlocks = function(response) {
 		if (NRS.downloadingBlockchain) {
 			//new round started...
-			if (NRS.temp.blocks.length == 0 && NRS.state.lastBlock != response.id) {
+			if (NRS.tempBlocks.length == 0 && NRS.state.lastBlock != response.id) {
 				return;
 			}
 		}
 
 		//we have all blocks 	
-		if (response.height - 1 == NRS.lastBlockHeight || NRS.temp.blocks.length == 99) {
+		if (response.height - 1 == NRS.lastBlockHeight || NRS.tempBlocks.length == 99) {
 			var newBlocks = [];
 
 			//there was only 1 new block (response)
-			if (NRS.temp.blocks.length == 0) {
+			if (NRS.tempBlocks.length == 0) {
 				//remove oldest block, add newest block
 				NRS.blocks.unshift(response);
 				newBlocks.push(response);
 			} else {
-				NRS.temp.blocks.push(response);
+				NRS.tempBlocks.push(response);
 				//remove oldest blocks, add newest blocks
-				[].unshift.apply(NRS.blocks, NRS.temp.blocks);
-				newBlocks = NRS.temp.blocks;
-				NRS.temp.blocks = [];
+				[].unshift.apply(NRS.blocks, NRS.tempBlocks);
+				newBlocks = NRS.tempBlocks;
+				NRS.tempBlocks = [];
 			}
 
 			if (NRS.blocks.length > 100) {
@@ -90,7 +93,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
-			NRS.temp.blocks.push(response);
+			NRS.tempBlocks.push(response);
 			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
 		}
 	}
@@ -283,27 +286,14 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.dataLoadFinished($("#blocks_table"));
 
 		if (NRS.useNQT) {
-			var divider = new BigInteger((100000000 * blocks.length).toString());
+			var average_fee = new Big(total_fees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toPrecision(2);
+			var average_amount = new Big(total_amount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toPrecision(2);
 
-			console.log("mod = " + divider.toString());
-
-			var fee_fractional = total_fees.mod(divider);
-
-			console.log("fractional = " + fee_fractional.toString());
-			console.log("divide = " + total_fees.divide(divider).toString());
-			/*
-			100000000
-			10000000000
-			100000000
-			*/
-
-			total_fees = parseFloat(total_fees.divide(divider).toString() + "." + fee_fractional.toString());
-
-			$("#blocks_average_fee").html(NRS.formatAmount(total_fees, true)).removeClass("loading_dots"); //ROUND
-			$("#blocks_average_amount").html(NRS.formatAmount(total_amount)).removeClass("loading_dots"); //ROUND
+			$("#blocks_average_fee").html(NRS.formatAmount(average_fee)).removeClass("loading_dots");
+			$("#blocks_average_amount").html(NRS.formatAmount(average_amount)).removeClass("loading_dots");
 		} else {
 			$("#blocks_average_fee").html(NRS.formatAmount(total_fees / blocks.length, true)).removeClass("loading_dots"); //ROUND
-			$("#blocks_average_amount").html(NRS.formatAmount(Math.round(total_amount / 100))).removeClass("loading_dots"); //ROUND
+			$("#blocks_average_amount").html(NRS.formatAmount(total_amount / blocks.length, true)).removeClass("loading_dots"); //ROUND
 		}
 
 		if (NRS.blocksPageType == "forged_blocks") {

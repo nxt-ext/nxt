@@ -1,4 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.normalVersion = {};
+	NRS.betaVersion = {};
+
 	NRS.checkAliasVersions = function() {
 		//Get latest version nr+hash of normal version
 		NRS.sendRequest("getAliasURI", {

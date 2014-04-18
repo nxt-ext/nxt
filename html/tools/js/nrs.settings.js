@@ -1,4 +1,9 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.defaultSettings = {
+		"submit_on_enter": 0,
+		"use_new_address_format": 0
+	};
+
 	NRS.defaultColors = {
 		"background": "#F9F9F9",
 		"header": "#408EBA",

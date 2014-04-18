@@ -1,4 +1,13 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.lastTransactionsTimestamp = 0;
+	NRS.lastTransactions = "";
+
+	NRS.unconfirmedTransactions = [];
+	NRS.unconfirmedTransactionIds = "";
+	NRS.unconfirmedTransactionsChange = true;
+
+	NRS.transactionsPageType = null;
+
 	NRS.handleInitialTransactions = function(transactions, transactionIds) {
 		if (transactions.length) {
 			var rows = "";

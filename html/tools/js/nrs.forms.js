@@ -1,4 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.forms = {
+		"errorMessages": {}
+	};
 
 	$(".modal form input").keydown(function(e) {
 		if (e.which == "13") {

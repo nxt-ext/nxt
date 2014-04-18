@@ -163,8 +163,6 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getAsset", {
 						"asset": transaction.attachment.asset
 					}, function(asset, input) {
-						console.log(transaction);
-						console.log(asset);
 						var data = {
 							"Type": "Asset Transfer",
 							"Asset Name": asset.name,

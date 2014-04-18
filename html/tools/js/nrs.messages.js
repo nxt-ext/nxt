@@ -1,6 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.messages = {};
+
 	NRS.pages.messages = function(callback) {
-		console.log("here we are");
 		NRS.pageLoading();
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
@@ -11,8 +12,6 @@ var NRS = (function(NRS, $, undefined) {
 			"type": 1,
 			"subtype": 0
 		}, function(response) {
-			console.log(response);
-
 			if (response.transactionIds && response.transactionIds.length) {
 				var transactionIds = response.transactionIds.reverse().slice(0, 100);
 				var nrTransactions = transactionIds.length;

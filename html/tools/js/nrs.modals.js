@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.fetchingModalData = false;
+
 	// save the original function object
 	var _superModal = $.fn.modal;
 

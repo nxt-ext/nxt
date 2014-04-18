@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.newsRefresh = 0;
+
 	NRS.pages.news = function() {
 		var currentTime = new Date().getTime();
 
