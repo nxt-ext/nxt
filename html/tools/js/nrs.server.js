@@ -242,7 +242,14 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					return;
 				} else {
-					var payload = response.transactionBytes.substr(0, 128) + signature + response.transactionBytes.substr(256);
+					console.log(response.transactionBytes);
+					console.log(response);
+
+					if (NRS.useNQT) {
+						var payload = response.transactionBytes.substr(0, 144) + signature + response.transactionBytes.substr(272);
+					} else {
+						var payload = response.transactionBytes.substr(0, 128) + signature + response.transactionBytes.substr(256);
+					}
 
 					if (!NRS.verifyTransactionBytes(payload, requestType, data)) {
 						if (callback) {
