@@ -1788,9 +1788,12 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Effective balance leasing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
+                Account recipientAccount = Account.getAccount(transaction.getRecipientId());
                 if (transaction.getRecipientId().equals(transaction.getSenderId())
                         || transaction.getAmountNQT() != 0
-                        || attachment.getPeriod() < 1440) {
+                        || attachment.getPeriod() < 1440
+                        || recipientAccount == null
+                        || recipientAccount.getPublicKey() == null) {
                     throw new NxtException.ValidationException("Invalid effective balance leasing: " + attachment.getJSONObject());
                 }
             }

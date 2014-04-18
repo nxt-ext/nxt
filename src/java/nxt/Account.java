@@ -44,22 +44,23 @@ public final class Account {
             @Override
             public void notify(Block block) {
                 int height = block.getHeight();
-                for (Account account : getAllAccounts()) {
-                    if (account.currentLeasingHeightFrom != Integer.MAX_VALUE) {
-                        if (height == account.currentLeasingHeightFrom) {
-                            Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
-                        } else if (height == account.currentLeasingHeightTo) {
-                            Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
-                            if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
-                                account.currentLeasingHeightFrom = Integer.MAX_VALUE;
-                            } else {
-                                account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
-                                account.currentLeasingHeightTo = account.nextLeasingHeightTo;
-                                account.currentLesseeId = account.nextLesseeId;
-                                account.nextLeasingHeightFrom = Integer.MAX_VALUE;
-                                if (height == account.currentLeasingHeightFrom) {
-                                    Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
-                                }
+                Iterator<Map.Entry<Long, Account>> iterator = leasingAccounts.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Account account = iterator.next().getValue();
+                    if (height == account.currentLeasingHeightFrom) {
+                        Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                    } else if (height == account.currentLeasingHeightTo) {
+                        Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                        if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
+                            account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                            iterator.remove();
+                        } else {
+                            account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
+                            account.currentLeasingHeightTo = account.nextLeasingHeightTo;
+                            account.currentLesseeId = account.nextLesseeId;
+                            account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                            if (height == account.currentLeasingHeightFrom) {
+                                Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
                             }
                         }
                     }
@@ -70,8 +71,8 @@ public final class Account {
 
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
-
     private static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
+    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentHashMap<>();
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
@@ -120,6 +121,7 @@ public final class Account {
 
     static void clear() {
         accounts.clear();
+        leasingAccounts.clear();
     }
 
     private final Long id;
@@ -246,7 +248,7 @@ public final class Account {
         while ((result = guaranteedBalances.get(i)).ignore && i > 0) {
             i--;
         }
-        return result.ignore ? 0 : result.balance;
+        return result.ignore || result.balance < 0 ? 0 : result.balance;
 
     }
 
@@ -294,6 +296,7 @@ public final class Account {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
             Block lastBlock = Nxt.getBlockchain().getLastBlock();
+            leasingAccounts.put(this.getId(), this);
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
 
                 currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
