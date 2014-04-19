@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.DbIterator;
 import nxt.util.Logger;
@@ -257,6 +258,35 @@ final class DbVersion {
                             "('83.212.103.18'), ('bug.airdns.org')");
                 }
             case 38:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
+            case 39:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_full_hash BINARY(32)");
+            case 40:
+                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
+                     Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET full_hash = ? WHERE id = ?")) {
+                    while (iterator.hasNext()) {
+                        Transaction transaction = iterator.next();
+                        pstmt.setBytes(1, Crypto.sha256().digest(transaction.getBytes()));
+                        pstmt.setLong(2, transaction.getId());
+                        pstmt.executeUpdate();
+                    }
+                    con.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 41:
+                apply("ALTER TABLE transaction ALTER COLUMN full_hash SET NOT NULL");
+            case 42:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
+            case 43:
+                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
+                + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
+            case 44:
+                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                apply(null);
+            case 45:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

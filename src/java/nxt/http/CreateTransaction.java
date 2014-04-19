@@ -28,7 +28,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + 5);
-        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNQT", "deadline", "referencedTransaction"}, 0,
+        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNQT", "deadline", "referencedTransactionFullHash"}, 0,
                 result, parameters.length, 5);
         return result;
     }
@@ -46,7 +46,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                                             long amountNQT, Attachment attachment)
             throws NxtException {
         String deadlineValue = req.getParameter("deadline");
-        String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
+        String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
+        String referencedTransactionId = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
 
@@ -79,10 +80,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             return NOT_ENOUGH_FUNDS;
         }
 
-        Long referencedTransaction;
-        try {
-            referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
-        } catch (RuntimeException e) {
+        if (referencedTransactionId != null) {
             return INCORRECT_REFERENCED_TRANSACTION;
         }
 
@@ -94,10 +92,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         try {
             Transaction transaction = attachment == null ?
                     Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                            amountNQT, feeNQT, referencedTransaction)
+                            amountNQT, feeNQT, referencedTransactionFullHash)
                     :
                     Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                            amountNQT, feeNQT, referencedTransaction, attachment);
+                            amountNQT, feeNQT, referencedTransactionFullHash, attachment);
 
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
