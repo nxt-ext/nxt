@@ -506,9 +506,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
                                 + " is already in the blockchain", transaction);
                     }
-                    if ((transaction.getReferencedTransactionId() != null
-                            && ! TransactionDb.hasTransaction(transaction.getReferencedTransactionId()))) {
-                        throw new TransactionNotAcceptedException("Missing referenced transaction " + Convert.toUnsignedLong(transaction.getReferencedTransactionId())
+                    if ((transaction.getReferencedTransactionFullHash() != null
+                            && ! TransactionDb.hasTransactionByFullHash(transaction.getReferencedTransactionFullHash()))) {
+                        throw new TransactionNotAcceptedException("Missing referenced transaction "
+                                + transaction.getReferencedTransactionFullHash()
                                 + " for transaction " + transaction.getStringId(), transaction);
                     }
                     if (! transaction.verify()) {
@@ -626,7 +627,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
         for (TransactionImpl transaction : transactionProcessor.getAllUnconfirmedTransactions()) {
-            if (transaction.getReferencedTransactionId() == null || TransactionDb.hasTransaction(transaction.getReferencedTransactionId())) {
+            if (transaction.getReferencedTransactionFullHash() == null
+                    || TransactionDb.hasTransactionByFullHash(transaction.getReferencedTransactionFullHash())) {
                 sortedTransactions.add(transaction);
             }
         }

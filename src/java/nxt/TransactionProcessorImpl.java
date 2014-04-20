@@ -229,7 +229,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
 
         try {
-            boolean useNQT = Nxt.getBlockchain().getLastBlock().getHeight() >= Constants.NQT_BLOCK;
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -243,20 +242,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             long amountNQT;
             long feeNQT;
             String referencedTransactionFullHash = null;
-            Long referencedTransactionId = null;
-            if (! useNQT) {
-                amountNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
-                feeNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
-                referencedTransactionId = Convert.zeroToNull(buffer.getLong());
-            } else {
-                amountNQT = buffer.getLong();
-                feeNQT = buffer.getLong();
-                byte[] referencedTransactionFullHashBytes = new byte[32];
-                buffer.get(referencedTransactionFullHashBytes);
-                if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-                    referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-                    referencedTransactionId = Convert.fullHashToId(referencedTransactionFullHash);
-                }
+            amountNQT = buffer.getLong();
+            feeNQT = buffer.getLong();
+            byte[] referencedTransactionFullHashBytes = new byte[32];
+            buffer.get(referencedTransactionFullHashBytes);
+            if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
+                referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
             }
             byte[] signature = new byte[64];
             buffer.get(signature);
@@ -264,13 +255,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             TransactionImpl transaction;
-            if (! useNQT) {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionId, signature);
-            } else {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionFullHash, signature);
-            }
+            transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                    amountNQT, feeNQT, referencedTransactionFullHash, signature);
             transactionType.loadAttachment(transaction, buffer);
 
             return transaction;
@@ -301,18 +287,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
             }
             String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
             byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction;
-            if (referencedTransactionFullHash != null) {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
                         amountNQT, feeNQT, referencedTransactionFullHash, signature);
-            } else {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionId, signature);
-            }
 
             JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 

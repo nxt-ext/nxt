@@ -19,7 +19,6 @@ final class TransactionImpl implements Transaction {
     private final Long recipientId;
     private final long amountNQT;
     private final long feeNQT;
-    private Long referencedTransactionId; // remove after NQT_BLOCK
     private final String referencedTransactionFullHash;
     private final TransactionType type;
 
@@ -62,18 +61,8 @@ final class TransactionImpl implements Transaction {
         this.amountNQT = amountNQT;
         this.feeNQT = feeNQT;
         this.referencedTransactionFullHash = referencedTransactionFullHash;
-        if (referencedTransactionFullHash != null) {
-            referencedTransactionId = Convert.fullHashToId(referencedTransactionFullHash);
-        }
         this.signature = signature;
         this.type = type;
-    }
-
-    // remove after NQT_BLOCK
-    TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
-        this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT, (String)null, signature);
-        this.referencedTransactionId = referencedTransactionId;
     }
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
@@ -83,22 +72,6 @@ final class TransactionImpl implements Transaction {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
                 referencedTransactionFullHash == null ? null : Convert.toHexString(referencedTransactionFullHash),
                 signature);
-        this.blockId = blockId;
-        this.height = height;
-        this.id = id;
-        this.senderId = senderId;
-        this.attachment = attachment;
-        this.hash = hash == null ? null : Convert.toHexString(hash);
-        this.blockTimestamp = blockTimestamp;
-        this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
-    }
-
-    // remove after NQT_BLOCK
-    TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature, Long blockId, int height,
-                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp, byte[] fullHash)
-            throws NxtException.ValidationException {
-        this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, signature);
         this.blockId = blockId;
         this.height = height;
         this.id = id;
@@ -137,11 +110,6 @@ final class TransactionImpl implements Transaction {
     @Override
     public String getReferencedTransactionFullHash() {
         return referencedTransactionFullHash;
-    }
-
-    @Override
-    public Long getReferencedTransactionId() {
-        return referencedTransactionId;
     }
 
     @Override
@@ -311,7 +279,7 @@ final class TransactionImpl implements Transaction {
             if (referencedTransactionFullHash != null) {
                 buffer.putLong(Convert.fullHashToId(Convert.parseHexString(referencedTransactionFullHash)));
             } else {
-                buffer.putLong(Convert.nullToZero(referencedTransactionId));
+                buffer.putLong(0L);
             }
         }
         buffer.put(signature != null ? signature : new byte[64]);
@@ -351,7 +319,6 @@ final class TransactionImpl implements Transaction {
         json.put("fee", feeNQT / Constants.ONE_NXT);
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
-        json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
         if (referencedTransactionFullHash != null) {
             json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }

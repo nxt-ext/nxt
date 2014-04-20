@@ -282,13 +282,19 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
             case 43:
                 apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
-                + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
+                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
             case 44:
                 apply(null);
             case 45:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 46:
+                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
+                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id) "
+                        + "WHERE a.referenced_transaction_full_hash IS NULL");
+            case 47:
+                apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
+            case 48:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

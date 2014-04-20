@@ -99,10 +99,6 @@ final class TransactionDb {
             Long recipientId = rs.getLong("recipient_id");
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
-            Long referencedTransactionId = rs.getLong("referenced_transaction_id");
-            if (rs.wasNull()) {
-                referencedTransactionId = null;
-            }
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
             byte[] signature = rs.getBytes("signature");
             Long blockId = rs.getLong("block_id");
@@ -115,13 +111,8 @@ final class TransactionDb {
             byte[] fullHash = rs.getBytes("full_hash");
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            if (referencedTransactionFullHash != null) {
-                return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                        referencedTransactionFullHash, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp, fullHash);
-            } else {
-                return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                        referencedTransactionId, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp, fullHash);
-            }
+            return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
+                    referencedTransactionFullHash, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp, fullHash);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -149,7 +140,7 @@ final class TransactionDb {
         try {
             for (Transaction transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
-                        + "recipient_id, amount, fee, referenced_transaction_full_hash, referenced_transaction_id, height, "
+                        + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment, "
                         + "hash, block_timestamp, full_hash) "
                         + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
@@ -164,11 +155,6 @@ final class TransactionDb {
                         pstmt.setBytes(++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
                     } else {
                         pstmt.setNull(++i, Types.BINARY);
-                    }
-                    if (transaction.getReferencedTransactionId() != null) {
-                        pstmt.setLong(++i, transaction.getReferencedTransactionId());
-                    } else {
-                        pstmt.setNull(++i, Types.BIGINT);
                     }
                     pstmt.setInt(++i, transaction.getHeight());
                     pstmt.setLong(++i, transaction.getBlockId());
