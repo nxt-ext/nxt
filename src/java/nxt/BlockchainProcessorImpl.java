@@ -453,10 +453,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException("Previous block id doesn't match");
                 }
 
-                if (block.getVersion() !=
-                        (previousLastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1
-                        : previousLastBlock.getHeight() < Constants.NQT_BLOCK ? 2
-                        : 3)) {
+                if (! verifyVersion(block, previousLastBlock.getHeight())) {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
 
@@ -790,6 +787,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
+    private boolean verifyVersion(Block block, int currentHeight) {
+        return block.getVersion() ==
+                (currentHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
+                        : currentHeight < Constants.NQT_BLOCK ? 2
+                        : 3);
+    }
+
     private volatile boolean validateAtScan = false;
 
     void validateAtNextScan() {
@@ -824,6 +828,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (validateAtScan && ! currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
                             if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
                                 throw new NxtException.ValidationException("Invalid block signature");
+                            }
+                            if (! verifyVersion(currentBlock, blockchain.getHeight())) {
+                                throw new NxtException.ValidationException("Invalid block version");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                 if (!transaction.verify()) {
