@@ -179,7 +179,7 @@ public final class Peers {
             Logger.logDebugMessage("Well known peers: " + buf.toString());
         }
 
-        usePeersDb = Nxt.getBooleanProperty("usePeersDb");
+        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb");
         if (usePeersDb) {
             Logger.logDebugMessage("Loading known peers from the database...");
             for (String savedPeer : PeerDb.loadPeers()) {
