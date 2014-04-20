@@ -228,10 +228,6 @@ final class BlockImpl implements Block {
         json.put("version", version);
         json.put("timestamp", timestamp);
         json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
-        if (version < 3) {
-            json.put("totalAmount", totalAmountNQT / Constants.ONE_NXT);
-            json.put("totalFee", totalFeeNQT / Constants.ONE_NXT);
-        }
         json.put("totalAmountNQT", totalAmountNQT);
         json.put("totalFeeNQT", totalFeeNQT);
         json.put("payloadLength", payloadLength);

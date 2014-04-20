@@ -759,13 +759,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
             long totalAmountNQT;
             long totalFeeNQT;
-            if (blockData.get("totalAmountNQT") != null) {
-                totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
-                totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
-            } else {
-                totalAmountNQT = Convert.safeMultiply(((Long) blockData.get("totalAmount")), Constants.ONE_NXT);
-                totalFeeNQT = Convert.safeMultiply(((Long) blockData.get("totalFee")), Constants.ONE_NXT);
-            }
+            totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
+            totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
             int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
             byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
             byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));

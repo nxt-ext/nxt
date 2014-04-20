@@ -315,8 +315,6 @@ final class TransactionImpl implements Transaction {
         json.put("deadline", deadline);
         json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
         json.put("recipient", Convert.toUnsignedLong(recipientId));
-        json.put("amount", amountNQT / Constants.ONE_NXT);
-        json.put("fee", feeNQT / Constants.ONE_NXT);
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
         if (referencedTransactionFullHash != null) {
