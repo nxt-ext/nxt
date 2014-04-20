@@ -185,8 +185,18 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public Transaction getTransactionByFullHash(String fullHash) {
+        return TransactionDb.findTransactionByFullHash(fullHash);
+    }
+
+    @Override
     public boolean hasTransaction(Long transactionId) {
         return TransactionDb.hasTransaction(transactionId);
+    }
+
+    @Override
+    public boolean hasTransactionByFullHash(String fullHash) {
+        return TransactionDb.hasTransactionByFullHash(fullHash);
     }
 
     @Override

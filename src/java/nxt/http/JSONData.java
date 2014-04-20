@@ -190,12 +190,16 @@ final class JSONData {
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
         json.put("referencedTransaction", Convert.toUnsignedLong(transaction.getReferencedTransactionId()));
+        if (transaction.getReferencedTransactionFullHash() != null) {
+            json.put("referencedTransactionFullHash", transaction.getReferencedTransactionFullHash());
+        }
         json.put("signature", Convert.toHexString(transaction.getSignature()));
         if (transaction.getAttachment() != null) {
             json.put("attachment", attachment(transaction.getAttachment()));
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("hash", transaction.getHash());
+        json.put("fullHash", transaction.getFullHash());
         json.put("transaction", transaction.getStringId());
         return json;
     }

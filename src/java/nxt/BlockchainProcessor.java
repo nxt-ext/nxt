@@ -33,7 +33,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
         private final TransactionImpl transaction;
 
         TransactionNotAcceptedException(String message, TransactionImpl transaction) {
-            super(message);
+            super(message  + " transaction: " + transaction.getJSONObject().toJSONString());
             this.transaction = transaction;
         }
 
