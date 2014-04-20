@@ -276,18 +276,6 @@ final class TransactionImpl implements Transaction {
 
     }
 
-    private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
-
-    int getSize() {
-        return TRANSACTION_BYTES_LENGTH + (useNQT() ? 8 + 8 + 32 - 4 - 4 - 8 : 0) +  (attachment == null ? 0 : attachment.getSize());
-    }
-
-    private boolean useNQT() {
-        return this.height > Constants.NQT_BLOCK
-                && (this.height < Integer.MAX_VALUE
-                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
-    }
-
     @Override
     public byte[] getBytes() {
 
@@ -396,8 +384,22 @@ final class TransactionImpl implements Transaction {
         return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
 
+    int getSize() {
+        return signatureOffset() + 64  +  (attachment == null ? 0 : attachment.getSize());
+    }
+
+    private int signatureOffset() {
+        return 1 + 1 + 4 + 2 + 32 + 8 + (useNQT() ? 8 + 8 + 32 : 4 + 4 + 8);
+    }
+
+    private boolean useNQT() {
+        return this.height > Constants.NQT_BLOCK
+                && (this.height < Integer.MAX_VALUE
+                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
+    }
+
     private byte[] zeroSignature(byte[] data) {
-        int start = useNQT() ? 72 : 64;
+        int start = signatureOffset();
         for (int i = start; i < start + 64; i++) {
             data[i] = 0;
         }

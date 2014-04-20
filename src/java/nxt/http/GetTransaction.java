@@ -16,7 +16,7 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
     static final GetTransaction instance = new GetTransaction();
 
     private GetTransaction() {
-        super("transaction", "hash");
+        super("transaction", "hash", "fullHash");
     }
 
     @Override
@@ -24,7 +24,8 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
 
         String transactionIdString = Convert.emptyToNull(req.getParameter("transaction"));
         String transactionHash = Convert.emptyToNull(req.getParameter("hash"));
-        if (transactionIdString == null && transactionHash == null) {
+        String transactionFullHash = Convert.emptyToNull(req.getParameter("fullHash"));
+        if (transactionIdString == null && transactionHash == null && transactionFullHash == null) {
             return MISSING_TRANSACTION;
         }
 
@@ -34,8 +35,13 @@ public final class GetTransaction extends APIServlet.APIRequestHandler {
             if (transactionIdString != null) {
                 transactionId = Convert.parseUnsignedLong(transactionIdString);
                 transaction = Nxt.getBlockchain().getTransaction(transactionId);
-            } else {
+            } else if (transactionHash != null) {
                 transaction = Nxt.getBlockchain().getTransaction(transactionHash);
+                if (transaction == null) {
+                    return UNKNOWN_TRANSACTION;
+                }
+            } else {
+                transaction = Nxt.getBlockchain().getTransactionByFullHash(transactionFullHash);
                 if (transaction == null) {
                     return UNKNOWN_TRANSACTION;
                 }

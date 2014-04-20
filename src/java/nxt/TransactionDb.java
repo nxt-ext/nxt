@@ -48,7 +48,7 @@ final class TransactionDb {
         }
     }
 
-    static Transaction findTransactionFullHash(String fullHash) {
+    static Transaction findTransactionByFullHash(String fullHash) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
@@ -77,7 +77,7 @@ final class TransactionDb {
         }
     }
 
-    static boolean hasTransactionFullHash(String fullHash) {
+    static boolean hasTransactionByFullHash(String fullHash) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));

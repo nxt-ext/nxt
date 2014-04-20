@@ -4,6 +4,7 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -36,6 +37,7 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
                 response = JSONData.unconfirmedTransaction(transaction);
                 response.put("verify", transaction.verify());
             } catch (NxtException.ValidationException e) {
+                Logger.logDebugMessage(e.getMessage(), e);
                 response = new JSONObject();
                 response.put("error", e.getMessage());
             }

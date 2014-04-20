@@ -187,6 +187,25 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
+    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
+                                      long amountNQT, long feeNQT, String referencedTransactionFullHash)
+            throws NxtException.ValidationException {
+        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
+                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
+    }
+
+    @Override
+    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
+                                      long amountNQT, long feeNQT, String referencedTransactionFullHash, Attachment attachment)
+            throws NxtException.ValidationException {
+        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
+                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
+        transaction.setAttachment(attachment);
+        transaction.validateAttachment();
+        return transaction;
+    }
+
+    @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
         if (! transaction.verify()) {
             throw new NxtException.ValidationException("Transaction signature verification failed");
@@ -261,25 +280,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         } catch (RuntimeException e) {
             throw new NxtException.ValidationException(e.toString(), e);
         }
-    }
-
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash)
-            throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
-                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
-    }
-
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash, Attachment attachment)
-            throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
-                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
-        transaction.setAttachment(attachment);
-        transaction.validateAttachment();
-        return transaction;
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
