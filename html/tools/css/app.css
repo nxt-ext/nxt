@@ -3223,6 +3223,30 @@ input:invalid {
   border: 1px solid red;
 }
 
+#forging_indicator.animate_forging i {
+  -webkit-animation-name: pulse;
+  -webkit-animation-duration: 2s;
+  -webkit-animation-iteration-count: infinite;
+}
+
+@-moz-keyframes pulse {
+  from { color: #749a02; text-shadow: 0 0 9px #266000; }
+  50% { color: #91bd09; text-shadow: 0 0 18px #9bc92b; }
+  to { color: #749a02; text-shadow: 0 0 9px #266000; }
+}
+
+@-webkit-keyframes pulse {
+  from { color: #749a02; text-shadow: 0 0 9px #266000; }
+  50% { color: #91bd09; text-shadow: 0 0 18px #9bc92b; }
+  to { color: #749a02; text-shadow: 0 0 9px #266000; }
+}
+
+@keyframes pulse {
+  from { color: #749a02; text-shadow: 0 0 9px #266000; }
+  50% { color: #91bd09; text-shadow: 0 0 18px #9bc92b; }
+  to { color: #749a02; text-shadow: 0 0 9px #266000;  }
+}
+
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

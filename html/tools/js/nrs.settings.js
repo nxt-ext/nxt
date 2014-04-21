@@ -1,7 +1,8 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.defaultSettings = {
 		"submit_on_enter": 0,
-		"use_new_address_format": 0
+		"use_new_address_format": 0,
+		"animate_forging": 1
 	};
 
 	NRS.defaultColors = {
@@ -823,10 +824,7 @@ var NRS = (function(NRS, $, undefined) {
 				"id": "settings"
 			}], function(error, result) {
 				if (result.length) {
-					NRS.settings = JSON.parse(result[0].contents);
-					if ($.isEmptyObject(NRS.settings)) {
-						NRS.settings = NRS.defaultSettings;
-					}
+					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
 				} else {
 					NRS.database.insert("data", {
 						id: "settings",
@@ -837,15 +835,14 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.applySettings();
 			});
 		} else {
-			NRS.settings = JSON.parse(localStorage.getItem("settings"));
-			if ($.isEmptyObject(NRS.settings)) {
-				NRS.settings = NRS.defaultSettings;
-			}
+			NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
 			NRS.applySettings();
 		}
 	}
 
 	NRS.applySettings = function(key) {
+		console.log("apply settings");
+		console.log(NRS.settings);
 		if (!key || key == "submit_on_enter") {
 			if (NRS.settings["submit_on_enter"]) {
 				$(".modal form").on("submit.onEnter", function(e) {
@@ -854,6 +851,14 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			} else {
 				$(".modal form").off("submit.onEnter");
+			}
+		}
+
+		if (!key || key == "animate_forging") {
+			if (NRS.settings["animate_forging"]) {
+				$("#forging_indicator").addClass("animate_forging");
+			} else {
+				$("#forging_indicator").removeClass("animate_forging");
 			}
 		}
 
