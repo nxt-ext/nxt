@@ -1,0 +1,332 @@
+var NRS = (function(NRS, $, undefined) {
+	NRS.userInfoModal = {
+		"user": 0
+	};
+
+	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table").on("click", "a[data-user]", function(e) {
+		e.preventDefault();
+
+		var account = $(this).data("user");
+
+		NRS.showAccountModal(account);
+	});
+
+	NRS.showAccountModal = function(account) {
+		if (NRS.fetchingModalData) {
+			return;
+		}
+
+		if (typeof account == "object") {
+			NRS.userInfoModal.user = account.id;
+		} else {
+			NRS.userInfoModal.user = account;
+			NRS.fetchingModalData = true;
+		}
+
+		$("#user_info_modal_account").html(NRS.getAccountFormatted(NRS.userInfoModal.user));
+
+		$("#user_info_modal_actions button").data("account", NRS.userInfoModal.user);
+
+		if (NRS.userInfoModal.user in NRS.contacts) {
+			$("#user_info_modal_add_as_contact").hide();
+		} else {
+			$("#user_info_modal_add_as_contact").show();
+		}
+
+		if (NRS.fetchingModalData) {
+			NRS.sendRequest("getAccount", {
+				"account": NRS.userInfoModal.user
+			}, function(response) {
+				NRS.processAccountModalData(response);
+				NRS.fetchingModalData = false;
+			});
+		} else {
+			NRS.processAccountModalData(account);
+		}
+
+		$("#user_info_modal_transactions").show();
+
+		NRS.userInfoModal.transactions();
+	}
+
+	NRS.processAccountModalData = function(account) {
+		var balance;
+
+		if (NRS.useNQT) {
+			balance = new BigInteger(account.unconfirmedBalanceNQT);
+		} else {
+			balance = (account.unconfirmedBalance / 100) || 0;
+		}
+
+		if (balance == 0) {
+			$("#user_info_modal_balance").html("0");
+		} else {
+			$("#user_info_modal_balance").html(NRS.formatAmount(balance) + " NXT");
+		}
+
+		$("#user_info_modal").modal("show");
+	}
+
+	$("#user_info_modal").on("hidden.bs.modal", function(e) {
+		$(this).find(".user_info_modal_content").hide();
+		$(this).find(".user_info_modal_content table tbody").empty();
+		$(this).find(".user_info_modal_content:not(.data-loading,.data-never-loading)").addClass("data-loading");
+		$(this).find("ul.nav li.active").removeClass("active");
+		$("#user_info_transactions").addClass("active");
+		NRS.userInfoModal.user = 0;
+	});
+
+	$("#user_info_modal ul.nav li").click(function(e) {
+		e.preventDefault();
+
+		var tab = $(this).data("tab");
+
+		$(this).siblings().removeClass("active");
+		$(this).addClass("active");
+
+		$(".user_info_modal_content").hide();
+
+		var content = $("#user_info_modal_" + tab);
+
+		content.show();
+
+		if (content.hasClass("data-loading")) {
+			NRS.userInfoModal[tab]();
+		}
+	});
+
+	/*some duplicate methods here...*/
+	NRS.userInfoModal.transactions = function(type) {
+		NRS.sendRequest("getAccountTransactionIds", {
+			"account": NRS.userInfoModal.user,
+			"timestamp": 0
+		}, function(response) {
+			if (response.transactionIds && response.transactionIds.length) {
+				var transactions = {};
+				var nr_transactions = 0;
+
+				var transactionIds = response.transactionIds.reverse().slice(0, 100);
+
+				for (var i = 0; i < transactionIds.length; i++) {
+					NRS.sendRequest("getTransaction", {
+						"transaction": transactionIds[i]
+					}, function(transaction, input) {
+						/*
+    					if (NRS.currentPage != "transactions") {
+    						transactions = {};
+    						return;
+    					}*/
+
+						transactions[input.transaction] = transaction;
+						nr_transactions++;
+
+						if (nr_transactions == transactionIds.length) {
+							var rows = "";
+
+							for (var i = 0; i < nr_transactions; i++) {
+								var transaction = transactions[transactionIds[i]];
+
+								var transactionType = "Unknown";
+
+								if (transaction.type == 0) {
+									transactionType = "Ordinary payment";
+								} else if (transaction.type == 1) {
+									switch (transaction.subtype) {
+										case 0:
+											transactionType = "Arbitrary message";
+											break;
+										case 1:
+											transactionType = "Alias assignment";
+											break;
+										case 2:
+											transactionType = "Poll creation";
+											break;
+										case 3:
+											transactionType = "Vote casting";
+											break;
+									}
+								} else if (transaction.type == 2) {
+									switch (transaction.subtype) {
+										case 0:
+											transactionType = "Asset issuance";
+											break;
+										case 1:
+											transactionType = "Asset transfer";
+											break;
+										case 2:
+											transactionType = "Ask order placement";
+											break;
+										case 3:
+											transactionType = "Bid order placement";
+											break;
+										case 4:
+											transactionType = "Ask order cancellation";
+											break;
+										case 5:
+											transactionType = "Bid order cancellation";
+											break;
+									}
+								}
+
+								var receiving = transaction.recipient == NRS.userInfoModal.user;
+								var account = (receiving ? String(transaction.sender).escapeHTML() : String(transaction.recipient).escapeHTML());
+
+								if (transaction.amountNQT) {
+									transaction.amount = new BigInteger(transaction.amountNQT);
+									transaction.fee = new BigInteger(transaction.feeNQT);
+								}
+
+								rows += "<tr><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(account) + "</td></tr>";
+							}
+
+							$("#user_info_modal_transactions_table tbody").empty().append(rows);
+							NRS.dataLoadFinished($("#user_info_modal_transactions_table"));
+						}
+					});
+
+					/*
+    				if (NRS.currentPage != "transactions") {
+    					transactions = {};
+    					return;
+    				}*/
+				}
+			} else {
+				$("#user_info_modal_transactions_table tbody").empty();
+				NRS.dataLoadFinished($("#user_info_modal_transactions_table"));
+			}
+		});
+	}
+
+	NRS.userInfoModal.aliases = function() {
+		NRS.sendRequest("listAccountAliases", {
+			"account": NRS.userInfoModal.user
+		}, function(response) {
+			if (response.aliases && response.aliases.length) {
+				var aliases = response.aliases;
+
+				aliases.sort(function(a, b) {
+					if (a.alias.toLowerCase() > b.alias.toLowerCase()) {
+						return 1;
+					} else if (a.alias.toLowerCase() < b.alias.toLowerCase()) {
+						return -1;
+					} else {
+						return 0;
+					}
+				});
+
+				var rows = "";
+
+				var alias_account_count = 0,
+					alias_uri_count = 0,
+					empty_alias_count = 0,
+					alias_count = aliases.length;
+
+				for (var i = 0; i < alias_count; i++) {
+					var alias = aliases[i];
+
+					rows += "<tr data-alias='" + alias.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + alias.alias.escapeHTML() + "</td><td class='uri'>" + (alias.uri.indexOf("http") === 0 ? "<a href='" + String(alias.uri).escapeHTML() + "' target='_blank'>" + String(alias.uri).escapeHTML() + "</a>" : String(alias.uri).escapeHTML()) + "</td></tr>";
+					if (!alias.uri) {
+						empty_alias_count++;
+					} else if (alias.uri.indexOf("http") === 0) {
+						alias_uri_count++;
+					} else if (alias.uri.indexOf("acct:") === 0 || alias.uri.indexOf("nacc:") === 0) {
+						alias_account_count++;
+					}
+				}
+
+				$("#user_info_modal_aliases_table tbody").empty().append(rows);
+				NRS.dataLoadFinished($("#user_info_modal_aliases_table"));
+			} else {
+				$("#user_info_modal_aliases_table tbody").empty();
+				NRS.dataLoadFinished($("#user_info_modal_aliases_table"));
+			}
+		});
+	}
+
+	NRS.userInfoModal.assets = function() {
+		NRS.sendRequest("getAccount", {
+			"account": NRS.userInfoModal.user
+		}, function(response) {
+			/*
+			if (NRS.currentPage != "my_assets") {
+				return;
+			}*/
+
+			if (response.assetBalances && response.assetBalances.length) {
+				var assets = [];
+				var nr_assets = 0;
+				var ignored_assets = 0;
+
+				for (var i = 0; i < response.assetBalances.length; i++) {
+					if (response.assetBalances[i].balance == 0) {
+						ignored_assets++;
+
+						if (nr_assets + ignored_assets == response.assetBalances.length) {
+							NRS.userInfoModal.assetsLoaded(assets);
+						}
+						continue;
+					}
+
+					NRS.sendRequest("getAsset", {
+						"asset": response.assetBalances[i].asset,
+						"_extra": {
+							"balance": response.assetBalances[i].balance
+						}
+					}, function(asset, input) {
+						/*
+						if (NRS.currentPage != "my_assets") {
+							return;
+						}*/
+
+
+						asset.asset = input.asset;
+						asset.balance = input["_extra"].balance;
+
+						assets[nr_assets] = asset;
+						nr_assets++;
+
+						if (nr_assets + ignored_assets == response.assetBalances.length) {
+							NRS.userInfoModal.assetsLoaded(assets);
+						}
+					});
+
+					/*
+					if (NRS.currentPage != "my_assets") {
+						return;
+					}*/
+				}
+			} else {
+				$("#user_info_modal_assets_table tbody").empty();
+				NRS.dataLoadFinished($("#user_info_modal_assets_table"));
+			}
+		});
+	}
+
+	NRS.userInfoModal.assetsLoaded = function(assets) {
+		var rows = "";
+
+		assets.sort(function(a, b) {
+			if (a.name.toLowerCase() > b.name.toLowerCase()) {
+				return 1;
+			} else if (a.name.toLowerCase() < b.name.toLowerCase()) {
+				return -1;
+			} else {
+				return 0;
+			}
+		});
+
+		for (var i = 0; i < assets.length; i++) {
+			var asset = assets[i];
+
+			var percentageAsset = parseFloat(asset.balance / asset.quantity);
+			percentageAsset = Math.round(percentageAsset * 10000000) / 100000;
+
+			rows += "<tr><td>" + asset.name.escapeHTML() + "</td><td>" + NRS.formatAmount(asset.balance) + "</td><td>" + NRS.formatAmount(asset.quantity) + "</td><td>" + percentageAsset + "%</td></tr>";
+		}
+
+		$("#user_info_modal_assets_table tbody").empty().append(rows);
+		NRS.dataLoadFinished($("#user_info_modal_assets_table"));
+	}
+
+	return NRS;
+}(NRS || {}, jQuery));
