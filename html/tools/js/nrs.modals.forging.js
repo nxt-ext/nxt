@@ -5,7 +5,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.startForgingComplete = function(response, data) {
 		if ("deadline" in response) {
-			$("#forging_indicator i.fa").removeClass("text-danger").addClass("text-success");
+			$("#forging_indicator").addClass("forging");
 			$("#forging_indicator span").html("Forging");
 			NRS.isForging = true;
 			$.growl("Forging started successfully.", {
@@ -25,7 +25,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+		$("#forging_indicator").removeClass("forging");
 		$("#forging_indicator span").html("Not forging");
 
 		NRS.isForging = false;
@@ -44,9 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("#forging_indicator").click(function(e) {
 		e.preventDefault();
 
-		var $forgingIndicator = $(this).find("i.fa-circle");
-
-		if ($forgingIndicator.hasClass("text-success")) {
+		if ($(this).hasClass("forging")) {
 			$("#stop_forging_modal").modal("show");
 		} else {
 			$("#start_forging_modal").modal("show");

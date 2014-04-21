@@ -841,8 +841,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.applySettings = function(key) {
-		console.log("apply settings");
-		console.log(NRS.settings);
 		if (!key || key == "submit_on_enter") {
 			if (NRS.settings["submit_on_enter"]) {
 				$(".modal form").on("submit.onEnter", function(e) {
@@ -856,9 +854,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!key || key == "animate_forging") {
 			if (NRS.settings["animate_forging"]) {
-				$("#forging_indicator").addClass("animate_forging");
+				$("#forging_indicator").addClass("animated");
 			} else {
-				$("#forging_indicator").removeClass("animate_forging");
+				$("#forging_indicator").removeClass("animated");
 			}
 		}
 

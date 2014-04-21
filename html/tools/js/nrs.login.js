@@ -192,11 +192,11 @@ var NRS = (function(NRS, $, undefined) {
 						"secretPhrase": password
 					}, function(response) {
 						if ("deadline" in response) {
-							$("#forging_indicator i.fa").removeClass("text-danger").addClass("text-success");
+							$("#forging_indicator").addClass("forging");
 							$("#forging_indicator span").html("Forging");
 							NRS.isForging = true;
 						} else {
-							$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+							$("#forging_indicator").removeClass("forging");
 							$("#forging_indicator span").html("Not Forging");
 							NRS.isForging = false;
 						}

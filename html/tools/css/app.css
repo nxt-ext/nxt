@@ -3223,7 +3223,15 @@ input:invalid {
   border: 1px solid red;
 }
 
-#forging_indicator.animate_forging i {
+#forging_indicator i {
+  color:#a94442;
+}
+
+#forging_indicator.forging i {
+  color:#3c763d;
+}
+
+#forging_indicator.forging.animated i {
   -webkit-animation-name: pulse;
   -webkit-animation-duration: 2s;
   -webkit-animation-iteration-count: infinite;
