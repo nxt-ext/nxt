@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.crypto.Crypto;
-import nxt.util.Convert;
 import nxt.util.DbIterator;
 import nxt.util.Logger;
 
@@ -111,22 +110,9 @@ final class DbVersion {
             case 19:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS hash BINARY(32)");
             case 20:
-                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
-                     Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET hash = ? WHERE id = ?")) {
-                    while (iterator.hasNext()) {
-                        Transaction transaction = iterator.next();
-                        pstmt.setBytes(1, Convert.parseHexString(transaction.getHash()));
-                        pstmt.setLong(2, transaction.getId());
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
                 apply(null);
             case 21:
-                apply("ALTER TABLE transaction ALTER COLUMN hash SET NOT NULL");
+                apply(null);
             case 22:
                 apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
             case 23:
@@ -295,6 +281,8 @@ final class DbVersion {
             case 47:
                 apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
             case 48:
+                apply("ALTER TABLE transaction DROP COLUMN hash");
+            case 49:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

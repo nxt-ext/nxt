@@ -36,8 +36,6 @@ public interface Transaction extends Comparable<Transaction> {
 
     byte[] getSignature();
 
-    String getHash();
-
     String getFullHash();
 
     TransactionType getType();

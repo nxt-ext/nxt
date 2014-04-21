@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -32,18 +31,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, TransactionImpl> unconfirmedTransactionHashes = new ConcurrentHashMap<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-    private static class TransactionHashInfo {
-        private final Long transactionId;
-        private final int expiration;
-        private TransactionHashInfo(Transaction transaction) {
-            this.transactionId = transaction.getId();
-            this.expiration = transaction.getExpiration();
-        }
-    }
-    private final ConcurrentMap<String, TransactionHashInfo> transactionHashes = new ConcurrentHashMap<>();
     private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
@@ -63,7 +52,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             TransactionImpl transaction = iterator.next();
                             if (transaction.getExpiration() < curTime) {
                                 iterator.remove();
-                                unconfirmedTransactionHashes.remove(transaction.getHash());
                                 transaction.undoUnconfirmed();
                                 removedUnconfirmedTransactions.add(transaction);
                             }
@@ -307,9 +295,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void clear() {
         unconfirmedTransactions.clear();
-        unconfirmedTransactionHashes.clear();
         nonBroadcastedTransactions.clear();
-        transactionHashes.clear();
     }
 
     void apply(BlockImpl block) {
@@ -321,49 +307,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             //TODO: Phaser not yet implemented
             //Phaser.processTransaction(transaction);
             transaction.apply();
-            transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
         }
-        purgeExpiredHashes(block.getTimestamp());
     }
 
     void undo(BlockImpl block) throws TransactionType.UndoNotSupportedException {
         block.undo();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
-            TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
-            if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
-                transactionHashes.remove(transaction.getHash());
-            }
             unconfirmedTransactions.put(transaction.getId(), transaction);
-            unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
         }
         if (addedUnconfirmedTransactions.size() > 0) {
             transactionListeners.notify(addedUnconfirmedTransactions, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
         }
-    }
-
-    TransactionImpl checkTransactionHashes(BlockImpl block) {
-        TransactionImpl duplicateTransaction = null;
-        for (TransactionImpl transaction : block.getTransactions()) {
-            if (transactionHashes.putIfAbsent(transaction.getHash(), new TransactionHashInfo(transaction)) != null && block.getHeight() != 58294) {
-                duplicateTransaction = transaction;
-                break;
-            }
-        }
-
-        if (duplicateTransaction != null) {
-            for (TransactionImpl transaction : block.getTransactions()) {
-                if (! transaction.equals(duplicateTransaction)) {
-                    TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
-                    if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
-                        transactionHashes.remove(transaction.getHash());
-                    }
-                }
-            }
-        }
-        return duplicateTransaction;
     }
 
     void updateUnconfirmedTransactions(BlockImpl block) {
@@ -374,7 +331,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             addedConfirmedTransactions.add(transaction);
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
-                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedUnconfirmedTransactions.add(removedTransaction);
             }
         }
@@ -393,7 +349,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         for (TransactionImpl transaction : transactions) {
             if (unconfirmedTransactions.remove(transaction.getId()) != null) {
                 transaction.undoUnconfirmed();
-                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedList.add(transaction);
             }
         }
@@ -402,15 +357,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void shutdown() {
         removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
-    }
-
-    private void purgeExpiredHashes(int blockTimestamp) {
-        Iterator<Map.Entry<String, TransactionHashInfo>> iterator = transactionHashes.entrySet().iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().getValue().expiration < blockTimestamp) {
-                iterator.remove();
-            }
-        }
     }
 
     private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) {
@@ -447,14 +393,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                 synchronized (BlockchainImpl.getInstance()) {
 
+                    if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
+                        break; // not ready to process transactions
+                    }
+
                     Long id = transaction.getId();
                     if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
                             || ! transaction.verify()) {
-                        continue;
-                    }
-
-                    if (transactionHashes.containsKey(transaction.getHash())
-                            || unconfirmedTransactionHashes.containsKey(transaction.getHash())) {
                         continue;
                     }
 
@@ -469,7 +414,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
-                        unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
                         addedUnconfirmedTransactions.add(transaction);
                     } else {
                         addedDoubleSpendingTransactions.add(transaction);

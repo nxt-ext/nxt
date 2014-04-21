@@ -23,11 +23,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -36,6 +34,7 @@ import java.util.TreeSet;
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
+    private static final byte[] CHECKSUM_NQT_BLOCK = null;
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -420,22 +419,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private byte[] calculateTransactionsChecksum() {
-        PriorityQueue<Transaction> sortedTransactions = new PriorityQueue<>(blockchain.getTransactionCount(), new Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction o1, Transaction o2) {
-                long id1 = o1.getId();
-                long id2 = o2.getId();
-                return id1 < id2 ? -1 : (id1 > id2 ? 1 : (o1.getTimestamp() < o2.getTimestamp() ? -1 : (o1.getTimestamp() > o2.getTimestamp() ? 1 : 0)));
-            }
-        });
-        try (DbIterator<TransactionImpl> iterator = blockchain.getAllTransactions()) {
-            while (iterator.hasNext()) {
-                sortedTransactions.add(iterator.next());
-            }
-        }
         MessageDigest digest = Crypto.sha256();
-        while (! sortedTransactions.isEmpty()) {
-            digest.update(sortedTransactions.poll().getBytes());
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement(
+                     "SELECT * FROM transaction ORDER BY id ASC, timestamp ASC");
+             DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
+            while (iterator.hasNext()) {
+                digest.update(iterator.next().getBytes());
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
         }
         return digest.digest();
     }
@@ -466,6 +459,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new BlockNotAcceptedException("Checksum failed");
                     } else {
                         Logger.logMessage("Checksum passed at block " + Constants.TRANSPARENT_FORGING_BLOCK);
+                    }
+                }
+
+                if (previousLastBlock.getHeight() == Constants.NQT_BLOCK) {
+                    byte[] checksum = calculateTransactionsChecksum();
+                    if (CHECKSUM_NQT_BLOCK == null) {
+                        Logger.logMessage("Checksum calculated:\n" + Arrays.toString(checksum));
+                    } else if (!Arrays.equals(checksum, CHECKSUM_NQT_BLOCK)) {
+                        Logger.logMessage("Checksum failed at block " + Constants.NQT_BLOCK);
+                        throw new BlockNotAcceptedException("Checksum failed");
+                    } else {
+                        Logger.logMessage("Checksum passed at block " + Constants.NQT_BLOCK);
                     }
                 }
 
@@ -564,12 +569,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 block.setPrevious(previousLastBlock);
-
-                TransactionImpl duplicateTransaction = transactionProcessor.checkTransactionHashes(block);
-                if (duplicateTransaction != null) {
-                    throw new TransactionNotAcceptedException("Duplicate hash of transaction "
-                            + duplicateTransaction.getStringId(), duplicateTransaction);
-                }
 
                 addBlock(block);
 

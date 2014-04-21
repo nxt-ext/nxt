@@ -38,7 +38,6 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
             try {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("transaction", transaction.getStringId());
-                response.put("hash", transaction.getHash());
                 response.put("fullHash", transaction.getFullHash());
             } catch (NxtException.ValidationException e) {
                 response.put("error", e.getMessage());

@@ -32,7 +32,6 @@ final class TransactionImpl implements Transaction {
     private volatile Long id;
     private volatile String stringId = null;
     private volatile Long senderId;
-    private volatile String hash;
     private volatile String fullHash;
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
@@ -67,7 +66,7 @@ final class TransactionImpl implements Transaction {
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                     long amountNQT, long feeNQT, byte[] referencedTransactionFullHash, byte[] signature, Long blockId, int height,
-                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp, byte[] fullHash)
+                    Long id, Long senderId, Attachment attachment, int blockTimestamp, byte[] fullHash)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
                 referencedTransactionFullHash == null ? null : Convert.toHexString(referencedTransactionFullHash),
@@ -77,7 +76,6 @@ final class TransactionImpl implements Transaction {
         this.id = id;
         this.senderId = senderId;
         this.attachment = attachment;
-        this.hash = hash == null ? null : Convert.toHexString(hash);
         this.blockTimestamp = blockTimestamp;
         this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
     }
@@ -333,15 +331,6 @@ final class TransactionImpl implements Transaction {
             throw new IllegalStateException("Transaction already signed");
         }
         signature = Crypto.sign(getBytes(), secretPhrase);
-    }
-
-    @Override
-    public String getHash() {
-        if (hash == null) {
-            byte[] data = zeroSignature(getBytes());
-            hash = Convert.toHexString(Crypto.sha256().digest(data));
-        }
-        return hash;
     }
 
     @Override

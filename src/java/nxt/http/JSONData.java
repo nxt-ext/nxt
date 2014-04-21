@@ -204,7 +204,6 @@ final class JSONData {
             json.put("attachment", attachment(transaction.getAttachment()));
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
-        json.put("hash", transaction.getHash());
         return json;
     }
 
