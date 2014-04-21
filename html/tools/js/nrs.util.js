@@ -257,13 +257,61 @@ var NRS = (function(NRS, $, undefined) {
 		return formattedWeight.escapeHTML();
 	}
 
-	NRS.calculateOrderTotalNQT = function(quantityQNT, priceNQT, decimals) {
-		var totalNXT = NRS.calculateOrderTotal(quantityQNT, priceNQT, decimals);
+	NRS.formatOrderPricePerWholeQNT = function(price, decimals) {
+		price = NRS.calculateOrderPricePerWholeQNT(price, decimals);
 
-		return NRS.convertToNQT(totalNXT);
+		return price;
 	}
 
-	NRS.calculateOrderTotal = function(quantityQNT, priceNQT, decimals) {
+	NRS.calculateOrderPricePerWholeQNT = function(price, decimals) {
+		if (typeof price != "object") {
+			price = new BigInteger(String(price));
+		}
+
+		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))));
+	}
+
+	/*
+	12:54:38 wesleyh@jabber.ccc.de: i thought price nqt should always be an integer
+12:54:50 Jean Luc: it would be 100000000/134
+12:54:54 wesleyh@jabber.ccc.de: ok
+12:55:01 Jean Luc: =746268.6567164179104
+12:55:12 Jean Luc: no, because you have to round it to an int
+12:55:32 wesleyh@jabber.ccc.de: i have to round it to 746269? 
+12:55:33 Jean Luc: so it has to be 746268
+12:55:42 wesleyh@jabber.ccc.de: always round down? 
+12:55:50 Jean Luc: 746268⋅134/100000000
+12:55:58 Jean Luc: =0.99999912
+12:56:07 Jean Luc: doesn't matter which way
+12:56:28 Jean Luc: the problem is, the user cannot pay exactly 1.00000000000 NXT for 1.34 of this asset
+12:56:44 wesleyh@jabber.ccc.de: that's a problem
+12:56:44 Jean Luc: it has to be 0.99999912
+12:56:52 wesleyh@jabber.ccc.de: we will have ugly numbes in the open trade list
+12:56:59 Jean Luc: or 746269⋅134/100000000  = 1.00000046
+12:57:38 wesleyh@jabber.ccc.de: so if someone wants to fill that order, since you are only allowed to enter integers (1 nxt
+12:57:43 wesleyh@jabber.ccc.de: that will not fill the order compeltey
+12:58:01 wesleyh@jabber.ccc.de: or ti seems you are able to enter other numbers as you yourslef state  here
+12:58:06 wesleyh@jabber.ccc.de: you can enter 1.00000000046
+
+*/
+	NRS.calculatePricePerWholeQNT = function(price, decimals) {
+		price = String(price);
+
+		if (decimals) {
+			var toRemove = price.slice(-decimals);
+
+			if (!/^[0]+$/.test(toRemove)) {
+				//return new Big(price).div(new Big(Math.pow(10, decimals))).round(8, 0);
+				throw "Invalid input.";
+			} else {
+				return price.slice(0, -decimals);
+			}
+		} else {
+			return price;
+		}
+	}
+
+	NRS.calculateOrderTotalNQT = function(quantityQNT, priceNQT) {
 		if (typeof quantityQNT != "object") {
 			quantityQNT = new BigInteger(String(quantityQNT));
 		}
@@ -272,30 +320,19 @@ var NRS = (function(NRS, $, undefined) {
 			priceNQT = new BigInteger(String(priceNQT));
 		}
 
-		var total = NRS.convertToNXT(quantityQNT.multiply(priceNQT));
+		return quantityQNT.multiply(priceNQT).toString();
+	}
 
-		if (decimals) {
-			var afterComma = "";
-
-			var dot = total.indexOf(".");
-			if (dot != -1) {
-				//we converted to NXT, now we need to take into account the QNT decimals...
-				total = total.replace(".", "");
-				afterComma = total.substring(dot - decimals);
-				total = total.substring(0, dot - decimals);
-			} else {
-				afterComma = total.substring(total.length - decimals);
-				total = total.substring(0, total.length - decimals);
-			}
-
-			afterComma = afterComma.replace(/0+$/, "");
-
-			if (afterComma) {
-				total = total + "." + afterComma;
-			}
+	NRS.calculateOrderTotal = function(quantityQNT, priceNQT) {
+		if (typeof quantityQNT != "object") {
+			quantityQNT = new BigInteger(String(quantityQNT));
 		}
 
-		return total;
+		if (typeof priceNQT != "object") {
+			priceNQT = new BigInteger(String(priceNQT));
+		}
+
+		return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
 	}
 
 	NRS.calculatePercentage = function(a, b) {

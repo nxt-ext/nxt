@@ -115,6 +115,11 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				}
+			} else {
+				NRS.pageLoaded();
+				$("#asset_exchange_sidebar").empty();
+				$("#no_asset_selected, #loading_asset_data").hide();
+				$("#no_assets_available").show();
 			}
 		});
 	}
@@ -319,7 +324,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_exchange_sidebar a.active").removeClass("active");
 			link.addClass("active");
 
-			$("#no_asset_selected, #loading_asset_data").hide();
+			$("#no_asset_selected, #loading_asset_data, #no_assets_available").hide();
 			$("#asset_details").show();
 
 			$("#asset_details").parent().animate({
@@ -433,7 +438,7 @@ var NRS = (function(NRS, $, undefined) {
 
 								askOrder.priceNQT = new BigInteger(askOrder.priceNQT);
 								askOrder.quantityQNT = new BigInteger(askOrder.quantityQNT);
-								askOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(askOrder.quantityQNT, askOrder.priceNQT, NRS.currentAsset.decimals));
+								askOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(askOrder.quantityQNT, askOrder.priceNQT));
 
 								if (i == 0) {
 									if (!input["_extra"].refresh) {
@@ -464,7 +469,7 @@ var NRS = (function(NRS, $, undefined) {
 									className += " tentative tentative-crossed";
 								}
 
-								rows += "<tr class='" + className + "' data-quantity='" + askOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + askOrder.priceNQT.toString().escapeHTML() + "'><td>" + (askOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(askOrder.account).escapeHTML() + "' class='user_info'>" + (askOrder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(askOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(askOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(askOrder.priceNQT) + "</td><td>" + NRS.formatAmount(askOrder.totalNQT) + "</tr>";
+								rows += "<tr class='" + className + "' data-quantity='" + askOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + askOrder.priceNQT.toString().escapeHTML() + "'><td>" + (askOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(askOrder.account).escapeHTML() + "' class='user_info'>" + (askOrder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(askOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(askOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(askOrder.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(askOrder.totalNQT) + "</tr>";
 							}
 
 							$("#asset_exchange_ask_orders_table tbody").empty().append(rows);
@@ -478,9 +483,9 @@ var NRS = (function(NRS, $, undefined) {
 
 										unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
 										unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-										unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals));
+										unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
 
-										var rowToAdd = "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.priceQNT) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
+										var rowToAdd = "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
 
 										var rowAdded = false;
 
@@ -515,10 +520,10 @@ var NRS = (function(NRS, $, undefined) {
 
 						unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
 						unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-						unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals));
+						unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
 
 						if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 2 && unconfirmedTransaction.attachment.asset == assetId) {
-							rows += "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.priceQNT) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
+							rows += "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
 						}
 					}
 
@@ -572,7 +577,7 @@ var NRS = (function(NRS, $, undefined) {
 
 								bidOrder.priceNQT = new BigInteger(bidOrder.priceNQT);
 								bidOrder.quantityQNT = new BigInteger(bidOrder.quantityQNT);
-								bidOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(bidOrder.quantityQNT, bidOrder.priceNQT, NRS.currentAsset.decimals));
+								bidOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(bidOrder.quantityQNT, bidOrder.priceNQT));
 
 								if (i == 0) {
 									if (!refresh) {
@@ -603,7 +608,7 @@ var NRS = (function(NRS, $, undefined) {
 									className += " tentative tentative-crossed";
 								}
 
-								rows += "<tr class='" + className + "' data-quantity='" + bidOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + bidOrder.priceNQT.toString().escapeHTML() + "'><td>" + (bidOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(bidOrder.account).escapeHTML() + "' class='user_info'>" + (bidORder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(bidOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(bidOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(bidOrder.priceNQT) + "</td><td>" + NRS.formatAmount(bidOrder.totalNQT) + "</tr>";
+								rows += "<tr class='" + className + "' data-quantity='" + bidOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + bidOrder.priceNQT.toString().escapeHTML() + "'><td>" + (bidOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(bidOrder.account).escapeHTML() + "' class='user_info'>" + (bidORder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(bidOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(bidOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(bidOrder.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(bidOrder.totalNQT) + "</tr>";
 
 							}
 
@@ -618,9 +623,9 @@ var NRS = (function(NRS, $, undefined) {
 
 										unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
 										unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-										unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals));
+										unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
 
-										var rowToAdd = "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.priceQNT) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
+										var rowToAdd = "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
 
 										var rowAdded = false;
 
@@ -656,9 +661,9 @@ var NRS = (function(NRS, $, undefined) {
 						if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 3 && unconfirmedTransaction.attachment.asset == assetId) {
 							unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
 							unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-							unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals));
+							unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
 
-							rows += "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.priceQNT) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
+							rows += "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
 						}
 					}
 
@@ -692,9 +697,9 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < nrTrades; i++) {
 					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
-					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT, NRS.currentAsset.decimals));
+					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
 
-					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatAmount(trades[i].priceNQT) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td><td>" + String(trades[i].askOrder).escapeHTML() + "</td><td>" + String(trades[i].bidOrder).escapeHTML() + "</td></tr>";
+					rows += "<tr><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, NRS.currentAsset.decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(trades[i].totalNQT) + "</td><td>" + String(trades[i].askOrder).escapeHTML() + "</td><td>" + String(trades[i].bidOrder).escapeHTML() + "</td></tr>";
 				}
 
 				$("#asset_exchange_trade_history_table tbody").empty().append(rows);
@@ -735,8 +740,9 @@ var NRS = (function(NRS, $, undefined) {
 		try {
 			var priceNQT = new BigInteger(String($tr.data("price")));
 			var quantityQNT = new BigInteger(String($tr.data("quantity")));
-			var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals));
-			$("#" + type + "_asset_price").val(NRS.convertToNXT(priceNQT));
+			var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT));
+
+			$("#" + type + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(priceNQT, NRS.currentAsset.decimals));
 			$("#" + type + "_asset_quantity").val(NRS.convertToQNTf(quantityQNT, NRS.currentAsset.decimals));
 			$("#" + type + "_asset_total").val(NRS.convertToNXT(totalNQT));
 		} catch (err) {
@@ -847,7 +853,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		var isQuantityField = /_quantity/i.test($(this).attr("id"));
 
-		if (NRS.currentAsset.decimals) {
+		var maxFractionLength = (isQuantityField ? NRS.currentAsset.decimals : 8 - NRS.currentAsset.decimals);
+
+		if (maxFractionLength) {
 			//allow 1 single period character
 			if (charCode == 190) {
 				if ($(this).val().indexOf(".") != -1) {
@@ -860,8 +868,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			//do not allow period
 			if (charCode == 190 || charCode == 188) {
-				//this should only be shown on the input for the asset, not the NXT input...
-				$.growl("Fractions are not allowed for this asset.", {
+				$.growl("Fractions are not allowed.", {
 					"type": "danger"
 				});
 				e.preventDefault();
@@ -873,7 +880,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		var afterComma = input.match(/\.(\d*)$/);
 
-		var maxFractionLength = (isQuantityField ? NRS.currentAsset.decimals : 8);
 
 		//only allow as many as there are decimals allowed..
 		if (afterComma && afterComma[1].length > maxFractionLength) {
@@ -881,27 +887,22 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (selectedText != $(this).val()) {
 				if (isQuantityField) {
-					if (maxFractionLength == 0) {
-						$.growl("This asset does not allow fractions.", {
-							"type": "danger"
-						});
-					} else {
-						$.growl("Only " + NRS.currentAsset.decimals + " digits after the decimal mark are allowed for this asset.", {
-							"type": "danger"
-						});
-					}
+					errorMessage = "Only " + NRS.currentAsset.decimals + " digits after the decimal mark are allowed for this asset.";
 				} else {
-					$.growl("Only 8 digits after the decimal mark are allowed.", {
-						"type": "danger"
-					});
+					errorMessage = "Only " + (8 - NRS.currentAsset.decimals) + " digits after the decimal mark are allowed.";
 				}
+
+				$.growl(errorMessage, {
+					"type": "danger"
+				});
+
 				e.preventDefault();
 				return false;
 			}
 		}
 
 		//numeric characters, left/right key, backspace, delete
-		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57) || (charCode >= 96 && charCode <= 105)) {
+		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (e.shiftKey && charCode >= 48 && charCode <= 57) || (charCode >= 96 && charCode <= 105)) {
 			return;
 		} else {
 			//comma
@@ -915,12 +916,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	//calculate preview price (calculated on every keypress)
 	$("#sell_asset_quantity, #sell_asset_price, #buy_asset_quantity, #buy_asset_price").keyup(function(e) {
 		var orderType = $(this).data("type").toLowerCase();
 
 		try {
-			var priceNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())));
+			//TODO?
 			var quantityQNT = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_asset_quantity").val()), NRS.currentAsset.decimals));
+			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())), NRS.currentAsset.decimals));
 		} catch (err) {
 			$("#" + orderType + "_asset_total").val("0");
 			return;
@@ -945,10 +948,11 @@ var NRS = (function(NRS, $, undefined) {
 		orderType = orderType.toLowerCase();
 
 		try {
-			var priceNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())));
-			var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_fee").val())));
+			//TODO
 			var quantity = String($("#" + orderType + "_asset_quantity").val());
 			var quantityQNT = new BigInteger(NRS.convertToQNT(quantity, NRS.currentAsset.decimals));
+			var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())), NRS.currentAsset.decimals));
+			var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_fee").val())));
 			var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals), false, true);
 		} catch (err) {
 			$.growl("Invalid input.", {
@@ -968,12 +972,14 @@ var NRS = (function(NRS, $, undefined) {
 			feeNQT = new BigInteger("100000000");
 		}
 
+		var priceNQTPerWholeQNT = priceNQT.multiply(new BigInteger("" + Math.pow(10, NRS.currentAsset.decimals)));
+
 		if (orderType == "buy") {
-			var description = "Buy <strong>" + NRS.formatQuantity(quantityQNT, NRS.currentAsset.decimals, true) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(priceNQT, false, true) + " NXT</strong> each.";
-			var tooltipTitle = "As each asset is bought you will pay " + NRS.formatAmount(priceNQT, false, true) + " NXT, making a total of " + totalNXT + " NXT once all assets have been bought.";
+			var description = "Buy <strong>" + NRS.formatQuantity(quantityQNT, NRS.currentAsset.decimals, true) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(priceNQTPerWholeQNT, false, true) + " NXT</strong> each.";
+			var tooltipTitle = "As each asset is bought you will pay " + NRS.formatAmount(priceNQTPerWholeQNT, false, true) + " NXT, making a total of " + totalNXT + " NXT once all assets have been bought.";
 		} else {
-			var description = "Sell <strong>" + NRS.formatQuantity(quantityQNT, NRS.currentAsset.decimals, true) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(priceNQT, false, true) + " NXT</strong> each.";
-			var tooltipTitle = "As each asset is sold you will receive " + NRS.formatAmount(priceNQT, false, true) + " NXT, making a total of " + totalNXT + " NXT once all assets have been sold.";
+			var description = "Sell <strong>" + NRS.formatQuantity(quantityQNT, NRS.currentAsset.decimals, true) + " " + $("#asset_name").html() + "</strong> assets at <strong>" + NRS.formatAmount(priceNQTPerWholeQNT, false, true) + " NXT</strong> each.";
+			var tooltipTitle = "As each asset is sold you will receive " + NRS.formatAmount(priceNQTPerWholeQNT, false, true) + " NXT, making a total of " + totalNXT + " NXT once all assets have been sold.";
 		}
 
 		$("#asset_order_description").html(description);
@@ -1022,7 +1028,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		data.quantityQNT = new BigInteger(data.quantityQNT);
 		data.priceNQT = new BigInteger(data.priceNQT);
-		data.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(data.quantityQNT, data.priceNQT, NRS.currentAsset.decimals));
+		data.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(data.quantityQNT, data.priceNQT));
 
 		var rowToAdd = "<tr class='tentative' data-transaction='" + String(response.transaction).escapeHTML() + "' data-quantity='" + data.quantityQNT.toString().escapeHTML() + "' data-price='" + data.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(data.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(data.priceNQT) + "</td><td>" + NRS.formatAmount(data.totalNQT) + "</td></tr>";
 
@@ -1494,7 +1500,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.goToAsset = function(asset) {
 		$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
-		$("#no_asset_selected, #asset_details").hide();
+		$("#no_asset_selected, #asset_details, #no_assets_available").hide();
 		$("#loading_asset_data").show();
 
 		$("ul.sidebar-menu a[data-page=asset_exchange]").last().trigger("click", [{
@@ -1504,7 +1510,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (assetLink.length) {
 					assetLink.click();
 				} else {
-					$("#loading_asset_data").hide();
+					$("#loading_asset_data, #no_assets_available").hide();
 					$("#no_asset_selected").show();
 				}
 			}
@@ -1705,7 +1711,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			completeOrder.priceNQT = new BigInteger(completeOrder.priceNQT);
 			completeOrder.quantityQNT = new BigInteger(completeOrder.quantityQNT);
-			completeOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(completeOrder.quantityQNT, completeOrder.priceNQT, completeOrder.decimals));
+			completeOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(completeOrder.quantityQNT, completeOrder.priceNQT));
 
 			rows += "<tr data-order='" + String(completeOrder.order).escapeHTML() + "'" + (cancelled ? " class='tentative tentative-crossed'" : (completeOrder.tentative ? " class='tentative'" : "")) + "><td><a href='#' data-goto-asset='" + String(completeOrder.asset).escapeHTML() + "'>" + completeOrder.assetName.escapeHTML() + "</a></td><td>" + NRS.formatQuantity(completeOrder.quantityQNT, completeOrder.decimals) + "</td><td>" + NRS.formatAmount(completeOrder.priceNQT) + "</td><td>" + NRS.formatAmount(completeOrder.totalNQT) + "</td><td class='cancel'>" + (cancelled || completeOrder.tentative ? "/" : "<a href='#' data-toggle='modal' data-target='#cancel_order_modal' data-order='" + String(completeOrder.order).escapeHTML() + "' data-type='" + type + "'>Cancel</a>") + "</td></tr>";
 		}
