@@ -1323,6 +1323,61 @@
 	       -->
 	       
 		</div>
+
+		<div class="modal fade" id="lease_balance_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Lease Your Balance</h4>
+		      		</div>
+					<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label for="lease_balance_recipient">RECIPIENT</label>
+								<div class="input-group">
+								    <input type="text" class="form-control" name="recipient" id="lease_balance_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
+								    <span class="input-group-btn btn-group recipient_selector">
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>	<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    </span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-4 col-sm-4 col-md-4">
+									<label for="lease_balance_period">PERIOD <i id="asset_order_total_tooltip" class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last." data-container="body"></i></label>
+									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="1440" value="1440" tabindex="2">
+								</div>
+								<div class="col-xs-4 col-sm-4 col-md-4">
+									<div class="form-group">
+										<label for="lease_balance_fee">FEE</label>
+										<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+									</div>
+								</div>
+								<div class="col-xs-4 col-sm-4 col-md-4">
+									<div class="form-group">
+										<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="4">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="lease_balance_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="5">
+							</div>
+						</form>
+						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+					</div>
+		      		<div class="modal-footer" style="margin-top:0;">
+		      			<input type="hidden" name="success_message" value="Your balance has been leased out successfully." />
+		      			<input type="hidden" name="request_type" value="leaseBalance" />
+		      			<input type="hidden" name="converted_account_id" value="" />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Lease Balance</button>
+		      		</div>
+		    	</div>
+			</div>
+		</div>
 		
 		<div class="modal fade" id="stop_forging_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-wide">
@@ -2380,6 +2435,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						    	</tr>
 						    </tbody>
 					 	</table>
+						<div style="padding-top:10px"><a href="#" data-toggle="modal" data-target="#lease_balance_modal">Lease your balance to another account</a></div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
 			        	<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
