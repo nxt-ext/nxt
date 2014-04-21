@@ -284,9 +284,11 @@ final class DbVersion {
                 apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
                 + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
             case 44:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 45:
+                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                apply(null);
+            case 46:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
