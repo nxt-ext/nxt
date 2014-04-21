@@ -26,10 +26,12 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
+    private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
+            "deadline", "referencedTransactionFullHash", "broadcast"};
+
     private static String[] addCommonParameters(String[] parameters) {
-        String[] result = Arrays.copyOf(parameters, parameters.length + 5);
-        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNQT", "deadline", "referencedTransactionFullHash"}, 0,
-                result, parameters.length, 5);
+        String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);
+        System.arraycopy(commonParameters, 0, result, parameters.length, commonParameters.length);
         return result;
     }
 
@@ -50,6 +52,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String referencedTransactionId = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
+        boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
@@ -99,14 +102,20 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
-                Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("transaction", transaction.getStringId());
-
+                response.put("fullHash", transaction.getFullHash());
+                if (broadcast) {
+                    Nxt.getTransactionProcessor().broadcast(transaction);
+                    response.put("broadcasted", true);
+                } else {
+                    response.put("broadcasted", false);
+                }
+            } else {
+                response.put("broadcasted", false);
             }
 
             response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
             response.put("hash", transaction.getHash());
-            response.put("fullHash", transaction.getFullHash());
 
         } catch (TransactionType.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
