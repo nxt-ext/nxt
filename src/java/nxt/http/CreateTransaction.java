@@ -104,6 +104,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 transaction.sign(secretPhrase);
                 response.put("transaction", transaction.getStringId());
                 response.put("fullHash", transaction.getFullHash());
+                response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+                response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
                 if (broadcast) {
                     Nxt.getTransactionProcessor().broadcast(transaction);
                     response.put("broadcasted", true);
@@ -114,7 +116,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 response.put("broadcasted", false);
             }
 
-            response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
             response.put("hash", transaction.getHash());
 
         } catch (TransactionType.NotYetEnabledException e) {
