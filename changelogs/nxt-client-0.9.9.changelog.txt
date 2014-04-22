@@ -12,8 +12,8 @@ been changed, taking effect at NQT_BLOCK. Instead of using signature as part
 of the bytes over which the hash is calculated, the sha256 hash of the
 signature is now used.
 
-The above change allows a simple way of transaction escrow, relying on the
-referenced transaction feature we already have:
+After NQT_BLOCK, the above change will allow a simple way of transaction escrow,
+relying on the referenced transaction feature we already have:
 
 Alice prepares and signs a transaction A, but doesn't broadcast it (setting the
 broadcast=false parameter introduced in this release). She sends to Bob the
