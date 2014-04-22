@@ -740,7 +740,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
-            Logger.logDebugMessage("Removing invalid transaction: " + transaction.getJSONObject());
+            Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
             transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
