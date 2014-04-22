@@ -101,6 +101,18 @@ public final class Convert {
         return s == null ? "" : s;
     }
 
+    public static byte[] emptyToNull(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+        for (byte b : bytes) {
+            if (b != 0) {
+                return bytes;
+            }
+        }
+        return null;
+    }
+
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }

@@ -15,7 +15,6 @@ import org.json.simple.JSONStreamAware;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -226,8 +225,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         processPeerTransactions(transactionsData, true);
     }
 
-    private static final byte[] emptyBytes = new byte[32];
-
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
 
@@ -256,13 +253,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 feeNQT = buffer.getLong();
                 byte[] referencedTransactionFullHashBytes = new byte[32];
                 buffer.get(referencedTransactionFullHashBytes);
-                if (!Arrays.equals(referencedTransactionFullHashBytes, emptyBytes)) {
+                if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
                     referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
                     referencedTransactionId = Convert.fullHashToId(referencedTransactionFullHash);
                 }
             }
             byte[] signature = new byte[64];
             buffer.get(signature);
+            signature = Convert.emptyToNull(signature);
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             TransactionImpl transaction;
