@@ -85,14 +85,9 @@ var NRS = (function(NRS, $, undefined) {
 			"account": accountId
 		}, function(response) {
 			if (response.publicKey) {
-				if (NRS.useNQT) {
-					var balance = new BigInteger(response.unconfirmedBalanceNQT);
-				} else {
-					var balance = (response.balance / 100) || 0;
-				}
 				callback({
 					"type": "info",
-					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(balance, false, true) + "NXT."
+					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + "NXT."
 				});
 			} else {
 				if (response.errorCode) {
@@ -113,14 +108,9 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					}
 				} else {
-					if (NRS.useNQT) {
-						var balance = new BigInteger(response.unconfirmedBalanceNQT);
-					} else {
-						var balance = (response.balance / 100) || 0;
-					}
 					callback({
 						"type": "warning",
-						"message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of " + NRS.formatAmount(balance, false, true) + " NXT. Please double check your recipient address before submitting."
+						"message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + " NXT. Please double check your recipient address before submitting."
 					});
 				}
 			}

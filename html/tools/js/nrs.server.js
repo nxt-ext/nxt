@@ -100,12 +100,7 @@ var NRS = (function(NRS, $, undefined) {
 				var field = nxtField.replace("NXT", "");
 
 				if (nxtField in data) {
-					if (NRS.useNQT) {
-						data[field + "NQT"] = NRS.convertToNQT(data[nxtField]);
-					} else {
-						data[field] = data[nxtField];
-					}
-
+					data[field + "NQT"] = NRS.convertToNQT(data[nxtField]);
 					delete data[nxtField];
 				}
 			}
@@ -204,6 +199,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.publicKey = NRS.accountInfo.publicKey;
 			} else {
 				data.publicKey = NRS.generatePublicKey(secretPhrase);
+				NRS.accountInfo.publicKey = data.publicKey;
 			}
 		} else if (type == "POST" && NRS.rememberPassword) {
 			data.secretPhrase = sessionStorage.getItem("secret");
@@ -225,11 +221,11 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.addToConsole(this.url, this.type, this.data, response);
 			}
 
-			if (secretPhrase && response.transactionBytes && !response.errorCode) {
+			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode) {
 				var publicKey = NRS.generatePublicKey(secretPhrase);
-				var signature = nxtCrypto.sign(response.transactionBytes, converters.stringToHexString(secretPhrase));
+				var signature = nxtCrypto.sign(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
-				if (!nxtCrypto.verify(signature, response.transactionBytes, publicKey)) {
+				if (!nxtCrypto.verify(signature, response.unsignedTransactionBytes, publicKey)) {
 					if (callback) {
 						callback({
 							"errorCode": 1,
@@ -243,9 +239,9 @@ var NRS = (function(NRS, $, undefined) {
 					return;
 				} else {
 					if (NRS.useNQT) {
-						var payload = response.transactionBytes.substr(0, 144) + signature + response.transactionBytes.substr(272);
+						var payload = response.unsignedTransactionBytes.substr(0, 192) + signature + response.unsignedTransactionBytes.substr(320);
 					} else {
-						var payload = response.transactionBytes.substr(0, 128) + signature + response.transactionBytes.substr(256);
+						var payload = response.unsignedTransactionBytes.substr(0, 128) + signature + response.unsignedTransactionBytes.substr(256);
 					}
 
 					if (!NRS.verifyTransactionBytes(payload, requestType, data)) {
@@ -321,31 +317,31 @@ var NRS = (function(NRS, $, undefined) {
 		transaction.subtype = byteArray[1];
 		transaction.timestamp = String(converters.byteArrayToSignedInt32(byteArray, 2));
 		transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
-		//sender public key == bytes 8 - 39
+		transaction.senderPublicKey = converters.byteArrayToHexString(byteArray.slice(8, 40));
 		transaction.recipient = String(converters.byteArrayToBigInteger(byteArray, 40));
 		if (NRS.useNQT) {
 			transaction.amountNQT = String(converters.byteArrayToBigInteger(byteArray, 48));
 			transaction.feeNQT = String(converters.byteArrayToBigInteger(byteArray, 56));
-		} else {
-			transaction.amount = String(converters.byteArrayToSignedInt32(byteArray, 48));
-			transaction.fee = String(converters.byteArrayToSignedInt32(byteArray, 52));
-		}
-		transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, (NRS.useNQT ? 64 : 56)));
 
-		if (transaction.referencedTransaction == "0") {
-			transaction.referencedTransaction = null;
-		}
-
-		//signature == 64 - 127
-
-		if (NRS.useNQT) {
-			if (!("amountNQT" in data)) {
-				data.amountNQT = "0";
+			//incorrect?..
+			var refHash = byteArray.slice(64, 96);
+			transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
+			if (transaction.referencedTransactionFullHash == "0") {
+				transaction.referencedTransactionFullHash = null;
+			} else {
+				transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
 			}
 		} else {
-			if (!("amount" in data)) {
-				data.amount = "0";
+			transaction.amountNQT = NRS.convertToNQT(String(converters.byteArrayToSignedInt32(byteArray, 48)));
+			transaction.feeNQT = NRS.convertToNQT(String(converters.byteArrayToSignedInt32(byteArray, 52)));
+			transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, 56));
+			if (transaction.referencedTransaction == "0") {
+				transaction.referencedTransaction = null;
 			}
+		}
+
+		if (!("amountNQT" in data)) {
+			data.amountNQT = "0";
 		}
 
 		if (!("recipient" in data)) {
@@ -353,28 +349,35 @@ var NRS = (function(NRS, $, undefined) {
 			data.recipient = "1739068987193023818";
 		}
 
+		if (transaction.senderPublicKey != NRS.accountInfo.publicKey) {
+			return false;
+		}
+
 		if (transaction.deadline !== data.deadline || transaction.recipient !== data.recipient) {
 			return false;
 		}
 
+		if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
+			return false;
+		}
+
 		if (NRS.useNQT) {
-			if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
+			if ("referencedTransactionFullHash" in data && transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
+				return false;
+			}
+			if ("referencedTransactionId" in data && transaction.referencedTransactionId !== data.referencedTransactionId) {
 				return false;
 			}
 		} else {
-			if (transaction.amount !== data.amount || transaction.fee !== data.fee) {
+			if ("referencedTransaction" in data && transaction.referencedTransaction !== data.referencedTransaction) {
 				return false;
 			}
-		}
-
-		if ("referencedTransaction" in data && transaction.referencedTransaction !== data.referencedTransaction) {
-			return false;
 		}
 
 		var pos = 128;
 
 		if (NRS.useNQT) {
-			pos = 136;
+			pos += 32;
 		}
 
 		switch (requestType) {

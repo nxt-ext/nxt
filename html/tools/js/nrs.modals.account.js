@@ -50,18 +50,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.processAccountModalData = function(account) {
-		var balance;
-
-		if (NRS.useNQT) {
-			balance = new BigInteger(account.unconfirmedBalanceNQT);
-		} else {
-			balance = (account.unconfirmedBalance / 100) || 0;
-		}
-
-		if (balance == 0) {
+		if (account.unconfirmedBalanceNQT == "0") {
 			$("#user_info_modal_balance").html("0");
 		} else {
-			$("#user_info_modal_balance").html(NRS.formatAmount(balance) + " NXT");
+			$("#user_info_modal_balance").html(NRS.formatAmount(account.unconfirmedBalanceNQT) + " NXT");
 		}
 
 		$("#user_info_modal").modal("show");

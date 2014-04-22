@@ -343,16 +343,12 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				if (NRS.useNQT) {
-					var balance = NRS.formatAmount(new BigInteger(response.unconfirmedBalanceNQT));
-					balance = balance.split(".");
-					if (balance.length == 2) {
-						balance = balance[0] + "<span style='font-size:12px'>." + balance[1] + "</span>";
-					} else {
-						balance = balance[0];
-					}
+				var balance = NRS.formatAmount(new BigInteger(response.unconfirmedBalanceNQT));
+				balance = balance.split(".");
+				if (balance.length == 2) {
+					balance = balance[0] + "<span style='font-size:12px'>." + balance[1] + "</span>";
 				} else {
-					var balance = NRS.formatAmount(response.unconfirmedBalance / 100);
+					balance = balance[0];
 				}
 
 				$("#account_balance").html(balance);
@@ -361,7 +357,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (response.assetBalances) {
 					for (var i = 0; i < response.assetBalances.length; i++) {
-						if ((NRS.useNQT && response.assetBalances[i].balanceNQT != "0") || (!NRS.useNQT && response.assetBalances[i].balance > 0)) {
+						if (response.assetBalances[i].balanceNQT != "0") {
 							nr_assets++;
 						}
 					}

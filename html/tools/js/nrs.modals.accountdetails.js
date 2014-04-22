@@ -13,15 +13,9 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#account_balance_warning").hide();
 
-			if (NRS.useNQT) {
-				$("#account_balance_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.balanceNQT)) + " NXT");
-				$("#account_balance_unconfirmed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.unconfirmedBalanceNQT)) + " NXT");
-				$("#account_balance_effective_balance").html(NRS.formatAmount(NRS.accountInfo.effectiveBalanceNXT) + " NXT");
-			} else {
-				$("#account_balance_balance").html(NRS.formatAmount(NRS.accountInfo.balance / 100) + " NXT");
-				$("#account_balance_unconfirmed_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalance / 100) + " NXT");
-				$("#account_balance_effective_balance").html(NRS.formatAmount(NRS.accountInfo.effectiveBalance / 100) + " NXT");
-			}
+			$("#account_balance_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.balanceNQT)) + " NXT");
+			$("#account_balance_unconfirmed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.unconfirmedBalanceNQT)) + " NXT");
+			$("#account_balance_effective_balance").html(NRS.formatAmount(NRS.accountInfo.effectiveBalanceNXT) + " NXT");
 
 			$("#account_balance_public_key").html(String(NRS.accountInfo.publicKey).escapeHTML());
 			$("#account_balance_account_id").html(String(NRS.account).escapeHTML());

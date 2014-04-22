@@ -407,6 +407,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(result)) {
+			console.log(currency + " --" + result);
 			throw "Invalid input.";
 		}
 
@@ -844,21 +845,13 @@ var NRS = (function(NRS, $, undefined) {
 				key = key.replace("Formatted", "");
 				value = String(value).escapeHTML();
 			} else if (key == "Quantity" && $.isArray(value)) {
-				if (NRS.useNQT) {
-					if ($.isArray(value)) {
-						value = NRS.formatQuantity(value[0], value[1]);
-					} else {
-						value = NRS.formatQuantity(value, 0);
-					}
-				} else if (!NRS.useNQT) {
-					value = NRS.formatAmount(value);
+				if ($.isArray(value)) {
+					value = NRS.formatQuantity(value[0], value[1]);
+				} else {
+					value = NRS.formatQuantity(value, 0);
 				}
 			} else if (key == "Price" || key == "Total" || key == "Amount") {
-				if (NRS.useNQT) {
-					value = NRS.formatAmount(new BigInteger(value)) + " NXT";
-				} else {
-					value = NRS.formatAmount(value / 100, true) + " NXT"; //ROUND
-				}
+				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
 			} else {
 				value = String(value).escapeHTML().nl2br();
 			}
