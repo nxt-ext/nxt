@@ -318,7 +318,7 @@ var NRS = (function(NRS, $, undefined) {
 		var byteArray = converters.hexStringToByteArray(transactionBytes);
 
 		transaction.type = byteArray[0];
-		transaction.subType = byteArray[1];
+		transaction.subtype = byteArray[1];
 		transaction.timestamp = String(converters.byteArrayToSignedInt32(byteArray, 2));
 		transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
 		//sender public key == bytes 8 - 39
@@ -379,12 +379,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		switch (requestType) {
 			case "sendMoney":
-				if (transaction.type !== 0 || transaction.subType !== 0) {
+				if (transaction.type !== 0 || transaction.subtype !== 0) {
 					return false;
 				}
 				break;
 			case "sendMessage":
-				if (transaction.type !== 1 || transaction.subType !== 0) {
+				if (transaction.type !== 1 || transaction.subtype !== 0) {
 					return false;
 				}
 
@@ -401,7 +401,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				break;
 			case "assignAlias":
-				if (transaction.type !== 1 || transaction.subType !== 1) {
+				if (transaction.type !== 1 || transaction.subtype !== 1) {
 					return false;
 				}
 
@@ -424,7 +424,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				break;
 			case "createPoll":
-				if (transaction.type !== 1 || transaction.subType !== 2) {
+				if (transaction.type !== 1 || transaction.subtype !== 2) {
 					return false;
 				}
 
@@ -484,7 +484,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "castVote":
-				if (transaction.type !== 1 || transaction.subType !== 3) {
+				if (transaction.type !== 1 || transaction.subtype !== 3) {
 					return false;
 				}
 
@@ -508,7 +508,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "hubAnnouncement":
-				if (transaction.type !== 1 || transaction.subType != 4) {
+				if (transaction.type !== 1 || transaction.subtype != 4) {
 					return false;
 				}
 
@@ -538,7 +538,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "accountInfo":
-				if (transaction.type !== 1 || transaction.subType != 5) {
+				if (transaction.type !== 1 || transaction.subtype != 5) {
 					return false;
 				}
 
@@ -564,7 +564,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "issueAsset":
-				if (transaction.type !== 2 || transaction.subType !== 0) {
+				if (transaction.type !== 2 || transaction.subtype !== 0) {
 					return false;
 				}
 
@@ -591,7 +591,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				break;
 			case "transferAsset":
-				if (transaction.type !== 2 || transaction.subType !== 1) {
+				if (transaction.type !== 2 || transaction.subtype !== 1) {
 					return false;
 				}
 
@@ -617,9 +617,9 @@ var NRS = (function(NRS, $, undefined) {
 			case "placeBidOrder":
 				if (transaction.type !== 2) {
 					return false;
-				} else if (requestType == "placeAskOrder" && transaction.subType !== 2) {
+				} else if (requestType == "placeAskOrder" && transaction.subtype !== 2) {
 					return false;
-				} else if (requestType == "placeBidOrder" && transaction.subType !== 3) {
+				} else if (requestType == "placeBidOrder" && transaction.subtype !== 3) {
 					return false;
 				}
 
@@ -641,9 +641,9 @@ var NRS = (function(NRS, $, undefined) {
 			case "cancelBidOrder":
 				if (transaction.type !== 2) {
 					return false;
-				} else if (requestType == "cancelAskOrder" && transaction.subType !== 4) {
+				} else if (requestType == "cancelAskOrder" && transaction.subtype !== 4) {
 					return false;
-				} else if (requestType == "cancelBidOrder" && transaction.subType !== 5) {
+				} else if (requestType == "cancelBidOrder" && transaction.subtype !== 5) {
 					return false;
 				}
 
@@ -655,7 +655,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsListing":
-				if (transaction.type !== 3 && transaction.subType != 0) {
+				if (transaction.type !== 3 && transaction.subtype != 0) {
 					return false;
 				}
 
@@ -695,7 +695,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsDelisting":
-				if (transaction.type !== 3 && transaction.subType !== 1) {
+				if (transaction.type !== 3 && transaction.subtype !== 1) {
 					return false;
 				}
 
@@ -707,7 +707,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsPriceChange":
-				if (transaction.type !== 3 && transaction.subType !== 2) {
+				if (transaction.type !== 3 && transaction.subtype !== 2) {
 					return false;
 				}
 
@@ -723,7 +723,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsQuantityChange":
-				if (transaction.type !== 3 && transaction.subType !== 3) {
+				if (transaction.type !== 3 && transaction.subtype !== 3) {
 					return false;
 				}
 
@@ -739,7 +739,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsPurchase":
-				if (transaction.type !== 3 && transaction.subType !== 4) {
+				if (transaction.type !== 3 && transaction.subtype !== 4) {
 					return false;
 				}
 
@@ -776,7 +776,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsDelivery":
-				if (transaction.type !== 3 && transaction.subType !== 5) {
+				if (transaction.type !== 3 && transaction.subtype !== 5) {
 					return false;
 				}
 
@@ -805,7 +805,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsFeedback":
-				if (transaction.type !== 3 && transaction.subType !== 6) {
+				if (transaction.type !== 3 && transaction.subtype !== 6) {
 					return false;
 				}
 
@@ -830,7 +830,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "digitalGoodsRefund":
-				if (transaction.type !== 3 && transaction.subType !== 7) {
+				if (transaction.type !== 3 && transaction.subtype !== 7) {
 					return false;
 				}
 
@@ -859,7 +859,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "effectiveBalanceLeasing":
-				if (transaction.type !== 4 && transaction.subType !== 0) {
+				if (transaction.type !== 4 && transaction.subtype !== 0) {
 					return false;
 				}
 

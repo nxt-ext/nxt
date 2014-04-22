@@ -133,6 +133,27 @@ var NRS = (function(NRS, $, undefined) {
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
+
+					break;
+				case 4:
+					var data = {
+						"Type": "Hub Announcement"
+					};
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				case 5:
+					var data = {
+						"Type": "Account Info",
+						"Name": transaction.attachment.name,
+						"Description": transaction.attachment.description
+					};
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
 					break;
 				default:
 					incorrect = true;
@@ -301,6 +322,23 @@ var NRS = (function(NRS, $, undefined) {
 					});
 
 					break;
+				default:
+					incorrect = true;
+					break;
+			}
+		} else if (transaction.type == 4) {
+			switch (transaction.subtype) {
+				case 0:
+					var data = {
+						"Type": "Effective Balance Leasing",
+						"Period": transaction.attachment.period
+					};
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+
 				default:
 					incorrect = true;
 					break;
