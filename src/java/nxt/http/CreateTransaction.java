@@ -26,10 +26,12 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
+    private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
+            "deadline", "referencedTransactionFullHash", "broadcast"};
+
     private static String[] addCommonParameters(String[] parameters) {
-        String[] result = Arrays.copyOf(parameters, parameters.length + 5);
-        System.arraycopy(new String[]{"secretPhrase", "publicKey", "feeNQT", "deadline", "referencedTransaction"}, 0,
-                result, parameters.length, 5);
+        String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);
+        System.arraycopy(commonParameters, 0, result, parameters.length, commonParameters.length);
         return result;
     }
 
@@ -46,9 +48,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                                             long amountNQT, Attachment attachment)
             throws NxtException {
         String deadlineValue = req.getParameter("deadline");
-        String referencedTransactionValue = Convert.emptyToNull(req.getParameter("referencedTransaction"));
+        String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
+        String referencedTransactionId = Convert.emptyToNull(req.getParameter("referencedTransaction"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
+        boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
@@ -79,10 +83,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             return NOT_ENOUGH_FUNDS;
         }
 
-        Long referencedTransaction;
-        try {
-            referencedTransaction = referencedTransactionValue == null ? null : Convert.parseUnsignedLong(referencedTransactionValue);
-        } catch (RuntimeException e) {
+        if (referencedTransactionId != null) {
             return INCORRECT_REFERENCED_TRANSACTION;
         }
 
@@ -94,19 +95,28 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         try {
             Transaction transaction = attachment == null ?
                     Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                            amountNQT, feeNQT, referencedTransaction)
+                            amountNQT, feeNQT, referencedTransactionFullHash)
                     :
                     Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                            amountNQT, feeNQT, referencedTransaction, attachment);
+                            amountNQT, feeNQT, referencedTransactionFullHash, attachment);
 
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
-                Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("transaction", transaction.getStringId());
-
+                response.put("fullHash", transaction.getFullHash());
+                response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+                response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
+                if (broadcast) {
+                    Nxt.getTransactionProcessor().broadcast(transaction);
+                    response.put("broadcasted", true);
+                } else {
+                    response.put("broadcasted", false);
+                }
+            } else {
+                response.put("broadcasted", false);
             }
 
-            response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
+            response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
             response.put("hash", transaction.getHash());
 
         } catch (TransactionType.NotYetEnabledException e) {

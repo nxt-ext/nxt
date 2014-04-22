@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +19,8 @@ final class TransactionImpl implements Transaction {
     private final Long recipientId;
     private final long amountNQT;
     private final long feeNQT;
-    private final Long referencedTransactionId;
+    private Long referencedTransactionId; // remove after NQT_BLOCK
+    private final String referencedTransactionFullHash;
     private final TransactionType type;
 
     private int height = Integer.MAX_VALUE;
@@ -32,9 +34,10 @@ final class TransactionImpl implements Transaction {
     private volatile String stringId = null;
     private volatile Long senderId;
     private volatile String hash;
+    private volatile String fullHash;
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
+                    long amountNQT, long feeNQT, String referencedTransactionFullHash, byte[] signature) throws NxtException.ValidationException {
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
@@ -47,7 +50,7 @@ final class TransactionImpl implements Transaction {
                     + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
         }
 
-        if (Nxt.getBlockchain().getHeight() < Constants.FRACTIONAL_BLOCK
+        if (Nxt.getBlockchain().getHeight() < Constants.FRACTIONAL_BLOCK && Nxt.getBlockchain().getHeight() > 0
                 && (amountNQT % Constants.ONE_NXT != 0 || feeNQT % Constants.ONE_NXT != 0)) {
             throw new TransactionType.NotYetEnabledException("Fractional amounts or fees not yet supported!");
         }
@@ -58,15 +61,42 @@ final class TransactionImpl implements Transaction {
         this.recipientId = recipientId;
         this.amountNQT = amountNQT;
         this.feeNQT = feeNQT;
-        this.referencedTransactionId = referencedTransactionId;
+        this.referencedTransactionFullHash = referencedTransactionFullHash;
+        if (referencedTransactionFullHash != null) {
+            referencedTransactionId = Convert.fullHashToId(referencedTransactionFullHash);
+        }
         this.signature = signature;
         this.type = type;
+    }
 
+    // remove after NQT_BLOCK
+    TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+                    long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature) throws NxtException.ValidationException {
+        this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT, (String)null, signature);
+        this.referencedTransactionId = referencedTransactionId;
     }
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
+                    long amountNQT, long feeNQT, byte[] referencedTransactionFullHash, byte[] signature, Long blockId, int height,
+                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp, byte[] fullHash)
+            throws NxtException.ValidationException {
+        this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
+                referencedTransactionFullHash == null ? null : Convert.toHexString(referencedTransactionFullHash),
+                signature);
+        this.blockId = blockId;
+        this.height = height;
+        this.id = id;
+        this.senderId = senderId;
+        this.attachment = attachment;
+        this.hash = hash == null ? null : Convert.toHexString(hash);
+        this.blockTimestamp = blockTimestamp;
+        this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
+    }
+
+    // remove after NQT_BLOCK
+    TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                     long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature, Long blockId, int height,
-                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp)
+                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp, byte[] fullHash)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, signature);
         this.blockId = blockId;
@@ -76,6 +106,7 @@ final class TransactionImpl implements Transaction {
         this.attachment = attachment;
         this.hash = hash == null ? null : Convert.toHexString(hash);
         this.blockTimestamp = blockTimestamp;
+        this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
     }
 
     @Override
@@ -101,6 +132,11 @@ final class TransactionImpl implements Transaction {
     @Override
     public long getFeeNQT() {
         return feeNQT;
+    }
+
+    @Override
+    public String getReferencedTransactionFullHash() {
+        return referencedTransactionFullHash;
     }
 
     @Override
@@ -173,10 +209,20 @@ final class TransactionImpl implements Transaction {
             if (signature == null) {
                 throw new IllegalStateException("Transaction is not signed yet");
             }
-            byte[] hash = Crypto.sha256().digest(getBytes());
+            byte[] hash;
+            if (useNQT()) {
+                byte[] data = zeroSignature(getBytes());
+                byte[] signatureHash = Crypto.sha256().digest(signature);
+                MessageDigest digest = Crypto.sha256();
+                digest.update(data);
+                hash = digest.digest(signatureHash);
+            } else {
+                hash = Crypto.sha256().digest(getBytes());
+            }
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
             stringId = bigInteger.toString();
+            fullHash = Convert.toHexString(hash);
         }
         return id;
     }
@@ -190,6 +236,14 @@ final class TransactionImpl implements Transaction {
             }
         }
         return stringId;
+    }
+
+    @Override
+    public String getFullHash() {
+        if (fullHash == null) {
+            getId();
+        }
+        return fullHash;
     }
 
     @Override
@@ -232,18 +286,6 @@ final class TransactionImpl implements Transaction {
 
     }
 
-    private static final int TRANSACTION_BYTES_LENGTH = 1 + 1 + 4 + 2 + 32 + 8 + 4 + 4 + 8 + 64;
-
-    int getSize() {
-        return TRANSACTION_BYTES_LENGTH + (useNQT() ? 8 : 0) +  (attachment == null ? 0 : attachment.getSize());
-    }
-
-    private boolean useNQT() {
-        return this.height > Constants.NQT_BLOCK
-                && (this.height < Integer.MAX_VALUE
-                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
-    }
-
     @Override
     public byte[] getBytes() {
 
@@ -258,17 +300,30 @@ final class TransactionImpl implements Transaction {
         if (useNQT()) {
             buffer.putLong(amountNQT);
             buffer.putLong(feeNQT);
+            if (referencedTransactionFullHash != null) {
+                buffer.put(Convert.parseHexString(referencedTransactionFullHash));
+            } else {
+                buffer.put(new byte[32]);
+            }
         } else {
             buffer.putInt((int)(amountNQT / Constants.ONE_NXT));
             buffer.putInt((int)(feeNQT / Constants.ONE_NXT));
+            if (referencedTransactionFullHash != null) {
+                buffer.putLong(Convert.fullHashToId(Convert.parseHexString(referencedTransactionFullHash)));
+            } else {
+                buffer.putLong(Convert.nullToZero(referencedTransactionId));
+            }
         }
-        buffer.putLong(Convert.nullToZero(referencedTransactionId));
         buffer.put(signature != null ? signature : new byte[64]);
         if (attachment != null) {
             buffer.put(attachment.getBytes());
         }
         return buffer.array();
+    }
 
+    @Override
+    public byte[] getUnsignedBytes() {
+        return zeroSignature(getBytes());
     }
 
     /*
@@ -297,13 +352,8 @@ final class TransactionImpl implements Transaction {
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
         json.put("referencedTransaction", Convert.toUnsignedLong(referencedTransactionId));
-        // temporary, first step of making referenced txid a full hash
-        if (referencedTransactionId != null) {
-            Transaction referencedTransaction = BlockchainImpl.getInstance().getTransaction(referencedTransactionId);
-            if (referencedTransaction != null) {
-                json.put("referencedTransactionFullHash",
-                        Convert.toHexString(Crypto.sha256().digest(referencedTransaction.getBytes())));
-            }
+        if (referencedTransactionFullHash != null) {
+            json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
         json.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
@@ -344,12 +394,29 @@ final class TransactionImpl implements Transaction {
         if (account == null) {
             return false;
         }
+        if (signature == null) {
+            return false;
+        }
         byte[] data = zeroSignature(getBytes());
         return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
 
+    int getSize() {
+        return signatureOffset() + 64  +  (attachment == null ? 0 : attachment.getSize());
+    }
+
+    private int signatureOffset() {
+        return 1 + 1 + 4 + 2 + 32 + 8 + (useNQT() ? 8 + 8 + 32 : 4 + 4 + 8);
+    }
+
+    private boolean useNQT() {
+        return this.height > Constants.NQT_BLOCK
+                && (this.height < Integer.MAX_VALUE
+                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
+    }
+
     private byte[] zeroSignature(byte[] data) {
-        int start = useNQT() ? 72 : 64;
+        int start = signatureOffset();
         for (int i = start; i < start + 64; i++) {
             data[i] = 0;
         }

@@ -1,0 +1,36 @@
+This release is for testnet only. It will also cause another testnet reset,
+so it is required that all testnet nodes update to it.
+
+Switched to using full 256-bit hash for referenced transaction ids. The complete
+switch in the use of full hash will only be implemented after NQT_BLOCK, but as
+it requires a hard fork again, the change in transaction bytes format from long
+to 256-bit hash for referenced transaction is now scheduled to happen at
+NQT_BLOCK.
+
+First run will perform some database schema updates again, and will also delete
+testnet blocks after 63000. NQT_BLOCK will now be set to 76000 at testnet, so
+we have one last chance of testing non-fractional amounts plus the current
+referenced transaction changes before and after NQT_BLOCK. Balance leasing will
+be enabled on testnet at block 75000 now. After the reset, testnet will start
+from block 74590, so we have around 1000 blocks before NQT_BLOCK on testnet.
+
+The transaction fullHash, which includes the signature unlike the other hash
+we currently have, is now also available in the transaction JSON. It is also
+possible to retrieve a transaction based on its fullHash using getTransaction.
+
+The http API referencedTransactionId parameter has been replaced with
+referencedTransactionFullHash, a hex-encoded 256-bit full hash.
+
+The transaction JSON also includes referencedTransactionFullHash, if not null,
+and for now also includes referencedTransactionId. Until NQT_BLOCK is passed,
+users of this API should really check both, as for transactions before NQT_BLOCK
+it cannot be guaranteed that referencedTransactionFullHash is available because
+it is not a part of the byte array transaction format. After NQT_BLOCK is passed,
+this will be changed to always include referencedTransactionFullHash in the JSON
+(also for old transactions), and the referencedTransactionId will be removed.
+
+Added nxt.usePeersDb to nxt-default.properties, enabled by default. This is to
+disable use of saved peer addresses, useful for test purposes only.
+
+
+

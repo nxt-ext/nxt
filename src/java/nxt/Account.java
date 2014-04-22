@@ -6,7 +6,6 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -108,9 +107,7 @@ public final class Account {
 
     public static Long getId(byte[] publicKey) {
         byte[] publicKeyHash = Crypto.sha256().digest(publicKey);
-        BigInteger bigInteger = new BigInteger(1, new byte[] {publicKeyHash[7], publicKeyHash[6], publicKeyHash[5],
-                publicKeyHash[4], publicKeyHash[3], publicKeyHash[2], publicKeyHash[1], publicKeyHash[0]});
-        return bigInteger.longValue();
+        return Convert.fullHashToId(publicKeyHash);
     }
 
     static Account addOrGetAccount(Long id) {

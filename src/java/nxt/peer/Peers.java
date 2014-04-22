@@ -72,6 +72,7 @@ public final class Peers {
     private static final int pushThreshold;
     private static final int pullThreshold;
     private static final int sendToPeersLimit;
+    private static final boolean usePeersDb;
     private static final boolean savePeers;
 
     static final JSONStreamAware myPeerInfoRequest;
@@ -178,12 +179,15 @@ public final class Peers {
             Logger.logDebugMessage("Well known peers: " + buf.toString());
         }
 
-        Logger.logDebugMessage("Loading known peers from the database...");
-        for (String savedPeer : PeerDb.loadPeers()) {
-            Peers.addPeer(savedPeer);
+        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb");
+        if (usePeersDb) {
+            Logger.logDebugMessage("Loading known peers from the database...");
+            for (String savedPeer : PeerDb.loadPeers()) {
+                Peers.addPeer(savedPeer);
+            }
         }
         Logger.logDebugMessage("Known peers: " + peers.size());
-        savePeers = Nxt.getBooleanProperty("nxt.savePeers");
+        savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
 
     }
 

@@ -1,0 +1,68 @@
+All http APIs that submit a new transaction now allow an optional "broadcast"
+parameter. If set to "false", transaction will not be broadcasted, if any other
+value, transaction will be broadcasted. Transactions that are not signed will
+of course never be broadcasted. The signed and unsigned bytes are always
+returned with the transaction JSON, so the signed bytes can be broadcasted
+manually later.
+
+Minor bugfixes related to referenced transaction id handling.
+
+The calculation of full transaction hash (and therefore transaction id too) has
+been changed, taking effect at NQT_BLOCK. Instead of using signature as part
+of the bytes over which the hash is calculated, the sha256 hash of the
+signature is now used.
+
+After NQT_BLOCK, the above change will allow a simple way of transaction escrow,
+relying on the referenced transaction feature we already have:
+
+Alice prepares and signs a transaction A, but doesn't broadcast it (setting the
+broadcast=false parameter introduced in this release). She sends to Bob the
+unsigned transaction bytes, the full transaction hash, and the signature hash.
+All of those are included in the JSON returned by the API. (Warning: make sure
+not to send the signed transaction bytes, or the signature itself, as then Bob
+can just broadcast transaction A himself).
+
+Bob prepares, signs and broadcasts transaction B, setting the
+referencedTransactionFullHash parameter to the full hash of A provided by Alice.
+He can verify that this hash indeed belongs to the transaction he expects from
+Alice, by using the new calculateFullHash API, which takes unsigned transaction
+bytes and signature hash (both of which Alice has also sent to Bob). He can also
+use the parseTransaction API to decode the unsigned bytes and inspect all
+transaction fields.
+
+Transaction B is accepted in the unconfirmed transaction pool, but as long as A
+is still missing, B will not be confirmed, i.e. will not be included in the
+blockchain. If A is never submitted, B will eventually expire - so Bob should
+make sure to set a long enough deadline, such as the maximum of 1440 minutes.
+
+Once in the unconfirmed transactions pool, Bob has no way of recalling B back.
+So now Alice can safely submit her transaction A, by just broadcasting the
+signed transaction bytes she got in the first step. Transaction A will get
+included in the blockchain first, and in the next block Bob's transaction B
+will also be included.
+
+Note that while the above scheme is good enough for a simple escrow, the
+blockchain does not enforce that if A is included, B will also be included. It
+may happen due to forks and blockchain reorganization, that B never gets a
+chance to be included and expires unconfirmed, while A still remains in the
+blockchain. However, it is not practically possible for Bob to intentionally
+cause such chain of events and to prevent B from being confirmed.
+
+Because of the change in transaction id calculation, on test net, NQT_BLOCK has
+been moved to 76500, which will cause a minor reset deleting blocks after 76000.
+
+On main net NQT_BLOCK is now set to 132000, FRACTIONAL_BLOCK at 134000,
+ASSET_EXCHANGE_BLOCK 135000. Any bugs in NQT or AE need to be found and fixed
+before that.
+
+The deadline for upgrade to 0.9.9 is block 130000, when the lease balance
+feature gets enabled. 0.8.13 nodes will be on a fork after that block.
+0.7.7 nodes are most likely already on a fork.
+
+Since the 0.9 branch API accepts amounts in NQT only, any client, website, or
+exchange still using amounts in NXT, based on the 0.8 API, should upgrade to
+the 0.9 NQT API before block 130000. Otherwise they are stuck with 0.8.13,
+which as I said will be on a fork after that block.
+
+
+

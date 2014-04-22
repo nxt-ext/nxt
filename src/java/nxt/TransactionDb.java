@@ -48,10 +48,39 @@ final class TransactionDb {
         }
     }
 
+    static Transaction findTransactionByFullHash(String fullHash) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
+            pstmt.setBytes(1, Convert.parseHexString(fullHash));
+            ResultSet rs = pstmt.executeQuery();
+            Transaction transaction = null;
+            if (rs.next()) {
+                transaction = loadTransaction(con, rs);
+            }
+            rs.close();
+            return transaction;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Transaction already in database, full_hash = " + fullHash + ", does not pass validation!");
+        }
+    }
+
     static boolean hasTransaction(Long transactionId) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static boolean hasTransactionByFullHash(String fullHash) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE full_hash = ?")) {
+            pstmt.setBytes(1, Convert.parseHexString(fullHash));
             ResultSet rs = pstmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
@@ -74,6 +103,7 @@ final class TransactionDb {
             if (rs.wasNull()) {
                 referencedTransactionId = null;
             }
+            byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
             byte[] signature = rs.getBytes("signature");
             Long blockId = rs.getLong("block_id");
             int height = rs.getInt("height");
@@ -82,11 +112,16 @@ final class TransactionDb {
             Attachment attachment = (Attachment)rs.getObject("attachment");
             byte[] hash = rs.getBytes("hash");
             int blockTimestamp = rs.getInt("block_timestamp");
+            byte[] fullHash = rs.getBytes("full_hash");
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                    referencedTransactionId, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp);
-
+            if (referencedTransactionFullHash != null) {
+                return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
+                        referencedTransactionFullHash, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp, fullHash);
+            } else {
+                return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
+                        referencedTransactionId, signature, blockId, height, id, senderId, attachment, hash, blockTimestamp, fullHash);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -113,10 +148,11 @@ final class TransactionDb {
     static void saveTransactions(Connection con, List<TransactionImpl> transactions) {
         try {
             for (Transaction transaction : transactions) {
-                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, recipient_id, "
-                        + "amount, fee, referenced_transaction_id, height, block_id, signature, timestamp, type, subtype, sender_id, attachment, "
-                        + "hash, block_timestamp) "
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
+                        + "recipient_id, amount, fee, referenced_transaction_full_hash, referenced_transaction_id, height, "
+                        + "block_id, signature, timestamp, type, subtype, sender_id, attachment, "
+                        + "hash, block_timestamp, full_hash) "
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -124,6 +160,11 @@ final class TransactionDb {
                     pstmt.setLong(++i, transaction.getRecipientId());
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
+                    if (transaction.getReferencedTransactionFullHash() != null) {
+                        pstmt.setBytes(++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
+                    } else {
+                        pstmt.setNull(++i, Types.BINARY);
+                    }
                     if (transaction.getReferencedTransactionId() != null) {
                         pstmt.setLong(++i, transaction.getReferencedTransactionId());
                     } else {
@@ -143,6 +184,7 @@ final class TransactionDb {
                     }
                     pstmt.setBytes(++i, Convert.parseHexString(transaction.getHash()));
                     pstmt.setInt(++i, transaction.getBlockTimestamp());
+                    pstmt.setBytes(++i, Convert.parseHexString(transaction.getFullHash()));
                     pstmt.executeUpdate();
                 }
             }

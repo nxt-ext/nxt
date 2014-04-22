@@ -61,6 +61,18 @@ public final class Convert {
         return zeroToNull(bigInt.longValue());
     }
 
+    public static Long fullHashToId(byte[] hash) {
+        BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
+        return bigInteger.longValue();
+    }
+
+    public static Long fullHashToId(String hash) {
+        if (hash == null) {
+            return null;
+        }
+        return fullHashToId(Convert.parseHexString(hash));
+    }
+
     public static int getEpochTime() {
         return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
     }
@@ -87,6 +99,18 @@ public final class Convert {
 
     public static String nullToEmpty(String s) {
         return s == null ? "" : s;
+    }
+
+    public static byte[] emptyToNull(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+        for (byte b : bytes) {
+            if (b != 0) {
+                return bytes;
+            }
+        }
+        return null;
     }
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {

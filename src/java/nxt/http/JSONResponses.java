@@ -68,7 +68,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DATE = incorrect("date");
     public static final JSONStreamAware MISSING_PRICE = missing("priceNQT");
     public static final JSONStreamAware INCORRECT_PRICE = incorrect("price");
-    public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransaction");
+    public static final JSONStreamAware INCORRECT_REFERENCED_TRANSACTION = incorrect("referencedTransactionFullHash");
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
@@ -93,6 +93,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ACCOUNT_DESCRIPTION_LENGTH = incorrect("description", "(length must be less than " + Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_PERIOD = missing("period");
     public static final JSONStreamAware INCORRECT_PERIOD = incorrect("period", "(period must be at least 1440 blocks)");
+    public static final JSONStreamAware MISSING_UNSIGNED_BYTES = missing("unsignedTransactionBytes");
+    public static final JSONStreamAware MISSING_SIGNATURE_HASH = missing("signatureHash");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

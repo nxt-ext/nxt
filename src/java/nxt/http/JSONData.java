@@ -11,6 +11,7 @@ import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
+import nxt.crypto.Crypto;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -190,13 +191,21 @@ final class JSONData {
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
         json.put("referencedTransaction", Convert.toUnsignedLong(transaction.getReferencedTransactionId()));
-        json.put("signature", Convert.toHexString(transaction.getSignature()));
+        if (transaction.getReferencedTransactionFullHash() != null) {
+            json.put("referencedTransactionFullHash", transaction.getReferencedTransactionFullHash());
+        }
+        byte[] signature = Convert.emptyToNull(transaction.getSignature());
+        if (signature != null) {
+            json.put("signature", Convert.toHexString(signature));
+            json.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(signature)));
+            json.put("fullHash", transaction.getFullHash());
+            json.put("transaction", transaction.getStringId());
+        }
         if (transaction.getAttachment() != null) {
             json.put("attachment", attachment(transaction.getAttachment()));
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("hash", transaction.getHash());
-        json.put("transaction", transaction.getStringId());
         return json;
     }
 

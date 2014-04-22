@@ -34,7 +34,11 @@ public interface Blockchain {
 
     Transaction getTransaction(String hash);
 
+    Transaction getTransactionByFullHash(String fullHash);
+
     boolean hasTransaction(Long transactionId);
+
+    boolean hasTransactionByFullHash(String fullHash);
 
     int getTransactionCount();
 
