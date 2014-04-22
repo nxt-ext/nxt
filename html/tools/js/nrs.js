@@ -40,7 +40,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(".testnet_only, #testnet_login, #testnet_warning").show();
 		}
 
-		NRS.useNQT = (NRS.isTestNet || NRS.lastBlockHeight >= 150000);
+		NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();

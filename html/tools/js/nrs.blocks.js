@@ -23,12 +23,13 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.blocks.push(response);
+
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
 		} else {
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
-			NRS.useNQT = (NRS.isTestNet || NRS.lastBlockHeight >= 150000);
+			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000) || ("totalAmountNQT" in NRS.blocks[0]);
 
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 30) {
 				NRS.downloadingBlockchain = true;
@@ -89,7 +90,7 @@ var NRS = (function(NRS, $, undefined) {
 			//set new last block height
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
-			NRS.useNQT = (NRS.isTestNet || NRS.lastBlockHeight >= 150000);
+			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000) || ("totalAmountNQT" in NRS.blocks[0]);
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {

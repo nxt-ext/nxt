@@ -226,6 +226,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		$("#no_assets_available").hide();
+
 		NRS.pageLoaded(callback);
 	}
 
@@ -608,7 +610,7 @@ var NRS = (function(NRS, $, undefined) {
 									className += " tentative tentative-crossed";
 								}
 
-								rows += "<tr class='" + className + "' data-quantity='" + bidOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + bidOrder.priceNQT.toString().escapeHTML() + "'><td>" + (bidOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(bidOrder.account).escapeHTML() + "' class='user_info'>" + (bidORder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(bidOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(bidOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(bidOrder.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(bidOrder.totalNQT) + "</tr>";
+								rows += "<tr class='" + className + "' data-quantity='" + bidOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + bidOrder.priceNQT.toString().escapeHTML() + "'><td>" + (bidOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(bidOrder.account).escapeHTML() + "' class='user_info'>" + (bidOrder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(bidOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(bidOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(bidOrder.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(bidOrder.totalNQT) + "</tr>";
 
 							}
 

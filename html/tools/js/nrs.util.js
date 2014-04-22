@@ -271,29 +271,6 @@ var NRS = (function(NRS, $, undefined) {
 		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))));
 	}
 
-	/*
-	12:54:38 wesleyh@jabber.ccc.de: i thought price nqt should always be an integer
-12:54:50 Jean Luc: it would be 100000000/134
-12:54:54 wesleyh@jabber.ccc.de: ok
-12:55:01 Jean Luc: =746268.6567164179104
-12:55:12 Jean Luc: no, because you have to round it to an int
-12:55:32 wesleyh@jabber.ccc.de: i have to round it to 746269? 
-12:55:33 Jean Luc: so it has to be 746268
-12:55:42 wesleyh@jabber.ccc.de: always round down? 
-12:55:50 Jean Luc: 746268⋅134/100000000
-12:55:58 Jean Luc: =0.99999912
-12:56:07 Jean Luc: doesn't matter which way
-12:56:28 Jean Luc: the problem is, the user cannot pay exactly 1.00000000000 NXT for 1.34 of this asset
-12:56:44 wesleyh@jabber.ccc.de: that's a problem
-12:56:44 Jean Luc: it has to be 0.99999912
-12:56:52 wesleyh@jabber.ccc.de: we will have ugly numbes in the open trade list
-12:56:59 Jean Luc: or 746269⋅134/100000000  = 1.00000046
-12:57:38 wesleyh@jabber.ccc.de: so if someone wants to fill that order, since you are only allowed to enter integers (1 nxt
-12:57:43 wesleyh@jabber.ccc.de: that will not fill the order compeltey
-12:58:01 wesleyh@jabber.ccc.de: or ti seems you are able to enter other numbers as you yourslef state  here
-12:58:06 wesleyh@jabber.ccc.de: you can enter 1.00000000046
-
-*/
 	NRS.calculatePricePerWholeQNT = function(price, decimals) {
 		price = String(price);
 
@@ -430,6 +407,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(result)) {
+			console.log("result == invalid " + result + " -- " + currency);
 			throw "Invalid input.";
 		}
 
