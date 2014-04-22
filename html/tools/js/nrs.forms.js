@@ -146,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
 					formCompleteFunction(response, data);
 				}
 
-				if (NRS.accountBalance && !NRS.accountBalance.publicKey) {
+				if (NRS.accountInfo && !NRS.accountInfo.publicKey) {
 					$("#dashboard_message").hide();
 				}
 			} else {

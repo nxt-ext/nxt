@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.genesis = "1739068987193023818";
 
 	NRS.account = "";
-	NRS.accountBalance = {};
+	NRS.accountInfo = {};
 
 	NRS.database = null;
 	NRS.databaseSupport = false;
@@ -93,7 +93,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.tempBlocks = [];
 					NRS.state = response;
 					if (NRS.account) {
-						NRS.getAccountBalance();
+						NRS.getAccountInfo();
 					}
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
 					if (NRS.account) {
@@ -277,25 +277,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.getAccountBalance = function(firstRun) {
+	NRS.getAccountInfo = function(firstRun) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.account
 		}, function(response) {
-			var previousAccountBalance = NRS.accountBalance;
+			var previousAccountInfo = NRS.accountInfo;
 
-			NRS.accountBalance = response;
+			NRS.accountInfo = response;
 
 			if (response.errorCode) {
 				$("#account_balance").html("0");
 				$("#account_nr_assets").html("0");
 
-				if (NRS.accountBalance.errorCode == 5) {
+				if (NRS.accountInfo.errorCode == 5) {
 					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + NRS.account + "</strong>").show();
 				} else {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountBalance.errorDescription ? NRS.accountBalance.errorDescription.escapeHTML() : "An unknown error occured.").show();
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
 				}
 			} else {
-				if (!NRS.accountBalance.publicKey) {
+				if (!NRS.accountInfo.publicKey) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("<b>Warning!</b>: Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue. (<a href='#' data-toggle='modal' data-target='#send_message_modal'>send a message</a>, <a href='#' data-toggle='modal' data-target='#register_alias_modal'>buy an alias</a>, <a href='#' data-toggle='modal' data-target='#send_money_modal'>send Nxt</a>, ...)").show();
 				} else {
 					$("#dashboard_message").hide();
@@ -308,11 +308,11 @@ var NRS = (function(NRS, $, undefined) {
 						if (!error && asset_balance.length) {
 							var previous_balances = asset_balance[0].contents;
 
-							if (!NRS.accountBalance.assetBalances) {
-								NRS.accountBalance.assetBalances = [];
+							if (!NRS.accountInfo.assetBalances) {
+								NRS.accountInfo.assetBalances = [];
 							}
 
-							var current_balances = JSON.stringify(NRS.accountBalance.assetBalances);
+							var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
 
 							if (previous_balances != current_balances) {
 								if (previous_balances != "undefined") {
@@ -325,21 +325,21 @@ var NRS = (function(NRS, $, undefined) {
 								}, [{
 									id: "asset_balances_" + NRS.account
 								}]);
-								NRS.checkAssetDifferences(NRS.accountBalance.assetBalances, previous_balances);
+								NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
 							}
 						} else {
 							NRS.database.insert("data", {
 								id: "asset_balances_" + NRS.account,
-								contents: JSON.stringify(NRS.accountBalance.assetBalances)
+								contents: JSON.stringify(NRS.accountInfo.assetBalances)
 							});
 						}
 					});
-				} else if (previousAccountBalance && previousAccountBalance.assetBalances) {
-					var previous_balances = JSON.stringify(previousAccountBalance.assetBalances);
-					var current_balances = JSON.stringify(NRS.accountBalance.assetBalances);
+				} else if (previousAccountInfo && previousAccountInfo.assetBalances) {
+					var previousBalances = JSON.stringify(previousAccountInfo.assetBalances);
+					var currentBalances = JSON.stringify(NRS.accountInfo.assetBalances);
 
-					if (previous_balances != current_balances) {
-						NRS.checkAssetDifferences(NRS.accountBalance.assetBalances, previousAccountBalance.assetBalances);
+					if (previousBalances != currentBalances) {
+						NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previousAccountInfo.assetBalances);
 					}
 				}
 
@@ -368,6 +368,21 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				$("#account_nr_assets").html(nr_assets);
+
+				//todo: only update if necessary (changes)
+				if (response.currentLeasingHeightFrom) {
+					if (NRS.lastBlockHeight >= response.currentLeasingHeightFrom) {
+						$("#account_leasing").html("Leased Out").show();
+					} else {
+						$("#account_leasing").html("Leased Soon").show();
+					}
+
+					$("#account_leasing_status").html("Your account " + (NRS.lastBlockHeight >= response.currentLeasingHeightFrom ? "is" : "will be") + " leased out starting from block " + String(response.currentLeasingHeightFrom).escapeHTML() + " until block " + String(response.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(response.currentLessee).escapeHTML() + "' class='user_info'>" + String(response.currentLessee).escapeHTML() + "</a>").show();
+				} else {
+					$("#account_leasing_status").html("Your account balance is not leased out.").show();
+					$("#account_leasing").hide();
+				}
+
 			}
 
 			if (firstRun) {

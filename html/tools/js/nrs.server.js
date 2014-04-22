@@ -200,8 +200,8 @@ var NRS = (function(NRS, $, undefined) {
 
 			delete data.secretPhrase;
 
-			if (NRS.accountBalance && NRS.accountBalance.publicKey) {
-				data.publicKey = NRS.accountBalance.publicKey;
+			if (NRS.accountInfo && NRS.accountInfo.publicKey) {
+				data.publicKey = NRS.accountInfo.publicKey;
 			} else {
 				data.publicKey = NRS.generatePublicKey(secretPhrase);
 			}

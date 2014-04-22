@@ -109,10 +109,10 @@
 	                            <div class="small-box bg-aqua">
 	                                <div class="inner">
 	                                    <h3><span id="account_balance" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p>Account Balance</p>
+	                                    <p>Account Balance <span class="label" id="account_leasing" style="display:none;background-color:#1C4B78"></span></p>
 	                                </div>
 	                                <div class="icon"><i class="fa fa-briefcase"></i></div>
-	                                <a href="#" class="small-box-footer" data-toggle="modal" data-target="#account_balance_modal">More info <i class="fa fa-arrow-circle-right"></i></a>
+	                                <a href="#" class="small-box-footer" data-toggle="modal" data-target="#account_details_modal">More info <i class="fa fa-arrow-circle-right"></i></a>
 	                            </div>
 	                        </div>
 	                        <div class="col-lg-3 col-xs-6">
@@ -2315,7 +2315,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</ul>
 							
 						<div id="nrs_modal_update" class="nrs_modal_content" style="display:none">
-							<div id="nrs_update_explanation">
+							<div id="nrs_update_explanation" class="nrs_message">
 								<span id="nrs_update_explanation_blockchain_sync">The blockchain is still downloading, check again after it's up to date.</span>
 								<span id="nrs_update_explanation_up_to_date">You have the latest release already. There is no need to update.</span>
 								<span id="nrs_update_explanation_new_release">A new NRS release is available. It is recommended that you update.<br /><br /><button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')">Download NRS <span class="nrs_new_version_nr"></span></button></span>
@@ -2403,7 +2403,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 		
-		<div class="modal fade" id="account_balance_modal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal fade" id="account_details_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 			    <div class="modal-content">
 			     	<div class="modal-header">
@@ -2411,31 +2411,43 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			        	<h4 class="modal-title">Account Details</h4>
 			      	</div>
 			      	<div class="modal-body">	
-			      		<div class="callout callout-danger" id="account_balance_warning" style="display:none"></div>
-		
-						<table class="table table-striped" id="account_balance_table" style="margin-bottom:0">
-						    <tbody>
-						    	<tr>
-						    		<td style="font-weight: bold;width:180px;">Account ID:</td><td><span id="account_balance_account_id"></span></td>
-						    	</tr>
-						    	<!--<tr style="display:none">
-						    		<td style="font-weight: bold">New Address Format:</td><td><span id="account_balance_new_address_format"></span></td>
-						    	</tr>-->
-						    	<tr>
-						    		<td style="font-weight: bold">Balance:</td><td><span id="account_balance_balance"></span></td>
-						    	</tr>
-						    	<tr>
-						    		<td style="font-weight: bold">Unconfirmed Balance:</td><td><span id="account_balance_unconfirmed_balance"></span></td>
-						    	</tr>
-						    	<tr>
-						    		<td style="font-weight: bold">Effective Balance:</td><td><span id="account_balance_effective_balance"></span></td>
-						    	</tr>
-						    	<tr>
-						    		<td style="font-weight: bold">Public Key:</td><td><span id="account_balance_public_key" style="word-break:break-all;"></span></td>
-						    	</tr>
-						    </tbody>
-					 	</table>
-						<div style="padding-top:10px"><a href="#" data-toggle="modal" data-target="#lease_balance_modal">Lease your balance to another account</a></div>
+			      		<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+							<li class="active" id="account_details_balance_nav" data-tab="balance"><a href="#">Account Balance</a></li>
+							<li data-tab="leasing"><a href="#">Account Leasing</a></li>
+						</ul>
+
+						<div id="account_details_modal_balance" class="account_details_modal_content" style="display:none">
+				      		<div class="callout callout-danger" id="account_balance_warning" style="display:none"></div>
+			
+							<table class="table table-striped" id="account_balance_table" style="margin-bottom:0">
+							    <tbody>
+							    	<tr>
+							    		<td style="font-weight: bold;width:180px;">Account ID:</td><td><span id="account_balance_account_id"></span></td>
+							    	</tr>
+							    	<!--<tr style="display:none">
+							    		<td style="font-weight: bold">New Address Format:</td><td><span id="account_balance_new_address_format"></span></td>
+							    	</tr>-->
+							    	<tr>
+							    		<td style="font-weight: bold">Balance:</td><td><span id="account_balance_balance"></span></td>
+							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold">Unconfirmed Balance:</td><td><span id="account_balance_unconfirmed_balance"></span></td>
+							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold">Effective Balance:</td><td><span id="account_balance_effective_balance"></span></td>
+							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold">Public Key:</td><td><span id="account_balance_public_key" style="word-break:break-all;"></span></td>
+							    	</tr>
+							    </tbody>
+						 	</table>
+						 </div>
+
+						<div id="account_details_modal_leasing" class="account_details_modal_content" style="display:none">     
+							<div id="account_leasing_status" class="nrs_message" style="display:none"></div>
+	
+							<div style="padding-top:10px"><a href="#" data-toggle="modal" data-target="#lease_balance_modal">Lease your balance to another account</a></div>
+						</div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
 			        	<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -2600,7 +2612,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
         <script src="js/nrs.sidebar.js" type="text/javascript"></script>
         <script src="js/nrs.modals.js" type="text/javascript"></script>
         <script src="js/nrs.modals.account.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.balance.js" type="text/javascript"></script>
+        <script src="js/nrs.modals.accountdetails.js" type="text/javascript"></script>
         <script src="js/nrs.modals.block.js" type="text/javascript"></script>
         <script src="js/nrs.modals.forging.js" type="text/javascript"></script>
         <script src="js/nrs.modals.info.js" type="text/javascript"></script>

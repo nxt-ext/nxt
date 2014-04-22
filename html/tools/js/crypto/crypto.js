@@ -48,7 +48,7 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		var publicKey = getPublicKey(converters.stringToHexString(secretPhrase));
 
 		/*	
-		if (NRS.accountBalance && NRS.accountBalance.publicKey && publicKey != NRS.accountBalance.publicKey) {
+		if (NRS.accountInfo && NRS.accountInfo.publicKey && publicKey != NRS.accountInfo.publicKey) {
 			return -1;
 		}
 		*/

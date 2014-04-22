@@ -185,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 					});
 				}
 
-				NRS.getAccountBalance(true);
+				NRS.getAccountInfo(true);
 
 				if (NRS.isLocalHost) {
 					NRS.sendRequest("startForging", {

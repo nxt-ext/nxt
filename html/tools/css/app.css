@@ -3037,7 +3037,7 @@ a.list-group-item-header:hover {
     margin-top:20px;
 }
 
-#nrs_update_explanation {
+.nrs_message {
     background:#DFF0D9;
     color:#48874A;
     padding:5px;

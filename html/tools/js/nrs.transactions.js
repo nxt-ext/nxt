@@ -254,7 +254,7 @@ var NRS = (function(NRS, $, undefined) {
 				response.confirmations = "/";
 				response.confirmed = false;
 				NRS.unconfirmedTransactions.push(response);
-				NRS.getAccountBalance();
+				NRS.getAccountInfo();
 			}
 		});
 	}
