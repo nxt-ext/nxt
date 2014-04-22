@@ -2193,7 +2193,7 @@ body > .header .logo .icon {
   background-color: #3c8dbc;
 }
 .navbar .nav a {
-  color: #acd0e5;
+  color: #fff;
 }
 .navbar .nav > li > a:hover,
 .navbar .nav > li > a:active,
@@ -3255,6 +3255,12 @@ input:invalid {
   to { color: #749a02; text-shadow: 0 0 9px #266000;  }
 }
 
+#account_name {
+  font-style:italic;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

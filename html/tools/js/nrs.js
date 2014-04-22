@@ -383,6 +383,9 @@ var NRS = (function(NRS, $, undefined) {
 					$("#account_leasing").hide();
 				}
 
+				if (response.name) {
+					$("#account_name").html(response.name.escapeHTML());
+				}
 			}
 
 			if (firstRun) {

@@ -214,7 +214,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					} else {
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+						$("#forging_indicator").removeClass("forging");
 						$("#forging_indicator span").html("Not Forging");
 						$("#forging_indicator").show();
 						NRS.isForging = false;

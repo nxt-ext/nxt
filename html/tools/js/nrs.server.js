@@ -537,7 +537,7 @@ var NRS = (function(NRS, $, undefined) {
 				return false;
 
 				break;
-			case "accountInfo":
+			case "setAccountInfo":
 				if (transaction.type !== 1 || transaction.subtype != 5) {
 					return false;
 				}
@@ -858,7 +858,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "effectiveBalanceLeasing":
+			case "leaseBalance":
 				if (transaction.type !== 4 && transaction.subtype !== 0) {
 					return false;
 				}

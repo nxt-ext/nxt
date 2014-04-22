@@ -20,7 +20,7 @@
     <body class="lockscreen fixed">
         <header class="header">
             <a href="#" class="logo" id="logo" data-page="dashboard">
-                <img src="img/nxt_logo_small.png" style="opacity:0.85" />
+                <img src="img/nxt_logo_small.png" style="opacity:0.95" />
             </a>
             <nav class="navbar navbar-static-top" role="navigation">
                 <a href="#" class="navbar-btn sidebar-toggle" data-toggle="offcanvas" role="button">
@@ -54,6 +54,7 @@
                 	<div class="user-panel">
                         <div class="pull-left info">
                         	<div class="pull-left info">
+                        		<div style="margin-bottom:5px;"><a href="#" id="account_name" data-toggle="modal" data-target="#account_info_modal">No Name Set</a></div>
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
 	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
@@ -109,7 +110,7 @@
 	                            <div class="small-box bg-aqua">
 	                                <div class="inner">
 	                                    <h3><span id="account_balance" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
-	                                    <p>Account Balance <span class="label" id="account_leasing" style="display:none;background-color:#1C4B78"></span></p>
+	                                    <p>Account Balance <span class="label" id="account_leasing" style="display:none;background-color:#1990B1"></span></p>
 	                                </div>
 	                                <div class="icon"><i class="fa fa-briefcase"></i></div>
 	                                <a href="#" class="small-box-footer" data-toggle="modal" data-target="#account_details_modal">More info <i class="fa fa-arrow-circle-right"></i></a>
@@ -534,7 +535,7 @@
 	                	<h1>Asset Exchange</h1>
 	                	<!--
 	                	<div style="position:absolute;top:9px;right:9px;">
-		                	<!-- <button type="button" class="btn btn-sm btn-default" id="asset_exchange_refresh">Refresh</button>
+		                	<button type="button" class="btn btn-sm btn-default" id="asset_exchange_refresh">Refresh</button>
 	                	</div>
 	                	-->
 	                </section>
@@ -550,7 +551,7 @@
 						         </div>
 						         <div class="content-splitter-right">
 						         	<div class="content-splitter-right-inner">
-						         		<div id="no_assets_available" style="padding-top: 150px;text-align:center;">No assets available.</div>
+						         		<div id="no_assets_available" style="padding-top: 150px;text-align:center;display:none;">No assets available.</div>
 						         		<div id="no_asset_selected" style="padding-top: 150px;text-align:center;">Please select an asset in the left sidebar.</div>
 						         		<div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;">Asset data loading, please wait...<br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 						         		<div id="asset_details" style="display:none">
@@ -1992,7 +1993,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="input-group">
 								    <input type="text" class="form-control" name="recipient" id="send_message_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
 								    <span class="input-group-btn btn-group recipient_selector">
-								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>														<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>	<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
 								    </span>
 								</div>
 							</div>
@@ -2028,6 +2029,54 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			       		<input type="hidden" name="converted_account_id" value="" />
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send Message</button>
+			      	</div>
+		    	</div>
+		  	</div>
+		</div>
+
+		<div class="modal fade" id="account_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		   		<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		       		 	<h4 class="modal-title">Set Account Info</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label for="account_info_name">NAME</label>
+								<input type="text" class="form-control" name="name" id="account_info_name" placeholder="Your Name" tabindex="1" />
+							</div>
+							<div class="form-group">
+								<label for="account_info_description">DESCRIPTION</label>
+								<textarea class="form-control" id="account_info_description" name="description" rows="4" tabindex="2"></textarea>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="account_info_fee">FEE</label>
+										<input type="number" name="feeNXT" id="account_info_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="account_info_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="account_info_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="account_info_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="account_info_password" class="form-control" placeholder="" tabindex="5">
+							</div>
+						</form>
+					</div>
+			       	<div class="modal-footer" style="margin-top:0;">
+			       		<input type="hidden" name="request_type" value="setAccountInfo" />
+			       		<input type="hidden" name="success_message" value="Your account info has been saved successfully." />
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Update Account Info</button>
 			      	</div>
 		    	</div>
 		  	</div>
@@ -2618,6 +2667,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
         <script src="js/nrs.modals.info.js" type="text/javascript"></script>
         <script src="js/nrs.modals.token.js" type="text/javascript"></script>
         <script src="js/nrs.modals.transaction.js" type="text/javascript"></script>
+        <script src="js/nrs.modals.accountinfo.js" type="text/javascript"></script>
+        <script src="js/nrs.modals.balanceleasing.js" type="text/javascript"></script>
         <script src="js/nrs.console.js" type="text/javascript"></script>
         <script src="js/nrs.util.js" type="text/javascript"></script>
     </body>
