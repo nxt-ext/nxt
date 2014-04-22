@@ -136,125 +136,136 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		NRS.sendRequest("getAccountId", {
-			"secretPhrase": password
-		}, function(response) {
-			if (!response.errorCode) {
-				NRS.account = String(response.accountId).escapeHTML();
-			}
+		NRS.sendRequest("getState", function(response) {
+			if (response.errorCode) {
+				$.growl("Could not connect to server.", {
+					"type": "danger",
+					"offset": 10
+				});
 
-			if (!NRS.account) {
 				return;
 			}
 
-			NRS.sendRequest("getAccountPublicKey", {
-				"account": NRS.account
+			NRS.sendRequest("getAccountId", {
+				"secretPhrase": password
 			}, function(response) {
-				if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password)) {
-					$.growl("This account is already taken. Please choose another pass phrase.", {
-						"type": "danger",
-						"offset": 10
-					});
+				if (!response.errorCode) {
+					NRS.account = String(response.accountId).escapeHTML();
+				}
+
+				if (!NRS.account) {
 					return;
 				}
 
-				if ($("#remember_password").is(":checked")) {
-					NRS.rememberPassword = true;
-					$("#remember_password").prop("checked", false);
-					sessionStorage.setItem("secret", password);
-					$.growl("Remember to log out at the end of your session so as to clear the password from memory.", {
-						"type": "danger"
-					});
-					$(".secret_phrase, .show_secret_phrase").hide();
-					$(".hide_secret_phrase").show();
-				}
-
-				$("#account_id").html(NRS.getAccountFormatted(NRS.account));
-
-				var passwordNotice = "";
-
-				if (password.length < 35) {
-					passwordNotice = "Your secret phrase is less than 35 characters long. This is not secure.";
-				} else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-					passwordNotice = "Your secret phrase does not contain numbers and uppercase letters. This is not secure.";
-				}
-
-				if (passwordNotice) {
-					$.growl("<strong>Warning</strong>: " + passwordNotice, {
-						"type": "danger"
-					});
-				}
-
-				NRS.getAccountInfo(true);
-
-				if (NRS.isLocalHost) {
-					NRS.sendRequest("startForging", {
-						"secretPhrase": password
-					}, function(response) {
-						if ("deadline" in response) {
-							$("#forging_indicator").addClass("forging");
-							$("#forging_indicator span").html("Forging");
-							NRS.isForging = true;
-						} else {
-							$("#forging_indicator").removeClass("forging");
-							$("#forging_indicator span").html("Not Forging");
-							NRS.isForging = false;
-						}
-						$("#forging_indicator").show();
-					});
-				} else {
-					//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-					$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
-					$("#forging_indicator span").html("Not Forging");
-					$("#forging_indicator").show();
-					NRS.isForging = false;
-				}
-
-				//NRS.getAccountAliases();
-
-				NRS.unlock();
-
-				NRS.setupClipboardFunctionality();
-
-				if (callback) {
-					callback();
-				}
-
-				NRS.checkLocationHash(password);
-
-				$(window).on("hashchange", NRS.checkLocationHash);
-
-				NRS.sendRequest('getAccountTransactionIds', {
-					"account": NRS.account,
-					"timestamp": 0
+				NRS.sendRequest("getAccountPublicKey", {
+					"account": NRS.account
 				}, function(response) {
-					if (response.transactionIds && response.transactionIds.length) {
-						var transactionIds = response.transactionIds.reverse().slice(0, 10);
-						var nrTransactions = 0;
-						var transactions = [];
+					if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password)) {
+						$.growl("This account is already taken. Please choose another pass phrase.", {
+							"type": "danger",
+							"offset": 10
+						});
+						return;
+					}
 
-						for (var i = 0; i < transactionIds.length; i++) {
-							NRS.sendRequest('getTransaction', {
-								"transaction": transactionIds[i]
-							}, function(transaction, input) {
-								nrTransactions++;
+					if ($("#remember_password").is(":checked")) {
+						NRS.rememberPassword = true;
+						$("#remember_password").prop("checked", false);
+						sessionStorage.setItem("secret", password);
+						$.growl("Remember to log out at the end of your session so as to clear the password from memory.", {
+							"type": "danger"
+						});
+						$(".secret_phrase, .show_secret_phrase").hide();
+						$(".hide_secret_phrase").show();
+					}
 
-								transaction.id = input.transaction;
-								transaction.confirmed = true;
-								transactions.push(transaction);
+					$("#account_id").html(NRS.getAccountFormatted(NRS.account));
 
-								if (nrTransactions == transactionIds.length) {
-									NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-										NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
-									});
-								}
-							});
-						}
-					} else {
-						NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-							NRS.handleInitialTransactions(unconfirmedTransactions, []);
+					var passwordNotice = "";
+
+					if (password.length < 35) {
+						passwordNotice = "Your secret phrase is less than 35 characters long. This is not secure.";
+					} else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
+						passwordNotice = "Your secret phrase does not contain numbers and uppercase letters. This is not secure.";
+					}
+
+					if (passwordNotice) {
+						$.growl("<strong>Warning</strong>: " + passwordNotice, {
+							"type": "danger"
 						});
 					}
+
+					NRS.getAccountInfo(true);
+
+					if (NRS.isLocalHost) {
+						NRS.sendRequest("startForging", {
+							"secretPhrase": password
+						}, function(response) {
+							if ("deadline" in response) {
+								$("#forging_indicator").addClass("forging");
+								$("#forging_indicator span").html("Forging");
+								NRS.isForging = true;
+							} else {
+								$("#forging_indicator").removeClass("forging");
+								$("#forging_indicator span").html("Not Forging");
+								NRS.isForging = false;
+							}
+							$("#forging_indicator").show();
+						});
+					} else {
+						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
+						$("#forging_indicator i.fa").removeClass("text-success").addClass("text-danger");
+						$("#forging_indicator span").html("Not Forging");
+						$("#forging_indicator").show();
+						NRS.isForging = false;
+					}
+
+					//NRS.getAccountAliases();
+
+					NRS.unlock();
+
+					NRS.setupClipboardFunctionality();
+
+					if (callback) {
+						callback();
+					}
+
+					NRS.checkLocationHash(password);
+
+					$(window).on("hashchange", NRS.checkLocationHash);
+
+					NRS.sendRequest('getAccountTransactionIds', {
+						"account": NRS.account,
+						"timestamp": 0
+					}, function(response) {
+						if (response.transactionIds && response.transactionIds.length) {
+							var transactionIds = response.transactionIds.reverse().slice(0, 10);
+							var nrTransactions = 0;
+							var transactions = [];
+
+							for (var i = 0; i < transactionIds.length; i++) {
+								NRS.sendRequest('getTransaction', {
+									"transaction": transactionIds[i]
+								}, function(transaction, input) {
+									nrTransactions++;
+
+									transaction.id = input.transaction;
+									transaction.confirmed = true;
+									transactions.push(transaction);
+
+									if (nrTransactions == transactionIds.length) {
+										NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+											NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
+										});
+									}
+								});
+							}
+						} else {
+							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+								NRS.handleInitialTransactions(unconfirmedTransactions, []);
+							});
+						}
+					});
 				});
 			});
 		});
