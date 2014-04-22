@@ -53,6 +53,8 @@ public interface Transaction extends Comparable<Transaction> {
 
     byte[] getBytes();
 
+    byte[] getUnsignedBytes();
+
     JSONObject getJSONObject();
 
     /*

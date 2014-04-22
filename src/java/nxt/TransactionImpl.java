@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -208,7 +209,16 @@ final class TransactionImpl implements Transaction {
             if (signature == null) {
                 throw new IllegalStateException("Transaction is not signed yet");
             }
-            byte[] hash = Crypto.sha256().digest(getBytes());
+            byte[] hash;
+            if (useNQT()) {
+                byte[] data = zeroSignature(getBytes());
+                byte[] signatureHash = Crypto.sha256().digest(signature);
+                MessageDigest digest = Crypto.sha256();
+                digest.update(data);
+                hash = digest.digest(signatureHash);
+            } else {
+                hash = Crypto.sha256().digest(getBytes());
+            }
             BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
             id = bigInteger.longValue();
             stringId = bigInteger.toString();
@@ -309,7 +319,11 @@ final class TransactionImpl implements Transaction {
             buffer.put(attachment.getBytes());
         }
         return buffer.array();
+    }
 
+    @Override
+    public byte[] getUnsignedBytes() {
+        return zeroSignature(getBytes());
     }
 
     /*
@@ -378,6 +392,9 @@ final class TransactionImpl implements Transaction {
     public boolean verify() {
         Account account = Account.getAccount(getSenderId());
         if (account == null) {
+            return false;
+        }
+        if (signature == null) {
             return false;
         }
         byte[] data = zeroSignature(getBytes());

@@ -55,6 +55,7 @@ public final class APIServlet extends HttpServlet {
 
         map.put("assignAlias", AssignAlias.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
+        map.put("calculateFullHash", CalculateFullHash.instance);
         map.put("cancelAskOrder", CancelAskOrder.instance);
         map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
