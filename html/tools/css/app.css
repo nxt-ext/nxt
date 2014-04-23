@@ -3261,6 +3261,15 @@ input:invalid {
   white-space:nowrap;
   overflow:hidden;
 }
+
+#asset_description {
+  word-wrap: break-word;
+}
+
+hr {
+  margin-top:10px;
+  margin-bottom:10px;
+}
 /*
 .navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
     background: #496cad

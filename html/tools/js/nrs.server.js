@@ -50,7 +50,7 @@ var NRS = (function(NRS, $, undefined) {
 			crossDomain: true,
 			dataType: "json",
 			type: "GET",
-			timeout: 15000,
+			timeout: 20000,
 			async: (async === undefined ? true : async),
 			data: data
 		}).done(function(json) {
@@ -212,7 +212,7 @@ var NRS = (function(NRS, $, undefined) {
 			crossDomain: true,
 			dataType: "json",
 			type: type,
-			timeout: 15000, //15 seconds
+			timeout: 20000,
 			async: (async === undefined ? true : async),
 			beforeSend: beforeSend,
 			data: data
@@ -919,7 +919,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (callback) {
 				if (error == "timeout") {
-					error = "The request timed out. Warning: This does not mean the request did not go through. You should wait for the next block and see if your request has been processed.";
+					error = "The request timed out. Warning: This does not mean the request did not go through. You should a few blocks and see if your request has been processed before trying to submit it again.";
 				}
 				callback({
 					"errorCode": -1,

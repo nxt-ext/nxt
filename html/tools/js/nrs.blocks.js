@@ -263,11 +263,14 @@ var NRS = (function(NRS, $, undefined) {
 		$("#blocks_table tbody").empty().append(rows);
 		NRS.dataLoadFinished($("#blocks_table"));
 
-		var average_fee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toPrecision(2);
-		var average_amount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toPrecision(2);
+		var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toPrecision(2);
+		var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toPrecision(2);
 
-		$("#blocks_average_fee").html(NRS.formatAmount(average_fee)).removeClass("loading_dots");
-		$("#blocks_average_amount").html(NRS.formatAmount(average_amount)).removeClass("loading_dots");
+		averageFee = NRS.convertToNQT(averageFee);
+		averageAmount = NRS.convertToNQT(averageAmount);
+
+		$("#blocks_average_fee").html(NRS.formatAmount(averageFee)).removeClass("loading_dots");
+		$("#blocks_average_amount").html(NRS.formatAmount(averageAmount)).removeClass("loading_dots");
 
 		if (NRS.blocksPageType == "forged_blocks") {
 			if (blocks.length == 100) {

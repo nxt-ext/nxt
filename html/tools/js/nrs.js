@@ -249,7 +249,7 @@ var NRS = (function(NRS, $, undefined) {
 		};
 
 		try {
-			NRS.database = new WebDB("NRS2", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRSDB_V1", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -436,11 +436,11 @@ var NRS = (function(NRS, $, undefined) {
 					asset.id = input["_extra"].id;
 
 					if (asset.difference > 0) {
-						$.growl("You received <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(asset.difference) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + "</a>.", {
+						$.growl("You received <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(asset.difference) + " " + String(asset.name).escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
 					} else {
-						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(Math.abs(asset.difference)) + " " + asset.name.escapeHTML() + (asset.difference == 1 ? " asset" : "assets") + "</a>.", {
+						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(Math.abs(asset.difference)) + " " + String(asset.name).escapeHTML() + (asset.difference == 1 ? " asset" : "assets") + "</a>.", {
 							"type": "success"
 						});
 					}

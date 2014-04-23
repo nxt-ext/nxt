@@ -407,7 +407,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(result)) {
-			console.log(currency + " --" + result);
 			throw "Invalid input.";
 		}
 
@@ -521,14 +520,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatAmount = function(amount, round, no_escaping) {
+
 		if (typeof amount == "undefined") {
 			return "0";
 		} else if (typeof amount == "string") {
-			//contains fraction
-			if (amount.indexOf(".") !== -1) {
-				amount = NRS.convertToNQT(amount);
-			}
-
 			amount = new BigInteger(amount);
 		}
 
