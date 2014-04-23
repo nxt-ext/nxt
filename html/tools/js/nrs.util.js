@@ -289,6 +289,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.calculateOrderTotalNQT = function(quantityQNT, priceNQT) {
+
 		if (typeof quantityQNT != "object") {
 			quantityQNT = new BigInteger(String(quantityQNT));
 		}
@@ -297,7 +298,9 @@ var NRS = (function(NRS, $, undefined) {
 			priceNQT = new BigInteger(String(priceNQT));
 		}
 
-		return quantityQNT.multiply(priceNQT).toString();
+		var orderTotal = quantityQNT.multiply(priceNQT);
+
+		return orderTotal.toString();
 	}
 
 	NRS.calculateOrderTotal = function(quantityQNT, priceNQT) {
