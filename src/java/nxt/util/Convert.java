@@ -3,6 +3,7 @@ package nxt.util;
 import nxt.Constants;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
 
 public final class Convert {
@@ -62,6 +63,9 @@ public final class Convert {
     }
 
     public static Long fullHashToId(byte[] hash) {
+        if (hash == null || hash.length < 8) {
+            throw new IllegalArgumentException("Invalid hash: " + Arrays.toString(hash));
+        }
         BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
         return bigInteger.longValue();
     }
