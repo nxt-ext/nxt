@@ -416,7 +416,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#lease_balance_message").html("<strong>Remember</strong>: Once submitted the lease cannot be cancelled.");
 		}
 
-		if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo) {
+		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
 			$("#forging_indicator").removeClass("forging");
 			$("#forging_indicator span").html("Not Forging");
 			$("#forging_indicator").show();
