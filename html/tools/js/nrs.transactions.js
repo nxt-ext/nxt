@@ -363,6 +363,12 @@ var NRS = (function(NRS, $, undefined) {
 				case 3:
 					transactionType = "Vote casting";
 					break;
+				case 4:
+					transactionType = "Hub Announcement";
+					break;
+				case 5:
+					transactionType = "Account Info";
+					break;
 			}
 		} else if (transaction.type == 2) {
 			switch (transaction.subtype) {
@@ -383,6 +389,39 @@ var NRS = (function(NRS, $, undefined) {
 					break;
 				case 5:
 					transactionType = "Bid order cancellation";
+					break;
+			}
+		} else if (transaction.type == 3) {
+			switch (transaction.subtype) {
+				case 0:
+					transactionType = "Digital Goods Listing";
+					break;
+				case 1:
+					transactionType = "Digital Goods Delisting";
+					break;
+				case 2:
+					transactionType = "Digtal Goods Price Change";
+					break;
+				case 3:
+					transactionType = "Digital Goods Quantity Change";
+					break;
+				case 4:
+					transactionType = "Digital Goods Purchase";
+					break;
+				case 5:
+					transactionType = "Digital Goods Delivery";
+					break;
+				case 6:
+					transactionType = "Digital Goods Feedback";
+					break;
+				case 7:
+					transactionType = "Digital Goods Refund";
+					break;
+			}
+		} else if (transaction.type == 4) {
+			switch (transaction.subtype) {
+				case 0:
+					transactionType = "Effective Balance Leasing";
 					break;
 			}
 		}
