@@ -289,7 +289,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.calculateOrderTotalNQT = function(quantityQNT, priceNQT) {
-
 		if (typeof quantityQNT != "object") {
 			quantityQNT = new BigInteger(String(quantityQNT));
 		}

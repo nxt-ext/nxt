@@ -491,8 +491,8 @@ var NRS = (function(NRS, $, undefined) {
 
 										if ($rows.length) {
 											$rows.each(function() {
-												var row_price = parseFloat($(this).data("price"));
-												if (unconfirmedTransaction.attachment.price / 100 < row_price) {
+												var rowPrice = new BigInteger(String($(this).data("price")));
+												if (unconfirmedTransaction.priceNQT.compareTo(rowPrice) < 0) {
 													$(this).before(rowToAdd);
 													rowAdded = true;
 													return false;
@@ -621,8 +621,8 @@ var NRS = (function(NRS, $, undefined) {
 
 										if ($rows.length) {
 											$rows.each(function() {
-												var row_price = parseFloat($(this).data("price"));
-												if (unconfirmedTransaction.attachment.price / 100 < row_price) {
+												var rowPrice = new BigInteger(String($(this).data("price")));
+												if (unconfirmedTransaction.priceNQT.compareTo(rowPrice) > 0) {
 													$(this).before(rowToAdd);
 													rowAdded = true;
 													return false;
@@ -1006,13 +1006,13 @@ var NRS = (function(NRS, $, undefined) {
 		//update highest bid / lowest ask
 		if ($rows.length) {
 			$rows.each(function() {
-				var row_price = parseFloat($(this).data("price"));
+				var rowPrice = new BigInteger(String($(this).data("price")));
 
-				if (data.requestType == "placeBidOrder" && data.price / 100 > row_price) {
+				if (data.requestType == "placeBidOrder" && data.priceNQT.compareTo(rowPrice) > 0) {
 					$(this).before(rowToAdd);
 					rowAdded = true;
 					return false;
-				} else if (data.requestType == "placeAskOrder" && data.price / 100 < row_price) {
+				} else if (data.requestType == "placeAskOrder" && data.priceNQT.compareTo(rowPrice) < 0) {
 					$(this).before(rowToAdd);
 					rowAdded = true;
 					return false;
