@@ -365,18 +365,11 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#account_nr_assets").html(nr_assets);
 
-				//todo: only update if necessary (changes)
-				if (response.currentLeasingHeightFrom) {
-					if (NRS.lastBlockHeight >= response.currentLeasingHeightFrom) {
-						$("#account_leasing").html("Leased Out").show();
-					} else {
-						$("#account_leasing").html("Leased Soon").show();
-					}
-
-					$("#account_leasing_status").html("Your account " + (NRS.lastBlockHeight >= response.currentLeasingHeightFrom ? "is" : "will be") + " leased out starting from block " + String(response.currentLeasingHeightFrom).escapeHTML() + " until block " + String(response.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(response.currentLessee).escapeHTML() + "' class='user_info'>" + String(response.currentLessee).escapeHTML() + "</a>").show();
-				} else {
-					$("#account_leasing_status").html("Your account balance is not leased out.").show();
-					$("#account_leasing").hide();
+				if ((response.currentLeasingHeightFrom != previousAccountInfo.currentLeasingHeightFrom) ||
+					(response.lessors && !previousAccountInfo.lessors) ||
+					(!response.lessors && previousAccountInfo.lessors) ||
+					(response.lessors && previousAccountInfo.lessors && response.lessors.sort().toString() != previousAccountInfo.lessors.sort().toString())) {
+					NRS.updateAccountLeasingStatus();
 				}
 
 				if (response.name) {
@@ -388,6 +381,55 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_balance, #account_nr_assets").removeClass("loading_dots");
 			}
 		});
+	}
+
+	NRS.updateAccountLeasingStatus = function() {
+		var accountLeasingLabel = "";
+		var accountLeasingStatus = "";
+
+		if (NRS.accountInfo.currentLeasingHeightFrom) {
+			accountLeasingLabel += (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom ? "Leased Out" : "Leased Soon");
+			accountLeasingStatus = "Your account effective balance " + (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom ? "is" : "will be") + " leased out starting from block " + String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML() + " until block " + String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(NRS.accountInfo.currentLessee).escapeHTML() + "' class='user_info'>" + String(NRS.accountInfo.currentLessee).escapeHTML() + "</a>";
+			$("#lease_balance_message").html("<strong>Remember</strong>: This lease will take effect after the current lease has ended.");
+		} else {
+			accountLeasingStatus = "Your account effective balance is not leased out.";
+			$("#lease_balance_message").html("<strong>Remember</strong>: Once submitted the lease cannot be cancelled.");
+		}
+
+		if (NRS.accountInfo.lessors) {
+			if (accountLeasingLabel) {
+				accountLeasingLabel += ", ";
+				accountLeasingStatus += "<br /><br />";
+			}
+			accountLeasingLabel += NRS.accountInfo.lessors.length + (NRS.accountInfo.lessors.length == 1 ? " lessor" : "lessors");
+			accountLeasingStatus += NRS.accountInfo.lessors.length + " " + (NRS.accountInfo.lessors.length == 1 ? "lessor has" : "lessors have") + " leased their effective balance to your account.";
+
+			var rows = "";
+
+			for (var i = 0; i < NRS.accountInfo.lessors.length; i++) {
+				var lessor = NRS.accountInfo.lessors[i];
+
+				rows += "<tr><td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td></tr>";
+			}
+
+			$("#account_lessor_table tbody").empty().append(rows);
+			$("#account_lessor_container").show();
+		} else {
+			$("#account_lessor_table tbody").empty();
+			$("#account_lessor_container").hide();
+		}
+
+		if (accountLeasingLabel) {
+			$("#account_leasing").html(accountLeasingLabel).show();
+		} else {
+			$("#account_leasing").hide();
+		}
+
+		if (accountLeasingStatus) {
+			$("#account_leasing_status").html(accountLeasingStatus).show();
+		} else {
+			$("#account_leasing_status").hide();
+		}
 	}
 
 	NRS.checkAssetDifferences = function(current_balances, previous_balances) {

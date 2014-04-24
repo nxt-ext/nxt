@@ -1339,6 +1339,7 @@
 		      		</div>
 					<div class="modal-body">			
 						<form role="form">
+							<div class="callout callout-danger never_hide" id="lease_balance_message"><strong>Remember</strong>: Once submitted leasing cannot be cancelled.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="lease_balance_recipient">RECIPIENT</label>
@@ -2500,7 +2501,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 
 						<div id="account_details_modal_leasing" class="account_details_modal_content" style="display:none">     
 							<div id="account_leasing_status" class="nrs_message" style="display:none"></div>
-	
+							<div id="account_lessor_container" style="display:none;max-height:350px;overflow:auto;">
+								<table class="table table-striped" id="account_lessor_table" style="margin-bottom:0">
+									<thead>
+								    <tr>
+								        <th>Lessor</th>
+								    </tr>
+								    </thead>
+								    <tbody>
+								    	
+								    </tbody>
+								</table>
+							</div>
 							<div style="padding-top:10px"><a href="#" data-toggle="modal" data-target="#lease_balance_modal">Lease your balance to another account</a></div>
 						</div>
 					</div>
