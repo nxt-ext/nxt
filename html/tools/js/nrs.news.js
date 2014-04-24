@@ -4,9 +4,11 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.news = function() {
 		if (NRS.settings.news != 1) {
 			$("#rss_news_container").hide();
+			$("#rss_news_disabled").show();
 			return;
 		} else {
 			$("#rss_news_container").show();
+			$("#rss_news_disabled").hide();
 		}
 
 		var currentTime = new Date().getTime();

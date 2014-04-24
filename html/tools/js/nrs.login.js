@@ -146,6 +146,9 @@ var NRS = (function(NRS, $, undefined) {
 				return;
 			}
 
+			NRS.state = response;
+
+			//this is done locally..
 			NRS.sendRequest("getAccountId", {
 				"secretPhrase": password
 			}, function(response) {
@@ -195,30 +198,36 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					}
 
-					NRS.getAccountInfo(true);
+					NRS.getAccountInfo(true, function() {
+						if (NRS.accountInfo.currentLeasingHeightFrom) {
+							NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
+						} else {
+							NRS.isLeased = false;
+						}
 
-					if (NRS.isLocalHost) {
-						NRS.sendRequest("startForging", {
-							"secretPhrase": password
-						}, function(response) {
-							if ("deadline" in response) {
-								$("#forging_indicator").addClass("forging");
-								$("#forging_indicator span").html("Forging");
-								NRS.isForging = true;
-							} else {
-								$("#forging_indicator").removeClass("forging");
-								$("#forging_indicator span").html("Not Forging");
-								NRS.isForging = false;
-							}
-							$("#forging_indicator").show();
-						});
-					} else {
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						$("#forging_indicator").removeClass("forging");
-						$("#forging_indicator span").html("Not Forging");
-						$("#forging_indicator").show();
-						NRS.isForging = false;
-					}
+						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || NRS.isLeased || !NRS.isLocalHost) {
+							$("#forging_indicator").removeClass("forging");
+							$("#forging_indicator span").html("Not Forging");
+							$("#forging_indicator").show();
+							NRS.isForging = false;
+						} else if (NRS.isLocalHost) {
+							NRS.sendRequest("startForging", {
+								"secretPhrase": password
+							}, function(response) {
+								if ("deadline" in response) {
+									$("#forging_indicator").addClass("forging");
+									$("#forging_indicator span").html("Forging");
+									NRS.isForging = true;
+								} else {
+									$("#forging_indicator").removeClass("forging");
+									$("#forging_indicator span").html("Not Forging");
+									NRS.isForging = false;
+								}
+								$("#forging_indicator").show();
+							});
+						}
+					});
 
 					//NRS.getAccountAliases();
 

@@ -44,7 +44,21 @@ var NRS = (function(NRS, $, undefined) {
 	$("#forging_indicator").click(function(e) {
 		e.preventDefault();
 
-		if ($(this).hasClass("forging")) {
+		if (!NRS.accountInfo.publicKey) {
+			$.growl("You cannot forge because your account has no public key. Please make an outgoing transaction first.", {
+				"type": "danger"
+			});
+		} else if (NRS.accountInfo.effectiveBalanceNXT == 0) {
+			if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo) {
+				$.growl("Your effective balance is leased out, you cannot forge at the moment.", {
+					"type": "danger"
+				});
+			} else {
+				$.growl("Your effective balance is zero, you cannot forge.", {
+					"type": "danger"
+				});
+			}
+		} else if ($(this).hasClass("forging")) {
 			$("#stop_forging_modal").modal("show");
 		} else {
 			$("#start_forging_modal").modal("show");

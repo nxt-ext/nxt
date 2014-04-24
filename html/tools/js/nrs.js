@@ -19,6 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isTestNet = false;
 	NRS.isLocalHost = false;
 	NRS.isForging = false;
+	NRS.isLeased = false;
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
@@ -282,7 +283,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.getAccountInfo = function(firstRun) {
+	NRS.getAccountInfo = function(firstRun, callback) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.account
 		}, function(response) {
@@ -370,7 +371,17 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#account_nr_assets").html(nr_assets);
 
-				if ((response.currentLeasingHeightFrom != previousAccountInfo.currentLeasingHeightFrom) ||
+				if (NRS.lastBlockHeight) {
+					var isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
+					if (isLeased != NRS.IsLeased) {
+						var leasingChange = true;
+					}
+				} else {
+					var leasingChange = false;
+				}
+
+				if (leasingChange ||
+					(response.currentLeasingHeightFrom != previousAccountInfo.currentLeasingHeightFrom) ||
 					(response.lessors && !previousAccountInfo.lessors) ||
 					(!response.lessors && previousAccountInfo.lessors) ||
 					(response.lessors && previousAccountInfo.lessors && response.lessors.sort().toString() != previousAccountInfo.lessors.sort().toString())) {
@@ -384,6 +395,10 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (firstRun) {
 				$("#account_balance, #account_nr_assets").removeClass("loading_dots");
+			}
+
+			if (callback) {
+				callback();
 			}
 		});
 	}
@@ -399,6 +414,13 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			accountLeasingStatus = "Your account effective balance is not leased out.";
 			$("#lease_balance_message").html("<strong>Remember</strong>: Once submitted the lease cannot be cancelled.");
+		}
+
+		if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo) {
+			$("#forging_indicator").removeClass("forging");
+			$("#forging_indicator span").html("Not Forging");
+			$("#forging_indicator").show();
+			NRS.isForging = false;
 		}
 
 		if (NRS.accountInfo.lessors) {
