@@ -834,6 +834,31 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.createInfoTable = function(data, fixed) {
 		var rows = "";
 
+		/*
+		var keys = [];
+
+		if (Object.keys) {
+			keys = Object.keys(data);
+		} else {
+			for (var key in data) {
+				keys.push(key);
+			}
+		}
+
+		keys.sort(function(a, b) {
+			if (a < b) {
+				return -1;
+			} else if (a > b) {
+				return 1
+			} else {
+				return 0
+			}
+		});
+
+		for (var i = 0; i < keys.length; i++) {
+			var key = keys[i];
+		*/
+
 		for (var key in data) {
 			var value = data[key];
 
@@ -853,7 +878,7 @@ var NRS = (function(NRS, $, undefined) {
 				value = String(value).escapeHTML().nl2br();
 			}
 
-			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key).escapeHTML() + ":</td><td style='width:90%;" + (/hash|signature|publicKey/i.test(key) ? "word-break:break-all" : "") + "'>" + value + "</td></tr>";
+			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key.capitalize()).escapeHTML() + ":</td><td style='width:90%;" + (/hash|signature|publicKey/i.test(key) ? "word-break:break-all" : "") + "'>" + value + "</td></tr>";
 		}
 
 		return rows;
