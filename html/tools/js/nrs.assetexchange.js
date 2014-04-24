@@ -1464,6 +1464,12 @@ var NRS = (function(NRS, $, undefined) {
 	$("body").on("click", "a[data-goto-asset]", function(e) {
 		e.preventDefault();
 
+		var $visible_modal = $(".modal.in");
+
+		if ($visible_modal.length) {
+			$visible_modal.modal("hide");
+		}
+
 		NRS.goToAsset($(this).data("goto-asset"));
 	});
 

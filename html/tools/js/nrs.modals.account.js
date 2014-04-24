@@ -3,7 +3,7 @@ var NRS = (function(NRS, $, undefined) {
 		"user": 0
 	};
 
-	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table, #account_details_modal").on("click", "a[data-user]", function(e) {
+	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table, #account_details_modal, #transaction_info_modal").on("click", "a[data-user]", function(e) {
 		e.preventDefault();
 
 		var account = $(this).data("user");
@@ -64,10 +64,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (account.description) {
-			$("#user_info_description, #user_info_modal_description").show();
+			$("#user_info_description").show();
 			$("#user_info_modal_description").html(String(account.description).escapeHTML().nl2br());
 		} else {
-			$("#user_info_description, #user_info_modal_description").hide();
+			$("#user_info_description").hide();
 		}
 
 		$("#user_info_modal").modal("show");
@@ -370,6 +370,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#user_info_modal_assets_table tbody").empty().append(rows);
+
 		NRS.dataLoadFinished($("#user_info_modal_assets_table"));
 	}
 

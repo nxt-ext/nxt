@@ -15,6 +15,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.fetchingModalData = true;
 
 		$("#transaction_info_output").html("").hide();
+		$("#transaction_info_callout").hide();
 		$("#transaction_info_table").hide();
 		$("#transaction_info_table tbody").empty();
 
@@ -194,6 +195,8 @@ var NRS = (function(NRS, $, undefined) {
 					if (transaction.sender != NRS.account) {
 						data["Sender"] = NRS.getAccountTitle(transaction.sender);
 					}
+
+					$("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.id).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();

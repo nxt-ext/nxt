@@ -874,11 +874,13 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
 				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
+			} else if (key == "Sender" || key == "Recipient") {
+				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {
 				value = String(value).escapeHTML().nl2br();
 			}
 
-			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key.capitalize()).escapeHTML() + ":</td><td style='width:90%;" + (/hash|signature|publicKey/i.test(key) ? "word-break:break-all" : "") + "'>" + value + "</td></tr>";
+			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key.capitalize()).escapeHTML() + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
 		}
 
 		return rows;

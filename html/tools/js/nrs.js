@@ -129,6 +129,11 @@ var NRS = (function(NRS, $, undefined) {
 		var page = $(this).data("page");
 
 		if (page == NRS.currentPage) {
+			NRS.abortOutstandingRequests();
+
+			if (data && data.callback) {
+				data.callback();
+			}
 			return;
 		}
 
