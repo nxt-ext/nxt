@@ -51,9 +51,23 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.processAccountModalData = function(account) {
 		if (account.unconfirmedBalanceNQT == "0") {
-			$("#user_info_modal_balance").html("0");
+			$("#user_info_modal_account_balance").html("0");
 		} else {
-			$("#user_info_modal_balance").html(NRS.formatAmount(account.unconfirmedBalanceNQT) + " NXT");
+			$("#user_info_modal_account_balance").html(NRS.formatAmount(account.unconfirmedBalanceNQT) + " NXT");
+		}
+
+		if (account.name) {
+			$("#user_info_modal_account_name").html(String(account.name).escapeHTML());
+			$("#user_info_modal_account_name_container").show();
+		} else {
+			$("#user_info_modal_account_name_container").hide();
+		}
+
+		if (account.description) {
+			$("#user_info_description, #user_info_modal_description").show();
+			$("#user_info_modal_description").html(String(account.description).escapeHTML().nl2br());
+		} else {
+			$("#user_info_description, #user_info_modal_description").hide();
 		}
 
 		$("#user_info_modal").modal("show");

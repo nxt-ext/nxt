@@ -1339,7 +1339,7 @@
 		      		</div>
 					<div class="modal-body">			
 						<form role="form">
-							<div class="callout callout-danger never_hide" id="lease_balance_message"><strong>Remember</strong>: Once submitted leasing cannot be cancelled.</div>
+							<div class="callout callout-danger never_hide" id="lease_balance_message"><strong>Remember</strong>: Once submitted the lease cannot be cancelled.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="lease_balance_recipient">RECIPIENT</label>
@@ -2277,13 +2277,16 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		        		<h4 class="modal-title">Account <strong><span id="user_info_modal_account"></span></strong> Info</h4>
 		     		</div>
 			      	<div class="modal-body">	
-				     	<div class="callout callout-info">This account has a balance of <strong><span id="user_info_modal_balance"></span></strong>.</div>
+				     	<div class="callout callout-info">
+				     		This account <span id="user_info_modal_account_name_container">named <span id="user_info_modal_account_name" style="font-weight:bold"></span></span> has a balance of <strong><span id="user_info_modal_account_balance"></span></strong>.
+				     	</div>
 				     	 	
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
 							<li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
+							<li id="user_info_description" data-tab="description"><a href="#">Description</a></li>
 						</ul>
 
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_transactions" style="display:none;max-height:350px;overflow:auto;">
@@ -2348,6 +2351,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 						</div>
+
+						<div class="user_info_modal_content data-never-loading" id="user_info_modal_description" style="display:none;">
+						</div>
+
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 						<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
