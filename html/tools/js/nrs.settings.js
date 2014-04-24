@@ -2,7 +2,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.defaultSettings = {
 		"submit_on_enter": 0,
 		"use_new_address_format": 0,
-		"animate_forging": 1
+		"animate_forging": 1,
+		"news": -1
 	};
 
 	NRS.defaultColors = {
@@ -857,6 +858,14 @@ var NRS = (function(NRS, $, undefined) {
 				$("#forging_indicator").addClass("animated");
 			} else {
 				$("#forging_indicator").removeClass("animated");
+			}
+		}
+
+		if (!key || key == "news") {
+			if (NRS.settings["news"] == 0) {
+				$("#news_link").hide();
+			} else {
+				$("#news_link").show();
 			}
 		}
 

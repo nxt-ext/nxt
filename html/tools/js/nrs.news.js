@@ -2,6 +2,13 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.newsRefresh = 0;
 
 	NRS.pages.news = function() {
+		if (NRS.settings.news != 1) {
+			$("#rss_news_container").hide();
+			return;
+		} else {
+			$("#rss_news_container").show();
+		}
+
 		var currentTime = new Date().getTime();
 
 		if (currentTime - NRS.newsRefresh > 60 * 60 * 10) { //10 minutes before refreshing..
@@ -42,6 +49,11 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.newsLoaded = function($el) {
 		$el.removeClass("data-loading").find("img").remove();
 	}
+
+	$("#rss_news_enable").on("click", function() {
+		NRS.updateSettings("news", 1);
+		NRS.pages.news();
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));
