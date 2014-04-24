@@ -315,8 +315,8 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.calculatePercentage = function(a, b) {
-		a = new Big(a.toString());
-		b = new Big(b.toString());
+		a = new Big(String(a));
+		b = new Big(String(b));
 
 		var result = a.div(b).times(new Big("100"));
 

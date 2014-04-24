@@ -292,21 +292,16 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.userInfoModal.user
 		}, function(response) {
-			/*
-			if (NRS.currentPage != "my_assets") {
-				return;
-			}*/
-
 			if (response.assetBalances && response.assetBalances.length) {
 				var assets = [];
-				var nr_assets = 0;
-				var ignored_assets = 0;
+				var nrAssets = 0;
+				var ignoredAssets = 0;
 
 				for (var i = 0; i < response.assetBalances.length; i++) {
 					if (response.assetBalances[i].balance == 0) {
-						ignored_assets++;
+						ignoredAssets++;
 
-						if (nr_assets + ignored_assets == response.assetBalances.length) {
+						if (nrAssets + ignoredAssets == response.assetBalances.length) {
 							NRS.userInfoModal.assetsLoaded(assets);
 						}
 						continue;
@@ -315,30 +310,19 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.sendRequest("getAsset", {
 						"asset": response.assetBalances[i].asset,
 						"_extra": {
-							"balance": response.assetBalances[i].balance
+							"balanceQNT": response.assetBalances[i].balanceQNT
 						}
 					}, function(asset, input) {
-						/*
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}*/
-
-
 						asset.asset = input.asset;
-						asset.balance = input["_extra"].balance;
+						asset.balanceQNT = input["_extra"].balanceQNT;
 
-						assets[nr_assets] = asset;
-						nr_assets++;
+						assets[nrAssets] = asset;
+						nrAssets++;
 
-						if (nr_assets + ignored_assets == response.assetBalances.length) {
+						if (nrAssets + ignoredAssets == response.assetBalances.length) {
 							NRS.userInfoModal.assetsLoaded(assets);
 						}
 					});
-
-					/*
-					if (NRS.currentPage != "my_assets") {
-						return;
-					}*/
 				}
 			} else {
 				$("#user_info_modal_assets_table tbody").empty();
@@ -363,10 +347,9 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < assets.length; i++) {
 			var asset = assets[i];
 
-			var percentageAsset = parseFloat(asset.balance / asset.quantity);
-			percentageAsset = Math.round(percentageAsset * 10000000) / 100000;
+			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
 
-			rows += "<tr><td>" + asset.name.escapeHTML() + "</td><td>" + NRS.formatAmount(asset.balance) + "</td><td>" + NRS.formatAmount(asset.quantity) + "</td><td>" + percentageAsset + "%</td></tr>";
+			rows += "<tr><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 		}
 
 		$("#user_info_modal_assets_table tbody").empty().append(rows);
