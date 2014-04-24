@@ -48,7 +48,7 @@ final class BlockImpl implements Block {
             throw new NxtException.ValidationException("attempted to create a block with " + transactions.size() + " transactions");
         }
 
-        if (payloadLength > Constants.MAX_NUMBER_OF_TRANSACTIONS * (version < 3 ? 128 : 160)|| payloadLength < 0) {
+        if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
             throw new NxtException.ValidationException("attempted to create a block with payloadLength " + payloadLength);
         }
 
