@@ -913,7 +913,7 @@ var NRS = (function(NRS, $, undefined) {
 		var orderType = $invoker.data("type");
 		var assetId = $invoker.data("asset");
 
-		$("#asset_order_modal .asset_order_modal_type").html(orderType);
+		$("#asset_order_modal_button").html(orderType + " Asset").data("resetText", orderType + " Asset");
 
 		orderType = orderType.toLowerCase();
 

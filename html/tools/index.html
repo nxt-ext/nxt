@@ -590,7 +590,7 @@
 									                	    <form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;">
 									                	    	<div style="margin-left:-20px">
 										                	    	<div class="form-group">
-										                	    		<label for="buy_asset_quantity" class="col-sm-3 control-label">Amount</label>
+										                	    		<label for="buy_asset_quantity" class="col-sm-3 control-label">Quantity</label>
 										                	    		<div class="col-sm-9">
 										                	    			<div class="input-group">
 										                	    				<input id="buy_asset_quantity" type="text" name="buy_asset_quantity" value="0" class="form-control" data-type="buy" />
@@ -674,7 +674,7 @@
 									                        <form role="form" class="form-horizontal" style="padding: 10px;max-width:350px;margin-left:auto;margin-right:auto;">
 										                        <div style="margin-left:-20px">
 										                        	<div class="form-group">
-										                        		<label for="sell_asset_quantity" class="col-sm-3 control-label">Amount</label>
+										                        		<label for="sell_asset_quantity" class="col-sm-3 control-label">Quantity</label>
 										                        		<div class="col-sm-9">
 										                        			<div class="input-group">
 										                        				<input id="sell_asset_quantity" type="text" name="sell_asset_quantity" value="0" class="form-control" data-type="sell" />
@@ -1536,7 +1536,7 @@
 			      		<input type="hidden" name="success_message" value="The __ order has been submitted." />
 			      		<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have gone through." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..."><span class="asset_order_modal_type"></span> Asset</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="asset_order_modal_button"></button>
 			      	</div>
 		    	</div>
 			</div>
