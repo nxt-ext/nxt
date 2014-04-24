@@ -72,7 +72,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getAliasId", GetAliasId.instance);
         map.put("getAliasIds", GetAliasIds.instance);
         map.put("getAliasURI", GetAliasURI.instance);
+        map.put("getAllAssets", GetAllAssets.instance);
         map.put("getAsset", GetAsset.instance);
+        map.put("getAssets", GetAssets.instance);
         map.put("getAssetIds", GetAssetIds.instance);
         map.put("getAssetsByName", GetAssetsByName.instance);
         map.put("getBalance", GetBalance.instance);
@@ -111,6 +113,7 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
+        map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);
         map.put("stopForging", StopForging.instance);
         map.put("getForging", GetForging.instance);
