@@ -32,6 +32,12 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	//Reset scroll position of tab when shown.
+	$('a[data-toggle="tab"]').on("shown.bs.tab", function(e) {
+		var target = $(e.target).attr("href");
+		$(target).scrollTop(0);
+	})
+
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
 		var $visible_modal = $(".modal.in");
