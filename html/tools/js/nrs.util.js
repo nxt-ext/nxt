@@ -872,7 +872,7 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					value = NRS.formatQuantity(value, 0);
 				}
-			} else if (key == "Price" || key == "Total" || key == "Amount") {
+			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
 				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
 			} else {
 				value = String(value).escapeHTML().nl2br();

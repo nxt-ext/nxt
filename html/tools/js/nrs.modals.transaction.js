@@ -49,6 +49,26 @@ var NRS = (function(NRS, $, undefined) {
 
 		var incorrect = false;
 
+		if (transaction.type == 0) {
+			switch (transaction.subtype) {
+				case 0:
+					var data = {
+						"Type": "Ordinary Payment",
+						"Amount": transaction.amountNQT,
+						"Fee": transaction.feeNQT,
+						"Recipient": NRS.getAccountTitle(transaction.recipient),
+						"Sender": NRS.getAccountTitle(transaction.sender)
+					};
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				default:
+					incorrect = true;
+					break;
+			}
+		}
 		if (transaction.type == 1) {
 			switch (transaction.subtype) {
 				case 0:
