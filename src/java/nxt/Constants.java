@@ -60,7 +60,7 @@ public final class Constants {
     public static final int FRACTIONAL_BLOCK = isTestnet ? NQT_BLOCK : 134000;
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : 135000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int DIGITAL_GOODS_STORE_BLOCK = Integer.MAX_VALUE;
+    public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
     public static final long EPOCH_BEGINNING;
     static {
