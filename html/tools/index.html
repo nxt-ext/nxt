@@ -2279,15 +2279,15 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		     		</div>
 			      	<div class="modal-body">	
 				     	<div class="callout callout-info">
-				     		This account <span id="user_info_modal_account_name_container">named <span id="user_info_modal_account_name" style="font-weight:bold"></span></span> has a balance of <strong><span id="user_info_modal_account_balance"></span></strong>.
+				     		The account <span id="user_info_modal_account_name_container">named <span id="user_info_modal_account_name" style="font-weight:bold"></span></span> has a balance of <strong><span id="user_info_modal_account_balance"></span></strong>.
 				     	</div>
 				     	 	
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
-							<li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
 							<li id="user_info_description" data-tab="description"><a href="#">Description</a></li>
+							<li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
 						</ul>
 
 						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_transactions" style="display:none;max-height:350px;overflow:auto;">
@@ -2343,6 +2343,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="data-empty-container" style="padding-top:10px">This user has no assets.</div>
 						</div>
 						
+						<div class="user_info_modal_content data-never-loading" id="user_info_modal_description" style="display:none;"></div>
+
 						<div class="user_info_modal_content data-never-loading" id="user_info_modal_actions" style="display:none;">
 							<div class="row">
 								<div class="col-xs-6 col-md-6" style="margin-left:auto;margin-right:auto;float:none;">
@@ -2351,9 +2353,6 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									<button type="button" id="user_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="">Add as Contact</button>
 								</div>
 							</div>
-						</div>
-
-						<div class="user_info_modal_content data-never-loading" id="user_info_modal_description" style="display:none;">
 						</div>
 
 					</div>
