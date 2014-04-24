@@ -7,11 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-
-import static nxt.http.JSONResponses.INCORRECT_ASSET;
-import static nxt.http.JSONResponses.MISSING_ASSET_NAME;
-import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 public final class GetAssets extends APIServlet.APIRequestHandler {
 

@@ -1258,21 +1258,21 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 try {
                     int nameBytesLength = buffer.getShort();
-                    if (nameBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH) {
+                    if (nameBytesLength > 3 * Constants.MAX_DGS_LISTING_NAME_LENGTH) {
                         throw new NxtException.ValidationException("Invalid name length: " + nameBytesLength);
                     }
                     byte[] nameBytes = new byte[nameBytesLength];
                     buffer.get(nameBytes);
                     String name = new String(nameBytes, "UTF-8");
                     int descriptionBytesLength = buffer.getShort();
-                    if (descriptionBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH) {
+                    if (descriptionBytesLength > 3 * Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH) {
                         throw new NxtException.ValidationException("Invalid description length: " + descriptionBytesLength);
                     }
                     byte[] descriptionBytes = new byte[descriptionBytesLength];
                     buffer.get(descriptionBytes);
                     String description = new String(descriptionBytes, "UTF-8");
                     int tagsBytesLength = buffer.getShort();
-                    if (tagsBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH) {
+                    if (tagsBytesLength > 3 * Constants.MAX_DGS_LISTING_TAGS_LENGTH) {
                         throw new NxtException.ValidationException("Invalid tags length: " + tagsBytesLength);
                     }
                     byte[] tagsBytes = new byte[tagsBytesLength];
@@ -1312,10 +1312,10 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing)transaction.getAttachment();
                 if (attachment.getName().length() == 0
-                        || attachment.getName().length() > Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH
-                        || attachment.getDescription().length() > Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH
-                        || attachment.getTags().length() > Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH
-                        || attachment.getQuantity() < 0 || attachment.getQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
+                        || attachment.getName().length() > Constants.MAX_DGS_LISTING_NAME_LENGTH
+                        || attachment.getDescription().length() > Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH
+                        || attachment.getTags().length() > Constants.MAX_DGS_LISTING_TAGS_LENGTH
+                        || attachment.getQuantity() < 0 || attachment.getQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
@@ -1446,9 +1446,9 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange)transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (goods == null
-                        || attachment.getDeltaQuantity() < -Constants.MAX_DIGITAL_GOODS_QUANTITY
-                        || attachment.getDeltaQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
+                if (goods == null || goods.isDelisted()
+                        || attachment.getDeltaQuantity() < -Constants.MAX_DGS_LISTING_QUANTITY
+                        || attachment.getDeltaQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods quantity change: " + attachment.getJSONObject());
                 }
@@ -1470,7 +1470,7 @@ public abstract class TransactionType {
                 long priceNQT = buffer.getLong();
                 int deliveryDeadline = buffer.getInt();
                 int noteBytesLength = buffer.getShort();
-                if (noteBytesLength > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH) {
+                if (noteBytesLength > Constants.MAX_DGS_NOTE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid note length: " + noteBytesLength);
                 }
                 byte[] noteBytes = new byte[noteBytesLength];
@@ -1535,9 +1535,9 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DIGITAL_GOODS_QUANTITY
+                if (attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
-                        || attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
+                        || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || goods == null || goods.isDelisted()
                         || attachment.getQuantity() > goods.getQuantity()
@@ -1558,7 +1558,7 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long purchaseId = buffer.getLong();
                 int goodsBytesLength = buffer.getShort();
-                if (goodsBytesLength > Constants.MAX_DIGITAL_GOODS_LENGTH) {
+                if (goodsBytesLength > Constants.MAX_DGS_LENGTH) {
                     throw new NxtException.ValidationException("Invalid goods length: " + goodsBytesLength);
                 }
                 byte[] goodsBytes = new byte[goodsBytesLength];
@@ -1596,7 +1596,7 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPendingPurchase(attachment.getPurchaseId());
-                if (attachment.getGoods().getData().length > Constants.MAX_DIGITAL_GOODS_LENGTH
+                if (attachment.getGoods().getData().length > Constants.MAX_DGS_LENGTH
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null
@@ -1616,7 +1616,7 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long purchaseId = buffer.getLong();
                 int noteBytesLength = buffer.getShort();
-                if (noteBytesLength > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH) {
+                if (noteBytesLength > Constants.MAX_DGS_NOTE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid note length: " + noteBytesLength);
                 }
                 byte[] noteBytes = new byte[noteBytesLength];
@@ -1648,7 +1648,7 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback)transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(attachment.getPurchaseId());
-                if (attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
+                if (attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || purchase == null
                         || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
@@ -1668,7 +1668,7 @@ public abstract class TransactionType {
                 Long purchaseId = buffer.getLong();
                 long refundNQT = buffer.getLong();
                 int noteBytesLength = buffer.getShort();
-                if (noteBytesLength > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH) {
+                if (noteBytesLength > Constants.MAX_DGS_NOTE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid note length: " + noteBytesLength);
                 }
                 byte[] noteBytes = new byte[noteBytesLength];
@@ -1731,7 +1731,7 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(attachment.getPurchaseId());
                 if (attachment.getRefundNQT() < 0 || attachment.getRefundNQT() > Constants.MAX_BALANCE_NQT
-                        || attachment.getNote().getData().length > Constants.MAX_DIGITAL_GOODS_NOTE_LENGTH
+                        || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || purchase == null
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {

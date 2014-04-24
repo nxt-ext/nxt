@@ -12,6 +12,7 @@ import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
+import static nxt.http.JSONResponses.INCORRECT_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.INCORRECT_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
@@ -22,6 +23,7 @@ import static nxt.http.JSONResponses.MISSING_ACCOUNT;
 import static nxt.http.JSONResponses.MISSING_AMOUNT;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.MISSING_FEE;
+import static nxt.http.JSONResponses.MISSING_GOODS;
 import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.MISSING_PRICE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
@@ -127,6 +129,18 @@ final class ParameterParser {
             return Convert.parseUnsignedLong(orderValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ORDER);
+        }
+    }
+
+    static Long getGoodsId(HttpServletRequest req) throws ParameterException {
+        String goodsValue = Convert.emptyToNull(req.getParameter("goods"));
+        if (goodsValue == null) {
+            throw new ParameterException(MISSING_GOODS);
+        }
+        try {
+            return Convert.parseUnsignedLong(goodsValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_GOODS);
         }
     }
 

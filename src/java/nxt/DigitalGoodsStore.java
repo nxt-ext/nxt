@@ -95,8 +95,8 @@ public final class DigitalGoodsStore {
             quantity += deltaQuantity;
             if (quantity < 0) {
                 quantity = 0;
-            } else if (quantity > Constants.MAX_DIGITAL_GOODS_QUANTITY) {
-                quantity = Constants.MAX_DIGITAL_GOODS_QUANTITY;
+            } else if (quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
+                quantity = Constants.MAX_DGS_LISTING_QUANTITY;
             }
         }
 

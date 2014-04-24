@@ -96,6 +96,14 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_UNSIGNED_BYTES = incorrect("unsignedTransactionBytes");
     public static final JSONStreamAware MISSING_UNSIGNED_BYTES = missing("unsignedTransactionBytes");
     public static final JSONStreamAware MISSING_SIGNATURE_HASH = missing("signatureHash");
+    public static final JSONStreamAware INCORRECT_DGS_LISTING_NAME = incorrect("name", "(length must be not longer than " + Constants.MAX_DGS_LISTING_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_DGS_LISTING_DESCRIPTION = incorrect("description", "(length must be not longer than " + Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_DGS_LISTING_TAGS = incorrect("tags", "(length must be not longer than " + Constants.MAX_DGS_LISTING_TAGS_LENGTH + " characters)");
+    public static final JSONStreamAware MISSING_GOODS = missing("goods");
+    public static final JSONStreamAware INCORRECT_GOODS = incorrect("goods");
+    public static final JSONStreamAware UNKNOWN_GOODS = unknown("goods");
+    public static final JSONStreamAware INCORRECT_DELTA_QUANTITY = incorrect("deltaQuantity");
+    public static final JSONStreamAware MISSING_DELTA_QUANTITY = missing("deltaQuantity");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
