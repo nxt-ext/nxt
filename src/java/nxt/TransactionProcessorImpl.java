@@ -275,8 +275,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
             }
             String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-            // remove later:
-            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
+            // ugly, remove later:
+            String referencedTransactionIdString = (String) transactionData.get("referencedTransaction");
+            Long referencedTransactionId = referencedTransactionIdString == null ?
+                    null : Convert.parseUnsignedLong(referencedTransactionIdString);
             if (referencedTransactionId != null && referencedTransactionFullHash == null) {
                 Transaction referencedTransaction = Nxt.getBlockchain().getTransaction(referencedTransactionId);
                 if (referencedTransaction != null) {
