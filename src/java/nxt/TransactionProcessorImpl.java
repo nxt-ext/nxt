@@ -276,9 +276,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
             // ugly, remove later:
-            String referencedTransactionIdString = (String) transactionData.get("referencedTransaction");
-            Long referencedTransactionId = referencedTransactionIdString == null ?
-                    null : Convert.parseUnsignedLong(referencedTransactionIdString);
+            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
             if (referencedTransactionId != null && referencedTransactionFullHash == null) {
                 Transaction referencedTransaction = Nxt.getBlockchain().getTransaction(referencedTransactionId);
                 if (referencedTransaction != null) {
