@@ -641,14 +641,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         int blockTimestamp = Convert.getEpochTime();
 
-        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH) {
+        int maxPayloadLength = Constants.MAX_NUMBER_OF_TRANSACTIONS *
+                (blockchain.getLastBlock().getHeight() < Constants.NQT_BLOCK ? 128 : 160);
+        while (payloadLength <= maxPayloadLength) {
 
             int prevNumberOfNewTransactions = newTransactions.size();
 
             for (TransactionImpl transaction : sortedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > maxPayloadLength) {
                     continue;
                 }
 

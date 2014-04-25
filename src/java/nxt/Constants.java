@@ -5,9 +5,9 @@ import java.util.TimeZone;
 
 public final class Constants {
 
-    public static final int BLOCK_HEADER_LENGTH = 224;
+    public static final int BLOCK_HEADER_LENGTH = 232;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
-    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 128;
+    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 160;
     public static final long MAX_BALANCE_NXT = 1000000000;
     public static final long ONE_NXT = 100000000;
     public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
@@ -60,7 +60,7 @@ public final class Constants {
     public static final int FRACTIONAL_BLOCK = isTestnet ? NQT_BLOCK : 134000;
     public static final int ASSET_EXCHANGE_BLOCK = isTestnet ? NQT_BLOCK : 135000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int DIGITAL_GOODS_STORE_BLOCK = Integer.MAX_VALUE;
+    public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
     public static final long EPOCH_BEGINNING;
     static {
