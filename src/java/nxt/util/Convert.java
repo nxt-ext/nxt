@@ -53,7 +53,7 @@ public final class Convert {
 
     public static Long parseUnsignedLong(String number) {
         if (number == null) {
-            throw new IllegalArgumentException("trying to parse null");
+            return null;
         }
         BigInteger bigInt = new BigInteger(number.trim());
         if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
