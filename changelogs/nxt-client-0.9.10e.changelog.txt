@@ -12,4 +12,6 @@ the unconfirmed balance of the account when the transaction is accepted into the
 unconfirmed pool, and is refunded back when the transaction is either confirmed,
 or expires and is removed from the pool.
 
+Added Wesley's UI under html/ui, available by default on http://localhost:7876
+
 
