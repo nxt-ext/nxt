@@ -50,7 +50,7 @@ var NRS = (function(NRS, $, undefined) {
 			crossDomain: true,
 			dataType: "json",
 			type: "GET",
-			timeout: 20000,
+			timeout: 30000,
 			async: (async === undefined ? true : async),
 			data: data
 		}).done(function(json) {
@@ -212,9 +212,10 @@ var NRS = (function(NRS, $, undefined) {
 			crossDomain: true,
 			dataType: "json",
 			type: type,
-			timeout: 20000,
+			timeout: 30000,
 			async: (async === undefined ? true : async),
 			beforeSend: beforeSend,
+			shouldRetry: (type == "GET" ? 2 : undefined),
 			data: data
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {
@@ -886,7 +887,7 @@ var NRS = (function(NRS, $, undefined) {
 			crossDomain: true,
 			dataType: "json",
 			type: "POST",
-			timeout: 20000, //20 seconds
+			timeout: 30000,
 			async: true,
 			data: {
 				"transactionBytes": transactionData

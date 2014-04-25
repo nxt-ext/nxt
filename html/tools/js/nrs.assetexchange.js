@@ -88,10 +88,6 @@ var NRS = (function(NRS, $, undefined) {
 								"position": i
 							}
 						}, function(asset, input) {
-							if (!asset.name) {
-								console.log(asset);
-							}
-
 							if (asset.errorCode) {
 								nrAssets++;
 							} else {
