@@ -94,6 +94,10 @@ var converters = function() {
 			return value;
 		},
 		byteArrayToString: function(bytes, opt_startIndex, length) {
+			if (length == 0) {
+				return "";
+			}
+
 			if (opt_startIndex && length) {
 				var index = this.checkBytesToIntInput(bytes, parseInt(length, 10), parseInt(opt_startIndex, 10));
 
