@@ -255,7 +255,7 @@ var NRS = (function(NRS, $, undefined) {
 		};
 
 		try {
-			NRS.database = new WebDB("NRSDB_V1", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRSDBC", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
