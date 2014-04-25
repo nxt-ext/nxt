@@ -372,9 +372,10 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_nr_assets").html(nr_assets);
 
 				if (NRS.lastBlockHeight) {
-					var isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
+					var isLeased = NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom;
 					if (isLeased != NRS.IsLeased) {
 						var leasingChange = true;
+						NRS.isLeased = isLeased;
 					}
 				} else {
 					var leasingChange = false;
@@ -407,9 +408,14 @@ var NRS = (function(NRS, $, undefined) {
 		var accountLeasingLabel = "";
 		var accountLeasingStatus = "";
 
-		if (NRS.accountInfo.currentLeasingHeightFrom) {
-			accountLeasingLabel += (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom ? "Leased Out" : "Leased Soon");
-			accountLeasingStatus = "Your account effective balance " + (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom ? "is" : "will be") + " leased out starting from block " + String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML() + " until block " + String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(NRS.accountInfo.currentLessee).escapeHTML() + "' class='user_info'>" + String(NRS.accountInfo.currentLessee).escapeHTML() + "</a>";
+		if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom) {
+			accountLeasingLabel = "Leased Out";
+			accountLeasingStatus = "Your account effective balance is leased out starting from block " + String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML() + " until block " + String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(NRS.accountInfo.currentLessee).escapeHTML() + "' class='user_info'>" + String(NRS.accountInfo.currentLessee).escapeHTML() + "</a>";
+			$("#lease_balance_message").html("<strong>Remember</strong>: This lease will take effect after the current lease has ended.");
+
+		} else if (NRS.lastBlockHeight < NRS.accountInfo.currentLeasingHeightTo) {
+			accountLeasingLabel = "Leased Soon";
+			accountLeasingStatus = "Your account effective balance will be leased out starting from block " + String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML() + " until block " + String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(NRS.accountInfo.currentLessee).escapeHTML() + "' class='user_info'>" + String(NRS.accountInfo.currentLessee).escapeHTML() + "</a>";
 			$("#lease_balance_message").html("<strong>Remember</strong>: This lease will take effect after the current lease has ended.");
 		} else {
 			accountLeasingStatus = "Your account effective balance is not leased out.";
