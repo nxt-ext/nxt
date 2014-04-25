@@ -25,18 +25,18 @@ var NRS = (function(NRS, $, undefined) {
 						if (nr_polls == response.pollIds.length) {
 							var rows = "";
 
-							if (NRS.unconfirmedTransaction.length) {
+							if (NRS.unconfirmedTransactions.length) {
 								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 									var unconfirmedTransaction = NRS.unconfirmedTransaction[i];
 
 									if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subType == 2) {
-										var pollDescription = unconfirmedTransaction.attachment.description;
+										var pollDescription = String(unconfirmedTransaction.attachment.description);
 
 										if (pollDescription.length > 100) {
 											pollDescription = pollDescription.substring(0, 100) + "...";
 										}
 
-										rows += "<tr class='tentative'><td>" + unconfirmedTransaction.attachment.name.escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + String(unconfirmedTransaction.sender).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction.sender) + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + String(unconfirmedTransaction.sender).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction.sender) + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
 
 									}
 								}
@@ -49,13 +49,13 @@ var NRS = (function(NRS, $, undefined) {
 									continue;
 								}
 
-								var pollDescription = poll.attachment.description;
+								var pollDescription = String(poll.attachment.description);
 
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
 
-								rows += "<tr><td>" + poll.attachment.name.escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + String(poll.sender).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(poll.sender) + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+								rows += "<tr><td>" + String(poll.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + String(poll.sender).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(poll.sender) + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
 							}
 
 							$("#polls_table tbody").empty().append(rows);
