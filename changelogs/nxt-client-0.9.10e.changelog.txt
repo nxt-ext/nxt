@@ -1,0 +1,17 @@
+Added getAllAssets API which retrieves all Assets, and getAssets API which takes
+a multivalued "asset" parameter and returns the Assets with corresponding assetIds.
+
+Added signTransaction API which takes unsignedTransactionBytes and secretPhrase
+and returns the signed transactionBytes, transaction id, full hash, and signature
+hash. The transaction is not broadcasted.
+
+To prevent denial of service attacks, transactions that need to stay in the
+unconfirmed transactions pool, while waiting for their referenced transactions
+to arrive, will be charged 100 NXT refundable deposit. This is subtracted from
+the unconfirmed balance of the account when the transaction is accepted into the
+unconfirmed pool, and is refunded back when the transaction is either confirmed,
+or expires and is removed from the pool.
+
+Added Wesley's UI under html/ui, available by default on http://localhost:7876
+
+

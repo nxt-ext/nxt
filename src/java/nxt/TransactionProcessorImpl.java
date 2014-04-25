@@ -440,9 +440,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 transactions.add(parseTransaction((JSONObject) transactionData));
             } catch (NxtException.ValidationException e) {
-                if (! (e instanceof TransactionType.NotYetEnabledException)) {
-                    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
-                }
+                //if (! (e instanceof TransactionType.NotYetEnabledException)) {
+                //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
+                //}
             }
         }
         processTransactions(transactions, sendToPeers);
