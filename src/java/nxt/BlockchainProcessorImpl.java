@@ -34,7 +34,7 @@ import java.util.TreeSet;
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
-    private static final byte[] CHECKSUM_NQT_BLOCK = null;
+    private static final byte[] CHECKSUM_NQT_BLOCK = Constants.isTestnet ? new byte[]{-126, -117, -94, -16, 125, -94, 38, 10, 11, 37, -33, 4, -70, -8, -40, -80, 18, -21, -54, -126, 109, -73, 63, -56, 67, 59, -30, 83, -6, -91, -24, 34} : null;
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -511,11 +511,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
                                 + " is already in the blockchain", transaction);
                     }
-                    if ((transaction.getReferencedTransactionFullHash() != null
-                            && ! TransactionDb.hasTransactionByFullHash(transaction.getReferencedTransactionFullHash()))) {
-                        throw new TransactionNotAcceptedException("Missing referenced transaction "
-                                + transaction.getReferencedTransactionFullHash()
-                                + " for transaction " + transaction.getStringId(), transaction);
+                    if (transaction.getReferencedTransactionFullHash() != null) {
+                        if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
+                                || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                && !TransactionDb.hasTransactionByFullHash(transaction.getReferencedTransactionFullHash()))) {
+                            throw new TransactionNotAcceptedException("Missing referenced transaction "
+                                    + transaction.getReferencedTransactionFullHash()
+                                    + " for transaction " + transaction.getStringId(), transaction);
+                        }
                     }
                     if (! transaction.verify()) {
                         throw new TransactionNotAcceptedException("Signature verification failed for transaction "
