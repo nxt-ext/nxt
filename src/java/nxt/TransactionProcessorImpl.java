@@ -189,8 +189,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                       long amountNQT, long feeNQT, String referencedTransactionFullHash)
             throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
+        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
                 recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
+        transaction.validateAttachment();
+        return transaction;
     }
 
     @Override
