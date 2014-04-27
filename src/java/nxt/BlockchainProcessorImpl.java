@@ -593,10 +593,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private boolean popLastBlock() throws TransactionType.UndoNotSupportedException {
         try {
-            BlockImpl block;
 
             synchronized (blockchain) {
-                block = blockchain.getLastBlock();
+                BlockImpl block = blockchain.getLastBlock();
                 Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
                 if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                     return false;
@@ -610,9 +609,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 blockchain.setLastBlock(block, previousBlock);
                 transactionProcessor.undo(block);
                 BlockDb.deleteBlocksFrom(block.getId());
+                blockListeners.notify(block, Event.BLOCK_POPPED);
             } // synchronized
-
-            blockListeners.notify(block, Event.BLOCK_POPPED);
 
         } catch (RuntimeException e) {
             Logger.logMessage("Error popping last block", e);
