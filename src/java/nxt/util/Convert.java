@@ -121,39 +121,8 @@ public final class Convert {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }
 
-    public static String toNXT(long nqt) {
-        return toStringFraction(nqt, 8);
-    }
-
     public static long parseNXT(String nxt) {
         return parseStringFraction(nxt, 8, Constants.MAX_BALANCE_NXT);
-    }
-
-    /*
-    public static String toQuantityINT(long quantityQNT, byte decimals) {
-        return toStringFraction(quantityQNT, decimals);
-    }
-
-    public static long parseQuantityINT(String quantityValueINT, byte decimals) {
-        return parseStringFraction(quantityValueINT, decimals, Constants.MAX_ASSET_QUANTITY);
-    }
-    */
-
-    private static String toStringFraction(long number, int decimals) {
-        long wholePart = number / multipliers[decimals];
-        long fractionalPart = number % multipliers[decimals];
-        if (fractionalPart == 0) {
-            return String.valueOf(wholePart);
-        }
-        StringBuilder buf = new StringBuilder();
-        buf.append(wholePart);
-        buf.append('.');
-        String fractionalPartString = String.valueOf(fractionalPart);
-        for (int i = fractionalPartString.length(); i < decimals; i++) {
-            buf.append('0');
-        }
-        buf.append(fractionalPartString);
-        return buf.toString();
     }
 
     private static long parseStringFraction(String value, int decimals, long maxValue) {
@@ -176,10 +145,6 @@ public final class Convert {
             fractionalPart *= 10;
         }
         return wholePart * multipliers[decimals] + fractionalPart;
-    }
-
-    public static long multiplier(byte decimal) {
-        return multipliers[decimal];
     }
 
     // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
