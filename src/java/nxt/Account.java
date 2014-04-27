@@ -56,6 +56,7 @@ public final class Account {
     }
 
     static {
+
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -76,7 +77,7 @@ public final class Account {
                         if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
                             account.currentLeasingHeightFrom = Integer.MAX_VALUE;
                             account.currentLesseeId = null;
-                            iterator.remove();
+                            //iterator.remove();
                         } else {
                             account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
                             account.currentLeasingHeightTo = account.nextLeasingHeightTo;
@@ -90,11 +91,27 @@ public final class Account {
                                         Event.LEASE_STARTED);
                             }
                         }
+                    } else if (height == account.currentLeasingHeightTo + 1440) {
+                        //keep expired leases for up to 1440 blocks to be able to handle block pop-off
+                        iterator.remove();
                     }
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-        //TODO: BLOCK_UNDO is not handled yet
+
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                int height = block.getHeight();
+                for (Account account : leasingAccounts.values()) {
+                    if (height == account.currentLeasingHeightFrom || height == account.currentLeasingHeightTo) {
+                        // hack
+                        throw new RuntimeException("Undo of lease start or end not supported");
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
+
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
