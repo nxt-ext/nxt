@@ -321,7 +321,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             @Override
             public void notify(Block block) {
                 if (block.getHeight() % 5000 == 0) {
-                    Logger.logDebugMessage("processed block " + block.getHeight());
+                    Logger.logMessage("processed block " + block.getHeight());
                 }
             }
         }, Event.BLOCK_SCANNED);
