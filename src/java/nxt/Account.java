@@ -21,7 +21,8 @@ import java.util.concurrent.ConcurrentMap;
 public final class Account {
 
     public static enum Event {
-        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE
+        BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE,
+        LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
     }
 
     public static class AccountAsset {
@@ -38,6 +39,22 @@ public final class Account {
 
     }
 
+    public static class AccountLease {
+
+        public final Long lessorId;
+        public final Long lesseeId;
+        public final int fromHeight;
+        public final int toHeight;
+
+        private AccountLease(Long lessorId, Long lesseeId, int fromHeight, int toHeight) {
+            this.lessorId = lessorId;
+            this.lesseeId = lesseeId;
+            this.fromHeight = fromHeight;
+            this.toHeight = toHeight;
+        }
+
+    }
+
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
@@ -48,24 +65,36 @@ public final class Account {
                     Account account = iterator.next().getValue();
                     if (height == account.currentLeasingHeightFrom) {
                         Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                        leaseListeners.notify(
+                                new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
+                                Event.LEASE_STARTED);
                     } else if (height == account.currentLeasingHeightTo) {
                         Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                        leaseListeners.notify(
+                                new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
+                                Event.LEASE_ENDED);
                         if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
                             account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                            account.currentLesseeId = null;
                             iterator.remove();
                         } else {
                             account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
                             account.currentLeasingHeightTo = account.nextLeasingHeightTo;
                             account.currentLesseeId = account.nextLesseeId;
                             account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                            account.nextLesseeId = null;
                             if (height == account.currentLeasingHeightFrom) {
                                 Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                                leaseListeners.notify(
+                                        new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
+                                        Event.LEASE_STARTED);
                             }
                         }
                     }
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+        //TODO: BLOCK_UNDO is not handled yet
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -76,6 +105,8 @@ public final class Account {
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
     private static final Listeners<AccountAsset,Event> assetListeners = new Listeners<>();
+
+    private static final Listeners<AccountLease,Event> leaseListeners = new Listeners<>();
 
     public static boolean addListener(Listener<Account> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
@@ -91,6 +122,14 @@ public final class Account {
 
     public static boolean removeAssetListener(Listener<AccountAsset> listener, Event eventType) {
         return assetListeners.removeListener(listener, eventType);
+    }
+
+    public static boolean addLeaseListener(Listener<AccountLease> listener, Event eventType) {
+        return leaseListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeLeaseListener(Listener<AccountLease> listener, Event eventType) {
+        return leaseListeners.removeListener(listener, eventType);
     }
 
     public static Collection<Account> getAllAccounts() {
@@ -300,6 +339,9 @@ public final class Account {
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
                 nextLeasingHeightFrom = Integer.MAX_VALUE;
+                leaseListeners.notify(
+                        new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
+                        Event.LEASE_SCHEDULED);
 
             } else {
 
@@ -309,6 +351,9 @@ public final class Account {
                 }
                 nextLeasingHeightTo = nextLeasingHeightFrom + period;
                 nextLesseeId = lesseeId;
+                leaseListeners.notify(
+                        new AccountLease(this.getId(), lesseeId, nextLeasingHeightFrom, nextLeasingHeightTo),
+                        Event.LEASE_SCHEDULED);
 
             }
         }
