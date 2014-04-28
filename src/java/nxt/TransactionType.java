@@ -374,7 +374,7 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 // can't tell whether Alias existed before and what was its previous uri
-                throw new UndoNotSupportedException(transaction, "Reversal of alias assignment not supported");
+                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
             }
 
             @Override
@@ -486,7 +486,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of poll creation not supported");
+                throw new UndoNotSupportedException("Reversal of poll creation not supported");
             }
 
             @Override
@@ -554,7 +554,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of vote casting not supported");
+                throw new UndoNotSupportedException("Reversal of vote casting not supported");
             }
 
             @Override
@@ -712,7 +712,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Undoing account info not supported");
+                throw new UndoNotSupportedException("Undoing account info not supported");
             }
 
         };
@@ -1003,7 +1003,7 @@ public abstract class TransactionType {
                 if (askOrder == null || askOrder.getQuantityQNT() != attachment.getQuantityQNT()
                         || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
-                    throw new UndoNotSupportedException(transaction, "Ask order already filled");
+                    throw new UndoNotSupportedException("Ask order already filled");
                 }
             }
 
@@ -1069,7 +1069,7 @@ public abstract class TransactionType {
                 if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT()
                         || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
-                    throw new UndoNotSupportedException(transaction, "Bid order already filled");
+                    throw new UndoNotSupportedException("Bid order already filled");
                 }
             }
 
@@ -1119,7 +1119,7 @@ public abstract class TransactionType {
 
             @Override
             final void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of order cancellation not supported");
+                throw new UndoNotSupportedException("Reversal of order cancellation not supported");
             }
 
             @Override
@@ -1385,7 +1385,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods price change not supported");
+                throw new UndoNotSupportedException("Reversal of digital goods price change not supported");
             }
 
             @Override
@@ -1430,7 +1430,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods quantity change not supported");
+                throw new UndoNotSupportedException("Reversal of digital goods quantity change not supported");
             }
 
             @Override
@@ -1782,7 +1782,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of effective balance leasing not supported");
+                throw new UndoNotSupportedException("Reversal of effective balance leasing not supported");
             }
 
             @Override
@@ -1804,15 +1804,8 @@ public abstract class TransactionType {
 
     public static final class UndoNotSupportedException extends NxtException {
 
-        private final Transaction transaction;
-
-        UndoNotSupportedException(Transaction transaction, String message) {
+        UndoNotSupportedException(String message) {
             super(message);
-            this.transaction = transaction;
-        }
-
-        public Transaction getTransaction() {
-            return transaction;
         }
 
     }
