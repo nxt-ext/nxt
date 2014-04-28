@@ -3,24 +3,14 @@ Running the Nxt software:
 Dependencies: Java 7 or later needs to be installed first. Only the Oracle JVM
 has been tested and supported.
 
-Windows:
-
-.....
-
-Mac:
-
-.....
-
-Linux:
-
 There is no installation needed. Unpack the nxt-client.zip package and open a
-shell in the resulting nxt directory. Execute the run.sh script. This will start
-a java server process, which will start logging its activities to the console.
-The initialization takes a few seconds. When it is ready, you should see the
-message "Nxt server 1.0.0 started successfully". Open a browser, without
-stopping the java process, and go to http://localhost:7876 , where the Nxt UI
-should now be available. To stop the application, type Ctrl-C inside the console
-window.
+shell in the resulting nxt directory. Execute the run.sh script if using Linux,
+or run.bat if using Windows. This will start a java server process, which will
+begin logging its activities to the console. The initialization takes a few
+seconds. When it is ready, you should see the message "Nxt server 1.0.0 started
+successfully". Open a browser, without stopping the java process, and go to
+http://localhost:7876 , where the Nxt UI should now be available. To stop the
+application, type Ctrl-C inside the console window.
 
 
 Customization:
