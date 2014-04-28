@@ -189,8 +189,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                       long amountNQT, long feeNQT, String referencedTransactionFullHash)
             throws NxtException.ValidationException {
-        return new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
+        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
                 recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
+        transaction.validateAttachment();
+        return transaction;
     }
 
     @Override
@@ -440,9 +442,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 transactions.add(parseTransaction((JSONObject) transactionData));
             } catch (NxtException.ValidationException e) {
-                if (! (e instanceof TransactionType.NotYetEnabledException)) {
-                    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
-                }
+                //if (! (e instanceof TransactionType.NotYetEnabledException)) {
+                //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
+                //}
             }
         }
         processTransactions(transactions, sendToPeers);

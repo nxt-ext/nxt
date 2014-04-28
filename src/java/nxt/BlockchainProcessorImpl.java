@@ -108,6 +108,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Long currentBlockId = commonBlockId;
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
+                    outer:
                     while (true) {
 
                         JSONArray nextBlocks = getNextBlocks(peer, currentBlockId);
@@ -123,8 +124,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     block = parseBlock(blockData);
                                 } catch (NxtException.ValidationException e) {
-                                    peer.blacklist(e);
-                                    return;
+                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage());
+                                    break outer;
                                 }
                                 currentBlockId = block.getId();
 
@@ -322,7 +323,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             @Override
             public void notify(Block block) {
                 if (block.getHeight() % 5000 == 0) {
-                    Logger.logDebugMessage("processed block " + block.getHeight());
+                    Logger.logMessage("processed block " + block.getHeight());
                 }
             }
         }, Event.BLOCK_SCANNED);
@@ -593,10 +594,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private boolean popLastBlock() throws TransactionType.UndoNotSupportedException {
         try {
-            BlockImpl block;
 
             synchronized (blockchain) {
-                block = blockchain.getLastBlock();
+                BlockImpl block = blockchain.getLastBlock();
                 Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
                 if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
                     return false;
@@ -610,13 +610,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 blockchain.setLastBlock(block, previousBlock);
                 transactionProcessor.undo(block);
                 BlockDb.deleteBlocksFrom(block.getId());
+                blockListeners.notify(block, Event.BLOCK_POPPED);
             } // synchronized
 
-            blockListeners.notify(block, Event.BLOCK_POPPED);
-
         } catch (RuntimeException e) {
-            Logger.logMessage("Error popping last block", e);
-            return false;
+            Logger.logDebugMessage("Error popping last block: " + e.getMessage());
+            throw new TransactionType.UndoNotSupportedException(e.getMessage());
         }
         return true;
     }
@@ -641,14 +640,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         int blockTimestamp = Convert.getEpochTime();
 
-        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH) {
+        int maxPayloadLength = Constants.MAX_NUMBER_OF_TRANSACTIONS *
+                (blockchain.getLastBlock().getHeight() < Constants.NQT_BLOCK ? 128 : 160);
+        while (payloadLength <= maxPayloadLength) {
 
             int prevNumberOfNewTransactions = newTransactions.size();
 
             for (TransactionImpl transaction : sortedTransactions) {
 
                 int transactionLength = transaction.getSize();
-                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > maxPayloadLength) {
                     continue;
                 }
 
@@ -740,7 +741,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
-            Logger.logDebugMessage("Removing invalid transaction" + transaction);
+            Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
             transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());

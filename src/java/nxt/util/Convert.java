@@ -3,6 +3,7 @@ package nxt.util;
 import nxt.Constants;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
 
 public final class Convert {
@@ -52,7 +53,7 @@ public final class Convert {
 
     public static Long parseUnsignedLong(String number) {
         if (number == null) {
-            throw new IllegalArgumentException("trying to parse null");
+            return null;
         }
         BigInteger bigInt = new BigInteger(number.trim());
         if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
@@ -62,6 +63,9 @@ public final class Convert {
     }
 
     public static Long fullHashToId(byte[] hash) {
+        if (hash == null || hash.length < 8) {
+            throw new IllegalArgumentException("Invalid hash: " + Arrays.toString(hash));
+        }
         BigInteger bigInteger = new BigInteger(1, new byte[] {hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0]});
         return bigInteger.longValue();
     }
@@ -117,39 +121,8 @@ public final class Convert {
         return s == null ? replaceNull : s.length() > limit ? (s.substring(0, dots ? limit - 3 : limit) + (dots ? "..." : "")) : s;
     }
 
-    public static String toNXT(long nqt) {
-        return toStringFraction(nqt, 8);
-    }
-
     public static long parseNXT(String nxt) {
         return parseStringFraction(nxt, 8, Constants.MAX_BALANCE_NXT);
-    }
-
-    /*
-    public static String toQuantityINT(long quantityQNT, byte decimals) {
-        return toStringFraction(quantityQNT, decimals);
-    }
-
-    public static long parseQuantityINT(String quantityValueINT, byte decimals) {
-        return parseStringFraction(quantityValueINT, decimals, Constants.MAX_ASSET_QUANTITY);
-    }
-    */
-
-    private static String toStringFraction(long number, int decimals) {
-        long wholePart = number / multipliers[decimals];
-        long fractionalPart = number % multipliers[decimals];
-        if (fractionalPart == 0) {
-            return String.valueOf(wholePart);
-        }
-        StringBuilder buf = new StringBuilder();
-        buf.append(wholePart);
-        buf.append('.');
-        String fractionalPartString = String.valueOf(fractionalPart);
-        for (int i = fractionalPartString.length(); i < decimals; i++) {
-            buf.append('0');
-        }
-        buf.append(fractionalPartString);
-        return buf.toString();
     }
 
     private static long parseStringFraction(String value, int decimals, long maxValue) {
@@ -172,10 +145,6 @@ public final class Convert {
             fractionalPart *= 10;
         }
         return wholePart * multipliers[decimals] + fractionalPart;
-    }
-
-    public static long multiplier(byte decimal) {
-        return multipliers[decimal];
     }
 
     // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
