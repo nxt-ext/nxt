@@ -108,6 +108,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Long currentBlockId = commonBlockId;
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
+                    outer:
                     while (true) {
 
                         JSONArray nextBlocks = getNextBlocks(peer, currentBlockId);
@@ -123,8 +124,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     block = parseBlock(blockData);
                                 } catch (NxtException.ValidationException e) {
-                                    peer.blacklist(e);
-                                    return;
+                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage());
+                                    break outer;
                                 }
                                 currentBlockId = block.getId();
 
