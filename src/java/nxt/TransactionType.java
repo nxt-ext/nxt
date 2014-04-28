@@ -320,9 +320,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ARBITRARY_MESSAGES_BLOCK) {
-                    throw new NotYetEnabledException("Arbitrary messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0 || attachment.getMessage().length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid arbitrary message: " + attachment.getJSONObject());
@@ -377,7 +374,7 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 // can't tell whether Alias existed before and what was its previous uri
-                throw new UndoNotSupportedException(transaction, "Reversal of alias assignment not supported");
+                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
             }
 
             @Override
@@ -393,9 +390,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_SYSTEM_BLOCK) {
-                    throw new NotYetEnabledException("Aliases not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || attachment.getAliasName().length() == 0
@@ -492,7 +486,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of poll creation not supported");
+                throw new UndoNotSupportedException("Reversal of poll creation not supported");
             }
 
             @Override
@@ -560,7 +554,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of vote casting not supported");
+                throw new UndoNotSupportedException("Reversal of vote casting not supported");
             }
 
             @Override
@@ -642,7 +636,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_7) {
                     throw new NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement)transaction.getAttachment();
@@ -721,7 +715,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Undoing account info not supported");
+                throw new UndoNotSupportedException("Undoing account info not supported");
             }
 
         };
@@ -1012,7 +1006,7 @@ public abstract class TransactionType {
                 if (askOrder == null || askOrder.getQuantityQNT() != attachment.getQuantityQNT()
                         || ! askOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
-                    throw new UndoNotSupportedException(transaction, "Ask order already filled");
+                    throw new UndoNotSupportedException("Ask order already filled");
                 }
             }
 
@@ -1078,7 +1072,7 @@ public abstract class TransactionType {
                 if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT()
                         || ! bidOrder.getAssetId().equals(attachment.getAssetId())) {
                     //undoing of partially filled orders not supported yet
-                    throw new UndoNotSupportedException(transaction, "Bid order already filled");
+                    throw new UndoNotSupportedException("Bid order already filled");
                 }
             }
 
@@ -1128,7 +1122,7 @@ public abstract class TransactionType {
 
             @Override
             final void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of order cancellation not supported");
+                throw new UndoNotSupportedException("Reversal of order cancellation not supported");
             }
 
             @Override
@@ -1394,7 +1388,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods price change not supported");
+                throw new UndoNotSupportedException("Reversal of digital goods price change not supported");
             }
 
             @Override
@@ -1439,7 +1433,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of digital goods quantity change not supported");
+                throw new UndoNotSupportedException("Reversal of digital goods quantity change not supported");
             }
 
             @Override
@@ -1791,7 +1785,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException(transaction, "Reversal of effective balance leasing not supported");
+                throw new UndoNotSupportedException("Reversal of effective balance leasing not supported");
             }
 
             @Override
@@ -1816,15 +1810,8 @@ public abstract class TransactionType {
 
     public static final class UndoNotSupportedException extends NxtException {
 
-        private final Transaction transaction;
-
-        UndoNotSupportedException(Transaction transaction, String message) {
+        UndoNotSupportedException(String message) {
             super(message);
-            this.transaction = transaction;
-        }
-
-        public Transaction getTransaction() {
-            return transaction;
         }
 
     }
