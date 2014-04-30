@@ -18,7 +18,7 @@ public final class DigitalGoodsStore {
             public void notify(Block block) {
                 for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
                     Purchase purchase = pendingPurchaseEntry.getValue();
-                    if (block.getTimestamp() > purchase.getDeliveryDeadline()) {
+                    if (block.getTimestamp() > purchase.getDeliveryDeadlineTimestamp()) {
                         Account buyer = Account.getAccount(purchase.getBuyerId());
                         buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                         getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
@@ -35,8 +35,8 @@ public final class DigitalGoodsStore {
                 Block previousBlock = Nxt.getBlockchain().getLastBlock();
                 for (Map.Entry<Long, Purchase> purchaseEntry : purchases.entrySet()) {
                     Purchase purchase = purchaseEntry.getValue();
-                    if (block.getTimestamp() > purchase.getDeliveryDeadline()
-                            && previousBlock.getTimestamp() <= purchase.getDeliveryDeadline()) {
+                    if (block.getTimestamp() > purchase.getDeliveryDeadlineTimestamp()
+                            && previousBlock.getTimestamp() <= purchase.getDeliveryDeadlineTimestamp()) {
                         Account buyer = Account.getAccount(purchase.getBuyerId());
                         buyer.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                         getGoods(purchase.getGoodsId()).changeQuantity(- purchase.getQuantity());
@@ -125,17 +125,18 @@ public final class DigitalGoodsStore {
         private final Long sellerId;
         private final int quantity;
         private final long priceNQT;
-        private final int deliveryDeadline;
+        private final int deliveryDeadlineTimestamp;
         private final XoredData note;
 
-        private Purchase(Long id, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+        private Purchase(Long id, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
+                         int deliveryDeadlineTimestamp, XoredData note) {
             this.id = id;
             this.buyerId = buyerId;
             this.goodsId = goodsId;
             this.sellerId = sellerId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
-            this.deliveryDeadline = deliveryDeadline;
+            this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
             this.note = note;
         }
 
@@ -161,8 +162,8 @@ public final class DigitalGoodsStore {
             return priceNQT;
         }
 
-        public int getDeliveryDeadline() {
-            return deliveryDeadline;
+        public int getDeliveryDeadlineTimestamp() {
+            return deliveryDeadlineTimestamp;
         }
 
         public XoredData getNote() {
@@ -197,8 +198,9 @@ public final class DigitalGoodsStore {
     }
 
     private static void addPurchase(Long purchaseId, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
-                                   int deliveryDeadline, XoredData note) {
-        Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT, deliveryDeadline, note);
+                                   int deliveryDeadlineTimestamp, XoredData note) {
+        Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT,
+                deliveryDeadlineTimestamp, note);
         purchases.put(purchaseId, purchase);
         pendingPurchases.put(purchaseId, purchase);
     }
@@ -254,12 +256,13 @@ public final class DigitalGoodsStore {
     }
 
     static void purchase(Long purchaseId, Long buyerId, Long goodsId, int quantity, long priceNQT,
-                                int deliveryDeadline, XoredData note) {
+                                int deliveryDeadlineTimestamp, XoredData note) {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
-                && deliveryDeadline > Nxt.getBlockchain().getLastBlock().getHeight()) {
+                && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getHeight()) {
             goods.changeQuantity(-quantity);
-            addPurchase(purchaseId, buyerId, goodsId, goods.getSellerId(), quantity, priceNQT, deliveryDeadline, note);
+            addPurchase(purchaseId, buyerId, goodsId, goods.getSellerId(), quantity, priceNQT,
+                    deliveryDeadlineTimestamp, note);
         } else {
             Account buyer = Account.getAccount(buyerId);
             buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(quantity, priceNQT));

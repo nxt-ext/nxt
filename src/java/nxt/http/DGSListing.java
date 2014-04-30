@@ -29,8 +29,8 @@ public final class DGSListing extends CreateTransaction {
         String name = Convert.emptyToNull(req.getParameter("name"));
         String description = Convert.emptyToNull(req.getParameter("description"));
         String tags = Convert.emptyToNull(req.getParameter("tags"));
-        String quantityString = Convert.emptyToNull(req.getParameter("quantity"));
         long priceNQT = ParameterParser.getPriceNQT(req);
+        int quantity = ParameterParser.getGoodsQuantity(req);
 
         if (name == null) {
             return MISSING_NAME;
@@ -46,16 +46,6 @@ public final class DGSListing extends CreateTransaction {
 
         if (tags != null && tags.length() > Constants.MAX_DGS_LISTING_TAGS_LENGTH) {
             return INCORRECT_DGS_LISTING_TAGS;
-        }
-
-        int quantity;
-        try {
-            quantity = Integer.parseInt(quantityString);
-            if (quantity < 0 || quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
-                return INCORRECT_QUANTITY;
-            }
-        } catch (NumberFormatException e) {
-            return INCORRECT_QUANTITY;
         }
 
         Account account = ParameterParser.getSenderAccount(req);

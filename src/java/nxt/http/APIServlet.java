@@ -62,8 +62,12 @@ public final class APIServlet extends HttpServlet {
         map.put("createPoll", CreatePoll.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
+        map.put("dgsDelivery", DGSDelivery.instance);
+        map.put("dgsFeedback", DGSFeedback.instance);
         map.put("dgsPriceChange", DGSPriceChange.instance);
+        map.put("dgsPurchase", DGSPurchase.instance);
         map.put("dgsQuantityChange", DGSQuantityChange.instance);
+        map.put("dgsRefund", DGSRefund.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("generateToken", GenerateToken.instance);

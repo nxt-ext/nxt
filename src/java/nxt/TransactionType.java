@@ -1480,11 +1480,12 @@ public abstract class TransactionType {
                 Long goodsId = (Long)attachmentData.get("goods");
                 int quantity = ((Long)attachmentData.get("quantity")).intValue();
                 long priceNQT = (Long)attachmentData.get("priceNQT");
-                int deliveryDeadline = ((Long)attachmentData.get("deliveryDeadline")).intValue();
+                int deliveryDeadlineTimestamp = ((Long)attachmentData.get("deliveryDeadlineTimestamp")).intValue();
                 XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")),
                         Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
-                transaction.setAttachment(new Attachment.DigitalGoodsPurchase(goodsId, quantity, priceNQT, deliveryDeadline, note));
+                transaction.setAttachment(new Attachment.DigitalGoodsPurchase(goodsId, quantity, priceNQT,
+                        deliveryDeadlineTimestamp, note));
             }
 
             @Override
@@ -1515,7 +1516,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
                 DigitalGoodsStore.purchase(transaction.getId(), transaction.getSenderId(), attachment.getGoodsId(),
-                        attachment.getQuantity(), attachment.getPriceNQT(), attachment.getDeliveryDeadline(), attachment.getNote());
+                        attachment.getQuantity(), attachment.getPriceNQT(), attachment.getDeliveryDeadlineTimestamp(), attachment.getNote());
             }
 
             @Override
@@ -1536,7 +1537,7 @@ public abstract class TransactionType {
                         || goods == null || goods.isDelisted()
                         || attachment.getQuantity() > goods.getQuantity()
                         || attachment.getPriceNQT() != goods.getPriceNQT()
-                        || attachment.getDeliveryDeadline() <= Nxt.getBlockchain().getLastBlock().getTimestamp()) {
+                        || attachment.getDeliveryDeadlineTimestamp() <= Nxt.getBlockchain().getLastBlock().getTimestamp()) {
                     throw new NxtException.ValidationException("Invalid digital goods purchase: " + attachment.getJSONObject());
                 }
             }
@@ -1552,7 +1553,7 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long purchaseId = buffer.getLong();
                 int goodsBytesLength = buffer.getShort();
-                if (goodsBytesLength > Constants.MAX_DGS_LENGTH) {
+                if (goodsBytesLength > Constants.MAX_DGS_GOODS_LENGTH) {
                     throw new NxtException.ValidationException("Invalid goods length: " + goodsBytesLength);
                 }
                 byte[] goodsBytes = new byte[goodsBytesLength];
@@ -1567,7 +1568,7 @@ public abstract class TransactionType {
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
-                XoredData goods = new XoredData(Convert.parseHexString((String)attachmentData.get("goods")),
+                XoredData goods = new XoredData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                         Convert.parseHexString((String)attachmentData.get("goodsNonce")));
                 long discountNQT = (Long)attachmentData.get("discountNQT");
 
@@ -1590,7 +1591,7 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPendingPurchase(attachment.getPurchaseId());
-                if (attachment.getGoods().getData().length > Constants.MAX_DGS_LENGTH
+                if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null

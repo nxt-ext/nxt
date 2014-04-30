@@ -3,7 +3,9 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Constants;
+import nxt.DigitalGoodsStore;
 import nxt.crypto.Crypto;
+import nxt.crypto.XoredData;
 import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,11 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE;
+import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE_NONCE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
 import static nxt.http.JSONResponses.INCORRECT_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
+import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
@@ -26,6 +31,7 @@ import static nxt.http.JSONResponses.MISSING_FEE;
 import static nxt.http.JSONResponses.MISSING_GOODS;
 import static nxt.http.JSONResponses.MISSING_ORDER;
 import static nxt.http.JSONResponses.MISSING_PRICE;
+import static nxt.http.JSONResponses.MISSING_PURCHASE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
@@ -141,6 +147,57 @@ final class ParameterParser {
             return Convert.parseUnsignedLong(goodsValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_GOODS);
+        }
+    }
+
+    static int getGoodsQuantity(HttpServletRequest req) throws ParameterException {
+        String quantityString = Convert.emptyToNull(req.getParameter("quantity"));
+        try {
+            int quantity = Integer.parseInt(quantityString);
+            if (quantity < 0 || quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
+                throw new ParameterException(INCORRECT_QUANTITY);
+            }
+            return quantity;
+        } catch (NumberFormatException e) {
+            throw new ParameterException(INCORRECT_QUANTITY);
+        }
+    }
+
+    static XoredData getNote(HttpServletRequest req) throws ParameterException {
+        byte[] noteData;
+        try {
+            noteData = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("note")));
+            if (noteData.length > Constants.MAX_DGS_NOTE_LENGTH) {
+                throw new ParameterException(INCORRECT_DGS_NOTE);
+            }
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_DGS_NOTE);
+        }
+        byte[] noteNonce;
+        try {
+            noteNonce = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("noteNonce")));
+            if (noteNonce.length != 32) {
+                throw new ParameterException(INCORRECT_DGS_NOTE_NONCE);
+            }
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_DGS_NOTE_NONCE);
+        }
+        return new XoredData(noteData, noteNonce);
+    }
+
+    static DigitalGoodsStore.Purchase getPurchase(HttpServletRequest req) throws ParameterException {
+        String purchaseIdString = Convert.emptyToNull(req.getParameter("purchase"));
+        if (purchaseIdString == null) {
+            throw new ParameterException(MISSING_PURCHASE);
+        }
+        try {
+            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(Convert.parseUnsignedLong(purchaseIdString));
+            if (purchase == null) {
+                throw new ParameterException(INCORRECT_PURCHASE);
+            }
+            return purchase;
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PURCHASE);
         }
     }
 

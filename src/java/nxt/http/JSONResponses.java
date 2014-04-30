@@ -104,6 +104,18 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_GOODS = unknown("goods");
     public static final JSONStreamAware INCORRECT_DELTA_QUANTITY = incorrect("deltaQuantity");
     public static final JSONStreamAware MISSING_DELTA_QUANTITY = missing("deltaQuantity");
+    public static final JSONStreamAware MISSING_DELIVERY_DEADLINE_TIMESTAMP = missing("deliveryDeadlineTimestamp");
+    public static final JSONStreamAware INCORRECT_DELIVERY_DEADLINE_TIMESTAMP = incorrect("deliveryDeadlineTimestamp");
+    public static final JSONStreamAware INCORRECT_PURCHASE_QUANTITY = incorrect("quantity", "(quantity exceeds available goods quantity)");
+    public static final JSONStreamAware INCORRECT_PURCHASE_PRICE = incorrect("priceNQT", "(purchase price doesn't match goods price)");
+    public static final JSONStreamAware INCORRECT_DGS_NOTE = incorrect("note");
+    public static final JSONStreamAware INCORRECT_DGS_NOTE_NONCE = incorrect("noteNonce");
+    public static final JSONStreamAware INCORRECT_PURCHASE = incorrect("purchase");
+    public static final JSONStreamAware MISSING_PURCHASE = missing("purchase");
+    public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("goodsData");
+    public static final JSONStreamAware INCORRECT_DGS_GOODS_NONCE = incorrect("goodsNonce");
+    public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
+    public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

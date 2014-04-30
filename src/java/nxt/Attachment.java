@@ -1010,14 +1010,14 @@ public interface Attachment {
         private final Long goodsId;
         private final int quantity;
         private final long priceNQT;
-        private final int deliveryDeadline;
+        private final int deliveryDeadlineTimestamp;
         private final XoredData note;
 
-        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp, XoredData note) {
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
-            this.deliveryDeadline = deliveryDeadline;
+            this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
             this.note = note;
         }
 
@@ -1034,7 +1034,7 @@ public interface Attachment {
                 buffer.putLong(goodsId);
                 buffer.putInt(quantity);
                 buffer.putLong(priceNQT);
-                buffer.putInt(deliveryDeadline);
+                buffer.putInt(deliveryDeadlineTimestamp);
                 buffer.putShort((short)note.getData().length);
                 buffer.put(note.getData());
                 buffer.put(note.getNonce());
@@ -1051,7 +1051,7 @@ public interface Attachment {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("quantity", quantity);
             attachment.put("priceNQT", priceNQT);
-            attachment.put("deliveryDeadline", deliveryDeadline);
+            attachment.put("deliveryDeadlineTimestamp", deliveryDeadlineTimestamp);
             attachment.put("note", Convert.toHexString(note.getData()));
             attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
@@ -1068,7 +1068,7 @@ public interface Attachment {
 
         public long getPriceNQT() { return priceNQT; }
 
-        public int getDeliveryDeadline() { return deliveryDeadline; }
+        public int getDeliveryDeadlineTimestamp() { return deliveryDeadlineTimestamp; }
 
         public XoredData getNote() { return note; }
 
@@ -1114,7 +1114,7 @@ public interface Attachment {
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            attachment.put("goods", Convert.toHexString(goods.getData()));
+            attachment.put("goodsData", Convert.toHexString(goods.getData()));
             attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
             attachment.put("discountNQT", discountNQT);
             return attachment;
