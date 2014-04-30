@@ -2,7 +2,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
-import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
 import nxt.crypto.XoredData;
@@ -12,8 +11,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_DELIVERY_DEADLINE_TIMESTAMP;
-import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE;
-import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE_NONCE;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE_PRICE;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_DELIVERY_DEADLINE_TIMESTAMP;
@@ -31,9 +28,21 @@ public final class DGSPurchase extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Long goodsId = ParameterParser.getGoodsId(req);
+        DigitalGoodsStore.Goods goods = ParameterParser.getGoods(req);
+        if (goods.isDelisted()) {
+            return UNKNOWN_GOODS;
+        }
+
         int quantity = ParameterParser.getGoodsQuantity(req);
+        if (quantity > goods.getQuantity()) {
+            return INCORRECT_PURCHASE_QUANTITY;
+        }
+
         long priceNQT = ParameterParser.getPriceNQT(req);
+        if (priceNQT != goods.getPriceNQT()) {
+            return INCORRECT_PURCHASE_PRICE;
+        }
+
         XoredData note = ParameterParser.getNote(req);
         Account buyerAccount = ParameterParser.getSenderAccount(req);
 
@@ -51,18 +60,7 @@ public final class DGSPurchase extends CreateTransaction {
             return INCORRECT_DELIVERY_DEADLINE_TIMESTAMP;
         }
 
-        DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(goodsId);
-        if (goods == null || goods.isDelisted()) {
-            return UNKNOWN_GOODS;
-        }
-        if (quantity > goods.getQuantity()) {
-            return INCORRECT_PURCHASE_QUANTITY;
-        }
-        if (priceNQT != goods.getPriceNQT()) {
-            return INCORRECT_PURCHASE_PRICE;
-        }
-
-        Attachment attachment = new Attachment.DigitalGoodsPurchase(goodsId, quantity, priceNQT, deliveryDeadline, note);
+        Attachment attachment = new Attachment.DigitalGoodsPurchase(goods.getId(), quantity, priceNQT, deliveryDeadline, note);
         return createTransaction(req, buyerAccount, attachment);
 
     }

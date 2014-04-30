@@ -37,6 +37,7 @@ import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
+import static nxt.http.JSONResponses.UNKNOWN_GOODS;
 
 final class ParameterParser {
 
@@ -138,13 +139,19 @@ final class ParameterParser {
         }
     }
 
-    static Long getGoodsId(HttpServletRequest req) throws ParameterException {
+    static DigitalGoodsStore.Goods getGoods(HttpServletRequest req) throws ParameterException {
         String goodsValue = Convert.emptyToNull(req.getParameter("goods"));
         if (goodsValue == null) {
             throw new ParameterException(MISSING_GOODS);
         }
+        DigitalGoodsStore.Goods goods;
         try {
-            return Convert.parseUnsignedLong(goodsValue);
+            Long goodsId = Convert.parseUnsignedLong(goodsValue);
+            goods = DigitalGoodsStore.getGoods(goodsId);
+            if (goods == null) {
+                throw new ParameterException(UNKNOWN_GOODS);
+            }
+            return goods;
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_GOODS);
         }
@@ -263,6 +270,24 @@ final class ParameterParser {
         }
         try {
             return Convert.parseUnsignedLong(recipientValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
+    }
+
+    static Long getSellerId(HttpServletRequest req) throws ParameterException {
+        String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
+        try {
+            return Convert.parseUnsignedLong(sellerIdValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
+    }
+
+    static Long getBuyerId(HttpServletRequest req) throws ParameterException {
+        String buyerIdValue = Convert.emptyToNull(req.getParameter("buyer"));
+        try {
+            return Convert.parseUnsignedLong(buyerIdValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }

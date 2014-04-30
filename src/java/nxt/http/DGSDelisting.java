@@ -20,16 +20,13 @@ public final class DGSDelisting extends CreateTransaction {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-
         Account account = ParameterParser.getSenderAccount(req);
-        Long goodsId = ParameterParser.getGoodsId(req);
-        DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(goodsId);
-        if (goods == null || goods.isDelisted() || !goods.getSellerId().equals(account.getId())) {
+        DigitalGoodsStore.Goods goods = ParameterParser.getGoods(req);
+        if (goods.isDelisted() || !goods.getSellerId().equals(account.getId())) {
             return UNKNOWN_GOODS;
         }
-        Attachment attachment = new Attachment.DigitalGoodsDelisting(goodsId);
+        Attachment attachment = new Attachment.DigitalGoodsDelisting(goods.getId());
         return createTransaction(req, account, attachment);
-
     }
 
 }

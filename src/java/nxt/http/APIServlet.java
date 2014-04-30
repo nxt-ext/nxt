@@ -88,6 +88,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
         map.put("getConstants", GetConstants.instance);
+        map.put("getDGSGoods", GetDGSGoods.instance);
+        map.put("getDGSGood", GetDGSGood.instance);
+        map.put("getDGSPurchases", GetDGSPurchases.instance);
+        map.put("getDGSPurchase", GetDGSPurchase.instance);
+        map.put("getPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         if (Constants.isTestnet) {

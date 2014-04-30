@@ -20,17 +20,14 @@ public final class DGSPriceChange extends CreateTransaction {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-
         Account account = ParameterParser.getSenderAccount(req);
-        Long goodsId = ParameterParser.getGoodsId(req);
+        DigitalGoodsStore.Goods goods = ParameterParser.getGoods(req);
         long priceNQT = ParameterParser.getPriceNQT(req);
-        DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(goodsId);
-        if (goods == null || goods.isDelisted() || ! goods.getSellerId().equals(account.getId())) {
+        if (goods.isDelisted() || ! goods.getSellerId().equals(account.getId())) {
             return UNKNOWN_GOODS;
         }
-        Attachment attachment = new Attachment.DigitalGoodsPriceChange(goodsId, priceNQT);
+        Attachment attachment = new Attachment.DigitalGoodsPriceChange(goods.getId(), priceNQT);
         return createTransaction(req, account, attachment);
-
     }
 
 }

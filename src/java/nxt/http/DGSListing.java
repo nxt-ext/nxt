@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_DGS_LISTING_DESCRIPTION;
 import static nxt.http.JSONResponses.INCORRECT_DGS_LISTING_NAME;
 import static nxt.http.JSONResponses.INCORRECT_DGS_LISTING_TAGS;
-import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_NAME;
 
 public final class DGSListing extends CreateTransaction {

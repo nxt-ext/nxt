@@ -26,7 +26,11 @@ public final class DGSQuantityChange extends CreateTransaction {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Account account = ParameterParser.getSenderAccount(req);
-        Long goodsId = ParameterParser.getGoodsId(req);
+        DigitalGoodsStore.Goods goods = ParameterParser.getGoods(req);
+        if (goods.isDelisted() || ! goods.getSellerId().equals(account.getId())) {
+            return UNKNOWN_GOODS;
+        }
+
         int deltaQuantity;
         try {
             String deltaQuantityString = Convert.emptyToNull(req.getParameter("deltaQuantity"));
@@ -40,11 +44,8 @@ public final class DGSQuantityChange extends CreateTransaction {
         } catch (NumberFormatException e) {
             return INCORRECT_DELTA_QUANTITY;
         }
-        DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(goodsId);
-        if (goods == null || goods.isDelisted() || ! goods.getSellerId().equals(account.getId())) {
-            return UNKNOWN_GOODS;
-        }
-        Attachment attachment = new Attachment.DigitalGoodsQuantityChange(goodsId, deltaQuantity);
+
+        Attachment attachment = new Attachment.DigitalGoodsQuantityChange(goods.getId(), deltaQuantity);
         return createTransaction(req, account, attachment);
 
     }
