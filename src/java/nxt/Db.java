@@ -25,6 +25,13 @@ public final class Db {
         cp = JdbcConnectionPool.create(dbUrl, "sa", "sa");
         cp.setMaxConnections(Nxt.getIntProperty("nxt.maxDbConnections"));
         cp.setLoginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout"));
+        int defaultLockTimeout = Nxt.getIntProperty("nxt.dbDefaultLockTimeout") * 1000;
+        try (Connection con = cp.getConnection();
+             Statement stmt = con.createStatement()) {
+            stmt.executeUpdate("SET DEFAULT_LOCK_TIMEOUT " + defaultLockTimeout);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
         DbVersion.init();
     }
 
