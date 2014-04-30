@@ -69,6 +69,18 @@ public final class DebugTrace {
                 debugTrace.trace(accountAsset, true);
             }
         }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
+        Account.addLeaseListener(new Listener<Account.AccountLease>() {
+            @Override
+            public void notify(Account.AccountLease accountLease) {
+                debugTrace.trace(accountLease, true);
+            }
+        }, Account.Event.LEASE_STARTED);
+        Account.addLeaseListener(new Listener<Account.AccountLease>() {
+            @Override
+            public void notify(Account.AccountLease accountLease) {
+                debugTrace.trace(accountLease, false);
+            }
+        }, Account.Event.LEASE_ENDED);
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -95,7 +107,7 @@ public final class DebugTrace {
             "transaction amount", "transaction fee", "generation fee",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity", "transaction", "timestamp"};
+            "asset quantity", "transaction", "lessee", "lessor guaranteed balance", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -155,10 +167,23 @@ public final class DebugTrace {
         log(getValues(accountAsset.accountId, accountAsset, unconfirmed));
     }
 
+    private void trace(Account.AccountLease accountLease, boolean start) {
+        if (! include(accountLease.lesseeId) && ! include(accountLease.lessorId)) {
+            return;
+        }
+        log(getValues(accountLease.lessorId, accountLease, start));
+    }
+
     private void trace(Block block, boolean isUndo) {
         Long generatorId = block.getGeneratorId();
         if (include(generatorId)) {
             log(getValues(generatorId, block, isUndo));
+            long fee = block.getTotalFeeNQT();
+            if (fee != 0) {
+                for (Long lessorId : Account.getAccount(generatorId).getLeaserIds()) {
+                    log(lessorGuaranteedBalance(lessorId));
+                }
+            }
         }
         for (Transaction transaction : block.getTransactions()) {
             Long senderId = transaction.getSenderId();
@@ -172,6 +197,17 @@ public final class DebugTrace {
                 log(getValues(recipientId, transaction, transaction.getAttachment(), true, isUndo));
             }
         }
+    }
+
+    private Map<String,String> lessorGuaranteedBalance(Long accountId) {
+        Map<String,String> map = new HashMap<>();
+        map.put("account", Convert.toUnsignedLong(accountId));
+        Account account = Account.getAccount(accountId);
+        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
+        map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+        map.put("event", "lessor guaranteed balance");
+        return map;
     }
 
     private Map<String,String> getValues(Long accountId) {
@@ -245,6 +281,16 @@ public final class DebugTrace {
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
         map.put("event", "asset balance");
+        return map;
+    }
+
+    private Map<String,String> getValues(Long accountId, Account.AccountLease accountLease, boolean start) {
+        Map<String,String> map = new HashMap<>();
+        map.put("account", Convert.toUnsignedLong(accountId));
+        map.put("event", start ? "lease begin" : "lease end");
+        map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+        map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+        map.put("lessee", Convert.toUnsignedLong(accountLease.lesseeId));
         return map;
     }
 

@@ -8,3 +8,4 @@
 /nxt.jar
 /nxt_test_db/
 *.trace
+/nxt-trace.csv
