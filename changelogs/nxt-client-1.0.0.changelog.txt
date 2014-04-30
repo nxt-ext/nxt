@@ -1,0 +1,13 @@
+The old NRS UI is now disabled by default. Only the new UI is available, at
+http://localhost:7876
+
+Added Account lease events, Listeners can be registered for LEASE_SCHEDULED,
+LEASE_STARTED and LEASE_ENDED. This is of interest to Java API users only.
+
+Minor bugfixes. Avoid new transaction validation errors during blockchain scan.
+Removed NotYetEnabled checks for milestone blocks that have already passed.
+
+Added README.txt file, see that for installation and configuration instructions.
+
+
+
