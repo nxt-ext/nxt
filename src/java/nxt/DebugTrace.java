@@ -178,10 +178,12 @@ public final class DebugTrace {
         Long generatorId = block.getGeneratorId();
         if (include(generatorId)) {
             log(getValues(generatorId, block, isUndo));
-            long fee = block.getTotalFeeNQT();
-            if (fee != 0) {
-                for (Long lessorId : Account.getAccount(generatorId).getLeaserIds()) {
-                    log(lessorGuaranteedBalance(lessorId));
+        }
+        for (Long accountId : accountIds) {
+            Account account = Account.getAccount(accountId);
+            if (account != null) {
+                for (Long lessorId : account.getLeaserIds()) {
+                    log(lessorGuaranteedBalance(lessorId, accountId));
                 }
             }
         }
@@ -199,11 +201,13 @@ public final class DebugTrace {
         }
     }
 
-    private Map<String,String> lessorGuaranteedBalance(Long accountId) {
+    private Map<String,String> lessorGuaranteedBalance(Long accountId, Long lesseeId) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
-        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
+        // use 1441 instead of 1440 as at this point the newly generated block has already been pushed
+        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1441)));
+        map.put("lessee", Convert.toUnsignedLong(lesseeId));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
         map.put("event", "lessor guaranteed balance");
