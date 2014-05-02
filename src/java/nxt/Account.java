@@ -167,9 +167,14 @@ public final class Account {
     }
 
     static Account addOrGetAccount(Long id) {
-        Account account = new Account(id);
-        Account oldAccount = accounts.putIfAbsent(id, account);
-        return oldAccount != null ? oldAccount : account;
+        Account oldAccount = accounts.get(id);
+        if (oldAccount == null) {
+            Account account = new Account(id);
+            oldAccount = accounts.putIfAbsent(id, account);
+            return oldAccount != null ? oldAccount : account;
+        } else {
+            return oldAccount;
+        }
     }
 
     static void clear() {
