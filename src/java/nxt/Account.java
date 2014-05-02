@@ -205,6 +205,9 @@ public final class Account {
     private volatile String description;
 
     private Account(Long id) {
+        if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
+            Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
+        }
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
