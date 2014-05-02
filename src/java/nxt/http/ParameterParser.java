@@ -236,7 +236,7 @@ final class ParameterParser {
         }
         Account account;
         try {
-            account = Account.getAccount(Convert.parseUnsignedLong(accountValue));
+            account = Account.getAccount(Convert.parseAccountId(accountValue));
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ACCOUNT);
         }
@@ -268,11 +268,16 @@ final class ParameterParser {
         if (recipientValue == null || "0".equals(recipientValue)) {
             throw new ParameterException(MISSING_RECIPIENT);
         }
+        Long recipientId;
         try {
-            return Convert.parseUnsignedLong(recipientValue);
+            recipientId = Convert.parseAccountId(recipientValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
+        if (recipientId == null) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
+        return recipientId;
     }
 
     static Long getSellerId(HttpServletRequest req) throws ParameterException {

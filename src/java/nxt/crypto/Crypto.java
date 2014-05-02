@@ -222,4 +222,23 @@ public final class Crypto {
 
     }
 
+    public static String rsEncode(long id) {
+        return ReedSolomon.encode(id);
+    }
+
+    public static long rsDecode(String rsString) {
+        rsString = rsString.toUpperCase();
+        try {
+            long id = ReedSolomon.decode(rsString);
+            if (! rsString.equals(ReedSolomon.encode(id))) {
+                throw new RuntimeException("ERROR: Reed-Solomon decoding of " + rsString
+                        + " not reversible, decoded to " + id);
+            }
+            return id;
+        } catch (ReedSolomon.DecodeException e) {
+            Logger.logDebugMessage("Reed-Solomon decoding failed for " + rsString + ": " + e.toString());
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
 }

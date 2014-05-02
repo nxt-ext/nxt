@@ -1,6 +1,7 @@
 package nxt.util;
 
 import nxt.Constants;
+import nxt.crypto.Crypto;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -60,6 +61,22 @@ public final class Convert {
             throw new IllegalArgumentException("overflow: " + number);
         }
         return zeroToNull(bigInt.longValue());
+    }
+
+    public static Long parseAccountId(String account) {
+        if (account == null) {
+            return null;
+        }
+        account = account.toUpperCase();
+        if (account.startsWith("NXT-")) {
+            return zeroToNull(Crypto.rsDecode(account.substring(4)));
+        } else {
+            return parseUnsignedLong(account);
+        }
+    }
+
+    public static String rsAccount(Long accountId) {
+        return "NXT-" + Crypto.rsEncode(nullToZero(accountId));
     }
 
     public static Long fullHashToId(byte[] hash) {
