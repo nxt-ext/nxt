@@ -4,13 +4,14 @@ import nxt.crypto.XoredData;
 import nxt.util.Convert;
 import nxt.util.Listener;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class DigitalGoodsStore {
 
@@ -18,13 +19,13 @@ public final class DigitalGoodsStore {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchases.entrySet()) {
+                for (Map.Entry<Long, Purchase> pendingPurchaseEntry : pendingPurchasesMap.entrySet()) {
                     Purchase purchase = pendingPurchaseEntry.getValue();
                     if (block.getTimestamp() > purchase.getDeliveryDeadlineTimestamp()) {
                         Account buyer = Account.getAccount(purchase.getBuyerId());
                         buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                         getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-                        pendingPurchases.remove(pendingPurchaseEntry.getKey());
+                        pendingPurchasesMap.remove(pendingPurchaseEntry.getKey());
                     }
                 }
             }
@@ -42,14 +43,14 @@ public final class DigitalGoodsStore {
                         Account buyer = Account.getAccount(purchase.getBuyerId());
                         buyer.addToUnconfirmedBalanceNQT(- Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
                         getGoods(purchase.getGoodsId()).changeQuantity(- purchase.getQuantity());
-                        pendingPurchases.put(purchaseEntry.getKey(), purchase);
+                        pendingPurchasesMap.put(purchaseEntry.getKey(), purchase);
                     }
                 }
             }
         }, BlockchainProcessor.Event.BLOCK_POPPED);
     }
 
-    public static final class Goods {
+    public static final class Goods implements Comparable<Goods> {
         private final Long id;
         private final Long sellerId;
         private final String name;
@@ -118,9 +119,14 @@ public final class DigitalGoodsStore {
             this.delisted = delisted;
         }
 
+        @Override
+        public int compareTo(Goods other) {
+            return name.compareTo(other.name);
+        }
+
     }
 
-    public static final class Purchase {
+    public static final class Purchase implements Comparable<Purchase> {
         private final Long id;
         private final Long buyerId;
         private final Long goodsId;
@@ -175,11 +181,22 @@ public final class DigitalGoodsStore {
         }
 
         public boolean isPending() {
-            return pendingPurchases.containsKey(id);
+            return pendingPurchasesMap.containsKey(id);
         }
 
         public int getTimestamp() {
             return timestamp;
+        }
+
+        @Override
+        public int compareTo(Purchase other) {
+            if (this.timestamp < other.timestamp) {
+                return -1;
+            }
+            if (this.timestamp > other.timestamp) {
+                return 1;
+            }
+            return Long.compare(this.id, other.id);
         }
 
     }
@@ -188,20 +205,22 @@ public final class DigitalGoodsStore {
     private static final ConcurrentMap<Long, Purchase> purchasesMap = new ConcurrentHashMap<>();
     private static final Collection<Goods> allGoods = Collections.unmodifiableCollection(goodsMap.values());
     private static final Collection<Purchase> allPurchases = Collections.unmodifiableCollection(purchasesMap.values());
-    private static final ConcurrentMap<Long, Purchase> pendingPurchases = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, ConcurrentMap<Long, Goods>> sellerGoodsMap = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, ConcurrentMap<Long, Purchase>> sellerPurchasesMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Purchase> pendingPurchasesMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, SortedSet<Goods>> sellerGoodsMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, SortedSet<Purchase>> sellerPurchasesMap = new ConcurrentHashMap<>();
+
+    private static final SortedSet emptySortedSet = Collections.unmodifiableSortedSet(new TreeSet());
 
     public static Collection<Goods> getAllGoods() {
         return allGoods;
     }
 
-    public static Collection<Goods> getSellerGoods(Long sellerId) {
-        Map<Long,Goods> map = sellerGoodsMap.get(sellerId);
-        if (map == null || map.isEmpty()) {
-            return Collections.emptySet();
+    public static SortedSet<Goods> getSellerGoods(Long sellerId) {
+        SortedSet<Goods> set = sellerGoodsMap.get(sellerId);
+        if (set == null || set.isEmpty()) {
+            return emptySortedSet;
         }
-        return Collections.unmodifiableCollection(map.values());
+        return Collections.unmodifiableSortedSet(set);
     }
 
     public static Goods getGoods(Long goodsId) {
@@ -212,54 +231,54 @@ public final class DigitalGoodsStore {
         return allPurchases;
     }
 
-    public static Collection<Purchase> getSellerPurchases(Long sellerId) {
-        Map<Long,Purchase> map = sellerPurchasesMap.get(sellerId);
-        if (map == null || map.isEmpty()) {
-            return Collections.emptySet();
+    public static SortedSet<Purchase> getSellerPurchases(Long sellerId) {
+        SortedSet<Purchase> set = sellerPurchasesMap.get(sellerId);
+        if (set == null || set.isEmpty()) {
+            return emptySortedSet;
         }
-        return Collections.unmodifiableCollection(map.values());
+        return Collections.unmodifiableSortedSet(set);
     }
 
-    public static Collection<Purchase> getBuyerPurchases(Long buyerId) {
-        List<Purchase> list = new ArrayList<>();
+    public static SortedSet<Purchase> getBuyerPurchases(Long buyerId) {
+        SortedSet<Purchase> set = new TreeSet<>();
         for (Purchase purchase : allPurchases) {
             if (purchase.getBuyerId().equals(buyerId)) {
-                list.add(purchase);
+                set.add(purchase);
             }
         }
-        return list;
+        return set;
     }
 
-    public static Collection<Purchase> getSellerBuyerPurchases(Long sellerId, Long buyerId) {
-        List<Purchase> list = new ArrayList<>();
+    public static SortedSet<Purchase> getSellerBuyerPurchases(Long sellerId, Long buyerId) {
+        SortedSet<Purchase> set = new TreeSet<>();
         for (Purchase purchase : getSellerPurchases(sellerId)) {
             if (purchase.getBuyerId().equals(buyerId)) {
-                list.add(purchase);
+                set.add(purchase);
             }
         }
-        return list;
+        return set;
     }
 
     public static Purchase getPurchase(Long purchaseId) {
         return purchasesMap.get(purchaseId);
     }
 
-    public static Collection<Purchase> getPendingSellerPurchases(Long sellerId) {
-        Map<Long,Purchase> map = sellerPurchasesMap.get(sellerId);
-        if (map == null || map.isEmpty()) {
-            return Collections.emptySet();
+    public static SortedSet<Purchase> getPendingSellerPurchases(Long sellerId) {
+        SortedSet<Purchase> set = sellerPurchasesMap.get(sellerId);
+        if (set == null || set.isEmpty()) {
+            return emptySortedSet;
         }
-        List<Purchase> list = new ArrayList<>();
-        for (Map.Entry<Long,Purchase> entry : map.entrySet()) {
-            if (pendingPurchases.containsKey(entry.getKey())) {
-                list.add(entry.getValue());
+        SortedSet<Purchase> result = new TreeSet<>();
+        for (Purchase purchase : set) {
+            if (pendingPurchasesMap.containsKey(purchase.getId())) {
+                result.add(purchase);
             }
         }
-        return list;
+        return result;
     }
 
     static Purchase getPendingPurchase(Long purchaseId) {
-        return pendingPurchases.get(purchaseId);
+        return pendingPurchasesMap.get(purchaseId);
     }
 
     private static void addPurchase(Long purchaseId, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
@@ -267,18 +286,19 @@ public final class DigitalGoodsStore {
         Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT,
                 deliveryDeadlineTimestamp, note, timestamp);
         purchasesMap.put(purchaseId, purchase);
-        pendingPurchases.put(purchaseId, purchase);
-        ConcurrentMap<Long, Purchase> map = sellerPurchasesMap.get(sellerId);
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            sellerPurchasesMap.put(sellerId, map);
+        pendingPurchasesMap.put(purchaseId, purchase);
+        SortedSet<Purchase> set = sellerPurchasesMap.get(sellerId);
+        if (set == null) {
+            set = new ConcurrentSkipListSet<>();
+            sellerPurchasesMap.put(sellerId, set);
         }
-        map.put(purchaseId, purchase);
+        set.add(purchase);
     }
 
     static void clear() {
         goodsMap.clear();
         purchasesMap.clear();
+        pendingPurchasesMap.clear();
         sellerGoodsMap.clear();
         sellerPurchasesMap.clear();
     }
@@ -287,19 +307,19 @@ public final class DigitalGoodsStore {
                                  int quantity, long priceNQT) {
         Goods goods = new Goods(goodsId, sellerId, name, description, tags, quantity, priceNQT);
         goodsMap.put(goodsId, goods);
-        ConcurrentMap<Long, Goods> map = sellerGoodsMap.get(sellerId);
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            sellerGoodsMap.put(sellerId, map);
+        SortedSet<Goods> set = sellerGoodsMap.get(sellerId);
+        if (set == null) {
+            set = new ConcurrentSkipListSet<>();
+            sellerGoodsMap.put(sellerId, set);
         }
-        map.put(goodsId, goods);
+        set.add(goods);
     }
 
     static void undoListGoods(Long goodsId) {
         Goods goods = goodsMap.remove(goodsId);
-        Map<Long, Goods> map = sellerGoodsMap.get(goods.getSellerId());
-        map.remove(goodsId);
-        if (map.isEmpty()) {
+        SortedSet<Goods> set = sellerGoodsMap.get(goods.getSellerId());
+        set.remove(goodsId);
+        if (set.isEmpty()) {
             sellerGoodsMap.remove(goods.getSellerId());
         }
     }
@@ -358,11 +378,11 @@ public final class DigitalGoodsStore {
     static void undoPurchase(Long purchaseId, Long buyerId, int quantity, long priceNQT) {
         Purchase purchase = purchasesMap.remove(purchaseId);
         if (purchase != null) {
-            pendingPurchases.remove(purchaseId);
+            pendingPurchasesMap.remove(purchaseId);
             getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-            Map<Long, Purchase> map = sellerPurchasesMap.get(purchase.getSellerId());
-            map.remove(purchaseId);
-            if (map.isEmpty()) {
+            SortedSet<Purchase> set = sellerPurchasesMap.get(purchase.getSellerId());
+            set.remove(purchaseId);
+            if (set.isEmpty()) {
                 sellerPurchasesMap.remove(purchase.getSellerId());
             }
         } else {
@@ -372,7 +392,7 @@ public final class DigitalGoodsStore {
     }
 
     static void deliver(Long sellerId, Long purchaseId, long discountNQT) {
-        Purchase purchase = pendingPurchases.remove(purchaseId);
+        Purchase purchase = pendingPurchasesMap.remove(purchaseId);
         if (purchase != null) {
             long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
             Account buyer = Account.getAccount(purchase.getBuyerId());
@@ -386,7 +406,7 @@ public final class DigitalGoodsStore {
     static void undoDeliver(Long sellerId, Long purchaseId, long discountNQT) {
         Purchase purchase = purchasesMap.get(purchaseId);
         if (purchase != null) {
-            pendingPurchases.put(purchaseId, purchase);
+            pendingPurchasesMap.put(purchaseId, purchase);
             long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
             Account buyer = Account.getAccount(purchase.getBuyerId());
             buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
