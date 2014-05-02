@@ -25,6 +25,7 @@ final class JSONData {
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();
         json.put("account", Convert.toUnsignedLong(alias.getAccount().getId()));
+        json.put("accountRS", Convert.rsAccount(alias.getAccount().getId()));
         json.put("alias", alias.getAliasName());
         json.put("uri", alias.getURI());
         json.put("timestamp", alias.getTimestamp());
@@ -50,6 +51,7 @@ final class JSONData {
     static JSONObject asset(Asset asset) {
         JSONObject json = new JSONObject();
         json.put("account", Convert.toUnsignedLong(asset.getAccountId()));
+        json.put("accountRS", Convert.rsAccount(asset.getAccountId()));
         json.put("name", asset.getName());
         json.put("description", asset.getDescription());
         json.put("decimals", asset.getDecimals());
@@ -76,6 +78,7 @@ final class JSONData {
         json.put("order", Convert.toUnsignedLong(order.getId()));
         json.put("asset", Convert.toUnsignedLong(order.getAssetId()));
         json.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
+        json.put("account", Convert.rsAccount(order.getAccount().getId()));
         json.put("quantityQNT", String.valueOf(order.getQuantityQNT()));
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
         json.put("height", order.getHeight());
@@ -86,6 +89,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("height", block.getHeight());
         json.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
+        json.put("generatorRS", Convert.rsAccount(block.getGeneratorId()));
         json.put("timestamp", block.getTimestamp());
         json.put("numberOfTransactions", block.getTransactionIds().size());
         json.put("totalAmountNQT", String.valueOf(block.getTotalAmountNQT()));
@@ -115,7 +119,9 @@ final class JSONData {
 
     static JSONObject hallmark(Hallmark hallmark) {
         JSONObject json = new JSONObject();
-        json.put("account", Convert.toUnsignedLong(Account.getId(hallmark.getPublicKey())));
+        Long accountId = Account.getId(hallmark.getPublicKey());
+        json.put("account", Convert.toUnsignedLong(accountId));
+        json.put("accountRS", Convert.rsAccount(accountId));
         json.put("host", hallmark.getHost());
         json.put("weight", hallmark.getWeight());
         String dateString = Hallmark.formatDate(hallmark.getDate());
@@ -126,7 +132,9 @@ final class JSONData {
 
     static JSONObject token(Token token) {
         JSONObject json = new JSONObject();
-        json.put("account", Convert.toUnsignedLong(Account.getId(token.getPublicKey())));
+        Long accountId = Account.getId(token.getPublicKey());
+        json.put("account", Convert.toUnsignedLong(accountId));
+        json.put("accountRS", Convert.rsAccount(accountId));
         json.put("timestamp", token.getTimestamp());
         json.put("valid", token.isValid());
         return json;
@@ -188,6 +196,7 @@ final class JSONData {
         json.put("deadline", transaction.getDeadline());
         json.put("senderPublicKey", Convert.toHexString(transaction.getSenderPublicKey()));
         json.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+        json.put("recipientRS", Convert.rsAccount(transaction.getRecipientId()));
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
         if (transaction.getReferencedTransactionFullHash() != null) {
@@ -204,6 +213,7 @@ final class JSONData {
             json.put("attachment", attachment(transaction.getAttachment()));
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+        json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
         return json;
     }
 

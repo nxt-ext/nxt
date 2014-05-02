@@ -167,9 +167,14 @@ public final class Account {
     }
 
     static Account addOrGetAccount(Long id) {
-        Account account = new Account(id);
-        Account oldAccount = accounts.putIfAbsent(id, account);
-        return oldAccount != null ? oldAccount : account;
+        Account oldAccount = accounts.get(id);
+        if (oldAccount == null) {
+            Account account = new Account(id);
+            oldAccount = accounts.putIfAbsent(id, account);
+            return oldAccount != null ? oldAccount : account;
+        } else {
+            return oldAccount;
+        }
     }
 
     static void clear() {
@@ -200,6 +205,9 @@ public final class Account {
     private volatile String description;
 
     private Account(Long id) {
+        if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
+            Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
+        }
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;

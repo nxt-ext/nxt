@@ -29,7 +29,9 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
         byte[] publicKey = Crypto.getPublicKey(secretPhrase);
 
         JSONObject response = new JSONObject();
-        response.put("accountId", Convert.toUnsignedLong(Account.getId(publicKey)));
+        Long accountId = Account.getId(publicKey);
+        response.put("accountId", Convert.toUnsignedLong(accountId));
+        response.put("accountRS", Convert.rsAccount(accountId));
 
         return response;
     }

@@ -37,7 +37,7 @@ public final class VerifyTrace {
     }
 
     public static void main(String[] args) {
-        String fileName = args.length == 1 ? args[0] : "nxt.trace";
+        String fileName = args.length == 1 ? args[0] : "nxt-trace.csv";
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
             String[] headers = unquote(line.split(DebugTrace.SEPARATOR));
