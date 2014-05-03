@@ -516,8 +516,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
                                 && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
                                 || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                                && !TransactionDb.hasTransactionByFullHash(transaction.getReferencedTransactionFullHash()))) {
-                            throw new TransactionNotAcceptedException("Missing referenced transaction "
+                                && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
+                            throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
                                     + transaction.getReferencedTransactionFullHash()
                                     + " for transaction " + transaction.getStringId(), transaction);
                         }
@@ -629,8 +629,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
         for (TransactionImpl transaction : transactionProcessor.getAllUnconfirmedTransactions()) {
-            if (transaction.getReferencedTransactionFullHash() == null
-                    || TransactionDb.hasTransactionByFullHash(transaction.getReferencedTransactionFullHash())) {
+            if (hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0)) {
                 sortedTransactions.add(transaction);
             }
         }
@@ -790,6 +789,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 (currentHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
                         : currentHeight < Constants.NQT_BLOCK ? 2
                         : 3);
+    }
+
+    private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
+        if (transaction.getReferencedTransactionFullHash() == null) {
+            return timestamp - transaction.getTimestamp() < 60 * 1440 * 60 && count < 10;
+        }
+        transaction = TransactionDb.findTransactionByFullHash(transaction.getReferencedTransactionFullHash());
+        return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
     }
 
     private volatile boolean validateAtScan = false;
