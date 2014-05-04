@@ -1,14 +1,17 @@
 package nxt.crypto;
 
 import nxt.util.Logger;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -135,6 +138,27 @@ public final class Crypto {
     }
 
     public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey)
+            throws IOException, InvalidCipherTextException {
+        byte[] dhSharedSecret = new byte[32];
+        Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
+        byte[] key = sha256().digest(dhSharedSecret);
+        byte[] iv = new byte[16];
+        secureRandom.get().nextBytes(iv);
+        PaddedBufferedBlockCipher aes = new PaddedBufferedBlockCipher(new CBCBlockCipher(
+                new AESEngine()));
+        CipherParameters ivAndKey = new ParametersWithIV(new KeyParameter(key), iv);
+        aes.init(true, ivAndKey);
+        byte[] output = new byte[aes.getOutputSize(plaintext.length)];
+        int len = aes.processBytes(plaintext, 0, plaintext.length, output, 0);
+        aes.doFinal(output, len);
+        ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
+        ciphertextOut.write(iv);
+        ciphertextOut.write(output);
+        return ciphertextOut.toByteArray();
+    }
+
+    /*
+    public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey)
             throws GeneralSecurityException, IOException {
         byte[] dhSharedSecret = new byte[32];
         Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
@@ -150,7 +174,29 @@ public final class Crypto {
         ciphertextOut.write(cipher.doFinal(plaintext));
         return ciphertextOut.toByteArray();
     }
+    */
 
+    public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte theirPublicKey[])
+            throws InvalidCipherTextException {
+        if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
+            throw new InvalidCipherTextException("invalid ciphertext");
+        }
+        byte[] iv = Arrays.copyOfRange(ivCiphertext, 0, 16);
+        byte[] ciphertext = Arrays.copyOfRange(ivCiphertext, 16, ivCiphertext.length);
+        byte[] dhSharedSecret = new byte[32];
+        Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
+        byte[] key = sha256().digest(dhSharedSecret);
+        PaddedBufferedBlockCipher aes = new PaddedBufferedBlockCipher(new CBCBlockCipher(
+                new AESEngine()));
+        CipherParameters ivAndKey = new ParametersWithIV(new KeyParameter(key), iv);
+        aes.init(false, ivAndKey);
+        byte[] output = new byte[aes.getOutputSize(ciphertext.length)];
+        int len = aes.processBytes(ciphertext, 0, ciphertext.length, output, 0);
+        aes.doFinal(output, len);
+        return output;
+    }
+
+    /*
     public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte theirPublicKey[])
             throws GeneralSecurityException {
         if ( ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0 ) {
@@ -167,6 +213,7 @@ public final class Crypto {
         cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
         return cipher.doFinal(ciphertext);
     }
+    */
 
     private static void xorProcess(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
 
