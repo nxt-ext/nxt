@@ -48,6 +48,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
+    private volatile int lastBlockchainFeederHeight;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
 
@@ -84,6 +85,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
                     if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) <= 0) {
                         return;
+                    }
+                    if (response.get("blockchainHeight") != null) {
+                        lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
                     }
 
                     Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
@@ -353,6 +357,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public Peer getLastBlockchainFeeder() {
         return lastBlockchainFeeder;
+    }
+
+    @Override
+    public int getLastBlockchainFeederHeight() {
+        return lastBlockchainFeederHeight;
     }
 
     @Override
