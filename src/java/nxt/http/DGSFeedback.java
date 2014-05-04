@@ -4,7 +4,7 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,22 +16,26 @@ public final class DGSFeedback extends CreateTransaction {
     static final DGSFeedback instance = new DGSFeedback();
 
     private DGSFeedback() {
-        super("purchase", "note", "noteNonce");
+        super("purchase", "note");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         DigitalGoodsStore.Purchase purchase = ParameterParser.getPurchase(req);
-        XoredData note = ParameterParser.getNote(req);
+
         Account buyerAccount = ParameterParser.getSenderAccount(req);
         if (! buyerAccount.getId().equals(purchase.getBuyerId())) {
             return INCORRECT_PURCHASE;
         }
 
-        Attachment attachment = new Attachment.DigitalGoodsFeedback(purchase.getId(), note);
-        return createTransaction(req, buyerAccount, attachment);
+        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        byte[] note = ParameterParser.getNote(req);
+        Account sellerAccount = Account.getAccount(purchase.getSellerId());
+        EncryptedData encryptedNote = sellerAccount.encryptTo(note, secretPhrase);
 
+        Attachment attachment = new Attachment.DigitalGoodsFeedback(purchase.getId(), encryptedNote);
+        return createTransaction(req, buyerAccount, attachment);
     }
 
 }

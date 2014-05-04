@@ -5,7 +5,7 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -44,9 +44,12 @@ public final class DGSRefund extends CreateTransaction {
             return INCORRECT_DGS_REFUND;
         }
 
-        XoredData note = ParameterParser.getNote(req);
+        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        Account buyerAccount = Account.getAccount(purchase.getBuyerId());
+        byte[] note = ParameterParser.getNote(req);
+        EncryptedData encryptedNote = buyerAccount.encryptTo(note, secretPhrase);
 
-        Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, note);
+        Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, encryptedNote);
         return createTransaction(req, sellerAccount, attachment);
 
     }

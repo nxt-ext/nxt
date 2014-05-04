@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -1011,9 +1011,9 @@ public interface Attachment {
         private final int quantity;
         private final long priceNQT;
         private final int deliveryDeadlineTimestamp;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp, XoredData note) {
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp, EncryptedData note) {
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
@@ -1070,7 +1070,7 @@ public interface Attachment {
 
         public int getDeliveryDeadlineTimestamp() { return deliveryDeadlineTimestamp; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
@@ -1079,10 +1079,10 @@ public interface Attachment {
         static final long serialVersionUID = 0;
 
         private final Long purchaseId;
-        private final XoredData goods;
+        private final EncryptedData goods;
         private final long discountNQT;
 
-        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discountNQT) {
+        public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, long discountNQT) {
             this.purchaseId = purchaseId;
             this.goods = goods;
             this.discountNQT = discountNQT;
@@ -1127,7 +1127,7 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public XoredData getGoods() { return goods; }
+        public EncryptedData getGoods() { return goods; }
 
         public long getDiscountNQT() { return discountNQT; }
 
@@ -1138,9 +1138,9 @@ public interface Attachment {
         static final long serialVersionUID = 0;
 
         private final Long purchaseId;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsFeedback(Long purchaseId, XoredData note) {
+        public DigitalGoodsFeedback(Long purchaseId, EncryptedData note) {
             this.purchaseId = purchaseId;
             this.note = note;
         }
@@ -1187,7 +1187,7 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
@@ -1197,9 +1197,9 @@ public interface Attachment {
 
         private final Long purchaseId;
         private final long refundNQT;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsRefund(Long purchaseId, long refundNQT, XoredData note) {
+        public DigitalGoodsRefund(Long purchaseId, long refundNQT, EncryptedData note) {
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
             this.note = note;
@@ -1251,7 +1251,7 @@ public interface Attachment {
 
         public long getRefundNQT() { return refundNQT; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 

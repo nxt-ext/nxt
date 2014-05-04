@@ -5,7 +5,7 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_DGS_DISCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_DGS_GOODS;
-import static nxt.http.JSONResponses.INCORRECT_DGS_GOODS_NONCE;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 
 public final class DGSDelivery extends CreateTransaction {
@@ -21,13 +20,14 @@ public final class DGSDelivery extends CreateTransaction {
     static final DGSDelivery instance = new DGSDelivery();
 
     private DGSDelivery() {
-        super("purchase", "discountNQT", "goodsData", "goodsNonce");
+        super("purchase", "discountNQT", "goodsData");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Account sellerAccount = ParameterParser.getSenderAccount(req);
+        String secretPhrase = ParameterParser.getSecretPhrase(req);
         DigitalGoodsStore.Purchase purchase = ParameterParser.getPurchase(req);
         if (! sellerAccount.getId().equals(purchase.getSellerId())) {
             return INCORRECT_PURCHASE;
@@ -56,19 +56,10 @@ public final class DGSDelivery extends CreateTransaction {
             return INCORRECT_DGS_GOODS;
         }
 
-        byte[] goodsNonce;
-        try {
-            goodsNonce = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("goodsNonce")));
-            if (goodsNonce.length != 32) {
-                return INCORRECT_DGS_GOODS_NONCE;
-            }
-        } catch (RuntimeException e) {
-            return INCORRECT_DGS_GOODS_NONCE;
-        }
+        Account buyerAccount = Account.getAccount(purchase.getBuyerId());
+        EncryptedData encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);
 
-        XoredData goods = new XoredData(goodsData, goodsNonce);
-
-        Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), goods, discountNQT);
+        Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, discountNQT);
         return createTransaction(req, sellerAccount, attachment);
 
     }

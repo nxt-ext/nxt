@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -232,6 +233,20 @@ public final class Account {
 
     public synchronized byte[] getPublicKey() {
         return publicKey;
+    }
+
+    public EncryptedData encryptTo(byte[] data, String senderSecretPhrase) {
+        if (publicKey == null) {
+            throw new IllegalArgumentException("Recipient account doesn't have a public key set");
+        }
+        return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), publicKey);
+    }
+
+    public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase) {
+        if (publicKey == null) {
+            throw new IllegalArgumentException("Sender account doesn't have a public key set");
+        }
+        return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
     }
 
     public synchronized long getBalanceNQT() {

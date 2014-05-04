@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -1464,14 +1464,14 @@ public abstract class TransactionType {
                 long priceNQT = buffer.getLong();
                 int deliveryDeadline = buffer.getInt();
                 int noteBytesLength = buffer.getShort();
-                if (noteBytesLength > Constants.MAX_DGS_NOTE_LENGTH) {
+                if (noteBytesLength > 3 * Constants.MAX_DGS_NOTE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid note length: " + noteBytesLength);
                 }
                 byte[] noteBytes = new byte[noteBytesLength];
                 buffer.get(noteBytes);
                 byte[] noteNonceBytes = new byte[32];
                 buffer.get(noteNonceBytes);
-                XoredData note = new XoredData(noteBytes, noteNonceBytes);
+                EncryptedData note = new EncryptedData(noteBytes, noteNonceBytes);
                 transaction.setAttachment(new Attachment.DigitalGoodsPurchase(goodsId, quantity, priceNQT, deliveryDeadline, note));
             }
 
@@ -1481,7 +1481,7 @@ public abstract class TransactionType {
                 int quantity = ((Long)attachmentData.get("quantity")).intValue();
                 long priceNQT = (Long)attachmentData.get("priceNQT");
                 int deliveryDeadlineTimestamp = ((Long)attachmentData.get("deliveryDeadlineTimestamp")).intValue();
-                XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")),
+                EncryptedData note = new EncryptedData(Convert.parseHexString((String)attachmentData.get("note")),
                         Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
                 transaction.setAttachment(new Attachment.DigitalGoodsPurchase(goodsId, quantity, priceNQT,
@@ -1533,7 +1533,7 @@ public abstract class TransactionType {
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
                 if (attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
-                        || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
+                        || attachment.getNote().getData().length > 3 * Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || goods == null || goods.isDelisted()
                         || attachment.getQuantity() > goods.getQuantity()
@@ -1561,7 +1561,7 @@ public abstract class TransactionType {
                 buffer.get(goodsBytes);
                 byte[] goodsNonceBytes = new byte[32];
                 buffer.get(goodsNonceBytes);
-                XoredData goods = new XoredData(goodsBytes, goodsNonceBytes);
+                EncryptedData goods = new EncryptedData(goodsBytes, goodsNonceBytes);
                 long discountNQT = buffer.getLong();
                 transaction.setAttachment(new Attachment.DigitalGoodsDelivery(purchaseId, goods, discountNQT));
             }
@@ -1569,7 +1569,7 @@ public abstract class TransactionType {
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
-                XoredData goods = new XoredData(Convert.parseHexString((String)attachmentData.get("goodsData")),
+                EncryptedData goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                         Convert.parseHexString((String)attachmentData.get("goodsNonce")));
                 long discountNQT = (Long)attachmentData.get("discountNQT");
 
@@ -1579,7 +1579,8 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getDiscountNQT());
+                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(),
+                        attachment.getDiscountNQT(), attachment.getGoods());
             }
 
             @Override
@@ -1612,21 +1613,21 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long purchaseId = buffer.getLong();
                 int noteBytesLength = buffer.getShort();
-                if (noteBytesLength > Constants.MAX_DGS_NOTE_LENGTH) {
+                if (noteBytesLength > 3 * Constants.MAX_DGS_NOTE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid note length: " + noteBytesLength);
                 }
                 byte[] noteBytes = new byte[noteBytesLength];
                 buffer.get(noteBytes);
                 byte[] noteNonceBytes = new byte[32];
                 buffer.get(noteNonceBytes);
-                XoredData note = new XoredData(noteBytes, noteNonceBytes);
+                EncryptedData note = new EncryptedData(noteBytes, noteNonceBytes);
                 transaction.setAttachment(new Attachment.DigitalGoodsFeedback(purchaseId, note));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
-                XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")),
+                EncryptedData note = new EncryptedData(Convert.parseHexString((String)attachmentData.get("note")),
                         Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
                 transaction.setAttachment(new Attachment.DigitalGoodsFeedback(purchaseId, note));
@@ -1634,11 +1635,16 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                // cfb: No action required
+                Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback)transaction.getAttachment();
+                DigitalGoodsStore.feedback(attachment.getPurchaseId(), attachment.getNote());
             }
 
             @Override
-            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {}
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount)
+                    throws UndoNotSupportedException {
+                Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback)transaction.getAttachment();
+                DigitalGoodsStore.undoFeedback(attachment.getPurchaseId());
+            }
 
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -1664,14 +1670,14 @@ public abstract class TransactionType {
                 Long purchaseId = buffer.getLong();
                 long refundNQT = buffer.getLong();
                 int noteBytesLength = buffer.getShort();
-                if (noteBytesLength > Constants.MAX_DGS_NOTE_LENGTH) {
+                if (noteBytesLength > 3 * Constants.MAX_DGS_NOTE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid note length: " + noteBytesLength);
                 }
                 byte[] noteBytes = new byte[noteBytesLength];
                 buffer.get(noteBytes);
                 byte[] noteNonceBytes = new byte[32];
                 buffer.get(noteNonceBytes);
-                XoredData note = new XoredData(noteBytes, noteNonceBytes);
+                EncryptedData note = new EncryptedData(noteBytes, noteNonceBytes);
                 transaction.setAttachment(new Attachment.DigitalGoodsRefund(purchaseId, refundNQT, note));
             }
 
@@ -1679,7 +1685,7 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 Long purchaseId = (Long)attachmentData.get("purchase");
                 long refundNQT = (Long)attachmentData.get("refundNQT");
-                XoredData note = new XoredData(Convert.parseHexString((String)attachmentData.get("note")),
+                EncryptedData note = new EncryptedData(Convert.parseHexString((String)attachmentData.get("note")),
                         Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
                 transaction.setAttachment(new Attachment.DigitalGoodsRefund(purchaseId, refundNQT, note));
@@ -1705,7 +1711,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
                 DigitalGoodsStore.refund(transaction.getSenderId(), attachment.getPurchaseId(),
-                        attachment.getRefundNQT());
+                        attachment.getRefundNQT(), attachment.getNote());
             }
 
             @Override

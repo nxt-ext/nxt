@@ -202,6 +202,18 @@ final class JSONData {
         json.put("note", Convert.toHexString(purchase.getNote().getData()));
         json.put("noteNonce", Convert.toHexString(purchase.getNote().getNonce()));
         json.put("pending", purchase.isPending());
+        if (purchase.getEncryptedGoods() != null) {
+            json.put("goodsData", Convert.toHexString(purchase.getEncryptedGoods().getData()));
+            json.put("goodsDataNonce", Convert.toHexString(purchase.getEncryptedGoods().getNonce()));
+        }
+        if (purchase.getFeedbackNote() != null) {
+            json.put("feedbackNote", Convert.toHexString(purchase.getFeedbackNote().getData()));
+            json.put("feedbackNoteNonce", Convert.toHexString(purchase.getFeedbackNote().getNonce()));
+        }
+        if (purchase.getRefundNote() != null) {
+            json.put("refundNote", Convert.toHexString(purchase.getRefundNote().getData()));
+            json.put("refundNoteNonce", Convert.toHexString(purchase.getRefundNote().getNonce()));
+        }
         return json;
     }
 

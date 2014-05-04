@@ -142,11 +142,18 @@ public final class Crypto {
     }
 
     public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
+        return aesEncrypt(plaintext, myPrivateKey, theirPublicKey, new byte[32]);
+    }
+
+    public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
 
         try {
 
             byte[] dhSharedSecret = new byte[32];
             Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
+            for (int i = 0; i < 32; i++) {
+                dhSharedSecret[i] ^= nonce[i];
+            }
             byte[] key = sha256().digest(dhSharedSecret);
             byte[] iv = new byte[16];
             secureRandom.get().nextBytes(iv);
@@ -187,7 +194,12 @@ public final class Crypto {
     }
     */
 
-    public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte theirPublicKey[]) {
+
+    public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte[] theirPublicKey) {
+        return aesDecrypt(ivCiphertext, myPrivateKey, theirPublicKey, new byte[32]);
+    }
+
+    public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
 
         try {
 
@@ -198,6 +210,9 @@ public final class Crypto {
             byte[] ciphertext = Arrays.copyOfRange(ivCiphertext, 16, ivCiphertext.length);
             byte[] dhSharedSecret = new byte[32];
             Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
+            for (int i = 0; i < 32; i++) {
+                dhSharedSecret[i] ^= nonce[i];
+            }
             byte[] key = sha256().digest(dhSharedSecret);
             PaddedBufferedBlockCipher aes = new PaddedBufferedBlockCipher(new CBCBlockCipher(
                     new AESEngine()));
@@ -260,33 +275,29 @@ public final class Crypto {
 
     }
 
+    @Deprecated
     public static byte[] xorEncrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey) {
-
         byte[] nonce = new byte[32];
         secureRandom.get().nextBytes(nonce); // cfb: May block as entropy is being gathered, for example, if they need to read from /dev/random on various unix-like operating systems
         xorProcess(data, position, length, myPrivateKey, theirPublicKey, nonce);
         return nonce;
-
     }
 
+    @Deprecated
     public static void xorDecrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey,
                                   byte[] nonce) {
         xorProcess(data, position, length, myPrivateKey, theirPublicKey, nonce);
     }
 
     public static byte[] getSharedSecret(byte[] myPrivateKey, byte[] theirPublicKey) {
-
         try {
-
             byte[] sharedSecret = new byte[32];
             Curve25519.curve(sharedSecret, myPrivateKey, theirPublicKey);
             return sharedSecret;
-
         } catch (RuntimeException e) {
             Logger.logMessage("Error getting shared secret", e);
             throw e;
         }
-
     }
 
     public static String rsEncode(long id) {

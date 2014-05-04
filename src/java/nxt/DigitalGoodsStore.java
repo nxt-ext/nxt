@@ -1,8 +1,9 @@
 package nxt;
 
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Listener;
+import nxt.util.Listeners;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +15,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class DigitalGoodsStore {
+
+    public static enum Event {
+        GOODS_LISTED, GOODS_DELISTED, GOODS_PRICE_CHANGE, GOODS_QUANTITY_CHANGE,
+        PURCHASE, DELIVERY, REFUND, FEEDBACK
+    }
 
     static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
@@ -48,6 +54,26 @@ public final class DigitalGoodsStore {
                 }
             }
         }, BlockchainProcessor.Event.BLOCK_POPPED);
+    }
+
+    private static final Listeners<Goods,Event> goodsListeners = new Listeners<>();
+
+    private static final Listeners<Purchase,Event> purchaseListeners = new Listeners<>();
+
+    public static boolean addGoodsListener(Listener<Goods> listener, Event eventType) {
+        return goodsListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removeGoodsListener(Listener<Goods> listener, Event eventType) {
+        return goodsListeners.removeListener(listener, eventType);
+    }
+
+    public static boolean addPurchaseListener(Listener<Purchase> listener, Event eventType) {
+        return purchaseListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removePurchaseListener(Listener<Purchase> listener, Event eventType) {
+        return purchaseListeners.removeListener(listener, eventType);
     }
 
     public static final class Goods implements Comparable<Goods> {
@@ -134,11 +160,14 @@ public final class DigitalGoodsStore {
         private final int quantity;
         private final long priceNQT;
         private final int deliveryDeadlineTimestamp;
-        private final XoredData note;
+        private final EncryptedData note;
         private final int timestamp;
+        private volatile EncryptedData encryptedGoods;
+        private volatile EncryptedData refundNote;
+        private volatile EncryptedData feedbackNote;
 
         private Purchase(Long id, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
-                         int deliveryDeadlineTimestamp, XoredData note, int timestamp) {
+                         int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
             this.id = id;
             this.buyerId = buyerId;
             this.goodsId = goodsId;
@@ -176,7 +205,7 @@ public final class DigitalGoodsStore {
             return deliveryDeadlineTimestamp;
         }
 
-        public XoredData getNote() {
+        public EncryptedData getNote() {
             return note;
         }
 
@@ -186,6 +215,30 @@ public final class DigitalGoodsStore {
 
         public int getTimestamp() {
             return timestamp;
+        }
+
+        public EncryptedData getEncryptedGoods() {
+            return encryptedGoods;
+        }
+
+        private void setEncryptedGoods(EncryptedData encryptedGoods) {
+            this.encryptedGoods = encryptedGoods;
+        }
+
+        public EncryptedData getRefundNote() {
+            return feedbackNote;
+        }
+
+        private void setRefundNote(EncryptedData refundNote) {
+            this.refundNote = refundNote;
+        }
+
+        public EncryptedData getFeedbackNote() {
+            return feedbackNote;
+        }
+
+        private void setFeedbackNote(EncryptedData feedbackNote) {
+            this.feedbackNote = feedbackNote;
         }
 
         @Override
@@ -282,7 +335,7 @@ public final class DigitalGoodsStore {
     }
 
     private static void addPurchase(Long purchaseId, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
-                                   int deliveryDeadlineTimestamp, XoredData note, int timestamp) {
+                                   int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
         Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT,
                 deliveryDeadlineTimestamp, note, timestamp);
         purchasesMap.put(purchaseId, purchase);
@@ -293,6 +346,7 @@ public final class DigitalGoodsStore {
             sellerPurchasesMap.put(sellerId, set);
         }
         set.add(purchase);
+        purchaseListeners.notify(purchase, Event.PURCHASE);
     }
 
     static void clear() {
@@ -313,12 +367,13 @@ public final class DigitalGoodsStore {
             sellerGoodsMap.put(sellerId, set);
         }
         set.add(goods);
+        goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
 
     static void undoListGoods(Long goodsId) {
         Goods goods = goodsMap.remove(goodsId);
         SortedSet<Goods> set = sellerGoodsMap.get(goods.getSellerId());
-        set.remove(goodsId);
+        set.remove(goods);
         if (set.isEmpty()) {
             sellerGoodsMap.remove(goods.getSellerId());
         }
@@ -328,6 +383,7 @@ public final class DigitalGoodsStore {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted()) {
             goods.setDelisted(true);
+            goodsListeners.notify(goods, Event.GOODS_DELISTED);
         } else {
             throw new IllegalStateException("Goods already delisted");
         }
@@ -346,6 +402,7 @@ public final class DigitalGoodsStore {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted()) {
             goods.changePrice(priceNQT);
+            goodsListeners.notify(goods, Event.GOODS_PRICE_CHANGE);
         } else {
             throw new IllegalStateException("Can't change price of delisted goods");
         }
@@ -355,13 +412,14 @@ public final class DigitalGoodsStore {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted()) {
             goods.changeQuantity(deltaQuantity);
+            goodsListeners.notify(goods, Event.GOODS_QUANTITY_CHANGE);
         } else {
             throw new IllegalStateException("Can't change quantity of delisted goods");
         }
     }
 
     static void purchase(Long purchaseId, Long buyerId, Long goodsId, int quantity, long priceNQT,
-                                int deliveryDeadlineTimestamp, XoredData note, int timestamp) {
+                                int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
                 && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getHeight()) {
@@ -381,7 +439,7 @@ public final class DigitalGoodsStore {
             pendingPurchasesMap.remove(purchaseId);
             getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
             SortedSet<Purchase> set = sellerPurchasesMap.get(purchase.getSellerId());
-            set.remove(purchaseId);
+            set.remove(purchase);
             if (set.isEmpty()) {
                 sellerPurchasesMap.remove(purchase.getSellerId());
             }
@@ -391,7 +449,7 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void deliver(Long sellerId, Long purchaseId, long discountNQT) {
+    static void deliver(Long sellerId, Long purchaseId, long discountNQT, EncryptedData encryptedGoods) {
         Purchase purchase = pendingPurchasesMap.remove(purchaseId);
         if (purchase != null) {
             long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
@@ -400,6 +458,8 @@ public final class DigitalGoodsStore {
             buyer.addToUnconfirmedBalanceNQT(discountNQT);
             Account seller = Account.getAccount(sellerId);
             seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
+            purchase.setEncryptedGoods(encryptedGoods);
+            purchaseListeners.notify(purchase, Event.DELIVERY);
         }
     }
 
@@ -413,23 +473,38 @@ public final class DigitalGoodsStore {
             buyer.addToUnconfirmedBalanceNQT(- discountNQT);
             Account seller = Account.getAccount(sellerId);
             seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
+            purchase.setEncryptedGoods(null);
         }
     }
 
-    static void refund(Long sellerId, Long purchaseId, long refundNQT) {
-        Purchase purchase = getPurchase(purchaseId);
+    static void refund(Long sellerId, Long purchaseId, long refundNQT, EncryptedData encryptedNote) {
+        Purchase purchase = purchasesMap.get(purchaseId);
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceNQT(-refundNQT);
         Account buyer = Account.getAccount(purchase.getBuyerId());
         buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
+        purchase.setRefundNote(encryptedNote);
+        purchaseListeners.notify(purchase, Event.REFUND);
     }
 
     static void undoRefund(Long sellerId, Long purchaseId, long refundNQT) {
-        Purchase purchase = getPurchase(purchaseId);
+        Purchase purchase = purchasesMap.get(purchaseId);
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceNQT(refundNQT);
         Account buyer = Account.getAccount(purchase.getBuyerId());
         buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
+        purchase.setRefundNote(null);
+    }
+
+    static void feedback(Long purchaseId, EncryptedData encryptedNote) {
+        Purchase purchase = purchasesMap.get(purchaseId);
+        purchase.setFeedbackNote(encryptedNote);
+        purchaseListeners.notify(purchase, Event.FEEDBACK);
+    }
+
+    static void undoFeedback(Long purchaseId) {
+        Purchase purchase = purchasesMap.get(purchaseId);
+        purchase.setFeedbackNote(null);
     }
 
 }

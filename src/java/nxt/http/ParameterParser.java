@@ -5,16 +5,15 @@ import nxt.Asset;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.crypto.Crypto;
-import nxt.crypto.XoredData;
 import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE;
-import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE_NONCE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_ORDER;
@@ -34,6 +33,7 @@ import static nxt.http.JSONResponses.MISSING_PRICE;
 import static nxt.http.JSONResponses.MISSING_PURCHASE;
 import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
@@ -170,26 +170,16 @@ final class ParameterParser {
         }
     }
 
-    static XoredData getNote(HttpServletRequest req) throws ParameterException {
-        byte[] noteData;
+    static byte[] getNote(HttpServletRequest req) throws ParameterException {
         try {
-            noteData = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("note")));
-            if (noteData.length > Constants.MAX_DGS_NOTE_LENGTH) {
+            String note = Convert.nullToEmpty(req.getParameter("note"));
+            if (note.length() > Constants.MAX_DGS_NOTE_LENGTH) {
                 throw new ParameterException(INCORRECT_DGS_NOTE);
             }
-        } catch (RuntimeException e) {
+            return note.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
             throw new ParameterException(INCORRECT_DGS_NOTE);
         }
-        byte[] noteNonce;
-        try {
-            noteNonce = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("noteNonce")));
-            if (noteNonce.length != 32) {
-                throw new ParameterException(INCORRECT_DGS_NOTE_NONCE);
-            }
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_DGS_NOTE_NONCE);
-        }
-        return new XoredData(noteData, noteNonce);
     }
 
     static DigitalGoodsStore.Purchase getPurchase(HttpServletRequest req) throws ParameterException {
@@ -206,6 +196,14 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PURCHASE);
         }
+    }
+
+    static String getSecretPhrase(HttpServletRequest req) throws ParameterException {
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        if (secretPhrase == null) {
+            throw new ParameterException(MISSING_SECRET_PHRASE);
+        }
+        return secretPhrase;
     }
 
     static Account getSenderAccount(HttpServletRequest req) throws ParameterException {

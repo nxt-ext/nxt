@@ -4,7 +4,7 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -43,9 +43,6 @@ public final class DGSPurchase extends CreateTransaction {
             return INCORRECT_PURCHASE_PRICE;
         }
 
-        XoredData note = ParameterParser.getNote(req);
-        Account buyerAccount = ParameterParser.getSenderAccount(req);
-
         String deliveryDeadlineString = Convert.emptyToNull(req.getParameter("deliveryDeadlineTimestamp"));
         if (deliveryDeadlineString == null) {
             return MISSING_DELIVERY_DEADLINE_TIMESTAMP;
@@ -60,7 +57,14 @@ public final class DGSPurchase extends CreateTransaction {
             return INCORRECT_DELIVERY_DEADLINE_TIMESTAMP;
         }
 
-        Attachment attachment = new Attachment.DigitalGoodsPurchase(goods.getId(), quantity, priceNQT, deliveryDeadline, note);
+        byte[] note = ParameterParser.getNote(req);
+        Account buyerAccount = ParameterParser.getSenderAccount(req);
+        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        Account sellerAccount = Account.getAccount(goods.getSellerId());
+        EncryptedData encryptedNote = sellerAccount.encryptTo(note, secretPhrase);
+
+        Attachment attachment = new Attachment.DigitalGoodsPurchase(goods.getId(), quantity, priceNQT,
+                deliveryDeadline, encryptedNote);
         return createTransaction(req, buyerAccount, attachment);
 
     }
