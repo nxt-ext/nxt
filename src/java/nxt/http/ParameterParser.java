@@ -172,11 +172,7 @@ final class ParameterParser {
 
     static byte[] getNote(HttpServletRequest req) throws ParameterException {
         try {
-            String note = Convert.nullToEmpty(req.getParameter("note"));
-            if (note.length() > Constants.MAX_DGS_NOTE_LENGTH) {
-                throw new ParameterException(INCORRECT_DGS_NOTE);
-            }
-            return note.getBytes("UTF-8");
+            return Convert.nullToEmpty(req.getParameter("note")).getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new ParameterException(INCORRECT_DGS_NOTE);
         }

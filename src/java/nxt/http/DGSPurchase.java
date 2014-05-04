@@ -21,8 +21,7 @@ public final class DGSPurchase extends CreateTransaction {
     static final DGSPurchase instance = new DGSPurchase();
 
     private DGSPurchase() {
-        super("goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp",
-                "note", "noteNonce");
+        super("goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp", "note");
     }
 
     @Override

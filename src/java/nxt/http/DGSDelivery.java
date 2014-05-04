@@ -49,9 +49,6 @@ public final class DGSDelivery extends CreateTransaction {
         byte[] goodsData;
         try {
             goodsData = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("goodsData")));
-            if (goodsData.length > Constants.MAX_DGS_GOODS_LENGTH) {
-                return INCORRECT_DGS_GOODS;
-            }
         } catch (RuntimeException e) {
             return INCORRECT_DGS_GOODS;
         }
