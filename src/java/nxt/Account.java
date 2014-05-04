@@ -189,6 +189,7 @@ public final class Account {
     private volatile int keyHeight;
     private long balanceNQT;
     private long unconfirmedBalanceNQT;
+    private long forgedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
     private volatile int currentLeasingHeightFrom;
@@ -255,6 +256,10 @@ public final class Account {
 
     public synchronized long getUnconfirmedBalanceNQT() {
         return unconfirmedBalanceNQT;
+    }
+
+    public synchronized long getForgedBalanceNQT() {
+        return forgedBalanceNQT;
     }
 
     public long getEffectiveBalanceNXT() {
@@ -535,6 +540,12 @@ public final class Account {
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
             listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        }
+    }
+
+    void addToForgedBalanceNQT(long amountNQT) {
+        synchronized(this) {
+            this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
         }
     }
 
