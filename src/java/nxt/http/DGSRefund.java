@@ -19,7 +19,7 @@ public final class DGSRefund extends CreateTransaction {
     static final DGSRefund instance = new DGSRefund();
 
     private DGSRefund() {
-        super("purchase", "refundNQT", "note", "noteNonce");
+        super("purchase", "refundNQT", "note", "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override
@@ -44,10 +44,8 @@ public final class DGSRefund extends CreateTransaction {
             return INCORRECT_DGS_REFUND;
         }
 
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
         Account buyerAccount = Account.getAccount(purchase.getBuyerId());
-        byte[] note = ParameterParser.getNote(req);
-        EncryptedData encryptedNote = buyerAccount.encryptTo(note, secretPhrase);
+        EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, buyerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, encryptedNote);
         return createTransaction(req, sellerAccount, attachment);

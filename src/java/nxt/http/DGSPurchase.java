@@ -21,7 +21,8 @@ public final class DGSPurchase extends CreateTransaction {
     static final DGSPurchase instance = new DGSPurchase();
 
     private DGSPurchase() {
-        super("goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp", "note");
+        super("goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp", "note",
+                "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override
@@ -56,11 +57,9 @@ public final class DGSPurchase extends CreateTransaction {
             return INCORRECT_DELIVERY_DEADLINE_TIMESTAMP;
         }
 
-        byte[] note = ParameterParser.getNote(req);
         Account buyerAccount = ParameterParser.getSenderAccount(req);
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
         Account sellerAccount = Account.getAccount(goods.getSellerId());
-        EncryptedData encryptedNote = sellerAccount.encryptTo(note, secretPhrase);
+        EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, sellerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsPurchase(goods.getId(), quantity, priceNQT,
                 deliveryDeadline, encryptedNote);

@@ -16,7 +16,7 @@ public final class DGSFeedback extends CreateTransaction {
     static final DGSFeedback instance = new DGSFeedback();
 
     private DGSFeedback() {
-        super("purchase", "note");
+        super("purchase", "note", "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override
@@ -29,10 +29,8 @@ public final class DGSFeedback extends CreateTransaction {
             return INCORRECT_PURCHASE;
         }
 
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
-        byte[] note = ParameterParser.getNote(req);
         Account sellerAccount = Account.getAccount(purchase.getSellerId());
-        EncryptedData encryptedNote = sellerAccount.encryptTo(note, secretPhrase);
+        EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, sellerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsFeedback(purchase.getId(), encryptedNote);
         return createTransaction(req, buyerAccount, attachment);

@@ -20,14 +20,13 @@ public final class DGSDelivery extends CreateTransaction {
     static final DGSDelivery instance = new DGSDelivery();
 
     private DGSDelivery() {
-        super("purchase", "discountNQT", "goodsData");
+        super("purchase", "discountNQT", "goodsData", "encryptedGoodsData", "encryptedGoodsNonce");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Account sellerAccount = ParameterParser.getSenderAccount(req);
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
         DigitalGoodsStore.Purchase purchase = ParameterParser.getPurchase(req);
         if (! sellerAccount.getId().equals(purchase.getSellerId())) {
             return INCORRECT_PURCHASE;
@@ -46,15 +45,19 @@ public final class DGSDelivery extends CreateTransaction {
             return INCORRECT_DGS_DISCOUNT;
         }
 
-        byte[] goodsData;
-        try {
-            goodsData = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("goodsData")));
-        } catch (RuntimeException e) {
-            return INCORRECT_DGS_GOODS;
-        }
-
         Account buyerAccount = Account.getAccount(purchase.getBuyerId());
-        EncryptedData encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);
+        EncryptedData encryptedGoods = ParameterParser.getEncryptedGoods(req);
+
+        if (encryptedGoods == null) {
+            String secretPhrase = ParameterParser.getSecretPhrase(req);
+            byte[] goodsData;
+            try {
+                goodsData = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("goodsData")));
+            } catch (RuntimeException e) {
+                return INCORRECT_DGS_GOODS;
+            }
+            encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);
+        }
 
         Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, discountNQT);
         return createTransaction(req, sellerAccount, attachment);

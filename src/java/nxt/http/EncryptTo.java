@@ -3,6 +3,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.NxtException;
 import nxt.crypto.EncryptedData;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -31,8 +32,8 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
         EncryptedData encryptedNote = recipientAccount.encryptTo(note, secretPhrase);
 
         JSONObject response = new JSONObject();
-        response.put("note", encryptedNote.getData());
-        response.put("noteNonce", encryptedNote.getNonce());
+        response.put("encryptedNote", Convert.toHexString(encryptedNote.getData()));
+        response.put("encryptedNoteNonce", Convert.toHexString(encryptedNote.getNonce()));
         return response;
 
     }

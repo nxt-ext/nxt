@@ -115,6 +115,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
     public static final JSONStreamAware MISSING_SELLER = missing("seller");
+    public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_NOTE = incorrect("encryptedNote");
+    public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("encryptedGoods");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

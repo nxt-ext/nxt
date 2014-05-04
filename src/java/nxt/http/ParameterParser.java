@@ -5,39 +5,13 @@ import nxt.Asset;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
-import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
-import static nxt.http.JSONResponses.INCORRECT_ASSET;
-import static nxt.http.JSONResponses.INCORRECT_DGS_NOTE;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
-import static nxt.http.JSONResponses.INCORRECT_GOODS;
-import static nxt.http.JSONResponses.INCORRECT_ORDER;
-import static nxt.http.JSONResponses.INCORRECT_PRICE;
-import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
-import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
-import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
-import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
-import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_AMOUNT;
-import static nxt.http.JSONResponses.MISSING_ASSET;
-import static nxt.http.JSONResponses.MISSING_FEE;
-import static nxt.http.JSONResponses.MISSING_GOODS;
-import static nxt.http.JSONResponses.MISSING_ORDER;
-import static nxt.http.JSONResponses.MISSING_PRICE;
-import static nxt.http.JSONResponses.MISSING_PURCHASE;
-import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.MISSING_RECIPIENT;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
-import static nxt.http.JSONResponses.UNKNOWN_ASSET;
-import static nxt.http.JSONResponses.UNKNOWN_GOODS;
+import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
 
@@ -176,6 +150,33 @@ final class ParameterParser {
         } catch (UnsupportedEncodingException e) {
             throw new ParameterException(INCORRECT_DGS_NOTE);
         }
+    }
+
+    static EncryptedData getEncryptedNote(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+        String encryptedNote = Convert.emptyToNull(req.getParameter("encryptedNote"));
+        String encryptedNoteNonce = Convert.emptyToNull(req.getParameter("encryptedNoteNonce"));
+        if (encryptedNote != null && encryptedNoteNonce != null) {
+            try {
+                return new EncryptedData(Convert.parseHexString(encryptedNote), Convert.parseHexString(encryptedNoteNonce));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_DGS_ENCRYPTED_NOTE);
+            }
+        }
+        String secretPhrase = getSecretPhrase(req);
+        return recipientAccount.encryptTo(getNote(req), secretPhrase);
+    }
+
+    static EncryptedData getEncryptedGoods(HttpServletRequest req) throws ParameterException {
+        String encryptedGoodsData = Convert.emptyToNull(req.getParameter("encryptedGoodsData"));
+        String encryptedGoodsNonce = Convert.emptyToNull(req.getParameter("encryptedGoodsNonce"));
+        if (encryptedGoodsData != null && encryptedGoodsNonce != null) {
+            try {
+                return new EncryptedData(Convert.parseHexString(encryptedGoodsData), Convert.parseHexString(encryptedGoodsNonce));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_DGS_ENCRYPTED_GOODS);
+            }
+        }
+        return null;
     }
 
     static DigitalGoodsStore.Purchase getPurchase(HttpServletRequest req) throws ParameterException {
