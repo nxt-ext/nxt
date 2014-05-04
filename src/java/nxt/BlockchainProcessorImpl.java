@@ -50,6 +50,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile Peer lastBlockchainFeeder;
     private volatile int lastBlockchainFeederHeight;
 
+    private volatile boolean isScanning;
+
     private final Runnable getMoreBlocksThread = new Runnable() {
 
         private final JSONStreamAware getCumulativeDifficultyRequest;
@@ -362,6 +364,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public int getLastBlockchainFeederHeight() {
         return lastBlockchainFeederHeight;
+    }
+
+    @Override
+    public boolean isScanning() {
+        return isScanning;
     }
 
     @Override
@@ -811,6 +818,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void scan() {
         synchronized (blockchain) {
+            isScanning = true;
             Logger.logMessage("Scanning blockchain...");
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
@@ -866,6 +874,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             validateAtScan = false;
             Logger.logMessage("...done");
+            isScanning = false;
         }
     }
 
