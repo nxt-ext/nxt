@@ -1,14 +1,17 @@
 package nxt.crypto;
 
 import nxt.util.Logger;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -30,8 +33,7 @@ public final class Crypto {
             return MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
             Logger.logMessage("Missing message digest algorithm: " + algorithm);
-            System.exit(1);
-            return null;
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
@@ -40,23 +42,35 @@ public final class Crypto {
     }
 
     public static byte[] getPublicKey(String secretPhrase) {
-
         try {
-
             byte[] publicKey = new byte[32];
             Curve25519.keygen(publicKey, null, Crypto.sha256().digest(secretPhrase.getBytes("UTF-8")));
-
+            /*
             if (! Curve25519.isCanonicalPublicKey(publicKey)) {
                 throw new RuntimeException("Public key not canonical");
             }
-
+            */
             return publicKey;
-
-        } catch (RuntimeException|UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException e) {
             Logger.logMessage("Error getting public key", e);
-            return null;
+            throw new RuntimeException(e.getMessage(), e);
         }
+    }
 
+    public static byte[] getPrivateKey(String secretPhrase) {
+        try {
+            byte[] s = Crypto.sha256().digest(secretPhrase.getBytes("UTF-8"));
+            Curve25519.clamp(s);
+            return s;
+        }
+        catch (UnsupportedEncodingException e) {
+            Logger.logMessage("Error getting private key", e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static void curve(byte[] Z, byte[] k, byte[] P) {
+        Curve25519.curve(Z, k, P);
     }
 
     public static byte[] sign(byte[] message, String secretPhrase) {
@@ -86,54 +100,75 @@ public final class Crypto {
             System.arraycopy(v, 0, signature, 0, 32);
             System.arraycopy(h, 0, signature, 32, 32);
 
+            /*
             if (!Curve25519.isCanonicalSignature(signature)) {
                 throw new RuntimeException("Signature not canonical");
             }
-
+            */
             return signature;
 
-        } catch (RuntimeException|UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException e) {
             Logger.logMessage("Error in signing message", e);
-            return null;
+            throw new RuntimeException(e.getMessage(), e);
         }
 
     }
 
     public static boolean verify(byte[] signature, byte[] message, byte[] publicKey, boolean enforceCanonical) {
 
+        if (enforceCanonical && !Curve25519.isCanonicalSignature(signature)) {
+            Logger.logDebugMessage("Rejecting non-canonical signature");
+            return false;
+        }
+
+        if (enforceCanonical && !Curve25519.isCanonicalPublicKey(publicKey)) {
+            Logger.logDebugMessage("Rejecting non-canonical public key");
+            return false;
+        }
+
+        byte[] Y = new byte[32];
+        byte[] v = new byte[32];
+        System.arraycopy(signature, 0, v, 0, 32);
+        byte[] h = new byte[32];
+        System.arraycopy(signature, 32, h, 0, 32);
+        Curve25519.verify(Y, v, h, publicKey);
+
+        MessageDigest digest = Crypto.sha256();
+        byte[] m = digest.digest(message);
+        digest.update(m);
+        byte[] h2 = digest.digest(Y);
+
+        return Arrays.equals(h, h2);
+    }
+
+    public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
+
         try {
 
-            if (enforceCanonical && !Curve25519.isCanonicalSignature(signature)) {
-                Logger.logDebugMessage("Rejecting non-canonical signature");
-                return false;
-            }
+            byte[] dhSharedSecret = new byte[32];
+            Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
+            byte[] key = sha256().digest(dhSharedSecret);
+            byte[] iv = new byte[16];
+            secureRandom.get().nextBytes(iv);
+            PaddedBufferedBlockCipher aes = new PaddedBufferedBlockCipher(new CBCBlockCipher(
+                    new AESEngine()));
+            CipherParameters ivAndKey = new ParametersWithIV(new KeyParameter(key), iv);
+            aes.init(true, ivAndKey);
+            byte[] output = new byte[aes.getOutputSize(plaintext.length)];
+            int len = aes.processBytes(plaintext, 0, plaintext.length, output, 0);
+            aes.doFinal(output, len);
+            ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
+            ciphertextOut.write(iv);
+            ciphertextOut.write(output);
+            return ciphertextOut.toByteArray();
 
-            if (enforceCanonical && !Curve25519.isCanonicalPublicKey(publicKey)) {
-                Logger.logDebugMessage("Rejecting non-canonical public key");
-                return false;
-            }
-
-            byte[] Y = new byte[32];
-            byte[] v = new byte[32];
-            System.arraycopy(signature, 0, v, 0, 32);
-            byte[] h = new byte[32];
-            System.arraycopy(signature, 32, h, 0, 32);
-            Curve25519.verify(Y, v, h, publicKey);
-
-            MessageDigest digest = Crypto.sha256();
-            byte[] m = digest.digest(message);
-            digest.update(m);
-            byte[] h2 = digest.digest(Y);
-
-            return Arrays.equals(h, h2);
-
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error in Crypto verify", e);
-            return false;
+        } catch (IOException | InvalidCipherTextException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
 
     }
 
+    /*
     public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey)
             throws GeneralSecurityException, IOException {
         byte[] dhSharedSecret = new byte[32];
@@ -150,7 +185,36 @@ public final class Crypto {
         ciphertextOut.write(cipher.doFinal(plaintext));
         return ciphertextOut.toByteArray();
     }
+    */
 
+    public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte theirPublicKey[]) {
+
+        try {
+
+            if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
+                throw new InvalidCipherTextException("invalid ciphertext");
+            }
+            byte[] iv = Arrays.copyOfRange(ivCiphertext, 0, 16);
+            byte[] ciphertext = Arrays.copyOfRange(ivCiphertext, 16, ivCiphertext.length);
+            byte[] dhSharedSecret = new byte[32];
+            Curve25519.curve(dhSharedSecret, myPrivateKey, theirPublicKey);
+            byte[] key = sha256().digest(dhSharedSecret);
+            PaddedBufferedBlockCipher aes = new PaddedBufferedBlockCipher(new CBCBlockCipher(
+                    new AESEngine()));
+            CipherParameters ivAndKey = new ParametersWithIV(new KeyParameter(key), iv);
+            aes.init(false, ivAndKey);
+            byte[] output = new byte[aes.getOutputSize(ciphertext.length)];
+            int len = aes.processBytes(ciphertext, 0, ciphertext.length, output, 0);
+            aes.doFinal(output, len);
+            return output;
+
+        } catch (InvalidCipherTextException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+
+    }
+
+    /*
     public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte theirPublicKey[])
             throws GeneralSecurityException {
         if ( ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0 ) {
@@ -167,8 +231,10 @@ public final class Crypto {
         cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
         return cipher.doFinal(ciphertext);
     }
+    */
 
-    private static void xorProcess(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
+    private static void xorProcess(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey,
+                                   byte[] nonce) {
 
         byte[] seed = new byte[32];
         Curve25519.curve(seed, myPrivateKey, theirPublicKey);
@@ -203,7 +269,8 @@ public final class Crypto {
 
     }
 
-    public static void xorDecrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
+    public static void xorDecrypt(byte[] data, int position, int length, byte[] myPrivateKey, byte[] theirPublicKey,
+                                  byte[] nonce) {
         xorProcess(data, position, length, myPrivateKey, theirPublicKey, nonce);
     }
 
@@ -217,7 +284,7 @@ public final class Crypto {
 
         } catch (RuntimeException e) {
             Logger.logMessage("Error getting shared secret", e);
-            return null;
+            throw e;
         }
 
     }
