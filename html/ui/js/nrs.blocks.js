@@ -207,7 +207,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				} else {
-					NRS.blocksPageLoaded({});
+					NRS.blocksPageLoaded([]);
 				}
 			});
 		} else {
@@ -248,6 +248,7 @@ var NRS = (function(NRS, $, undefined) {
 			var block = blocks[i];
 
 			totalAmount = totalAmount.add(new BigInteger(block.totalAmountNQT));
+
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
 
 			totalTransactions += block.numberOfTransactions;
@@ -257,15 +258,24 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (account != NRS.genesis ? "<a href='#' data-user='" + account + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
-		var startingTime = NRS.blocks[NRS.blocks.length - 1].timestamp;
-		var endingTime = NRS.blocks[0].timestamp;
-		var time = endingTime - startingTime;
+		if (blocks.length) {
+			var startingTime = blocks[NRS.blocks.length - 1].timestamp;
+			var endingTime = blocks[0].timestamp;
+			var time = endingTime - startingTime;
+		} else {
+			var startingTime = endingTime = time = 0;
+		}
 
 		$("#blocks_table tbody").empty().append(rows);
 		NRS.dataLoadFinished($("#blocks_table"));
 
-		var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-		var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+		if (blocks.length) {
+			var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+			var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+		} else {
+			var averageFee = 0;
+			var averageAmount = 0;
+		}
 
 		averageFee = NRS.convertToNQT(averageFee);
 		averageAmount = NRS.convertToNQT(averageAmount);
