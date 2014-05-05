@@ -259,7 +259,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (blocks.length) {
-			var startingTime = blocks[NRS.blocks.length - 1].timestamp;
+			var startingTime = blocks[blocks.length - 1].timestamp;
 			var endingTime = blocks[0].timestamp;
 			var time = endingTime - startingTime;
 		} else {
