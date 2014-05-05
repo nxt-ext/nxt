@@ -740,60 +740,80 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $el = $(elements);
 
-		var clipboard = new ZeroClipboard($el, {
-			moviePath: "js/3rdparty/zeroclipboard.swf"
-		});
+		if (NRS.inApp) {
+			$el.on("click", function() {
+				parent.postMessage({
+					"type": "copy",
+					"text": NRS.getClipboardText($(this).data("type"))
+				}, "*");
 
+				$.growl("Copied to the clipboard successfully.", {
+					"type": "success"
+				});
+			});
+		} else {
+			var clipboard = new ZeroClipboard($el, {
+				moviePath: "js/3rdparty/zeroclipboard.swf"
+			});
 
-		clipboard.on("dataRequested", function(client, args) {
-			switch ($(this).data("type")) {
-				case "account_id":
-					client.setText(NRS.account);
-					break;
-				case "new_address_format":
-					var address = new NxtAddress();
+			clipboard.on("dataRequested", function(client, args) {
+				client.setText(NRS.getClipboardText($(this).data("type")));
+			});
 
-					if (address.set(NRS.account, true)) {
-						client.setText(address.toString());
-					} else {
-						client.setText(NRS.account);
-					}
-
-					break;
-				case "message_link":
-					client.setText(document.URL.replace(/#.*$/, "") + "#message:" + NRS.account);
-					break;
-				case "send_link":
-					client.setText(document.URL.replace(/#.*$/, "") + "#send:" + NRS.account);
-					break;
-				case "asset_id":
-					client.setText($("#asset_id").text());
-					break;
-				case "asset_link":
-					client.setText(document.URL.replace(/#.*/, "") + "#asset:" + $("#asset_id").text());
-					break;
+			if ($el.hasClass("dropdown-toggle")) {
+				$el.removeClass("dropdown-toggle").data("toggle", "");
+				$el.parent().remove(".dropdown-menu");
 			}
-		});
 
-		if ($el.hasClass("dropdown-toggle")) {
-			$el.removeClass("dropdown-toggle").data("toggle", "");
-			$el.parent().remove(".dropdown-menu");
+			clipboard.on("complete", function(client, args) {
+				$.growl("Copied to the clipboard successfully.", {
+					"type": "success"
+				});
+			});
+
+			clipboard.on("noflash", function(client, args) {
+				$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {
+					"type": "danger"
+				});
+			});
+
+			clipboard.on("wrongflash", function(client, args) {
+				$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
+			});
 		}
+	}
 
-		clipboard.on("complete", function(client, args) {
-			$.growl("Copied to the clipboard successfully.", {
-				"type": "success"
-			});
-		});
+	NRS.getClipboardText = function(type) {
+		switch (type) {
+			case "account_id":
+				return NRS.account;
+				break;
+			case "new_address_format":
+				var address = new NxtAddress();
 
-		clipboard.on("noflash", function(client, args) {
-			$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {
-				"type": "danger"
-			});
-		});
-		clipboard.on("wrongflash", function(client, args) {
-			$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
-		});
+				if (address.set(NRS.account, true)) {
+					return address.toString();
+				} else {
+					return NRS.account;
+				}
+
+				break;
+			case "message_link":
+				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;
+				break;
+			case "send_link":
+				return document.URL.replace(/#.*$/, "") + "#send:" + NRS.account;
+				break;
+			case "asset_id":
+				return $("#asset_id").text();
+				break;
+			case "asset_link":
+				return document.URL.replace(/#.*/, "") + "#asset:" + $("#asset_id").text();
+				break;
+			default:
+				return "";
+				break;
+		}
 	}
 
 	NRS.dataLoadFinished = function($table, fadeIn) {

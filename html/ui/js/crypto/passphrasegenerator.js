@@ -38,8 +38,6 @@ var PassPhraseGenerator = {
 			$("#account_phrase_generator_start").show();
 			$("#account_phrase_generator_stop").hide();
 
-			$(".center").center();
-
 			bits = 128;
 
 			var random = new Uint32Array(bits / 32);
@@ -73,14 +71,11 @@ var PassPhraseGenerator = {
 				$("#account_phrase_generator_start").hide();
 				$("#account_phrase_generator_stop").fadeIn("slow");
 				$("#custom_passphrase_link").show();
-				$(".center").center();
 			}, 1500);
 		} else {
 			$container.find(".progress-bar").css("width", "0%");
 			$container.find(".progess-bar span").text("0% seeded");
 			$container.find(".step_1").show();
-
-			$(".center").center();
 
 			Math.seedrandom();
 
@@ -116,8 +111,6 @@ var PassPhraseGenerator = {
 					PassPhraseGenerator.passPhrase = words.join(" ");
 
 					$container.find(".step_2 textarea").val(PassPhraseGenerator.passPhrase).prop("readonly", true);
-
-					$(".center").center();
 				}
 			});
 		}

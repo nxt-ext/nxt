@@ -1198,138 +1198,133 @@
 		    </div>
 		    -->
 			
-	        <div class="center" style="display:none">   
-	        	 <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="88" style="margin-bottom:40px;opacity: 0.5;;" /></center>
-	            	 
-	            <div id="login_panel">   
-	            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;">Log in with your <strong>TestNet</strong> account - not your real one!</div>
-	                    	                    
-		            <div class="lockscreen-item">
-		                <div class="lockscreen-credentials">   
-		                    <div class="input-group">
-		                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Secret Phrase" autofocus />
-		                        <div class="input-group-btn">
-		                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
-		                        </div>
-		                    </div>
-		                </div>
-		            </div>	
-		            
-		            <div id="remember_password_container">
-		            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember password during session</label>
+			<table id="center" style="display:none;width:100%;height:100%;">
+	        	<tr><td style="text-align:center;vertical-align:middle">
+		        	 <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="88" style="margin-bottom:40px;opacity: 0.5;;" /></center>
+		            	 
+		            <div id="login_panel">   
+		            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;">Log in with your <strong>TestNet</strong> account - not your real one!</div>
+		                    	                    
+			            <div class="lockscreen-item">
+			                <div class="lockscreen-credentials">   
+			                    <div class="input-group">
+			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Secret Phrase" autofocus />
+			                        <div class="input-group-btn">
+			                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+			                        </div>
+			                    </div>
+			                </div>
+			            </div>	
+			            
+			            <div id="remember_password_container">
+			            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember password during session</label>
+			            </div>
+			            
+			            <div id="registration_link">
+			            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();">Don't have an account? Click here to create one!</a>
+			            </div> 
 		            </div>
 		            
-		            <div id="registration_link">
-		            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();">Don't have an account? Click here to create one!</a>
-		            </div> 
-	            </div>
-	            
-				<div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
-	                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Welcome to Nxt</div>
-	                <div class="panel-body">
-	               		<button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;">Returning User?</button>
-				   		&nbsp;&nbsp;
-				   		<button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;">New? Create Your Account!</button>
-	                </div>
-	            </div>  
-				
-	            <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
-	                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
-	                <div class="panel-body">
-						<form class="form-horizontal" role="form" method="post">
-	        				<div class="callout callout-info" style="max-width:500px;">Your secret phrase must be at least 35 characters long.</div>
-	        				
-	        				<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
-
-		            		<div class="form-group">
-		            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
-		            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
-		            		</div>
-		                    <div class="form-group">
-		                        <label for="registration_password_repeat" class="col-sm-3 control-label">Repeat</label>
-		                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
-		                    </div>
-		                    
-							<div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-		                    </div>
-	                    </form>
-	                </div>
-	            </div>  
-	            
-	            <div class="panel panel-default" id="account_phrase_generator_panel" style="display:none;max-width:500px">
-	            	<div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
-	                <div class="panel-body">
-	                	<div id="account_phrase_generator_loading">
-	                		<p><span class="loading_text">Loading Word List</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
-	                		
-							<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-	                	</div>
-	                	
-	                	<div id="account_phrase_generator_loaded">	        				
-	        				<div class="step_1 account_phrase_generator_steps">
-								<div id="account_phrase_generator_seeder" class="seeder">
-									<p>Move your cursor around to seed the random number generator...</p>
-									<div class="progress progress-striped">
-							            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-							                <span class="sr-only">0% Seeded</span>
-							            </div>
-									</div>
-								</div>
-								
-								<div style="text-align:right">
-									<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-								</div>
-	        				</div>
-	        				
-	        				<div class="step_2 account_phrase_generator_steps">
-	        					<div id="account_phrase_generator_start">
-	        						<p>Generating your secret phrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
-	        						
-									<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-	        					</div>
-	        					
-	        					<div id="account_phrase_generator_stop" style="display:none">
-		        					<p>Your automatically generated secret phrase is:</p>
-		        					
-		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
-	        					
-		        					<p>Please write down or memorize these 12 words (their order and capitalization matters). This secret phrase is needed in order to access your Nxt account.</p>
-		        						        					
-		        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+					<div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
+		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Welcome to Nxt</div>
+		                <div class="panel-body">
+		               		<button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;">Returning User?</button>
+					   		&nbsp;&nbsp;
+					   		<button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;">New? Create Your Account!</button>
+		                </div>
+		            </div>  
+					
+		            <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
+		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
+		                <div class="panel-body">
+							<form class="form-horizontal" role="form" method="post">
+		        				<div class="callout callout-info" style="max-width:500px;">Your secret phrase must be at least 35 characters long.</div>
 		        				
-									<div style="text-align:right">
-										<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-									</div>
-	        					</div>
-	        				</div>
-	        				
-	        				<div class="step_3 account_phrase_generator_steps">
-	        					<p>Your secret phrase is very important! In order to be sure that you have saved it, please write your secret phrase below:</p>
-	        					
-	        					<div class="callout callout-danger" style="display:none">You have not typed the secret phrase correctly, please try again!</div>
+		        				<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
 
-	        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
-	        					
-	        					<div style="text-align:right">
-									<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="NRS.verifyGeneratedPassphrase();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-								</div>
-	        				</div>
-	                	</div>
-	                </div>
-	            </div>  
+			            		<div class="form-group">
+			            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
+			            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
+			            		</div>
+			                    <div class="form-group">
+			                        <label for="registration_password_repeat" class="col-sm-3 control-label">Repeat</label>
+			                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
+			                    </div>
+			                    
+								<div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+			                    </div>
+		                    </form>
+		                </div>
+		            </div>
 	            
-	            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
-		    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own secret phrase? Click here.</a>
-				</div>
-			</div>
-	        <!--
-	        <div style="position:absolute;top:10px;left:10px;" id="server_select">
-	        	<button type="button" class="btn btn-primary">
-	        		<span class="text">TestNet</span></span>
-	        	</button>
-	        </div>
-	       -->
-	       
+		            <div class="panel panel-default" id="account_phrase_generator_panel" style="display:none;max-width:500px">
+		            	<div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
+		                <div class="panel-body">
+		                	<div id="account_phrase_generator_loading">
+		                		<p><span class="loading_text">Loading Word List</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+		                		
+								<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+		                	</div>
+		                	
+		                	<div id="account_phrase_generator_loaded">	        				
+		        				<div class="step_1 account_phrase_generator_steps">
+									<div id="account_phrase_generator_seeder" class="seeder">
+										<p>Move your cursor around to seed the random number generator...</p>
+										<div class="progress progress-striped">
+								            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+								                <span class="sr-only">0% Seeded</span>
+								            </div>
+										</div>
+									</div>
+									
+									<div style="text-align:right">
+										<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+									</div>
+		        				</div>
+		        				
+		        				<div class="step_2 account_phrase_generator_steps">
+		        					<div id="account_phrase_generator_start">
+		        						<p>Generating your secret phrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+		        						
+										<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+		        					</div>
+		        					
+		        					<div id="account_phrase_generator_stop" style="display:none">
+			        					<p>Your automatically generated secret phrase is:</p>
+			        					
+			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+		        					
+			        					<p>Please write down or memorize these 12 words (their order and capitalization matters). This secret phrase is needed in order to access your Nxt account.</p>
+			        						        					
+			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+			        				
+										<div style="text-align:right">
+											<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+										</div>
+		        					</div>
+		        				</div>
+		        				
+		        				<div class="step_3 account_phrase_generator_steps">
+		        					<p>Your secret phrase is very important! In order to be sure that you have saved it, please write your secret phrase below:</p>
+		        					
+		        					<div class="callout callout-danger" style="display:none">You have not typed the secret phrase correctly, please try again!</div>
+
+		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+		        					
+		        					<div style="text-align:right">
+										<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="NRS.verifyGeneratedPassphrase();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+									</div>
+		        				</div>
+		                	</div>
+		                </div>
+		            </div>  
+	            
+		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
+			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own secret phrase? Click here.</a>
+					</div>
+				</td>
+				</tr>
+			</table>	       
 		</div>
 
 		<div class="modal fade" id="lease_balance_modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -2630,7 +2625,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		</div>
 		
 		<div id="downloading_blockchain">
-			Downloading blockchain <span class="loading_dots"><span>.</span><span>.</span><span>.</span></span>
+			Downloading blockchain<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span>
 			<div class="progress progress-striped sm active" style="margin-bottom:5px;margin-top:5px;">
 	            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
 	                <span class="sr-only">0% Complete</span>

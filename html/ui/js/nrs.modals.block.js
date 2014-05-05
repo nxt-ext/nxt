@@ -2,22 +2,28 @@ var NRS = (function(NRS, $, undefined) {
 	$("#blocks_table, #dashboard_blocks_table").on("click", "a[data-block]", function(event) {
 		event.preventDefault();
 
-		var blockHeight = $(this).data("block");
-
-		var block = $(NRS.blocks).filter(function() {
-			return parseInt(this.height) == parseInt(blockHeight);
-		}).get(0);
-
-		NRS.showBlockModal(block);
-	});
-
-	NRS.showBlockModal = function(block) {
 		if (NRS.fetchingModalData) {
 			return;
 		}
 
 		NRS.fetchingModalData = true;
 
+		var blockHeight = $(this).data("block");
+
+		var block = $(NRS.blocks).filter(function() {
+			return parseInt(this.height) == parseInt(blockHeight);
+		}).get(0);
+
+		if (!block) {
+			NRS.getBlock($(this).data("blockid"), function(response) {
+				NRS.showBlockModal(response);
+			});
+		} else {
+			NRS.showBlockModal(block);
+		}
+	});
+
+	NRS.showBlockModal = function(block) {
 		$("#block_info_modal_block").html(String(block.id).escapeHTML());
 
 		$("#block_info_transactions_tab_link").tab("show");
