@@ -167,10 +167,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".page").hide();
 
-		$("body").scrollTop(0);
+		$(document.documentElement).scrollTop(0);
 
 		$("#" + page + "_page").show();
-
 
 		$(".content-header h1").find(".loading_dots").remove();
 
