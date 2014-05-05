@@ -295,13 +295,6 @@ var NRS = (function(NRS, $, undefined) {
 			localStorage.setItem("logged_in", true);
 		}
 
-		$("body").removeClass("lockscreen");
-		$("html").removeClass("lockscreen");
-		$("#lockscreen").hide();
-		$("window").off("resize.lockscreen");
-
-		$("body").scrollTop(0);
-
 		var userStyles = ["header", "sidebar", "page_header"];
 
 		for (var i = 0; i < userStyles.length; i++) {
@@ -315,6 +308,11 @@ var NRS = (function(NRS, $, undefined) {
 		var navBarHeight = $("nav.navbar").height();
 
 		$(".content-splitter-right").css("bottom", (contentHeaderHeight + navBarHeight + 10) + "px");
+
+		$("#lockscreen").hide();
+		$("body, html").removeClass("lockscreen");
+
+		$(document.documentElement).scrollTop(0);
 	}
 
 	$("#logout_button").click(function(e) {
