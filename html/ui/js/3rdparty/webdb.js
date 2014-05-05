@@ -2,7 +2,7 @@
    http://github.com/haas85/webdb
    Copyright (c) 2014 Iñigo Gonzalez Vazquez <ingonza85@gmail.com> (@haas85) - Under MIT License */
 (function() {
-	var WebDB, indexedDB, webDB, webSQL, _mix, _typeOf;
+	var WebDB, indexedDB, webDB, webSQL, _mix, _typeOf, _hasLocalStorage;
 
 	window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
 
@@ -15,11 +15,22 @@
 			this.schema = schema;
 			this.version = version;
 			this.size = size != null ? size : 5242880;
-			if (window.indexedDB) {
-				manager = new WebDB.indexedDB(this.name, this.schema, this.version, callback);
-			} else if (window.openDatabase) {
-				manager = new WebDB.webSQL(this.name, this.schema, this.version, this.size, callback);
+			try {
+				window.localStorage;
+				_hasLocalStorage = true;
+			} catch (err) {
+				_hasLocalStorage = false;
 			}
+			if (!_hasLocalStorage) {
+				throw "Local storage not supported";
+			} else {
+				if (window.indexedDB) {
+					manager = new WebDB.indexedDB(this.name, this.schema, this.version, callback);
+				} else if (window.openDatabase) {
+					manager = new WebDB.webSQL(this.name, this.schema, this.version, this.size, callback);
+				}
+			}
+
 			if (!window.openDatabase && !window.indexedDB) {
 				this.select = function(table, query, callback) {
 					if (callback != null) {

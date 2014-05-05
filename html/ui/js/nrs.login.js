@@ -10,7 +10,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLoginOrWelcomeScreen = function() {
-		if (localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
@@ -291,7 +291,7 @@ var NRS = (function(NRS, $, undefined) {
 			return this;
 		}
 
-		if (localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			setTimeout(function() {
 				$("#login_password").focus()
 			}, 10);
@@ -306,7 +306,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.unlock = function() {
-		if (!localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && !localStorage.getItem("logged_in")) {
 			localStorage.setItem("logged_in", true);
 		}
 

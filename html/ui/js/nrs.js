@@ -32,6 +32,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages = {};
 	NRS.incoming = {};
 
+	NRS.hasLocalStorage = true;
+
 	NRS.init = function() {
 		if (location.port && location.port != "6876") {
 			$(".testnet_only").hide();
@@ -50,6 +52,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
+		}
+
+		try {
+			window.localStorage;
+		} catch (err) {
+			NRS.hasLocalStorage = false;
 		}
 
 		NRS.createDatabase(function() {
