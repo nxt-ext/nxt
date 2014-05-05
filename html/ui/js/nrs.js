@@ -84,6 +84,12 @@ var NRS = (function(NRS, $, undefined) {
 		$(".show_popover").popover({
 			"trigger": "hover"
 		});
+
+		$("#dashboard_transactions_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
+			$(this).popover("show");
+		}).on("mouseleave", "td.confirmations", function() {
+			$(this).popover("destroy");
+		});
 	}
 
 	NRS.getState = function(callback) {

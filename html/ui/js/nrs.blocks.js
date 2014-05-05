@@ -145,15 +145,18 @@ var NRS = (function(NRS, $, undefined) {
 
 			var confirmations = parseInt($(this).data("confirmations"), 10);
 
-			if (confirmations <= 10) {
-				var nrConfirmations = confirmations + newBlocks.length;
+			var nrConfirmations = confirmations + newBlocks.length;
 
+			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
+				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
 
 				if (nrConfirmations > 10) {
 					nrConfirmations = '10+';
 				}
 				$(this).html(nrConfirmations);
+			} else {
+				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
 			}
 		});
 	}
