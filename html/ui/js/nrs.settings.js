@@ -836,7 +836,11 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.applySettings();
 			});
 		} else {
-			NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+			if (NRS.hasLocalStorage) {
+				NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+			} else {
+				NRS.settings = NRS.defaultSettings;
+			}
 			NRS.applySettings();
 		}
 	}
@@ -905,7 +909,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, [{
 				id: "settings"
 			}]);
-		} else {
+		} else if (NRS.hasLocalStorage) {
 			localStorage.setItem("settings", JSON.stringify(NRS.settings));
 		}
 

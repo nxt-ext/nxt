@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.newlyCreatedAccount = false;
+
 	NRS.allowLoginViaEnter = function() {
 		$("#login_password").keypress(function(e) {
 			if (e.which == '13') {
@@ -10,7 +12,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLoginOrWelcomeScreen = function() {
-		if (localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
@@ -25,13 +27,11 @@ var NRS = (function(NRS, $, undefined) {
 		setTimeout(function() {
 			$("#login_password").focus()
 		}, 10);
-		$(".center").center();
 	}
 
 	NRS.showWelcomeScreen = function() {
-		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #welcome_panel, #custom_passphrase_link").hide();
+		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#welcome_panel").show();
-		$(".center").center();
 	}
 
 	NRS.registerUserDefinedAccount = function() {
@@ -40,7 +40,6 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_generator_panel :input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_custom_panel").show();
 		$("#registration_password").focus();
-		$(".center").center();
 	}
 
 	NRS.registerAccount = function() {
@@ -57,8 +56,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		$loading.show();
 		$loaded.hide();
-
-		$(".center").center();
 
 		if (typeof PassPhraseGenerator == "undefined") {
 			$.when(
@@ -86,6 +83,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (password != PassPhraseGenerator.passPhrase) {
 			$("#account_phrase_generator_panel .step_3 .callout").show();
 		} else {
+			NRS.newlyCreatedAccount = true;
 			NRS.login(password, function() {
 				$.growl("Secret phrase confirmed successfully, you are now logged in.", {
 					"type": "success"
@@ -281,17 +279,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLockscreen = function() {
-		/* CENTER ELEMENTS IN THE SCREEN */
-		$.fn.center = function() {
-			this.css("position", "absolute");
-			this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +
-				$(window).scrollTop()) - 30 + "px");
-			this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) +
-				$(window).scrollLeft()) + "px");
-			return this;
-		}
-
-		if (localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			setTimeout(function() {
 				$("#login_password").focus()
 			}, 10);
@@ -299,23 +287,13 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.showWelcomeScreen();
 		}
 
-		$(".center").center().show();
-		$(window).on("resize.lockscreen", function() {
-			$(".center").center();
-		});
+		$("#center").show();
 	}
 
 	NRS.unlock = function() {
-		if (!localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && !localStorage.getItem("logged_in")) {
 			localStorage.setItem("logged_in", true);
 		}
-
-		$("body").removeClass("lockscreen");
-		$("html").removeClass("lockscreen");
-		$("#lockscreen").hide();
-		$("window").off("resize.lockscreen");
-
-		$("body").scrollTop(0);
 
 		var userStyles = ["header", "sidebar", "page_header"];
 
@@ -330,6 +308,11 @@ var NRS = (function(NRS, $, undefined) {
 		var navBarHeight = $("nav.navbar").height();
 
 		$(".content-splitter-right").css("bottom", (contentHeaderHeight + navBarHeight + 10) + "px");
+
+		$("#lockscreen").hide();
+		$("body, html").removeClass("lockscreen");
+
+		$(document.documentElement).scrollTop(0);
 	}
 
 	$("#logout_button").click(function(e) {

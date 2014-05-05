@@ -32,6 +32,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages = {};
 	NRS.incoming = {};
 
+	NRS.hasLocalStorage = true;
+	NRS.inApp = false;
+
 	NRS.init = function() {
 		if (location.port && location.port != "6876") {
 			$(".testnet_only").hide();
@@ -52,6 +55,12 @@ var NRS = (function(NRS, $, undefined) {
 			$(".remote_warning").show();
 		}
 
+		try {
+			window.localStorage;
+		} catch (err) {
+			NRS.hasLocalStorage = false;
+		}
+
 		NRS.createDatabase(function() {
 			NRS.getSettings();
 		});
@@ -61,6 +70,16 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		NRS.showLockscreen();
+
+		if (window.parent && window.location.href.indexOf("?app") != -1) {
+			NRS.inApp = true;
+
+			$("#show_console").hide();
+
+			parent.postMessage("loaded", "*");
+
+			window.addEventListener("message", receiveMessage, false);
+		}
 
 		//every 30 seconds check for new block..
 		setInterval(function() {
@@ -75,6 +94,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".show_popover").popover({
 			"trigger": "hover"
+		});
+
+		$("#dashboard_transactions_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
+			$(this).popover("show");
+		}).on("mouseleave", "td.confirmations", function() {
+			$(this).popover("destroy");
 		});
 	}
 
@@ -142,10 +167,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".page").hide();
 
-		$("body").scrollTop(0);
+		$(document.documentElement).scrollTop(0);
 
 		$("#" + page + "_page").show();
-
 
 		$(".content-header h1").find(".loading_dots").remove();
 
@@ -296,12 +320,18 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_nr_assets").html("0");
 
 				if (NRS.accountInfo.errorCode == 5) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + NRS.account + "</strong>").show();
+					if (NRS.downloadingBlockchain) {
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+					} else {
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>").show();
+					}
 				} else {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
 				}
 			} else {
-				if (!NRS.accountInfo.publicKey) {
+				if (NRS.downloadingBlockchain) {
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+				} else if (!NRS.accountInfo.publicKey) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("<b>Warning!</b>: Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue. (<a href='#' data-toggle='modal' data-target='#send_message_modal'>send a message</a>, <a href='#' data-toggle='modal' data-target='#register_alias_modal'>buy an alias</a>, <a href='#' data-toggle='modal' data-target='#send_money_modal'>send Nxt</a>, ...)").show();
 				} else {
 					$("#dashboard_message").hide();
@@ -321,7 +351,7 @@ var NRS = (function(NRS, $, undefined) {
 							var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
 
 							if (previous_balances != current_balances) {
-								if (previous_balances != "undefined") {
+								if (previous_balances != "undefined" && typeof previous_balances != "undefined") {
 									previous_balances = JSON.parse(previous_balances);
 								} else {
 									previous_balances = [];
@@ -653,12 +683,9 @@ $(document).ready(function() {
 	NRS.init();
 });
 
-window.addEventListener("message", receiveMessage, false);
-
 function receiveMessage(event) {
 	if (event.origin != "file://") {
 		return;
 	}
-
 	//parent.postMessage("from iframe", "file://");
 }

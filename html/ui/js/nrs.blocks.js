@@ -45,7 +45,7 @@ var NRS = (function(NRS, $, undefined) {
 			for (var i = 0; i < NRS.blocks.length; i++) {
 				var block = NRS.blocks[i];
 
-				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
+				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.id).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 			}
 
 			$("#dashboard_blocks_table tbody").empty().append(rows);
@@ -106,6 +106,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 30) {
 				NRS.downloadingBlockchain = false;
+				$("#dashboard_message").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 				$("#show_console").show();
 				$.growl("The block chain is now up to date.", {
@@ -122,7 +123,7 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < newBlockCount; i++) {
 			var block = newBlocks[i];
 
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
+			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.id).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 		}
 
 		if (newBlockCount == 1) {
@@ -144,15 +145,18 @@ var NRS = (function(NRS, $, undefined) {
 
 			var confirmations = parseInt($(this).data("confirmations"), 10);
 
-			if (confirmations <= 10) {
-				var nrConfirmations = confirmations + newBlocks.length;
+			var nrConfirmations = confirmations + newBlocks.length;
 
+			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
+				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
 
 				if (nrConfirmations > 10) {
 					nrConfirmations = '10+';
 				}
 				$(this).html(nrConfirmations);
+			} else {
+				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
 			}
 		});
 	}
@@ -192,6 +196,7 @@ var NRS = (function(NRS, $, undefined) {
 								return;
 							}
 
+							block["id"] = input.block;
 							blocks[input["_extra"].nr] = block;
 							nr_blocks++;
 
@@ -206,7 +211,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				} else {
-					NRS.blocksPageLoaded({});
+					NRS.blocksPageLoaded([]);
 				}
 			});
 		} else {
@@ -239,32 +244,42 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.blocksPageLoaded = function(blocks) {
 		var rows = "";
-		var totalAmount = new BigInteger();
-		var totalFees = new BigInteger();
+		var totalAmount = new BigInteger("0");
+		var totalFees = new BigInteger("0");
 		var totalTransactions = 0;
 
 		for (var i = 0; i < blocks.length; i++) {
 			var block = blocks[i];
 
 			totalAmount = totalAmount.add(new BigInteger(block.totalAmountNQT));
+
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
 
 			totalTransactions += block.numberOfTransactions;
 
 			var account = String(block.generator).escapeHTML();
 
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (account != NRS.genesis ? "<a href='#' data-user='" + account + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
+			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.id).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (account != NRS.genesis ? "<a href='#' data-user='" + account + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
-		var startingTime = NRS.blocks[NRS.blocks.length - 1].timestamp;
-		var endingTime = NRS.blocks[0].timestamp;
-		var time = endingTime - startingTime;
+		if (blocks.length) {
+			var startingTime = blocks[blocks.length - 1].timestamp;
+			var endingTime = blocks[0].timestamp;
+			var time = endingTime - startingTime;
+		} else {
+			var startingTime = endingTime = time = 0;
+		}
 
 		$("#blocks_table tbody").empty().append(rows);
 		NRS.dataLoadFinished($("#blocks_table"));
 
-		var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-		var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+		if (blocks.length) {
+			var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+			var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+		} else {
+			var averageFee = 0;
+			var averageAmount = 0;
+		}
 
 		averageFee = NRS.convertToNQT(averageFee);
 		averageAmount = NRS.convertToNQT(averageAmount);
