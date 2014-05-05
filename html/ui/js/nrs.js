@@ -304,12 +304,18 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_nr_assets").html("0");
 
 				if (NRS.accountInfo.errorCode == 5) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + NRS.account + "</strong>").show();
+					if (NRS.downloadingBlockchain) {
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+					} else {
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>").show();
+					}
 				} else {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
 				}
 			} else {
-				if (!NRS.accountInfo.publicKey) {
+				if (NRS.downloadingBlockchain) {
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+				} else if (!NRS.accountInfo.publicKey) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("<b>Warning!</b>: Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue. (<a href='#' data-toggle='modal' data-target='#send_message_modal'>send a message</a>, <a href='#' data-toggle='modal' data-target='#register_alias_modal'>buy an alias</a>, <a href='#' data-toggle='modal' data-target='#send_money_modal'>send Nxt</a>, ...)").show();
 				} else {
 					$("#dashboard_message").hide();

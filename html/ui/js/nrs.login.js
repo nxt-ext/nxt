@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.newlyCreatedAccount = false;
+
 	NRS.allowLoginViaEnter = function() {
 		$("#login_password").keypress(function(e) {
 			if (e.which == '13') {
@@ -86,6 +88,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (password != PassPhraseGenerator.passPhrase) {
 			$("#account_phrase_generator_panel .step_3 .callout").show();
 		} else {
+			NRS.newlyCreatedAccount = true;
 			NRS.login(password, function() {
 				$.growl("Secret phrase confirmed successfully, you are now logged in.", {
 					"type": "success"

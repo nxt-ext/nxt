@@ -106,6 +106,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 30) {
 				NRS.downloadingBlockchain = false;
+				$("#dashboard_message").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 				$("#show_console").show();
 				$.growl("The block chain is now up to date.", {
