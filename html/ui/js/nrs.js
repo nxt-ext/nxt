@@ -33,6 +33,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.incoming = {};
 
 	NRS.hasLocalStorage = true;
+	NRS.inApp = false;
 
 	NRS.init = function() {
 		if (location.port && location.port != "6876") {
@@ -58,6 +59,16 @@ var NRS = (function(NRS, $, undefined) {
 			window.localStorage;
 		} catch (err) {
 			NRS.hasLocalStorage = false;
+		}
+
+		if (window.parent && window.location.href.indexOf("?app") != -1) {
+			NRS.inApp = true;
+
+			$("#show_console").hide();
+
+			parent.postMessage("loaded", "*");
+
+			window.addEventListener("message", receiveMessage, false);
 		}
 
 		NRS.createDatabase(function() {
@@ -341,7 +352,7 @@ var NRS = (function(NRS, $, undefined) {
 							var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
 
 							if (previous_balances != current_balances) {
-								if (previous_balances != "undefined") {
+								if (previous_balances != "undefined" && typeof previous_balances != "undefined") {
 									previous_balances = JSON.parse(previous_balances);
 								} else {
 									previous_balances = [];
@@ -673,12 +684,9 @@ $(document).ready(function() {
 	NRS.init();
 });
 
-window.addEventListener("message", receiveMessage, false);
-
 function receiveMessage(event) {
 	if (event.origin != "file://") {
 		return;
 	}
-
 	//parent.postMessage("from iframe", "file://");
 }
