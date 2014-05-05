@@ -10,7 +10,9 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 
+import static nxt.http.JSONResponses.ALREADY_DELIVERED;
 import static nxt.http.JSONResponses.INCORRECT_DGS_DISCOUNT;
 import static nxt.http.JSONResponses.INCORRECT_DGS_GOODS;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
@@ -20,7 +22,7 @@ public final class DGSDelivery extends CreateTransaction {
     static final DGSDelivery instance = new DGSDelivery();
 
     private DGSDelivery() {
-        super("purchase", "discountNQT", "goodsData", "encryptedGoodsData", "encryptedGoodsNonce");
+        super("purchase", "discountNQT", "goodsData", "goodsText", "encryptedGoodsData", "encryptedGoodsNonce");
     }
 
     @Override
@@ -30,6 +32,9 @@ public final class DGSDelivery extends CreateTransaction {
         DigitalGoodsStore.Purchase purchase = ParameterParser.getPurchase(req);
         if (! sellerAccount.getId().equals(purchase.getSellerId())) {
             return INCORRECT_PURCHASE;
+        }
+        if (! purchase.isPending()) {
+            return ALREADY_DELIVERED;
         }
 
         String discountValueNQT = Convert.emptyToNull(req.getParameter("discountNQT"));
@@ -52,8 +57,13 @@ public final class DGSDelivery extends CreateTransaction {
             String secretPhrase = ParameterParser.getSecretPhrase(req);
             byte[] goodsData;
             try {
-                goodsData = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("goodsData")));
-            } catch (RuntimeException e) {
+                String goodsDataString = Convert.emptyToNull(req.getParameter("goodsData"));
+                if (goodsDataString != null) {
+                    goodsData = Convert.parseHexString(goodsDataString);
+                } else {
+                    goodsData = Convert.nullToEmpty(req.getParameter("goodsText")).getBytes("UTF-8");
+                }
+            } catch (UnsupportedEncodingException|RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
             encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);

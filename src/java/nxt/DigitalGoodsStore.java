@@ -226,7 +226,7 @@ public final class DigitalGoodsStore {
         }
 
         public EncryptedData getRefundNote() {
-            return feedbackNote;
+            return refundNote;
         }
 
         private void setRefundNote(EncryptedData refundNote) {

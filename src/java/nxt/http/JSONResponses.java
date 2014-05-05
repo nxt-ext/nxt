@@ -182,6 +182,22 @@ public final class JSONResponses {
         MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware DECRYPTION_FAILED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Decryption failed");
+        DECRYPTION_FAILED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware ALREADY_DELIVERED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Purchase already delivered");
+        ALREADY_DELIVERED = JSON.prepare(response);
+    }
+
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

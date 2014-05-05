@@ -1,8 +1,9 @@
 package nxt.crypto;
 
+import java.io.Serializable;
 import java.security.SecureRandom;
 
-public final class EncryptedData {
+public final class EncryptedData implements Serializable {
 
     private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
         @Override
@@ -13,6 +14,11 @@ public final class EncryptedData {
 
     private final byte[] data;
     private final byte[] nonce;
+
+    public EncryptedData() {
+        this.data = null;
+        this.nonce = null;
+    }
 
     public EncryptedData(byte[] data, byte[] nonce) {
         this.data = data;

@@ -16,7 +16,7 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
     static final EncryptTo instance = new EncryptTo();
 
     private EncryptTo() {
-        super("recipient", "note");
+        super("recipient", "note", "secretPhrase");
     }
 
     @Override
