@@ -61,16 +61,6 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.hasLocalStorage = false;
 		}
 
-		if (window.parent && window.location.href.indexOf("?app") != -1) {
-			NRS.inApp = true;
-
-			$("#show_console").hide();
-
-			parent.postMessage("loaded", "*");
-
-			window.addEventListener("message", receiveMessage, false);
-		}
-
 		NRS.createDatabase(function() {
 			NRS.getSettings();
 		});
@@ -80,6 +70,16 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		NRS.showLockscreen();
+
+		if (window.parent && window.location.href.indexOf("?app") != -1) {
+			NRS.inApp = true;
+
+			$("#show_console").hide();
+
+			parent.postMessage("loaded", "*");
+
+			window.addEventListener("message", receiveMessage, false);
+		}
 
 		//every 30 seconds check for new block..
 		setInterval(function() {

@@ -27,13 +27,11 @@ var NRS = (function(NRS, $, undefined) {
 		setTimeout(function() {
 			$("#login_password").focus()
 		}, 10);
-		$(".center").center();
 	}
 
 	NRS.showWelcomeScreen = function() {
-		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #welcome_panel, #custom_passphrase_link").hide();
+		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#welcome_panel").show();
-		$(".center").center();
 	}
 
 	NRS.registerUserDefinedAccount = function() {
@@ -42,7 +40,6 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_generator_panel :input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_custom_panel").show();
 		$("#registration_password").focus();
-		$(".center").center();
 	}
 
 	NRS.registerAccount = function() {
@@ -59,8 +56,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		$loading.show();
 		$loaded.hide();
-
-		$(".center").center();
 
 		if (typeof PassPhraseGenerator == "undefined") {
 			$.when(
@@ -284,16 +279,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLockscreen = function() {
-		/* CENTER ELEMENTS IN THE SCREEN */
-		$.fn.center = function() {
-			this.css("position", "absolute");
-			this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +
-				$(window).scrollTop()) - 30 + "px");
-			this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) +
-				$(window).scrollLeft()) + "px");
-			return this;
-		}
-
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			setTimeout(function() {
 				$("#login_password").focus()
@@ -302,10 +287,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.showWelcomeScreen();
 		}
 
-		$(".center").center().show();
-		$(window).on("resize.lockscreen", function() {
-			$(".center").center();
-		});
+		$("#center").show();
 	}
 
 	NRS.unlock = function() {
