@@ -26,8 +26,8 @@ public final class DGSListing extends CreateTransaction {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String name = Convert.emptyToNull(req.getParameter("name"));
-        String description = Convert.emptyToNull(req.getParameter("description"));
-        String tags = Convert.emptyToNull(req.getParameter("tags"));
+        String description = Convert.nullToEmpty(req.getParameter("description"));
+        String tags = Convert.nullToEmpty(req.getParameter("tags"));
         long priceNQT = ParameterParser.getPriceNQT(req);
         int quantity = ParameterParser.getGoodsQuantity(req);
 
@@ -35,15 +35,15 @@ public final class DGSListing extends CreateTransaction {
             return MISSING_NAME;
         }
         name = name.trim();
-        if (name.length() > Constants.MAX_DGS_LISTING_NAME_LENGTH || name.length() == 0) {
+        if (name.length() > Constants.MAX_DGS_LISTING_NAME_LENGTH) {
             return INCORRECT_DGS_LISTING_NAME;
         }
 
-        if (description != null && description.length() > Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH) {
+        if (description.length() > Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH) {
             return INCORRECT_DGS_LISTING_DESCRIPTION;
         }
 
-        if (tags != null && tags.length() > Constants.MAX_DGS_LISTING_TAGS_LENGTH) {
+        if (tags.length() > Constants.MAX_DGS_LISTING_TAGS_LENGTH) {
             return INCORRECT_DGS_LISTING_TAGS;
         }
 
