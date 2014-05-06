@@ -3264,3 +3264,13 @@ hr {
 #center .panel {
   display:inline-block;
 }
+
+#center .panel-heading, #center .panel-body {
+  text-align:left;
+}
+
+#testnet_login {
+  display:inline-block;
+  text-align:left;
+  margin-bottom:5px;
+}
