@@ -46,6 +46,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
+		if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
+			if ($("#sidebar_asset_exchange").style.display == "none") {
+				$("#sidebar_asset_exchange").show();
+			}
+		}
+
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
@@ -155,15 +161,11 @@ var NRS = (function(NRS, $, undefined) {
 		var page = $(this).data("page");
 
 		if (page == NRS.currentPage) {
-			NRS.abortOutstandingRequests();
-
 			if (data && data.callback) {
 				data.callback();
 			}
 			return;
 		}
-
-		NRS.abortOutstandingRequests();
 
 		$(".page").hide();
 

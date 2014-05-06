@@ -293,8 +293,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		assetId = assetId.escapeHTML();
 
-		NRS.abortOutstandingRequests(true);
-
 		if (NRS.databaseSupport) {
 			NRS.database.select("assets", [{
 				"asset": assetId
