@@ -1653,6 +1653,7 @@ public abstract class TransactionType {
                 if (attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || purchase == null
+                        || purchase.getFeedbackNote() != null
                         || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSONObject());
                 }
@@ -1736,6 +1737,7 @@ public abstract class TransactionType {
                         || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != 32
                         || purchase == null
+                        || purchase.getRefundNote() != null
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSONObject());
                 }
