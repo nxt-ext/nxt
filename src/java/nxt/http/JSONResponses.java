@@ -198,6 +198,22 @@ public final class JSONResponses {
         ALREADY_DELIVERED = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware DUPLICATE_REFUND;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Refund already sent");
+        DUPLICATE_REFUND = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware DUPLICATE_FEEDBACK;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Feedback already sent");
+        DUPLICATE_FEEDBACK = JSON.prepare(response);
+    }
+
     private static JSONStreamAware missing(String paramName) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

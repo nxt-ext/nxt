@@ -9,6 +9,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.DUPLICATE_FEEDBACK;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 
 public final class DGSFeedback extends CreateTransaction {
@@ -27,6 +28,9 @@ public final class DGSFeedback extends CreateTransaction {
         Account buyerAccount = ParameterParser.getSenderAccount(req);
         if (! buyerAccount.getId().equals(purchase.getBuyerId())) {
             return INCORRECT_PURCHASE;
+        }
+        if (purchase.getFeedbackNote() != null) {
+            return DUPLICATE_FEEDBACK;
         }
 
         Account sellerAccount = Account.getAccount(purchase.getSellerId());

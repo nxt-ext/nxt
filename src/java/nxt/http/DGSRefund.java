@@ -11,6 +11,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.DUPLICATE_REFUND;
 import static nxt.http.JSONResponses.INCORRECT_DGS_REFUND;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 
@@ -29,6 +30,9 @@ public final class DGSRefund extends CreateTransaction {
         DigitalGoodsStore.Purchase purchase = ParameterParser.getPurchase(req);
         if (! sellerAccount.getId().equals(purchase.getSellerId())) {
             return INCORRECT_PURCHASE;
+        }
+        if (purchase.getRefundNote() != null) {
+            return DUPLICATE_REFUND;
         }
 
         String refundValueNQT = Convert.emptyToNull(req.getParameter("refundNQT"));
