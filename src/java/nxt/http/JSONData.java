@@ -80,7 +80,7 @@ final class JSONData {
         json.put("order", Convert.toUnsignedLong(order.getId()));
         json.put("asset", Convert.toUnsignedLong(order.getAssetId()));
         json.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
-        json.put("account", Convert.rsAccount(order.getAccount().getId()));
+        json.put("accountRS", Convert.rsAccount(order.getAccount().getId()));
         json.put("quantityQNT", String.valueOf(order.getQuantityQNT()));
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
         json.put("height", order.getHeight());
