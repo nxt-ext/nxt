@@ -129,6 +129,7 @@ final class JSONData {
         json.put("priceNQT", goods.getPriceNQT());
         json.put("seller", Convert.toUnsignedLong(goods.getSellerId()));
         json.put("tags", goods.getTags());
+        json.put("delisted", goods.isDelisted());
         return json;
     }
 
