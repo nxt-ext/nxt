@@ -128,6 +128,7 @@ final class JSONData {
         json.put("quantity", goods.getQuantity());
         json.put("priceNQT", goods.getPriceNQT());
         json.put("seller", Convert.toUnsignedLong(goods.getSellerId()));
+        json.put("sellerRS", Convert.rsAccount(goods.getSellerId()));
         json.put("tags", goods.getTags());
         json.put("delisted", goods.isDelisted());
         return json;
@@ -197,9 +198,11 @@ final class JSONData {
         json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
         json.put("goods", Convert.toUnsignedLong(purchase.getGoodsId()));
         json.put("seller", Convert.toUnsignedLong(purchase.getSellerId()));
+        json.put("sellerRS", Convert.rsAccount(purchase.getSellerId()));
         json.put("priceNQT", purchase.getPriceNQT());
         json.put("quantity", purchase.getQuantity());
         json.put("buyer", Convert.toUnsignedLong(purchase.getBuyerId()));
+        json.put("buyerRS", Convert.rsAccount(purchase.getBuyerId()));
         json.put("timestamp", purchase.getTimestamp());
         json.put("deliveryDeadlineTimestamp", purchase.getDeliveryDeadlineTimestamp());
         json.put("note", Convert.toHexString(purchase.getNote().getData()));
