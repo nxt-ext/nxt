@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.NxtException;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -38,7 +39,8 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
             response.put("data", Convert.toHexString(decrypted));
             response.put("text", new String(decrypted, "UTF-8"));
             return response;
-        } catch (UnsupportedEncodingException | RuntimeException ignore) {
+        } catch (UnsupportedEncodingException | RuntimeException e) {
+            Logger.logDebugMessage(e.toString(), e);
             return DECRYPTION_FAILED;
         }
     }
