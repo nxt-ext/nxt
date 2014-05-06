@@ -110,7 +110,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getState = function(callback) {
-		NRS.sendRequest('getState', function(response) {
+		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
 				//todo
 			} else {
@@ -606,9 +606,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		try {
 			if (NRS.isTestNet) {
-				var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getState";
+				var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getBlockchainStatus";
 			} else {
-				var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getState";
+				var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getBlockchainStatus";
 			}
 
 			NRS.sendOutsideRequest(url, function(response) {
