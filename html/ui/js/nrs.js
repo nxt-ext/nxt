@@ -34,6 +34,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.hasLocalStorage = true;
 	NRS.inApp = false;
+	NRS.assetTableKeys = [];
 
 	NRS.init = function() {
 		if (location.port && location.port != "6876") {
@@ -260,6 +261,7 @@ var NRS = (function(NRS, $, undefined) {
 			},
 			assets: {
 				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
 				asset: {
 					"primary": true,
 					"type": "VARCHAR(25)"
@@ -280,8 +282,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		};
 
+		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
+
 		try {
-			NRS.database = new WebDB("NRSDBC", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 

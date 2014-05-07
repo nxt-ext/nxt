@@ -118,7 +118,17 @@ var NRS = (function(NRS, $, undefined) {
 						if (transaction.sender == NRS.account) {
 							transaction.id = input.transaction;
 							transaction.confirmed = false;
+							transaction.unconfirmed = true;
 							transaction.confirmations = "/";
+
+							if (transaction.attachment) {
+								for (var key in transaction.attachment) {
+									if (!transaction.hasOwnProperty(key)) {
+										transaction[key] = transaction.attachment[key];
+									}
+								}
+							}
+
 							unconfirmedTransactions.push(transaction);
 							unconfirmedTransactionIdArray.push(transaction.id);
 						}
