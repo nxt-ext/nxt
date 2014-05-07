@@ -539,7 +539,19 @@
 			                    <div class="content-splitter-sidebar" style="width:200px">
 			                        <div class="content-splitter-sidebar-inner">
 			                        	<div class="list-group unselectable sidebar_context" id="asset_exchange_sidebar">
-				                        	<div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
+											<div id="asset_exchange_sidebar_search">
+												 <form action="#" method="get" class="sidebar-form" id="asset_exchange_search">
+													<div class="input-group">
+														<input type="text" name="q" class="form-control" placeholder="Search...">
+														<span class="input-group-btn">
+														<button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+														</span>
+													</div>
+												</form>             
+											</div>
+											<div id="asset_exchange_sidebar_content">
+				                        		<div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
+				                        	</div>
 			                        	</div>
 						             </div>
 						         </div>
