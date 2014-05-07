@@ -157,7 +157,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.assetExchangeSidebarLoaded = function(callback, activeAsset) {
+	NRS.assetExchangeSidebarLoaded = function(activeAsset, callback) {
 		var rows = "";
 
 		NRS.assets.sort(function(a, b) {
@@ -317,7 +317,6 @@ var NRS = (function(NRS, $, undefined) {
 				"asset": assetId
 			}], function(error, asset) {
 				if (!error) {
-					$(this).addClass("active");
 					NRS.loadAsset(asset[0], refresh);
 				}
 			});
@@ -326,7 +325,6 @@ var NRS = (function(NRS, $, undefined) {
 				"asset": assetId
 			}, function(response, input) {
 				if (!response.errorCode) {
-					$(this).addClass("active");
 					NRS.loadAsset(response, refresh);
 				}
 			});
@@ -342,6 +340,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!refresh) {
 			$("#asset_exchange_sidebar a.active").removeClass("active");
+			$("#asset_exchange_sidebar a[data-asset=" + assetId + "]").addClass("active");
 
 			$("#no_asset_selected, #loading_asset_data, #no_assets_available").hide();
 			$("#asset_details").show().parent().animate({
