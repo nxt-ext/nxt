@@ -117,15 +117,22 @@ public final class Peers {
         }
 
         JSONObject json = new JSONObject();
-        if (Peers.myAddress != null && Peers.myAddress.length() > 0) {
-            if (! Constants.isTestnet) {
-                if (Peers.myAddress.indexOf(':') > 0) {
-                    json.put("announcedAddress", Peers.myAddress);
+        if (myAddress != null && myAddress.length() > 0) {
+            try {
+                URI uri = new URI("http://"+myAddress.trim());
+                String host = uri.getHost();
+                int port = uri.getPort();
+                if (!Constants.isTestnet) {
+                    if (port >= 0)
+                        json.put("announcedAddress", myAddress);
+                    else
+                        json.put("announcedAddress", host+(myPeerServerPort!=DEFAULT_PEER_PORT ? ":"+myPeerServerPort : ""));
                 } else {
-                    json.put("announcedAddress", Peers.myAddress + (Peers.myPeerServerPort != Peers.DEFAULT_PEER_PORT ? ":" + Peers.myPeerServerPort : ""));
+                    json.put("announcedAddress", host);
                 }
-            } else {
-                json.put("announcedAddress", Peers.myAddress.split(":")[0]);
+            } catch (URISyntaxException e) {
+                Logger.logMessage("Your announce address is invalid: " + myAddress);
+                throw new RuntimeException(e.toString(), e);
             }
         }
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
@@ -570,11 +577,13 @@ public final class Peers {
             }
             URI uri = new URI("http://" + address.trim());
             String host = uri.getHost();
-            if (host == null || host.equals("") || host.equals("localhost") || host.equals("127.0.0.1") || host.equals("0:0:0:0:0:0:0:1")) {
+            if (host == null || host.equals("") || host.equals("localhost") ||
+                                host.equals("127.0.0.1") || host.equals("[0:0:0:0:0:0:0:1]")) {
                 return null;
             }
             InetAddress inetAddress = InetAddress.getByName(host);
-            if (inetAddress.isAnyLocalAddress() || inetAddress.isLoopbackAddress() || inetAddress.isLinkLocalAddress()) {
+            if (inetAddress.isAnyLocalAddress() || inetAddress.isLoopbackAddress() ||
+                                                   inetAddress.isLinkLocalAddress()) {
                 return null;
             }
             int port = uri.getPort();
