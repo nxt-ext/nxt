@@ -317,7 +317,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
                     Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                 }
-            }
+            } // synchronized
 
         }
 
@@ -875,7 +875,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             validateAtScan = false;
             Logger.logMessage("...done");
             isScanning = false;
-        }
+        } // synchronized
     }
 
 }

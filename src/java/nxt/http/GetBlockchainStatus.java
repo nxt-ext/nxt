@@ -1,24 +1,14 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
 import nxt.Block;
 import nxt.BlockchainProcessor;
-import nxt.Generator;
 import nxt.Nxt;
-import nxt.Order;
-import nxt.Poll;
-import nxt.Trade;
-import nxt.Vote;
 import nxt.peer.Peer;
-import nxt.peer.Peers;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
 
