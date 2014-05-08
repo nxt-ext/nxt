@@ -541,9 +541,9 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += nameLength;
 
-				var descriptionLength = parseInt(byteArray[pos], 10);
+				var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
 
-				pos++;
+				pos += 2;
 
 				transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
 
