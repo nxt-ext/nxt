@@ -216,8 +216,10 @@ var NRS = (function(NRS, $, undefined) {
 	$("button.goto-page, a.goto-page").click(function(event) {
 		event.preventDefault();
 
-		var page = $(this).data("page");
+		NRS.goToPage($(this).data("page"));
+	});
 
+	NRS.goToPage = function(page) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
 		if ($link.length) {
@@ -231,7 +233,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.pages[page]();
 			}
 		}
-	});
+	}
 
 	NRS.pageLoading = function() {
 		var $pageHeader = $("#" + NRS.currentPage + "_page .content-header h1");
@@ -322,7 +324,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance").html("0");
+				$("#account_balance, #account_forged_balance").html("0");
 				$("#account_nr_assets").html("0");
 
 				if (NRS.accountInfo.errorCode == 5) {
@@ -395,6 +397,17 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#account_balance").html(balance);
 
+				var forgedBalance = NRS.formatAmount(new BigInteger(response.forgedBalanceNQT));
+
+				forgedBalance = forgedBalance.split(".");
+				if (forgedBalance.length == 2) {
+					forgedBalance = forgedBalance[0] + "<span style='font-size:12px'>." + forgedBalance[1] + "</span>";
+				} else {
+					forgedBalance = forgedBalance[0];
+				}
+
+				$("#account_forged_balance").html(forgedBalance);
+
 				var nr_assets = 0;
 
 				if (response.assetBalances) {
@@ -431,7 +444,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_nr_assets").removeClass("loading_dots");
+				$("#account_balance, #account_forged_balance, #account_nr_assets").removeClass("loading_dots");
 			}
 
 			if (callback) {

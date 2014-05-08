@@ -334,6 +334,13 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages.blocks();
 	});
 
+	$("#goto_forged_blocks").click(function(e) {
+		e.preventDefault();
+
+		$("#blocks_page_type").parent().find(".text").text("Forged By You");
+		NRS.blocksPageType = "forged_blocks";
+		NRS.goToPage("blocks");
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));
