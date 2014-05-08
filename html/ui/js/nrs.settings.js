@@ -388,6 +388,10 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		}
+
+		if (NRS.settings["news"] != -1) {
+			$("#settings_news_initial").remove();
+		}
 	}
 
 	NRS.cssGradient = function(start, stop) {
@@ -883,7 +887,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!key || key == "news") {
 			if (NRS.settings["news"] == 0) {
 				$("#news_link").hide();
-			} else {
+			} else if (NRS.settings["news"] == 1) {
 				$("#news_link").show();
 			}
 		}
