@@ -34,6 +34,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.hasLocalStorage = true;
 	NRS.inApp = false;
+	NRS.assetTableKeys = [];
 
 	NRS.init = function() {
 		if (location.port && location.port != "6876") {
@@ -45,6 +46,12 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
+
+		if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
+			if ($("#sidebar_asset_exchange").style.display == "none") {
+				$("#sidebar_asset_exchange").show();
+			}
+		}
 
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
@@ -104,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getState = function(callback) {
-		NRS.sendRequest('getState', function(response) {
+		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
 				//todo
 			} else {
@@ -155,15 +162,11 @@ var NRS = (function(NRS, $, undefined) {
 		var page = $(this).data("page");
 
 		if (page == NRS.currentPage) {
-			NRS.abortOutstandingRequests();
-
 			if (data && data.callback) {
 				data.callback();
 			}
 			return;
 		}
-
-		NRS.abortOutstandingRequests();
 
 		$(".page").hide();
 
@@ -258,6 +261,7 @@ var NRS = (function(NRS, $, undefined) {
 			},
 			assets: {
 				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
 				asset: {
 					"primary": true,
 					"type": "VARCHAR(25)"
@@ -278,8 +282,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		};
 
+		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
+
 		try {
-			NRS.database = new WebDB("NRSDBC", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -604,9 +610,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		try {
 			if (NRS.isTestNet) {
-				var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getState";
+				var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getBlockchainStatus";
 			} else {
-				var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getState";
+				var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getBlockchainStatus";
 			}
 
 			NRS.sendOutsideRequest(url, function(response) {

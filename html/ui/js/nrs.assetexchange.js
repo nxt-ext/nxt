@@ -7,14 +7,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.asset_exchange = function(callback) {
 		NRS.pageLoading();
 
-		var $active = $("#asset_exchange_sidebar a.active");
-
-		var activeAsset = false;
-
-		if ($active.length) {
-			activeAsset = $active.data("asset");
-		}
-
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
 		NRS.assets = [];
@@ -29,109 +21,126 @@ var NRS = (function(NRS, $, undefined) {
 						"id": asset.asset,
 						"name": asset.name.toLowerCase(),
 						"groupName": asset.groupName.toLowerCase(),
+						"account": asset.account,
+						"accountRS": asset.accountRS,
 						"quantityQNT": asset.quantityQNT,
 						"decimals": asset.decimals
 					});
 				});
 
-				assets = null;
-
-				NRS.loadAssetExchangeSidebar(callback, activeAsset);
+				NRS.loadAssetExchangeSidebar(callback);
 			});
 		} else {
-			NRS.loadAssetExchangeSidebar(callback, activeAsset);
+			NRS.loadAssetExchangeSidebar(callback);
 		}
 	}
 
-	NRS.loadAssetExchangeSidebar = function(callback, activeAsset) {
-		NRS.sendRequest("getAssetIds+", function(response) {
-			if (response.assetIds && response.assetIds.length) {
-				if (NRS.currentPage != "asset_exchange") {
-					return;
-				}
+	NRS.loadAssetExchangeSidebar = function(callback) {
+		if (!NRS.assets.length) {
+			//this is done if we have no assets in the database.. get all of them at once.	
+			NRS.sendRequest("getAllAssets", function(response) {
+				NRS.firstAssetPageLoad = false;
 
-				if (NRS.databaseSupport && NRS.firstAssetPageLoad) {
-					for (var i = 0; i < NRS.assetIds.length; i++) {
-						if (response.assetIds.indexOf(NRS.assetIds[i]) == -1) {
+				if (response.assets) {
+					NRS.saveNewAssets(response.assets, function() {
+						NRS.assetExchangeSidebarLoaded(callback);
+					});
+				} else {
+					NRS.pageLoaded();
+					$("#asset_exchange_sidebar").empty();
+					$("#no_asset_selected, #loading_asset_data").hide();
+					$("#no_assets_available").show();
+				}
+			});
+		} else {
+			//get only the new assets
+			NRS.sendRequest("getAssetIds+", function(response) {
+				if (response.assetIds) {
+					if (NRS.databaseSupport && NRS.firstAssetPageLoad) {
+						NRS.firstAssetPageLoad = false;
+
+						var incorrectAssetIds = NRS.assetIds.diff(response.assetIds);
+
+						if (incorrectAssetIds.length) {
 							//something is wrong, the asset ID provided by the database does not exist in the list of asset IDS returned by the server. 
 							//Possible if the user is using a different blockchain. We will clear the DB.
 							NRS.assetIds = [];
 							NRS.assets = [];
 
 							NRS.database.delete("assets", []);
-							break;
-						}
-					}
+							NRS.loadAssetExchangeSidebar(callback);
 
-					NRS.firstAssetPageLoad = false;
-				}
-
-				var nrAssets = 0;
-				var newAssets = [];
-
-				for (var i = 0; i < response.assetIds.length; i++) {
-					if (NRS.databaseSupport && NRS.assetIds.indexOf(response.assetIds[i]) > -1) {
-						//already in database    					
-						nrAssets++;
-
-						if (nrAssets == response.assetIds.length) {
-							NRS.saveNewAssets(newAssets, function() {
-								NRS.assetExchangeSidebarLoaded(callback, activeAsset);
-							});
-						}
-						continue;
-					} else {
-						//not in database (or no database support), fetch
-						NRS.sendRequest("getAsset+", {
-							"asset": response.assetIds[i],
-							"_extra": {
-								"position": i
-							}
-						}, function(asset, input) {
-							if (asset.errorCode) {
-								nrAssets++;
-							} else {
-								asset.groupName = "";
-								//asset.position  = input["_extra"].position;
-
-								NRS.assets.push({
-									"id": asset.asset,
-									"name": String(asset.name).toLowerCase(),
-									"groupName": "",
-									"quantityQNT": asset.quantityQNT,
-									"decimals": asset.decimals
-								});
-
-								newAssets.push(asset);
-
-								nrAssets++;
-
-								if (nrAssets == response.assetIds.length) {
-									NRS.saveNewAssets(newAssets, function() {
-										NRS.assetExchangeSidebarLoaded(callback, activeAsset);
-									});
-								}
-							}
-						});
-
-						if (NRS.currentPage != "asset_exchange") {
 							return;
 						}
 					}
+
+					var newAssetIds = response.assetIds.diff(NRS.assetIds);
+
+					if (newAssetIds.length) {
+						var qs = [];
+
+						for (var i = 0; i < newAssetIds.length; i++) {
+							qs.push("assets=" + encodeURIComponent(newAssetIds[i]));
+						}
+
+						qs = qs.join("&");
+						//construct string
+						NRS.sendRequest("getAssets+", {
+							//special request.. ugly hack.. also does POST due to URL max length
+							"doGetAssets": qs
+						}, function(response) {
+							NRS.saveNewAssets(response.assets, function() {
+								NRS.assetExchangeSidebarLoaded(callback);
+							});
+						});
+					} else {
+						NRS.assetExchangeSidebarLoaded(callback);
+					}
+				} else {
+					NRS.pageLoaded();
+					$("#asset_exchange_sidebar_content").empty();
+					$("#no_asset_selected, #loading_asset_data").hide();
+					$("#no_assets_available").show();
 				}
-			} else {
-				NRS.pageLoaded();
-				$("#asset_exchange_sidebar").empty();
-				$("#no_asset_selected, #loading_asset_data").hide();
-				$("#no_assets_available").show();
-			}
-		});
+			});
+		}
 	}
 
 	NRS.saveNewAssets = function(newAssets, callback) {
-		if (NRS.databaseSupport && newAssets.length) {
+		if (newAssets && newAssets.length) {
 			for (var i = 0; i < newAssets.length; i++) {
-				delete newAssets[i].numberOfTrades;
+				newAssets[i].groupName = "";
+
+				var asset = newAssets[i];
+
+				NRS.assets.push({
+					"id": asset.asset,
+					"name": String(asset.name).toLowerCase(),
+					"groupName": "",
+					"account": asset.account,
+					"accountRS": asset.accountRS,
+					"quantityQNT": asset.quantityQNT,
+					"decimals": asset.decimals
+				})
+			}
+		}
+
+		if (NRS.databaseSupport && newAssets && newAssets.length) {
+			var toRemove = [];
+
+			//remove key/value pairs from newAssets that are not in database schema to prevent errors in future versions
+			var keys = Object.keys(newAssets[0]);
+
+			for (var i = 0; i < keys.length; i++) {
+				if (NRS.assetTableKeys.indexOf(keys[i]) == -1) {
+					toRemove.push(keys[i]);
+				}
+			}
+
+			for (var i = 0; i < newAssets.length; i++) {
+				for (var j in toRemove) {
+					delete newAssets[i][toRemove[j]];
+				}
 			}
 
 			NRS.database.insert("assets", newAssets, function(error) {
@@ -144,7 +153,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.assetExchangeSidebarLoaded = function(callback, activeAsset) {
+	//called on opening the asset exchange page and automatic refresh
+	NRS.assetExchangeSidebarLoaded = function(callback) {
 		var rows = "";
 
 		NRS.assets.sort(function(a, b) {
@@ -183,8 +193,17 @@ var NRS = (function(NRS, $, undefined) {
 		var ungrouped = true;
 		var isClosedGroup = false;
 
+		var isSearch = NRS.assetSearch && NRS.assetSearch.length;
+		var searchResults = 0;
+
 		for (var i = 0; i < NRS.assets.length; i++) {
 			var asset = NRS.assets[i];
+
+			if (isSearch && NRS.assetSearch.indexOf(asset.id) == -1) {
+				continue;
+			} else {
+				searchResults++;
+			}
 
 			if (asset.groupName.toLowerCase() != lastGroup) {
 				var to_check = (asset.groupName ? asset.groupName : "undefined");
@@ -209,24 +228,27 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
 		}
 
-		var currentActiveAsset = $("#asset_exchange_sidebar a.active");
+		var active = $("#asset_exchange_sidebar a.active");
 
-		if (currentActiveAsset.length) {
-			currentActiveAsset = currentActiveAsset.data("asset");
+		if (active.length) {
+			active = active.data("asset");
 		} else {
-			currentActiveAsset = false;
+			active = false;
 		}
 
-		$("#asset_exchange_sidebar").empty().append(rows);
+		$("#asset_exchange_sidebar_content").empty().append(rows);
+		$("#asset_exchange_sidebar_search").show();
 
-		if (activeAsset !== false) {
-			if (activeAsset !== currentActiveAsset) {
-				$("#asset_exchange_sidebar a[data-asset=" + currentActiveAsset + "]").addClass("active");
-			} else {
-				$("#asset_exchange_sidebar a[data-asset=" + activeAsset + "]").addClass("active").trigger("click", [{
-					"refresh": true
-				}]);
+		if (isSearch) {
+			if (active && NRS.assetSearch.indexOf(active) != -1) {
+				//check if currently selected asset is in search results, if so keep it at that
+				$("#asset_exchange_sidebar a[data-asset=" + active + "]").addClass("active");
+			} else if (NRS.assetSearch.length == 1) {
+				//if there is only 1 search result, click it
+				$("#asset_exchange_sidebar a[data-asset=" + NRS.assetSearch[0] + "]").addClass("active").trigger("click");
 			}
+		} else if (active) {
+			$("#asset_exchange_sidebar a[data-asset=" + active + "]").addClass("active");
 		}
 
 		$("#no_assets_available").hide();
@@ -247,10 +269,16 @@ var NRS = (function(NRS, $, undefined) {
 	$("#asset_exchange_sidebar").on("click", "a", function(e, data) {
 		e.preventDefault();
 
-		var link = $(this);
-
 		var assetId = $(this).data("asset");
 
+		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
+		if (data && data.refresh) {
+			var refresh = true;
+		} else {
+			var refresh = false;
+		}
+
+		//clicked on a group
 		if (!assetId) {
 			if (NRS.databaseSupport) {
 				var group = $(this).data("groupname");
@@ -293,48 +321,42 @@ var NRS = (function(NRS, $, undefined) {
 
 		assetId = assetId.escapeHTML();
 
-		NRS.abortOutstandingRequests(true);
-
 		if (NRS.databaseSupport) {
 			NRS.database.select("assets", [{
 				"asset": assetId
 			}], function(error, asset) {
 				if (!error) {
-					NRS.loadAsset(asset[0], link, data);
+					NRS.loadAsset(asset[0], refresh);
 				}
 			});
 		} else {
-			NRS.sendRequest("getAsset", {
+			NRS.sendRequest("getAsset+", {
 				"asset": assetId
 			}, function(response, input) {
 				if (!response.errorCode) {
-					NRS.loadAsset(response, link, data);
+					NRS.loadAsset(response, refresh);
 				}
 			});
 		}
 
 	});
 
-	NRS.loadAsset = function(asset, link, data) {
+	NRS.loadAsset = function(asset, refresh) {
 		var assetId = asset.asset;
 
 		NRS.currentAsset = asset;
 		NRS.currentSubPage = assetId;
 
-		var asset_account = NRS.getAccountTitle(asset.account);
-
-		var refresh = (data && data.refresh);
-
 		if (!refresh) {
 			$("#asset_exchange_sidebar a.active").removeClass("active");
-			link.addClass("active");
+			$("#asset_exchange_sidebar a[data-asset=" + assetId + "]").addClass("active");
 
 			$("#no_asset_selected, #loading_asset_data, #no_assets_available").hide();
 			$("#asset_details").show().parent().animate({
 				"scrollTop": 0
 			}, 0);
 
-			$("#asset_account").html("<a href='#' data-user='" + asset_account + "' class='user_info'>" + asset_account + "</a>");
+			$("#asset_account").html("<a href='#' data-user='" + String(asset.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(asset.account) + "</a>");
 			$("#asset_id").html(assetId.escapeHTML());
 			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
 			$("#asset_name").html(String(asset.name).escapeHTML());
@@ -345,12 +367,8 @@ var NRS = (function(NRS, $, undefined) {
 			$("#sell_asset_button").data("asset", assetId);
 			$("#buy_asset_button").data("asset", assetId);
 
-			$("#sell_asset_price").val("");
-			$("#buy_asset_price").val("");
-			$("#buy_asset_quantity").val("0");
-			$("#buy_asset_total").val("0");
-			$("#sell_asset_quantity").val("0");
-			$("#sell_asset_total").val("0");
+			$("#sell_asset_price, #buy_asset_price").val("");
+			$("#sell_asset_quantity, #sell_asset_total, #buy_asset_quantity, #buy_asset_total").val("0");
 
 			$("#asset_exchange_ask_orders_table tbody").empty();
 			$("#asset_exchange_bid_orders_table tbody").empty();
@@ -366,9 +384,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, 200);
 		}
 
-		var responsesReceived = 0;
-		var balance = -1;
-
+		//todo: is this necessary, can we remove it? 
 		NRS.sendRequest("getAccount+" + assetId, {
 			"account": NRS.account
 		}, function(response) {
@@ -405,282 +421,20 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		NRS.sendRequest("getAskOrderIds+" + assetId, {
-			"asset": assetId,
-			"timestamp": 0,
-			"limit": 50,
-			"_extra": {
-				"refresh": refresh
-			}
-		}, function(response, input) {
-			var refresh = input["_extra"].refresh;
+		NRS.loadAssetOrders("ask", assetId, refresh);
+		NRS.loadAssetOrders("bid", assetId, refresh);
 
-			if (response.askOrderIds && response.askOrderIds.length) {
-				var realNrAskOrders = response.askOrderIds.length;
-				var askOrderIds = response.askOrderIds;
-				var askOrders = {};
-				var nrAskOrders = 0;
-
-				$("#sell_orders_count").html("(" + realNrAskOrders + (realNrAskOrders == 50 ? "+" : "") + ")");
-
-				for (var i = 0; i < askOrderIds.length; i++) {
-					NRS.sendRequest("getAskOrder+" + assetId, {
-						"order": askOrderIds[i],
-						"_extra": {
-							"refresh": refresh
-						}
-					}, function(order, input) {
-						askOrders[input.order] = order;
-
-						nrAskOrders++;
-
-						if (nrAskOrders == askOrderIds.length) {
-							var rows = "";
-
-							var refresh = input["_extra"].refresh;
-
-							for (var i = 0; i < nrAskOrders; i++) {
-								var askOrder = askOrders[askOrderIds[i]];
-
-								askOrder.priceNQT = new BigInteger(askOrder.priceNQT);
-								askOrder.quantityQNT = new BigInteger(askOrder.quantityQNT);
-								askOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(askOrder.quantityQNT, askOrder.priceNQT));
-
-								if (i == 0 && !input["_extra"].refresh) {
-									$("#buy_asset_price").val(NRS.calculateOrderPricePerWholeQNT(askOrder.priceNQT, NRS.currentAsset.decimals));
-								}
-
-								var cancelled = false;
-
-								if (NRS.unconfirmedTransactions.length) {
-									for (var j = 0; j < NRS.unconfirmedTransactions.length; j++) {
-										var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
-
-										if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 4 && unconfirmedTransaction.attachment.order == askOrderIds[i]) {
-											cancelled = true;
-											break;
-										}
-									}
-								}
-
-								var className = (askOrder.account == NRS.account ? "your-order" : "") + (cancelled ? " tentative tentative-crossed" : "");
-
-								rows += "<tr class='" + className + "' data-quantity='" + askOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + askOrder.priceNQT.toString().escapeHTML() + "'><td>" + (askOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(askOrder.account).escapeHTML() + "' class='user_info'>" + (askOrder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(askOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(askOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(askOrder.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(askOrder.totalNQT) + "</tr>";
-							}
-
-							$("#asset_exchange_ask_orders_table tbody").empty().append(rows);
-
-							if (NRS.unconfirmedTransactions.length) {
-								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-									var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-									if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 2 && unconfirmedTransaction.attachment.asset == assetId) {
-										var $rows = $("#asset_exchange_ask_orders_table tbody").find("tr");
-
-										unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
-										unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-										unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
-
-										var rowToAdd = "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
-
-										var rowAdded = false;
-
-										if ($rows.length) {
-											$rows.each(function() {
-												var rowPrice = new BigInteger(String($(this).data("price")));
-												if (unconfirmedTransaction.priceNQT.compareTo(rowPrice) < 0) {
-													$(this).before(rowToAdd);
-													rowAdded = true;
-													return false;
-												}
-											});
-										}
-
-										if (!rowAdded) {
-											$("#asset_exchange_ask_orders_table tbody").append(rowToAdd);
-										}
-									}
-								}
-							}
-
-							NRS.dataLoadFinished($("#asset_exchange_ask_orders_table"), !refresh);
-						}
-					});
-				}
-			} else {
-				if (NRS.unconfirmedTransactions.length) {
-					var rows = "";
-
-					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-						unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
-						unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-						unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
-
-						if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 2 && unconfirmedTransaction.attachment.asset == assetId) {
-							rows += "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
-						}
-					}
-
-					$("#asset_exchange_ask_orders_table tbody").empty().append(rows);
-				} else {
-					$("#asset_exchange_ask_orders_table tbody").empty();
-				}
-
-				NRS.dataLoadFinished($("#asset_exchange_ask_orders_table"), !refresh);
-				//refresh
-				$("#buy_asset_price").val("0");
-				$("#sell_orders_count").html("");
-			}
-		});
-
-		NRS.sendRequest("getBidOrderIds+" + assetId, {
-			"asset": assetId,
-			"timestamp": 0,
-			"limit": 50,
-			"_extra": {
-				"refresh": refresh
-			}
-		}, function(response, input) {
-			var refresh = input["_extra"].refresh;
-
-			if (response.bidOrderIds && response.bidOrderIds.length) {
-				var realNrBidOrders = response.bidOrderIds.length;
-				var bidOrderIds = response.bidOrderIds;
-				var bidOrders = {};
-				var nrBidOrders = 0;
-
-				$("#buy_orders_count").html("(" + realNrBidOrders + (realNrBidOrders == 50 ? "+" : "") + ")");
-
-				for (var i = 0; i < bidOrderIds.length; i++) {
-					NRS.sendRequest("getBidOrder+" + assetId, {
-						"order": bidOrderIds[i],
-						"_extra": {
-							"refresh": refresh
-						}
-					}, function(order, input) {
-						bidOrders[input.order] = order;
-						nrBidOrders++;
-
-						if (nrBidOrders == bidOrderIds.length) {
-							var rows = "";
-
-							var refresh = input["_extra"].refresh;
-
-							for (var i = 0; i < nrBidOrders; i++) {
-								var bidOrder = bidOrders[bidOrderIds[i]];
-
-								bidOrder.priceNQT = new BigInteger(bidOrder.priceNQT);
-								bidOrder.quantityQNT = new BigInteger(bidOrder.quantityQNT);
-								bidOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(bidOrder.quantityQNT, bidOrder.priceNQT));
-
-								if (i == 0 && !refresh) {
-									$("#sell_asset_price").val(NRS.calculateOrderPricePerWholeQNT(bidOrder.priceNQT, NRS.currentAsset.decimals));
-								}
-
-								var cancelled = false;
-
-								if (NRS.unconfirmedTransactions.length) {
-									for (var j = 0; j < NRS.unconfirmedTransactions.length; j++) {
-										var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
-
-										if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 5 && unconfirmedTransaction.attachment.order == bidOrderIds[i]) {
-											cancelled = true;
-											break;
-										}
-									}
-								}
-
-								var className = (bidOrder.account == NRS.account ? "your-order" : "") + (cancelled ? " tentative tentative-crossed" : "");
-
-								rows += "<tr class='" + className + "' data-quantity='" + bidOrder.quantityQNT.toString().escapeHTML() + "' data-price='" + bidOrder.priceNQT.toString().escapeHTML() + "'><td>" + (bidOrder.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(bidOrder.account).escapeHTML() + "' class='user_info'>" + (bidOrder.account == asset_account ? "Asset Issuer" : NRS.getAccountTitle(bidOrder.account)) + "</a>") + "</td><td>" + NRS.formatQuantity(bidOrder.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(bidOrder.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(bidOrder.totalNQT) + "</tr>";
-
-							}
-
-							$("#asset_exchange_bid_orders_table tbody").empty().append(rows);
-
-							if (NRS.unconfirmedTransactions.length) {
-								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-									var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-									if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 3 && unconfirmedTransaction.attachment.asset == assetId) {
-										var $rows = $("#asset_exchange_bid_orders_table tbody").find("tr");
-
-										unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
-										unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-										unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
-
-										var rowToAdd = "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
-
-										var rowAdded = false;
-
-										if ($rows.length) {
-											$rows.each(function() {
-												var rowPrice = new BigInteger(String($(this).data("price")));
-												if (unconfirmedTransaction.priceNQT.compareTo(rowPrice) > 0) {
-													$(this).before(rowToAdd);
-													rowAdded = true;
-													return false;
-												}
-											});
-										}
-
-										if (!rowAdded) {
-											$("#asset_exchange_bid_orders_table tbody").append(rowToAdd);
-										}
-									}
-								}
-							}
-
-							NRS.dataLoadFinished($("#asset_exchange_bid_orders_table"), !refresh);
-						}
-					});
-				}
-			} else {
-				if (NRS.unconfirmedTransactions.length) {
-					var rows = "";
-
-					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-
-						if (unconfirmedTransaction.type == 2 && unconfirmedTransaction.subtype == 3 && unconfirmedTransaction.attachment.asset == assetId) {
-							unconfirmedTransaction.priceNQT = new BigInteger(unconfirmedTransaction.attachment.priceNQT);
-							unconfirmedTransaction.quantityQNT = new BigInteger(unconfirmedTransaction.attachment.quantityQNT);
-							unconfirmedTransaction.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(unconfirmedTransaction.quantityQNT, unconfirmedTransaction.priceNQT));
-
-							rows += "<tr class='tentative' data-quantity='" + unconfirmedTransaction.quantityQNT.toString().escapeHTML() + "' data-price='" + unconfirmedTransaction.priceNQT.toString().escapeHTML() + "'><td>You - <strong>Pending Order</strong></td><td>" + NRS.formatQuantity(unconfirmedTransaction.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(unconfirmedTransaction.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.totalNQT) + "</td></tr>";
-						}
-					}
-
-					$("#asset_exchange_bid_orders_table tbody").empty().append(rows);
-				} else {
-					$("#asset_exchange_bid_orders_table tbody").empty();
-				}
-
-				NRS.dataLoadFinished($("#asset_exchange_bid_orders_table"), !refresh);
-				//refresh
-				$("#sell_asset_price").val("0");
-				$("#buy_orders_count").html("");
-			}
-		});
-
+		//todo NRS.currentSubPageID ??...
 		NRS.sendRequest("getTrades+" + assetId, {
 			"asset": assetId,
-			"firstIndex": 0,
-			"_extra": {
-				"refresh": refresh
-			}
+			"firstIndex": 0
 		}, function(response, input) {
 			if (response.trades && response.trades.length) {
 				var trades = response.trades.reverse().slice(0, 50);
-				var nrTrades = trades.length;
-
-				var refresh = input["_extra"].refresh;
 
 				var rows = "";
 
-				for (var i = 0; i < nrTrades; i++) {
+				for (var i = 0; i < trades.length; i++) {
 					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
 					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
@@ -696,6 +450,128 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 	}
+
+	NRS.loadAssetOrders = function(type, assetId, refresh) {
+		type = type.toLowerCase();
+
+		NRS.sendRequest("get" + type.capitalize() + "Orders+" + assetId, {
+			"asset": assetId,
+			"timestamp": 0,
+			"limit": 50
+		}, function(response, input) {
+			var orders = response[type + "Orders"];
+
+			if (!orders) {
+				orders = [];
+			}
+
+			if (NRS.unconfirmedTransactions.length) {
+				var added = false;
+
+				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+
+					if (unconfirmedTransaction.type == 2 && (type == "ask" ? unconfirmedTransaction.subtype == 2 : unconfirmedTransaction.subtype == 3) && unconfirmedTransaction.asset == assetId) {
+						orders.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
+						added = true;
+					}
+				}
+
+				if (added) {
+					orders.sort(function(a, b) {
+						if (type == "ask") {
+							//lowest price at the top
+							return new BigInteger(a.priceNQT).compareTo(new BigInteger(b.priceNQT));
+						} else {
+							//highest price at the top
+							return new BigInteger(b.priceNQT).compareTo(new BigInteger(a.priceNQT));
+						}
+					});
+				}
+			}
+
+			if (orders.length) {
+				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("(" + orders.length + (orders.length == 50 ? "+" : "") + ")");
+
+				var rows = "";
+
+				for (var i = 0; i < orders.length; i++) {
+					var order = orders[i];
+
+					order.priceNQT = new BigInteger(order.priceNQT);
+					order.quantityQNT = new BigInteger(order.quantityQNT);
+					order.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(order.quantityQNT, order.priceNQT));
+
+					if (i == 0 && !refresh) {
+						$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
+					}
+
+					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
+
+					rows += "<tr class='" + className + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(order.account).escapeHTML() + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order.account)) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
+				}
+
+				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
+			} else {
+				$("#asset_exchange_" + type + "_orders_table tbody").empty();
+				if (!refresh) {
+					$("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val("0");
+				}
+				$("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("");
+			}
+
+			NRS.dataLoadFinished($("#asset_exchange_" + type + "_orders_table"), !refresh);
+		});
+	}
+
+	NRS.isUserCancelledOrder = function(order) {
+		if (NRS.unconfirmedTransactions.length) {
+			for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+				var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+
+				if (unconfirmedTransaction.type == 2 && (order.type == "ask" ? unconfirmedTransaction.subtype == 4 : unconfirmedTransaction.subtype == 5) && unconfirmedTransaction.attachment.order == order.order) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	$("#asset_exchange_search").on("submit", function(e) {
+		e.preventDefault();
+
+		var input = $.trim($("#asset_exchange_search input[name=q]").val());
+
+		if (!input) {
+			NRS.assetSearch = false;
+			NRS.assetExchangeSidebarLoaded();
+		} else {
+			NRS.assetSearch = [];
+
+			if (/NXT\-/i.test(input)) {
+				$.each(NRS.assets, function(key, asset) {
+					if (asset.accountRS == input) {
+						NRS.assetSearch.push(asset.id);
+					}
+				});
+			} else {
+				$.each(NRS.assets, function(key, asset) {
+					if (asset.account == input || asset.id == input || asset.name.indexOf(input) !== -1) {
+						NRS.assetSearch.push(asset.id);
+					}
+				});
+			}
+
+			if (!NRS.assetSearch.length) {
+				$.growl("Nothing found, please try another query.", {
+					"type": "danger"
+				});
+			} else {
+				NRS.assetExchangeSidebarLoaded();
+			}
+		}
+	});
 
 	$("#buy_asset_box .box-header, #sell_asset_box .box-header").click(function(e) {
 		e.preventDefault();

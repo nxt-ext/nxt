@@ -37,6 +37,9 @@ public final class Generator {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
                     return;
                 }
+                if (Nxt.getBlockchainProcessor().isScanning()) {
+                    return;
+                }
                 try {
                     for (Generator generator : generators.values()) {
                         generator.forge();

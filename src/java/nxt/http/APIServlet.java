@@ -80,6 +80,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssetsByName", GetAssetsByName.instance);
         map.put("getBalance", GetBalance.instance);
         map.put("getBlock", GetBlock.instance);
+        map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);

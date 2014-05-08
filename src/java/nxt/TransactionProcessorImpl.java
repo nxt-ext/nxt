@@ -346,6 +346,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
         }
 
+        Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
+        while (iterator.hasNext()) {
+            TransactionImpl transaction = iterator.next();
+            transaction.undoUnconfirmed();
+            if (! transaction.applyUnconfirmed()) {
+                iterator.remove();
+                removedUnconfirmedTransactions.add(transaction);
+                transactionListeners.notify(Collections.singletonList((Transaction)transaction), Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
+            }
+        }
+
         if (removedUnconfirmedTransactions.size() > 0) {
             transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }

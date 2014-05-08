@@ -2,8 +2,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
 
-	NRS.getBlock = function(blockID, callback, async) {
-		NRS.sendRequest('getBlock', {
+	NRS.getBlock = function(blockID, callback, pageRequest) {
+		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
 			"block": blockID
 		}, function(response) {
 			if (response.errorCode && response.errorCode == -1) {
@@ -14,7 +14,7 @@ var NRS = (function(NRS, $, undefined) {
 					callback(response);
 				}
 			}
-		}, (async == undefined ? true : async));
+		}, true);
 	}
 
 	NRS.handleInitialBlocks = function(response) {
@@ -30,6 +30,12 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
 			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
+
+			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
+				if ($("#sidebar_asset_exchange").style.display == "none") {
+					$("#sidebar_asset_exchange").show();
+				}
+			}
 
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 30) {
 				NRS.downloadingBlockchain = true;
@@ -86,6 +92,12 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
 			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
+
+			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
+				if ($("#sidebar_asset_exchange").style.display == "none") {
+					$("#sidebar_asset_exchange").show();
+				}
+			}
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
@@ -225,7 +237,7 @@ var NRS = (function(NRS, $, undefined) {
 					var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
 					//if previous block is undefined, dont try add it
 					if (typeof previousBlock !== "undefined")
-						NRS.getBlock(previousBlock, NRS.finish100Blocks);
+						NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
 				}
 			} else {
 				NRS.blocksPageLoaded(NRS.blocks);
@@ -236,7 +248,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.finish100Blocks = function(response) {
 		NRS.blocks.push(response);
 		if (NRS.blocks.length < 100 && typeof response.previousBlock !== "undefined") {
-			NRS.getBlock(response.previousBlock, NRS.finish100Blocks);
+			NRS.getBlock(response.previousBlock, NRS.finish100Blocks, true);
 		} else {
 			NRS.blocksPageLoaded(NRS.blocks);
 		}
