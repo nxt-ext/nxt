@@ -387,26 +387,8 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				var balance = NRS.formatAmount(new BigInteger(response.unconfirmedBalanceNQT));
-				balance = balance.split(".");
-				if (balance.length == 2) {
-					balance = balance[0] + "<span style='font-size:12px'>." + balance[1] + "</span>";
-				} else {
-					balance = balance[0];
-				}
-
-				$("#account_balance").html(balance);
-
-				var forgedBalance = NRS.formatAmount(new BigInteger(response.forgedBalanceNQT));
-
-				forgedBalance = forgedBalance.split(".");
-				if (forgedBalance.length == 2) {
-					forgedBalance = forgedBalance[0] + "<span style='font-size:12px'>." + forgedBalance[1] + "</span>";
-				} else {
-					forgedBalance = forgedBalance[0];
-				}
-
-				$("#account_forged_balance").html(forgedBalance);
+				$("#account_balance").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
+				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));
 
 				var nr_assets = 0;
 

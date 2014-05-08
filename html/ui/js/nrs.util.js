@@ -918,5 +918,18 @@ var NRS = (function(NRS, $, undefined) {
 		return t;
 	}
 
+	NRS.formatStyledAmount = function(amount, round) {
+		var amount = NRS.formatAmount(amount, round);
+
+		amount = amount.split(".");
+		if (amount.length == 2) {
+			amount = amount[0] + "<span style='font-size:12px'>." + amount[1] + "</span>";
+		} else {
+			amount = amount[0];
+		}
+
+		return amount;
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
