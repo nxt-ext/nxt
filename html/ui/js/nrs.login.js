@@ -134,7 +134,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		NRS.sendRequest("getState", function(response) {
+		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
 				$.growl("Could not connect to server.", {
 					"type": "danger",

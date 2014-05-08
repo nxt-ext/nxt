@@ -539,7 +539,19 @@
 			                    <div class="content-splitter-sidebar" style="width:200px">
 			                        <div class="content-splitter-sidebar-inner">
 			                        	<div class="list-group unselectable sidebar_context" id="asset_exchange_sidebar">
-				                        	<div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
+											<div id="asset_exchange_sidebar_search">
+												 <form action="#" method="get" class="sidebar-form" id="asset_exchange_search">
+													<div class="input-group">
+														<input type="text" name="q" class="form-control" placeholder="Search...">
+														<span class="input-group-btn">
+														<button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+														</span>
+													</div>
+												</form>             
+											</div>
+											<div id="asset_exchange_sidebar_content">
+				                        		<div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
+				                        	</div>
 			                        	</div>
 						             </div>
 						         </div>
@@ -2421,37 +2433,42 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							    		<td style="font-weight: bold"># Unlocked Accounts:</td><td><span id="nrs_node_state_numberOfUnlockedAccounts"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Total Memory:</td><td><span id="nrs_node_state_totalMemory"></span></td>
+							    		<td style="font-weight: bold">Last Feeder Height:</td><td><span id="nrs_node_state_lastBlockchainFeederHeight"></span></td>
 								    	<td style="font-weight: bold"># Peers:</td><td><span id="nrs_node_state_numberOfPeers"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Free Memory:</td><td><span id="nrs_node_state_freeMemory"></span></td>
+							    		<td style="font-weight: bold">Total Memory:</td><td><span id="nrs_node_state_totalMemory"></span></td>
 							    		<td style="font-weight: bold"># Transactions:</td><td><span id="nrs_node_state_numberOfTransactions"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Max Memory:</td><td><span id="nrs_node_state_maxMemory"></span></td>
+							    		<td style="font-weight: bold">Free Memory:</td><td><span id="nrs_node_state_freeMemory"></span></td>
 							    		<td style="font-weight: bold"># Aliases:</td><td><span id="nrs_node_state_numberOfAliases"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Processors:</td><td><span id="nrs_node_state_availableProcessors"></span></td>
+							    		<td style="font-weight: bold">Max Memory:</td><td><span id="nrs_node_state_maxMemory"></span></td>
 							    		<td style="font-weight: bold"># Orders:</td><td><span id="nrs_node_state_numberOfOrders"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Difficulty:</td><td><span id="nrs_node_state_cumulativeDifficulty"></span></td>
+							    		<td style="font-weight: bold">Processors:</td><td><span id="nrs_node_state_availableProcessors"></span></td>
 							    		<td style="font-weight: bold"># Assets:</td><td><span id="nrs_node_state_numberOfAssets"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Total Balance:</td><td><span id="nrs_node_state_totalEffectiveBalance"></span></td>
+							    		<td style="font-weight: bold">Difficulty:</td><td><span id="nrs_node_state_cumulativeDifficulty"></span></td>
 							    		<td style="font-weight: bold"># Trades:</td><td><span id="nrs_node_state_numberOfTrades"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Time:</td><td><span id="nrs_node_state_time"></span></td>
+							    		<td style="font-weight: bold">Total Balance:</td><td><span id="nrs_node_state_totalEffectiveBalanceNXT"></span></td>
 							    		<td style="font-weight: bold"># Polls:</td><td><span id="nrs_node_state_numberOfPolls"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">&nbsp;</td><td>&nbsp;</td>
+							    		<td style="font-weight: bold">Time:</td><td><span id="nrs_node_state_time"></span></td>
 							    		<td style="font-weight: bold"># Votes:</td><td><span id="nrs_node_state_numberOfVotes"></span></td>
 							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold">Is Scanning:</td><td><span id="nrs_node_state_isScanning"></span></td>
+							    		<td style="font-weight: bold">&nbsp;</td><td>&nbsp;</td>
+							    	</tr>
+
 							    </tbody>
 						 	</table>
 						</div>

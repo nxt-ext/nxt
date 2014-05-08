@@ -36,3 +36,26 @@ Number.prototype.pad = function(size) {
 	}
 	return s;
 }
+
+Array.prototype.diff = function(a) {
+	return this.filter(function(i) {
+		return a.indexOf(i) < 0;
+	});
+};
+
+if (typeof Object.keys !== "function") {
+	(function() {
+		Object.keys = Object_keys;
+
+		function Object_keys(obj) {
+			var keys = [],
+				name;
+			for (name in obj) {
+				if (obj.hasOwnProperty(name)) {
+					keys.push(name);
+				}
+			}
+			return keys;
+		}
+	})();
+}

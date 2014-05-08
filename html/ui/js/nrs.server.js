@@ -187,6 +187,12 @@ var NRS = (function(NRS, $, undefined) {
 			var ajaxCall = $.ajax;
 		}
 
+		//workaround for 1 specific case.. ugly
+		if (data.doGetAssets) {
+			data = data.doGetAssets;
+			type = "POST";
+		}
+
 		ajaxCall({
 			url: url,
 			crossDomain: true,

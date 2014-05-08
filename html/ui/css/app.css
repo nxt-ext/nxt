@@ -525,7 +525,7 @@ body > .header .logo .icon {
 .sidebar {
   margin-bottom: 5px;
 }
-.sidebar .sidebar-form input:focus {
+.sidebar-form input:focus {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
@@ -2455,21 +2455,21 @@ background:#33363f
 .skin-blue .treeview-menu > li > a:hover {
   color: #111;
 }
-.skin-blue .sidebar-form {
+.skin-blue .sidebar .sidebar-form {
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   border-radius: 2px;
   border: 1px solid #dbdbdb;
   margin: 10px 10px;
 }
-.skin-blue .sidebar-form input[type="text"],
-.skin-blue .sidebar-form .btn {
+.skin-blue .sidebar .sidebar-form input[type="text"],
+.skin-blue .sidebar .sidebar-form .btn {
   box-shadow: none;
   background-color: #fafafa;
   border: 1px solid #fafafa;
   height: 35px;
 }
-.skin-blue .sidebar-form input[type="text"] {
+.skin-blue .sidebar .sidebar-form input[type="text"] {
   color: #666;
   -webkit-border-top-left-radius: 2px !important;
   -webkit-border-top-right-radius: 0 !important;
@@ -2484,15 +2484,15 @@ background:#33363f
   border-bottom-right-radius: 0 !important;
   border-bottom-left-radius: 2px !important;
 }
-.skin-blue .sidebar-form input[type="text"]:focus,
-.skin-blue .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+.skin-blue .sidebar .sidebar-form input[type="text"]:focus,
+.skin-blue .sidebar .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
   background-color: #fff;
   color: #666;
 }
-.skin-blue .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+.skin-blue .sidebar .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
   border-left-color: #fff;
 }
-.skin-blue .sidebar-form .btn {
+.skin-blue .sidebar .sidebar-form .btn {
   color: #999;
   -webkit-border-top-left-radius: 0 !important;
   -webkit-border-top-right-radius: 2px !important;
@@ -3273,4 +3273,10 @@ hr {
   display:inline-block;
   text-align:left;
   margin-bottom:5px;
+}
+
+#asset_exchange_sidebar_search {
+  display:none;
+  margin-top:10px;
+  border-bottom:1px solid #ddd;
 }
