@@ -71,11 +71,11 @@ public final class PeerServlet extends HttpServlet {
                 remoteAddr = "["+remoteAddr+"]";
             peer = Peers.addPeer(remoteAddr, null);
             if (peer == null) {
-                Logger.logDebugMessage("Rejected request from "+remoteAddr);
+                //Logger.logDebugMessage("Rejected request from "+remoteAddr);
                 return;
             }
             if (peer.isBlacklisted()) {
-                Logger.logDebugMessage("Rejected request from blacklisted peer "+remoteAddr);
+                //Logger.logDebugMessage("Rejected request from blacklisted peer "+remoteAddr);
                 return;
             }
 
