@@ -324,6 +324,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).parents(".btn-group").find(".text").text($(this).text());
 
+		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
+
 		NRS.pages.blocks();
 	});
 
