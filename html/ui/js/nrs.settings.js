@@ -1,7 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.defaultSettings = {
 		"submit_on_enter": 0,
-		"use_new_address_format": 0,
+		"use_reed_solomon": 0,
 		"animate_forging": 1,
 		"news": -1,
 		"fee_warning": "100000000000",
@@ -892,29 +892,32 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		/*
-		if (!key || key == "use_new_address_format") {
-			if (NRS.settings["use_new_address_format"]) {
-				$("#block_info_modal, #transaction_info_modal").find(".modal-dialog").addClass("modal-dialog-wide");
+		if (!key || key == "use_reed_solomon") {
+			if (NRS.settings["use_reed_solomon"]) {
 				$("#account_id_prefix").hide();
+				$("#account_id").html(NRS.getAccountFormatted(NRS.accountRS)).css("font-size", "12px");
+				$("body").addClass("reed_solomon");
 			} else {
 				$("#account_id_prefix").show();
-			}
-
-			if (NRS.account) {
-				$("#account_id").html(NRS.getAccountFormatted(NRS.account));
+				$("#account_id").html(NRS.getAccountFormatted(NRS.account)).css("font-size", "14px");
+				$("body").removeClass("reed_solomon");
 			}
 
 			var $dashboard_account_links = $("#dashboard_transactions_table a.user_info");
 
 			$.each($dashboard_account_links, function(key, value) {
-				var account = $(this).data("user");
+				if (NRS.settings["use_reed_solomon"]) {
+					var account = $(this).data("user-rs");
+				} else {
+					var account = $(this).data("user-id");
+				}
 
-				$(this).html(NRS.getAccountFormatted(account));
+				$(this).data("user", account);
+				$(this).html(String(account).escapeHTML());
 			});
 
 			//todo: wider message sidebar
-		}*/
+		}
 	}
 
 	NRS.updateSettings = function(key, value) {

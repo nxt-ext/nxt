@@ -69,9 +69,6 @@ helpful information, so include its contents when submitting a bug report.
 In addition to the default user interface at http://localhost:7876 , the
 following urls are available:
 
-http://localhost:7876/update.html - an update checker, which uses information
-from the blockchain to check for newer versions and let you download them.
-
 http://localhost:7876/test - a list of all available http API requests, very
 useful for client developers and for anyone who wants to execute commands
 directly using the http interface without going through the browser UI.
