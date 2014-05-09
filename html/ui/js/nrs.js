@@ -24,7 +24,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
-	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12];
 
 	NRS.rememberPassword = false;
 	NRS.selectedContext = null;
@@ -42,7 +41,6 @@ var NRS = (function(NRS, $, undefined) {
 			$(".testnet_only").hide();
 		} else {
 			NRS.isTestNet = true;
-			NRS.blockchainCalculationServers = [9, 10];
 			$(".testnet_only, #testnet_login, #testnet_warning").show();
 		}
 
@@ -291,7 +289,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB_", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -605,45 +603,20 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.calculateBlockchainDownloadTime = function(callback) {
-		if (!NRS.blockchainCalculationServers.length) {
-			return;
-		}
-
-		var key = Math.floor((Math.random() * NRS.blockchainCalculationServers.length));
-		var value = NRS.blockchainCalculationServers[key];
-
-		NRS.blockchainCalculationServers.splice(key, 1);
-
-		try {
-			if (NRS.isTestNet) {
-				var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getBlockchainStatus";
-			} else {
-				var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getBlockchainStatus";
-			}
-
-			NRS.sendOutsideRequest(url, function(response) {
-				if (response.numberOfBlocks && response.time && response.numberOfBlocks > NRS.state.numberOfBlocks && Math.abs(NRS.state.time - response.time) < 120) {
-					NRS.blockchainExpectedBlocks = response.numberOfBlocks;
-					if (callback) {
-						callback();
-					}
-				} else if (callback) {
-					NRS.calculateBlockchainDownloadTime(callback);
-				}
-			}, false);
-		} catch (err) {
-			if (callback) {
-				NRS.calculateBlockchainDownloadTime(callback);
-			}
-		}
-	}
-
 	NRS.updateBlockchainDownloadProgress = function() {
-		var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.blockchainExpectedBlocks) * 100), 10);
+		if (NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
+			var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
+		} else {
+			var percentage = 100;
+		}
 
-		$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
-		$("#downloading_blockchain .sr-only").html(percentage + "% Complete");
+		if (percentage == 100) {
+			$("#downloading_blockchain .progress").hide();
+		} else {
+			$("#downloading_blockchain .progress").show();
+			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
+			$("#downloading_blockchain .sr-only").html(percentage + "% Complete");
+		}
 	}
 
 	$("#id_search").on("submit", function(e) {
