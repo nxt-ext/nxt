@@ -7,6 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.genesis = "1739068987193023818";
 
 	NRS.account = "";
+	NRS.accountRS = ""
 	NRS.accountInfo = {};
 
 	NRS.database = null;
@@ -23,7 +24,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
-	NRS.blockchainCalculationServers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12];
 
 	NRS.rememberPassword = false;
 	NRS.selectedContext = null;
@@ -41,14 +41,13 @@ var NRS = (function(NRS, $, undefined) {
 			$(".testnet_only").hide();
 		} else {
 			NRS.isTestNet = true;
-			NRS.blockchainCalculationServers = [9, 10];
 			$(".testnet_only, #testnet_login, #testnet_warning").show();
 		}
 
 		NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 		if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-			if ($("#sidebar_asset_exchange").style.display == "none") {
+			if (!$("#sidebar_asset_exchange").is(":visible")) {
 				$("#sidebar_asset_exchange").show();
 			}
 		}
@@ -258,7 +257,8 @@ var NRS = (function(NRS, $, undefined) {
 				},
 				name: "VARCHAR(100) COLLATE NOCASE",
 				email: "VARCHAR(200)",
-				accountId: "VARCHAR(25)",
+				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
 				description: "TEXT"
 			},
 			assets: {
@@ -337,6 +337,13 @@ var NRS = (function(NRS, $, undefined) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
 				}
 			} else {
+				if (NRS.accountRS && NRS.accountInfo.accountRS != NRS.accountRS) {
+					$.growl("Generated Reed Solomon address different from the one in the blockchain!", {
+						"type": "danger"
+					});
+					NRS.accountRS = NRS.accountInfo.accountRS;
+				}
+
 				if (NRS.downloadingBlockchain) {
 					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
 				} else if (!NRS.accountInfo.publicKey) {
@@ -460,6 +467,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.isForging = false;
 		}
 
+		//no reed solomon available? do it myself? todo
 		if (NRS.accountInfo.lessors) {
 			if (accountLeasingLabel) {
 				accountLeasingLabel += ", ";
@@ -593,45 +601,20 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.calculateBlockchainDownloadTime = function(callback) {
-		if (!NRS.blockchainCalculationServers.length) {
-			return;
-		}
-
-		var key = Math.floor((Math.random() * NRS.blockchainCalculationServers.length));
-		var value = NRS.blockchainCalculationServers[key];
-
-		NRS.blockchainCalculationServers.splice(key, 1);
-
-		try {
-			if (NRS.isTestNet) {
-				var url = "http://node" + value + ".mynxtcoin.org:6876/nxt?requestType=getBlockchainStatus";
-			} else {
-				var url = "http://vps" + value + ".nxtcrypto.org:7876/nxt?requestType=getBlockchainStatus";
-			}
-
-			NRS.sendOutsideRequest(url, function(response) {
-				if (response.numberOfBlocks && response.time && response.numberOfBlocks > NRS.state.numberOfBlocks && Math.abs(NRS.state.time - response.time) < 120) {
-					NRS.blockchainExpectedBlocks = response.numberOfBlocks;
-					if (callback) {
-						callback();
-					}
-				} else if (callback) {
-					NRS.calculateBlockchainDownloadTime(callback);
-				}
-			}, false);
-		} catch (err) {
-			if (callback) {
-				NRS.calculateBlockchainDownloadTime(callback);
-			}
-		}
-	}
-
 	NRS.updateBlockchainDownloadProgress = function() {
-		var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.blockchainExpectedBlocks) * 100), 10);
+		if (NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
+			var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
+		} else {
+			var percentage = 100;
+		}
 
-		$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
-		$("#downloading_blockchain .sr-only").html(percentage + "% Complete");
+		if (percentage == 100) {
+			$("#downloading_blockchain .progress").hide();
+		} else {
+			$("#downloading_blockchain .progress").show();
+			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
+			$("#downloading_blockchain .sr-only").html(percentage + "% Complete");
+		}
 	}
 
 	$("#id_search").on("submit", function(e) {

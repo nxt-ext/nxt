@@ -48,7 +48,7 @@ var NRS = (function(NRS, $, undefined) {
 						contactDescription = "-";
 					}
 
-					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + String(contact.accountId).escapeHTML() + "' class='user_info'>" + String(contact.accountId).escapeHTML() + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
+					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + NRS.getAccountFormatted(contact, "account") + "' class='user_info'>" + NRS.getAccountFormatted(contact, "account") + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
 				});
 
 				$("#contacts_table tbody").empty().append(rows);
@@ -67,6 +67,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.addContact = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		data.account_id = String(data.account_id);
+
 		if (!data.name) {
 			return {
 				"error": "Contact name is a required field."
@@ -77,9 +79,15 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		if (/^\d+$/.test(data.name)) {
+		if (/^\d+$/.test(data.name) || /^NXT\-/i.test(data.name)) {
 			return {
 				"error": "Contact name must contain alphabetic characters."
+			};
+		}
+
+		if (data.email && !/@/.test(data.email)) {
+			return {
+				"error": "Email address is incorrect."
 			};
 		}
 
@@ -94,26 +102,70 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		if (/^NXT\-/i.test(data.account_id)) {
+			data.account_rs = data.account_id;
+
+			var address = new NxtAddress();
+
+			if (address.set(data.account_rs)) {
+				data.account = address.account_id();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		} else {
+			var address = new NxtAddress();
+
+			if (address.set(data.account_id)) {
+				data.account_rs = address.toString();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		}
+
+		NRS.sendRequest("getAccount", {
+			"account": data.account_id
+		}, function(response) {
+			if (!response.errorCode) {
+				if (response.account != data.account || response.accountRS != data.account_rs) {
+					return {
+						"error": "Invalid account ID."
+					};
+				}
+			}
+		}, false);
+
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 
 		NRS.database.select("contacts", [{
-			"accountId": data.account_id
+			"account": data.account_id
+		}, {
+			"name": data.name
 		}], function(error, contacts) {
 			if (contacts.length) {
-				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
+				if (contacts[0].name == data.name) {
+					$modal.find(".error_message").html("A contact with this name already exists.").show();
+				} else {
+					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
+				}
 				$btn.button("reset");
 				$modal.modal("unlock");
 			} else {
 				NRS.database.insert("contacts", {
 					name: data.name,
 					email: data.email,
-					accountId: data.account_id,
+					account: data.account_id,
+					accountRS: data.account_rs,
 					description: data.description
 				}, function(error) {
 					NRS.contacts[data.account_id] = {
 						name: data.name,
 						email: data.email,
-						accountId: data.account_id,
+						account: data.account_id,
+						accountRS: data.account_rs,
 						description: data.description
 					};
 
@@ -134,10 +186,6 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.selectedContext.data("context", "messages_sidebar_update_context");
 					}
 				});
-
-				return {
-					"stop": true
-				};
 			}
 		});
 	}
@@ -150,15 +198,22 @@ var NRS = (function(NRS, $, undefined) {
 		if (!contactId && NRS.selectedContext) {
 			var accountId = NRS.selectedContext.data("account");
 
-			NRS.database.select("contacts", [{
-				"accountId": accountId
-			}], function(error, contact) {
+			var dbKey = (/^NXT\-/i.test(accountId) ? "accountRS" : "account");
+
+			var dbQuery = {};
+			dbQuery[dbKey] = accountId;
+
+			NRS.database.select("contacts", [dbQuery], function(error, contact) {
 				contact = contact[0];
 
 				$("#update_contact_id").val(contact.id);
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				$("#update_contact_account_id").val(contact.accountId);
+				if (NRS.settings["use_reed_solomon"]) {
+					$("#update_contact_account_id").val(contact.accountRS);
+				} else {
+					$("#update_contact_account_id").val(contact.account);
+				}
 				$("#update_contact_description").val(contact.description);
 			});
 		} else {
@@ -171,7 +226,11 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				$("#update_contact_account_id").val(contact.accountId);
+				if (NRS.settings["use_reed_solomon"]) {
+					$("#update_contact_account_id").val(contact.accountRS);
+				} else {
+					$("#update_contact_account_id").val(contact.account);
+				}
 				$("#update_contact_description").val(contact.description);
 			});
 		}
@@ -179,6 +238,8 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.updateContact = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
+
+		data.account_id = String(data.account_id);
 
 		if (!data.name) {
 			return {
@@ -209,10 +270,46 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
+		if (/^NXT\-/i.test(data.account_id)) {
+			data.account_rs = data.account_id;
+
+			var address = new NxtAddress();
+
+			if (address.set(data.account_rs)) {
+				data.account = address.account_id();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		} else {
+			var address = new NxtAddress();
+
+			if (address.set(data.account_id)) {
+				data.account_rs = address.toString();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		}
+
+		NRS.sendRequest("getAccount", {
+			"account": data.account_id
+		}, function(response) {
+			if (!response.errorCode) {
+				if (response.account != data.account || response.accountRS != data.account_rs) {
+					return {
+						"error": "Invalid account ID."
+					};
+				}
+			}
+		}, false);
+
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 
 		NRS.database.select("contacts", [{
-			"accountId": data.account_id
+			"account": data.account_id
 		}], function(error, contacts) {
 			if (contacts.length && contacts[0].id != contactId) {
 				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
@@ -222,7 +319,8 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.database.update("contacts", {
 					name: data.name,
 					email: data.email,
-					accountId: data.account_id,
+					account: data.account_id,
+					accountRS: data.account_rs,
 					description: data.description
 				}, [{
 					"id": contactId
@@ -234,7 +332,8 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.contacts[data.account_id] = {
 						name: data.name,
 						email: data.email,
-						accountId: data.account_id,
+						account: data.account_id,
+						accountRS: data.account_rs,
 						description: data.description
 					};
 
@@ -254,10 +353,6 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				});
-
-				return {
-					"stop": true
-				};
 			}
 		});
 	}

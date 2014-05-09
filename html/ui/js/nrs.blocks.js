@@ -32,18 +32,17 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-				if ($("#sidebar_asset_exchange").style.display == "none") {
+				if (!$("#sidebar_asset_exchange").is(":visible")) {
 					$("#sidebar_asset_exchange").show();
 				}
 			}
 
-			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 30) {
+			//if no new blocks in 24 hours, show blockchain download progress..
+			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 24) {
 				NRS.downloadingBlockchain = true;
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
 				$("#show_console").hide();
-				NRS.calculateBlockchainDownloadTime(function() {
-					NRS.updateBlockchainDownloadProgress();
-				});
+				NRS.updateBlockchainDownloadProgress();
 			}
 
 			var rows = "";
@@ -94,7 +93,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-				if ($("#sidebar_asset_exchange").style.display == "none") {
+				if (!$("#sidebar_asset_exchange").is(":visible")) {
 					$("#sidebar_asset_exchange").show();
 				}
 			}
@@ -116,7 +115,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.downloadingBlockchain) {
-			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 30) {
+			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24) {
 				NRS.downloadingBlockchain = false;
 				$("#dashboard_message").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
@@ -267,9 +266,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			totalTransactions += block.numberOfTransactions;
 
-			var account = String(block.generator).escapeHTML();
-
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.id).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (account != NRS.genesis ? "<a href='#' data-user='" + account + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
+			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.id).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
 		if (blocks.length) {
@@ -326,6 +323,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(this).parents(".btn-group").find(".text").text($(this).text());
+
+		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
+		$("#blocks_table tbody").empty();
+		$("#blocks_table").parent().addClass("data-loading");
 
 		NRS.pages.blocks();
 	});

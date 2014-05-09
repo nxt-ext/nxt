@@ -96,9 +96,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
-			if (!/^\d+$/.test(data.recipient)) {
+			if (!/^\d+$/.test(data.recipient) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
 				var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
-				if (!convertedAccountId || !/^\d+$/.test(convertedAccountId)) {
+				if (!convertedAccountId || (!/^\d+$/.test(convertedAccountId) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(convertedAccountId))) {
 					$modal.find(".error_message").html("Invalid account ID.").show();
 					NRS.unlockForm($modal, $btn);
 					return;

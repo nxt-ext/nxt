@@ -255,8 +255,8 @@ function NxtAddress() {
 		return true;
 	} //__________________________
 
-	this.toString = function(prefix) {
-		var out = (prefix ? 'NXT-' : '');
+	this.toString = function() {
+		var out = 'NXT-';
 
 		for (var i = 0; i < 17; i++) {
 			out += alphabet[codeword[cwmap[i]]];

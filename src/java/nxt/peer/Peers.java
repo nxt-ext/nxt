@@ -399,8 +399,11 @@ public final class Peers {
         }
         /*
         StringBuilder buf = new StringBuilder();
-        for (String address : PeerDb.loadPeers()) {
-            buf.append("('").append(address).append("'), ");
+        for (Peer peer : peers.values()) {
+            if (peer.getAnnouncedAddress() != null && peer.shareAddress() && ! peer.isBlacklisted()
+                    && peer.getVersion() != null && peer.getVersion().startsWith("1.")) {
+                buf.append("('").append(peer.getAnnouncedAddress()).append("'), ");
+            }
         }
         Logger.logDebugMessage(buf.toString());
         */
