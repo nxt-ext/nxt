@@ -706,29 +706,35 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	}
 
-	NRS.getAccountTitle = function(accountId) {
-		if (accountId in NRS.contacts) {
-			return NRS.contacts[accountId].name.escapeHTML();
-		} else if (accountId == NRS.account) {
+	NRS.getAccountTitle = function(object, acc) {
+		var type = typeof object;
+
+		if (type == "string" || type == "number") {
+			acc = object;
+			object = null;
+		}
+
+		if (acc in NRS.contacts) {
+			return NRS.contacts[acc].name.escapeHTML();
+		} else if (acc == NRS.account || acc == NRS.accountRS) {
 			return "You";
+		} else if (!object) {
+			return String(acc).escapeHTML();
 		} else {
-			return NRS.getAccountFormatted(accountId);
+			return NRS.getAccountFormatted(object, acc);
 		}
 	}
 
-	NRS.getAccountFormatted = function(accountId) {
-		/*if (NRS.settings["use_new_address_format"]) {
-			var address = new NxtAddress();
+	NRS.getAccountFormatted = function(object, acc) {
+		var type = typeof object;
 
-			if (address.set(accountId, true)) {
-				return address.toString().escapeHTML();
-			} else {
-				return String(accountId).escapeHTML();
-			}
+		if (type == "string" || type == "number") {
+			return String(object).escapeHTML();
+		} else if (NRS.settings["use_reed_solomon"]) {
+			return String(object[acc + "RS"]).escapeHTML();
 		} else {
-			return String(accountId).escapeHTML();
-		}*/
-		return String(accountId).escapeHTML();
+			return String(object[acc]).escapeHTML();
+		}
 	}
 
 	NRS.setupClipboardFunctionality = function() {
@@ -788,15 +794,8 @@ var NRS = (function(NRS, $, undefined) {
 			case "account_id":
 				return NRS.account;
 				break;
-			case "new_address_format":
-				var address = new NxtAddress();
-
-				if (address.set(NRS.account, true)) {
-					return address.toString();
-				} else {
-					return NRS.account;
-				}
-
+			case "account_rs":
+				return NRS.accountInfo.accountRS;
 				break;
 			case "message_link":
 				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;

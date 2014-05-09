@@ -17,14 +17,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		var account = $invoker.data("account");
 
-		if (account) {
-			account = NRS.getAccountFormatted(account);
-		} else {
+		if (!account) {
 			account = $invoker.data("contact");
 		}
 
 		if (account) {
-			$(this).find("input[name=recipient], input[name=account_id]").val(account.unescapeHTML()).trigger("blur");
+			$(this).find("input[name=recipient], input[name=account_id]").val(account).trigger("blur");
 		}
 	});
 
@@ -59,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.addUnconfirmedTransaction(response.transaction);
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount) && !(data.recipient in NRS.contacts)) {
-			$.growl("NXT has been sent! <a href='#' data-account='" + String(data.recipient).escapeHTML() + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
+			$.growl("NXT has been sent! <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
 				"type": "success"
 			});
 		} else {
@@ -87,30 +85,35 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.publicKey) {
 				callback({
 					"type": "info",
-					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + "NXT."
+					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + "NXT.",
+					"account": response
 				});
 			} else {
 				if (response.errorCode) {
 					if (response.errorCode == 4) {
 						callback({
 							"type": "danger",
-							"message": "The recipient account is malformed, please adjust. If you want to type an alias, prepend it with the @ character."
+							"message": "The recipient account is malformed, please adjust." + (!/^(NXT\-)/i.test(accountId) ? " If you want to type an alias, prepend it with the @ character." : ""),
+							"account": null
 						});
 					} else if (response.errorCode == 5) {
 						callback({
 							"type": "warning",
-							"message": "The recipient account is an unknown account, meaning it has never had an incoming or outgoing transaction. Please double check your recipient address before submitting."
+							"message": "The recipient account is an unknown account, meaning it has never had an incoming or outgoing transaction. Please double check your recipient address before submitting.",
+							"account": null
 						});
 					} else {
 						callback({
 							"type": "danger",
-							"message": "There is a problem with the recipient account: " + response.errorDescription
+							"message": "There is a problem with the recipient account: " + response.errorDescription,
+							"account": null
 						});
 					}
 				} else {
 					callback({
 						"type": "warning",
-						"message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + " NXT. Please double check your recipient address before submitting."
+						"message": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + " NXT. Please double check your recipient address before submitting.",
+						"account": response
 					});
 				}
 			}
@@ -133,18 +136,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		//solomon reed. Btw, this regex can be shortened..
 		if (/^(NXT\-)?[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(account)) {
-			account = account.replace(/^NXT\-/i, "");
-
 			var address = new NxtAddress();
 
 			if (address.set(account)) {
-				var accountId = address.account_id();
-
-				NRS.getAccountError(accountId, function(response) {
-					callout.removeClass(classes).addClass("callout-" + response.type).html("The recipient address translates to account <strong>" + String(accountId).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which")).show();
-					if (response.type == "info" || response.type == "warning") {
-						accountInputField.val(accountId);
-					}
+				NRS.getAccountError(account, function(response) {
+					callout.removeClass(classes).addClass("callout-" + response.type).html("The recipient address translates to account <strong>" + String(response.account.account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which").escapeHTML()).show();
 				});
 			} else {
 				if (address.guess.length == 1) {
@@ -168,11 +164,15 @@ var NRS = (function(NRS, $, undefined) {
 				}], function(error, contact) {
 					if (!error && contact.length) {
 						contact = contact[0];
-						NRS.getAccountError(contact.accountId, function(response) {
-							callout.removeClass(classes).addClass("callout-" + response.type).html("The contact links to account <strong>" + String(contact.accountId).escapeHTML() + "</strong>. " + response.message.escapeHTML()).show();
+						NRS.getAccountError((NRS.settings["use_reed_solomon"] ? contact.accountRS : contact.account), function(response) {
+							callout.removeClass(classes).addClass("callout-" + response.type).html("The contact links to account <strong>" + NRS.getAccountFormatted(contact, "account") + "</strong>. " + response.message.escapeHTML()).show();
 
 							if (response.type == "info" || response.type == "warning") {
-								accountInputField.val(contact.accountId);
+								if (NRS.settings["use_reed_solomon"]) {
+									accountInputField.val(contact.accountRS);
+								} else {
+									accountInputField.val(contact.account);
+								}
 							}
 						});
 					} else if (/^[a-z0-9]+$/i.test(account)) {

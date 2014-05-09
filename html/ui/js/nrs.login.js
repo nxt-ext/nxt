@@ -158,6 +158,12 @@ var NRS = (function(NRS, $, undefined) {
 					return;
 				}
 
+				var nxtAddress = new NxtAddress();
+
+				if (nxtAddress.set(NRS.account)) {
+					NRS.accountRS = nxtAddress.toString();
+				}
+
 				NRS.sendRequest("getAccountPublicKey", {
 					"account": NRS.account
 				}, function(response) {
@@ -180,7 +186,11 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 
-					$("#account_id").html(NRS.getAccountFormatted(NRS.account));
+					if (NRS.settings["use_reed_solomon"]) {
+						$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
+					} else {
+						$("#account_id").html(String(NRS.account).escapeHTML()).css("font-size", "14px");
+					}
 
 					var passwordNotice = "";
 

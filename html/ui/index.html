@@ -59,7 +59,7 @@
 	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
 										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
-										<li role="presentation" style="display:none"><a role="menuitem" tabindex="-1" href="#" data-type="new_address_format">Copy New Address Format</a></li>
+										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account RS</a></li>
 										<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
 										<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
 									</ul>
@@ -255,6 +255,7 @@
                 <div id="messages_page" class="page">
 	                <section class="content-header">
 	                	<h1>Messages</h1>
+	                	<!--
 						<div style="position:absolute;top:9px;right:9px;">
 				            <div class="btn-group">
 				                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Select Recipient <span class="caret"></span></button>
@@ -263,6 +264,7 @@
 				                </ul>
 				            </div>
 			            </div>
+			            -->
 	                </section>
 					<section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%;">
 						<div class="content-spliter">
@@ -811,13 +813,14 @@
 							            </select>
 							            <p class="help-block">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
 							        </div>
-							        <div class="form-group" style="display:none">
-							            <label for="settings_use_new_address_format">Use New Address Format</label>
-							            <select name="use_new_address_format" id="settings_use_new_address_format" class="form-control" style="width:150px">
+							        <div class="form-group">
+							        <!-- rs -->
+							            <label for="settings_use_reed_solomon">Use Reed Solomon Format</label>
+							            <select name="use_reed_solomon" id="settings_use_reed_solomon" class="form-control" style="width:150px">
 							                <option value="1">Yes</option>
 							                <option value="0">No</option>
 							            </select>
-							            <p class="help-block">The new address format has built-in error detection.</p>
+							            <p class="help-block">The reed solomon format has built-in error detection.</p>
 							        </div>
 									<div class="form-group">
 							            <label for="settings_animate_forging">Animate Forging Indicator</label>
@@ -2526,9 +2529,9 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							    	<tr>
 							    		<td style="font-weight: bold;width:180px;">Account ID:</td><td><span id="account_balance_account_id"></span></td>
 							    	</tr>
-							    	<!--<tr style="display:none">
-							    		<td style="font-weight: bold">New Address Format:</td><td><span id="account_balance_new_address_format"></span></td>
-							    	</tr>-->
+							    	<tr>
+							    		<td style="font-weight: bold">New Address Format:</td><td><span id="account_balance_account_rs"></span></td>
+							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold">Balance:</td><td><span id="account_balance_balance"></span></td>
 							    	</tr>

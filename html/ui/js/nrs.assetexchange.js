@@ -356,7 +356,7 @@ var NRS = (function(NRS, $, undefined) {
 				"scrollTop": 0
 			}, 0);
 
-			$("#asset_account").html("<a href='#' data-user='" + String(asset.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(asset.account) + "</a>");
+			$("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
 			$("#asset_id").html(assetId.escapeHTML());
 			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
 			$("#asset_name").html(String(asset.name).escapeHTML());
@@ -508,7 +508,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
 
-					rows += "<tr class='" + className + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + String(order.account).escapeHTML() + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order.account)) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
+					rows += "<tr class='" + className + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
 				}
 
 				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);

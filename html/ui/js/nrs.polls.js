@@ -36,7 +36,7 @@ var NRS = (function(NRS, $, undefined) {
 											pollDescription = pollDescription.substring(0, 100) + "...";
 										}
 
-										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + String(unconfirmedTransaction.sender).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction.sender) + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
 
 									}
 								}
@@ -55,7 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
 
-								rows += "<tr><td>" + String(poll.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + String(poll.sender).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(poll.sender) + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
+								rows += "<tr><td>" + String(poll.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(poll.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
 							}
 
 							$("#polls_table tbody").empty().append(rows);
@@ -149,7 +149,9 @@ var NRS = (function(NRS, $, undefined) {
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
-			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>Pending</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + String(NRS.account).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(NRS.account) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
+			var account = (NRS.settings["use_reed_solomon"] ? NRS.accountRS : NRS.account);
+
+			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>Pending</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(account) + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
 
 			$table.prepend(rowToAdd);
 

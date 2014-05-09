@@ -7,6 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.genesis = "1739068987193023818";
 
 	NRS.account = "";
+	NRS.accountRS = ""
 	NRS.accountInfo = {};
 
 	NRS.database = null;
@@ -57,6 +58,8 @@ var NRS = (function(NRS, $, undefined) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 		}
+
+		NRS.isLocalHost = false;
 
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
@@ -258,7 +261,8 @@ var NRS = (function(NRS, $, undefined) {
 				},
 				name: "VARCHAR(100) COLLATE NOCASE",
 				email: "VARCHAR(200)",
-				accountId: "VARCHAR(25)",
+				account: "VARCHAR(25)",
+				accountRS: "VARCHAR(25)",
 				description: "TEXT"
 			},
 			assets: {
@@ -287,7 +291,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB_", schema, 1, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -337,6 +341,13 @@ var NRS = (function(NRS, $, undefined) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
 				}
 			} else {
+				if (NRS.accountRS && NRS.accountInfo.accountRS != NRS.accountRS) {
+					$.growl("Generated Reed Solomon address different from the one in the blockchain!", {
+						"type": "danger"
+					});
+					NRS.accountRS = NRS.accountInfo.accountRS;
+				}
+
 				if (NRS.downloadingBlockchain) {
 					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
 				} else if (!NRS.accountInfo.publicKey) {
@@ -460,6 +471,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.isForging = false;
 		}
 
+		//no reed solomon available? do it myself? todo
 		if (NRS.accountInfo.lessors) {
 			if (accountLeasingLabel) {
 				accountLeasingLabel += ", ";

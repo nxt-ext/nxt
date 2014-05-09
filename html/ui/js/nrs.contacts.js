@@ -48,7 +48,7 @@ var NRS = (function(NRS, $, undefined) {
 						contactDescription = "-";
 					}
 
-					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + String(contact.accountId).escapeHTML() + "' class='user_info'>" + String(contact.accountId).escapeHTML() + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
+					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + NRS.getAccountFormatted(contact, "account") + "' class='user_info'>" + NRS.getAccountFormatted(contact, "account") + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
 				});
 
 				$("#contacts_table tbody").empty().append(rows);
@@ -77,7 +77,7 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		if (/^\d+$/.test(data.name)) {
+		if (/^\d+$/.test(data.name) || /^NXT\-/i.test(data.name)) {
 			return {
 				"error": "Contact name must contain alphabetic characters."
 			};
@@ -94,52 +94,61 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
+		NRS.sendRequest("getAccount", {
+			"account": data.account_id
+		}, function(response) {
+			var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 
-		NRS.database.select("contacts", [{
-			"accountId": data.account_id
-		}], function(error, contacts) {
-			if (contacts.length) {
-				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
-				$btn.button("reset");
-				$modal.modal("unlock");
-			} else {
-				NRS.database.insert("contacts", {
-					name: data.name,
-					email: data.email,
-					accountId: data.account_id,
-					description: data.description
-				}, function(error) {
-					NRS.contacts[data.account_id] = {
-						name: data.name,
-						email: data.email,
-						accountId: data.account_id,
-						description: data.description
-					};
+			var dbKey = (/^NXT\-/i.test(data.account_id) ? "accountRS" : "account");
 
+			var dbQuery = {};
+			dbQuery[dbKey] = data.account_id;
+
+			NRS.database.select("contacts", [dbQuery], function(error, contacts) {
+				if (contacts.length) {
+					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
 					$btn.button("reset");
 					$modal.modal("unlock");
-					$modal.modal("hide");
-					$.growl("Contact added successfully.", {
-						"type": "success"
-					});
+				} else {
+					NRS.database.insert("contacts", {
+						name: data.name,
+						email: data.email,
+						account: response.account,
+						accountRS: response.accountRS,
+						description: data.description
+					}, function(error) {
+						NRS.contacts[response.account] = {
+							name: data.name,
+							email: data.email,
+							account: response.account,
+							accountRS: response.accountRS,
+							description: data.description
+						};
 
-					if (NRS.currentPage == "contacts") {
-						NRS.pages.contacts();
-					} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
-						var heading = NRS.selectedContext.find("h4.list-group-item-heading");
-						if (heading.length) {
-							heading.html(data.name.escapeHTML());
+						$btn.button("reset");
+						$modal.modal("unlock");
+						$modal.modal("hide");
+						$.growl("Contact added successfully.", {
+							"type": "success"
+						});
+
+						if (NRS.currentPage == "contacts") {
+							NRS.pages.contacts();
+						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
+							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
+							if (heading.length) {
+								heading.html(data.name.escapeHTML());
+							}
+							NRS.selectedContext.data("context", "messages_sidebar_update_context");
 						}
-						NRS.selectedContext.data("context", "messages_sidebar_update_context");
-					}
-				});
-
-				return {
-					"stop": true
-				};
-			}
+					});
+				}
+			});
 		});
+
+		return {
+			"stop": true
+		};
 	}
 
 	$("#update_contact_modal").on('show.bs.modal', function(e) {
@@ -150,15 +159,22 @@ var NRS = (function(NRS, $, undefined) {
 		if (!contactId && NRS.selectedContext) {
 			var accountId = NRS.selectedContext.data("account");
 
-			NRS.database.select("contacts", [{
-				"accountId": accountId
-			}], function(error, contact) {
+			var dbKey = (/^NXT\-/i.test(accountId) ? "accountRS" : "account");
+
+			var dbQuery = {};
+			dbQuery[dbKey] = accountId;
+
+			NRS.database.select("contacts", [dbQuery], function(error, contact) {
 				contact = contact[0];
 
 				$("#update_contact_id").val(contact.id);
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				$("#update_contact_account_id").val(contact.accountId);
+				if (NRS.settings["use_reed_solomon"]) {
+					$("#update_contact_account_id").val(contact.accountRS);
+				} else {
+					$("#update_contact_account_id").val(contact.account);
+				}
 				$("#update_contact_description").val(contact.description);
 			});
 		} else {
@@ -171,7 +187,11 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				$("#update_contact_account_id").val(contact.accountId);
+				if (NRS.settings["use_reed_solomon"]) {
+					$("#update_contact_account_id").val(contact.accountRS);
+				} else {
+					$("#update_contact_account_id").val(contact.account);
+				}
 				$("#update_contact_description").val(contact.description);
 			});
 		}
@@ -209,57 +229,65 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
+		NRS.sendRequest("getAccount", {
+			"account": data.account_id
+		}, function(response) {
+			var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 
-		NRS.database.select("contacts", [{
-			"accountId": data.account_id
-		}], function(error, contacts) {
-			if (contacts.length && contacts[0].id != contactId) {
-				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
-				$btn.button("reset");
-				$modal.modal("unlock");
-			} else {
-				NRS.database.update("contacts", {
-					name: data.name,
-					email: data.email,
-					accountId: data.account_id,
-					description: data.description
-				}, [{
-					"id": contactId
-				}], function(error) {
-					if (contacts.length && data.account_id != contacts[0].accountId) {
-						delete NRS.contacts[contacts[0].accountId];
-					}
+			var dbKey = (/^NXT\-/i.test(data.account_id) ? "accountRS" : "account");
 
-					NRS.contacts[data.account_id] = {
-						name: data.name,
-						email: data.email,
-						accountId: data.account_id,
-						description: data.description
-					};
+			var dbQuery = {};
+			dbQuery[dbKey] = data.account_id;
 
+			NRS.database.select("contacts", [dbQuery], function(error, contacts) {
+				if (contacts.length && contacts[0].id != contactId) {
+					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
 					$btn.button("reset");
 					$modal.modal("unlock");
-					$modal.modal("hide");
-					$.growl("Contact updated successfully.", {
-						"type": "success"
-					});
-
-					if (NRS.currentPage == "contacts") {
-						NRS.pages.contacts();
-					} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
-						var heading = NRS.selectedContext.find("h4.list-group-item-heading");
-						if (heading.length) {
-							heading.html(data.name.escapeHTML());
+				} else {
+					NRS.database.update("contacts", {
+						name: data.name,
+						email: data.email,
+						account: response.account,
+						accountRS: response.accountRS,
+						description: data.description
+					}, [{
+						"id": contactId
+					}], function(error) {
+						if (contacts.length && data.account_id != contacts[0].accountId) {
+							delete NRS.contacts[contacts[0].accountId];
 						}
-					}
-				});
 
-				return {
-					"stop": true
-				};
-			}
+						NRS.contacts[data.account_id] = {
+							name: data.name,
+							email: data.email,
+							accountId: data.account_id,
+							description: data.description
+						};
+
+						$btn.button("reset");
+						$modal.modal("unlock");
+						$modal.modal("hide");
+						$.growl("Contact updated successfully.", {
+							"type": "success"
+						});
+
+						if (NRS.currentPage == "contacts") {
+							NRS.pages.contacts();
+						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
+							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
+							if (heading.length) {
+								heading.html(data.name.escapeHTML());
+							}
+						}
+					});
+				}
+			});
 		});
+
+		return {
+			"stop": true
+		};
 	}
 
 	$("#delete_contact_modal").on('show.bs.modal', function(e) {

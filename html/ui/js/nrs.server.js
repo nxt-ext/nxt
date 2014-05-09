@@ -209,6 +209,24 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.addToConsole(this.url, this.type, this.data, response);
 			}
 
+			if ("recipient" in data) {
+				if (/^NXT\-/i.test(data.recipient)) {
+					data.recipientRS = data.recipient;
+
+					var address = new NxtAddress();
+
+					if (address.set(data.recipient)) {
+						data.recipient = address.account_id();
+					}
+				} else {
+					var address = new NxtAddress();
+
+					if (address.set(data.recipient)) {
+						data.recipientRS = address.toString();
+					}
+				}
+			}
+
 			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode) {
 				var publicKey = NRS.generatePublicKey(secretPhrase);
 				var signature = nxtCrypto.sign(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
@@ -335,6 +353,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!("recipient" in data)) {
 			//recipient == genesis
 			data.recipient = "1739068987193023818";
+			data.recipientRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
 		}
 
 		if (transaction.senderPublicKey != NRS.accountInfo.publicKey) {
