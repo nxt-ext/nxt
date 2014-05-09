@@ -532,7 +532,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long pollId = (Long)attachmentData.get("pollId");
+                Long pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
                 JSONArray vote = (JSONArray)attachmentData.get("vote");
                 byte[] pollVote = new byte[vote.size()];
                 for (int i = 0; i < pollVote.length; i++) {
@@ -1332,7 +1332,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long goodsId = (Long)attachmentData.get("goods");
+                Long goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
                 transaction.setAttachment(new Attachment.DigitalGoodsDelisting(goodsId));
             }
 
@@ -1375,7 +1375,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long goodsId = (Long)attachmentData.get("goods");
+                Long goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
                 long priceNQT = (Long)attachmentData.get("priceNQT");
                 transaction.setAttachment(new Attachment.DigitalGoodsPriceChange(goodsId, priceNQT));
             }
@@ -1420,7 +1420,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long goodsId = (Long)attachmentData.get("goods");
+                Long goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
                 int deltaQuantity = ((Long)attachmentData.get("deltaQuantity")).intValue();
                 transaction.setAttachment(new Attachment.DigitalGoodsQuantityChange(goodsId, deltaQuantity));
             }
@@ -1477,7 +1477,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long goodsId = (Long)attachmentData.get("goods");
+                Long goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
                 int quantity = ((Long)attachmentData.get("quantity")).intValue();
                 long priceNQT = (Long)attachmentData.get("priceNQT");
                 int deliveryDeadlineTimestamp = ((Long)attachmentData.get("deliveryDeadlineTimestamp")).intValue();
@@ -1568,7 +1568,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long purchaseId = (Long)attachmentData.get("purchase");
+                Long purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
                 EncryptedData goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                         Convert.parseHexString((String)attachmentData.get("goodsNonce")));
                 long discountNQT = (Long)attachmentData.get("discountNQT");
@@ -1626,7 +1626,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long purchaseId = (Long)attachmentData.get("purchase");
+                Long purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
                 EncryptedData note = new EncryptedData(Convert.parseHexString((String)attachmentData.get("note")),
                         Convert.parseHexString((String)attachmentData.get("noteNonce")));
 
@@ -1684,7 +1684,7 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long purchaseId = (Long)attachmentData.get("purchase");
+                Long purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
                 long refundNQT = (Long)attachmentData.get("refundNQT");
                 EncryptedData note = new EncryptedData(Convert.parseHexString((String)attachmentData.get("note")),
                         Convert.parseHexString((String)attachmentData.get("noteNonce")));
