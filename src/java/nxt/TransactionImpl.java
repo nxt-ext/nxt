@@ -370,10 +370,6 @@ final class TransactionImpl implements Transaction {
     }
 
     void validateAttachment() throws NxtException.ValidationException {
-        if (Nxt.getBlockchain().getHeight() < Constants.FRACTIONAL_BLOCK && Nxt.getBlockchain().getHeight() > 0
-                && (amountNQT % Constants.ONE_NXT != 0 || feeNQT % Constants.ONE_NXT != 0)) {
-            throw new TransactionType.NotYetEnabledException("Fractional amounts or fees not yet supported!");
-        }
         type.validateAttachment(this);
     }
 
