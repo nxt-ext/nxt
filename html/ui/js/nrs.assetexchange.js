@@ -382,6 +382,21 @@ var NRS = (function(NRS, $, undefined) {
 			setTimeout(function() {
 				$(".data-loading img.loading").fadeIn(200);
 			}, 200);
+
+			var nrDuplicates = 0;
+
+			$.each(NRS.assets, function(key, singleAsset) {
+				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.id != assetId) {
+					nrDuplicates++;
+				}
+			});
+
+			if (nrDuplicates >= 1) {
+				$("#asset_exchange_duplicates_warning span").html(nrDuplicates + " " + (nrDuplicates == 1 ? "other asset" : "other assets"));
+				$("#asset_exchange_duplicates_warning").show();
+			} else {
+				$("#asset_exchange_duplicates_warning").hide();
+			}
 		}
 
 		//todo: is this necessary, can we remove it? 
@@ -546,6 +561,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!input) {
 			NRS.assetSearch = false;
 			NRS.assetExchangeSidebarLoaded();
+			$("#asset_exchange_clear_search").hide();
 		} else {
 			NRS.assetSearch = [];
 
@@ -569,8 +585,14 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			} else {
 				NRS.assetExchangeSidebarLoaded();
+				$("#asset_exchange_clear_search").show();
 			}
 		}
+	});
+
+	$("#asset_exchange_clear_search").on("click", function() {
+		$("#asset_exchange_search input[name=q]").val("");
+		$("#asset_exchange_search").trigger("submit");
 	});
 
 	$("#buy_asset_box .box-header, #sell_asset_box .box-header").click(function(e) {
