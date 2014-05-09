@@ -2,6 +2,8 @@ package nxt;
 
 import nxt.util.Convert;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -87,13 +89,19 @@ final class TransactionDb {
             int height = rs.getInt("height");
             Long id = rs.getLong("id");
             Long senderId = rs.getLong("sender_id");
-            Attachment attachment = (Attachment)rs.getObject("attachment");
+            byte[] attachmentBytes = rs.getBytes("attachment_bytes");
             int blockTimestamp = rs.getInt("block_timestamp");
             byte[] fullHash = rs.getBytes("full_hash");
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            return new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                    referencedTransactionFullHash, signature, blockId, height, id, senderId, attachment, blockTimestamp, fullHash);
+            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
+                        referencedTransactionFullHash, signature, blockId, height, id, senderId, blockTimestamp, fullHash);
+            if (attachmentBytes != null) {
+                ByteBuffer buffer = ByteBuffer.wrap(attachmentBytes);
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                transactionType.doLoadAttachment(transaction, buffer); // this does not do validate
+            }
+            return transaction;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -122,7 +130,7 @@ final class TransactionDb {
             for (Transaction transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
-                        + "block_id, signature, timestamp, type, subtype, sender_id, attachment, "
+                        + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
@@ -145,9 +153,9 @@ final class TransactionDb {
                     pstmt.setByte(++i, transaction.getType().getSubtype());
                     pstmt.setLong(++i, transaction.getSenderId());
                     if (transaction.getAttachment() != null) {
-                        pstmt.setObject(++i, transaction.getAttachment());
+                        pstmt.setBytes(++i, transaction.getAttachment().getBytes());
                     } else {
-                        pstmt.setNull(++i, Types.JAVA_OBJECT);
+                        pstmt.setNull(++i, Types.VARBINARY);
                     }
                     pstmt.setInt(++i, transaction.getBlockTimestamp());
                     pstmt.setBytes(++i, Convert.parseHexString(transaction.getFullHash()));

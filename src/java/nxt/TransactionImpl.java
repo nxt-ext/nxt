@@ -61,7 +61,7 @@ final class TransactionImpl implements Transaction {
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                     long amountNQT, long feeNQT, byte[] referencedTransactionFullHash, byte[] signature, Long blockId, int height,
-                    Long id, Long senderId, Attachment attachment, int blockTimestamp, byte[] fullHash)
+                    Long id, Long senderId, int blockTimestamp, byte[] fullHash)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
                 referencedTransactionFullHash == null ? null : Convert.toHexString(referencedTransactionFullHash),
@@ -70,7 +70,6 @@ final class TransactionImpl implements Transaction {
         this.height = height;
         this.id = id;
         this.senderId = senderId;
-        this.attachment = attachment;
         this.blockTimestamp = blockTimestamp;
         this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
     }

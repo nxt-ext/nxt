@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 
 final class DbVersion {
 
@@ -275,14 +276,39 @@ final class DbVersion {
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 46:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
+            case 47:
+                try (Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET attachment_bytes = ? where db_id = ?");
+                     Statement stmt = con.createStatement()) {
+                    ResultSet rs = stmt.executeQuery("SELECT * FROM transaction");
+                    while (rs.next()) {
+                        long dbId = rs.getLong("db_id");
+                        Attachment attachment = (Attachment)rs.getObject("attachment");
+                        if (attachment != null) {
+                            pstmt.setBytes(1, attachment.getBytes());
+                        } else {
+                            pstmt.setNull(1, Types.VARBINARY);
+                        }
+                        pstmt.setLong(2, dbId);
+                        pstmt.executeUpdate();
+                    }
+                    con.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 48:
+                apply("ALTER TABLE transaction DROP COLUMN attachment");
+            case 49:
                 apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
                         + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id) "
                         + "WHERE a.referenced_transaction_full_hash IS NULL");
-            case 47:
+            case 50:
                 apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
-            case 48:
+            case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
-            case 49:
+            case 52:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
