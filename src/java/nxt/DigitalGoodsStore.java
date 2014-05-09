@@ -165,6 +165,8 @@ public final class DigitalGoodsStore {
         private volatile EncryptedData encryptedGoods;
         private volatile EncryptedData refundNote;
         private volatile EncryptedData feedbackNote;
+        private volatile long discountNQT;
+        private volatile long refundNQT;
 
         private Purchase(Long id, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
                          int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
@@ -239,6 +241,22 @@ public final class DigitalGoodsStore {
 
         private void setFeedbackNote(EncryptedData feedbackNote) {
             this.feedbackNote = feedbackNote;
+        }
+
+        public long getDiscountNQT() {
+            return discountNQT;
+        }
+
+        public void setDiscountNQT(long discountNQT) {
+            this.discountNQT = discountNQT;
+        }
+
+        public long getRefundNQT() {
+            return refundNQT;
+        }
+
+        public void setRefundNQT(long refundNQT) {
+            this.refundNQT = refundNQT;
         }
 
         @Override
@@ -459,6 +477,7 @@ public final class DigitalGoodsStore {
             Account seller = Account.getAccount(sellerId);
             seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
             purchase.setEncryptedGoods(encryptedGoods);
+            purchase.setDiscountNQT(discountNQT);
             purchaseListeners.notify(purchase, Event.DELIVERY);
         }
     }
@@ -474,6 +493,7 @@ public final class DigitalGoodsStore {
             Account seller = Account.getAccount(sellerId);
             seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
             purchase.setEncryptedGoods(null);
+            purchase.setDiscountNQT(0);
         }
     }
 
@@ -484,6 +504,7 @@ public final class DigitalGoodsStore {
         Account buyer = Account.getAccount(purchase.getBuyerId());
         buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
         purchase.setRefundNote(encryptedNote);
+        purchase.setRefundNQT(refundNQT);
         purchaseListeners.notify(purchase, Event.REFUND);
     }
 
@@ -494,6 +515,7 @@ public final class DigitalGoodsStore {
         Account buyer = Account.getAccount(purchase.getBuyerId());
         buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
         purchase.setRefundNote(null);
+        purchase.setRefundNQT(0);
     }
 
     static void feedback(Long purchaseId, EncryptedData encryptedNote) {

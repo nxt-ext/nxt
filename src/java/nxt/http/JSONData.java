@@ -126,7 +126,7 @@ final class JSONData {
         json.put("name", goods.getName());
         json.put("description", goods.getDescription());
         json.put("quantity", goods.getQuantity());
-        json.put("priceNQT", goods.getPriceNQT());
+        json.put("priceNQT", String.valueOf(goods.getPriceNQT()));
         json.put("seller", Convert.toUnsignedLong(goods.getSellerId()));
         json.put("sellerRS", Convert.rsAccount(goods.getSellerId()));
         json.put("tags", goods.getTags());
@@ -199,7 +199,7 @@ final class JSONData {
         json.put("goods", Convert.toUnsignedLong(purchase.getGoodsId()));
         json.put("seller", Convert.toUnsignedLong(purchase.getSellerId()));
         json.put("sellerRS", Convert.rsAccount(purchase.getSellerId()));
-        json.put("priceNQT", purchase.getPriceNQT());
+        json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));
         json.put("quantity", purchase.getQuantity());
         json.put("buyer", Convert.toUnsignedLong(purchase.getBuyerId()));
         json.put("buyerRS", Convert.rsAccount(purchase.getBuyerId()));
@@ -219,6 +219,12 @@ final class JSONData {
         if (purchase.getRefundNote() != null) {
             json.put("refundNote", Convert.toHexString(purchase.getRefundNote().getData()));
             json.put("refundNoteNonce", Convert.toHexString(purchase.getRefundNote().getNonce()));
+        }
+        if (purchase.getDiscountNQT() > 0) {
+            json.put("discountNQT", String.valueOf(purchase.getDiscountNQT()));
+        }
+        if (purchase.getRefundNQT() > 0) {
+            json.put("refundNQT", String.valueOf(purchase.getRefundNQT()));
         }
         return json;
     }

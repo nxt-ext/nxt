@@ -107,7 +107,9 @@ public final class DebugTrace {
             "transaction amount", "transaction fee", "generation fee",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity", "transaction", "lessee", "lessor guaranteed balance", "timestamp"};
+            "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
+            "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
+            "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -360,6 +362,53 @@ public final class DebugTrace {
             Attachment.ColoredCoinsOrderCancellation orderCancellation = (Attachment.ColoredCoinsOrderCancellation)attachment;
             map.put("order", Convert.toUnsignedLong(orderCancellation.getOrderId()));
             map.put("event", "order cancel");
+        } else if (attachment instanceof Attachment.DigitalGoodsPurchase) {
+            Attachment.DigitalGoodsPurchase purchase = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
+            map.put("event", "purchase");
+            map.put("purchase", transaction.getStringId());
+            map.put("purchase price", String.valueOf(purchase.getPriceNQT()));
+            map.put("purchase quantity", String.valueOf(purchase.getQuantity()));
+            long cost = Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity());
+            if (isRecipient) {
+                if (isUndo) {
+                    cost = - cost;
+                }
+            } else {
+                if (! isUndo) {
+                    cost = - cost;
+                }
+            }
+            map.put("purchase cost", String.valueOf(cost));
+        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
+            Attachment.DigitalGoodsDelivery delivery = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
+            map.put("event", "delivery");
+            map.put("purchase", Convert.toUnsignedLong(delivery.getPurchaseId()));
+            long discount = delivery.getDiscountNQT();
+            if (isRecipient) {
+                if (isUndo) {
+                    discount = - discount;
+                }
+            } else {
+                if (! isUndo) {
+                    discount = - discount;
+                }
+            }
+            map.put("discount", String.valueOf(discount));
+        } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
+            Attachment.DigitalGoodsRefund refund = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
+            map.put("event", "refund");
+            map.put("purchase", Convert.toUnsignedLong(refund.getPurchaseId()));
+            long refundNQT = refund.getRefundNQT();
+            if (isRecipient) {
+                if (isUndo) {
+                    refundNQT = - refundNQT;
+                }
+            } else {
+                if (! isUndo) {
+                    refundNQT = - refundNQT;
+                }
+            }
+            map.put("refund", String.valueOf(refundNQT));
         }
         return map;
     }
