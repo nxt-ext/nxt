@@ -272,6 +272,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				NRS.unconfirmedTransactions.push(response);
+				NRS.incoming.updateDashboardTransactions(NRS.unconfirmedTransactions, true);
+
 				NRS.getAccountInfo();
 			}
 		});
@@ -439,7 +441,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (transaction.type == 4) {
 			switch (transaction.subtype) {
 				case 0:
-					transactionType = "Effective Balance Leasing";
+					transactionType = "Balance Leasing";
 					break;
 			}
 		}
