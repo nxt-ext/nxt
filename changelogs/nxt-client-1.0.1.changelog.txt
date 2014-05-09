@@ -36,13 +36,14 @@ Support for IPv6 connections, patch provided by ScripterRon.
 Updated jetty to version 9.1.5. Make sure first to delete the old jetty jar
 files from lib if just unpacking this release on top of an older installation.
 
---
 
 Client Updates:
 
-Built-in Reed Solomon support. Not enabled by default yet. Go to settings to change.
+Built-in Reed Solomon support. Not enabled by default yet. Go to settings to
+change.
 
-Added user warning when amount NXT or fee NXT are higher than maximum specified in settings.
+Added user warning when amount NXT or fee NXT are higher than maximum specified
+in settings.
 
 Added forged balance to dashboard.
 
