@@ -73,7 +73,7 @@ final class TransactionImpl implements Transaction {
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                     long amountNQT, long feeNQT, byte[] referencedTransactionFullHash, byte[] signature, Long blockId, int height,
-                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp, byte[] fullHash)
+                    Long id, Long senderId, byte[] hash, int blockTimestamp, byte[] fullHash)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
                 referencedTransactionFullHash == null ? null : Convert.toHexString(referencedTransactionFullHash),
@@ -82,7 +82,6 @@ final class TransactionImpl implements Transaction {
         this.height = height;
         this.id = id;
         this.senderId = senderId;
-        this.attachment = attachment;
         this.hash = hash == null ? null : Convert.toHexString(hash);
         this.blockTimestamp = blockTimestamp;
         this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
@@ -91,14 +90,13 @@ final class TransactionImpl implements Transaction {
     // remove after NQT_BLOCK
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
                     long amountNQT, long feeNQT, Long referencedTransactionId, byte[] signature, Long blockId, int height,
-                    Long id, Long senderId, Attachment attachment, byte[] hash, int blockTimestamp, byte[] fullHash)
+                    Long id, Long senderId, byte[] hash, int blockTimestamp, byte[] fullHash)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionId, signature);
         this.blockId = blockId;
         this.height = height;
         this.id = id;
         this.senderId = senderId;
-        this.attachment = attachment;
         this.hash = hash == null ? null : Convert.toHexString(hash);
         this.blockTimestamp = blockTimestamp;
         this.fullHash = fullHash == null ? null : Convert.toHexString(fullHash);
