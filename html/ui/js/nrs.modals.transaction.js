@@ -354,7 +354,7 @@ var NRS = (function(NRS, $, undefined) {
 			switch (transaction.subtype) {
 				case 0:
 					var data = {
-						"Type": "Effective Balance Leasing",
+						"Type": "Balance Leasing",
 						"Period": transaction.attachment.period
 					};
 
