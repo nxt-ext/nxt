@@ -140,7 +140,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					callout.removeClass(classes).addClass("callout-" + response.type).html("The recipient address translates to account <strong>" + String(response.account.account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which").escapeHTML()).show();
+					if (response.account) {
+						var message = "The recipient address translates to account <strong>" + String(response.account.account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which");
+					} else {
+						var message = response.message;
+					}
+
+					callout.removeClass(classes).addClass("callout-" + response.type).html(message.escapeHTML()).show();
 				});
 			} else {
 				if (address.guess.length == 1) {
