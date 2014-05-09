@@ -894,12 +894,13 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!key || key == "use_reed_solomon") {
 			if (NRS.settings["use_reed_solomon"]) {
-				$("#block_info_modal, #transaction_info_modal").find(".modal-dialog").addClass("modal-dialog-wide");
 				$("#account_id_prefix").hide();
 				$("#account_id").html(NRS.getAccountFormatted(NRS.accountRS)).css("font-size", "12px");
+				$("body").addClass("reed_solomon");
 			} else {
 				$("#account_id_prefix").show();
 				$("#account_id").html(NRS.getAccountFormatted(NRS.account)).css("font-size", "14px");
+				$("body").removeClass("reed_solomon");
 			}
 
 			var $dashboard_account_links = $("#dashboard_transactions_table a.user_info");

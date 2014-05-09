@@ -2526,9 +2526,13 @@ background:#33363f
 /* wesley */
 
 @media screen and (min-width: 800px) {
-  .modal-dialog-wide {
-    width: 800px;
+  body .modal-dialog-wide {
+    width: 700px;
     margin: 30px auto;
+  }
+
+  body.reed_solomon .modal-dialog-wide {
+    width: 800px;
   }
 }
 
