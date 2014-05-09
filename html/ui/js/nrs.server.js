@@ -209,7 +209,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.addToConsole(this.url, this.type, this.data, response);
 			}
 
-			if ("recipient" in data) {
+			if (typeof data == "object" && "recipient" in data) {
 				if (/^NXT\-/i.test(data.recipient)) {
 					data.recipientRS = data.recipient;
 

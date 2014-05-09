@@ -32,7 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-				if ($("#sidebar_asset_exchange").style.display == "none") {
+				if (!$("#sidebar_asset_exchange").is(":visible")) {
 					$("#sidebar_asset_exchange").show();
 				}
 			}
@@ -93,7 +93,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-				if ($("#sidebar_asset_exchange").style.display == "none") {
+				if (!$("#sidebar_asset_exchange").is(":visible")) {
 					$("#sidebar_asset_exchange").show();
 				}
 			}
