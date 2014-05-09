@@ -67,6 +67,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.addContact = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		data.account_id = String(data.account_id);
+
 		if (!data.name) {
 			return {
 				"error": "Contact name is a required field."
@@ -83,6 +85,12 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
+		if (data.email && !/@/.test(data.email)) {
+			return {
+				"error": "Email address is incorrect."
+			};
+		}
+
 		if (data.account_id.charAt(0) == '@') {
 			var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
 			if (convertedAccountId) {
@@ -94,61 +102,92 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		if (/^NXT\-/i.test(data.account_id)) {
+			data.account_rs = data.account_id;
+
+			var address = new NxtAddress();
+
+			if (address.set(data.account_rs)) {
+				data.account = address.account_id();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		} else {
+			var address = new NxtAddress();
+
+			if (address.set(data.account_id)) {
+				data.account_rs = address.toString();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		}
+
 		NRS.sendRequest("getAccount", {
 			"account": data.account_id
 		}, function(response) {
-			var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
+			if (!response.errorCode) {
+				if (response.account != data.account || response.accountRS != data.account_rs) {
+					return {
+						"error": "Invalid account ID."
+					};
+				}
+			}
+		}, false);
 
-			var dbKey = (/^NXT\-/i.test(data.account_id) ? "accountRS" : "account");
+		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 
-			var dbQuery = {};
-			dbQuery[dbKey] = data.account_id;
-
-			NRS.database.select("contacts", [dbQuery], function(error, contacts) {
-				if (contacts.length) {
-					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
-					$btn.button("reset");
-					$modal.modal("unlock");
+		NRS.database.select("contacts", [{
+			"account": data.account_id
+		}, {
+			"name": data.name
+		}], function(error, contacts) {
+			if (contacts.length) {
+				if (contacts[0].name == data.name) {
+					$modal.find(".error_message").html("A contact with this name already exists.").show();
 				} else {
-					NRS.database.insert("contacts", {
+					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
+				}
+				$btn.button("reset");
+				$modal.modal("unlock");
+			} else {
+				NRS.database.insert("contacts", {
+					name: data.name,
+					email: data.email,
+					account: data.account_id,
+					accountRS: data.account_rs,
+					description: data.description
+				}, function(error) {
+					NRS.contacts[data.account_id] = {
 						name: data.name,
 						email: data.email,
-						account: response.account,
-						accountRS: response.accountRS,
+						account: data.account_id,
+						accountRS: data.account_rs,
 						description: data.description
-					}, function(error) {
-						NRS.contacts[response.account] = {
-							name: data.name,
-							email: data.email,
-							account: response.account,
-							accountRS: response.accountRS,
-							description: data.description
-						};
+					};
 
-						$btn.button("reset");
-						$modal.modal("unlock");
-						$modal.modal("hide");
-						$.growl("Contact added successfully.", {
-							"type": "success"
-						});
-
-						if (NRS.currentPage == "contacts") {
-							NRS.pages.contacts();
-						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
-							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
-							if (heading.length) {
-								heading.html(data.name.escapeHTML());
-							}
-							NRS.selectedContext.data("context", "messages_sidebar_update_context");
-						}
+					$btn.button("reset");
+					$modal.modal("unlock");
+					$modal.modal("hide");
+					$.growl("Contact added successfully.", {
+						"type": "success"
 					});
-				}
-			});
-		});
 
-		return {
-			"stop": true
-		};
+					if (NRS.currentPage == "contacts") {
+						NRS.pages.contacts();
+					} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
+						var heading = NRS.selectedContext.find("h4.list-group-item-heading");
+						if (heading.length) {
+							heading.html(data.name.escapeHTML());
+						}
+						NRS.selectedContext.data("context", "messages_sidebar_update_context");
+					}
+				});
+			}
+		});
 	}
 
 	$("#update_contact_modal").on('show.bs.modal', function(e) {
@@ -200,6 +239,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.updateContact = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		data.account_id = String(data.account_id);
+
 		if (!data.name) {
 			return {
 				"error": "Contact name is a required field."
@@ -229,65 +270,91 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
+		if (/^NXT\-/i.test(data.account_id)) {
+			data.account_rs = data.account_id;
+
+			var address = new NxtAddress();
+
+			if (address.set(data.account_rs)) {
+				data.account = address.account_id();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		} else {
+			var address = new NxtAddress();
+
+			if (address.set(data.account_id)) {
+				data.account_rs = address.toString();
+			} else {
+				return {
+					"error": "Invalid account ID."
+				};
+			}
+		}
+
 		NRS.sendRequest("getAccount", {
 			"account": data.account_id
 		}, function(response) {
-			var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
+			if (!response.errorCode) {
+				if (response.account != data.account || response.accountRS != data.account_rs) {
+					return {
+						"error": "Invalid account ID."
+					};
+				}
+			}
+		}, false);
 
-			var dbKey = (/^NXT\-/i.test(data.account_id) ? "accountRS" : "account");
+		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 
-			var dbQuery = {};
-			dbQuery[dbKey] = data.account_id;
+		NRS.database.select("contacts", [{
+			"account": data.account_id
+		}], function(error, contacts) {
+			if (contacts.length && contacts[0].id != contactId) {
+				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
+				$btn.button("reset");
+				$modal.modal("unlock");
+			} else {
+				NRS.database.update("contacts", {
+					name: data.name,
+					email: data.email,
+					account: data.account_id,
+					accountRS: data.account_rs,
+					description: data.description
+				}, [{
+					"id": contactId
+				}], function(error) {
+					if (contacts.length && data.account_id != contacts[0].accountId) {
+						delete NRS.contacts[contacts[0].accountId];
+					}
 
-			NRS.database.select("contacts", [dbQuery], function(error, contacts) {
-				if (contacts.length && contacts[0].id != contactId) {
-					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
-					$btn.button("reset");
-					$modal.modal("unlock");
-				} else {
-					NRS.database.update("contacts", {
+					NRS.contacts[data.account_id] = {
 						name: data.name,
 						email: data.email,
-						account: response.account,
-						accountRS: response.accountRS,
+						account: data.account_id,
+						accountRS: data.account_rs,
 						description: data.description
-					}, [{
-						"id": contactId
-					}], function(error) {
-						if (contacts.length && data.account_id != contacts[0].accountId) {
-							delete NRS.contacts[contacts[0].accountId];
-						}
+					};
 
-						NRS.contacts[data.account_id] = {
-							name: data.name,
-							email: data.email,
-							accountId: data.account_id,
-							description: data.description
-						};
-
-						$btn.button("reset");
-						$modal.modal("unlock");
-						$modal.modal("hide");
-						$.growl("Contact updated successfully.", {
-							"type": "success"
-						});
-
-						if (NRS.currentPage == "contacts") {
-							NRS.pages.contacts();
-						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
-							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
-							if (heading.length) {
-								heading.html(data.name.escapeHTML());
-							}
-						}
+					$btn.button("reset");
+					$modal.modal("unlock");
+					$modal.modal("hide");
+					$.growl("Contact updated successfully.", {
+						"type": "success"
 					});
-				}
-			});
-		});
 
-		return {
-			"stop": true
-		};
+					if (NRS.currentPage == "contacts") {
+						NRS.pages.contacts();
+					} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
+						var heading = NRS.selectedContext.find("h4.list-group-item-heading");
+						if (heading.length) {
+							heading.html(data.name.escapeHTML());
+						}
+					}
+				});
+			}
+		});
 	}
 
 	$("#delete_contact_modal").on('show.bs.modal', function(e) {
