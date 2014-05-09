@@ -48,6 +48,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
+    private volatile int lastBlockchainFeederHeight;
+
+    private volatile boolean isScanning;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
 
@@ -84,6 +87,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     BigInteger betterCumulativeDifficulty = new BigInteger(peerCumulativeDifficulty);
                     if (betterCumulativeDifficulty.compareTo(curCumulativeDifficulty) <= 0) {
                         return;
+                    }
+                    if (response.get("blockchainHeight") != null) {
+                        lastBlockchainFeederHeight = ((Long) response.get("blockchainHeight")).intValue();
                     }
 
                     Long commonBlockId = Genesis.GENESIS_BLOCK_ID;
@@ -124,7 +130,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     block = parseBlock(blockData);
                                 } catch (NxtException.ValidationException e) {
-                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage());
+                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage()
+                                            + ", will try again later");
                                     break outer;
                                 }
                                 currentBlockId = block.getId();
@@ -311,7 +318,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
                     Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
                 }
-            }
+            } // synchronized
 
         }
 
@@ -353,6 +360,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public Peer getLastBlockchainFeeder() {
         return lastBlockchainFeeder;
+    }
+
+    @Override
+    public int getLastBlockchainFeederHeight() {
+        return lastBlockchainFeederHeight;
+    }
+
+    @Override
+    public boolean isScanning() {
+        return isScanning;
     }
 
     @Override
@@ -802,6 +819,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private void scan() {
         synchronized (blockchain) {
+            isScanning = true;
             Logger.logMessage("Scanning blockchain...");
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
@@ -857,7 +875,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
             validateAtScan = false;
             Logger.logMessage("...done");
-        }
+            isScanning = false;
+        } // synchronized
     }
 
 }

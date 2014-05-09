@@ -45,6 +45,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#nxtcoin_blogspot_news").rss("http://nxtcoin.blogspot.com/feeds/posts/default", settings, NRS.newsLoaded);
 			$("#nextcoin_forums_news").rss("https://nextcoin.org/index.php?type=rss;action=.xml;sa=news;", settings, NRS.newsLoaded);
 			$("#nxter_news").rss("http://nxter.org/feed/", settings, NRS.newsLoaded);
+			$("#nxtcommunity_news").rss("http://www.nxtcommunity.org/rss.xml", settings, NRS.newsLoaded);
 		}
 	}
 

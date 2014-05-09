@@ -1,0 +1,54 @@
+Added getAssetsByIssuer API to get all assets issued by an account.
+
+Added getAskOrders and getBidOrders API calls, returning the full JSON objects.
+
+Added BlockchainProcessor.getLastBlockchainFeederHeight(), to help determine
+blockchain download status. Note that this is present only when the current
+feeder peer also supports it, i.e. starting from this release.
+Added BlockchainProcessor.isScanning() to check for re-scan in progress.
+
+Added getBlockchainStatus API containing the above status, it is more efficient
+to use this instead of the getState API.
+
+Enhanced DebugTrace to log lease begin and end events, and lessor guaranteed
+balances for each block, in nxt-trace.csv file.
+
+Added server-side support for Reed-Solomon encoding of account numbers, thanks
+to ChuckOne who converted the javascript version to java. All API calls that
+accept account numbers can now recognize either account id's or Reed-Solomon
+addresses. JSON data responses that contain account numbers now also have them
+in Reed-Solomon format too.
+
+Added Crypto.getPrivateKey() and Crypto.curve() methods. Added the Bouncy Castle
+library, to be used for AES encryption instead of the limited strength default
+implementation.
+
+Added Account.getForgedBalanceNQT() to keep track of total forging fees earned
+by each account, available as forgedBalanceNQT in getBalance and getAccount.
+
+Increased default database query lock timeout to 10 s, nxt.dbDefaultLockTimeout
+in nxt-default.properties.
+
+Re-check unconfirmed pool for double-spending transaction after each block push.
+
+Support for IPv6 connections, patch provided by ScripterRon.
+
+Updated jetty to version 9.1.5. Make sure first to delete the old jetty jar
+files from lib if just unpacking this release on top of an older installation.
+
+
+Client Updates:
+
+Built-in Reed Solomon support. Not enabled by default yet. Go to settings to
+change.
+
+Added user warning when amount NXT or fee NXT are higher than maximum specified
+in settings.
+
+Added forged balance to dashboard.
+
+Asset exchange is now searchable.
+
+Blockchain download progress uses new API.
+
+Show (unconfirmed) transaction immediately on dashboard after form submit.

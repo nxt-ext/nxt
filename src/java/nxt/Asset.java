@@ -2,17 +2,18 @@ package nxt;
 
 import nxt.util.Convert;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class Asset {
 
     private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, List<Asset>> assetNameToAssetMappings = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, List<Asset>> accountAssets = new ConcurrentHashMap<>();
     private static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
 
     public static Collection<Asset> getAllAssets() {
@@ -31,6 +32,14 @@ public final class Asset {
         return Collections.unmodifiableList(assets);
     }
 
+    public static List<Asset> getAssetsIssuedBy(Long accountId) {
+        List<Asset> assets = accountAssets.get(accountId);
+        if (assets == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(assets);
+    }
+
     static void addAsset(Long assetId, Long senderAccountId, String name, String description, long quantityQNT, byte decimals) {
         Asset asset = new Asset(assetId, senderAccountId, name, description, quantityQNT, decimals);
         if (Asset.assets.putIfAbsent(assetId, asset) != null) {
@@ -38,21 +47,30 @@ public final class Asset {
         }
         List<Asset> assetList = assetNameToAssetMappings.get(name.toLowerCase());
         if (assetList == null) {
-            assetList = new ArrayList<>();
+            assetList = new CopyOnWriteArrayList<>();
             assetNameToAssetMappings.put(name.toLowerCase(), assetList);
         }
         assetList.add(asset);
+        List<Asset> accountAssetsList = accountAssets.get(senderAccountId);
+        if (accountAssetsList == null) {
+            accountAssetsList = new CopyOnWriteArrayList<>();
+            accountAssets.put(senderAccountId, accountAssetsList);
+        }
+        accountAssetsList.add(asset);
     }
 
     static void removeAsset(Long assetId) {
         Asset asset = Asset.assets.remove(assetId);
         List<Asset> assetList = assetNameToAssetMappings.get(asset.getName().toLowerCase());
         assetList.remove(asset);
+        List<Asset> accountAssetList = accountAssets.get(asset.getAccountId());
+        accountAssetList.remove(asset);
     }
 
     static void clear() {
         Asset.assets.clear();
         Asset.assetNameToAssetMappings.clear();
+        Asset.accountAssets.clear();
     }
 
     private final Long assetId;

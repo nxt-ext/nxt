@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.confirmedFormWarning = false;
+
 	NRS.forms = {
 		"errorMessages": {}
 	};
@@ -94,9 +96,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
-			if (!/^\d+$/.test(data.recipient)) {
+			if (!/^\d+$/.test(data.recipient) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
 				var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
-				if (!convertedAccountId || !/^\d+$/.test(convertedAccountId)) {
+				if (!convertedAccountId || (!/^\d+$/.test(convertedAccountId) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(convertedAccountId))) {
 					$modal.find(".error_message").html("Invalid account ID.").show();
 					NRS.unlockForm($modal, $btn);
 					return;
@@ -113,6 +115,26 @@ var NRS = (function(NRS, $, undefined) {
 			$modal.find(".error_message").html("Secret phrase is a required field.").show();
 			NRS.unlockForm($modal, $btn);
 			return;
+		}
+
+		if (!NRS.showedFormWarning) {
+			if ("amountNXT" in data && NRS.settings["amount_warning"] && NRS.settings["amount_warning"] != "0") {
+				if (new BigInteger(NRS.convertToNQT(data.amountNXT)).compareTo(new BigInteger(NRS.settings["amount_warning"])) > 0) {
+					NRS.showedFormWarning = true;
+					$modal.find(".error_message").html("You amount is higher than " + NRS.formatAmount(NRS.settings["amount_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
+					NRS.unlockForm($modal, $btn);
+					return;
+				}
+			}
+
+			if ("feeNXT" in data && NRS.settings["fee_warning"] && NRS.settings["fee_warning"] != "0") {
+				if (new BigInteger(NRS.convertToNQT(data.feeNXT)).compareTo(new BigInteger(NRS.settings["fee_warning"])) > 0) {
+					NRS.showedFormWarning = true;
+					$modal.find(".error_message").html("You fee is higher than " + NRS.formatAmount(NRS.settings["fee_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
+					NRS.unlockForm($modal, $btn);
+					return;
+				}
+			}
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {

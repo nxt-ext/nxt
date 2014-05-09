@@ -1,38 +1,5 @@
 var NRS = (function(NRS, $, undefined) {
-	NRS.xhrPool = [];
-
-	$(document).ajaxComplete(function(event, xhr, settings) {
-		if (xhr._page && xhr.statusText != "abort") {
-			var index = $.inArray(xhr, NRS.xhrPool);
-			if (index > -1) {
-				NRS.xhrPool.splice(index, 1);
-			}
-		}
-	});
-
-	NRS.abortOutstandingRequests = function(subPage) {
-		$(NRS.xhrPool).each(function(id, xhr) {
-			if (subPage) {
-				if (xhr._subPage) {
-					xhr.abort();
-				}
-			} else {
-				xhr.abort();
-			}
-		});
-
-		if (!subPage) {
-			NRS.xhrPool = [];
-		}
-	}
-
-	NRS.beforeSendRequest = function(xhr) {
-		xhr._page = true;
-		if (NRS.currentSubPage) {
-			xhr._subPage = true;
-		}
-		NRS.xhrPool.push(xhr);
-	}
+	NRS.multiQueue = null;
 
 	NRS.sendOutsideRequest = function(url, data, callback, async) {
 		if ($.isFunction(data)) {
@@ -148,6 +115,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.processAjaxRequest = function(requestType, data, callback, async) {
+		if (!NRS.multiQueue) {
+			NRS.multiQueue = $.ajaxMultiQueue(8);
+		}
+
 		if (data["_extra"]) {
 			var extra = data["_extra"];
 			delete data["_extra"];
@@ -155,13 +126,12 @@ var NRS = (function(NRS, $, undefined) {
 			var extra = null;
 		}
 
-		var beforeSend = null;
+		var currentPage = currentSubPage = null;
 
 		//means it is a page request, not a global request.. Page requests can be aborted.
 		if (requestType.slice(-1) == "+") {
 			requestType = requestType.slice(0, -1);
-
-			beforeSend = NRS.beforeSendRequest;
+			currentPage = NRS.currentPage;
 		} else {
 			//not really necessary... we can just use the above code..
 			var plusCharacter = requestType.indexOf("+");
@@ -169,8 +139,12 @@ var NRS = (function(NRS, $, undefined) {
 			if (plusCharacter > 0) {
 				var subType = requestType.substr(plusCharacter);
 				requestType = requestType.substr(0, plusCharacter);
-				beforeSend = NRS.beforeSendRequest;
+				currentPage = NRS.currentPage;
 			}
+		}
+
+		if (currentPage && NRS.currentSubPage) {
+			currentSubPage = NRS.currentSubPage;
 		}
 
 		var type = ("secretPhrase" in data ? "POST" : "GET");
@@ -207,19 +181,50 @@ var NRS = (function(NRS, $, undefined) {
 
 		$.support.cors = true;
 
-		$.ajax({
+		if (type == "GET") {
+			var ajaxCall = NRS.multiQueue.queue;
+		} else {
+			var ajaxCall = $.ajax;
+		}
+
+		//workaround for 1 specific case.. ugly
+		if (data.doGetAssets) {
+			data = data.doGetAssets;
+			type = "POST";
+		}
+
+		ajaxCall({
 			url: url,
 			crossDomain: true,
 			dataType: "json",
 			type: type,
 			timeout: 30000,
 			async: (async === undefined ? true : async),
-			beforeSend: beforeSend,
+			currentPage: currentPage,
+			currentSubPage: currentSubPage,
 			shouldRetry: (type == "GET" ? 2 : undefined),
 			data: data
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {
 				NRS.addToConsole(this.url, this.type, this.data, response);
+			}
+
+			if (typeof data == "object" && "recipient" in data) {
+				if (/^NXT\-/i.test(data.recipient)) {
+					data.recipientRS = data.recipient;
+
+					var address = new NxtAddress();
+
+					if (address.set(data.recipient)) {
+						data.recipient = address.account_id();
+					}
+				} else {
+					var address = new NxtAddress();
+
+					if (address.set(data.recipient)) {
+						data.recipientRS = address.toString();
+					}
+				}
 			}
 
 			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode) {
@@ -348,6 +353,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!("recipient" in data)) {
 			//recipient == genesis
 			data.recipient = "1739068987193023818";
+			data.recipientRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
 		}
 
 		if (transaction.senderPublicKey != NRS.accountInfo.publicKey) {
@@ -554,9 +560,9 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += nameLength;
 
-				var descriptionLength = parseInt(byteArray[pos], 10);
+				var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
 
-				pos++;
+				pos += 2;
 
 				transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
 

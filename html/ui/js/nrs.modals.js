@@ -50,6 +50,7 @@ var NRS = (function(NRS, $, undefined) {
 	$(".modal").on("shown.bs.modal", function() {
 		$(this).find("input[type=text]:first, input[type=password]:first").first().focus();
 		$(this).find("input[name=converted_account_id]").val("");
+		NRS.showedFormWarning = false; //maybe not the best place... we assume forms are only in modals?
 	});
 
 	//Reset form to initial state when modal is closed
@@ -78,6 +79,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		//Hide/Reset any possible error messages
 		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
+
+		NRS.showedFormWarning = false;
 	});
 
 	return NRS;

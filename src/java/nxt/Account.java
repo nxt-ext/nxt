@@ -167,9 +167,14 @@ public final class Account {
     }
 
     static Account addOrGetAccount(Long id) {
-        Account account = new Account(id);
-        Account oldAccount = accounts.putIfAbsent(id, account);
-        return oldAccount != null ? oldAccount : account;
+        Account oldAccount = accounts.get(id);
+        if (oldAccount == null) {
+            Account account = new Account(id);
+            oldAccount = accounts.putIfAbsent(id, account);
+            return oldAccount != null ? oldAccount : account;
+        } else {
+            return oldAccount;
+        }
     }
 
     static void clear() {
@@ -183,6 +188,7 @@ public final class Account {
     private volatile int keyHeight;
     private long balanceNQT;
     private long unconfirmedBalanceNQT;
+    private long forgedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
     private volatile int currentLeasingHeightFrom;
@@ -200,6 +206,9 @@ public final class Account {
     private volatile String description;
 
     private Account(Long id) {
+        if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
+            Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
+        }
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
@@ -232,6 +241,10 @@ public final class Account {
 
     public synchronized long getUnconfirmedBalanceNQT() {
         return unconfirmedBalanceNQT;
+    }
+
+    public synchronized long getForgedBalanceNQT() {
+        return forgedBalanceNQT;
     }
 
     public long getEffectiveBalanceNXT() {
@@ -512,6 +525,12 @@ public final class Account {
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
             listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        }
+    }
+
+    void addToForgedBalanceNQT(long amountNQT) {
+        synchronized(this) {
+            this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
         }
     }
 
