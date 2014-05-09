@@ -176,8 +176,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.blocks = function() {
 		NRS.pageLoading();
 
-		$("#forged_blocks_warning").hide();
-
 		if (NRS.blocksPageType == "forged_blocks") {
 			$("#forged_fees_total_box, #forged_blocks_total_box").show();
 			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").hide();
@@ -296,20 +294,18 @@ var NRS = (function(NRS, $, undefined) {
 		averageFee = NRS.convertToNQT(averageFee);
 		averageAmount = NRS.convertToNQT(averageAmount);
 
-		$("#blocks_average_fee").html(NRS.formatAmount(averageFee)).removeClass("loading_dots");
-		$("#blocks_average_amount").html(NRS.formatAmount(averageAmount)).removeClass("loading_dots");
+		$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
+		$("#blocks_average_amount").html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 
 		if (NRS.blocksPageType == "forged_blocks") {
 			if (blocks.length == 100) {
 				var blockCount = blocks.length + "+";
-				var feeTotal = NRS.formatAmount(totalFees, false) + "+";
 			} else {
 				var blockCount = blocks.length;
-				var feeTotal = NRS.formatAmount(totalFees, false);
 			}
 
 			$("#forged_blocks_total").html(blockCount).removeClass("loading_dots");
-			$("#forged_fees_total").html(feeTotal).removeClass("loading_dots");
+			$("#forged_fees_total").html(NRS.formatStyledAmount(NRS.accountInfo.forgedBalanceNQT)).removeClass("loading_dots");
 		} else {
 			$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
 			$("#blocks_average_generation_time").html(Math.round(time / 100) + "s").removeClass("loading_dots");
@@ -334,6 +330,13 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages.blocks();
 	});
 
+	$("#goto_forged_blocks").click(function(e) {
+		e.preventDefault();
+
+		$("#blocks_page_type").parent().find(".text").text("Forged By You");
+		NRS.blocksPageType = "forged_blocks";
+		NRS.goToPage("blocks");
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));

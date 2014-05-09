@@ -114,24 +114,21 @@ var NRS = (function(NRS, $, undefined) {
 					}, function(transaction, input) {
 						nr_transactions++;
 
-						//leave this for now, for older versions that do not yet have the account param added to getUnconfirmedTransactionIds
-						if (transaction.sender == NRS.account) {
-							transaction.id = input.transaction;
-							transaction.confirmed = false;
-							transaction.unconfirmed = true;
-							transaction.confirmations = "/";
+						transaction.id = input.transaction;
+						transaction.confirmed = false;
+						transaction.unconfirmed = true;
+						transaction.confirmations = "/";
 
-							if (transaction.attachment) {
-								for (var key in transaction.attachment) {
-									if (!transaction.hasOwnProperty(key)) {
-										transaction[key] = transaction.attachment[key];
-									}
+						if (transaction.attachment) {
+							for (var key in transaction.attachment) {
+								if (!transaction.hasOwnProperty(key)) {
+									transaction[key] = transaction.attachment[key];
 								}
 							}
-
-							unconfirmedTransactions.push(transaction);
-							unconfirmedTransactionIdArray.push(transaction.id);
 						}
+
+						unconfirmedTransactions.push(transaction);
+						unconfirmedTransactionIdArray.push(transaction.id);
 
 						if (nr_transactions == unconfirmedTransactionIds.length) {
 							NRS.unconfirmedTransactions = unconfirmedTransactions;
@@ -261,8 +258,18 @@ var NRS = (function(NRS, $, undefined) {
 		}, function(response) {
 			if (!response.errorCode) {
 				response.id = transactionId;
-				response.confirmations = 0;
+				response.confirmations = "/";
 				response.confirmed = false;
+				response.unconfirmed = true;
+
+				if (response.attachment) {
+					for (var key in response.attachment) {
+						if (!response.hasOwnProperty(key)) {
+							response[key] = response.attachment[key];
+						}
+					}
+				}
+
 				NRS.unconfirmedTransactions.push(response);
 				NRS.getAccountInfo();
 			}

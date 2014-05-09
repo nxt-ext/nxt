@@ -129,7 +129,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     block = parseBlock(blockData);
                                 } catch (NxtException.ValidationException e) {
-                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage());
+                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage()
+                                            + ", will try again later");
                                     break outer;
                                 }
                                 currentBlockId = block.getId();

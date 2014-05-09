@@ -3,7 +3,9 @@ var NRS = (function(NRS, $, undefined) {
 		"submit_on_enter": 0,
 		"use_new_address_format": 0,
 		"animate_forging": 1,
-		"news": -1
+		"news": -1,
+		"fee_warning": "100000000000",
+		"amount_warning": "10000000000000"
 	};
 
 	NRS.defaultColors = {
@@ -376,11 +378,19 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		for (var key in NRS.settings) {
-			if (!/_color/i.test(key)) {
+			if (/_warning/i.test(key)) {
+				if ($("#settings_" + key).length) {
+					$("#settings_" + key).val(NRS.convertToNXT(NRS.settings[key]));
+				}
+			} else if (!/_color/i.test(key)) {
 				if ($("#settings_" + key).length) {
 					$("#settings_" + key).val(NRS.settings[key]);
 				}
 			}
+		}
+
+		if (NRS.settings["news"] != -1) {
+			$("#settings_news_initial").remove();
 		}
 	}
 
@@ -802,6 +812,15 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.updateSettings(key, value);
 	});
 
+	$("#settings_box input[type=text]").on("input", function(e) {
+		var key = $(this).attr("name");
+		var value = $(this).val();
+
+		if (/_warning/i.test(key)) {
+			value = NRS.convertToNQT(value);
+		}
+		NRS.updateSettings(key, value);
+	});
 
 	NRS.updateColorScheme = function(e) {
 		var $color_scheme = $(e.target).closest(".custom_color_scheme");
@@ -868,7 +887,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!key || key == "news") {
 			if (NRS.settings["news"] == 0) {
 				$("#news_link").hide();
-			} else {
+			} else if (NRS.settings["news"] == 1) {
 				$("#news_link").show();
 			}
 		}
