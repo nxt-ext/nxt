@@ -1251,6 +1251,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#my_assets_table tbody").empty();
 				NRS.dataLoadFinished($("#my_assets_table"));
+				NRS.pageLoaded();
 			}
 		});
 	}
@@ -1594,7 +1595,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.open_orders = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange) {
+		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			NRS.pages.open_orders();
 		}
 	}

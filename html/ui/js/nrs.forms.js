@@ -42,6 +42,16 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $form = $modal.find("form:first");
 
+		if (NRS.downloadingBlockchain) {
+			$modal.find(".error_message").html("Please wait until the blockchain has finished downloading.").show();
+			NRS.unlockForm($modal, $btn);
+			return;
+		} else if (NRS.state.isScanning) {
+			$modal.find(".error_message").html("The blockchain is currently being rescanned. Please wait a minute and then try submitting again.").show();
+			NRS.unlockForm($modal, $btn);
+			return;
+		}
+
 		var invalidElement = false;
 
 		$form.find(":input").each(function() {

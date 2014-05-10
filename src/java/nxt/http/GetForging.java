@@ -2,7 +2,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Generator;
+import nxt.Nxt;
 import nxt.crypto.Crypto;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -39,7 +41,10 @@ public final class GetForging extends APIServlet.APIRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("deadline", generator.getDeadline());
+        long deadline = generator.getDeadline();
+        response.put("deadline", deadline);
+        int elapsedTime = Convert.getEpochTime() - Nxt.getBlockchain().getLastBlock().getTimestamp();
+        response.put("remaining", Math.max(deadline - elapsedTime, 0));
         return response;
 
     }
