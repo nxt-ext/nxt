@@ -226,7 +226,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.incoming.updateDashboardTransactions(transactions, confirmedTransactionIds.length == 0);
 		}
 
-		if (!oldBlock || NRS.unconfirmedTransactionsChange) {
+		if (!oldBlock || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			if (NRS.incoming[NRS.currentPage]) {
 				NRS.incoming[NRS.currentPage](transactions);
 			}
