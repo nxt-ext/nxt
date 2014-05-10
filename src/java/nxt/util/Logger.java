@@ -1,105 +1,277 @@
 package nxt.util;
-
 import nxt.Nxt;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.InputStream;
 
+import java.util.Properties;
+
+/**
+ * Handle logging for the Nxt node server
+ */
 public final class Logger {
 
+    /** Log event types */
     public static enum Event {
         MESSAGE, EXCEPTION
     }
 
-    private static final boolean debug;
-    private static final boolean enableStackTraces;
-
-    private static final ThreadLocal<SimpleDateFormat> logDateFormat = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS] ");
-        }
-    };
-
-    private static final Listeners<String,Event> messageListeners = new Listeners<>();
-    private static final Listeners<Exception,Event> exceptionListeners = new Listeners<>();
-
-    private static final PrintWriter fileLog;
-    static {
-        debug = Nxt.getBooleanProperty("nxt.debug");
-        enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces");
-        PrintWriter printWriter = null;
-        try {
-            printWriter = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Nxt.getStringProperty("nxt.log"))))), true);
-        } catch (IOException|RuntimeException e) {
-            logMessage("Logging to file not possible, will log to stdout only", e);
-        }
-        fileLog = printWriter;
-        logMessage("Debug logging " + (debug ? "enabled" : "disabled"));
-        logMessage("Exception stack traces " + (enableStackTraces ? "enabled" : "disabled"));
+    /** Log levels */
+    public static enum Level {
+        DEBUG, INFO, WARN, ERROR
     }
 
-    private Logger() {} //never
+    /** Message listeners */
+    private static final Listeners<String, Event> messageListeners = new Listeners<>();
 
+    /** Exception listeners */
+    private static final Listeners<Exception, Event> exceptionListeners = new Listeners<>();
+
+    /**
+     * Initialize the JDK log manager using the Java logging configuration files
+     * nxt/conf/logging-default.properties and nxt/conf/logging.properties.  The
+     * values specified in logging.properties will override the values specified in
+     * logging-default.properties.  The system-wide Java logging configuration file
+     * jre/lib/logging.properties will be used if no Nxt configuration file is found.
+     */
+    static {
+        try {
+            boolean foundProperties = false;
+            Properties loggingProperties = new Properties();
+            try (InputStream is = ClassLoader.getSystemResourceAsStream("logging-default.properties")) {
+                if (is != null) {
+                    loggingProperties.load(is);
+                    foundProperties = true;
+                }
+            }
+            try (InputStream is = ClassLoader.getSystemResourceAsStream("logging.properties")) {
+                if (is != null) {
+                    loggingProperties.load(is);
+                    foundProperties = true;
+                }
+            }
+            if (foundProperties) {
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                loggingProperties.store(outStream, "logging properties");
+                ByteArrayInputStream inStream = new ByteArrayInputStream(outStream.toByteArray());
+                java.util.logging.LogManager.getLogManager().readConfiguration(inStream);
+                inStream.close();
+                outStream.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading logging properties", e);
+        }
+        BriefLogFormatter.init();
+    }
+
+    /** Our logger instance */
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(nxt.Nxt.class);
+
+    /** Enable stack traces */
+    private static final boolean enableStackTraces = Nxt.getBooleanProperty("nxt.enableStackTraces");
+
+    /** Enable log traceback */
+    private static final boolean enableLogTraceback = Nxt.getBooleanProperty("nxt.enableLogTraceback");
+
+    /**
+     * No constructor
+     */
+    private Logger() {}
+
+    /**
+     * Add a message listener
+     *
+     * @param       listener            Listener
+     * @param       eventType           Notification event type
+     * @return                          TRUE if listener added
+     */
     public static boolean addMessageListener(Listener<String> listener, Event eventType) {
         return messageListeners.addListener(listener, eventType);
     }
 
+    /**
+     * Add an exception listener
+     *
+     * @param       listener            Listener
+     * @param       eventType           Notification event type
+     * @return                          TRUE if listener added
+     */
     public static boolean addExceptionListener(Listener<Exception> listener, Event eventType) {
         return exceptionListeners.addListener(listener, eventType);
     }
 
+    /**
+     * Remove a message listener
+     *
+     * @param       listener            Listener
+     * @param       eventType           Notification event type
+     * @return                          TRUE if listener removed
+     */
     public static boolean removeMessageListener(Listener<String> listener, Event eventType) {
         return messageListeners.removeListener(listener, eventType);
     }
 
+    /**
+     * Remove an exception listener
+     *
+     * @param       listener            Listener
+     * @param       eventType           Notification event type
+     * @return                          TRUE if listener removed
+     */
     public static boolean removeExceptionListener(Listener<Exception> listener, Event eventType) {
         return exceptionListeners.removeListener(listener, eventType);
     }
 
+    /**
+     * Log a message (map to INFO)
+     *
+     * @param       message             Message
+     */
     public static void logMessage(String message) {
-        String logEntry = logDateFormat.get().format(new Date()) + message;
-        System.out.println(logEntry);
-        if (fileLog != null) {
-            fileLog.println(logEntry);
-        }
-        messageListeners.notify(message, Event.MESSAGE);
+        doLog(Level.INFO, message, null);
     }
 
-    public static void logMessage(String message, Exception e) {
-        if (enableStackTraces) {
-            logMessage(message);
-            e.printStackTrace(System.out);
-            if (fileLog != null) {
-                e.printStackTrace(fileLog);
-            }
-        } else {
-            logMessage(message + ":\n" + e.toString());
-        }
-        exceptionListeners.notify(e, Event.EXCEPTION);
+    /**
+     * Log an exception (map to ERROR)
+     *
+     * @param       message             Message
+     * @param       exc                 Exception
+     */
+    public static void logMessage(String message, Exception exc) {
+        doLog(Level.ERROR, message, exc);
     }
 
+    /**
+     * Log an ERROR message
+     *
+     * @param       message             Message
+     */
+    public static void logErrorMessage(String message) {
+        doLog(Level.ERROR, message, null);
+    }
+
+    /**
+     * Log an ERROR exception
+     *
+     * @param       message             Message
+     * @param       exc                 Exception
+     */
+    public static void logErrorMessage(String message, Exception exc) {
+        doLog(Level.ERROR, message, exc);
+    }
+
+    /**
+     * Log a WARNING message
+     *
+     * @param       message             Message
+     */
+    public static void logWarningMessage(String message) {
+        doLog(Level.WARN, message, null);
+    }
+
+    /**
+     * Log a WARNING exception
+     *
+     * @param       message             Message
+     * @param       exc                 Exception
+     */
+    public static void logWarningMessage(String message, Exception exc) {
+        doLog(Level.WARN, message, exc);
+    }
+
+    /**
+     * Log an INFO message
+     *
+     * @param       message             Message
+     */
+    public static void logInfoMessage(String message) {
+        doLog(Level.INFO, message, null);
+    }
+
+    /**
+     * Log an INFO exception
+     *
+     * @param       message             Message
+     * @param       exc                 Exception
+     */
+    public static void logInfoMessage(String message, Exception exc) {
+        doLog(Level.INFO, message, exc);
+    }
+
+    /**
+     * Log a debug message
+     *
+     * @param       message             Message
+     */
     public static void logDebugMessage(String message) {
-        if (debug) {
-            logMessage("DEBUG: " + message);
-        }
+        doLog(Level.DEBUG, message, null);
     }
 
-    public static void logDebugMessage(String message, Exception e) {
-        if (enableStackTraces) {
-            logMessage("DEBUG: " + message);
-            e.printStackTrace(System.out);
-            if (fileLog != null) {
-                e.printStackTrace(fileLog);
-            }
-        } else if (debug) {
-            logMessage("DEBUG: " + message + ":\n" + e.toString());
+    /**
+     * Log a debug exception
+     *
+     * @param       message             Message
+     * @param       exc                 Exception
+     */
+    public static void logDebugMessage(String message, Exception exc) {
+        doLog(Level.DEBUG, message, exc);
+    }
+
+    /**
+     * Log the event
+     *
+     * @param       level               Level
+     * @param       message             Message
+     * @param       exc                 Exception
+     */
+    private static void doLog(Level level, String message, Exception exc) {
+        String logMessage = message;
+        Exception e = exc;
+        //
+        // Add caller class and method if enabled
+        //
+        if (enableLogTraceback) {
+            StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
+            String className = caller.getClassName();
+            int index = className.lastIndexOf('.');
+            if (index != -1)
+                className = className.substring(index+1);
+            logMessage = className + "." + caller.getMethodName() + ": " + logMessage;
         }
-        exceptionListeners.notify(e, Event.EXCEPTION);
+        //
+        // Format the stack trace if enabled
+        //
+        if (e != null) {
+            if (!enableStackTraces) {
+                logMessage = logMessage + "\n" + exc.toString();
+                e = null;
+            }
+        }
+        //
+        // Log the event
+        //
+        switch (level) {
+            case DEBUG:
+                log.debug(logMessage, e);
+                break;
+            case INFO:
+                log.info(logMessage, e);
+                break;
+            case WARN:
+                log.warn(logMessage, e);
+                break;
+            case ERROR:
+                log.error(logMessage, e);
+                break;
+        }
+        //
+        // Notify listeners
+        //
+        if (exc != null)
+            exceptionListeners.notify(exc, Event.EXCEPTION);
+        else
+            messageListeners.notify(message, Event.MESSAGE);
     }
 }

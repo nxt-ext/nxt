@@ -154,11 +154,6 @@ public final class Nxt {
 
             Logger.logMessage("logging enabled");
 
-            if (! Nxt.getBooleanProperty("nxt.debugJetty")) {
-                System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
-                Logger.logDebugMessage("jetty logging disabled");
-            }
-
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
