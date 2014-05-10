@@ -6,6 +6,7 @@ import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -20,7 +21,9 @@ public interface Attachment {
     TransactionType getTransactionType();
 
 
-    public final static class MessagingArbitraryMessage implements Attachment {
+    public final static class MessagingArbitraryMessage implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final byte[] message;
 
@@ -67,7 +70,9 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasAssignment implements Attachment {
+    public final static class MessagingAliasAssignment implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final String aliasName;
         private final String aliasURI;
@@ -139,7 +144,9 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingPollCreation implements Attachment {
+    public final static class MessagingPollCreation implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final String pollName;
         private final String pollDescription;
@@ -249,7 +256,9 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingVoteCasting implements Attachment {
+    public final static class MessagingVoteCasting implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long pollId;
         private final byte[] pollVote;
@@ -306,7 +315,9 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingHubAnnouncement implements Attachment {
+    public final static class MessagingHubAnnouncement implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final long minFeePerByteNQT;
         private final String[] uris;
@@ -378,7 +389,9 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingAccountInfo implements Attachment {
+    public final static class MessagingAccountInfo implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final String name;
         private final String description;
@@ -441,7 +454,9 @@ public interface Attachment {
 
     }
 
-    public final static class ColoredCoinsAssetIssuance implements Attachment {
+    public final static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final String name;
         private final String description;
@@ -526,7 +541,9 @@ public interface Attachment {
         }
     }
 
-    public final static class ColoredCoinsAssetTransfer implements Attachment {
+    public final static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long assetId;
         private final long quantityQNT;
@@ -602,7 +619,9 @@ public interface Attachment {
 
     }
 
-    abstract static class ColoredCoinsOrderPlacement implements Attachment {
+    abstract static class ColoredCoinsOrderPlacement implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long assetId;
         private final long quantityQNT;
@@ -661,6 +680,8 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
+        static final long serialVersionUID = 0;
+
         public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -674,6 +695,8 @@ public interface Attachment {
 
     public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
+        static final long serialVersionUID = 0;
+
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -685,7 +708,9 @@ public interface Attachment {
 
     }
 
-    abstract static class ColoredCoinsOrderCancellation implements Attachment {
+    abstract static class ColoredCoinsOrderCancellation implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long orderId;
 
@@ -726,6 +751,8 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
+        static final long serialVersionUID = 0;
+
         public ColoredCoinsAskOrderCancellation(Long orderId) {
             super(orderId);
         }
@@ -739,6 +766,8 @@ public interface Attachment {
 
     public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
+        static final long serialVersionUID = 0;
+
         public ColoredCoinsBidOrderCancellation(Long orderId) {
             super(orderId);
         }
@@ -750,7 +779,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsListing implements Attachment {
+    public final static class DigitalGoodsListing implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final String name;
         private final String description;
@@ -828,7 +859,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsDelisting implements Attachment {
+    public final static class DigitalGoodsDelisting implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long goodsId;
 
@@ -870,7 +903,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsPriceChange implements Attachment {
+    public final static class DigitalGoodsPriceChange implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long goodsId;
         private final long priceNQT;
@@ -918,7 +953,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsQuantityChange implements Attachment {
+    public final static class DigitalGoodsQuantityChange implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long goodsId;
         private final int deltaQuantity;
@@ -966,7 +1003,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsPurchase implements Attachment {
+    public final static class DigitalGoodsPurchase implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long goodsId;
         private final int quantity;
@@ -1035,7 +1074,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsDelivery implements Attachment {
+    public final static class DigitalGoodsDelivery implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long purchaseId;
         private final XoredData goods;
@@ -1092,7 +1133,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsFeedback implements Attachment {
+    public final static class DigitalGoodsFeedback implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long purchaseId;
         private final XoredData note;
@@ -1148,7 +1191,9 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsRefund implements Attachment {
+    public final static class DigitalGoodsRefund implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final Long purchaseId;
         private final long refundNQT;
@@ -1210,7 +1255,9 @@ public interface Attachment {
 
     }
 
-    public final static class AccountControlEffectiveBalanceLeasing implements Attachment {
+    public final static class AccountControlEffectiveBalanceLeasing implements Attachment, Serializable {
+
+        static final long serialVersionUID = 0;
 
         private final short period;
 
