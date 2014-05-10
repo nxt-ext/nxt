@@ -92,7 +92,9 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.getState();
 		}, 1000 * 30);
 
-		setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
+		if (!NRS.isTestNet) {
+			setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
+		}
 
 		NRS.allowLoginViaEnter();
 
