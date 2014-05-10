@@ -210,7 +210,8 @@ var NRS = (function(NRS, $, undefined) {
 					"version": NRS.downloadedVersion.versionNr,
 					"hash": NRS.downloadedVersion.hash
 				}
-			});
+			}, "*");
+			$("#nrs_modal").modal("hide");
 		} else {
 			$("#nrs_update_iframe").attr("src", "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-client-" + NRS.downloadedVersion.versionNr + ".zip");
 			$("#nrs_update_explanation").hide();

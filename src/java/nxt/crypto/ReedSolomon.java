@@ -1,6 +1,6 @@
 /*
     Reed Solomon Encoding and Decoding for Nxt
-    
+
     Version: 1.0, license: Public Domain, coder: NxtChg (admin@nxtchg.com)
     Java Version: ChuckOne (ChuckOne@mail.de).
 */
@@ -221,7 +221,7 @@ final class ReedSolomon {
                 if (!ReedSolomon.encode((Long) test_account[0]).equals(test_account[1])) {
                     System.out.println("ERROR: " + ReedSolomon.encode((Long) test_account[0]) + " != " + test_account[1]);
                 }
-                if (ReedSolomon.decode((String) test_account[1]) != test_account[0]) {
+                if (ReedSolomon.decode((String) test_account[1]) != (Long)test_account[0]) {
                     System.out.println("ERROR: " + ReedSolomon.decode((String) test_account[1]) + " != " + test_account[0]);
                 }
                 System.out.println("Success: " + test_account[0] + " == " + test_account[1]);
