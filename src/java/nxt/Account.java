@@ -110,7 +110,7 @@ public final class Account {
                     }
                 }
             }
-        }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
+        }, BlockchainProcessor.Event.BLOCK_POPPED);
 
     }
 

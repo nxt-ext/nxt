@@ -214,7 +214,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost) {
+						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
 							$("#forging_indicator").removeClass("forging");
 							$("#forging_indicator span").html("Not Forging");
 							$("#forging_indicator").show();
@@ -251,38 +251,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					$(window).on("hashchange", NRS.checkLocationHash);
 
-					NRS.sendRequest('getAccountTransactionIds', {
-						"account": NRS.account,
-						"timestamp": 0
-					}, function(response) {
-						if (response.transactionIds && response.transactionIds.length) {
-							var transactionIds = response.transactionIds.reverse().slice(0, 10);
-							var nrTransactions = 0;
-							var transactions = [];
-
-							for (var i = 0; i < transactionIds.length; i++) {
-								NRS.sendRequest('getTransaction', {
-									"transaction": transactionIds[i]
-								}, function(transaction, input) {
-									nrTransactions++;
-
-									transaction.id = input.transaction;
-									transaction.confirmed = true;
-									transactions.push(transaction);
-
-									if (nrTransactions == transactionIds.length) {
-										NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-											NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
-										});
-									}
-								});
-							}
-						} else {
-							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-								NRS.handleInitialTransactions(unconfirmedTransactions, []);
-							});
-						}
-					});
+					NRS.getInitialTransactions();
 				});
 			});
 		});

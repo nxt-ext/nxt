@@ -1,0 +1,20 @@
+Added getUnconfirmedTransactions API, returning the full JSON objects for all
+unconfirmed transactions, optionally filtered by account parameter.
+
+Added win-compile.sh script for compiling on windows.
+
+GetForging also shows "remaining" time to forge a block.
+
+Clear Generator state on rescan, likely the cause of repeating scans problem.
+
+Client Updates:
+
+Do not forge automatically when downloading the blockchain.
+
+Wait until blockchain finished downloading before allowing form submits.
+
+Update notification fix.
+
+Make blocks and peers page auto-update.
+
+Show buy/sell notification of assets.

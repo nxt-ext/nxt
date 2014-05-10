@@ -118,7 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.incoming.aliases = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange) {
+		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			NRS.pages.aliases();
 		}
 	}
