@@ -3,13 +3,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.betaVersion = {};
 
 	NRS.checkAliasVersions = function() {
+		if (NRS.downloadingBlockchain) {
+			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation_blockchain_sync").show();
+			return;
+		}
 		if (NRS.isTestNet) {
 			$("#nrs_update_explanation span").hide();
 			$("#nrs_update_explanation_testnet").show();
-			return;
-		} else if (NRS.downloadingBlockchain) {
-			$("#nrs_update_explanation span").hide();
-			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
 		}
 		//Get latest version nr+hash of normal version
