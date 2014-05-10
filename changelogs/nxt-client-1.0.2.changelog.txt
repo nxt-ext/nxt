@@ -7,4 +7,14 @@ GetForging also shows "remaining" time to forge a block.
 
 Clear Generator state on rescan, likely the cause of repeating scans problem.
 
+Client Updates:
 
+Do not forge automatically when downloading the blockchain.
+
+Wait until blockchain finished downloading before allowing form submits.
+
+Update notification fix.
+
+Make blocks and peers page auto-update.
+
+Show buy/sell notification of assets.

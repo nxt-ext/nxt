@@ -362,6 +362,9 @@ var NRS = (function(NRS, $, undefined) {
 					$("#dashboard_message").hide();
 				}
 
+				//only show if happened within last week
+				var showAssetDifference = (!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7));
+
 				if (NRS.databaseSupport) {
 					NRS.database.select("data", [{
 						"id": "asset_balances_" + NRS.account
@@ -386,7 +389,9 @@ var NRS = (function(NRS, $, undefined) {
 								}, [{
 									id: "asset_balances_" + NRS.account
 								}]);
-								NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
+								if (showAssetDifference) {
+									NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
+								}
 							}
 						} else {
 							NRS.database.insert("data", {
@@ -395,7 +400,7 @@ var NRS = (function(NRS, $, undefined) {
 							});
 						}
 					});
-				} else if (previousAccountInfo && previousAccountInfo.assetBalances) {
+				} else if (showAssetDifference && previousAccountInfo && previousAccountInfo.assetBalances) {
 					var previousBalances = JSON.stringify(previousAccountInfo.assetBalances);
 					var currentBalances = JSON.stringify(NRS.accountInfo.assetBalances);
 
@@ -518,21 +523,25 @@ var NRS = (function(NRS, $, undefined) {
 		var current_balances_ = {};
 		var previous_balances_ = {};
 
-		for (var k in previous_balances) {
-			previous_balances_[previous_balances[k].asset] = previous_balances[k].balance;
+		if (previous_balances.length) {
+			for (var k in previous_balances) {
+				previous_balances_[previous_balances[k].asset] = previous_balances[k].balanceQNT;
+			}
 		}
 
-		for (var k in current_balances) {
-			current_balances_[current_balances[k].asset] = current_balances[k].balance;
+		if (current_balances.length) {
+			for (var k in current_balances) {
+				current_balances_[current_balances[k].asset] = current_balances[k].balanceQNT;
+			}
 		}
 
 		var diff = {};
 
 		for (var k in previous_balances_) {
 			if (!(k in current_balances_)) {
-				diff[k] = -(previous_balances_[k]);
+				diff[k] = "-" + previous_balances_[k];
 			} else if (previous_balances_[k] !== current_balances_[k]) {
-				var change = current_balances_[k] - previous_balances_[k];
+				var change = new BigInteger(current_balances_[k]).substract(new BigInteger(previous_balances_[k])).toString();
 				diff[k] = change;
 			}
 		}
@@ -556,15 +565,24 @@ var NRS = (function(NRS, $, undefined) {
 						"difference": diff[k]
 					}
 				}, function(asset, input) {
+					if (asset.errorCode) {
+						return;
+					}
 					asset.difference = input["_extra"].difference;
 					asset.id = input["_extra"].id;
 
-					if (asset.difference > 0) {
-						$.growl("You received <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(asset.difference) + " " + String(asset.name).escapeHTML() + (asset.difference == 1 ? " asset" : " assets") + "</a>.", {
+					if (asset.difference.charAt(0) != "-") {
+						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
+
+						$.growl("You received <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
 					} else {
-						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + NRS.formatAmount(Math.abs(asset.difference)) + " " + String(asset.name).escapeHTML() + (asset.difference == 1 ? " asset" : "assets") + "</a>.", {
+						asset.difference = asset.difference.substring(1);
+
+						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
+
+						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
 					}
@@ -612,7 +630,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.updateBlockchainDownloadProgress = function() {
-		if (NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
+		if (NRS.state.lastBlockchainFeederHeight && NRS.state.numberOfBlocks < NRS.state.lastBlockchainFeederHeight) {
 			var percentage = parseInt(Math.round((NRS.state.numberOfBlocks / NRS.state.lastBlockchainFeederHeight) * 100), 10);
 		} else {
 			var percentage = 100;
