@@ -1,0 +1,10 @@
+Added getUnconfirmedTransactions API, returning the full JSON objects for all
+unconfirmed transactions, optionally filtered by account parameter.
+
+Added win-compile.sh script for compiling on windows.
+
+GetForging also shows "remaining" time to forge a block.
+
+Clear Generator state on rescan, likely the cause of repeating scans problem.
+
+

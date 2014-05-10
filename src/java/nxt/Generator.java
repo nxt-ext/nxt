@@ -63,6 +63,11 @@ public final class Generator {
 
     static void init() {}
 
+    static void clear() {
+        lastBlocks.clear();
+        hits.clear();
+    }
+
     public static boolean addListener(Listener<Generator> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
@@ -191,7 +196,9 @@ public final class Generator {
 
         int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
         if (elapsedTime > 0) {
-            BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance)).multiply(BigInteger.valueOf(elapsedTime));
+            BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget())
+                    .multiply(BigInteger.valueOf(effectiveBalance))
+                    .multiply(BigInteger.valueOf(elapsedTime));
             if (hits.get(accountId).compareTo(target) < 0) {
                 BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
             }
