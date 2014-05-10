@@ -242,6 +242,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.incoming.blocks = function() {
+		NRS.pages.blocks();
+	}
+
 	NRS.finish100Blocks = function(response) {
 		NRS.blocks.push(response);
 		if (NRS.blocks.length < 100 && typeof response.previousBlock !== "undefined") {
