@@ -8,6 +8,41 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.transactionsPageType = null;
 
+	NRS.getInitialTransactions = function() {
+		NRS.sendRequest("getAccountTransactionIds", {
+			"account": NRS.account,
+			"timestamp": 0
+		}, function(response) {
+			if (response.transactionIds && response.transactionIds.length) {
+				var transactionIds = response.transactionIds.reverse().slice(0, 10);
+				var nrTransactions = 0;
+				var transactions = [];
+
+				for (var i = 0; i < transactionIds.length; i++) {
+					NRS.sendRequest("getTransaction", {
+						"transaction": transactionIds[i]
+					}, function(transaction, input) {
+						nrTransactions++;
+
+						transaction.id = input.transaction;
+						transaction.confirmed = true;
+						transactions.push(transaction);
+
+						if (nrTransactions == transactionIds.length) {
+							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+								NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
+							});
+						}
+					});
+				}
+			} else {
+				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+					NRS.handleInitialTransactions(unconfirmedTransactions, []);
+				});
+			}
+		});
+	}
+
 	NRS.handleInitialTransactions = function(transactions, transactionIds) {
 		if (transactions.length) {
 			var rows = "";
@@ -36,10 +71,6 @@ var NRS = (function(NRS, $, undefined) {
 					transaction.amount = new BigInteger(transaction.amountNQT);
 					transaction.fee = new BigInteger(transaction.feeNQT);
 				}
-
-				//todo: !receiving && transaction.amount NQT
-
-				//todo transactionIds!!
 
 				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.id).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + (transaction[account] != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(transaction, account) + "' data-user-id='" + String(transaction[account]).escapeHTML() + "' data-user-rs='" + String(transaction[account + "RS"]).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(transaction, account) + "</a>" : "Genesis") + "</td><td class='confirmations' data-confirmations='" + String(transaction.confirmations).escapeHTML() + "' data-content='" + NRS.formatAmount(transaction.confirmations) + " confirmations' data-container='body' data-initial='true'>" + (transaction.confirmations > 10 ? "10+" : String(transaction.confirmations).escapeHTML()) + "</td></tr>";
 			}

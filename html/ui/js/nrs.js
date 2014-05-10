@@ -121,6 +121,14 @@ var NRS = (function(NRS, $, undefined) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
 
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
+				} else if (NRS.state.isScanning) {
+					NRS.blocks = [];
+					NRS.tempBlocks = [];
+					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
+					NRS.getInitialTransactions();
+					if (NRS.account) {
+						NRS.getAccountInfo();
+					}
 				} else if (NRS.state.lastBlock != response.lastBlock) {
 					NRS.tempBlocks = [];
 					NRS.state = response;

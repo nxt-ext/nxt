@@ -48,6 +48,10 @@ var NRS = (function(NRS, $, undefined) {
 			$.growl("The blockchain is busy downloading, you cannot forge during this time. Please try again when the blockchain is fully synced.", {
 				"type": "danger"
 			});
+		} else if (NRS.state.isScanning) {
+			$.growl("The blockchain is currently being rescanned, you cannot forge during this time. Please try again in a minute.", {
+				"type": "danger"
+			});
 		} else if (!NRS.accountInfo.publicKey) {
 			$.growl("You cannot forge because your account has no public key. Please make an outgoing transaction first.", {
 				"type": "danger"
