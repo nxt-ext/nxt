@@ -1251,6 +1251,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#my_assets_table tbody").empty();
 				NRS.dataLoadFinished($("#my_assets_table"));
+				NRS.pageLoaded();
 			}
 		});
 	}
