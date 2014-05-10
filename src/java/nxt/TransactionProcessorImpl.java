@@ -134,7 +134,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (transactionsData == null || transactionsData.size() == 0) {
                         return;
                     }
-                    processPeerTransactions(transactionsData, false);
+                    try {
+                        processPeerTransactions(transactionsData, false);
+                    } catch (RuntimeException e) {
+                        peer.blacklist(e);
+                    }
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
@@ -365,8 +369,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}
-            } catch (RuntimeException e) {
-                Logger.logDebugMessage("Dropping invalid transaction: " + e.toString(), e);
             }
         }
         processTransactions(transactions, sendToPeers);
