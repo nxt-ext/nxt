@@ -63,6 +63,11 @@ public final class Generator {
 
     static void init() {}
 
+    static void clear() {
+        lastBlocks.clear();
+        hits.clear();
+    }
+
     public static boolean addListener(Listener<Generator> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
