@@ -21,12 +21,16 @@
 */
 html,
 body {
+  overflow-x:hidden;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
   background: #f9f9f9;
   color: black !important;
+}
+html.lockscreen, html.lockscreen body {
   height:100%;
+  overflow-x:auto;
 }
 a {
   color: #3c8dbc;
