@@ -625,8 +625,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 blockListeners.notify(block, Event.BEFORE_BLOCK_UNDO);
                 blockchain.setLastBlock(block, previousBlock);
-                transactionProcessor.undo(block);
                 BlockDb.deleteBlocksFrom(block.getId());
+                transactionProcessor.undo(block);
                 blockListeners.notify(block, Event.BLOCK_POPPED);
             } // synchronized
 
