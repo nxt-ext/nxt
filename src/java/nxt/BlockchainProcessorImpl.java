@@ -134,6 +134,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                             + ", will try again later", e);
                                     break outer;
                                 } catch (RuntimeException e) {
+                                    Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
                                     peer.blacklist();
                                     return;
                                 }
