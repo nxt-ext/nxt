@@ -217,91 +217,66 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        try {
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            byte type = buffer.get();
-            byte subtype = buffer.get();
-            int timestamp = buffer.getInt();
-            short deadline = buffer.getShort();
-            byte[] senderPublicKey = new byte[32];
-            buffer.get(senderPublicKey);
-            Long recipientId = buffer.getLong();
-            long amountNQT;
-            long feeNQT;
-            String referencedTransactionFullHash = null;
-            amountNQT = buffer.getLong();
-            feeNQT = buffer.getLong();
-            byte[] referencedTransactionFullHashBytes = new byte[32];
-            buffer.get(referencedTransactionFullHashBytes);
-            if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-                referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-            }
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-            signature = Convert.emptyToNull(signature);
-
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction;
-            transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                    amountNQT, feeNQT, referencedTransactionFullHash, signature);
-            transactionType.loadAttachment(transaction, buffer);
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString(), e);
+        byte type = buffer.get();
+        byte subtype = buffer.get();
+        int timestamp = buffer.getInt();
+        short deadline = buffer.getShort();
+        byte[] senderPublicKey = new byte[32];
+        buffer.get(senderPublicKey);
+        Long recipientId = buffer.getLong();
+        long amountNQT = buffer.getLong();
+        long feeNQT = buffer.getLong();
+        String referencedTransactionFullHash = null;
+        byte[] referencedTransactionFullHashBytes = new byte[32];
+        buffer.get(referencedTransactionFullHashBytes);
+        if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
+            referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
         }
+        byte[] signature = new byte[64];
+        buffer.get(signature);
+        signature = Convert.emptyToNull(signature);
+
+        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+        TransactionImpl transaction;
+        transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                amountNQT, feeNQT, referencedTransactionFullHash, signature);
+        transactionType.loadAttachment(transaction, buffer);
+
+        return transaction;
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
-
-        try {
-
-            byte type = ((Long)transactionData.get("type")).byteValue();
-            byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-            int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-            short deadline = ((Long)transactionData.get("deadline")).shortValue();
-            byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-            Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-            if (recipientId == null) recipientId = 0L; // ugly
-            long amountNQT;
-            long feeNQT;
-            if (transactionData.get("amountNQT") != null) {
-                amountNQT = ((Long) transactionData.get("amountNQT"));
-                feeNQT = ((Long) transactionData.get("feeNQT"));
-            } else {
-                amountNQT = Convert.safeMultiply(((Long) transactionData.get("amount")), Constants.ONE_NXT);
-                feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
+        byte type = ((Long)transactionData.get("type")).byteValue();
+        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
+        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
+        short deadline = ((Long)transactionData.get("deadline")).shortValue();
+        byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
+        Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
+        if (recipientId == null) recipientId = 0L; // ugly
+        long amountNQT = (Long) transactionData.get("amountNQT");
+        long feeNQT = (Long) transactionData.get("feeNQT");
+        String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
+        // ugly, remove later:
+        Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
+        if (referencedTransactionId != null && referencedTransactionFullHash == null) {
+            Transaction referencedTransaction = Nxt.getBlockchain().getTransaction(referencedTransactionId);
+            if (referencedTransaction != null) {
+                referencedTransactionFullHash = referencedTransaction.getFullHash();
             }
-            String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-            // ugly, remove later:
-            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-            if (referencedTransactionId != null && referencedTransactionFullHash == null) {
-                Transaction referencedTransaction = Nxt.getBlockchain().getTransaction(referencedTransactionId);
-                if (referencedTransaction != null) {
-                    referencedTransactionFullHash = referencedTransaction.getFullHash();
-                }
-            }
-            //
-            byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
-
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionFullHash, signature);
-
-            JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-
-            transactionType.loadAttachment(transaction, attachmentData);
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage(e.toString(), e);
-            throw new NxtException.ValidationException(e.toString());
         }
+        //
+        byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
+
+        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+        TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                amountNQT, feeNQT, referencedTransactionFullHash, signature);
+
+        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
+        transactionType.loadAttachment(transaction, attachmentData);
+        return transaction;
     }
 
     void clear() {
@@ -390,6 +365,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}
+            } catch (RuntimeException e) {
+                Logger.logDebugMessage("Dropping invalid transaction: " + e.toString());
             }
         }
         processTransactions(transactions, sendToPeers);

@@ -40,7 +40,7 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
             Nxt.getBlockchainProcessor().processPeerBlock(request);
             return ACCEPTED;
 
-        } catch (NxtException e) {
+        } catch (NxtException|RuntimeException e) {
             if (peer != null) {
                 peer.blacklist(e);
             }

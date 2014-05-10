@@ -129,9 +129,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 try {
                                     block = parseBlock(blockData);
                                 } catch (NxtException.ValidationException e) {
-                                    Logger.logDebugMessage("Cannot validate block: " + e.getMessage()
-                                            + ", will try again later");
+                                    Logger.logDebugMessage("Cannot validate block: " + e.toString()
+                                            + ", will try again later", e);
                                     break outer;
+                                } catch (RuntimeException e) {
+                                    peer.blacklist();
+                                    return;
                                 }
                                 currentBlockId = block.getId();
 
@@ -769,36 +772,29 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
-        try {
-            int version = ((Long)blockData.get("version")).intValue();
-            int timestamp = ((Long)blockData.get("timestamp")).intValue();
-            Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-            long totalAmountNQT;
-            long totalFeeNQT;
-            totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
-            totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
-            int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-            byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
-            byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
-            byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
-            byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
-            byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
+        int version = ((Long)blockData.get("version")).intValue();
+        int timestamp = ((Long)blockData.get("timestamp")).intValue();
+        Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
+        long totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
+        long totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
+        int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
+        byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
+        byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
+        byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
+        byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
+        byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
 
-            SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
-            JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-            for (Object transactionData : transactionsData) {
-                TransactionImpl transaction = transactionProcessor.parseTransaction((JSONObject) transactionData);
-                if (blockTransactions.put(transaction.getId(), transaction) != null) {
-                    throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
-                }
+        SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
+        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
+        for (Object transactionData : transactionsData) {
+            TransactionImpl transaction = transactionProcessor.parseTransaction((JSONObject) transactionData);
+            if (blockTransactions.put(transaction.getId(), transaction) != null) {
+                throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
             }
-
-            return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
-                    generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString(), e);
         }
+
+        return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
+                generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
     }
 
     private boolean verifyVersion(Block block, int currentHeight) {

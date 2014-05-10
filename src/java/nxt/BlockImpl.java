@@ -78,9 +78,10 @@ final class BlockImpl implements Block {
 
     }
 
-    BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
-              byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions,
-              BigInteger cumulativeDifficulty, long baseTarget, Long nextBlockId, int height, Long id)
+    BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
+              byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature,
+              byte[] previousBlockHash, List<TransactionImpl> transactions, BigInteger cumulativeDifficulty,
+              long baseTarget, Long nextBlockId, int height, Long id)
             throws NxtException.ValidationException {
         this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions);

@@ -3,7 +3,6 @@ package nxt.peer;
 import nxt.Account;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
-import nxt.NxtException;
 import nxt.TransactionType;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
@@ -198,7 +197,7 @@ final class PeerImpl implements Peer {
     }
 
     @Override
-    public void blacklist(NxtException cause) {
+    public void blacklist(Exception cause) {
         if (cause instanceof TransactionType.NotYetEnabledException || cause instanceof BlockchainProcessor.BlockOutOfOrderException) {
             // don't blacklist peers just because a feature is not yet enabled
             // prevents erroneous blacklisting during loading of blockchain from scratch

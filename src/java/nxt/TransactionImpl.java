@@ -358,7 +358,9 @@ final class TransactionImpl implements Transaction {
     }
 
     private boolean useNQT() {
-        return this.height > Constants.NQT_BLOCK;
+        return this.height > Constants.NQT_BLOCK
+                && (this.height < Integer.MAX_VALUE
+                || Nxt.getBlockchain().getHeight() >= Constants.NQT_BLOCK);
     }
 
     private byte[] zeroSignature(byte[] data) {
