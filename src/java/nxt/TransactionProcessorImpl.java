@@ -366,7 +366,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}
             } catch (RuntimeException e) {
-                Logger.logDebugMessage("Dropping invalid transaction: " + e.toString());
+                Logger.logDebugMessage("Dropping invalid transaction: " + e.toString(), e);
             }
         }
         processTransactions(transactions, sendToPeers);
