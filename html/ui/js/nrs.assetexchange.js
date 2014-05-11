@@ -33,10 +33,6 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.loadAssetExchangeSidebar(callback);
 		}
-
-		$(window).on("resize", function() {
-			NRS.positionAssetSidebar();
-		});
 	}
 
 	NRS.positionAssetSidebar = function() {

@@ -109,6 +109,12 @@ var NRS = (function(NRS, $, undefined) {
 		}).on("mouseleave", "td.confirmations", function() {
 			$(this).popover("destroy");
 		});
+
+		$(window).on("resize.asset", function() {
+			if (NRS.currentPage == "asset_exchange") {
+				NRS.positionAssetSidebar();
+			}
+		});
 	}
 
 	NRS.getState = function(callback) {
