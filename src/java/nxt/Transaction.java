@@ -34,12 +34,7 @@ public interface Transaction extends Comparable<Transaction> {
 
     String getReferencedTransactionFullHash();
 
-    // remove after NQT_BLOCK
-    Long getReferencedTransactionId();
-
     byte[] getSignature();
-
-    String getHash();
 
     String getFullHash();
 

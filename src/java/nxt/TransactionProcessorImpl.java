@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -32,18 +31,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, TransactionImpl> unconfirmedTransactionHashes = new ConcurrentHashMap<>();
     private final Collection<TransactionImpl> allUnconfirmedTransactions = Collections.unmodifiableCollection(unconfirmedTransactions.values());
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
-    private static class TransactionHashInfo {
-        private final Long transactionId;
-        private final int expiration;
-        private TransactionHashInfo(Transaction transaction) {
-            this.transactionId = transaction.getId();
-            this.expiration = transaction.getExpiration();
-        }
-    }
-    private final ConcurrentMap<String, TransactionHashInfo> transactionHashes = new ConcurrentHashMap<>();
     private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
     private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
@@ -63,7 +52,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             TransactionImpl transaction = iterator.next();
                             if (transaction.getExpiration() < curTime) {
                                 iterator.remove();
-                                unconfirmedTransactionHashes.remove(transaction.getHash());
                                 transaction.undoUnconfirmed();
                                 removedUnconfirmedTransactions.add(transaction);
                             }
@@ -146,7 +134,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     if (transactionsData == null || transactionsData.size() == 0) {
                         return;
                     }
-                    processPeerTransactions(transactionsData, false);
+                    try {
+                        processPeerTransactions(transactionsData, false);
+                    } catch (RuntimeException e) {
+                        peer.blacklist(e);
+                    }
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error processing unconfirmed transactions from peer", e);
                 }
@@ -229,110 +221,71 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        try {
-            boolean useNQT = Nxt.getBlockchain().getLastBlock().getHeight() >= Constants.NQT_BLOCK;
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            byte type = buffer.get();
-            byte subtype = buffer.get();
-            int timestamp = buffer.getInt();
-            short deadline = buffer.getShort();
-            byte[] senderPublicKey = new byte[32];
-            buffer.get(senderPublicKey);
-            Long recipientId = buffer.getLong();
-            long amountNQT;
-            long feeNQT;
-            String referencedTransactionFullHash = null;
-            Long referencedTransactionId = null;
-            if (! useNQT) {
-                amountNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
-                feeNQT = ((long)buffer.getInt()) * Constants.ONE_NXT;
-                referencedTransactionId = Convert.zeroToNull(buffer.getLong());
-            } else {
-                amountNQT = buffer.getLong();
-                feeNQT = buffer.getLong();
-                byte[] referencedTransactionFullHashBytes = new byte[32];
-                buffer.get(referencedTransactionFullHashBytes);
-                if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-                    referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-                    referencedTransactionId = Convert.fullHashToId(referencedTransactionFullHash);
-                }
-            }
-            byte[] signature = new byte[64];
-            buffer.get(signature);
-            signature = Convert.emptyToNull(signature);
-
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction;
-            if (! useNQT) {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionId, signature);
-            } else {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionFullHash, signature);
-            }
-            transactionType.loadAttachment(transaction, buffer);
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            throw new NxtException.ValidationException(e.toString(), e);
+        byte type = buffer.get();
+        byte subtype = buffer.get();
+        int timestamp = buffer.getInt();
+        short deadline = buffer.getShort();
+        byte[] senderPublicKey = new byte[32];
+        buffer.get(senderPublicKey);
+        Long recipientId = buffer.getLong();
+        long amountNQT = buffer.getLong();
+        long feeNQT = buffer.getLong();
+        String referencedTransactionFullHash = null;
+        byte[] referencedTransactionFullHashBytes = new byte[32];
+        buffer.get(referencedTransactionFullHashBytes);
+        if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
+            referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
         }
+        byte[] signature = new byte[64];
+        buffer.get(signature);
+        signature = Convert.emptyToNull(signature);
+
+        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+        TransactionImpl transaction;
+        transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                amountNQT, feeNQT, referencedTransactionFullHash, signature);
+        transactionType.loadAttachment(transaction, buffer);
+
+        return transaction;
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
-
-        try {
-
-            byte type = ((Long)transactionData.get("type")).byteValue();
-            byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-            int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-            short deadline = ((Long)transactionData.get("deadline")).shortValue();
-            byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-            Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-            if (recipientId == null) recipientId = 0L; // ugly
-            long amountNQT;
-            long feeNQT;
-            if (transactionData.get("amountNQT") != null) {
-                amountNQT = ((Long) transactionData.get("amountNQT"));
-                feeNQT = ((Long) transactionData.get("feeNQT"));
-            } else {
-                amountNQT = Convert.safeMultiply(((Long) transactionData.get("amount")), Constants.ONE_NXT);
-                feeNQT = Convert.safeMultiply(((Long) transactionData.get("fee")), Constants.ONE_NXT);
+        byte type = ((Long)transactionData.get("type")).byteValue();
+        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
+        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
+        short deadline = ((Long)transactionData.get("deadline")).shortValue();
+        byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
+        Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
+        if (recipientId == null) recipientId = 0L; // ugly
+        long amountNQT = (Long) transactionData.get("amountNQT");
+        long feeNQT = (Long) transactionData.get("feeNQT");
+        String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
+        // ugly, remove later:
+        Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
+        if (referencedTransactionId != null && referencedTransactionFullHash == null) {
+            Transaction referencedTransaction = Nxt.getBlockchain().getTransaction(referencedTransactionId);
+            if (referencedTransaction != null) {
+                referencedTransactionFullHash = referencedTransaction.getFullHash();
             }
-            String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-            Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-            byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
-
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction;
-            if (referencedTransactionFullHash != null) {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionFullHash, signature);
-            } else {
-                transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                        amountNQT, feeNQT, referencedTransactionId, signature);
-            }
-
-            JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-
-            transactionType.loadAttachment(transaction, attachmentData);
-
-            return transaction;
-
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage(e.toString(), e);
-            throw new NxtException.ValidationException(e.toString());
         }
+        //
+        byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
+
+        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+        TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
+                amountNQT, feeNQT, referencedTransactionFullHash, signature);
+
+        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
+        transactionType.loadAttachment(transaction, attachmentData);
+        return transaction;
     }
 
     void clear() {
         unconfirmedTransactions.clear();
-        unconfirmedTransactionHashes.clear();
         nonBroadcastedTransactions.clear();
-        transactionHashes.clear();
     }
 
     void apply(BlockImpl block) {
@@ -344,49 +297,20 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             //TODO: Phaser not yet implemented
             //Phaser.processTransaction(transaction);
             transaction.apply();
-            transactionHashes.put(transaction.getHash(), new TransactionHashInfo(transaction));
         }
-        purgeExpiredHashes(block.getTimestamp());
     }
 
     void undo(BlockImpl block) throws TransactionType.UndoNotSupportedException {
         block.undo();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
-            TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
-            if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
-                transactionHashes.remove(transaction.getHash());
-            }
             unconfirmedTransactions.put(transaction.getId(), transaction);
-            unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
             transaction.undo();
             addedUnconfirmedTransactions.add(transaction);
         }
         if (addedUnconfirmedTransactions.size() > 0) {
             transactionListeners.notify(addedUnconfirmedTransactions, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
         }
-    }
-
-    TransactionImpl checkTransactionHashes(BlockImpl block) {
-        TransactionImpl duplicateTransaction = null;
-        for (TransactionImpl transaction : block.getTransactions()) {
-            if (transactionHashes.putIfAbsent(transaction.getHash(), new TransactionHashInfo(transaction)) != null && block.getHeight() != 58294) {
-                duplicateTransaction = transaction;
-                break;
-            }
-        }
-
-        if (duplicateTransaction != null) {
-            for (TransactionImpl transaction : block.getTransactions()) {
-                if (! transaction.equals(duplicateTransaction)) {
-                    TransactionHashInfo transactionHashInfo = transactionHashes.get(transaction.getHash());
-                    if (transactionHashInfo != null && transactionHashInfo.transactionId.equals(transaction.getId())) {
-                        transactionHashes.remove(transaction.getHash());
-                    }
-                }
-            }
-        }
-        return duplicateTransaction;
     }
 
     void updateUnconfirmedTransactions(BlockImpl block) {
@@ -397,7 +321,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             addedConfirmedTransactions.add(transaction);
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
-                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedUnconfirmedTransactions.add(removedTransaction);
             }
         }
@@ -408,7 +331,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             transaction.undoUnconfirmed();
             if (! transaction.applyUnconfirmed()) {
                 iterator.remove();
-                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedUnconfirmedTransactions.add(transaction);
                 transactionListeners.notify(Collections.singletonList((Transaction)transaction), Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
             }
@@ -428,7 +350,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         for (TransactionImpl transaction : transactions) {
             if (unconfirmedTransactions.remove(transaction.getId()) != null) {
                 transaction.undoUnconfirmed();
-                unconfirmedTransactionHashes.remove(transaction.getHash());
                 removedList.add(transaction);
             }
         }
@@ -437,15 +358,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void shutdown() {
         removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
-    }
-
-    private void purgeExpiredHashes(int blockTimestamp) {
-        Iterator<Map.Entry<String, TransactionHashInfo>> iterator = transactionHashes.entrySet().iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().getValue().expiration < blockTimestamp) {
-                iterator.remove();
-            }
-        }
     }
 
     private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) {
@@ -482,14 +394,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                 synchronized (BlockchainImpl.getInstance()) {
 
+                    if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
+                        break; // not ready to process transactions
+                    }
+
                     Long id = transaction.getId();
                     if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
                             || ! transaction.verify()) {
-                        continue;
-                    }
-
-                    if (transactionHashes.containsKey(transaction.getHash())
-                            || unconfirmedTransactionHashes.containsKey(transaction.getHash())) {
                         continue;
                     }
 
@@ -504,7 +415,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                         }
                         unconfirmedTransactions.put(id, transaction);
-                        unconfirmedTransactionHashes.put(transaction.getHash(), transaction);
                         addedUnconfirmedTransactions.add(transaction);
                     } else {
                         addedDoubleSpendingTransactions.add(transaction);
