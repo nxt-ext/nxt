@@ -444,11 +444,10 @@ var NRS = (function(NRS, $, undefined) {
 		//todo NRS.currentSubPageID ??...
 		NRS.sendRequest("getTrades+" + assetId, {
 			"asset": assetId,
-			"firstIndex": 0
+			"firstIndex": 0,
+			"lastIndex": 50
 		}, function(response, input) {
 			if (response.trades && response.trades.length) {
-				var trades = response.trades.reverse().slice(0, 50);
-
 				var rows = "";
 
 				for (var i = 0; i < trades.length; i++) {
