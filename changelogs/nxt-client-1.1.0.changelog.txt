@@ -25,6 +25,8 @@ transactions will only be created in NQT format now.
 
 More blacklisting of peers that cause RuntimeExceptions.
 
+Trades returned by getTrades API are now in reversed order, most recent first.
+
 Client Updates:
 
 Add unconfirmed transactions to dashboard immediately.
@@ -34,3 +36,4 @@ Show appropriate message during rescanning of blockchain.
 Limit trade history to last 50 trades.
 
 Show asset buy / sell notifications.
+
