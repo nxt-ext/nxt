@@ -252,7 +252,6 @@ final class JSONData {
         json.put("recipientRS", Convert.rsAccount(transaction.getRecipientId()));
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
-        json.put("referencedTransaction", Convert.toUnsignedLong(transaction.getReferencedTransactionId()));
         if (transaction.getReferencedTransactionFullHash() != null) {
             json.put("referencedTransactionFullHash", transaction.getReferencedTransactionFullHash());
         }
@@ -268,7 +267,6 @@ final class JSONData {
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
-        json.put("hash", transaction.getHash());
         json.put("height", transaction.getHeight());
         return json;
     }

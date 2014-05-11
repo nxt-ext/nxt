@@ -149,7 +149,7 @@ public abstract class TransactionType {
     // return false iff double spending
     final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
         long totalAmountNQT = Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT());
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             totalAmountNQT = Convert.safeAdd(totalAmountNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (senderAccount.getUnconfirmedBalanceNQT() < totalAmountNQT
@@ -168,7 +168,7 @@ public abstract class TransactionType {
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
         senderAccount.addToBalanceNQT(- (Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT())));
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         applyAttachment(transaction, senderAccount, recipientAccount);
@@ -178,7 +178,7 @@ public abstract class TransactionType {
 
     final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
         senderAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         undoAttachmentUnconfirmed(transaction, senderAccount);
@@ -188,7 +188,7 @@ public abstract class TransactionType {
 
     final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
         senderAccount.addToBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionId() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(- Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         undoAttachment(transaction, senderAccount, recipientAccount);
@@ -695,9 +695,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.NQT_BLOCK) {
-                    throw new NotYetEnabledException("Account info not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
