@@ -494,6 +494,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+					unconfirmedTransaction.order = unconfirmedTransaction.id;
 
 					if (unconfirmedTransaction.type == 2 && (type == "ask" ? unconfirmedTransaction.subtype == 2 : unconfirmedTransaction.subtype == 3) && unconfirmedTransaction.asset == assetId) {
 						orders.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
@@ -532,7 +533,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var className = (order.account == NRS.account ? "your-order" : "") + (order.unconfirmed ? " tentative" : (NRS.isUserCancelledOrder(order) ? " tentative tentative-crossed" : ""));
 
-					rows += "<tr class='" + className + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
+					rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'><td>" + (order.unconfirmed ? "You - <strong>Pending</strong>" : (order.account == NRS.account ? "<strong>You</strong>" : "<a href='#' data-user='" + NRS.getAccountFormatted(order, "account") + "' class='user_info'>" + (order.account == NRS.currentAsset.account ? "Asset Issuer" : NRS.getAccountTitle(order, "account")) + "</a>")) + "</td><td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td><td>" + NRS.formatAmount(order.totalNQT) + "</tr>";
 				}
 
 				$("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
@@ -892,6 +893,10 @@ var NRS = (function(NRS, $, undefined) {
 			var $table = $("#asset_exchange_bid_orders_table tbody");
 		} else {
 			var $table = $("#asset_exchange_ask_orders_table tbody");
+		}
+
+		if ($table.find("tr[data-transaction='" + String(response.transaction).escapeHTML() + "']").length) {
+			return;
 		}
 
 		var $rows = $table.find("tr");
