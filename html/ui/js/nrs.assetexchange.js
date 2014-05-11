@@ -33,6 +33,17 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.loadAssetExchangeSidebar(callback);
 		}
+
+		$(window).on("resize", function() {
+			NRS.positionAssetSidebar();
+		});
+	}
+
+	NRS.positionAssetSidebar = function() {
+		$("#asset_exchange_sidebar").parent().css("position", "relative");
+		$("#asset_exchange_sidebar").parent().css("padding-bottom", "5px");
+		$("#asset_exchange_sidebar_content").height($(window).height() - 120);
+		$("#asset_exchange_sidebar").height($(window).height() - 120);
 	}
 
 	NRS.loadAssetExchangeSidebar = function(callback) {
@@ -156,6 +167,8 @@ var NRS = (function(NRS, $, undefined) {
 	//called on opening the asset exchange page and automatic refresh
 	NRS.assetExchangeSidebarLoaded = function(callback) {
 		var rows = "";
+
+		NRS.positionAssetSidebar();
 
 		NRS.assets.sort(function(a, b) {
 			if ((!a.groupName && !b.groupName) || (a.groupName == "ignore list" && b.groupName == "ignore list")) {
