@@ -915,7 +915,9 @@ var NRS = (function(NRS, $, undefined) {
 					if ("transactionBytes" in original_response) {
 						delete original_response.transactionBytes;
 					}
+					original_response.broadcasted = true;
 					original_response.transaction = response.transaction;
+					original_response.fullHash = response.fullHash;
 					callback(original_response, original_data);
 				}
 			}
