@@ -421,9 +421,9 @@ var NRS = (function(NRS, $, undefined) {
 				var asset = NRS.accountInfo.unconfirmedAssetBalances[i];
 
 				if (asset.asset == assetId) {
-					NRS.currentAsset.yourBalanceNQT = asset.balanceQNT;
-					$("#your_asset_balance").html(NRS.formatQuantity(asset.balanceQNT, NRS.currentAsset.decimals));
-					if (asset.balanceQNT == "0") {
+					NRS.currentAsset.yourBalanceNQT = asset.unconfirmedBalanceQNT;
+					$("#your_asset_balance").html(NRS.formatQuantity(asset.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
+					if (asset.unconfirmedBalanceQNT == "0") {
 						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
 					} else {
 						$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
