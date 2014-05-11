@@ -58,10 +58,10 @@
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
 	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
-										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account RS</a></li>
-										<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
-										<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
+										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
+										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account RS</a></li>
+										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
+										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
 									</ul>
 								</div>
 	                            <a href="#" id="forging_indicator" class="forging" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span>Forging</span></a>
@@ -567,8 +567,8 @@
 					                        	<span id="asset_id_dropdown" class="dropdown" style="margin-bottom:0;">
 					                        		<strong>Asset Id</strong>: &nbsp;<a href="#" id="asset_id" class="dropdown-toggle" data-toggle="dropdown"></a>
 													<ul class="dropdown-menu" role="menu" style="right:0;left:auto;text-align:left;">
-														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id">Copy Asset ID</a></li>
-														<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link">Copy Asset Link</a></li>
+														<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id">Copy Asset ID</a></li>
+														<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link">Copy Asset Link</a></li>
 													</ul>
 												</span>
 							            	</div>
@@ -1771,7 +1771,6 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="issue_asset_name">ASSET NAME <i class="fa fa-question-circle show_popover" data-content="The asset name is non-unique. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
-</label>
 								<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Asset Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
