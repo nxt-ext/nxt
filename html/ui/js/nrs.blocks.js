@@ -19,6 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.handleInitialBlocks = function(response) {
 		if (response.errorCode) {
+			NRS.dataLoadFinished($("#dashboard_blocks_table"));
 			return;
 		}
 
@@ -232,10 +233,15 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.downloadingBlockchain) {
 					NRS.blocksPageLoaded(NRS.blocks);
 				} else {
-					var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
-					//if previous block is undefined, dont try add it
-					if (typeof previousBlock !== "undefined")
-						NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
+					if (NRS.blocks && NRS.blocks.length) {
+						var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
+						//if previous block is undefined, dont try add it
+						if (typeof previousBlock !== "undefined") {
+							NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
+						}
+					} else {
+						NRS.blocksPageLoaded([]);
+					}
 				}
 			} else {
 				NRS.blocksPageLoaded(NRS.blocks);
@@ -309,7 +315,11 @@ var NRS = (function(NRS, $, undefined) {
 			$("#forged_blocks_total").html(blockCount).removeClass("loading_dots");
 			$("#forged_fees_total").html(NRS.formatStyledAmount(NRS.accountInfo.forgedBalanceNQT)).removeClass("loading_dots");
 		} else {
-			$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
+			if (time == 0) {
+				$("#blocks_transactions_per_hour").html("0").removeClass("loading_dots");
+			} else {
+				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
+			}
 			$("#blocks_average_generation_time").html(Math.round(time / 100) + "s").removeClass("loading_dots");
 		}
 

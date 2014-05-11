@@ -206,8 +206,6 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.assignAliasComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		if (NRS.currentPage == "aliases") {
 			var $table = $("#aliases_table tbody");
 

@@ -157,7 +157,7 @@ var NRS = (function(NRS, $, undefined) {
 					$modal.find(".error_message").html(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.").show();
 				}
 				NRS.unlockForm($modal, $btn);
-			} else if (response.hash) {
+			} else if (response.fullHash) {
 				//should we add a fake transaction to the recent transactions?? or just wait until the next block comes!??
 				NRS.unlockForm($modal, $btn);
 
@@ -169,6 +169,10 @@ var NRS = (function(NRS, $, undefined) {
 					$.growl(successMessage.escapeHTML(), {
 						type: 'success'
 					});
+				}
+
+				if (response.transaction) {
+					NRS.addUnconfirmedTransaction(response.transaction);
 				}
 
 				var formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
