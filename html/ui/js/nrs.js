@@ -547,7 +547,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (!(k in current_balances_)) {
 				diff[k] = "-" + previous_balances_[k];
 			} else if (previous_balances_[k] !== current_balances_[k]) {
-				var change = new BigInteger(current_balances_[k]).substract(new BigInteger(previous_balances_[k])).toString();
+				var change = (new BigInteger(current_balances_[k]).subtract(new BigInteger(previous_balances_[k]))).toString();
 				diff[k] = change;
 			}
 		}
