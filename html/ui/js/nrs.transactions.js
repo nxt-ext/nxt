@@ -302,7 +302,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				NRS.unconfirmedTransactions.push(response);
+				NRS.unconfirmedTransactions.unshift(response);
 				NRS.incoming.updateDashboardTransactions(NRS.unconfirmedTransactions, true);
 
 				NRS.getAccountInfo();
