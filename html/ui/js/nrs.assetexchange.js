@@ -448,6 +448,8 @@ var NRS = (function(NRS, $, undefined) {
 			"lastIndex": 50
 		}, function(response, input) {
 			if (response.trades && response.trades.length) {
+				var trades = response.trades;
+
 				var rows = "";
 
 				for (var i = 0; i < trades.length; i++) {
