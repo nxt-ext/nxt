@@ -1790,17 +1790,15 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_6) {
-                    throw new NotYetEnabledException("Effective balance leasing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
                 Account recipientAccount = Account.getAccount(transaction.getRecipientId());
                 if (transaction.getRecipientId().equals(transaction.getSenderId())
                         || transaction.getAmountNQT() != 0
                         || attachment.getPeriod() < 1440
                         || recipientAccount == null
-                        || recipientAccount.getPublicKey() == null) {
-                    throw new NxtException.ValidationException("Invalid effective balance leasing: " + attachment.getJSONObject());
+                        || (recipientAccount.getPublicKey() == null && ! transaction.getStringId().equals("5081403377391821646"))) {
+                    throw new NxtException.ValidationException("Invalid effective balance leasing: "
+                            + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
             }
 
