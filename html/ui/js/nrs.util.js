@@ -396,7 +396,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (parts.length == 1) {
 			var fraction = "00000000";
 		} else if (parts.length == 2) {
-			var fraction = parts[1];
+			if (parts[1].length <= 8) {
+				var fraction = parts[1];
+			} else {
+				var fraction = parts[1].substring(0, 8);
+			}
 		} else {
 			throw "Invalid input";
 		}

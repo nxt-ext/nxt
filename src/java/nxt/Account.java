@@ -233,6 +233,9 @@ public final class Account {
     }
 
     public synchronized byte[] getPublicKey() {
+        if (this.keyHeight == -1) {
+            return null;
+        }
         return publicKey;
     }
 
