@@ -54,8 +54,6 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		if (!(data["_extra"] && data["_extra"].convertedAccount) && !(data.recipient in NRS.contacts)) {
 			$.growl("NXT has been sent! <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
 				"type": "success"

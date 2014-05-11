@@ -140,8 +140,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.createPollComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		if (NRS.currentPage == "polls") {
 			var $table = $("#polls_table tbody");
 

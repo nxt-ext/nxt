@@ -48,7 +48,7 @@ final class BlockImpl implements Block {
             throw new NxtException.ValidationException("attempted to create a block with " + transactions.size() + " transactions");
         }
 
-        if (payloadLength > Constants.MAX_NUMBER_OF_TRANSACTIONS * (version < 3 ? 128 : 160)|| payloadLength < 0) {
+        if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
             throw new NxtException.ValidationException("attempted to create a block with payloadLength " + payloadLength);
         }
 
@@ -78,9 +78,10 @@ final class BlockImpl implements Block {
 
     }
 
-    BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength, byte[] payloadHash,
-              byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature, byte[] previousBlockHash, List<TransactionImpl> transactions,
-              BigInteger cumulativeDifficulty, long baseTarget, Long nextBlockId, int height, Long id)
+    BlockImpl(int version, int timestamp, Long previousBlockId, long totalAmountNQT, long totalFeeNQT, int payloadLength,
+              byte[] payloadHash, byte[] generatorPublicKey, byte[] generationSignature, byte[] blockSignature,
+              byte[] previousBlockHash, List<TransactionImpl> transactions, BigInteger cumulativeDifficulty,
+              long baseTarget, Long nextBlockId, int height, Long id)
             throws NxtException.ValidationException {
         this(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                 generatorPublicKey, generationSignature, blockSignature, previousBlockHash, transactions);
@@ -228,10 +229,6 @@ final class BlockImpl implements Block {
         json.put("version", version);
         json.put("timestamp", timestamp);
         json.put("previousBlock", Convert.toUnsignedLong(previousBlockId));
-        if (version < 3) {
-            json.put("totalAmount", totalAmountNQT / Constants.ONE_NXT);
-            json.put("totalFee", totalFeeNQT / Constants.ONE_NXT);
-        }
         json.put("totalAmountNQT", totalAmountNQT);
         json.put("totalFeeNQT", totalFeeNQT);
         json.put("payloadLength", payloadLength);

@@ -745,7 +745,7 @@ var NRS = (function(NRS, $, undefined) {
 		var elements = "#asset_id_dropdown .dropdown-menu a, #account_id_dropdown .dropdown-menu a";
 
 		if (NRS.isLocalHost) {
-			$("#account_id_dropdown li.remote_only").remove();
+			$("#account_id_dropdown li.remote_only, #asset_info_dropdown li.remote_only").remove();
 		}
 
 		var $el = $(elements);
@@ -782,12 +782,16 @@ var NRS = (function(NRS, $, undefined) {
 			});
 
 			clipboard.on("noflash", function(client, args) {
+				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+				$("#account_id_dropdown, #asset_id").data("toggle", "");
 				$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {
 					"type": "danger"
 				});
 			});
 
 			clipboard.on("wrongflash", function(client, args) {
+				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+				$("#account_id_dropdown, #asset_id").data("toggle", "");
 				$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
 			});
 		}

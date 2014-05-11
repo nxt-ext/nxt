@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.crypto.Crypto;
-import nxt.util.Convert;
 import nxt.util.DbIterator;
 import nxt.util.Logger;
 
@@ -10,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 
 final class DbVersion {
 
@@ -111,22 +111,9 @@ final class DbVersion {
             case 19:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS hash BINARY(32)");
             case 20:
-                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
-                     Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET hash = ? WHERE id = ?")) {
-                    while (iterator.hasNext()) {
-                        Transaction transaction = iterator.next();
-                        pstmt.setBytes(1, Convert.parseHexString(transaction.getHash()));
-                        pstmt.setLong(2, transaction.getId());
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
                 apply(null);
             case 21:
-                apply("ALTER TABLE transaction ALTER COLUMN hash SET NOT NULL");
+                apply(null);
             case 22:
                 apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
             case 23:
@@ -233,13 +220,46 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
             case 43:
                 apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
-                + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
+                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
             case 44:
                 apply(null);
             case 45:
                 BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 46:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
+            case 47:
+                try (Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET attachment_bytes = ? where db_id = ?");
+                     Statement stmt = con.createStatement()) {
+                    ResultSet rs = stmt.executeQuery("SELECT * FROM transaction");
+                    while (rs.next()) {
+                        long dbId = rs.getLong("db_id");
+                        Attachment attachment = (Attachment)rs.getObject("attachment");
+                        if (attachment != null) {
+                            pstmt.setBytes(1, attachment.getBytes());
+                        } else {
+                            pstmt.setNull(1, Types.VARBINARY);
+                        }
+                        pstmt.setLong(2, dbId);
+                        pstmt.executeUpdate();
+                    }
+                    con.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 48:
+                apply("ALTER TABLE transaction DROP COLUMN attachment");
+            case 49:
+                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
+                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id) "
+                        + "WHERE a.referenced_transaction_full_hash IS NULL");
+            case 50:
+                apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
+            case 51:
+                apply("ALTER TABLE transaction DROP COLUMN hash");
+            case 52:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
