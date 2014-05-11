@@ -171,6 +171,10 @@ var NRS = (function(NRS, $, undefined) {
 					});
 				}
 
+				if (response.transaction) {
+					NRS.addUnconfirmedTransaction(response.transaction);
+				}
+
 				var formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
 				if (typeof formCompleteFunction == 'function') {

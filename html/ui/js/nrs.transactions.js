@@ -302,7 +302,19 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				NRS.unconfirmedTransactions.unshift(response);
+				var alreadyAdded = false;
+
+				$.each(NRS.unconfirmedTransactions, function(key, unconfirmedTransaction) {
+					if (unconfirmedTransaction.transaction == transactionId) {
+						alreadyAdded = true;
+						return false;
+					}
+				});
+
+				if (!alreadyAdded) {
+					NRS.unconfirmedTransactions.unshift(response);
+				}
+
 				NRS.incoming.updateDashboardTransactions(NRS.unconfirmedTransactions, true);
 
 				NRS.getAccountInfo();

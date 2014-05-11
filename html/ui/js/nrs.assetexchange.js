@@ -888,8 +888,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.orderAssetComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		if (data.requestType == "placeBidOrder") {
 			var $table = $("#asset_exchange_bid_orders_table tbody");
 		} else {
@@ -1361,7 +1359,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.transferAssetComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
 		NRS.pages.my_assets();
 	}
 
@@ -1636,8 +1633,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.cancelOrderComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
 	}
 

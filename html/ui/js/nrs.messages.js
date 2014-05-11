@@ -451,8 +451,6 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.sendMessageComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		data.message = data._extra.message;
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
