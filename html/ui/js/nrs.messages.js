@@ -430,7 +430,7 @@ var NRS = (function(NRS, $, undefined) {
 				$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", {
 					type: "danger"
 				});
-			} else if (response.hash) {
+			} else if (response.fullHash) {
 				NRS.addUnconfirmedTransaction(response.transaction);
 
 				$.growl("Message sent.", {
