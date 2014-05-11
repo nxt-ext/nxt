@@ -693,6 +693,14 @@ var NRS = (function(NRS, $, undefined) {
 				total = quantity.times(price);
 			}
 
+			if (type == "sell") {
+				var maxUserQuantity = new Big(NRS.convertToQNTf(balance, NRS.currentAsset.decimals));
+				if (quantity.cmp(maxUserQuantity) == 1) {
+					quantity = maxUserQuantity;
+					total = quantity.times(price);
+				}
+			}
+
 			$("#" + type + "_asset_quantity").val(quantity.toString());
 			$("#" + type + "_asset_total").val(NRS.convertToNXT(total.toString()));
 
