@@ -232,10 +232,13 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.downloadingBlockchain) {
 					NRS.blocksPageLoaded(NRS.blocks);
 				} else {
-					var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
-					//if previous block is undefined, dont try add it
-					if (typeof previousBlock !== "undefined")
-						NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
+					if (NRS.blocks && NRS.blocks.length) {
+						var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
+						//if previous block is undefined, dont try add it
+						if (typeof previousBlock !== "undefined") {
+							NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
+						}
+					}
 				}
 			} else {
 				NRS.blocksPageLoaded(NRS.blocks);
