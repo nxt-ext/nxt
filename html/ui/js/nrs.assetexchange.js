@@ -1378,6 +1378,8 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.goToAsset = function(asset) {
+		NRS.assetSearch = false;
+
 		$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
 		$("#no_asset_selected, #asset_details, #no_assets_available").hide();
 		$("#loading_asset_data").show();
