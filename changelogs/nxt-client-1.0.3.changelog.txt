@@ -1,0 +1,12 @@
+Account.getPublicKey() should return null if the key has not yet been included
+in a block. Related to blockchain download stuck at height 133933 bug.
+
+Increased default timeouts in nxt-default.properties.
+
+Client UI:
+
+Fixed NQT parse error.
+
+Fixed scrollbar issue in asset exchange.
+
+
