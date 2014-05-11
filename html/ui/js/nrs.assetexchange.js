@@ -408,42 +408,35 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		//todo: is this necessary, can we remove it? 
-		NRS.sendRequest("getAccount+" + assetId, {
-			"account": NRS.account
-		}, function(response) {
-			NRS.accountInfo.unconfirmedBalanceNQT = response.unconfirmedBalanceNQT;
+		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
+			$("#your_nxt_balance").html("0");
+			$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
+		} else {
+			$("#your_nxt_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalanceNQT));
+			$("#buy_automatic_price").addClass("nonzero").removeClass("zero");
+		}
 
-			if (response.unconfirmedBalanceNQT == "0") {
-				$("#your_nxt_balance").html("0");
-				$("#buy_automatic_price").addClass("zero").removeClass("nonzero");
-			} else {
-				$("#your_nxt_balance").html(NRS.formatAmount(response.unconfirmedBalanceNQT));
-				$("#buy_automatic_price").addClass("nonzero").removeClass("zero");
-			}
+		if (NRS.accountInfo.unconfirmedAssetBalances) {
+			for (var i = 0; i < NRS.accountInfo.unconfirmedAssetBalances.length; i++) {
+				var asset = NRS.accountInfo.unconfirmedAssetBalances[i];
 
-			if (response.assetBalances) {
-				for (var i = 0; i < response.assetBalances.length; i++) {
-					var asset = response.assetBalances[i];
-
-					if (asset.asset == assetId) {
-						NRS.currentAsset.yourBalanceNQT = asset.balanceQNT;
-						$("#your_asset_balance").html(NRS.formatQuantity(asset.balanceQNT, NRS.currentAsset.decimals));
-						if (asset.balanceQNT == "0") {
-							$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
-						} else {
-							$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
-						}
-						break;
+				if (asset.asset == assetId) {
+					NRS.currentAsset.yourBalanceNQT = asset.balanceQNT;
+					$("#your_asset_balance").html(NRS.formatQuantity(asset.balanceQNT, NRS.currentAsset.decimals));
+					if (asset.balanceQNT == "0") {
+						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
+					} else {
+						$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
 					}
+					break;
 				}
 			}
+		}
 
-			if (!NRS.currentAsset.yourBalanceNQT) {
-				NRS.currentAsset.yourBalanceNQT = "0";
-				$("#your_asset_balance").html("0");
-			}
-		});
+		if (!NRS.currentAsset.yourBalanceNQT) {
+			NRS.currentAsset.yourBalanceNQT = "0";
+			$("#your_asset_balance").html("0");
+		}
 
 		NRS.loadAssetOrders("ask", assetId, refresh);
 		NRS.loadAssetOrders("bid", assetId, refresh);
