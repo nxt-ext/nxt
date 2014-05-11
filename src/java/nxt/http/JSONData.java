@@ -216,6 +216,7 @@ final class JSONData {
         }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
+        json.put("height", transaction.getHeight());
         return json;
     }
 

@@ -1793,8 +1793,9 @@ public abstract class TransactionType {
                         || transaction.getAmountNQT() != 0
                         || attachment.getPeriod() < 1440
                         || recipientAccount == null
-                        || recipientAccount.getPublicKey() == null) {
-                    throw new NxtException.ValidationException("Invalid effective balance leasing: " + attachment.getJSONObject());
+                        || (recipientAccount.getPublicKey() == null && ! transaction.getStringId().equals("5081403377391821646"))) {
+                    throw new NxtException.ValidationException("Invalid effective balance leasing: "
+                            + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
             }
 

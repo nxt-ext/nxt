@@ -35,6 +35,13 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.positionAssetSidebar = function() {
+		$("#asset_exchange_sidebar").parent().css("position", "relative");
+		$("#asset_exchange_sidebar").parent().css("padding-bottom", "5px");
+		$("#asset_exchange_sidebar_content").height($(window).height() - 120);
+		$("#asset_exchange_sidebar").height($(window).height() - 120);
+	}
+
 	NRS.loadAssetExchangeSidebar = function(callback) {
 		if (!NRS.assets.length) {
 			//this is done if we have no assets in the database.. get all of them at once.	
@@ -156,6 +163,8 @@ var NRS = (function(NRS, $, undefined) {
 	//called on opening the asset exchange page and automatic refresh
 	NRS.assetExchangeSidebarLoaded = function(callback) {
 		var rows = "";
+
+		NRS.positionAssetSidebar();
 
 		NRS.assets.sort(function(a, b) {
 			if ((!a.groupName && !b.groupName) || (a.groupName == "ignore list" && b.groupName == "ignore list")) {
