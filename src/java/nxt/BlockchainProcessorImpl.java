@@ -114,6 +114,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Long currentBlockId = commonBlockId;
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
+                    boolean processedAll = true;
                     outer:
                     while (true) {
 
@@ -132,6 +133,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 } catch (NxtException.ValidationException e) {
                                     Logger.logDebugMessage("Cannot validate block: " + e.toString()
                                             + ", will try again later", e);
+                                    processedAll = false;
                                     break outer;
                                 } catch (RuntimeException e) {
                                     Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
@@ -157,7 +159,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                     }
 
-                    if (blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
+                    if (forkBlocks.size() > 0) {
+                        processedAll = false;
+                    }
+
+                    if (! processedAll && blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
                         processFork(peer, forkBlocks, commonBlock);
                     }
 
