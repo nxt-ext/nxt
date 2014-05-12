@@ -35,7 +35,7 @@
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal">Send Message</a></li>
 	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#generate_token_modal">Generate Token</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
-                        <li class="dropdown">
+                        <li class="dropdown" id="logout_button_container">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
                                 <i class="fa fa-power-off"></i>
                             </a>
@@ -79,7 +79,7 @@
                     <ul class="sidebar-menu">
                         <li class="active" id="dashboard_link"><a href="#" data-page="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
                         <li><a href="#" data-page="transactions"><i class="fa fa-briefcase"></i> <span>Transactions</span></a></li>
-                        <li class="treeview testnet_only" id="sidebar_asset_exchange">
+                        <li class="treeview" id="sidebar_asset_exchange">
                         	<a href="#" data-page="asset_exchange"><i class="fa fa-signal"></i><span>Asset Exchange</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> Asset Exchange</a></li>
@@ -560,7 +560,7 @@
 						         		<div id="no_asset_selected" style="padding-top: 150px;text-align:center;">Please select an asset in the left sidebar.</div>
 						         		<div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;">Asset data loading, please wait...<br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 						         		<div id="asset_details" style="display:none;">
-							            	<div class="alert alert-danger alert-no-icon" id="asset_exchange_duplicates_warning" style="display:none"><strong>Warning</strong>: There are <span></span> with the same name in the asset exchange. Please make sure you choose the right one. Look at the account and asset id for confirmation.</div>
+							            	<div class="alert alert-danger alert-no-icon" id="asset_exchange_duplicates_warning" style="display:none"><strong>Warning</strong>: There <span></span> with the same name in the asset exchange. Please make sure you choose the right one. Look at the account and asset id for confirmation.</div>
 
 							            	<div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
 							            		<strong>Account</strong>: <span id="asset_account"></span><br />
