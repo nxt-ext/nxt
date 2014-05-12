@@ -16,7 +16,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.settings = {};
 	NRS.contacts = {};
 
-	NRS.useNQT = false;
 	NRS.isTestNet = false;
 	NRS.isLocalHost = false;
 	NRS.isForging = false;
@@ -43,8 +42,6 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.isTestNet = true;
 			$(".testnet_only, #testnet_login, #testnet_warning").show();
 		}
-
-		NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
 
 		if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
 			if (!$("#sidebar_asset_exchange").is(":visible")) {
