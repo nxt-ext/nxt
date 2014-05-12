@@ -632,10 +632,10 @@
 		};
 
 		_setValue = function(table, column, value) {
-			if (_schema[table][column] === "NUMBER") {
+			if (_schema[table][column] === "NUMBER" && /^\d+$/.test(value)) {
 				return value;
 			} else {
-				return "'" + (String(value).replace("'", "''")) + "'";
+				return "'" + (String(value).replace(/'/g, "''")) + "'";
 			}
 		};
 

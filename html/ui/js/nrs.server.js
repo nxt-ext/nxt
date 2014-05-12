@@ -244,11 +244,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					return;
 				} else {
-					if (NRS.useNQT) {
-						var payload = response.unsignedTransactionBytes.substr(0, 192) + signature + response.unsignedTransactionBytes.substr(320);
-					} else {
-						var payload = response.unsignedTransactionBytes.substr(0, 128) + signature + response.unsignedTransactionBytes.substr(256);
-					}
+					var payload = response.unsignedTransactionBytes.substr(0, 192) + signature + response.unsignedTransactionBytes.substr(320);
 
 					if (!NRS.verifyTransactionBytes(payload, requestType, data)) {
 						if (callback) {
@@ -325,25 +321,15 @@ var NRS = (function(NRS, $, undefined) {
 		transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
 		transaction.senderPublicKey = converters.byteArrayToHexString(byteArray.slice(8, 40));
 		transaction.recipient = String(converters.byteArrayToBigInteger(byteArray, 40));
-		if (NRS.useNQT) {
-			transaction.amountNQT = String(converters.byteArrayToBigInteger(byteArray, 48));
-			transaction.feeNQT = String(converters.byteArrayToBigInteger(byteArray, 56));
+		transaction.amountNQT = String(converters.byteArrayToBigInteger(byteArray, 48));
+		transaction.feeNQT = String(converters.byteArrayToBigInteger(byteArray, 56));
 
-			//incorrect?..
-			var refHash = byteArray.slice(64, 96);
-			transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
-			if (transaction.referencedTransactionFullHash == "0") {
-				transaction.referencedTransactionFullHash = null;
-			} else {
-				transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
-			}
+		var refHash = byteArray.slice(64, 96);
+		transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
+		if (transaction.referencedTransactionFullHash == "0") {
+			transaction.referencedTransactionFullHash = null;
 		} else {
-			transaction.amountNQT = NRS.convertToNQT(String(converters.byteArrayToSignedInt32(byteArray, 48)));
-			transaction.feeNQT = NRS.convertToNQT(String(converters.byteArrayToSignedInt32(byteArray, 52)));
-			transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, 56));
-			if (transaction.referencedTransaction == "0") {
-				transaction.referencedTransaction = null;
-			}
+			transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
 		}
 
 		if (!("amountNQT" in data)) {
@@ -368,24 +354,14 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 
-		if (NRS.useNQT) {
-			if ("referencedTransactionFullHash" in data && transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
-				return false;
-			}
-			if ("referencedTransactionId" in data && transaction.referencedTransactionId !== data.referencedTransactionId) {
-				return false;
-			}
-		} else {
-			if ("referencedTransaction" in data && transaction.referencedTransaction !== data.referencedTransaction) {
-				return false;
-			}
+		if ("referencedTransactionFullHash" in data && transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
+			return false;
+		}
+		if ("referencedTransactionId" in data && transaction.referencedTransactionId !== data.referencedTransactionId) {
+			return false;
 		}
 
-		var pos = 128;
-
-		if (NRS.useNQT) {
-			pos += 32;
-		}
+		var pos = 160;
 
 		switch (requestType) {
 			case "sendMoney":

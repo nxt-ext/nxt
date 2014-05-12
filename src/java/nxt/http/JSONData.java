@@ -40,12 +40,14 @@ final class JSONData {
             json.put("unconfirmedBalanceNQT", "0");
             json.put("effectiveBalanceNXT", "0");
             json.put("forgedBalanceNQT", "0");
+            json.put("guaranteedBalanceNQT", "0");
         } else {
             synchronized (account) { // to make sure balance and unconfirmedBalance are consistent
                 json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
                 json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
                 json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
                 json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
             }
         }
         return json;

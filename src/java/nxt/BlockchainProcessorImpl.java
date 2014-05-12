@@ -157,7 +157,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                     }
 
-                    if (! forkBlocks.isEmpty() && blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
+                    if (blockchain.getLastBlock().getHeight() - commonBlock.getHeight() < 720) {
                         processFork(peer, forkBlocks, commonBlock);
                     }
 

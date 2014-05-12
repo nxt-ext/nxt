@@ -257,6 +257,12 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	$("#logout_button_container").on("show.bs.dropdown", function(e) {
+		if (!NRS.isForging) {
+			e.preventDefault();
+		}
+	});
+
 	NRS.showLockscreen = function() {
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			setTimeout(function() {
