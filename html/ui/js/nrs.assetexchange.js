@@ -401,7 +401,7 @@ var NRS = (function(NRS, $, undefined) {
 			});
 
 			if (nrDuplicates >= 1) {
-				$("#asset_exchange_duplicates_warning span").html(nrDuplicates + " " + (nrDuplicates == 1 ? "other asset" : "other assets"));
+				$("#asset_exchange_duplicates_warning span").html((nrDuplicates == 1 ? " is " : " are ") + nrDuplicates + " " + (nrDuplicates == 1 ? "other asset" : "other assets"));
 				$("#asset_exchange_duplicates_warning").show();
 			} else {
 				$("#asset_exchange_duplicates_warning").hide();
