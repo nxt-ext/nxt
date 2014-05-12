@@ -182,7 +182,7 @@ public final class DebugTrace {
         for (Long accountId : accountIds) {
             Account account = Account.getAccount(accountId);
             if (account != null) {
-                for (Long lessorId : account.getLeaserIds()) {
+                for (Long lessorId : account.getLessorIds()) {
                     log(lessorGuaranteedBalance(lessorId, accountId));
                 }
             }

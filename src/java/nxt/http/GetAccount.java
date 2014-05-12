@@ -47,12 +47,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                     response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
                 }
             }
-            if (!account.getLeaserIds().isEmpty()) {
-                JSONArray leaserIds = new JSONArray();
-                for (Long leaserId : account.getLeaserIds()) {
-                    leaserIds.add(Convert.toUnsignedLong(leaserId));
+            if (!account.getLessorIds().isEmpty()) {
+                JSONArray lessorIds = new JSONArray();
+                for (Long lessorId : account.getLessorIds()) {
+                    lessorIds.add(Convert.toUnsignedLong(lessorId));
                 }
-                response.put("lessors", leaserIds);
+                response.put("lessors", lessorIds);
             }
 
             JSONArray assetBalances = new JSONArray();
