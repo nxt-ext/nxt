@@ -43,12 +43,6 @@ var NRS = (function(NRS, $, undefined) {
 			$(".testnet_only, #testnet_login, #testnet_warning").show();
 		}
 
-		if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-			if (!$("#sidebar_asset_exchange").is(":visible")) {
-				$("#sidebar_asset_exchange").show();
-			}
-		}
-
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);

@@ -30,12 +30,6 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
-			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-				if (!$("#sidebar_asset_exchange").is(":visible")) {
-					$("#sidebar_asset_exchange").show();
-				}
-			}
-
 			//if no new blocks in 24 hours, show blockchain download progress..
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 24) {
 				NRS.downloadingBlockchain = true;
@@ -89,12 +83,6 @@ var NRS = (function(NRS, $, undefined) {
 
 			//set new last block height
 			NRS.lastBlockHeight = NRS.blocks[0].height;
-
-			if (!NRS.isTestNet && NRS.lastBlockHeight >= 135000) {
-				if (!$("#sidebar_asset_exchange").is(":visible")) {
-					$("#sidebar_asset_exchange").show();
-				}
-			}
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
