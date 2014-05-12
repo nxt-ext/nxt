@@ -26,7 +26,7 @@ final class DbVersion {
                     throw new RuntimeException("Invalid version table");
                 }
                 rs.close();
-                Logger.logMessage("Database is at level " + (nextUpdate - 1));
+                Logger.logMessage("Database update may take a while if needed, current db version " + (nextUpdate - 1) + "...");
             } catch (SQLException e) {
                 Logger.logMessage("Initializing an empty database");
                 stmt.executeUpdate("CREATE TABLE version (next_update INT NOT NULL)");
