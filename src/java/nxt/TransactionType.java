@@ -800,9 +800,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
@@ -909,9 +906,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0
                         || attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH
@@ -948,9 +942,6 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
@@ -1093,9 +1084,6 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-                    throw new NotYetEnabledException("Asset Exchange not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0) {
                     throw new NxtException.ValidationException("Invalid asset order cancellation amount or recipient");
                 }
