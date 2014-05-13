@@ -18,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 				$.each(assets, function(index, asset) {
 					NRS.assetIds.push(asset.asset);
 					NRS.assets.push({
-						"id": asset.asset,
+						"asset": asset.asset,
 						"name": asset.name.toLowerCase(),
 						"groupName": asset.groupName.toLowerCase(),
 						"account": asset.account,
@@ -208,7 +208,7 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < NRS.assets.length; i++) {
 			var asset = NRS.assets[i];
 
-			if (isSearch && NRS.assetSearch.indexOf(asset.id) == -1) {
+			if (isSearch && NRS.assetSearch.indexOf(asset.asset) == -1) {
 				continue;
 			} else {
 				searchResults++;
@@ -237,14 +237,14 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (NRS.accountInfo.assetBalances) {
 				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
-					if (assetBalance.asset == asset.id && assetBalance.balanceQNT != "0") {
+					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
 						ownsAsset = true;
 						return false;
 					}
 				});
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : "") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : "") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
@@ -417,7 +417,7 @@ var NRS = (function(NRS, $, undefined) {
 			var nrDuplicates = 0;
 
 			$.each(NRS.assets, function(key, singleAsset) {
-				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.id != assetId) {
+				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.asset != assetId) {
 					nrDuplicates++;
 				}
 			});
@@ -510,7 +510,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-					unconfirmedTransaction.order = unconfirmedTransaction.id;
+					unconfirmedTransaction.order = unconfirmedTransaction.transaction;
 
 					if (unconfirmedTransaction.type == 2 && (type == "ask" ? unconfirmedTransaction.subtype == 2 : unconfirmedTransaction.subtype == 3) && unconfirmedTransaction.asset == assetId) {
 						orders.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
@@ -594,13 +594,13 @@ var NRS = (function(NRS, $, undefined) {
 			if (/NXT\-/i.test(input)) {
 				$.each(NRS.assets, function(key, asset) {
 					if (asset.accountRS == input) {
-						NRS.assetSearch.push(asset.id);
+						NRS.assetSearch.push(asset.asset);
 					}
 				});
 			} else {
 				$.each(NRS.assets, function(key, asset) {
-					if (asset.account == input || asset.id == input || asset.name.indexOf(input) !== -1) {
-						NRS.assetSearch.push(asset.id);
+					if (asset.account == input || asset.asset == input || asset.name.indexOf(input) !== -1) {
+						NRS.assetSearch.push(asset.asset);
 					}
 				});
 			}
@@ -1540,7 +1540,7 @@ var NRS = (function(NRS, $, undefined) {
 						"assetName": "",
 						"decimals": 0,
 						"height": 0,
-						"order": unconfirmedTransaction.id,
+						"order": unconfirmedTransaction.transaction,
 						"priceNQT": unconfirmedTransaction.attachment.priceNQT,
 						"quantityQNT": unconfirmedTransaction.attachment.quantityQNT,
 						"tentative": true

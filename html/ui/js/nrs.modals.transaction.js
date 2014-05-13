@@ -23,7 +23,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.sendRequest("getTransaction", {
 				"transaction": transaction
 			}, function(response, input) {
-				response.id = input.transaction;
+				response.transaction = input.transaction;
 				NRS.processTransactionModalData(response);
 			});
 		} else {
@@ -39,9 +39,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (transactionDetails.referencedTransaction == "0") {
 			delete transactionDetails.referencedTransaction;
 		}
-		delete transactionDetails.id;
+		delete transactionDetails.transaction;
 
-		$("#transaction_info_modal_transaction").html(String(transaction.id).escapeHTML());
+		$("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
 
 		$("#transaction_info_tab_link").tab("show");
 
@@ -196,7 +196,7 @@ var NRS = (function(NRS, $, undefined) {
 						data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
-					$("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.id).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
+					$("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();

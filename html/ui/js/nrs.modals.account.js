@@ -17,7 +17,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (typeof account == "object") {
-			NRS.userInfoModal.user = account.id;
+			NRS.userInfoModal.user = account.account;
 		} else {
 			NRS.userInfoModal.user = account;
 			NRS.fetchingModalData = true;
