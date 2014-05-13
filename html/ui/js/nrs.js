@@ -584,7 +584,7 @@ var NRS = (function(NRS, $, undefined) {
 
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
+						$.growl("You sold or transferred <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
 					}
