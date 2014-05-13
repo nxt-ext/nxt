@@ -236,6 +236,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (option == "send_nxt") {
 			$("#send_money_recipient").val(account).trigger("blur");
 			$("#send_money_modal").modal("show");
+		} else if (option == "account_info") {
+			NRS.showAccountModal(account);
 		}
 	});
 
