@@ -649,44 +649,83 @@ var NRS = (function(NRS, $, undefined) {
 	$("#id_search").on("submit", function(e) {
 		e.preventDefault();
 
-		var id = $("#id_search input[name=q]").val();
+		var id = $.trim($("#id_search input[name=q]").val());
 
-		if (!/^\d+$/.test(id)) {
-			$.growl("You can search by account ID, transaction ID or block ID, nothing else.", {
-				"type": "danger"
+		if (/NXT\-/i.test(id)) {
+			NRS.sendRequest("getAccount", {
+				"account": id
+			}, function(response, input) {
+				if (!response.errorCode) {
+					response.id = input.account;
+					NRS.showAccountModal(response);
+				} else {
+					$.growl("Nothing found, please try another query.", {
+						"type": "danger"
+					});
+				}
 			});
-			return;
-		}
-		NRS.sendRequest("getTransaction", {
-			"transaction": id
-		}, function(response, input) {
-			if (!response.errorCode) {
-				response.id = input.transaction;
-				NRS.showTransactionModal(response);
-			} else {
-				NRS.sendRequest("getAccount", {
-					"account": id
-				}, function(response, input) {
-					if (!response.errorCode) {
-						response.id = input.account;
-						NRS.showAccountModal(response);
-					} else {
-						NRS.sendRequest("getBlock", {
-							"block": id
-						}, function(response, input) {
-							if (!response.errorCode) {
-								response.id = input.block;
-								NRS.showBlockModal(response);
-							} else {
-								$.growl("Nothing found, please try another query.", {
-									"type": "danger"
-								});
-							}
-						});
-					}
+		} else if (/^@/.test(id)) {
+			id = id.substring(1);
+			NRS.sendRequest("getAliasId", {
+				"alias": id
+			}, function(response) {
+				if (response.errorCode) {
+					$.growl("No such alias exists.", {
+						"type": "danger"
+					});
+				} else {
+					NRS.sendRequest("getTransaction", {
+						"transaction": response.id
+					}, function(response, input) {
+						if (response.errorCode) {
+							$.growl("Could not find alias transaction.", {
+								"type": "danger"
+							});
+						} else {
+							response.id = input.transaction;
+							NRS.showTransactionModal(response);
+						}
+					});
+				}
+			});
+		} else {
+			if (!/^\d+$/.test(id)) {
+				$.growl("Invalid input. Search by ID, reed solomon account number, or alias (prefixed with '@').", {
+					"type": "danger"
 				});
+				return;
 			}
-		});
+			NRS.sendRequest("getTransaction", {
+				"transaction": id
+			}, function(response, input) {
+				if (!response.errorCode) {
+					response.id = input.transaction;
+					NRS.showTransactionModal(response);
+				} else {
+					NRS.sendRequest("getAccount", {
+						"account": id
+					}, function(response, input) {
+						if (!response.errorCode) {
+							response.id = input.account;
+							NRS.showAccountModal(response);
+						} else {
+							NRS.sendRequest("getBlock", {
+								"block": id
+							}, function(response, input) {
+								if (!response.errorCode) {
+									response.id = input.block;
+									NRS.showBlockModal(response);
+								} else {
+									$.growl("Nothing found, please try another query.", {
+										"type": "danger"
+									});
+								}
+							});
+						}
+					});
+				}
+			});
+		}
 	});
 
 	return NRS;
