@@ -431,15 +431,18 @@ var NRS = (function(NRS, $, undefined) {
 					type: "danger"
 				});
 			} else if (response.fullHash) {
-				NRS.addUnconfirmedTransaction(response.transaction);
-
 				$.growl("Message sent.", {
 					type: "success"
 				});
 
 				$("#inline_message_text").val("");
 
-				$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+				NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
+					if (!alreadyProcessed) {
+						$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+					}
+				});
+
 				//leave password alone until user moves to another page.
 			} else {
 				$.growl("An unknown error occured. Your message may or may not have been sent.", {
@@ -496,7 +499,6 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	}
-
 
 	return NRS;
 }(NRS || {}, jQuery));
