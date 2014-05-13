@@ -391,7 +391,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_id").html(assetId.escapeHTML());
 			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
 			$("#asset_name").html(String(asset.name).escapeHTML());
-			$("#asset_description").html(String(asset.description).escapeHTML());
+			$("#asset_description").html(String(asset.description).autoLink());
 			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
 
 			$(".asset_name").html(String(asset.name).escapeHTML());
