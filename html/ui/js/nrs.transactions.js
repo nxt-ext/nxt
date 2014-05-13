@@ -284,7 +284,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	//todo: add to dashboard? 
-	NRS.addUnconfirmedTransaction = function(transactionId) {
+	NRS.addUnconfirmedTransaction = function(transactionId, callback) {
 		NRS.sendRequest("getTransaction", {
 			"transaction": transactionId
 		}, function(response) {
@@ -302,22 +302,36 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				var alreadyAdded = false;
+				var alreadyProcessed = false;
 
-				$.each(NRS.unconfirmedTransactions, function(key, unconfirmedTransaction) {
-					if (unconfirmedTransaction.transaction == transactionId) {
-						alreadyAdded = true;
-						return false;
+				try {
+					var regex = new RegExp("(^|,)" + transactionId + "(,|$)");
+
+					if (regex.exec(NRS.lastTransactions)) {
+						alreadyProcessed = true;
+					} else {
+						$.each(NRS.unconfirmedTransactions, function(key, unconfirmedTransaction) {
+							if (unconfirmedTransaction.transaction == transactionId) {
+								alreadyProcessed = true;
+								return false;
+							}
+						});
 					}
-				});
+				} catch (e) {}
 
-				if (!alreadyAdded) {
+				if (!alreadyProcessed) {
 					NRS.unconfirmedTransactions.unshift(response);
+				}
+
+				if (callback) {
+					callback(alreadyProcessed);
 				}
 
 				NRS.incoming.updateDashboardTransactions(NRS.unconfirmedTransactions, true);
 
 				NRS.getAccountInfo();
+			} else if (callback) {
+				callback(false);
 			}
 		});
 	}

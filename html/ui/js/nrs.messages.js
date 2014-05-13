@@ -473,6 +473,9 @@ var NRS = (function(NRS, $, undefined) {
 			var $existing = $sidebar.find("a.list-group-item[data-account=" + NRS.getAccountFormatted(data, "recipient") + "]");
 
 			if ($existing.length) {
+				if (response.alreadyProcesed) {
+					return;
+				}
 				$sidebar.prepend($existing);
 				$existing.find("p.list-group-item-text").html(NRS.formatTimestamp(now));
 

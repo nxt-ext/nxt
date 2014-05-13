@@ -891,6 +891,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.orderAssetComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
 		if (data.requestType == "placeBidOrder") {
 			var $table = $("#asset_exchange_bid_orders_table tbody");
 		} else {
@@ -911,7 +915,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		var rowAdded = false;
 
-		//update highest bid / lowest ask
 		if ($rows.length) {
 			$rows.each(function() {
 				var rowPrice = new BigInteger(String($(this).data("price")));
@@ -929,7 +932,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (!rowAdded) {
-			//if (data.requestType == "placeBidOrder") {
 			$table.append(rowToAdd);
 			$table.parent().parent().removeClass("data-empty").parent().addClass("no-padding");
 		}
@@ -1640,6 +1642,9 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.cancelOrderComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
 	}
 

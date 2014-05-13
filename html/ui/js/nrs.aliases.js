@@ -206,6 +206,10 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.assignAliasComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
 		if (NRS.currentPage == "aliases") {
 			var $table = $("#aliases_table tbody");
 
