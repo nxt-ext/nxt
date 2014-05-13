@@ -213,7 +213,11 @@ var NRS = (function(NRS, $, undefined) {
 									}
 								}
 
-								var receiving = transaction.recipient == NRS.userInfoModal.user;
+								if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
+									var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
+								} else {
+									var receiving = (transaction.recipient == NRS.userInfoModal.user);
+								}
 
 								if (transaction.amountNQT) {
 									transaction.amount = new BigInteger(transaction.amountNQT);
