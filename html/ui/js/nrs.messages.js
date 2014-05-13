@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 									}
 								});
 
-								var otherUserRS = (otherUser == response.sender ? response.senderRS : response.recipientRS);
+								var otherUserRS = (otherUser == NRS.messages[otherUser][0].sender ? NRS.messages[otherUser][0].senderRS : NRS.messages[otherUser][0].recipientRS);
 
 								sortedMessages.push({
 									"timestamp": NRS.messages[otherUser][NRS.messages[otherUser].length - 1].timestamp,
