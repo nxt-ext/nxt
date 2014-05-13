@@ -24,6 +24,7 @@ public class BuyAlias extends CreateTransaction {
         Account account = ParameterParser.getSenderAccount(req);
         String aliasName = req.getParameter("alias").toLowerCase();
         Long recipient = ParameterParser.getRecipientId(req);
+        long price = ParameterParser.getPriceNQT(req);
 
         if (aliasName == null) {
             return MISSING_ALIAS;
@@ -38,6 +39,6 @@ public class BuyAlias extends CreateTransaction {
         }
 
         Attachment attachment = new Attachment.MessagingAliasBuy(aliasName);
-        return createTransaction(req, account, recipient, 0, attachment);
+        return createTransaction(req, account, recipient, price, attachment);
     }
 }
