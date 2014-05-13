@@ -417,7 +417,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (response.assetBalances) {
 					for (var i = 0; i < response.assetBalances.length; i++) {
-						if (response.assetBalances[i].balanceNQT != "0") {
+						if (response.assetBalances[i].balanceQNT != "0") {
 							nr_assets++;
 						}
 					}
