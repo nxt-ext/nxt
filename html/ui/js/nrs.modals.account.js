@@ -299,7 +299,7 @@ var NRS = (function(NRS, $, undefined) {
 				var ignoredAssets = 0;
 
 				for (var i = 0; i < response.assetBalances.length; i++) {
-					if (response.assetBalances[i].balance == 0) {
+					if (response.assetBalances[i].balanceQNT == "0") {
 						ignoredAssets++;
 
 						if (nrAssets + ignoredAssets == response.assetBalances.length) {
