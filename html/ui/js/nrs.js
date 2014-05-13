@@ -99,6 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).popover("show");
 		}).on("mouseleave", "td.confirmations", function() {
 			$(this).popover("destroy");
+			$(".popover").remove();
 		});
 
 		$(window).on("resize.asset", function() {
