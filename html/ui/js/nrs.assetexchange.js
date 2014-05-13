@@ -629,10 +629,12 @@ var NRS = (function(NRS, $, undefined) {
 		var bf = box.find(".box-body, .box-footer");
 		if (!box.hasClass("collapsed-box")) {
 			box.addClass("collapsed-box");
+			$(this).find(".btn i.fa").removeClass("fa-minus").addClass("fa-plus");
 			bf.slideUp();
 		} else {
 			box.removeClass("collapsed-box");
 			bf.slideDown();
+			$(this).find(".btn i.fa").removeClass("fa-plus").addClass("fa-minus");
 		}
 	});
 
