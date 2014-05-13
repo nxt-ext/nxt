@@ -18,13 +18,10 @@ public final class ListAccountAliases extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-
         Long accountId = ParameterParser.getAccount(req).getId();
         JSONArray aliases = new JSONArray();
-        for (Alias alias : Alias.getAllAliases()) {
-            if (alias.getAccount().getId().equals(accountId)) {
-                aliases.add(JSONData.alias(alias));
-            }
+        for (Alias alias : Alias.getAliasesByOwner(accountId)) {
+            aliases.add(JSONData.alias(alias));
         }
 
         JSONObject response = new JSONObject();

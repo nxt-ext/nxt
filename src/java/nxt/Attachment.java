@@ -28,9 +28,7 @@ public interface Attachment {
         private final byte[] message;
 
         public MessagingArbitraryMessage(byte[] message) {
-
             this.message = message;
-
         }
 
         @Override
@@ -47,7 +45,6 @@ public interface Attachment {
             buffer.put(message);
 
             return buffer.array();
-
         }
 
         @Override
@@ -541,6 +538,110 @@ public interface Attachment {
         }
     }
 
+
+    abstract class AliasOperation implements Attachment {
+        byte[] stringToBytes(String aliasName){
+            try{
+                return aliasName.getBytes("UTF-8");
+            }catch (UnsupportedEncodingException e) {
+                Logger.logMessage("Wrong encoding, cant' convert to bytes("+aliasName+"):", e);
+                return new byte[]{};
+            }
+        }
+    }
+
+    public final static class MessagingAliasSell extends AliasOperation implements Attachment, Serializable {
+        static final long serialVersionUID = 0;
+        private final String aliasName;
+        private final long priceNQT;
+
+        public MessagingAliasSell(String aliasName, long priceNQT) {
+            this.aliasName = aliasName;
+            this.priceNQT = priceNQT;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_SELL;
+        }
+
+        @Override
+        public int getSize() {
+            return 1+stringToBytes(aliasName).length+8;
+        }
+
+        @Override
+        //todo: fix
+        public byte[] getBytes() {
+            byte[] aliasBytes = stringToBytes(aliasName);
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)aliasBytes.length);
+            buffer.put(aliasBytes);
+            buffer.putLong(priceNQT);
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("alias", aliasName);
+            attachment.put("price", priceNQT);
+            return attachment;
+        }
+
+        public String getAliasName(){
+            return aliasName;
+        }
+
+        public long getPriceNQT(){
+            return priceNQT;
+        }
+    }
+
+    public final static class MessagingAliasBuy extends AliasOperation implements Attachment, Serializable {
+        static final long serialVersionUID = 0;
+        private final String aliasName;
+
+        public MessagingAliasBuy(String aliasName) {
+            this.aliasName = aliasName;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_BUY;
+        }
+
+        @Override
+        public int getSize() {
+            return 1+stringToBytes(aliasName).length;
+        }
+
+        @Override
+        //todo: fix
+        public byte[] getBytes() {
+            byte[] aliasBytes = stringToBytes(aliasName);
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)aliasBytes.length);
+            buffer.put(aliasBytes);
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("alias", aliasName);
+            return attachment;
+        }
+
+        public String getAliasName(){
+            return aliasName;
+        }
+    }
+
     public final static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
 
         static final long serialVersionUID = 0;
@@ -550,11 +651,9 @@ public interface Attachment {
         private final String comment;
 
         public ColoredCoinsAssetTransfer(Long assetId, long quantityQNT, String comment) {
-
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = Convert.nullToEmpty(comment);
-
         }
 
         @Override
@@ -1298,7 +1397,5 @@ public interface Attachment {
         public short getPeriod() {
             return period;
         }
-
     }
-
 }

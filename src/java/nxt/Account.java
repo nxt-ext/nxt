@@ -596,4 +596,13 @@ public final class Account {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return this == o || (o instanceof Account && id.equals(((Account) o).id));
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }
