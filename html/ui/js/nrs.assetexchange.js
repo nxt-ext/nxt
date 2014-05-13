@@ -225,7 +225,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (asset.groupName) {
 					ungrouped = false;
-
 					rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'" + (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''") + " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + " <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
 				} else {
 					ungrouped = true;
@@ -234,7 +233,18 @@ var NRS = (function(NRS, $, undefined) {
 				lastGroup = asset.groupName.toLowerCase();
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			var ownsAsset = false;
+
+			if (NRS.accountInfo.assetBalances) {
+				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+					if (assetBalance.asset == asset.id && assetBalance.balanceQNT != "0") {
+						ownsAsset = true;
+						return false;
+					}
+				});
+			}
+
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : "") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
@@ -266,12 +276,24 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.asset_exchange = function() {
+		//refresh active asset
 		var $active = $("#asset_exchange_sidebar a.active");
 
 		if ($active.length) {
 			$active.trigger("click", [{
 				"refresh": true
 			}]);
+		}
+
+		//update assets owned (colored)
+		$("#asset_exchange_sidebar a.list-group-item.owns_asset").removeClass("owns_asset");
+
+		if (NRS.accountInfo.assetBalances) {
+			$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+				if (assetBalance.balanceQNT != "0") {
+					$("#asset_exchange_sidebar a.list-group-item[data-asset=" + assetBalance.asset + "]").addClass("owns_asset");
+				}
+			});
 		}
 	}
 
