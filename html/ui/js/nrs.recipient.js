@@ -44,7 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 		$list.empty();
 
 		for (var accountId in NRS.contacts) {
-			$list.append("<li><a href='#' data-contact='" + NRS.contacts[accountId].name.escapeHTML() + "'>" + NRS.contacts[accountId].name.escapeHTML() + "</a></li>");
+			$list.append("<li><a href='#' data-contact='" + String(NRS.contacts[accountId]).name.escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
 		}
 	});
 
