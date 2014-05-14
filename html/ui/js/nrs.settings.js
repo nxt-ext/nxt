@@ -5,7 +5,8 @@ var NRS = (function(NRS, $, undefined) {
 		"animate_forging": 1,
 		"news": -1,
 		"fee_warning": "100000000000",
-		"amount_warning": "10000000000000"
+		"amount_warning": "10000000000000",
+		"asset_transfer_warning": "10000"
 	};
 
 	NRS.defaultColors = {
@@ -378,7 +379,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		for (var key in NRS.settings) {
-			if (/_warning/i.test(key)) {
+			if (/_warning/i.test(key) && key != "asset_transfer_warning") {
 				if ($("#settings_" + key).length) {
 					$("#settings_" + key).val(NRS.convertToNXT(NRS.settings[key]));
 				}
@@ -816,7 +817,7 @@ var NRS = (function(NRS, $, undefined) {
 		var key = $(this).attr("name");
 		var value = $(this).val();
 
-		if (/_warning/i.test(key)) {
+		if (/_warning/i.test(key) && key != "asset_transfer_warning") {
 			value = NRS.convertToNQT(value);
 		}
 		NRS.updateSettings(key, value);

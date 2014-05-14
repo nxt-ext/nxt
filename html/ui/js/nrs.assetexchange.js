@@ -1374,6 +1374,17 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.transferAsset = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		if (!NRS.showedFormWarning) {
+			if (NRS.settings["asset_transfer_warning"] && NRS.settings["asset_transfer_warning"] != 0) {
+				if (new BigInteger(data.quantity).compareTo(new BigInteger(NRS.settings["asset_transfer_warning"])) > 0) {
+					NRS.showedFormWarning = true;
+					return {
+						"error": "Quantity specified is higher than " + String(NRS.settings["asset_transfer_warning"]).escapeHTML() + ". Are you sure you want to continue? Click the submit button again to confirm."
+					};
+				}
+			}
+		}
+
 		try {
 			data.quantityQNT = NRS.convertToQNT(data.quantity, data.decimals);
 		} catch (e) {
