@@ -331,17 +331,21 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.accountInfo = response;
 
+			var preferredAccountFormat = (NRS.settings["reed_solomon"] ? NRS.accountRS : NRS.account);
+			if (!preferredAccountFormat) {
+				preferredAccountFormat = NRS.account;
+			}
 			if (response.errorCode) {
 				$("#account_balance, #account_forged_balance").html("0");
 				$("#account_nr_assets").html("0");
 
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(preferredAccountFormat).escapeHTML() + "</strong>" : "")).show();
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("The blockchain is currently rescanning. Please wait until that has completed.").show();
 					} else {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>").show();
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(preferredAccountFormat).escapeHTML() + "</strong>").show();
 					}
 				} else {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
@@ -355,7 +359,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (NRS.downloadingBlockchain) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(preferredAccountFormat).escapeHTML() + "</strong>" : "")).show();
 				} else if (NRS.state && NRS.state.isScanning) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("The blockchain is currently rescanning. Please wait until that has completed.").show();
 				} else if (!NRS.accountInfo.publicKey) {
@@ -665,33 +669,9 @@ var NRS = (function(NRS, $, undefined) {
 					});
 				}
 			});
-		} else if (/^@/.test(id)) {
-			id = id.substring(1);
-			NRS.sendRequest("getAliasId", {
-				"alias": id
-			}, function(response) {
-				if (response.errorCode) {
-					$.growl("No such alias exists.", {
-						"type": "danger"
-					});
-				} else {
-					NRS.sendRequest("getTransaction", {
-						"transaction": response.id
-					}, function(response, input) {
-						if (response.errorCode) {
-							$.growl("Could not find alias transaction.", {
-								"type": "danger"
-							});
-						} else {
-							response.transaction = input.transaction;
-							NRS.showTransactionModal(response);
-						}
-					});
-				}
-			});
 		} else {
 			if (!/^\d+$/.test(id)) {
-				$.growl("Invalid input. Search by ID, reed solomon account number, or alias (prefixed with '@').", {
+				$.growl("Invalid input. Search by ID or reed solomon account number.", {
 					"type": "danger"
 				});
 				return;

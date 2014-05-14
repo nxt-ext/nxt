@@ -146,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
-			var account = (NRS.settings["use_reed_solomon"] ? NRS.accountRS : NRS.account);
+			var account = (NRS.settings["reed_solomon"] ? NRS.accountRS : NRS.account);
 
 			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>Pending</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(account) + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
 

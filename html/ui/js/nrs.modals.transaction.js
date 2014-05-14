@@ -118,7 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"Type": "Alias Assignment",
 						"Alias": transaction.attachment.alias,
-						"URI": transaction.attachment.uri
+						"DataFormattedHTML": transaction.attachment.uri.autoLink()
 					};
 
 					if (transaction.sender != NRS.account) {

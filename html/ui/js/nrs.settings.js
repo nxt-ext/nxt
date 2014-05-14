@@ -1,7 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.defaultSettings = {
 		"submit_on_enter": 0,
-		"use_reed_solomon": 0,
+		"reed_solomon": 1,
 		"animate_forging": 1,
 		"news": -1,
 		"fee_warning": "100000000000",
@@ -893,21 +893,27 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (!key || key == "use_reed_solomon") {
-			if (NRS.settings["use_reed_solomon"]) {
+		if (!key || key == "reed_solomon") {
+			if (NRS.settings["reed_solomon"]) {
 				$("#account_id_prefix").hide();
 				$("#account_id").html(NRS.getAccountFormatted(NRS.accountRS)).css("font-size", "12px");
 				$("body").addClass("reed_solomon");
+				$("#message_sidebar").css("width", "245px");
+				$("#message_content").css("left", "245px");
+				$("#inline_message_form").css("left", "485px");
 			} else {
 				$("#account_id_prefix").show();
 				$("#account_id").html(NRS.getAccountFormatted(NRS.account)).css("font-size", "14px");
 				$("body").removeClass("reed_solomon");
+				$("#message_sidebar").css("width", "200px");
+				$("#message_content").css("left", "200px");
+				$("#inline_message_form").css("left", "440px");
 			}
 
 			var $dashboard_account_links = $("#dashboard_transactions_table a.user_info");
 
 			$.each($dashboard_account_links, function(key, value) {
-				if (NRS.settings["use_reed_solomon"]) {
+				if (NRS.settings["reed_solomon"]) {
 					var account = $(this).data("user-rs");
 				} else {
 					var account = $(this).data("user-id");
