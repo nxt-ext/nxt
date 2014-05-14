@@ -18,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 				$.each(assets, function(index, asset) {
 					NRS.assetIds.push(asset.asset);
 					NRS.assets.push({
-						"id": asset.asset,
+						"asset": asset.asset,
 						"name": asset.name.toLowerCase(),
 						"groupName": asset.groupName.toLowerCase(),
 						"account": asset.account,
@@ -121,7 +121,7 @@ var NRS = (function(NRS, $, undefined) {
 				var asset = newAssets[i];
 
 				NRS.assets.push({
-					"id": asset.asset,
+					"asset": asset.asset,
 					"name": String(asset.name).toLowerCase(),
 					"groupName": "",
 					"account": asset.account,
@@ -208,7 +208,7 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < NRS.assets.length; i++) {
 			var asset = NRS.assets[i];
 
-			if (isSearch && NRS.assetSearch.indexOf(asset.id) == -1) {
+			if (isSearch && NRS.assetSearch.indexOf(asset.asset) == -1) {
 				continue;
 			} else {
 				searchResults++;
@@ -225,7 +225,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (asset.groupName) {
 					ungrouped = false;
-
 					rows += "<a href='#' class='list-group-item list-group-item-header" + (asset.groupName == "Ignore List" ? " no-context" : "") + "'" + (asset.groupName != "Ignore List" ? " data-context='asset_exchange_sidebar_group_context' " : "data-context=''") + " data-groupname='" + asset.groupName.escapeHTML() + "' data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.groupName.toUpperCase().escapeHTML() + " <i class='fa pull-right fa-angle-" + (isClosedGroup ? "right" : "down") + "'></i></h4></a>";
 				} else {
 					ungrouped = true;
@@ -234,7 +233,18 @@ var NRS = (function(NRS, $, undefined) {
 				lastGroup = asset.groupName.toLowerCase();
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + "' data-cache='" + i + "' data-asset='" + String(asset.id).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			var ownsAsset = false;
+
+			if (NRS.accountInfo.assetBalances) {
+				$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+					if (assetBalance.asset == asset.asset && assetBalance.balanceQNT != "0") {
+						ownsAsset = true;
+						return false;
+					}
+				});
+			}
+
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : "") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
@@ -266,12 +276,24 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.asset_exchange = function() {
+		//refresh active asset
 		var $active = $("#asset_exchange_sidebar a.active");
 
 		if ($active.length) {
 			$active.trigger("click", [{
 				"refresh": true
 			}]);
+		}
+
+		//update assets owned (colored)
+		$("#asset_exchange_sidebar a.list-group-item.owns_asset").removeClass("owns_asset");
+
+		if (NRS.accountInfo.assetBalances) {
+			$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+				if (assetBalance.balanceQNT != "0") {
+					$("#asset_exchange_sidebar a.list-group-item[data-asset=" + assetBalance.asset + "]").addClass("owns_asset");
+				}
+			});
 		}
 	}
 
@@ -347,7 +369,6 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 		}
-
 	});
 
 	NRS.loadAsset = function(asset, refresh) {
@@ -369,7 +390,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_id").html(assetId.escapeHTML());
 			$("#asset_decimals").html(String(asset.decimals).escapeHTML());
 			$("#asset_name").html(String(asset.name).escapeHTML());
-			$("#asset_description").html(String(asset.description).escapeHTML());
+			$("#asset_description").html(String(asset.description).autoLink());
 			$("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
 
 			$(".asset_name").html(String(asset.name).escapeHTML());
@@ -395,7 +416,7 @@ var NRS = (function(NRS, $, undefined) {
 			var nrDuplicates = 0;
 
 			$.each(NRS.assets, function(key, singleAsset) {
-				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.id != assetId) {
+				if (String(singleAsset.name).toLowerCase() == String(asset.name).toLowerCase() && singleAsset.asset != assetId) {
 					nrDuplicates++;
 				}
 			});
@@ -488,7 +509,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 					var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
-					unconfirmedTransaction.order = unconfirmedTransaction.id;
+					unconfirmedTransaction.order = unconfirmedTransaction.transaction;
 
 					if (unconfirmedTransaction.type == 2 && (type == "ask" ? unconfirmedTransaction.subtype == 2 : unconfirmedTransaction.subtype == 3) && unconfirmedTransaction.asset == assetId) {
 						orders.push($.extend(true, {}, unconfirmedTransaction)); //make sure it's a deep copy
@@ -572,13 +593,13 @@ var NRS = (function(NRS, $, undefined) {
 			if (/NXT\-/i.test(input)) {
 				$.each(NRS.assets, function(key, asset) {
 					if (asset.accountRS == input) {
-						NRS.assetSearch.push(asset.id);
+						NRS.assetSearch.push(asset.asset);
 					}
 				});
 			} else {
 				$.each(NRS.assets, function(key, asset) {
-					if (asset.account == input || asset.id == input || asset.name.indexOf(input) !== -1) {
-						NRS.assetSearch.push(asset.id);
+					if (asset.account == input || asset.asset == input || asset.name.indexOf(input) !== -1) {
+						NRS.assetSearch.push(asset.asset);
 					}
 				});
 			}
@@ -607,10 +628,12 @@ var NRS = (function(NRS, $, undefined) {
 		var bf = box.find(".box-body, .box-footer");
 		if (!box.hasClass("collapsed-box")) {
 			box.addClass("collapsed-box");
+			$(this).find(".btn i.fa").removeClass("fa-minus").addClass("fa-plus");
 			bf.slideUp();
 		} else {
 			box.removeClass("collapsed-box");
 			bf.slideDown();
+			$(this).find(".btn i.fa").removeClass("fa-plus").addClass("fa-minus");
 		}
 	});
 
@@ -891,6 +914,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.orderAssetComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
 		if (data.requestType == "placeBidOrder") {
 			var $table = $("#asset_exchange_bid_orders_table tbody");
 		} else {
@@ -911,7 +938,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		var rowAdded = false;
 
-		//update highest bid / lowest ask
 		if ($rows.length) {
 			$rows.each(function() {
 				var rowPrice = new BigInteger(String($(this).data("price")));
@@ -929,7 +955,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (!rowAdded) {
-			//if (data.requestType == "placeBidOrder") {
 			$table.append(rowToAdd);
 			$table.parent().parent().removeClass("data-empty").parent().addClass("no-padding");
 		}
@@ -1136,138 +1161,134 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.my_assets = function() {
 		NRS.pageLoading();
 
-		NRS.sendRequest("getAccount+", {
-			"account": NRS.account
-		}, function(response) {
-			if (response.assetBalances && response.assetBalances.length) {
-				var result = {
-					"assets": [],
-					"bid_orders": {},
-					"ask_orders": {}
-				};
-				var count = {
-					"total_assets": response.assetBalances.length,
-					"assets": 0,
-					"ignored_assets": 0,
-					"ask_orders": 0,
-					"bid_orders": 0
-				};
+		if (NRS.accountInfo.assetBalances && NRS.accountInfo.assetBalances.length) {
+			var result = {
+				"assets": [],
+				"bid_orders": {},
+				"ask_orders": {}
+			};
+			var count = {
+				"total_assets": NRS.accountInfo.assetBalances.length,
+				"assets": 0,
+				"ignored_assets": 0,
+				"ask_orders": 0,
+				"bid_orders": 0
+			};
 
-				for (var i = 0; i < response.assetBalances.length; i++) {
-					if (response.assetBalances[i].balance == 0) {
-						count.ignored_assets++;
-						if (NRS.checkMyAssetsPageLoaded(count)) {
-							NRS.myAssetsPageLoaded(result);
-						}
-						continue;
+			for (var i = 0; i < NRS.accountInfo.assetBalances.length; i++) {
+				if (NRS.accountInfo.assetBalances[i].balanceQNT == "0") {
+					count.ignored_assets++;
+					if (NRS.checkMyAssetsPageLoaded(count)) {
+						NRS.myAssetsPageLoaded(result);
+					}
+					continue;
+				}
+
+				NRS.sendRequest("getAskOrderIds+", {
+					"asset": NRS.accountInfo.assetBalances[i].asset,
+					"limit": 1,
+					"timestamp": 0
+				}, function(response, input) {
+					if (NRS.currentPage != "my_assets") {
+						return;
 					}
 
-					NRS.sendRequest("getAskOrderIds+", {
-						"asset": response.assetBalances[i].asset,
-						"limit": 1,
-						"timestamp": 0
-					}, function(response, input) {
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}
+					if (response.askOrderIds && response.askOrderIds.length) {
+						NRS.sendRequest("getAskOrder+", {
+							"order": response.askOrderIds[0],
+							"_extra": {
+								"asset": input.asset
+							}
+						}, function(response, input) {
+							if (NRS.currentPage != "my_assets") {
+								return;
+							}
 
-						if (response.askOrderIds && response.askOrderIds.length) {
-							NRS.sendRequest("getAskOrder+", {
-								"order": response.askOrderIds[0],
-								"_extra": {
-									"asset": input.asset
-								}
-							}, function(response, input) {
-								if (NRS.currentPage != "my_assets") {
-									return;
-								}
+							response.priceNQT = new BigInteger(response.priceNQT);
 
-								response.priceNQT = new BigInteger(response.priceNQT);
-
-								result.ask_orders[input["_extra"].asset] = response.priceNQT;
-								count.ask_orders++;
-								if (NRS.checkMyAssetsPageLoaded(count)) {
-									NRS.myAssetsPageLoaded(result);
-								}
-							});
-						} else {
-							result.ask_orders[input.asset] = -1;
+							result.ask_orders[input["_extra"].asset] = response.priceNQT;
 							count.ask_orders++;
 							if (NRS.checkMyAssetsPageLoaded(count)) {
 								NRS.myAssetsPageLoaded(result);
 							}
+						});
+					} else {
+						result.ask_orders[input.asset] = -1;
+						count.ask_orders++;
+						if (NRS.checkMyAssetsPageLoaded(count)) {
+							NRS.myAssetsPageLoaded(result);
 						}
-					});
+					}
+				});
 
-					NRS.sendRequest("getBidOrderIds+", {
-						"asset": response.assetBalances[i].asset,
-						"limit": 1,
-						"timestamp": 0
-					}, function(response, input) {
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}
+				NRS.sendRequest("getBidOrderIds+", {
+					"asset": NRS.accountInfo.assetBalances[i].asset,
+					"limit": 1,
+					"timestamp": 0
+				}, function(response, input) {
+					if (NRS.currentPage != "my_assets") {
+						return;
+					}
 
-						if (response.bidOrderIds && response.bidOrderIds.length) {
-							NRS.sendRequest("getBidOrder+", {
-								"order": response.bidOrderIds[0],
-								"_extra": {
-									"asset": input.asset
-								}
-							}, function(response, input) {
-								if (NRS.currentPage != "my_assets") {
-									return;
-								}
+					if (response.bidOrderIds && response.bidOrderIds.length) {
+						NRS.sendRequest("getBidOrder+", {
+							"order": response.bidOrderIds[0],
+							"_extra": {
+								"asset": input.asset
+							}
+						}, function(response, input) {
+							if (NRS.currentPage != "my_assets") {
+								return;
+							}
 
-								response.priceNQT = new BigInteger(response.priceNQT);
+							response.priceNQT = new BigInteger(response.priceNQT);
 
-								result.bid_orders[input["_extra"].asset] = response.priceNQT;
-								count.bid_orders++;
-								if (NRS.checkMyAssetsPageLoaded(count)) {
-									NRS.myAssetsPageLoaded(result);
-								}
-							});
-						} else {
-							result.bid_orders[input.asset] = -1;
+							result.bid_orders[input["_extra"].asset] = response.priceNQT;
 							count.bid_orders++;
 							if (NRS.checkMyAssetsPageLoaded(count)) {
 								NRS.myAssetsPageLoaded(result);
 							}
-						}
-					});
-
-					NRS.sendRequest("getAsset+", {
-						"asset": response.assetBalances[i].asset,
-						"_extra": {
-							"balanceQNT": response.assetBalances[i].balanceQNT
-						}
-					}, function(asset, input) {
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}
-
-						asset.asset = input.asset;
-						asset.balanceQNT = new BigInteger(input["_extra"].balanceQNT);
-						asset.quantityQNT = new BigInteger(asset.quantityQNT);
-
-						result.assets[count.assets] = asset;
-						count.assets++;
-
+						});
+					} else {
+						result.bid_orders[input.asset] = -1;
+						count.bid_orders++;
 						if (NRS.checkMyAssetsPageLoaded(count)) {
 							NRS.myAssetsPageLoaded(result);
 						}
-					});
+					}
+				});
 
+				NRS.sendRequest("getAsset+", {
+					"asset": NRS.accountInfo.assetBalances[i].asset,
+					"_extra": {
+						"balanceQNT": NRS.accountInfo.assetBalances[i].balanceQNT
+					}
+				}, function(asset, input) {
 					if (NRS.currentPage != "my_assets") {
 						return;
 					}
+
+					asset.asset = input.asset;
+					asset.balanceQNT = new BigInteger(input["_extra"].balanceQNT);
+					asset.quantityQNT = new BigInteger(asset.quantityQNT);
+
+					result.assets[count.assets] = asset;
+					count.assets++;
+
+					if (NRS.checkMyAssetsPageLoaded(count)) {
+						NRS.myAssetsPageLoaded(result);
+					}
+				});
+
+				if (NRS.currentPage != "my_assets") {
+					return;
 				}
-			} else {
-				$("#my_assets_table tbody").empty();
-				NRS.dataLoadFinished($("#my_assets_table"));
-				NRS.pageLoaded();
 			}
-		});
+		} else {
+			$("#my_assets_table tbody").empty();
+			NRS.dataLoadFinished($("#my_assets_table"));
+			NRS.pageLoaded();
+		}
 	}
 
 	NRS.checkMyAssetsPageLoaded = function(count) {
@@ -1321,7 +1342,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatAmount(lowestAskOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(highestBidOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(total) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>Transfer</a></td></tr>";
+			if (highestBidOrder != -1) {
+				var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(asset.balanceQNT, highestBidOrder));
+			}
+
+			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(totalNQT) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>Transfer</a></td></tr>";
 		}
 
 		$("#my_assets_table tbody").empty().append(rows);
@@ -1344,10 +1369,53 @@ var NRS = (function(NRS, $, undefined) {
 		$("#transfer_asset_asset").val(assetId);
 		$("#transfer_asset_decimals").val(decimals);
 		$("#transfer_asset_name").html(String(assetName).escapeHTML());
+		$("#transer_asset_available").html("");
+
+		var confirmedBalance = 0;
+		var unconfirmedBalance = 0;
+
+		if (NRS.accountInfo.assetBalances) {
+			$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+				if (assetBalance.asset == assetId) {
+					confirmedBalance = assetBalance.balanceQNT;
+					return false;
+				}
+			});
+		}
+
+		if (NRS.accountInfo.unconfirmedAssetBalances) {
+			$.each(NRS.accountInfo.unconfirmedAssetBalances, function(key, assetBalance) {
+				if (assetBalance.asset == assetId) {
+					unconfirmedBalance = assetBalance.unconfirmedBalanceQNT;
+					return false;
+				}
+			});
+		}
+
+		var availableAssetsMessage = "";
+
+		if (confirmedBalance == unconfirmedBalance) {
+			availableAssetsMessage = " - " + NRS.formatQuantity(confirmedBalance, decimals) + " available for transfer";
+		} else {
+			availableAssetsMessage = " - " + NRS.formatQuantity(unconfirmedBalance, decimals) + " available for transfer (" + NRS.formatQuantity(confirmedBalance, decimals) + " total)";
+		}
+
+		$("#transfer_asset_available").html(availableAssetsMessage);
 	});
 
 	NRS.forms.transferAsset = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
+
+		if (!NRS.showedFormWarning) {
+			if (NRS.settings["asset_transfer_warning"] && NRS.settings["asset_transfer_warning"] != 0) {
+				if (new Big(data.quantity).cmp(new Big(NRS.settings["asset_transfer_warning"])) > 0) {
+					NRS.showedFormWarning = true;
+					return {
+						"error": "Quantity specified is higher than " + String(NRS.settings["asset_transfer_warning"]).escapeHTML() + ". Are you sure you want to continue? Click the submit button again to confirm."
+					};
+				}
+			}
+		}
 
 		try {
 			data.quantityQNT = NRS.convertToQNT(data.quantity, data.decimals);
@@ -1514,7 +1582,7 @@ var NRS = (function(NRS, $, undefined) {
 						"assetName": "",
 						"decimals": 0,
 						"height": 0,
-						"order": unconfirmedTransaction.id,
+						"order": unconfirmedTransaction.transaction,
 						"priceNQT": unconfirmedTransaction.attachment.priceNQT,
 						"quantityQNT": unconfirmedTransaction.attachment.quantityQNT,
 						"tentative": true
@@ -1640,6 +1708,9 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.cancelOrderComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
 	}
 

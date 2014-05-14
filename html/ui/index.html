@@ -35,6 +35,18 @@
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal">Send Message</a></li>
 	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#generate_token_modal">Generate Token</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-question-circle"></i>
+                            </a>
+                            <ul class="dropdown-menu" role="menu">
+                            	<li><a role="menuitem" tabindex="-1" href="http://nxt.org/" target="_blank">Nxt.org</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://nxtforum.org/" target="_blank">Nxt Forum</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/" target="_blank">Nxt Wiki</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Nxt_client_interface" target="_blank">Interface Tutorial</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Asset_Exchange" target="_blank">Asset Exchange Tutorial</a></li>
+							</ul>
+						</li>
                         <li class="dropdown" id="logout_button_container">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
                                 <i class="fa fa-power-off"></i>
@@ -58,8 +70,8 @@
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
 	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
-										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account RS</a></li>
+										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account ID</a></li>
+										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Numeric Account	ID</a></li>
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
 									</ul>
@@ -223,6 +235,7 @@
 					           		<li><a href="#" data-type="2:3">Bid Order Placement</a></li>
 					           		<li><a href="#" data-type="2:4">Ask Order Cancellation</a></li>
 					           		<li><a href="#" data-type="2:5">Bid Order Cancellation</a></li>
+					           		<li><a href="#" data-type="unconfirmed">Unconfirmed Transactions</a></li>
 					          	</ul>
 							</div>
 	                	</div>
@@ -269,14 +282,14 @@
 					<section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%;">
 						<div class="content-spliter">
 					      <div class="content-splitter-inner">
-					          <div class="content-splitter-sidebar" style="width:200px;overflow-x:hidden;">
+					          <div class="content-splitter-sidebar" id="message_sidebar" style="width:200px;overflow-x:hidden;">
 					              <div class="content-splitter-sidebar-inner">
 					              	<div class="list-group unselectable sidebar_context" id="messages_sidebar">
 				                        <div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
 					              	</div>
 						             </div>
 						         </div>
-						         <div class="content-splitter-right">
+						         <div class="content-splitter-right" id="message_content">
 						         	<div class="content-splitter-right-inner">
 						         		<div id="no_message_selected" style="padding-top: 150px;text-align:center;">Please select a contact in the left sidebar.</div>
 						         		<div id="no_messages_available" style="padding-top: 150px;text-align:center;display:none;">No messages available, <a href="#" data-toggle="modal" data-target="#send_message_modal">send one</a>.</div>
@@ -374,7 +387,15 @@
                 	<section class="content-header">
                 		<h1>Aliases</h1>
                 		<div style="position:absolute;top:9px;right:9px;">
-							<button type="button" class="btn btn-default" data-toggle="modal" data-target="#register_alias_modal">Register Alias</button>
+							<form action="#" method="get" class="sidebar-form" id="asset_search" style="width:180px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Aliases...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+							<button type="button" class="btn btn-default" data-toggle="modal" data-target="#register_alias_modal" style="display:inline-block;vertical-align:middle;">Register Alias</button>
 						</div>
                 	</section>
                 	<section class="content">
@@ -543,7 +564,7 @@
 													<div class="input-group">
 														<input type="text" name="q" class="form-control" placeholder="Search...">
 														<span class="input-group-btn">
-														<button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+														<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 														</span>
 													</div>
 												</form>     
@@ -588,7 +609,7 @@
 								                		<div class="box-header" style="background-color:#DFF0D9;color: #48AB6C;">
 								                	   	<h3 class="box-title">Buy <span class="asset_name"></span> with NXT</h3>
 								                	       <div class="box-tools pull-right">
-								                	       	<button class="btn btn-info btn-sm" style="background-color: #48AB6C" data-widget="collapse"><i class="fa fa-minus"></i></button>
+								                	       	<button class="btn btn-info btn-sm" style="background-color: #48AB6C"><i class="fa fa-plus"></i></button>
 								                	        </div>
 								                	    </div>
 								                	    <div class="box-body no-padding" style="display:none">
@@ -672,7 +693,7 @@
 								                        <div class="box-header" style="background:#F2DEDE;color:#ED4348;">
 								                            <h3 class="box-title">Sell <span class="asset_name"></span> for NXT</h3>
 								                            <div class="box-tools pull-right">
-								                                <button class="btn btn-info btn-sm" data-widget="collapse" style="background-color: #ED4348"> <i class="fa fa-minus"></i></button>
+								                                <button class="btn btn-info btn-sm" style="background-color: #ED4348"> <i class="fa fa-plus"></i></button>
 								                            </div>
 								                        </div>
 								                        <div class="box-body no-padding" style="display:none">
@@ -751,7 +772,7 @@
 					                        	</div>
 					                        </div>
 							                        
-					                        <div class="box box-primary" style="max-height:500px;overflow:auto;margin-bottom:75px;">
+					                        <div class="box box-primary" style="max-height:500px;overflow:auto;margin-bottom:100px;">
 					                            <div class="box-header"><h3 class="box-title">Trade History</h3></div>
 					                            <div class="box-body no-padding">
 					                            	<div class="data-container data-loading" data-no-padding="true">
@@ -815,8 +836,8 @@
 							        </div>
 							        <div class="form-group">
 							        <!-- rs -->
-							            <label for="settings_use_reed_solomon">Use Reed Solomon Format</label>
-							            <select name="use_reed_solomon" id="settings_use_reed_solomon" class="form-control" style="width:150px">
+							            <label for="settings_reed_solomon">Use Reed Solomon Format</label>
+							            <select name="reed_solomon" id="settings_reed_solomon" class="form-control" style="width:150px">
 							                <option value="1">Yes</option>
 							                <option value="0">No</option>
 							            </select>
@@ -862,6 +883,13 @@
 	                        			<div class="input-group" style="width:150px">
 							          		<input type="text" name="fee_warning" id="settings_fee_warning" class="form-control" />
 	                        				<span class="input-group-addon">NXT</span>
+	                        			</div>
+							        </div>
+							        <div class="form-group">
+							            <label for="settings_asset_transfer_warning">Max Asset Transfer Warning</label>
+	                        			<div class="input-group" style="width:150px">
+							          		<input type="text" name="asset_transfer_warning" id="settings_asset_transfer_warning" class="form-control" />
+	                        				<span class="input-group-addon">QNT</span>
 	                        			</div>
 							        </div>
 							    </div>
@@ -1342,7 +1370,7 @@
 			        					
 			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
 		        					
-			        					<p>Please write down or memorize these 12 words (their order and capitalization matters). This secret phrase is needed in order to access your Nxt account.</p>
+			        					<p>Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This secret phrase is needed in order to access your Nxt account.</p>
 			        						        					
 			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
 			        				
@@ -1591,7 +1619,7 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label>ASSET</label>
-								<p id="transfer_asset_name"></p>
+								<p><span id="transfer_asset_name"></span><span id="transfer_asset_available" style="font-style:italic"></span></p>
 								<input type="hidden" name="asset" id="transfer_asset_asset" value="" />
 								<input type="hidden" name="decimals" id="transfer_asset_decimals" value="" />
 							</div>
@@ -2547,6 +2575,9 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							    		<td style="font-weight: bold">Unconfirmed Balance:</td><td><span id="account_balance_unconfirmed_balance"></span></td>
 							    	</tr>
 							    	<tr>
+							    		<td style="font-weight: bold">Guaranteed Balance:</td><td><span id="account_balance_guaranteed_balance"></span></td>
+							    	</tr>
+							    	<tr>
 							    		<td style="font-weight: bold">Effective Balance:</td><td><span id="account_balance_effective_balance"></span></td>
 							    	</tr>
 							    	<tr>
@@ -2665,14 +2696,16 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 
 		<div id="messages_sidebar_context" class="context_menu dropdown clearfix">
 		    <ul class="dropdown-menu" data-container="body" role="menu" style="display:block;position:static;margin-bottom:5px;">
-		        <li><a tabindex="-1" href="#" data-option="add_contact">Add contact</a></li>
+		    	<li><a tabindex="-1" href="#" data-option="account_info">Account Info</a></li>
+		        <li><a tabindex="-1" href="#" data-option="add_contact">Add Contact</a></li>
 				<li><a tabindex="-1" href="#" data-option="send_nxt">Send Nxt</a></li>
 		    </ul>
 		</div>
 		
 		<div id="messages_sidebar_update_context" class="context_menu dropdown clearfix">
 		    <ul class="dropdown-menu" data-container="body" role="menu" style="display:block;position:static;margin-bottom:5px;">
-		        <li><a tabindex="-1" href="#" data-option="update_contact">Update contact</a></li>
+		    	<li><a tabindex="-1" href="#" data-option="account_info">Account Info</a></li>
+		        <li><a tabindex="-1" href="#" data-option="update_contact">Update Contact</a></li>
 				<li><a tabindex="-1" href="#" data-option="send_nxt">Send Nxt</a></li>
 		    </ul>
 		</div>

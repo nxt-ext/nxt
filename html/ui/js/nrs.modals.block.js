@@ -24,7 +24,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.showBlockModal = function(block) {
-		$("#block_info_modal_block").html(String(block.id).escapeHTML());
+		$("#block_info_modal_block").html(String(block.block).escapeHTML());
 
 		$("#block_info_transactions_tab_link").tab("show");
 
@@ -34,7 +34,7 @@ var NRS = (function(NRS, $, undefined) {
 		delete blockDetails.nextBlockHash;
 		delete blockDetails.generationSignature;
 		delete blockDetails.payloadHash;
-		delete blockDetails.id;
+		delete blockDetails.block;
 
 		$("#block_info_details_table tbody").empty().append(NRS.createInfoTable(blockDetails));
 		$("#block_info_details_table").show();

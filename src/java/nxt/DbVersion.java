@@ -141,7 +141,6 @@ final class DbVersion {
             case 34:
                 apply(null);
             case 35:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 36:
                 apply("CREATE TABLE IF NOT EXISTS peer (address VARCHAR PRIMARY KEY)");
