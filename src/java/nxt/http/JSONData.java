@@ -25,11 +25,17 @@ final class JSONData {
 
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();
-        json.put("account", Convert.toUnsignedLong(alias.getAccount().getId()));
-        json.put("accountRS", Convert.rsAccount(alias.getAccount().getId()));
+        json.put("account", Convert.toUnsignedLong(alias.getAccountId()));
+        json.put("accountRS", Convert.rsAccount(alias.getAccountId()));
         json.put("alias", alias.getAliasName());
         json.put("uri", alias.getURI());
         json.put("timestamp", alias.getTimestamp());
+        Alias.Offer offer = Alias.getOffer(alias.getAliasName());
+        if (offer != null) {
+            json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
+            json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
+        }
+
         return json;
     }
 

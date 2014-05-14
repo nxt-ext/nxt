@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
@@ -14,6 +15,18 @@ import java.io.UnsupportedEncodingException;
 import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
+
+    static Alias getAlias(HttpServletRequest req) throws ParameterException {
+        String aliasName = Convert.emptyToNull(req.getParameter("alias"));
+        if (aliasName == null) {
+            throw new ParameterException(MISSING_ALIAS);
+        }
+        Alias alias = Alias.getAlias(aliasName);
+        if (alias == null) {
+            throw new ParameterException(INCORRECT_ALIAS);
+        }
+        return alias;
+    }
 
     static long getAmountNQT(HttpServletRequest req) throws ParameterException {
         String amountValueNQT = Convert.emptyToNull(req.getParameter("amountNQT"));
