@@ -241,6 +241,12 @@ var NRS = (function(NRS, $, undefined) {
 
 					NRS.unlock();
 
+					if (NRS.isOutdated) {
+						$.growl("A new NRS release is available. It is recommended that you update.", {
+							"type": "danger"
+						});
+					}
+
 					NRS.setupClipboardFunctionality();
 
 					if (callback) {

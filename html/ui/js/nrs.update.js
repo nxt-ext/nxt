@@ -1,6 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.normalVersion = {};
 	NRS.betaVersion = {};
+	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
 		if (NRS.downloadingBlockchain) {
@@ -13,6 +14,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#nrs_update_explanation_testnet").show();
 			return;
 		}
+
 		//Get latest version nr+hash of normal version
 		NRS.sendRequest("getAliasURI", {
 			"alias": "nrsversion"
@@ -57,15 +59,19 @@ var NRS = (function(NRS, $, undefined) {
 		$(".nrs_beta_version_nr").html(NRS.betaVersion.versionNr).show();
 
 		if (installVersusNormal == -1 && installVersusBeta == -1) {
+			NRS.isOutdated = true;
 			$("#nrs_update").html("Outdated!").show();
 			$("#nrs_update_explanation_new_choice").show();
 		} else if (installVersusBeta == -1) {
+			NRS.isOutdated = false;
 			$("#nrs_update").html("New Beta").show();
 			$("#nrs_update_explanation_new_beta").show();
 		} else if (installVersusNormal == -1) {
+			NRS.isOutdated = true;
 			$("#nrs_update").html("Outdated!").show();
 			$("#nrs_update_explanation_new_release").show();
 		} else {
+			NRS.isOutdated = false;
 			$("#nrs_update_explanation_up_to_date").show();
 		}
 	}
