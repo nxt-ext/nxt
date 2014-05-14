@@ -209,7 +209,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#update_contact_id").val(contact.id);
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				if (NRS.settings["use_reed_solomon"]) {
+				if (NRS.settings["reed_solomon"]) {
 					$("#update_contact_account_id").val(contact.accountRS);
 				} else {
 					$("#update_contact_account_id").val(contact.account);
@@ -226,7 +226,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				if (NRS.settings["use_reed_solomon"]) {
+				if (NRS.settings["reed_solomon"]) {
 					$("#update_contact_account_id").val(contact.accountRS);
 				} else {
 					$("#update_contact_account_id").val(contact.account);

@@ -734,7 +734,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (type == "string" || type == "number") {
 			return String(object).escapeHTML();
-		} else if (NRS.settings["use_reed_solomon"]) {
+		} else if (NRS.settings["reed_solomon"]) {
 			return String(object[acc + "RS"]).escapeHTML();
 		} else {
 			return String(object[acc]).escapeHTML();
