@@ -1,1 +1,12 @@
+Client Updates:
 
+Make reed solomon account format the default.
+Search by reed solomon account number.
+Differentiate background color of assets owned in asset sidebar.
+Differentiate background color of assets issued in account modal.
+Autolink URLs in asset description and alias data.
+Show notice on login if an update for NRS is available.
+Added a max asset transfer warning setting.
+Added a help menu.
+Correct amounts on "my assets" page.
+Alias search on aliases page.
