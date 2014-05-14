@@ -573,6 +573,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).parents(".btn-group").find(".text").text($(this).text());
 
+		$(".popover").remove();
+
 		NRS.pages.transactions();
 	});
 
