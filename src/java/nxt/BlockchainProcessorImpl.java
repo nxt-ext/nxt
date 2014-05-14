@@ -822,7 +822,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
     }
 
-    private volatile boolean validateAtScan = false;
+    private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
 
     void validateAtNextScan() {
         validateAtScan = true;
@@ -838,13 +838,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Account.clear();
             Alias.clear();
             Asset.clear();
-            Generator.clear();
             Order.clear();
             Poll.clear();
             Trade.clear();
             Vote.clear();
             DigitalGoodsStore.clear();
-            transactionProcessor.clear();
             try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
                 BlockImpl currentBlock;
@@ -886,6 +884,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new RuntimeException(e.toString(), e);
             }
             validateAtScan = false;
+            transactionProcessor.clear();
+            Generator.clear();
             Logger.logMessage("...done");
             isScanning = false;
         } // synchronized

@@ -44,7 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 		$list.empty();
 
 		for (var accountId in NRS.contacts) {
-			$list.append("<li><a href='#' data-contact='" + NRS.contacts[accountId].name.escapeHTML() + "'>" + NRS.contacts[accountId].name.escapeHTML() + "</a></li>");
+			$list.append("<li><a href='#' data-contact='" + String(NRS.contacts[accountId]).name.escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
 		}
 	});
 
@@ -168,11 +168,11 @@ var NRS = (function(NRS, $, undefined) {
 				}], function(error, contact) {
 					if (!error && contact.length) {
 						contact = contact[0];
-						NRS.getAccountError((NRS.settings["use_reed_solomon"] ? contact.accountRS : contact.account), function(response) {
+						NRS.getAccountError((NRS.settings["reed_solomon"] ? contact.accountRS : contact.account), function(response) {
 							callout.removeClass(classes).addClass("callout-" + response.type).html("The contact links to account <strong>" + NRS.getAccountFormatted(contact, "account") + "</strong>. " + response.message.escapeHTML()).show();
 
 							if (response.type == "info" || response.type == "warning") {
-								if (NRS.settings["use_reed_solomon"]) {
+								if (NRS.settings["reed_solomon"]) {
 									accountInputField.val(contact.accountRS);
 								} else {
 									accountInputField.val(contact.account);

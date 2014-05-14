@@ -167,19 +167,26 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (successMessage) {
 					$.growl(successMessage.escapeHTML(), {
-						type: 'success'
+						type: "success"
 					});
-				}
-
-				if (response.transaction) {
-					NRS.addUnconfirmedTransaction(response.transaction);
 				}
 
 				var formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
-				if (typeof formCompleteFunction == 'function') {
+				if (typeof formCompleteFunction == "function") {
 					data.requestType = requestType;
-					formCompleteFunction(response, data);
+
+					if (response.transaction) {
+						NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
+							response.alreadyProcessed = alreadyProcessed;
+							formCompleteFunction(response, data);
+						});
+					} else {
+						response.alreadyProcessed = false;
+						formCompleteFunction(response, data);
+					}
+				} else {
+					NRS.addUnconfirmedTransaction(response.transaction);
 				}
 
 				if (NRS.accountInfo && !NRS.accountInfo.publicKey) {

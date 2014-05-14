@@ -3288,3 +3288,16 @@ hr {
   margin-top:10px;
   border-bottom:1px solid #ddd;
 }
+
+.owns_asset {
+  background-color:#FFFFD5;
+}
+
+.asset_owner td {
+  background-color:#FFFFD5 !important;
+}
+
+
+.list-group-item.owns_asset.active, .list-group-item.owns_asset:hover {
+  border-right:5px solid #FFE545 !important;
+}

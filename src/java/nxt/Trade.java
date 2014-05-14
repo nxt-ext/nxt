@@ -33,6 +33,14 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
+    public static List<Trade> getTrades(Long assetId) {
+        List<Trade> assetTrades = trades.get(assetId);
+        if (assetTrades != null) {
+            return Collections.unmodifiableList(assetTrades);
+        }
+        return Collections.emptyList();
+    }
+
     static void addTrade(Long assetId, int timestamp, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
         List<Trade> assetTrades = trades.get(assetId);
         if (assetTrades == null) {
@@ -81,13 +89,5 @@ public final class Trade {
     public Long getAssetId() { return assetId; }
     
     public int getTimestamp() { return timestamp; }
-
-    public static List<Trade> getTrades(Long assetId) {
-        List<Trade> assetTrades = trades.get(assetId);
-        if (assetTrades != null) {
-            return Collections.unmodifiableList(assetTrades);
-        }
-        return Collections.emptyList();
-    }
 
 }

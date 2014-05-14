@@ -1,0 +1,21 @@
+Handle undo of initial alias assignment in order to minimize rescans. Clear
+unconfirmed transactions maps after rescan instead of before.
+
+Added nxt.forceValidate parameter to allow re-validating blocks and transactions
+on startup.
+
+Client Updates:
+
+Make reed solomon account format the default.
+Search by reed solomon account number.
+Differentiate background color of assets owned in asset sidebar.
+Differentiate background color of assets issued in account modal.
+Autolink URLs in asset description and alias data.
+Show notice on login if an update for NRS is available.
+Added a max asset transfer warning setting.
+Added a help menu.
+Correct amounts on my assets page.
+Alias search on aliases page.
+Added global unconfirmed transactions to transactions page.
+Show quantity of asset available for transfer in asset transfer modal.
+

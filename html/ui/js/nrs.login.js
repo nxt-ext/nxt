@@ -162,6 +162,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (nxtAddress.set(NRS.account)) {
 					NRS.accountRS = nxtAddress.toString();
+				} else {
+					$.growl("Could not generate Reed Solomon address.", {
+						"type": "danger"
+					});
 				}
 
 				NRS.sendRequest("getAccountPublicKey", {
@@ -186,7 +190,7 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 
-					if (NRS.settings["use_reed_solomon"]) {
+					if (NRS.settings["reed_solomon"]) {
 						$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
 					} else {
 						$("#account_id").html(String(NRS.account).escapeHTML()).css("font-size", "14px");
@@ -240,6 +244,12 @@ var NRS = (function(NRS, $, undefined) {
 					//NRS.getAccountAliases();
 
 					NRS.unlock();
+
+					if (NRS.isOutdated) {
+						$.growl("A new NRS release is available. It is recommended that you update.", {
+							"type": "danger"
+						});
+					}
 
 					NRS.setupClipboardFunctionality();
 

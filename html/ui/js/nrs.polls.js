@@ -27,7 +27,7 @@ var NRS = (function(NRS, $, undefined) {
 
 							if (NRS.unconfirmedTransactions.length) {
 								for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-									var unconfirmedTransaction = NRS.unconfirmedTransaction[i];
+									var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
 									if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subType == 2) {
 										var pollDescription = String(unconfirmedTransaction.attachment.description);
@@ -37,7 +37,6 @@ var NRS = (function(NRS, $, undefined) {
 										}
 
 										rows += "<tr class='tentative'><td>" + String(unconfirmedTransaction.attachment.name).escapeHTML() + "</td><td>" + pollDescription.escapeHTML() + "</td><td>" + (unconfirmedTransaction.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(unconfirmedTransaction, "sender") + "' class='user_info'>" + NRS.getAccountTitle(unconfirmedTransaction, "sender") + "</a>" : "Genesis") + "</td><td>" + NRS.formatTimestamp(unconfirmedTransaction.timestamp) + "</td><td><a href='#'>Vote (todo)</td></tr>";
-
 									}
 								}
 							}
@@ -147,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
 
-			var account = (NRS.settings["use_reed_solomon"] ? NRS.accountRS : NRS.account);
+			var account = (NRS.settings["reed_solomon"] ? NRS.accountRS : NRS.account);
 
 			var rowToAdd = "<tr class='tentative'><td>" + String(data.name).escapeHTML() + " - <strong>Pending</strong></td><td>" + String(data.description).escapeHTML() + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(account) + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a></td><td>" + NRS.formatTimestamp(now) + "</td><td>/</td></tr>";
 

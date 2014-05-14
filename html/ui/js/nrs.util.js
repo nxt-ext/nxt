@@ -258,17 +258,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatOrderPricePerWholeQNT = function(price, decimals) {
-		price = NRS.calculateOrderPricePerWholeQNT(price, decimals);
+		price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
 
-		return price;
+		return NRS.format(price);
 	}
 
-	NRS.calculateOrderPricePerWholeQNT = function(price, decimals) {
+	NRS.calculateOrderPricePerWholeQNT = function(price, decimals, returnAsObject) {
 		if (typeof price != "object") {
 			price = new BigInteger(String(price));
 		}
 
-		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))));
+		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))), returnAsObject);
 	}
 
 	NRS.calculatePricePerWholeQNT = function(price, decimals) {
@@ -734,7 +734,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (type == "string" || type == "number") {
 			return String(object).escapeHTML();
-		} else if (NRS.settings["use_reed_solomon"]) {
+		} else if (NRS.settings["reed_solomon"]) {
 			return String(object[acc + "RS"]).escapeHTML();
 		} else {
 			return String(object[acc]).escapeHTML();
@@ -803,7 +803,7 @@ var NRS = (function(NRS, $, undefined) {
 				return NRS.account;
 				break;
 			case "account_rs":
-				return NRS.accountInfo.accountRS;
+				return NRS.accountRS;
 				break;
 			case "message_link":
 				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;
@@ -890,7 +890,10 @@ var NRS = (function(NRS, $, undefined) {
 			var value = data[key];
 
 			//no need to mess with input, already done if Formatted is at end of key
-			if (/Formatted$/i.test(key)) {
+			if (/FormattedHTML$/i.test(key)) {
+				key = key.replace("FormattedHTML", "");
+				value = String(value);
+			} else if (/Formatted$/i.test(key)) {
 				key = key.replace("Formatted", "");
 				value = String(value).escapeHTML();
 			} else if (key == "Quantity" && $.isArray(value)) {

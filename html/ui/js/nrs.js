@@ -99,6 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).popover("show");
 		}).on("mouseleave", "td.confirmations", function() {
 			$(this).popover("destroy");
+			$(".popover").remove();
 		});
 
 		$(window).on("resize.asset", function() {
@@ -330,17 +331,21 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.accountInfo = response;
 
+			var preferredAccountFormat = (NRS.settings["reed_solomon"] ? NRS.accountRS : NRS.account);
+			if (!preferredAccountFormat) {
+				preferredAccountFormat = NRS.account;
+			}
 			if (response.errorCode) {
 				$("#account_balance, #account_forged_balance").html("0");
 				$("#account_nr_assets").html("0");
 
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(preferredAccountFormat).escapeHTML() + "</strong>" : "")).show();
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("The blockchain is currently rescanning. Please wait until that has completed.").show();
 					} else {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>").show();
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(preferredAccountFormat).escapeHTML() + "</strong>").show();
 					}
 				} else {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
@@ -354,7 +359,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (NRS.downloadingBlockchain) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.account).escapeHTML() + "</strong>" : "")).show();
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(preferredAccountFormat).escapeHTML() + "</strong>" : "")).show();
 				} else if (NRS.state && NRS.state.isScanning) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("The blockchain is currently rescanning. Please wait until that has completed.").show();
 				} else if (!NRS.accountInfo.publicKey) {
@@ -417,7 +422,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (response.assetBalances) {
 					for (var i = 0; i < response.assetBalances.length; i++) {
-						if (response.assetBalances[i].balanceNQT != "0") {
+						if (response.assetBalances[i].balanceQNT != "0") {
 							nr_assets++;
 						}
 					}
@@ -562,7 +567,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.sendRequest("getAsset", {
 					"asset": k,
 					"_extra": {
-						"id": k,
+						"asset": k,
 						"difference": diff[k]
 					}
 				}, function(asset, input) {
@@ -570,12 +575,12 @@ var NRS = (function(NRS, $, undefined) {
 						return;
 					}
 					asset.difference = input["_extra"].difference;
-					asset.id = input["_extra"].id;
+					asset.asset = input["_extra"].asset;
 
 					if (asset.difference.charAt(0) != "-") {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						$.growl("You received <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
+						$.growl("You received <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
 					} else {
@@ -583,7 +588,7 @@ var NRS = (function(NRS, $, undefined) {
 
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						$.growl("You sold <a href='#' data-goto-asset='" + String(asset.id).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
+						$.growl("You sold or transferred <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
 					}
@@ -649,44 +654,59 @@ var NRS = (function(NRS, $, undefined) {
 	$("#id_search").on("submit", function(e) {
 		e.preventDefault();
 
-		var id = $("#id_search input[name=q]").val();
+		var id = $.trim($("#id_search input[name=q]").val());
 
-		if (!/^\d+$/.test(id)) {
-			$.growl("You can search by account ID, transaction ID or block ID, nothing else.", {
-				"type": "danger"
+		if (/NXT\-/i.test(id)) {
+			NRS.sendRequest("getAccount", {
+				"account": id
+			}, function(response, input) {
+				if (!response.errorCode) {
+					response.account = input.account;
+					NRS.showAccountModal(response);
+				} else {
+					$.growl("Nothing found, please try another query.", {
+						"type": "danger"
+					});
+				}
 			});
-			return;
-		}
-		NRS.sendRequest("getTransaction", {
-			"transaction": id
-		}, function(response, input) {
-			if (!response.errorCode) {
-				response.id = input.transaction;
-				NRS.showTransactionModal(response);
-			} else {
-				NRS.sendRequest("getAccount", {
-					"account": id
-				}, function(response, input) {
-					if (!response.errorCode) {
-						response.id = input.account;
-						NRS.showAccountModal(response);
-					} else {
-						NRS.sendRequest("getBlock", {
-							"block": id
-						}, function(response, input) {
-							if (!response.errorCode) {
-								response.id = input.block;
-								NRS.showBlockModal(response);
-							} else {
-								$.growl("Nothing found, please try another query.", {
-									"type": "danger"
-								});
-							}
-						});
-					}
+		} else {
+			if (!/^\d+$/.test(id)) {
+				$.growl("Invalid input. Search by ID or reed solomon account number.", {
+					"type": "danger"
 				});
+				return;
 			}
-		});
+			NRS.sendRequest("getTransaction", {
+				"transaction": id
+			}, function(response, input) {
+				if (!response.errorCode) {
+					response.transaction = input.transaction;
+					NRS.showTransactionModal(response);
+				} else {
+					NRS.sendRequest("getAccount", {
+						"account": id
+					}, function(response, input) {
+						if (!response.errorCode) {
+							response.account = input.account;
+							NRS.showAccountModal(response);
+						} else {
+							NRS.sendRequest("getBlock", {
+								"block": id
+							}, function(response, input) {
+								if (!response.errorCode) {
+									response.block = input.block;
+									NRS.showBlockModal(response);
+								} else {
+									$.growl("Nothing found, please try another query.", {
+										"type": "danger"
+									});
+								}
+							});
+						}
+					});
+				}
+			});
+		}
 	});
 
 	return NRS;
