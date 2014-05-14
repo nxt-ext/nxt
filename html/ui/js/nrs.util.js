@@ -258,17 +258,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatOrderPricePerWholeQNT = function(price, decimals) {
-		price = NRS.calculateOrderPricePerWholeQNT(price, decimals);
+		price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
 
-		return price;
+		return NRS.format(price);
 	}
 
-	NRS.calculateOrderPricePerWholeQNT = function(price, decimals) {
+	NRS.calculateOrderPricePerWholeQNT = function(price, decimals, returnAsObject) {
 		if (typeof price != "object") {
 			price = new BigInteger(String(price));
 		}
 
-		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))));
+		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))), returnAsObject);
 	}
 
 	NRS.calculatePricePerWholeQNT = function(price, decimals) {

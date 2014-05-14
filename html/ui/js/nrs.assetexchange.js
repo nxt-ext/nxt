@@ -1161,138 +1161,134 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.my_assets = function() {
 		NRS.pageLoading();
 
-		NRS.sendRequest("getAccount+", {
-			"account": NRS.account
-		}, function(response) {
-			if (response.assetBalances && response.assetBalances.length) {
-				var result = {
-					"assets": [],
-					"bid_orders": {},
-					"ask_orders": {}
-				};
-				var count = {
-					"total_assets": response.assetBalances.length,
-					"assets": 0,
-					"ignored_assets": 0,
-					"ask_orders": 0,
-					"bid_orders": 0
-				};
+		if (NRS.accountInfo.assetBalances && NRS.accountInfo.assetBalances.length) {
+			var result = {
+				"assets": [],
+				"bid_orders": {},
+				"ask_orders": {}
+			};
+			var count = {
+				"total_assets": NRS.accountInfo.assetBalances.length,
+				"assets": 0,
+				"ignored_assets": 0,
+				"ask_orders": 0,
+				"bid_orders": 0
+			};
 
-				for (var i = 0; i < response.assetBalances.length; i++) {
-					if (response.assetBalances[i].balanceQNT == "0") {
-						count.ignored_assets++;
-						if (NRS.checkMyAssetsPageLoaded(count)) {
-							NRS.myAssetsPageLoaded(result);
-						}
-						continue;
+			for (var i = 0; i < NRS.accountInfo.assetBalances.length; i++) {
+				if (NRS.accountInfo.assetBalances[i].balanceQNT == "0") {
+					count.ignored_assets++;
+					if (NRS.checkMyAssetsPageLoaded(count)) {
+						NRS.myAssetsPageLoaded(result);
+					}
+					continue;
+				}
+
+				NRS.sendRequest("getAskOrderIds+", {
+					"asset": NRS.accountInfo.assetBalances[i].asset,
+					"limit": 1,
+					"timestamp": 0
+				}, function(response, input) {
+					if (NRS.currentPage != "my_assets") {
+						return;
 					}
 
-					NRS.sendRequest("getAskOrderIds+", {
-						"asset": response.assetBalances[i].asset,
-						"limit": 1,
-						"timestamp": 0
-					}, function(response, input) {
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}
+					if (response.askOrderIds && response.askOrderIds.length) {
+						NRS.sendRequest("getAskOrder+", {
+							"order": response.askOrderIds[0],
+							"_extra": {
+								"asset": input.asset
+							}
+						}, function(response, input) {
+							if (NRS.currentPage != "my_assets") {
+								return;
+							}
 
-						if (response.askOrderIds && response.askOrderIds.length) {
-							NRS.sendRequest("getAskOrder+", {
-								"order": response.askOrderIds[0],
-								"_extra": {
-									"asset": input.asset
-								}
-							}, function(response, input) {
-								if (NRS.currentPage != "my_assets") {
-									return;
-								}
+							response.priceNQT = new BigInteger(response.priceNQT);
 
-								response.priceNQT = new BigInteger(response.priceNQT);
-
-								result.ask_orders[input["_extra"].asset] = response.priceNQT;
-								count.ask_orders++;
-								if (NRS.checkMyAssetsPageLoaded(count)) {
-									NRS.myAssetsPageLoaded(result);
-								}
-							});
-						} else {
-							result.ask_orders[input.asset] = -1;
+							result.ask_orders[input["_extra"].asset] = response.priceNQT;
 							count.ask_orders++;
 							if (NRS.checkMyAssetsPageLoaded(count)) {
 								NRS.myAssetsPageLoaded(result);
 							}
+						});
+					} else {
+						result.ask_orders[input.asset] = -1;
+						count.ask_orders++;
+						if (NRS.checkMyAssetsPageLoaded(count)) {
+							NRS.myAssetsPageLoaded(result);
 						}
-					});
+					}
+				});
 
-					NRS.sendRequest("getBidOrderIds+", {
-						"asset": response.assetBalances[i].asset,
-						"limit": 1,
-						"timestamp": 0
-					}, function(response, input) {
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}
+				NRS.sendRequest("getBidOrderIds+", {
+					"asset": NRS.accountInfo.assetBalances[i].asset,
+					"limit": 1,
+					"timestamp": 0
+				}, function(response, input) {
+					if (NRS.currentPage != "my_assets") {
+						return;
+					}
 
-						if (response.bidOrderIds && response.bidOrderIds.length) {
-							NRS.sendRequest("getBidOrder+", {
-								"order": response.bidOrderIds[0],
-								"_extra": {
-									"asset": input.asset
-								}
-							}, function(response, input) {
-								if (NRS.currentPage != "my_assets") {
-									return;
-								}
+					if (response.bidOrderIds && response.bidOrderIds.length) {
+						NRS.sendRequest("getBidOrder+", {
+							"order": response.bidOrderIds[0],
+							"_extra": {
+								"asset": input.asset
+							}
+						}, function(response, input) {
+							if (NRS.currentPage != "my_assets") {
+								return;
+							}
 
-								response.priceNQT = new BigInteger(response.priceNQT);
+							response.priceNQT = new BigInteger(response.priceNQT);
 
-								result.bid_orders[input["_extra"].asset] = response.priceNQT;
-								count.bid_orders++;
-								if (NRS.checkMyAssetsPageLoaded(count)) {
-									NRS.myAssetsPageLoaded(result);
-								}
-							});
-						} else {
-							result.bid_orders[input.asset] = -1;
+							result.bid_orders[input["_extra"].asset] = response.priceNQT;
 							count.bid_orders++;
 							if (NRS.checkMyAssetsPageLoaded(count)) {
 								NRS.myAssetsPageLoaded(result);
 							}
-						}
-					});
-
-					NRS.sendRequest("getAsset+", {
-						"asset": response.assetBalances[i].asset,
-						"_extra": {
-							"balanceQNT": response.assetBalances[i].balanceQNT
-						}
-					}, function(asset, input) {
-						if (NRS.currentPage != "my_assets") {
-							return;
-						}
-
-						asset.asset = input.asset;
-						asset.balanceQNT = new BigInteger(input["_extra"].balanceQNT);
-						asset.quantityQNT = new BigInteger(asset.quantityQNT);
-
-						result.assets[count.assets] = asset;
-						count.assets++;
-
+						});
+					} else {
+						result.bid_orders[input.asset] = -1;
+						count.bid_orders++;
 						if (NRS.checkMyAssetsPageLoaded(count)) {
 							NRS.myAssetsPageLoaded(result);
 						}
-					});
+					}
+				});
 
+				NRS.sendRequest("getAsset+", {
+					"asset": NRS.accountInfo.assetBalances[i].asset,
+					"_extra": {
+						"balanceQNT": NRS.accountInfo.assetBalances[i].balanceQNT
+					}
+				}, function(asset, input) {
 					if (NRS.currentPage != "my_assets") {
 						return;
 					}
+
+					asset.asset = input.asset;
+					asset.balanceQNT = new BigInteger(input["_extra"].balanceQNT);
+					asset.quantityQNT = new BigInteger(asset.quantityQNT);
+
+					result.assets[count.assets] = asset;
+					count.assets++;
+
+					if (NRS.checkMyAssetsPageLoaded(count)) {
+						NRS.myAssetsPageLoaded(result);
+					}
+				});
+
+				if (NRS.currentPage != "my_assets") {
+					return;
 				}
-			} else {
-				$("#my_assets_table tbody").empty();
-				NRS.dataLoadFinished($("#my_assets_table"));
-				NRS.pageLoaded();
 			}
-		});
+		} else {
+			$("#my_assets_table tbody").empty();
+			NRS.dataLoadFinished($("#my_assets_table"));
+			NRS.pageLoaded();
+		}
 	}
 
 	NRS.checkMyAssetsPageLoaded = function(count) {
@@ -1322,6 +1318,7 @@ var NRS = (function(NRS, $, undefined) {
 			var lowestAskOrder = result.ask_orders[asset.asset];
 			var highestBidOrder = result.bid_orders[asset.asset];
 
+			console.log(lowestAskOrder.toString());
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
 
 			if (highestBidOrder != -1) {
@@ -1346,7 +1343,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatAmount(lowestAskOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(highestBidOrder) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(total) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>Transfer</a></td></tr>";
+			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " - <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(total, asset.decimals) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>Transfer</a></td></tr>";
 		}
 
 		$("#my_assets_table tbody").empty().append(rows);
