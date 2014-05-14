@@ -890,7 +890,10 @@ var NRS = (function(NRS, $, undefined) {
 			var value = data[key];
 
 			//no need to mess with input, already done if Formatted is at end of key
-			if (/Formatted$/i.test(key)) {
+			if (/FormattedHTML$/i.test(key)) {
+				key = key.replace("FormattedHTML", "");
+				value = String(value);
+			} else if (/Formatted$/i.test(key)) {
 				key = key.replace("Formatted", "");
 				value = String(value).escapeHTML();
 			} else if (key == "Quantity" && $.isArray(value)) {
