@@ -35,6 +35,11 @@ public final class Alias {
         }
     }
 
+    static void remove(Alias alias) {
+        aliases.remove(alias.getAliasName().toLowerCase());
+        aliasIdToAliasMappings.remove(alias.getId());
+    }
+
     static void clear() {
         aliases.clear();
         aliasIdToAliasMappings.clear();

@@ -373,8 +373,14 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                // can't tell whether Alias existed before and what was its previous uri
-                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName().toLowerCase());
+                if (alias.getId().equals(transaction.getId())) {
+                    Alias.remove(alias);
+                } else {
+                    // alias has been updated, can't tell what was its previous uri
+                    throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                }
             }
 
             @Override
