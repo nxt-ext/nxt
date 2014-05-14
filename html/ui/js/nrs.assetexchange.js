@@ -1369,6 +1369,38 @@ var NRS = (function(NRS, $, undefined) {
 		$("#transfer_asset_asset").val(assetId);
 		$("#transfer_asset_decimals").val(decimals);
 		$("#transfer_asset_name").html(String(assetName).escapeHTML());
+		$("#transer_asset_available").html("");
+
+		var confirmedBalance = 0;
+		var unconfirmedBalance = 0;
+
+		if (NRS.accountInfo.assetBalances) {
+			$.each(NRS.accountInfo.assetBalances, function(key, assetBalance) {
+				if (assetBalance.asset == assetId) {
+					confirmedBalance = assetBalance.balanceQNT;
+					return false;
+				}
+			});
+		}
+
+		if (NRS.accountInfo.unconfirmedAssetBalances) {
+			$.each(NRS.accountInfo.unconfirmedAssetBalances, function(key, assetBalance) {
+				if (assetBalance.asset == assetId) {
+					unconfirmedBalance = assetBalance.unconfirmedBalanceQNT;
+					return false;
+				}
+			});
+		}
+
+		var availableAssetsMessage = "";
+
+		if (confirmedBalance == unconfirmedBalance) {
+			availableAssetsMessage = " - " + NRS.formatQuantity(confirmedBalance, decimals) + " available for transfer";
+		} else {
+			availableAssetsMessage = " - " + NRS.formatQuantity(unconfirmedBalance, decimals) + " available for transfer (" + NRS.formatQuantity(confirmedBalance, decimals) + " total)";
+		}
+
+		$("#transfer_asset_available").html(availableAssetsMessage);
 	});
 
 	NRS.forms.transferAsset = function($modal) {
