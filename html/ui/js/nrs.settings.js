@@ -898,10 +898,16 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_id_prefix").hide();
 				$("#account_id").html(NRS.getAccountFormatted(NRS.accountRS)).css("font-size", "12px");
 				$("body").addClass("reed_solomon");
+				$("#message_sidebar").css("width", "245px");
+				$("#message_content").css("left", "245px");
+				$("#inline_message_form").css("left", "485px");
 			} else {
 				$("#account_id_prefix").show();
 				$("#account_id").html(NRS.getAccountFormatted(NRS.account)).css("font-size", "14px");
 				$("body").removeClass("reed_solomon");
+				$("#message_sidebar").css("width", "200px");
+				$("#message_content").css("left", "200px");
+				$("#inline_message_form").css("left", "440px");
 			}
 
 			var $dashboard_account_links = $("#dashboard_transactions_table a.user_info");
