@@ -298,7 +298,7 @@ var NRS = (function(NRS, $, undefined) {
 			"account": NRS.userInfoModal.user
 		}, function(response) {
 			if (response.assetBalances && response.assetBalances.length) {
-				var assets = [];
+				var assets = {};
 				var nrAssets = 0;
 				var ignoredAssets = 0;
 
@@ -307,7 +307,7 @@ var NRS = (function(NRS, $, undefined) {
 						ignoredAssets++;
 
 						if (nrAssets + ignoredAssets == response.assetBalances.length) {
-							NRS.userInfoModal.assetsLoaded(assets);
+							NRS.userInfoModal.addIssuedAssets(assets);
 						}
 						continue;
 					}
@@ -321,14 +321,38 @@ var NRS = (function(NRS, $, undefined) {
 						asset.asset = input.asset;
 						asset.balanceQNT = input["_extra"].balanceQNT;
 
-						assets[nrAssets] = asset;
+						assets[asset.asset] = asset;
 						nrAssets++;
 
 						if (nrAssets + ignoredAssets == response.assetBalances.length) {
-							NRS.userInfoModal.assetsLoaded(assets);
+							NRS.userInfoModal.addIssuedAssets(assets);
 						}
 					});
 				}
+			} else {
+				NRS.userInfoModal.addIssuedAssets({});
+			}
+		});
+	}
+
+	NRS.userInfoModal.addIssuedAssets = function(assets) {
+		NRS.sendRequest("getAssetsByIssuer", {
+			"account": NRS.userInfoModal.user
+		}, function(response) {
+			if (response.assets && response.assets.length) {
+				$.each(response.assets, function(key, issuedAsset) {
+					if (assets[issuedAsset.asset]) {
+						assets[issuedAsset.asset].issued = true;
+					} else {
+						issuedAsset.balanceQNT = "0";
+						issuedAsset.issued = true;
+						assets[issuedAsset.asset] = issuedAsset;
+					}
+				});
+
+				NRS.userInfoModal.assetsLoaded(assets);
+			} else if (!$.isEmptyObject(assets)) {
+				NRS.userInfoModal.assetsLoaded(assets);
 			} else {
 				$("#user_info_modal_assets_table tbody").empty();
 				NRS.dataLoadFinished($("#user_info_modal_assets_table"));
@@ -337,24 +361,43 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.userInfoModal.assetsLoaded = function(assets) {
+		var assetArray = [];
 		var rows = "";
 
-		assets.sort(function(a, b) {
-			if (a.name.toLowerCase() > b.name.toLowerCase()) {
-				return 1;
-			} else if (a.name.toLowerCase() < b.name.toLowerCase()) {
+		$.each(assets, function(key, asset) {
+			assetArray.push(asset);
+		});
+
+		assetArray.sort(function(a, b) {
+			if (a.issued && b.issued) {
+				if (a.name.toLowerCase() > b.name.toLowerCase()) {
+					return 1;
+				} else if (a.name.toLowerCase() < b.name.toLowerCase()) {
+					return -1;
+				} else {
+					return 0;
+				}
+			} else if (a.issued) {
 				return -1;
+			} else if (b.issued) {
+				return 1;
 			} else {
-				return 0;
+				if (a.name.toLowerCase() > b.name.toLowerCase()) {
+					return 1;
+				} else if (a.name.toLowerCase() < b.name.toLowerCase()) {
+					return -1;
+				} else {
+					return 0;
+				}
 			}
 		});
 
-		for (var i = 0; i < assets.length; i++) {
-			var asset = assets[i];
+		for (var i = 0; i < assetArray.length; i++) {
+			var asset = assetArray[i];
 
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
 
-			rows += "<tr><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 		}
 
 		$("#user_info_modal_assets_table tbody").empty().append(rows);
