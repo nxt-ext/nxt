@@ -1337,34 +1337,12 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                try {
-                    int nameBytesLength = buffer.getShort();
-                    if (nameBytesLength > 3 * Constants.MAX_DGS_LISTING_NAME_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid name length: " + nameBytesLength);
-                    }
-                    byte[] nameBytes = new byte[nameBytesLength];
-                    buffer.get(nameBytes);
-                    String name = new String(nameBytes, "UTF-8");
-                    int descriptionBytesLength = buffer.getShort();
-                    if (descriptionBytesLength > 3 * Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid description length: " + descriptionBytesLength);
-                    }
-                    byte[] descriptionBytes = new byte[descriptionBytesLength];
-                    buffer.get(descriptionBytes);
-                    String description = new String(descriptionBytes, "UTF-8");
-                    int tagsBytesLength = buffer.getShort();
-                    if (tagsBytesLength > 3 * Constants.MAX_DGS_LISTING_TAGS_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid tags length: " + tagsBytesLength);
-                    }
-                    byte[] tagsBytes = new byte[tagsBytesLength];
-                    buffer.get(tagsBytes);
-                    String tags = new String(tagsBytes, "UTF-8");
-                    int quantity = buffer.getInt();
-                    long priceNQT = buffer.getLong();
-                    transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, priceNQT));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error parsing goods listing", e);
-                }
+                String name = readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_NAME_LENGTH);
+                String description = readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH);
+                String tags = readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_TAGS_LENGTH);
+                int quantity = buffer.getInt();
+                long priceNQT = buffer.getLong();
+                transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, priceNQT));
             }
 
             @Override

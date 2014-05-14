@@ -6,8 +6,6 @@ import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.UnsupportedEncodingException;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
@@ -121,8 +119,8 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasSell implements Attachment, Serializable {
-        static final long serialVersionUID = 0;
+    public final static class MessagingAliasSell implements Attachment {
+
         private final String aliasName;
         private final long priceNQT;
 
@@ -171,8 +169,8 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasBuy implements Attachment, Serializable {
-        static final long serialVersionUID = 0;
+    public final static class MessagingAliasBuy implements Attachment {
+
         private final String aliasName;
 
         public MessagingAliasBuy(String aliasName) {
@@ -213,9 +211,7 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingPollCreation implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingPollCreation implements Attachment {
 
         private final String pollName;
         private final String pollDescription;
