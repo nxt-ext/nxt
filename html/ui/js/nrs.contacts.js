@@ -276,7 +276,7 @@ var NRS = (function(NRS, $, undefined) {
 			var address = new NxtAddress();
 
 			if (address.set(data.account_rs)) {
-				data.account = address.account_id();
+				data.account_id = address.account_id();
 			} else {
 				return {
 					"error": "Invalid account ID."
@@ -298,7 +298,7 @@ var NRS = (function(NRS, $, undefined) {
 			"account": data.account_id
 		}, function(response) {
 			if (!response.errorCode) {
-				if (response.account != data.account || response.accountRS != data.account_rs) {
+				if (response.account != data.account_id || response.accountRS != data.account_rs) {
 					return {
 						"error": "Invalid account ID."
 					};
