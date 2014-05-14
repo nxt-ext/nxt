@@ -1,0 +1,11 @@
+Fixed forking problem. Hopefully.
+
+Include guaranteedBalanceNQT (1440 confirmations) in getAccount JSON.
+
+Client UI:
+
+Fixed AE display in Safari.
+
+Removed some pre-NQT logic. Make AE visible by default.
+
+

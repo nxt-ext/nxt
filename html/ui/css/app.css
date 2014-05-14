@@ -21,12 +21,16 @@
 */
 html,
 body {
-  overflow-x: hidden!important;
-  font-family: sans-serif;
+  overflow-x:hidden;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
   background: #f9f9f9;
   color: black !important;
+}
+html.lockscreen, html.lockscreen body {
+  height:100%;
+  overflow-x:auto;
 }
 a {
   color: #3c8dbc;
@@ -525,7 +529,7 @@ body > .header .logo .icon {
 .sidebar {
   margin-bottom: 5px;
 }
-.sidebar .sidebar-form input:focus {
+.sidebar-form input:focus {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
@@ -2455,21 +2459,21 @@ background:#33363f
 .skin-blue .treeview-menu > li > a:hover {
   color: #111;
 }
-.skin-blue .sidebar-form {
+.skin-blue .sidebar .sidebar-form {
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   border-radius: 2px;
   border: 1px solid #dbdbdb;
   margin: 10px 10px;
 }
-.skin-blue .sidebar-form input[type="text"],
-.skin-blue .sidebar-form .btn {
+.skin-blue .sidebar .sidebar-form input[type="text"],
+.skin-blue .sidebar .sidebar-form .btn {
   box-shadow: none;
   background-color: #fafafa;
   border: 1px solid #fafafa;
   height: 35px;
 }
-.skin-blue .sidebar-form input[type="text"] {
+.skin-blue .sidebar .sidebar-form input[type="text"] {
   color: #666;
   -webkit-border-top-left-radius: 2px !important;
   -webkit-border-top-right-radius: 0 !important;
@@ -2484,15 +2488,15 @@ background:#33363f
   border-bottom-right-radius: 0 !important;
   border-bottom-left-radius: 2px !important;
 }
-.skin-blue .sidebar-form input[type="text"]:focus,
-.skin-blue .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+.skin-blue .sidebar .sidebar-form input[type="text"]:focus,
+.skin-blue .sidebar .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
   background-color: #fff;
   color: #666;
 }
-.skin-blue .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+.skin-blue .sidebar .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
   border-left-color: #fff;
 }
-.skin-blue .sidebar-form .btn {
+.skin-blue .sidebar .sidebar-form .btn {
   color: #999;
   -webkit-border-top-left-radius: 0 !important;
   -webkit-border-top-right-radius: 2px !important;
@@ -2525,10 +2529,14 @@ background:#33363f
 
 /* wesley */
 
-@media screen and (min-width: 768px) {
-  .modal-dialog-wide {
+@media screen and (min-width: 800px) {
+  body .modal-dialog-wide {
     width: 700px;
     margin: 30px auto;
+  }
+
+  body.reed_solomon .modal-dialog-wide, .modal-dialog-wider {
+    width: 800px;
   }
 }
 
@@ -3070,21 +3078,6 @@ nrs_update_hashes {
     margin-bottom:1px;
 }
 
-
-
-/*http://themeforest.net/item/mint-flat-responsive-admin-dashboard-template/full_screen_preview/6679983 */
-
-
-
-/* http://themeforest.net/item/bracket-responsive-bootstrap-3-admin-template/full_screen_preview/6894362 */
-
-
-
-/* http://cdn.mosaicpro.biz/flatplus/php/admin/profile_resume.html?module=admin&page=profile_resume&url_rewrite=&lang=en&skin=style-default&v=v1.2.4-rc1 */
-
-
-
-
 .left-side-single .sidebar > .sidebar-menu  >li > a {
 	border-bottom:none !important;
 }
@@ -3270,11 +3263,36 @@ hr {
   margin-top:10px;
   margin-bottom:10px;
 }
-/*
-.navbar.main .navbar-brand .colors>li.dropdown .dropdown-menu .color.primary {
-    background: #496cad
-}*/
 
 
+#lockscreen {
+  height:100%;
+}
 
-/* gray header + sidebar http://r209.com/templates/moodstrap/typography.html */
+#center .panel {
+  display:inline-block;
+}
+
+#center .panel-heading, #center .panel-body {
+  text-align:left;
+}
+
+#testnet_login {
+  display:inline-block;
+  text-align:left;
+  margin-bottom:5px;
+}
+
+#asset_exchange_sidebar_search {
+  display:none;
+  margin-top:10px;
+  border-bottom:1px solid #ddd;
+}
+
+.owns_asset {
+  background-color:#FFFFD5;
+}
+
+.list-group-item.owns_asset.active, .list-group-item.owns_asset:hover {
+  border-right:5px solid #FFE545 !important;
+}

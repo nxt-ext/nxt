@@ -9,3 +9,5 @@
 /nxt_test_db/
 *.trace
 /nxt-trace.csv
+/README_win.txt
+/package.sh

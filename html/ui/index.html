@@ -36,6 +36,18 @@
 	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#generate_token_modal">Generate Token</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
                         <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-question-circle"></i>
+                            </a>
+                            <ul class="dropdown-menu" role="menu">
+                            	<li><a role="menuitem" tabindex="-1" href="http://nxt.org/" target="_blank">Nxt.org</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://nxtforum.org/" target="_blank">Nxt Forum</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/" target="_blank">Nxt Wiki</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Nxt_client_interface" target="_blank">Interface Tutorial</a></li>
+								<li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Asset_Exchange" target="_blank">Asset Exchange Tutorial</a></li>
+							</ul>
+						</li>
+                        <li class="dropdown" id="logout_button_container">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
                                 <i class="fa fa-power-off"></i>
                             </a>
@@ -58,10 +70,10 @@
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
 	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-										<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
-										<li role="presentation" style="display:none"><a role="menuitem" tabindex="-1" href="#" data-type="new_address_format">Copy New Address Format</a></li>
-										<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
-										<li role="presentation" class="remote_only"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
+										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Account ID</a></li>
+										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account RS</a></li>
+										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
+										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
 									</ul>
 								</div>
 	                            <a href="#" id="forging_indicator" class="forging" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span>Forging</span></a>
@@ -79,7 +91,7 @@
                     <ul class="sidebar-menu">
                         <li class="active" id="dashboard_link"><a href="#" data-page="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
                         <li><a href="#" data-page="transactions"><i class="fa fa-briefcase"></i> <span>Transactions</span></a></li>
-                        <li class="treeview testnet_only">
+                        <li class="treeview" id="sidebar_asset_exchange">
                         	<a href="#" data-page="asset_exchange"><i class="fa fa-signal"></i><span>Asset Exchange</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="asset_exchange"><i class="fa fa-angle-double-right"></i> Asset Exchange</a></li>
@@ -119,6 +131,16 @@
 	                        <div class="col-lg-3 col-xs-6">
 	                            <div class="small-box bg-green">
 	                                <div class="inner">
+	                                    <h3><span id="account_forged_balance" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
+	                                    <p>Forged Balance</p>
+	                                </div>
+	                                <div class="icon"><i class="ion ion-hammer"></i></div>
+	                                <a href="#" id="goto_forged_blocks" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+	                            </div>
+	                        </div>
+	                        <div class="col-lg-3 col-xs-6">
+	                            <div class="small-box bg-yellow">
+	                                <div class="inner">
 	                                    <h3><span id="account_nr_assets" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
 	                                    <p>Assets Owned</p>
 	                                </div>
@@ -126,25 +148,14 @@
 	                                <a href="#" class="small-box-footer goto-page" data-page="my_assets">More info <i class="fa fa-arrow-circle-right"></i></a>
 	                            </div>
 	                        </div>
-
 	                        <div class="col-lg-3 col-xs-6">
-	                            <div class="small-box bg-yellow">
+	                            <div class="small-box bg-red">
 	                                <div class="inner">
 	                                    <h3><span id="nrs_version" class="loading_dots"><span>.</span><span>.</span><span>.</span></span></h3>
 	                                    <p><span id="nrs_version_info">NRS Version</span> <span class="label label-danger" id="nrs_update" style="display:none;"></span></p>
 	                                </div>
 	                                <div class="icon"><i class="fa fa-code"></i></div>
 	                                <a href="#" class="small-box-footer" data-toggle="modal" data-target="#nrs_modal">More info <i class="fa fa-arrow-circle-right"></i></a>
-	                            </div>
-	                        </div>
-	                        <div class="col-lg-3 col-xs-6">
-	                            <div class="small-box bg-red">
-	                                <div class="inner">
-	                                    <h3>...</h3>
-	                                    <p>Todo</p>
-	                                </div>
-	                                <div class="icon"><i class="ion ion-person-add"></i></div>
-	                                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
 	                            </div>
 	                        </div>
 	                    </div>
@@ -193,7 +204,7 @@
 								                </tbody>
 								            </table>
 								            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-								            <div class="data-empty-container"></div>
+								            <div class="data-empty-container"><p>No blocks found.</p></div>
 								    	</div>
 							        </div>
 							        <div class="box-footer" id="dashboard_blocks_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="blocks"><i class="fa fa-caret-right"></i> View More</button></div>
@@ -224,6 +235,7 @@
 					           		<li><a href="#" data-type="2:3">Bid Order Placement</a></li>
 					           		<li><a href="#" data-type="2:4">Ask Order Cancellation</a></li>
 					           		<li><a href="#" data-type="2:5">Bid Order Cancellation</a></li>
+					           		<li><a href="#" data-type="unconfirmed">Unconfirmed Transactions</a></li>
 					          	</ul>
 							</div>
 	                	</div>
@@ -256,6 +268,7 @@
                 <div id="messages_page" class="page">
 	                <section class="content-header">
 	                	<h1>Messages</h1>
+	                	<!--
 						<div style="position:absolute;top:9px;right:9px;">
 				            <div class="btn-group">
 				                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Select Recipient <span class="caret"></span></button>
@@ -264,6 +277,7 @@
 				                </ul>
 				            </div>
 			            </div>
+			            -->
 	                </section>
 					<section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%;">
 						<div class="content-spliter">
@@ -527,11 +541,9 @@
                 <div id="asset_exchange_page" class="page">
 	                <section class="content-header">
 	                	<h1>Asset Exchange</h1>
-	                	<!--
 	                	<div style="position:absolute;top:9px;right:9px;">
-		                	<button type="button" class="btn btn-sm btn-default" id="asset_exchange_refresh">Refresh</button>
+		                	<button type="button" class="btn btn-sm btn-default" id="asset_exchange_clear_search" style="display:none">Clear Search Results</button>
 	                	</div>
-	                	-->
 	                </section>
 	                <section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%;">
 						<div class="content-spliter">
@@ -539,7 +551,19 @@
 			                    <div class="content-splitter-sidebar" style="width:200px">
 			                        <div class="content-splitter-sidebar-inner">
 			                        	<div class="list-group unselectable sidebar_context" id="asset_exchange_sidebar">
-				                        	<div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
+											<div id="asset_exchange_sidebar_search">
+												 <form action="#" method="get" class="sidebar-form" id="asset_exchange_search">
+													<div class="input-group">
+														<input type="text" name="q" class="form-control" placeholder="Search...">
+														<span class="input-group-btn">
+														<button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+														</span>
+													</div>
+												</form>     
+											</div>
+											<div id="asset_exchange_sidebar_content">
+				                        		<div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
+				                        	</div>
 			                        	</div>
 						             </div>
 						         </div>
@@ -549,13 +573,15 @@
 						         		<div id="no_asset_selected" style="padding-top: 150px;text-align:center;">Please select an asset in the left sidebar.</div>
 						         		<div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;">Asset data loading, please wait...<br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 						         		<div id="asset_details" style="display:none;">
+							            	<div class="alert alert-danger alert-no-icon" id="asset_exchange_duplicates_warning" style="display:none"><strong>Warning</strong>: There <span></span> with the same name in the asset exchange. Please make sure you choose the right one. Look at the account and asset id for confirmation.</div>
+
 							            	<div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
 							            		<strong>Account</strong>: <span id="asset_account"></span><br />
 					                        	<span id="asset_id_dropdown" class="dropdown" style="margin-bottom:0;">
 					                        		<strong>Asset Id</strong>: &nbsp;<a href="#" id="asset_id" class="dropdown-toggle" data-toggle="dropdown"></a>
 													<ul class="dropdown-menu" role="menu" style="right:0;left:auto;text-align:left;">
-														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id">Copy Asset ID</a></li>
-														<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link">Copy Asset Link</a></li>
+														<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id">Copy Asset ID</a></li>
+														<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link">Copy Asset Link</a></li>
 													</ul>
 												</span>
 							            	</div>
@@ -575,7 +601,7 @@
 								                		<div class="box-header" style="background-color:#DFF0D9;color: #48AB6C;">
 								                	   	<h3 class="box-title">Buy <span class="asset_name"></span> with NXT</h3>
 								                	       <div class="box-tools pull-right">
-								                	       	<button class="btn btn-info btn-sm" style="background-color: #48AB6C" data-widget="collapse"><i class="fa fa-minus"></i></button>
+								                	       	<button class="btn btn-info btn-sm" style="background-color: #48AB6C"><i class="fa fa-plus"></i></button>
 								                	        </div>
 								                	    </div>
 								                	    <div class="box-body no-padding" style="display:none">
@@ -659,7 +685,7 @@
 								                        <div class="box-header" style="background:#F2DEDE;color:#ED4348;">
 								                            <h3 class="box-title">Sell <span class="asset_name"></span> for NXT</h3>
 								                            <div class="box-tools pull-right">
-								                                <button class="btn btn-info btn-sm" data-widget="collapse" style="background-color: #ED4348"> <i class="fa fa-minus"></i></button>
+								                                <button class="btn btn-info btn-sm" style="background-color: #ED4348"> <i class="fa fa-plus"></i></button>
 								                            </div>
 								                        </div>
 								                        <div class="box-body no-padding" style="display:none">
@@ -738,7 +764,7 @@
 					                        	</div>
 					                        </div>
 							                        
-					                        <div class="box box-primary" style="max-height:500px;overflow:auto;">
+					                        <div class="box box-primary" style="max-height:500px;overflow:auto;margin-bottom:75px;">
 					                            <div class="box-header"><h3 class="box-title">Trade History</h3></div>
 					                            <div class="box-body no-padding">
 					                            	<div class="data-container data-loading" data-no-padding="true">
@@ -779,13 +805,13 @@
                 
                 <div id="settings_page" class="page">
 					<section class="content-header"><h1>Settings</h1></section>
-					<section class="content">
+					<section class="content" id="settings_box">
 					
 						<style type="text/css">
 						/*form.settings_form > .form-group > .control-label { width: 120px; }*/
 						</style>
 						
-						<div class="box box-primary" id="settings_box">
+						<div class="box box-primary">
 							<div class="box-header">
 							    <h3 class="box-title">General</h3>
 							</div>
@@ -800,13 +826,14 @@
 							            </select>
 							            <p class="help-block">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
 							        </div>
-							        <div class="form-group" style="display:none">
-							            <label for="settings_use_new_address_format">Use New Address Format</label>
-							            <select name="use_new_address_format" id="settings_use_new_address_format" class="form-control" style="width:150px">
+							        <div class="form-group">
+							        <!-- rs -->
+							            <label for="settings_use_reed_solomon">Use Reed Solomon Format</label>
+							            <select name="use_reed_solomon" id="settings_use_reed_solomon" class="form-control" style="width:150px">
 							                <option value="1">Yes</option>
 							                <option value="0">No</option>
 							            </select>
-							            <p class="help-block">The new address format has built-in error detection.</p>
+							            <p class="help-block">The reed solomon format has built-in error detection.</p>
 							        </div>
 									<div class="form-group">
 							            <label for="settings_animate_forging">Animate Forging Indicator</label>
@@ -818,6 +845,7 @@
 							        <div class="form-group">
 							            <label for="settings_news">Enable News Section</label>
 							            <select name="news" id="settings_news" class="form-control" style="width:150px">
+							            	<option value="-1" id="settings_news_initial">Choose</option>
 							                <option value="1">Yes</option>
 							                <option value="0">No</option>
 							            </select>
@@ -825,7 +853,41 @@
 							    </div>
 							</form>
 						</div>
-                        
+
+						<div class="box box-warning" id="settings_box">
+							<div class="box-header">
+							    <h3 class="box-title">Form Warnings</h3>
+							</div>
+							
+							<form role="form">
+							    <div class="box-body" style="padding-top:0;">
+							    	<p class="help-block">Show a warning when an amount / fee entered is higher than specified below.</p>
+
+							        <div class="form-group">
+							            <label for="settings_amount_warning">Max Amount Warning</label>
+	                        			<div class="input-group" style="width:150px">
+							          		<input type="text" name="amount_warning" id="settings_amount_warning" class="form-control" />
+	                        				<span class="input-group-addon">NXT</span>
+	                        			</div>
+							        </div>
+							        <div class="form-group">
+							            <label for="settings_fee_warning">Max Fee Warning</label>
+	                        			<div class="input-group" style="width:150px">
+							          		<input type="text" name="fee_warning" id="settings_fee_warning" class="form-control" />
+	                        				<span class="input-group-addon">NXT</span>
+	                        			</div>
+							        </div>
+							        <div class="form-group">
+							            <label for="settings_asset_transfer_warning">Max Asset Transfer Warning</label>
+	                        			<div class="input-group" style="width:150px">
+							          		<input type="text" name="asset_transfer_warning" id="settings_asset_transfer_warning" class="form-control" />
+	                        				<span class="input-group-addon">QNT</span>
+	                        			</div>
+							        </div>
+							    </div>
+							</form>
+						</div>
+                                            
                         <div class="box box-success" style="overflow:visible">
 							<div class="box-header">
 							    <h3 class="box-title">Theme Settings</h3>
@@ -1031,14 +1093,21 @@
 					                </div>
 					            </div>
 
-				                <div class="box box-primary">
+					            <div class="box box-primary">
+				                    <div class="box-header"><h3 class="box-title">NxtCommunity.org</h3></div>
+				                    <div class="box-body">
+				                		<div id="nxtcommunity_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+				                    </div>
+				                </div>
+
+				                <div class="box box-warning">
 				                    <div class="box-header"><h3 class="box-title">NxtCrypto.org</h3></div>
 				                    <div class="box-body">
 				                		<div id="nxtcrypto_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 				                    </div>
 				                </div>
-				            				                				                
-				                <div class="box box-primary">
+
+				                <div class="box box-success">
 				                    <div class="box-header"><h3 class="box-title">NxtCoin.Blogspot.com</h3></div>
 				                    <div class="box-body">
 				                		<div id="nxtcoin_blogspot_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -1053,19 +1122,20 @@
 				                    </div>
 				                </div>
 
-								<div class="box box-warning">
+								<div class="box box-success">
 				                    <div class="box-header"><h3 class="box-title">Nxter.org</h3></div>
 				                    <div class="box-body">
 				                		<div id="nxter_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 				                    </div>
 				                </div>
 				                
-					            <div class="box box-success">
+					            <div class="box box-primary">
 					                <div class="box-header"><h3 class="box-title">NextCoin.org Forums</h3></div>
 					                <div class="box-body">
 					            		<div id="nextcoin_forums_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 					                </div>
 					            </div>
+
 				            </div>
 						</div>
 						<div id="rss_news_disabled" style="padding-top: 150px;text-align:center;">The news section is currently disabled. <a href="#" id="rss_news_enable">Click here</a> to enable it.</div>
@@ -1151,8 +1221,6 @@
 						    </div>
 						</div>
 						
-						<div class="callout callout-danger" id="forged_blocks_warning"><strong>Warning</strong>: Only the last 100 blocks forged are shown (this includes the "Total Fee" statistic.)</div>
-
 						<div class="data-container data-loading">
 							<table class="table table-striped" id="blocks_table">
 								<thead>
@@ -1172,7 +1240,7 @@
 							    </tbody>
 							</table>
 							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-							<div class="data-empty-container"></div>
+							<div class="data-empty-container">No blocks found.</div>
 						</div>
 	                </section>
 				</div>
@@ -1198,138 +1266,133 @@
 		    </div>
 		    -->
 			
-	        <div class="center" style="display:none">   
-	        	 <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="88" style="margin-bottom:40px;opacity: 0.5;;" /></center>
-	            	 
-	            <div id="login_panel">   
-	            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;">Log in with your <strong>TestNet</strong> account - not your real one!</div>
-	                    	                    
-		            <div class="lockscreen-item">
-		                <div class="lockscreen-credentials">   
-		                    <div class="input-group">
-		                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Secret Phrase" autofocus />
-		                        <div class="input-group-btn">
-		                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
-		                        </div>
-		                    </div>
-		                </div>
-		            </div>	
-		            
-		            <div id="remember_password_container">
-		            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember password during session</label>
+			<table id="center" style="display:none;width:100%;height:100%;">
+	        	<tr><td style="text-align:center;vertical-align:middle">
+		        	 <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="88" style="margin-bottom:40px;opacity: 0.5;;" /></center>
+		            	 
+		            <div id="login_panel">   
+		            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;">Log in with your <strong>TestNet</strong> account - not your real one!</div>
+		                    	                    
+			            <div class="lockscreen-item">
+			                <div class="lockscreen-credentials">   
+			                    <div class="input-group">
+			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Secret Phrase" autofocus />
+			                        <div class="input-group-btn">
+			                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+			                        </div>
+			                    </div>
+			                </div>
+			            </div>	
+			            
+			            <div id="remember_password_container">
+			            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember password during session</label>
+			            </div>
+			            
+			            <div id="registration_link">
+			            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();">Don't have an account? Click here to create one!</a>
+			            </div> 
 		            </div>
 		            
-		            <div id="registration_link">
-		            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();">Don't have an account? Click here to create one!</a>
-		            </div> 
-	            </div>
-	            
-				<div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
-	                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Welcome to Nxt</div>
-	                <div class="panel-body">
-	               		<button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;">Returning User?</button>
-				   		&nbsp;&nbsp;
-				   		<button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;">New? Create Your Account!</button>
-	                </div>
-	            </div>  
-				
-	            <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
-	                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
-	                <div class="panel-body">
-						<form class="form-horizontal" role="form" method="post">
-	        				<div class="callout callout-info" style="max-width:500px;">Your secret phrase must be at least 35 characters long.</div>
-	        				
-	        				<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
-
-		            		<div class="form-group">
-		            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
-		            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
-		            		</div>
-		                    <div class="form-group">
-		                        <label for="registration_password_repeat" class="col-sm-3 control-label">Repeat</label>
-		                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
-		                    </div>
-		                    
-							<div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-		                    </div>
-	                    </form>
-	                </div>
-	            </div>  
-	            
-	            <div class="panel panel-default" id="account_phrase_generator_panel" style="display:none;max-width:500px">
-	            	<div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
-	                <div class="panel-body">
-	                	<div id="account_phrase_generator_loading">
-	                		<p><span class="loading_text">Loading Word List</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
-	                		
-							<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-	                	</div>
-	                	
-	                	<div id="account_phrase_generator_loaded">	        				
-	        				<div class="step_1 account_phrase_generator_steps">
-								<div id="account_phrase_generator_seeder" class="seeder">
-									<p>Move your cursor around to seed the random number generator...</p>
-									<div class="progress progress-striped">
-							            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-							                <span class="sr-only">0% Seeded</span>
-							            </div>
-									</div>
-								</div>
-								
-								<div style="text-align:right">
-									<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-								</div>
-	        				</div>
-	        				
-	        				<div class="step_2 account_phrase_generator_steps">
-	        					<div id="account_phrase_generator_start">
-	        						<p>Generating your secret phrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
-	        						
-									<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-	        					</div>
-	        					
-	        					<div id="account_phrase_generator_stop" style="display:none">
-		        					<p>Your automatically generated secret phrase is:</p>
-		        					
-		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
-	        					
-		        					<p>Please write down or memorize these 12 words (their order and capitalization matters). This secret phrase is needed in order to access your Nxt account.</p>
-		        						        					
-		        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+					<div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
+		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Welcome to Nxt</div>
+		                <div class="panel-body">
+		               		<button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;">Returning User?</button>
+					   		&nbsp;&nbsp;
+					   		<button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;">New? Create Your Account!</button>
+		                </div>
+		            </div>  
+					
+		            <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
+		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
+		                <div class="panel-body">
+							<form class="form-horizontal" role="form" method="post">
+		        				<div class="callout callout-info" style="max-width:500px;">Your secret phrase must be at least 35 characters long.</div>
 		        				
-									<div style="text-align:right">
-										<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-									</div>
-	        					</div>
-	        				</div>
-	        				
-	        				<div class="step_3 account_phrase_generator_steps">
-	        					<p>Your secret phrase is very important! In order to be sure that you have saved it, please write your secret phrase below:</p>
-	        					
-	        					<div class="callout callout-danger" style="display:none">You have not typed the secret phrase correctly, please try again!</div>
+		        				<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
 
-	        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
-	        					
-	        					<div style="text-align:right">
-									<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="NRS.verifyGeneratedPassphrase();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
-								</div>
-	        				</div>
-	                	</div>
-	                </div>
-	            </div>  
+			            		<div class="form-group">
+			            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
+			            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
+			            		</div>
+			                    <div class="form-group">
+			                        <label for="registration_password_repeat" class="col-sm-3 control-label">Repeat</label>
+			                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
+			                    </div>
+			                    
+								<div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+			                    </div>
+		                    </form>
+		                </div>
+		            </div>
 	            
-	            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
-		    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own secret phrase? Click here.</a>
-				</div>
-			</div>
-	        <!--
-	        <div style="position:absolute;top:10px;left:10px;" id="server_select">
-	        	<button type="button" class="btn btn-primary">
-	        		<span class="text">TestNet</span></span>
-	        	</button>
-	        </div>
-	       -->
-	       
+		            <div class="panel panel-default" id="account_phrase_generator_panel" style="display:none;max-width:500px">
+		            	<div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
+		                <div class="panel-body">
+		                	<div id="account_phrase_generator_loading">
+		                		<p><span class="loading_text">Loading Word List</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+		                		
+								<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+		                	</div>
+		                	
+		                	<div id="account_phrase_generator_loaded">	        				
+		        				<div class="step_1 account_phrase_generator_steps">
+									<div id="account_phrase_generator_seeder" class="seeder">
+										<p>Move your cursor around to seed the random number generator...</p>
+										<div class="progress progress-striped">
+								            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+								                <span class="sr-only">0% Seeded</span>
+								            </div>
+										</div>
+									</div>
+									
+									<div style="text-align:right">
+										<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+									</div>
+		        				</div>
+		        				
+		        				<div class="step_2 account_phrase_generator_steps">
+		        					<div id="account_phrase_generator_start">
+		        						<p>Generating your secret phrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+		        						
+										<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+		        					</div>
+		        					
+		        					<div id="account_phrase_generator_stop" style="display:none">
+			        					<p>Your automatically generated secret phrase is:</p>
+			        					
+			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+		        					
+			        					<p>Please write down or memorize these 12 words (their order and capitalization matters). This secret phrase is needed in order to access your Nxt account.</p>
+			        						        					
+			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+			        				
+										<div style="text-align:right">
+											<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+										</div>
+		        					</div>
+		        				</div>
+		        				
+		        				<div class="step_3 account_phrase_generator_steps">
+		        					<p>Your secret phrase is very important! In order to be sure that you have saved it, please write your secret phrase below:</p>
+		        					
+		        					<div class="callout callout-danger" style="display:none">You have not typed the secret phrase correctly, please try again!</div>
+
+		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+		        					
+		        					<div style="text-align:right">
+										<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="NRS.verifyGeneratedPassphrase();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
+									</div>
+		        				</div>
+		                	</div>
+		                </div>
+		            </div>  
+	            
+		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
+			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own secret phrase? Click here.</a>
+					</div>
+				</td>
+				</tr>
+			</table>	       
 		</div>
 
 		<div class="modal fade" id="lease_balance_modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -1728,7 +1791,6 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="issue_asset_name">ASSET NAME <i class="fa fa-question-circle show_popover" data-content="The asset name is non-unique. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
-</label>
 								<input type="text" class="form-control" name="name" id="issue_asset_name" placeholder="Asset Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
@@ -2183,7 +2245,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		</div>
 
 		<div class="modal fade" id="block_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog">
+			<div class="modal-dialog modal-dialog-wide">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -2273,7 +2335,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		</div>
 		
 		<div class="modal fade" id="user_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog modal-dialog-wide">
+			<div class="modal-dialog modal-dialog-wider">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -2382,12 +2444,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<div id="nrs_modal_update" class="nrs_modal_content" style="display:none">
 							<div id="nrs_update_explanation" class="nrs_message">
 								<span id="nrs_update_explanation_blockchain_sync">The blockchain is still downloading, check again after it's up to date.</span>
+								<span id="nrs_update_explanation_testnet">NRS cannot be updated whilst connected to the testnet.</span>
 								<span id="nrs_update_explanation_up_to_date">You have the latest release already. There is no need to update.</span>
 								<span id="nrs_update_explanation_new_release">A new NRS release is available. It is recommended that you update.<br /><br /><button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')">Download NRS <span class="nrs_new_version_nr"></span></button></span>
 								<span id="nrs_update_explanation_new_beta">A new experimental release is available. It is not recommended that you install this unless you know what you're doing.<br /><br /><button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta')">Download NRS <span class="nrs_beta_version_nr"></span></button></span>
 								<span id="nrs_update_explanation_new_choice">Both a general and experimental release are available. It is not recommended that you install the experimental release unless you know what you're doing.
 								<br /><br />
-								<button type="button" class="btn btn-success ignore" onclick="NRS.downloadclientUpdate('release')">Download NRS <span class="nrs_new_version_nr"></span> - General Release</button>
+								<button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')">Download NRS <span class="nrs_new_version_nr"></span> - General Release</button>
 								<button type="button" class="btn btn-default ignore" onclick="NRS.downloadClientUpdate('beta')">Download NRS <span class="nrs_beta_version_nr"></span> - Experimental Release</button>
 								</span>
 							</div>
@@ -2426,37 +2489,42 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							    		<td style="font-weight: bold"># Unlocked Accounts:</td><td><span id="nrs_node_state_numberOfUnlockedAccounts"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Total Memory:</td><td><span id="nrs_node_state_totalMemory"></span></td>
+							    		<td style="font-weight: bold">Last Feeder Height:</td><td><span id="nrs_node_state_lastBlockchainFeederHeight"></span></td>
 								    	<td style="font-weight: bold"># Peers:</td><td><span id="nrs_node_state_numberOfPeers"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Free Memory:</td><td><span id="nrs_node_state_freeMemory"></span></td>
+							    		<td style="font-weight: bold">Total Memory:</td><td><span id="nrs_node_state_totalMemory"></span></td>
 							    		<td style="font-weight: bold"># Transactions:</td><td><span id="nrs_node_state_numberOfTransactions"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Max Memory:</td><td><span id="nrs_node_state_maxMemory"></span></td>
+							    		<td style="font-weight: bold">Free Memory:</td><td><span id="nrs_node_state_freeMemory"></span></td>
 							    		<td style="font-weight: bold"># Aliases:</td><td><span id="nrs_node_state_numberOfAliases"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Processors:</td><td><span id="nrs_node_state_availableProcessors"></span></td>
+							    		<td style="font-weight: bold">Max Memory:</td><td><span id="nrs_node_state_maxMemory"></span></td>
 							    		<td style="font-weight: bold"># Orders:</td><td><span id="nrs_node_state_numberOfOrders"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Difficulty:</td><td><span id="nrs_node_state_cumulativeDifficulty"></span></td>
+							    		<td style="font-weight: bold">Processors:</td><td><span id="nrs_node_state_availableProcessors"></span></td>
 							    		<td style="font-weight: bold"># Assets:</td><td><span id="nrs_node_state_numberOfAssets"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Total Balance:</td><td><span id="nrs_node_state_totalEffectiveBalance"></span></td>
+							    		<td style="font-weight: bold">Difficulty:</td><td><span id="nrs_node_state_cumulativeDifficulty"></span></td>
 							    		<td style="font-weight: bold"># Trades:</td><td><span id="nrs_node_state_numberOfTrades"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">Time:</td><td><span id="nrs_node_state_time"></span></td>
+							    		<td style="font-weight: bold">Total Balance:</td><td><span id="nrs_node_state_totalEffectiveBalanceNXT"></span></td>
 							    		<td style="font-weight: bold"># Polls:</td><td><span id="nrs_node_state_numberOfPolls"></span></td>
 							    	</tr>
 							    	<tr>
-							    		<td style="font-weight: bold">&nbsp;</td><td>&nbsp;</td>
+							    		<td style="font-weight: bold">Time:</td><td><span id="nrs_node_state_time"></span></td>
 							    		<td style="font-weight: bold"># Votes:</td><td><span id="nrs_node_state_numberOfVotes"></span></td>
 							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold">Is Scanning:</td><td><span id="nrs_node_state_isScanning"></span></td>
+							    		<td style="font-weight: bold">&nbsp;</td><td>&nbsp;</td>
+							    	</tr>
+
 							    </tbody>
 						 	</table>
 						</div>
@@ -2489,14 +2557,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							    	<tr>
 							    		<td style="font-weight: bold;width:180px;">Account ID:</td><td><span id="account_balance_account_id"></span></td>
 							    	</tr>
-							    	<!--<tr style="display:none">
-							    		<td style="font-weight: bold">New Address Format:</td><td><span id="account_balance_new_address_format"></span></td>
-							    	</tr>-->
+							    	<tr>
+							    		<td style="font-weight: bold">New Address Format:</td><td><span id="account_balance_account_rs"></span></td>
+							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold">Balance:</td><td><span id="account_balance_balance"></span></td>
 							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold">Unconfirmed Balance:</td><td><span id="account_balance_unconfirmed_balance"></span></td>
+							    	</tr>
+							    	<tr>
+							    		<td style="font-weight: bold">Guaranteed Balance:</td><td><span id="account_balance_guaranteed_balance"></span></td>
 							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold">Effective Balance:</td><td><span id="account_balance_effective_balance"></span></td>
@@ -2617,20 +2688,22 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 
 		<div id="messages_sidebar_context" class="context_menu dropdown clearfix">
 		    <ul class="dropdown-menu" data-container="body" role="menu" style="display:block;position:static;margin-bottom:5px;">
-		        <li><a tabindex="-1" href="#" data-option="add_contact">Add contact</a></li>
+		    	<li><a tabindex="-1" href="#" data-option="account_info">Account Info</a></li>
+		        <li><a tabindex="-1" href="#" data-option="add_contact">Add Contact</a></li>
 				<li><a tabindex="-1" href="#" data-option="send_nxt">Send Nxt</a></li>
 		    </ul>
 		</div>
 		
 		<div id="messages_sidebar_update_context" class="context_menu dropdown clearfix">
 		    <ul class="dropdown-menu" data-container="body" role="menu" style="display:block;position:static;margin-bottom:5px;">
-		        <li><a tabindex="-1" href="#" data-option="update_contact">Update contact</a></li>
+		    	<li><a tabindex="-1" href="#" data-option="account_info">Account Info</a></li>
+		        <li><a tabindex="-1" href="#" data-option="update_contact">Update Contact</a></li>
 				<li><a tabindex="-1" href="#" data-option="send_nxt">Send Nxt</a></li>
 		    </ul>
 		</div>
 		
 		<div id="downloading_blockchain">
-			Downloading blockchain <span class="loading_dots"><span>.</span><span>.</span><span>.</span></span>
+			Downloading blockchain<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span>
 			<div class="progress progress-striped sm active" style="margin-bottom:5px;margin-top:5px;">
 	            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
 	                <span class="sr-only">0% Complete</span>
@@ -2650,6 +2723,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
         <script src="js/3rdparty/jquery-2.1.0.js"></script>
         <script src="js/3rdparty/bootstrap.js" type="text/javascript"></script>
 		<script src="js/3rdparty/ajaxretry.js"></script>
+		<script src="js/3rdparty/ajaxmultiqueue.js"></script>
 		<script src="js/3rdparty/jquery.rss.js" type="text/javascript"></script>
         <script src="js/3rdparty/webdb.js" type="text/javascript"></script>
         <script src="js/3rdparty/growl.js" type="text/javascript"></script>

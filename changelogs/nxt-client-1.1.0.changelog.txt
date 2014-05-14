@@ -1,0 +1,39 @@
+Attachments are now stored in the database as byte arrays instead of serialized
+objects. The conversion will take place at first start of this version and will
+take some time and disk space, but after shutdown the database will shrink back
+even more (about 25%).
+
+Added blockchain checkpoint at NQT_BLOCK.
+
+Rely on partially-canonical signatures being enforced after NQT_BLOCK to detect
+signature malleability attacks, removed the logic enforcing uniqueness of
+transaction hashes (excluding signatures). Only the fullHash (including
+signature) is now unique. For this reason, the "hash" property has been removed
+from the transaction JSON and only "fullHash" is returned now.
+
+Use full hash instead of id for referenced transactions. Existing transactions
+in the database will be reprocessed as part of the database conversion.
+
+Referencing transactions can refer to transactions not more than 60 days back.
+This limitation is enforced on the whole length of referenced transactions chain
+in case the referenced transaction itself refers to a previous one and so on.
+Also the length of such chains is limited to 10 transactions.
+
+Removed some NotYetEnabled checks that are no longer relevant. Removed as much
+as possible any obsolete logic that deals with NXT amounts, as all new
+transactions will only be created in NQT format now.
+
+More blacklisting of peers that cause RuntimeExceptions.
+
+Trades returned by getTrades API are now in reversed order, most recent first.
+
+Client Updates:
+
+Add unconfirmed transactions to dashboard immediately.
+
+Show appropriate message during rescanning of blockchain.
+
+Limit trade history to last 50 trades.
+
+Show asset buy / sell notifications.
+

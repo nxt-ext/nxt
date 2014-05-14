@@ -1,6 +1,5 @@
 package nxt.peer;
 
-import nxt.NxtException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -34,7 +33,7 @@ public interface Peer extends Comparable<Peer> {
 
     boolean isBlacklisted();
 
-    void blacklist(NxtException cause);
+    void blacklist(Exception cause);
 
     void blacklist();
 

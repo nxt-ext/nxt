@@ -16,18 +16,11 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_balance_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.balanceNQT)) + " NXT");
 			$("#account_balance_unconfirmed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.unconfirmedBalanceNQT)) + " NXT");
 			$("#account_balance_effective_balance").html(NRS.formatAmount(NRS.accountInfo.effectiveBalanceNXT) + " NXT");
+			$("#account_balance_guaranteed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.guaranteedBalanceNQT)) + " NXT");
 
 			$("#account_balance_public_key").html(String(NRS.accountInfo.publicKey).escapeHTML());
 			$("#account_balance_account_id").html(String(NRS.account).escapeHTML());
-
-			/*
-			var address = new NxtAddress();
-
-			if (address.set(NRS.account, true)) {
-				$("#account_balance_new_address_format").html(address.toString().escapeHTML());
-			} else {
-				$("#account_balance_new_address_format").html("/");
-			}*/
+			$("#account_balance_account_rs").html(String(NRS.accountInfo.accountRS).escapeHTML());
 
 			if (!NRS.accountInfo.publicKey) {
 				$("#account_balance_public_key").html("/");

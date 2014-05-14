@@ -65,12 +65,12 @@ public final class Account {
                 while (iterator.hasNext()) {
                     Account account = iterator.next().getValue();
                     if (height == account.currentLeasingHeightFrom) {
-                        Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                        Account.getAccount(account.currentLesseeId).lessorIds.add(account.getId());
                         leaseListeners.notify(
                                 new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
                                 Event.LEASE_STARTED);
                     } else if (height == account.currentLeasingHeightTo) {
-                        Account.getAccount(account.currentLesseeId).leaserIds.remove(account.getId());
+                        Account.getAccount(account.currentLesseeId).lessorIds.remove(account.getId());
                         leaseListeners.notify(
                                 new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
                                 Event.LEASE_ENDED);
@@ -85,7 +85,7 @@ public final class Account {
                             account.nextLeasingHeightFrom = Integer.MAX_VALUE;
                             account.nextLesseeId = null;
                             if (height == account.currentLeasingHeightFrom) {
-                                Account.getAccount(account.currentLesseeId).leaserIds.add(account.getId());
+                                Account.getAccount(account.currentLesseeId).lessorIds.add(account.getId());
                                 leaseListeners.notify(
                                         new AccountLease(account.getId(), account.currentLesseeId, height, account.currentLeasingHeightTo),
                                         Event.LEASE_STARTED);
@@ -110,7 +110,7 @@ public final class Account {
                     }
                 }
             }
-        }, BlockchainProcessor.Event.BEFORE_BLOCK_UNDO);
+        }, BlockchainProcessor.Event.BLOCK_POPPED);
 
     }
 
@@ -167,9 +167,14 @@ public final class Account {
     }
 
     static Account addOrGetAccount(Long id) {
-        Account account = new Account(id);
-        Account oldAccount = accounts.putIfAbsent(id, account);
-        return oldAccount != null ? oldAccount : account;
+        Account oldAccount = accounts.get(id);
+        if (oldAccount == null) {
+            Account account = new Account(id);
+            oldAccount = accounts.putIfAbsent(id, account);
+            return oldAccount != null ? oldAccount : account;
+        } else {
+            return oldAccount;
+        }
     }
 
     static void clear() {
@@ -183,6 +188,7 @@ public final class Account {
     private volatile int keyHeight;
     private long balanceNQT;
     private long unconfirmedBalanceNQT;
+    private long forgedBalanceNQT;
     private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
 
     private volatile int currentLeasingHeightFrom;
@@ -191,7 +197,7 @@ public final class Account {
     private volatile int nextLeasingHeightFrom;
     private volatile int nextLeasingHeightTo;
     private volatile Long nextLesseeId;
-    private Set<Long> leaserIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
+    private Set<Long> lessorIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
 
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
@@ -200,6 +206,9 @@ public final class Account {
     private volatile String description;
 
     private Account(Long id) {
+        if (! id.equals(Crypto.rsDecode(Crypto.rsEncode(id)))) {
+            Logger.logMessage("CRITICAL ERROR: Reed-Solomon encoding fails for " + id);
+        }
         this.id = id;
         this.height = Nxt.getBlockchain().getLastBlock().getHeight();
         currentLeasingHeightFrom = Integer.MAX_VALUE;
@@ -223,6 +232,9 @@ public final class Account {
     }
 
     public synchronized byte[] getPublicKey() {
+        if (this.keyHeight == -1) {
+            return null;
+        }
         return publicKey;
     }
 
@@ -232,6 +244,10 @@ public final class Account {
 
     public synchronized long getUnconfirmedBalanceNQT() {
         return unconfirmedBalanceNQT;
+    }
+
+    public synchronized long getForgedBalanceNQT() {
+        return forgedBalanceNQT;
     }
 
     public long getEffectiveBalanceNXT() {
@@ -262,19 +278,19 @@ public final class Account {
         }
 
         if (lastBlock.getHeight() < currentLeasingHeightFrom) {
-                return (getGuaranteedBalanceNQT(1440) + getExtraEffectiveBalanceNQT()) / Constants.ONE_NXT;
+                return (getGuaranteedBalanceNQT(1440) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NXT;
         }
 
-        return getExtraEffectiveBalanceNQT() / Constants.ONE_NXT;
+        return getLessorsGuaranteedBalanceNQT() / Constants.ONE_NXT;
 
     }
 
-    private long getExtraEffectiveBalanceNQT() {
-        long extraEffectiveBalanceNQT = 0;
-        for (Long accountId : leaserIds) {
-            extraEffectiveBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
+    private long getLessorsGuaranteedBalanceNQT() {
+        long lessorsGuaranteedBalanceNQT = 0;
+        for (Long accountId : lessorIds) {
+            lessorsGuaranteedBalanceNQT += Account.getAccount(accountId).getGuaranteedBalanceNQT(1440);
         }
-        return extraEffectiveBalanceNQT;
+        return lessorsGuaranteedBalanceNQT;
     }
 
     public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
@@ -341,8 +357,8 @@ public final class Account {
         return nextLeasingHeightTo;
     }
 
-    public Set<Long> getLeaserIds() {
-        return Collections.unmodifiableSet(leaserIds);
+    public Set<Long> getLessorIds() {
+        return Collections.unmodifiableSet(lessorIds);
     }
 
     void leaseEffectiveBalance(Long lesseeId, short period) {
@@ -512,6 +528,12 @@ public final class Account {
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
             listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        }
+    }
+
+    void addToForgedBalanceNQT(long amountNQT) {
+        synchronized(this) {
+            this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
         }
     }
 

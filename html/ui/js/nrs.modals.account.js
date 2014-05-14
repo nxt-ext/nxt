@@ -17,7 +17,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (typeof account == "object") {
-			NRS.userInfoModal.user = account.id;
+			NRS.userInfoModal.user = account.account;
 		} else {
 			NRS.userInfoModal.user = account;
 			NRS.fetchingModalData = true;
@@ -208,20 +208,25 @@ var NRS = (function(NRS, $, undefined) {
 								} else if (transaction.type == 4) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Effective Balance Leasing";
+											transactionType = "Balance Leasing";
 											break;
 									}
 								}
 
-								var receiving = transaction.recipient == NRS.userInfoModal.user;
-								var account = (receiving ? String(transaction.sender).escapeHTML() : String(transaction.recipient).escapeHTML());
+								if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
+									var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
+								} else {
+									var receiving = (transaction.recipient == NRS.userInfoModal.user);
+								}
 
 								if (transaction.amountNQT) {
 									transaction.amount = new BigInteger(transaction.amountNQT);
 									transaction.fee = new BigInteger(transaction.feeNQT);
 								}
 
-								rows += "<tr><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(account) + "</td></tr>";
+								var account = (receiving ? "sender" : "recipient");
+
+								rows += "<tr><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
 							}
 
 							$("#user_info_modal_transactions_table tbody").empty().append(rows);
@@ -298,7 +303,7 @@ var NRS = (function(NRS, $, undefined) {
 				var ignoredAssets = 0;
 
 				for (var i = 0; i < response.assetBalances.length; i++) {
-					if (response.assetBalances[i].balance == 0) {
+					if (response.assetBalances[i].balanceQNT == "0") {
 						ignoredAssets++;
 
 						if (nrAssets + ignoredAssets == response.assetBalances.length) {

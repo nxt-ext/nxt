@@ -1,38 +1,5 @@
 var NRS = (function(NRS, $, undefined) {
-	NRS.xhrPool = [];
-
-	$(document).ajaxComplete(function(event, xhr, settings) {
-		if (xhr._page && xhr.statusText != "abort") {
-			var index = $.inArray(xhr, NRS.xhrPool);
-			if (index > -1) {
-				NRS.xhrPool.splice(index, 1);
-			}
-		}
-	});
-
-	NRS.abortOutstandingRequests = function(subPage) {
-		$(NRS.xhrPool).each(function(id, xhr) {
-			if (subPage) {
-				if (xhr._subPage) {
-					xhr.abort();
-				}
-			} else {
-				xhr.abort();
-			}
-		});
-
-		if (!subPage) {
-			NRS.xhrPool = [];
-		}
-	}
-
-	NRS.beforeSendRequest = function(xhr) {
-		xhr._page = true;
-		if (NRS.currentSubPage) {
-			xhr._subPage = true;
-		}
-		NRS.xhrPool.push(xhr);
-	}
+	NRS.multiQueue = null;
 
 	NRS.sendOutsideRequest = function(url, data, callback, async) {
 		if ($.isFunction(data)) {
@@ -148,6 +115,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.processAjaxRequest = function(requestType, data, callback, async) {
+		if (!NRS.multiQueue) {
+			NRS.multiQueue = $.ajaxMultiQueue(8);
+		}
+
 		if (data["_extra"]) {
 			var extra = data["_extra"];
 			delete data["_extra"];
@@ -155,13 +126,12 @@ var NRS = (function(NRS, $, undefined) {
 			var extra = null;
 		}
 
-		var beforeSend = null;
+		var currentPage = currentSubPage = null;
 
 		//means it is a page request, not a global request.. Page requests can be aborted.
 		if (requestType.slice(-1) == "+") {
 			requestType = requestType.slice(0, -1);
-
-			beforeSend = NRS.beforeSendRequest;
+			currentPage = NRS.currentPage;
 		} else {
 			//not really necessary... we can just use the above code..
 			var plusCharacter = requestType.indexOf("+");
@@ -169,8 +139,12 @@ var NRS = (function(NRS, $, undefined) {
 			if (plusCharacter > 0) {
 				var subType = requestType.substr(plusCharacter);
 				requestType = requestType.substr(0, plusCharacter);
-				beforeSend = NRS.beforeSendRequest;
+				currentPage = NRS.currentPage;
 			}
+		}
+
+		if (currentPage && NRS.currentSubPage) {
+			currentSubPage = NRS.currentSubPage;
 		}
 
 		var type = ("secretPhrase" in data ? "POST" : "GET");
@@ -207,19 +181,50 @@ var NRS = (function(NRS, $, undefined) {
 
 		$.support.cors = true;
 
-		$.ajax({
+		if (type == "GET") {
+			var ajaxCall = NRS.multiQueue.queue;
+		} else {
+			var ajaxCall = $.ajax;
+		}
+
+		//workaround for 1 specific case.. ugly
+		if (data.doGetAssets) {
+			data = data.doGetAssets;
+			type = "POST";
+		}
+
+		ajaxCall({
 			url: url,
 			crossDomain: true,
 			dataType: "json",
 			type: type,
 			timeout: 30000,
 			async: (async === undefined ? true : async),
-			beforeSend: beforeSend,
+			currentPage: currentPage,
+			currentSubPage: currentSubPage,
 			shouldRetry: (type == "GET" ? 2 : undefined),
 			data: data
 		}).done(function(response, status, xhr) {
 			if (NRS.console) {
 				NRS.addToConsole(this.url, this.type, this.data, response);
+			}
+
+			if (typeof data == "object" && "recipient" in data) {
+				if (/^NXT\-/i.test(data.recipient)) {
+					data.recipientRS = data.recipient;
+
+					var address = new NxtAddress();
+
+					if (address.set(data.recipient)) {
+						data.recipient = address.account_id();
+					}
+				} else {
+					var address = new NxtAddress();
+
+					if (address.set(data.recipient)) {
+						data.recipientRS = address.toString();
+					}
+				}
 			}
 
 			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode) {
@@ -239,11 +244,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					return;
 				} else {
-					if (NRS.useNQT) {
-						var payload = response.unsignedTransactionBytes.substr(0, 192) + signature + response.unsignedTransactionBytes.substr(320);
-					} else {
-						var payload = response.unsignedTransactionBytes.substr(0, 128) + signature + response.unsignedTransactionBytes.substr(256);
-					}
+					var payload = response.unsignedTransactionBytes.substr(0, 192) + signature + response.unsignedTransactionBytes.substr(320);
 
 					if (!NRS.verifyTransactionBytes(payload, requestType, data)) {
 						if (callback) {
@@ -320,25 +321,15 @@ var NRS = (function(NRS, $, undefined) {
 		transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
 		transaction.senderPublicKey = converters.byteArrayToHexString(byteArray.slice(8, 40));
 		transaction.recipient = String(converters.byteArrayToBigInteger(byteArray, 40));
-		if (NRS.useNQT) {
-			transaction.amountNQT = String(converters.byteArrayToBigInteger(byteArray, 48));
-			transaction.feeNQT = String(converters.byteArrayToBigInteger(byteArray, 56));
+		transaction.amountNQT = String(converters.byteArrayToBigInteger(byteArray, 48));
+		transaction.feeNQT = String(converters.byteArrayToBigInteger(byteArray, 56));
 
-			//incorrect?..
-			var refHash = byteArray.slice(64, 96);
-			transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
-			if (transaction.referencedTransactionFullHash == "0") {
-				transaction.referencedTransactionFullHash = null;
-			} else {
-				transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
-			}
+		var refHash = byteArray.slice(64, 96);
+		transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
+		if (transaction.referencedTransactionFullHash == "0") {
+			transaction.referencedTransactionFullHash = null;
 		} else {
-			transaction.amountNQT = NRS.convertToNQT(String(converters.byteArrayToSignedInt32(byteArray, 48)));
-			transaction.feeNQT = NRS.convertToNQT(String(converters.byteArrayToSignedInt32(byteArray, 52)));
-			transaction.referencedTransaction = String(converters.byteArrayToBigInteger(byteArray, 56));
-			if (transaction.referencedTransaction == "0") {
-				transaction.referencedTransaction = null;
-			}
+			transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
 		}
 
 		if (!("amountNQT" in data)) {
@@ -348,6 +339,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!("recipient" in data)) {
 			//recipient == genesis
 			data.recipient = "1739068987193023818";
+			data.recipientRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
 		}
 
 		if (transaction.senderPublicKey != NRS.accountInfo.publicKey) {
@@ -362,24 +354,14 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 
-		if (NRS.useNQT) {
-			if ("referencedTransactionFullHash" in data && transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
-				return false;
-			}
-			if ("referencedTransactionId" in data && transaction.referencedTransactionId !== data.referencedTransactionId) {
-				return false;
-			}
-		} else {
-			if ("referencedTransaction" in data && transaction.referencedTransaction !== data.referencedTransaction) {
-				return false;
-			}
+		if ("referencedTransactionFullHash" in data && transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
+			return false;
+		}
+		if ("referencedTransactionId" in data && transaction.referencedTransactionId !== data.referencedTransactionId) {
+			return false;
 		}
 
-		var pos = 128;
-
-		if (NRS.useNQT) {
-			pos += 32;
-		}
+		var pos = 160;
 
 		switch (requestType) {
 			case "sendMoney":
@@ -554,9 +536,9 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += nameLength;
 
-				var descriptionLength = parseInt(byteArray[pos], 10);
+				var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
 
-				pos++;
+				pos += 2;
 
 				transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
 
@@ -909,7 +891,9 @@ var NRS = (function(NRS, $, undefined) {
 					if ("transactionBytes" in original_response) {
 						delete original_response.transactionBytes;
 					}
+					original_response.broadcasted = true;
 					original_response.transaction = response.transaction;
+					original_response.fullHash = response.fullHash;
 					callback(original_response, original_data);
 				}
 			}

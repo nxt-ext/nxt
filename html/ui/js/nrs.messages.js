@@ -32,22 +32,22 @@ var NRS = (function(NRS, $, undefined) {
 
 						transactionsChecked++;
 
-						var other_user = (response.recipient == NRS.account ? response.sender : response.recipient);
+						var otherUser = (response.recipient == NRS.account ? response.sender : response.recipient);
 
-						if (!(other_user in NRS.messages)) {
-							NRS.messages[other_user] = [];
+						if (!(otherUser in NRS.messages)) {
+							NRS.messages[otherUser] = [];
 						}
 
-						NRS.messages[other_user].push(response);
+						NRS.messages[otherUser].push(response);
 
 						if (transactionsChecked == nrTransactions) {
 							var rows = "";
 							var menu = "";
 
-							var sorted_messages = [];
+							var sortedMessages = [];
 
-							for (var other_user in NRS.messages) {
-								NRS.messages[other_user].sort(function(a, b) {
+							for (var otherUser in NRS.messages) {
+								NRS.messages[otherUser].sort(function(a, b) {
 									if (a.timestamp > b.timestamp) {
 										return 1;
 									} else if (a.timestamp < b.timestamp) {
@@ -57,13 +57,16 @@ var NRS = (function(NRS, $, undefined) {
 									}
 								});
 
-								sorted_messages.push({
-									"timestamp": NRS.messages[other_user][NRS.messages[other_user].length - 1].timestamp,
-									"user": other_user
+								var otherUserRS = (otherUser == NRS.messages[otherUser][0].sender ? NRS.messages[otherUser][0].senderRS : NRS.messages[otherUser][0].recipientRS);
+
+								sortedMessages.push({
+									"timestamp": NRS.messages[otherUser][NRS.messages[otherUser].length - 1].timestamp,
+									"user": otherUser,
+									"userRS": otherUserRS
 								});
 							}
 
-							sorted_messages.sort(function(a, b) {
+							sortedMessages.sort(function(a, b) {
 								if (a.timestamp < b.timestamp) {
 									return 1;
 								} else if (a.timestamp > b.timestamp) {
@@ -73,22 +76,22 @@ var NRS = (function(NRS, $, undefined) {
 								}
 							});
 
-							for (var i = 0; i < sorted_messages.length; i++) {
-								var sorted_message = sorted_messages[i];
+							for (var i = 0; i < sortedMessages.length; i++) {
+								var sortedMessage = sortedMessages[i];
 
 								var extra = "";
 
-								if (sorted_message.user in NRS.contacts) {
-									extra = " data-contact='" + NRS.getAccountTitle(sorted_message.user) + "' data-context='messages_sidebar_update_context'";
+								if (sortedMessage.user in NRS.contacts) {
+									extra = " data-contact='" + NRS.getAccountTitle(sortedMessage, "user") + "' data-context='messages_sidebar_update_context'";
 								}
 
-								menu += "<li><a href='#' data-account='" + String(sorted_message.user).escapeHTML() + "'><strong>" + NRS.getAccountTitle(sorted_message.user) + "</strong><br />" + NRS.formatTimestamp(sorted_message.timestamp) + "</a></li>";
+								//menu += "<li><a href='#' data-account='" + NRS.getAccountFormatted(sortedMessage[user]) + "'><strong>" + NRS.getAccountTitle(sortedMessage, "user") + "</strong><br />" + NRS.formatTimestamp(sortedMessage.timestamp) + "</a></li>";
 
-								rows += "<a href='#' class='list-group-item' data-account='" + String(sorted_message.user).escapeHTML() + "'" + extra + "><h4 class='list-group-item-heading'>" + NRS.getAccountTitle(sorted_message.user) + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(sorted_message.timestamp) + "</p></a>";
+								rows += "<a href='#' class='list-group-item' data-account='" + NRS.getAccountFormatted(sortedMessage, "user") + "' data-account-id='" + NRS.getAccountFormatted(sortedMessage.user) + "'" + extra + "><h4 class='list-group-item-heading'>" + NRS.getAccountTitle(sortedMessage, "user") + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(sortedMessage.timestamp) + "</p></a>";
 							}
 
 							$("#messages_sidebar").empty().append(rows);
-							$("#messages_sidebar_menu").empty().append(menu);
+							//	$("#messages_sidebar_menu").empty().append(menu);
 
 							NRS.pageLoaded(callback);
 						}
@@ -108,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.messages = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange) {
+		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			//save current scrollTop    	
 			var activeAccount = $("#messages_sidebar a.active");
 
@@ -130,7 +133,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#messages_sidebar a.active").removeClass("active");
 		$(this).addClass("active");
 
-		var otherUser = $(this).data("account");
+		var otherUser = $(this).data("account-id");
 
 		$("#no_message_selected, #no_messages_available").hide();
 
@@ -225,7 +228,6 @@ var NRS = (function(NRS, $, undefined) {
 		var account = NRS.getAccountFormatted(NRS.selectedContext.data("account"));
 		var option = $(this).data("option");
 
-
 		NRS.closeContextMenu();
 
 		if (option == "add_contact") {
@@ -234,6 +236,8 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (option == "send_nxt") {
 			$("#send_money_recipient").val(account).trigger("blur");
 			$("#send_money_modal").modal("show");
+		} else if (option == "account_info") {
+			NRS.showAccountModal(account);
 		}
 	});
 
@@ -428,16 +432,19 @@ var NRS = (function(NRS, $, undefined) {
 				$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", {
 					type: "danger"
 				});
-			} else if (response.hash) {
-				NRS.addUnconfirmedTransaction(response.transaction);
-
+			} else if (response.fullHash) {
 				$.growl("Message sent.", {
 					type: "success"
 				});
 
 				$("#inline_message_text").val("");
 
-				$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+				NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
+					if (!alreadyProcessed) {
+						$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+					}
+				});
+
 				//leave password alone until user moves to another page.
 			} else {
 				$.growl("An unknown error occured. Your message may or may not have been sent.", {
@@ -449,12 +456,10 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.sendMessageComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
-
 		data.message = data._extra.message;
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
-			$.growl("Your message has been sent! <a href='#' data-account='" + String(data.recipient).escapeHTML() + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
+			$.growl("Your message has been sent! <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
 				"type": "success"
 			});
 		} else {
@@ -470,9 +475,12 @@ var NRS = (function(NRS, $, undefined) {
 
 			var $sidebar = $("#messages_sidebar");
 
-			var $existing = $sidebar.find("a.list-group-item[data-account=" + String(data.recipient).escapeHTML() + "]");
+			var $existing = $sidebar.find("a.list-group-item[data-account=" + NRS.getAccountFormatted(data, "recipient") + "]");
 
 			if ($existing.length) {
+				if (response.alreadyProcesed) {
+					return;
+				}
 				$sidebar.prepend($existing);
 				$existing.find("p.list-group-item-text").html(NRS.formatTimestamp(now));
 
@@ -480,7 +488,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data.message.escapeHTML() + "</p></dd>");
 				}
 			} else {
-				var accountTitle = NRS.getAccountTitle(data.recipient);
+				var accountTitle = NRS.getAccountTitle(data, "recipient");
 
 				var extra = "";
 
@@ -488,12 +496,11 @@ var NRS = (function(NRS, $, undefined) {
 					extra = " data-context='messages_sidebar_update_context'";
 				}
 
-				var listGroupItem = "<a href='#' class='list-group-item' data-account='" + String(data.recipient).escapeHTML() + "'" + extra + "><h4 class='list-group-item-heading'>" + accountTitle + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(now) + "</p></a>";
+				var listGroupItem = "<a href='#' class='list-group-item' data-account='" + NRS.getAccountFormatted(data, "recipient") + "'" + extra + "><h4 class='list-group-item-heading'>" + accountTitle + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(now) + "</p></a>";
 				$("#messages_sidebar").prepend(listGroupItem);
 			}
 		}
 	}
-
 
 	return NRS;
 }(NRS || {}, jQuery));

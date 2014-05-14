@@ -118,7 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.incoming.aliases = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange) {
+		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 			NRS.pages.aliases();
 		}
 	}
@@ -206,7 +206,9 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.assignAliasComplete = function(response, data) {
-		NRS.addUnconfirmedTransaction(response.transaction);
+		if (response.alreadyProcessed) {
+			return;
+		}
 
 		if (NRS.currentPage == "aliases") {
 			var $table = $("#aliases_table tbody");

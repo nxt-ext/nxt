@@ -23,9 +23,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
         Account account = ParameterParser.getAccount(req);
 
-        JSONObject response = JSONData.accountBalance(account);
-
         synchronized (account) {
+            JSONObject response = JSONData.accountBalance(account);
+            response.put("account", Convert.toUnsignedLong(account.getId()));
+            response.put("accountRS", Convert.rsAccount(account.getId()));
+
             if (account.getPublicKey() != null) {
                 response.put("publicKey", Convert.toHexString(account.getPublicKey()));
             }
@@ -45,12 +47,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                     response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
                 }
             }
-            if (!account.getLeaserIds().isEmpty()) {
-                JSONArray leaserIds = new JSONArray();
-                for (Long leaserId : account.getLeaserIds()) {
-                    leaserIds.add(Convert.toUnsignedLong(leaserId));
+            if (!account.getLessorIds().isEmpty()) {
+                JSONArray lessorIds = new JSONArray();
+                for (Long lessorId : account.getLessorIds()) {
+                    lessorIds.add(Convert.toUnsignedLong(lessorId));
                 }
-                response.put("lessors", leaserIds);
+                response.put("lessors", lessorIds);
             }
 
             JSONArray assetBalances = new JSONArray();
@@ -78,9 +80,8 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             if (unconfirmedAssetBalances.size() > 0) {
                 response.put("unconfirmedAssetBalances", unconfirmedAssetBalances);
             }
-
+            return response;
         }
-        return response;
     }
 
 }

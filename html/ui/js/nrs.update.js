@@ -1,8 +1,20 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.normalVersion = {};
 	NRS.betaVersion = {};
+	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
+		if (NRS.downloadingBlockchain) {
+			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation_blockchain_sync").show();
+			return;
+		}
+		if (NRS.isTestNet) {
+			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation_testnet").show();
+			return;
+		}
+
 		//Get latest version nr+hash of normal version
 		NRS.sendRequest("getAliasURI", {
 			"alias": "nrsversion"
@@ -47,15 +59,19 @@ var NRS = (function(NRS, $, undefined) {
 		$(".nrs_beta_version_nr").html(NRS.betaVersion.versionNr).show();
 
 		if (installVersusNormal == -1 && installVersusBeta == -1) {
+			NRS.isOutdated = true;
 			$("#nrs_update").html("Outdated!").show();
 			$("#nrs_update_explanation_new_choice").show();
 		} else if (installVersusBeta == -1) {
+			NRS.isOutdated = false;
 			$("#nrs_update").html("New Beta").show();
 			$("#nrs_update_explanation_new_beta").show();
 		} else if (installVersusNormal == -1) {
+			NRS.isOutdated = true;
 			$("#nrs_update").html("Outdated!").show();
 			$("#nrs_update_explanation_new_release").show();
 		} else {
+			NRS.isOutdated = false;
 			$("#nrs_update_explanation_up_to_date").show();
 		}
 	}
@@ -202,34 +218,45 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.downloadedVersion = NRS.betaVersion;
 		}
 
-		$("#nrs_update_iframe").attr("src", "http://download.nxtcrypto.org/nxt-client-" + NRS.downloadedVersion.versionNr + ".zip");
+		if (NRS.inApp) {
+			parent.postMessage({
+				"type": "update",
+				"update": {
+					"type": version,
+					"version": NRS.downloadedVersion.versionNr,
+					"hash": NRS.downloadedVersion.hash
+				}
+			}, "*");
+			$("#nrs_modal").modal("hide");
+		} else {
+			$("#nrs_update_iframe").attr("src", "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-client-" + NRS.downloadedVersion.versionNr + ".zip");
+			$("#nrs_update_explanation").hide();
+			$("#nrs_update_drop_zone").show();
 
-		$("#nrs_update_explanation").hide();
-		$("#nrs_update_drop_zone").show();
+			$("body").on("dragover.nrs", function(e) {
+				e.preventDefault();
+				e.stopPropagation();
 
-		$("body").on("dragover.nrs", function(e) {
-			e.preventDefault();
-			e.stopPropagation();
+				if (e.originalEvent && e.originalEvent.dataTransfer) {
+					e.originalEvent.dataTransfer.dropEffect = "copy";
+				}
+			});
 
-			if (e.originalEvent && e.originalEvent.dataTransfer) {
-				e.originalEvent.dataTransfer.dropEffect = "copy";
-			}
-		});
+			$("body").on("drop.nrs", function(e) {
+				NRS.verifyClientUpdate(e);
+			});
 
-		$("body").on("drop.nrs", function(e) {
-			NRS.verifyClientUpdate(e);
-		});
+			$("#nrs_update_drop_zone").on("click", function(e) {
+				e.preventDefault();
 
-		$("#nrs_update_drop_zone").on("click", function(e) {
-			e.preventDefault();
+				$("#nrs_update_file_select").trigger("click");
 
-			$("#nrs_update_file_select").trigger("click");
+			});
 
-		});
-
-		$("#nrs_update_file_select").on("change", function(e) {
-			NRS.verifyClientUpdate(e);
-		});
+			$("#nrs_update_file_select").on("change", function(e) {
+				NRS.verifyClientUpdate(e);
+			});
+		}
 
 		return false;
 	}

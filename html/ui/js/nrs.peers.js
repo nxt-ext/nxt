@@ -86,5 +86,9 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.incoming.peers = function() {
+		NRS.pages.peers();
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));

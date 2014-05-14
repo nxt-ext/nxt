@@ -2,23 +2,29 @@ var NRS = (function(NRS, $, undefined) {
 	$("#blocks_table, #dashboard_blocks_table").on("click", "a[data-block]", function(event) {
 		event.preventDefault();
 
-		var blockHeight = $(this).data("block");
-
-		var block = $(NRS.blocks).filter(function() {
-			return parseInt(this.height) == parseInt(blockHeight);
-		}).get(0);
-
-		NRS.showBlockModal(block);
-	});
-
-	NRS.showBlockModal = function(block) {
 		if (NRS.fetchingModalData) {
 			return;
 		}
 
 		NRS.fetchingModalData = true;
 
-		$("#block_info_modal_block").html(String(block.id).escapeHTML());
+		var blockHeight = $(this).data("block");
+
+		var block = $(NRS.blocks).filter(function() {
+			return parseInt(this.height) == parseInt(blockHeight);
+		}).get(0);
+
+		if (!block) {
+			NRS.getBlock($(this).data("blockid"), function(response) {
+				NRS.showBlockModal(response);
+			});
+		} else {
+			NRS.showBlockModal(block);
+		}
+	});
+
+	NRS.showBlockModal = function(block) {
+		$("#block_info_modal_block").html(String(block.block).escapeHTML());
 
 		$("#block_info_transactions_tab_link").tab("show");
 
@@ -28,7 +34,7 @@ var NRS = (function(NRS, $, undefined) {
 		delete blockDetails.nextBlockHash;
 		delete blockDetails.generationSignature;
 		delete blockDetails.payloadHash;
-		delete blockDetails.id;
+		delete blockDetails.block;
 
 		$("#block_info_details_table tbody").empty().append(NRS.createInfoTable(blockDetails));
 		$("#block_info_details_table").show();
@@ -58,7 +64,7 @@ var NRS = (function(NRS, $, undefined) {
 								transaction.fee = new BigInteger(transaction.feeNQT);
 							}
 
-							rows += "<tr><td>" + NRS.formatTime(transaction.timestamp) + "</td><td>" + NRS.formatAmount(transaction.amount) + "</td><td>" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction.recipient) + "</td><td>" + NRS.getAccountTitle(transaction.sender) + "</td></tr>";
+							rows += "<tr><td>" + NRS.formatTime(transaction.timestamp) + "</td><td>" + NRS.formatAmount(transaction.amount) + "</td><td>" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, "recipient") + "</td><td>" + NRS.getAccountTitle(transaction, "sender") + "</td></tr>";
 						}
 
 						$("#block_info_transactions_table tbody").empty().append(rows);

@@ -1,4 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
+	NRS.newlyCreatedAccount = false;
+
 	NRS.allowLoginViaEnter = function() {
 		$("#login_password").keypress(function(e) {
 			if (e.which == '13') {
@@ -10,7 +12,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showLoginOrWelcomeScreen = function() {
-		if (localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
@@ -25,13 +27,11 @@ var NRS = (function(NRS, $, undefined) {
 		setTimeout(function() {
 			$("#login_password").focus()
 		}, 10);
-		$(".center").center();
 	}
 
 	NRS.showWelcomeScreen = function() {
-		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #welcome_panel, #custom_passphrase_link").hide();
+		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#welcome_panel").show();
-		$(".center").center();
 	}
 
 	NRS.registerUserDefinedAccount = function() {
@@ -40,7 +40,6 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_generator_panel :input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_custom_panel").show();
 		$("#registration_password").focus();
-		$(".center").center();
 	}
 
 	NRS.registerAccount = function() {
@@ -57,8 +56,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		$loading.show();
 		$loaded.hide();
-
-		$(".center").center();
 
 		if (typeof PassPhraseGenerator == "undefined") {
 			$.when(
@@ -86,6 +83,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (password != PassPhraseGenerator.passPhrase) {
 			$("#account_phrase_generator_panel .step_3 .callout").show();
 		} else {
+			NRS.newlyCreatedAccount = true;
 			NRS.login(password, function() {
 				$.growl("Secret phrase confirmed successfully, you are now logged in.", {
 					"type": "success"
@@ -136,7 +134,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		NRS.sendRequest("getState", function(response) {
+		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
 				$.growl("Could not connect to server.", {
 					"type": "danger",
@@ -158,6 +156,12 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (!NRS.account) {
 					return;
+				}
+
+				var nxtAddress = new NxtAddress();
+
+				if (nxtAddress.set(NRS.account)) {
+					NRS.accountRS = nxtAddress.toString();
 				}
 
 				NRS.sendRequest("getAccountPublicKey", {
@@ -182,7 +186,11 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 
-					$("#account_id").html(NRS.getAccountFormatted(NRS.account));
+					if (NRS.settings["use_reed_solomon"]) {
+						$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
+					} else {
+						$("#account_id").html(String(NRS.account).escapeHTML()).css("font-size", "14px");
+					}
 
 					var passwordNotice = "";
 
@@ -206,7 +214,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost) {
+						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
 							$("#forging_indicator").removeClass("forging");
 							$("#forging_indicator span").html("Not Forging");
 							$("#forging_indicator").show();
@@ -233,6 +241,12 @@ var NRS = (function(NRS, $, undefined) {
 
 					NRS.unlock();
 
+					if (NRS.isOutdated) {
+						$.growl("A new NRS release is available. It is recommended that you update.", {
+							"type": "danger"
+						});
+					}
+
 					NRS.setupClipboardFunctionality();
 
 					if (callback) {
@@ -243,55 +257,20 @@ var NRS = (function(NRS, $, undefined) {
 
 					$(window).on("hashchange", NRS.checkLocationHash);
 
-					NRS.sendRequest('getAccountTransactionIds', {
-						"account": NRS.account,
-						"timestamp": 0
-					}, function(response) {
-						if (response.transactionIds && response.transactionIds.length) {
-							var transactionIds = response.transactionIds.reverse().slice(0, 10);
-							var nrTransactions = 0;
-							var transactions = [];
-
-							for (var i = 0; i < transactionIds.length; i++) {
-								NRS.sendRequest('getTransaction', {
-									"transaction": transactionIds[i]
-								}, function(transaction, input) {
-									nrTransactions++;
-
-									transaction.id = input.transaction;
-									transaction.confirmed = true;
-									transactions.push(transaction);
-
-									if (nrTransactions == transactionIds.length) {
-										NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-											NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
-										});
-									}
-								});
-							}
-						} else {
-							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-								NRS.handleInitialTransactions(unconfirmedTransactions, []);
-							});
-						}
-					});
+					NRS.getInitialTransactions();
 				});
 			});
 		});
 	}
 
-	NRS.showLockscreen = function() {
-		/* CENTER ELEMENTS IN THE SCREEN */
-		$.fn.center = function() {
-			this.css("position", "absolute");
-			this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +
-				$(window).scrollTop()) - 30 + "px");
-			this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) +
-				$(window).scrollLeft()) + "px");
-			return this;
+	$("#logout_button_container").on("show.bs.dropdown", function(e) {
+		if (!NRS.isForging) {
+			e.preventDefault();
 		}
+	});
 
-		if (localStorage.getItem("logged_in")) {
+	NRS.showLockscreen = function() {
+		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
 			setTimeout(function() {
 				$("#login_password").focus()
 			}, 10);
@@ -299,23 +278,13 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.showWelcomeScreen();
 		}
 
-		$(".center").center().show();
-		$(window).on("resize.lockscreen", function() {
-			$(".center").center();
-		});
+		$("#center").show();
 	}
 
 	NRS.unlock = function() {
-		if (!localStorage.getItem("logged_in")) {
+		if (NRS.hasLocalStorage && !localStorage.getItem("logged_in")) {
 			localStorage.setItem("logged_in", true);
 		}
-
-		$("body").removeClass("lockscreen");
-		$("html").removeClass("lockscreen");
-		$("#lockscreen").hide();
-		$("window").off("resize.lockscreen");
-
-		$("body").scrollTop(0);
 
 		var userStyles = ["header", "sidebar", "page_header"];
 
@@ -330,6 +299,11 @@ var NRS = (function(NRS, $, undefined) {
 		var navBarHeight = $("nav.navbar").height();
 
 		$(".content-splitter-right").css("bottom", (contentHeaderHeight + navBarHeight + 10) + "px");
+
+		$("#lockscreen").hide();
+		$("body, html").removeClass("lockscreen");
+
+		$(document.documentElement).scrollTop(0);
 	}
 
 	$("#logout_button").click(function(e) {

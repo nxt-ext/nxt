@@ -23,7 +23,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.sendRequest("getTransaction", {
 				"transaction": transaction
 			}, function(response, input) {
-				response.id = input.transaction;
+				response.transaction = input.transaction;
 				NRS.processTransactionModalData(response);
 			});
 		} else {
@@ -39,9 +39,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (transactionDetails.referencedTransaction == "0") {
 			delete transactionDetails.referencedTransaction;
 		}
-		delete transactionDetails.id;
+		delete transactionDetails.transaction;
 
-		$("#transaction_info_modal_transaction").html(String(transaction.id).escapeHTML());
+		$("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
 
 		$("#transaction_info_tab_link").tab("show");
 
@@ -57,8 +57,8 @@ var NRS = (function(NRS, $, undefined) {
 						"Type": "Ordinary Payment",
 						"Amount": transaction.amountNQT,
 						"Fee": transaction.feeNQT,
-						"Recipient": NRS.getAccountTitle(transaction.recipient),
-						"Sender": NRS.getAccountTitle(transaction.sender)
+						"Recipient": NRS.getAccountTitle(transaction, "recipient"),
+						"Sender": NRS.getAccountTitle(transaction, "sender")
 					};
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -103,13 +103,13 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (transaction.sender == NRS.account || transaction.recipient == NRS.account) {
 						if (transaction.sender == NRS.account) {
-							sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction.recipient);
+							sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient");
 						} else {
-							sender_info = "<strong>From</strong>: " + NRS.getAccountTitle(transaction.sender);
+							sender_info = "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
 						}
 					} else {
-						sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction.recipient) + "<br />";
-						sender_info += "<strong>From</strong>: " + NRS.getAccountTitle(transaction.sender);
+						sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient") + "<br />";
+						sender_info += "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
 					}
 
 					$("#transaction_info_output").html(message.escapeHTML().nl2br() + "<br /><br />" + sender_info).show();
@@ -122,7 +122,7 @@ var NRS = (function(NRS, $, undefined) {
 					};
 
 					if (transaction.sender != NRS.account) {
-						data["Sender"] = NRS.getAccountTitle(transaction.sender);
+						data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -137,7 +137,7 @@ var NRS = (function(NRS, $, undefined) {
 					};
 
 					if (transaction.sender != NRS.account) {
-						data["Sender"] = NRS.getAccountTitle(transaction.sender);
+						data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -150,7 +150,7 @@ var NRS = (function(NRS, $, undefined) {
 					};
 
 					if (transaction.sender != NRS.account) {
-						data["Sender"] = NRS.getAccountTitle(transaction.sender);
+						data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -193,10 +193,10 @@ var NRS = (function(NRS, $, undefined) {
 					};
 
 					if (transaction.sender != NRS.account) {
-						data["Sender"] = NRS.getAccountTitle(transaction.sender);
+						data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 					}
 
-					$("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.id).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
+					$("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
@@ -215,8 +215,8 @@ var NRS = (function(NRS, $, undefined) {
 							"Comment": transaction.attachment.comment
 						};
 
-						data["Sender"] = NRS.getAccountTitle(transaction.sender);
-						data["Recipient"] = NRS.getAccountTitle(transaction.recipient);
+						data["Sender"] = NRS.getAccountTitle(transaction, "sender");
+						data["Recipient"] = NRS.getAccountTitle(transaction, "recipient");
 
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
@@ -241,7 +241,7 @@ var NRS = (function(NRS, $, undefined) {
 						};
 
 						if (transaction.sender != NRS.account) {
-							data["Sender"] = NRS.getAccountTitle(transaction.sender);
+							data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 						}
 
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -267,7 +267,7 @@ var NRS = (function(NRS, $, undefined) {
 						};
 
 						if (transaction.sender != NRS.account) {
-							data["Sender"] = NRS.getAccountTitle(transaction.sender);
+							data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 						}
 
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -297,7 +297,7 @@ var NRS = (function(NRS, $, undefined) {
 								};
 
 								if (transaction.sender != NRS.account) {
-									data["Sender"] = NRS.getAccountTitle(transaction.sender);
+									data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 								}
 
 								$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -331,7 +331,7 @@ var NRS = (function(NRS, $, undefined) {
 								};
 
 								if (transaction.sender != NRS.account) {
-									data["Sender"] = NRS.getAccountTitle(transaction.sender);
+									data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 								}
 
 								$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
@@ -354,7 +354,7 @@ var NRS = (function(NRS, $, undefined) {
 			switch (transaction.subtype) {
 				case 0:
 					var data = {
-						"Type": "Effective Balance Leasing",
+						"Type": "Balance Leasing",
 						"Period": transaction.attachment.period
 					};
 

@@ -2,23 +2,24 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
 
-	NRS.getBlock = function(blockID, callback, async) {
-		NRS.sendRequest('getBlock', {
+	NRS.getBlock = function(blockID, callback, pageRequest) {
+		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
 			"block": blockID
 		}, function(response) {
 			if (response.errorCode && response.errorCode == -1) {
 				NRS.getBlock(blockID, callback, async);
 			} else {
 				if (callback) {
-					response.id = blockID;
+					response.block = blockID;
 					callback(response);
 				}
 			}
-		}, (async == undefined ? true : async));
+		}, true);
 	}
 
 	NRS.handleInitialBlocks = function(response) {
 		if (response.errorCode) {
+			NRS.dataLoadFinished($("#dashboard_blocks_table"));
 			return;
 		}
 
@@ -29,15 +30,13 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
-			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
-
-			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 30) {
+			//if no new blocks in 24 hours, show blockchain download progress..
+			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 24) {
 				NRS.downloadingBlockchain = true;
+				$("#nrs_update_explanation span").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
 				$("#show_console").hide();
-				NRS.calculateBlockchainDownloadTime(function() {
-					NRS.updateBlockchainDownloadProgress();
-				});
+				NRS.updateBlockchainDownloadProgress();
 			}
 
 			var rows = "";
@@ -45,7 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 			for (var i = 0; i < NRS.blocks.length; i++) {
 				var block = NRS.blocks[i];
 
-				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
+				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 			}
 
 			$("#dashboard_blocks_table tbody").empty().append(rows);
@@ -56,7 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.handleNewBlocks = function(response) {
 		if (NRS.downloadingBlockchain) {
 			//new round started...
-			if (NRS.tempBlocks.length == 0 && NRS.state.lastBlock != response.id) {
+			if (NRS.tempBlocks.length == 0 && NRS.state.lastBlock != response.block) {
 				return;
 			}
 		}
@@ -85,8 +84,6 @@ var NRS = (function(NRS, $, undefined) {
 			//set new last block height
 			NRS.lastBlockHeight = NRS.blocks[0].height;
 
-			NRS.useNQT = (NRS.isTestNet && NRS.lastBlockHeight >= 76500) || (!NRS.isTestNet && NRS.lastBlockHeight >= 132000);
-
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
 			NRS.tempBlocks.push(response);
@@ -104,8 +101,9 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.downloadingBlockchain) {
-			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 30) {
+			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24) {
 				NRS.downloadingBlockchain = false;
+				$("#dashboard_message").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 				$("#show_console").show();
 				$.growl("The block chain is now up to date.", {
@@ -122,7 +120,7 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < newBlockCount; i++) {
 			var block = newBlocks[i];
 
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
+			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 		}
 
 		if (newBlockCount == 1) {
@@ -144,23 +142,24 @@ var NRS = (function(NRS, $, undefined) {
 
 			var confirmations = parseInt($(this).data("confirmations"), 10);
 
-			if (confirmations <= 10) {
-				var nrConfirmations = confirmations + newBlocks.length;
+			var nrConfirmations = confirmations + newBlocks.length;
 
+			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
+				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
 
 				if (nrConfirmations > 10) {
 					nrConfirmations = '10+';
 				}
 				$(this).html(nrConfirmations);
+			} else {
+				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
 			}
 		});
 	}
 
 	NRS.pages.blocks = function() {
 		NRS.pageLoading();
-
-		$("#forged_blocks_warning").hide();
 
 		if (NRS.blocksPageType == "forged_blocks") {
 			$("#forged_fees_total_box, #forged_blocks_total_box").show();
@@ -192,6 +191,7 @@ var NRS = (function(NRS, $, undefined) {
 								return;
 							}
 
+							block["id"] = input.block;
 							blocks[input["_extra"].nr] = block;
 							nr_blocks++;
 
@@ -206,7 +206,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 				} else {
-					NRS.blocksPageLoaded({});
+					NRS.blocksPageLoaded([]);
 				}
 			});
 		} else {
@@ -217,10 +217,15 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.downloadingBlockchain) {
 					NRS.blocksPageLoaded(NRS.blocks);
 				} else {
-					var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
-					//if previous block is undefined, dont try add it
-					if (typeof previousBlock !== "undefined")
-						NRS.getBlock(previousBlock, NRS.finish100Blocks);
+					if (NRS.blocks && NRS.blocks.length) {
+						var previousBlock = NRS.blocks[NRS.blocks.length - 1].previousBlock;
+						//if previous block is undefined, dont try add it
+						if (typeof previousBlock !== "undefined") {
+							NRS.getBlock(previousBlock, NRS.finish100Blocks, true);
+						}
+					} else {
+						NRS.blocksPageLoaded([]);
+					}
 				}
 			} else {
 				NRS.blocksPageLoaded(NRS.blocks);
@@ -228,10 +233,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.incoming.blocks = function() {
+		NRS.pages.blocks();
+	}
+
 	NRS.finish100Blocks = function(response) {
 		NRS.blocks.push(response);
 		if (NRS.blocks.length < 100 && typeof response.previousBlock !== "undefined") {
-			NRS.getBlock(response.previousBlock, NRS.finish100Blocks);
+			NRS.getBlock(response.previousBlock, NRS.finish100Blocks, true);
 		} else {
 			NRS.blocksPageLoaded(NRS.blocks);
 		}
@@ -239,52 +248,62 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.blocksPageLoaded = function(blocks) {
 		var rows = "";
-		var totalAmount = new BigInteger();
-		var totalFees = new BigInteger();
+		var totalAmount = new BigInteger("0");
+		var totalFees = new BigInteger("0");
 		var totalTransactions = 0;
 
 		for (var i = 0; i < blocks.length; i++) {
 			var block = blocks[i];
 
 			totalAmount = totalAmount.add(new BigInteger(block.totalAmountNQT));
+
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
 
 			totalTransactions += block.numberOfTransactions;
 
-			var account = String(block.generator).escapeHTML();
-
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (account != NRS.genesis ? "<a href='#' data-user='" + account + "' class='user_info'>" + NRS.getAccountTitle(account) + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
+			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
-		var startingTime = NRS.blocks[NRS.blocks.length - 1].timestamp;
-		var endingTime = NRS.blocks[0].timestamp;
-		var time = endingTime - startingTime;
+		if (blocks.length) {
+			var startingTime = blocks[blocks.length - 1].timestamp;
+			var endingTime = blocks[0].timestamp;
+			var time = endingTime - startingTime;
+		} else {
+			var startingTime = endingTime = time = 0;
+		}
 
 		$("#blocks_table tbody").empty().append(rows);
 		NRS.dataLoadFinished($("#blocks_table"));
 
-		var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-		var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+		if (blocks.length) {
+			var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+			var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+		} else {
+			var averageFee = 0;
+			var averageAmount = 0;
+		}
 
 		averageFee = NRS.convertToNQT(averageFee);
 		averageAmount = NRS.convertToNQT(averageAmount);
 
-		$("#blocks_average_fee").html(NRS.formatAmount(averageFee)).removeClass("loading_dots");
-		$("#blocks_average_amount").html(NRS.formatAmount(averageAmount)).removeClass("loading_dots");
+		$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
+		$("#blocks_average_amount").html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 
 		if (NRS.blocksPageType == "forged_blocks") {
 			if (blocks.length == 100) {
 				var blockCount = blocks.length + "+";
-				var feeTotal = NRS.formatAmount(totalFees, false) + "+";
 			} else {
 				var blockCount = blocks.length;
-				var feeTotal = NRS.formatAmount(totalFees, false);
 			}
 
 			$("#forged_blocks_total").html(blockCount).removeClass("loading_dots");
-			$("#forged_fees_total").html(feeTotal).removeClass("loading_dots");
+			$("#forged_fees_total").html(NRS.formatStyledAmount(NRS.accountInfo.forgedBalanceNQT)).removeClass("loading_dots");
 		} else {
-			$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
+			if (time == 0) {
+				$("#blocks_transactions_per_hour").html("0").removeClass("loading_dots");
+			} else {
+				$("#blocks_transactions_per_hour").html(Math.round(totalTransactions / (time / 60) * 60)).removeClass("loading_dots");
+			}
 			$("#blocks_average_generation_time").html(Math.round(time / 100) + "s").removeClass("loading_dots");
 		}
 
@@ -304,9 +323,20 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).parents(".btn-group").find(".text").text($(this).text());
 
+		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
+		$("#blocks_table tbody").empty();
+		$("#blocks_table").parent().addClass("data-loading");
+
 		NRS.pages.blocks();
 	});
 
+	$("#goto_forged_blocks").click(function(e) {
+		e.preventDefault();
+
+		$("#blocks_page_type").parent().find(".text").text("Forged By You");
+		NRS.blocksPageType = "forged_blocks";
+		NRS.goToPage("blocks");
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));

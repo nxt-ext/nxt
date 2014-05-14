@@ -115,9 +115,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             } else {
                 response.put("broadcasted", false);
             }
-
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
-            response.put("hash", transaction.getHash());
 
         } catch (TransactionType.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;

@@ -66,11 +66,16 @@ public final class PeerServlet extends HttpServlet {
         JSONStreamAware response;
 
         try {
-            peer = Peers.addPeer(req.getRemoteAddr(), null);
+            String remoteAddr = req.getRemoteAddr();
+            if (remoteAddr.indexOf(':') >= 0)
+                remoteAddr = "["+remoteAddr+"]";
+            peer = Peers.addPeer(remoteAddr, null);
             if (peer == null) {
+                //Logger.logDebugMessage("Rejected request from "+remoteAddr);
                 return;
             }
             if (peer.isBlacklisted()) {
+                //Logger.logDebugMessage("Rejected request from blacklisted peer "+remoteAddr);
                 return;
             }
 
