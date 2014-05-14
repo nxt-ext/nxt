@@ -803,7 +803,7 @@ var NRS = (function(NRS, $, undefined) {
 				return NRS.account;
 				break;
 			case "account_rs":
-				return NRS.accountInfo.accountRS;
+				return NRS.accountRS;
 				break;
 			case "message_link":
 				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;

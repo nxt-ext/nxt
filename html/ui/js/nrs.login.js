@@ -162,6 +162,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (nxtAddress.set(NRS.account)) {
 					NRS.accountRS = nxtAddress.toString();
+				} else {
+					$.growl("Could not generate Reed Solomon address.", {
+						"type": "danger"
+					});
 				}
 
 				NRS.sendRequest("getAccountPublicKey", {
