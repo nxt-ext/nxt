@@ -121,7 +121,7 @@ var NRS = (function(NRS, $, undefined) {
 				var asset = newAssets[i];
 
 				NRS.assets.push({
-					"id": asset.asset,
+					"asset": asset.asset,
 					"name": String(asset.name).toLowerCase(),
 					"groupName": "",
 					"account": asset.account,
@@ -369,7 +369,6 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 		}
-
 	});
 
 	NRS.loadAsset = function(asset, refresh) {
