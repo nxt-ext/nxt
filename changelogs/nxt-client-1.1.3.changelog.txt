@@ -8,5 +8,6 @@ Autolink URLs in asset description and alias data.
 Show notice on login if an update for NRS is available.
 Added a max asset transfer warning setting.
 Added a help menu.
-Correct amounts on "my assets" page.
+Correct amounts on my assets page.
 Alias search on aliases page.
+Added global unconfirmed transactions to transactions page.
