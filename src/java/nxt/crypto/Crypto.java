@@ -1,5 +1,6 @@
 package nxt.crypto;
 
+import nxt.util.Convert;
 import nxt.util.Logger;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -9,7 +10,6 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -40,31 +40,20 @@ public final class Crypto {
     }
 
     public static byte[] getPublicKey(String secretPhrase) {
-        try {
-            byte[] publicKey = new byte[32];
-            Curve25519.keygen(publicKey, null, Crypto.sha256().digest(secretPhrase.getBytes("UTF-8")));
-            /*
+        byte[] publicKey = new byte[32];
+        Curve25519.keygen(publicKey, null, Crypto.sha256().digest(Convert.toBytes(secretPhrase)));
+        /*
             if (! Curve25519.isCanonicalPublicKey(publicKey)) {
                 throw new RuntimeException("Public key not canonical");
             }
             */
-            return publicKey;
-        } catch (UnsupportedEncodingException e) {
-            Logger.logMessage("Error getting public key", e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        return publicKey;
     }
 
     public static byte[] getPrivateKey(String secretPhrase) {
-        try {
-            byte[] s = Crypto.sha256().digest(secretPhrase.getBytes("UTF-8"));
-            Curve25519.clamp(s);
-            return s;
-        }
-        catch (UnsupportedEncodingException e) {
-            Logger.logMessage("Error getting private key", e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        byte[] s = Crypto.sha256().digest(Convert.toBytes(secretPhrase));
+        Curve25519.clamp(s);
+        return s;
     }
 
     public static void curve(byte[] Z, byte[] k, byte[] P) {
@@ -73,42 +62,35 @@ public final class Crypto {
 
     public static byte[] sign(byte[] message, String secretPhrase) {
 
-        try {
+        byte[] P = new byte[32];
+        byte[] s = new byte[32];
+        MessageDigest digest = Crypto.sha256();
+        Curve25519.keygen(P, s, digest.digest(Convert.toBytes(secretPhrase)));
 
-            byte[] P = new byte[32];
-            byte[] s = new byte[32];
-            MessageDigest digest = Crypto.sha256();
-            Curve25519.keygen(P, s, digest.digest(secretPhrase.getBytes("UTF-8")));
+        byte[] m = digest.digest(message);
 
-            byte[] m = digest.digest(message);
+        digest.update(m);
+        byte[] x = digest.digest(s);
 
-            digest.update(m);
-            byte[] x = digest.digest(s);
+        byte[] Y = new byte[32];
+        Curve25519.keygen(Y, null, x);
 
-            byte[] Y = new byte[32];
-            Curve25519.keygen(Y, null, x);
+        digest.update(m);
+        byte[] h = digest.digest(Y);
 
-            digest.update(m);
-            byte[] h = digest.digest(Y);
+        byte[] v = new byte[32];
+        Curve25519.sign(v, h, x, s);
 
-            byte[] v = new byte[32];
-            Curve25519.sign(v, h, x, s);
+        byte[] signature = new byte[64];
+        System.arraycopy(v, 0, signature, 0, 32);
+        System.arraycopy(h, 0, signature, 32, 32);
 
-            byte[] signature = new byte[64];
-            System.arraycopy(v, 0, signature, 0, 32);
-            System.arraycopy(h, 0, signature, 32, 32);
-
-            /*
+        /*
             if (!Curve25519.isCanonicalSignature(signature)) {
                 throw new RuntimeException("Signature not canonical");
             }
             */
-            return signature;
-
-        } catch (UnsupportedEncodingException e) {
-            Logger.logMessage("Error in signing message", e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        return signature;
 
     }
 

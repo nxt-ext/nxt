@@ -4,10 +4,13 @@ import nxt.crypto.XoredData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import java.io.UnsupportedEncodingException;
-import java.nio.BufferUnderflowException;
+
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 
 public abstract class TransactionType {
@@ -175,6 +178,7 @@ public abstract class TransactionType {
         if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
+        recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(transaction.getAmountNQT());
         applyAttachment(transaction, senderAccount, recipientAccount);
     }
 
@@ -195,6 +199,7 @@ public abstract class TransactionType {
         if (transaction.getReferencedTransactionFullHash() != null) {
             senderAccount.addToUnconfirmedBalanceNQT(- Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
+        recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(-transaction.getAmountNQT());
         undoAttachment(transaction, senderAccount, recipientAccount);
     }
 
@@ -249,12 +254,10 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(transaction.getAmountNQT());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(-transaction.getAmountNQT());
             }
 
             @Override
@@ -342,42 +345,7 @@ public abstract class TransactionType {
 
         };
 
-        private abstract static class AliasMessaging extends Messaging {
-            protected String extractString(ByteBuffer buffer, int maxLength) throws NxtException.ValidationException {
-                try{
-                    int length = buffer.get();
-                    if (length > 3 * maxLength) {
-                        throw new NxtException.ValidationException("Max alias length exceeded");
-                    }
-                    byte[] bytes = new byte[length];
-                    buffer.get(bytes);
-                    return new String(bytes, "UTF-8");
-                }catch (BufferUnderflowException|UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException(e.toString());
-                }
-            }
-
-
-
-            protected Alias extractAlias(String aliasName, Transaction transaction) throws NxtException.ValidationException {
-                final int aliasLength = aliasName.length();
-
-                boolean wrongChar = false;
-                for (int i = 0; i < aliasLength; i++) {
-                    if (Constants.ALPHABET.indexOf(aliasName.charAt(i)) < 0) {
-                        wrongChar = true; break;
-                    }
-                }
-
-                if(aliasLength == 0 || aliasLength > Constants.MAX_ALIAS_LENGTH || wrongChar){
-                    throw new NxtException.ValidationException("Invalid alias name: " + aliasName);
-                }
-
-                return Alias.getAlias(aliasName);
-            }
-        }
-
-        public static final TransactionType ALIAS_ASSIGNMENT = new AliasMessaging() {
+        public static final TransactionType ALIAS_ASSIGNMENT = new Messaging() {
 
             @Override
             public final byte getSubtype() {
@@ -386,9 +354,9 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String alias = extractString(buffer, Constants.MAX_ALIAS_LENGTH);
-                String uri = extractString(buffer, Constants.MAX_ALIAS_URI_LENGTH);
-                transaction.setAttachment(new Attachment.MessagingAliasAssignment(alias, uri));
+                String aliasName = readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
+                String aliasURI = readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH);
+                transaction.setAttachment(new Attachment.MessagingAliasAssignment(aliasName, aliasURI));
             }
 
             @Override
@@ -407,8 +375,14 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                // can't tell whether Alias existed before and what was its previous uri
-                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName());
+                if (alias.getId().equals(transaction.getId())) {
+                    Alias.remove(alias);
+                } else {
+                    // alias has been updated, can't tell what was its previous uri
+                    throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                }
             }
 
             @Override
@@ -438,15 +412,14 @@ public abstract class TransactionType {
                     }
                 }
                 Alias alias = Alias.getAlias(normalizedAlias);
-                if (alias != null && !Arrays.equals(alias.getAccount().getPublicKey(), transaction.getSenderPublicKey())) {
+                if (alias != null && ! alias.getAccountId().equals(transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Alias already owned by another account: " + normalizedAlias);
                 }
             }
 
         };
 
-
-        public static final TransactionType ALIAS_SELL = new AliasMessaging() {
+        public static final TransactionType ALIAS_SELL = new Messaging() {
 
             @Override
             public final byte getSubtype() {
@@ -455,38 +428,35 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String alias = extractString(buffer, Constants.MAX_ALIAS_LENGTH);
-                try{
-                    long priceNQT = buffer.getLong();
-                    transaction.setAttachment(new Attachment.MessagingAliasSell(alias, priceNQT));
-                }catch(BufferUnderflowException e){
-                    throw new NxtException.ValidationException(e.getMessage());
-                }
+                String alias = readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
+                long priceNQT = buffer.getLong();
+                transaction.setAttachment(new Attachment.MessagingAliasSell(alias, priceNQT));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 String alias = (String) attachmentData.get("alias");
                 long priceNQT = (Long) attachmentData.get("priceNQT");
-                Attachment att = new Attachment.MessagingAliasSell(alias, priceNQT);
-                transaction.setAttachment(att);
+                transaction.setAttachment(new Attachment.MessagingAliasSell(alias, priceNQT));
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 final Attachment.MessagingAliasSell attachment =
                         (Attachment.MessagingAliasSell) transaction.getAttachment();
-                final String aliasName = attachment.getAliasName().toLowerCase();
-                final long price = attachment.getPriceNQT();
-                final long buyerId = recipientAccount.getId();
-
-                Alias.addSellAliasOrder(aliasName, price, buyerId);
+                final String aliasName = attachment.getAliasName();
+                final long priceNQT = attachment.getPriceNQT();
+                final Long buyerId = recipientAccount.getId();
+                if (priceNQT > 0) {
+                    Alias.addSellOffer(aliasName, priceNQT, buyerId);
+                } else {
+                    Alias.changeOwner(Account.getAccount(buyerId), transaction.getId(), aliasName, transaction.getBlockTimestamp());
+                }
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                // can't tell whether Alias existed before and what was its previous uri
-                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                throw new UndoNotSupportedException("Reversal of alias sell offer not supported");
             }
 
             @Override
@@ -502,26 +472,37 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (transaction.getAmountNQT() != 0) {
-                    throw new NxtException.ValidationException("Invalid alias operation: " +
-                            transaction.getAttachment().getJSONObject());
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_TRANSFER_BLOCK) {
+                    throw new NotYetEnabledException("Alias transfer not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
-
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.ValidationException("Invalid sell alias transaction: " +
+                            transaction.getJSONObject());
+                }
                 final Attachment.MessagingAliasSell attachment =
                         (Attachment.MessagingAliasSell) transaction.getAttachment();
-                final String aliasName = attachment.getAliasName().toLowerCase();
-                final Alias alias = extractAlias(aliasName, transaction);
-
-                if (alias == null){
+                final String aliasName = attachment.getAliasName();
+                if (aliasName == null || aliasName.length() == 0) {
+                    throw new NxtException.ValidationException("Missing alias name");
+                }
+                final Alias alias = Alias.getAlias(aliasName);
+                if (alias == null) {
                     throw new NxtException.ValidationException("Alias hasn't been registered yet: " + aliasName);
-                }else if(!Arrays.equals(alias.getAccount().getPublicKey(), transaction.getSenderPublicKey())) {
-                    throw new NxtException.ValidationException("Alias isn't belongs to sender: " + aliasName);
+                } else if (! alias.getAccountId().equals(transaction.getSenderId())) {
+                    throw new NxtException.ValidationException("Alias doesn't belong to sender: " + aliasName);
+                }
+                long priceNQT = attachment.getPriceNQT();
+                if (priceNQT < 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.ValidationException("Invalid alias sell price: " + priceNQT);
+                }
+                if (priceNQT == 0 && transaction.getRecipientId().equals(Genesis.CREATOR_ID)) {
+                    throw new NxtException.ValidationException("Transferring aliases to Genesis account not allowed");
                 }
             }
         };
 
+        public static final TransactionType ALIAS_BUY = new Messaging() {
 
-        public static final TransactionType ALIAS_BUY = new AliasMessaging() {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_BUY;
@@ -529,42 +510,27 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String alias = extractString(buffer, Constants.MAX_ALIAS_LENGTH);
+                String alias = readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
                 transaction.setAttachment(new Attachment.MessagingAliasBuy(alias));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
                 String alias = (String) attachmentData.get("alias");
-                Attachment att = new Attachment.MessagingAliasBuy(alias);
-                transaction.setAttachment(att);
+                transaction.setAttachment(new Attachment.MessagingAliasBuy(alias));
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
-                final String aliasName = attachment.getAliasName().toLowerCase();
-                final long buyerId = transaction.getSenderId();
-
-                try {
-                    final Alias alias = extractAlias(aliasName, transaction);
-                    final Long price = transaction.getAmountNQT();
-
-                    if(Alias.matchOrders(alias, price, buyerId)){
-                        Alias.changeOwner(Account.getAccount(transaction.getSenderId()), transaction.getId(),
-                                            aliasName, transaction.getTimestamp());
-                    }
-                } catch (NxtException.ValidationException e) {
-                    e.printStackTrace();  //todo: ???
-                }
+                final String aliasName = attachment.getAliasName();
+                Alias.changeOwner(senderAccount, transaction.getId(), aliasName, transaction.getBlockTimestamp());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                // can't tell whether Alias existed before and what was its previous uri
-                //todo: undo?
-                throw new UndoNotSupportedException("Reversal of alias assignment not supported");
+                throw new UndoNotSupportedException("Reversal of alias buy not supported");
             }
 
             @Override
@@ -580,34 +546,35 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ALIAS_TRANSFER_BLOCK) {
+                    throw new NotYetEnabledException("Alias transfer not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
-                final String aliasName = attachment.getAliasName().toLowerCase();
-                final Alias alias = extractAlias(aliasName, transaction);
-
-                if (alias == null){
+                final String aliasName = attachment.getAliasName();
+                final Alias alias = Alias.getAlias(aliasName);
+                if (alias == null) {
                     throw new NxtException.ValidationException("Alias hasn't been registered yet: " + aliasName);
-                }else if(!alias.getAccount().getId().equals(transaction.getRecipientId())) {
-                    throw new NxtException.ValidationException("Alias is owned by account other than recipient: " + aliasName);
+                } else if (! alias.getAccountId().equals(transaction.getRecipientId())) {
+                    throw new NxtException.ValidationException("Alias is owned by account other than recipient: "
+                            + Convert.toUnsignedLong(alias.getAccountId()));
                 }
-
-                final Long priceNQT = Alias.getPrice(alias);
-                if(priceNQT == null){
-                    throw new NxtException.ValidationException("Alias is not for sale: "+aliasName);
+                Alias.Offer offer = Alias.getOffer(aliasName);
+                if (offer == null) {
+                    throw new NxtException.ValidationException("Alias is not for sale: " + aliasName);
                 }
-
-                if(transaction.getAmountNQT() < priceNQT){
-                    String msg = "Price is too low for: "+aliasName+"("+transaction.getAmountNQT()+" < "+priceNQT+")";
+                if (transaction.getAmountNQT() < offer.getPriceNQT()) {
+                    String msg = "Price is too low for: " + aliasName + " ("
+                            + transaction.getAmountNQT() + " < " + offer.getPriceNQT() + ")";
                     throw new NxtException.ValidationException(msg);
                 }
-
-                final long buyerId = Alias.getBuyerId(alias);
-                if(buyerId!=Genesis.CREATOR_ID && buyerId!=transaction.getSenderId()){
-                    throw new NxtException.ValidationException("Wrong buyer for "+aliasName+": "+buyerId);
+                if (! offer.getBuyerId().equals(Genesis.CREATOR_ID) && ! offer.getBuyerId().equals(transaction.getSenderId())) {
+                    throw new NxtException.ValidationException("Wrong buyer for " + aliasName + ": "
+                            + Convert.toUnsignedLong(transaction.getSenderId()) + " expected: "
+                            + Convert.toUnsignedLong(offer.getBuyerId()));
                 }
             }
         };
-
 
         public final static TransactionType POLL_CREATION = new Messaging() {
             @Override
@@ -617,43 +584,21 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                try {
-                    int pollNameBytesLength = buffer.getShort();
-                    if (pollNameBytesLength > 3 * Constants.MAX_POLL_NAME_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid poll name length");
-                    }
-                    byte[] pollNameBytes = new byte[pollNameBytesLength];
-                    buffer.get(pollNameBytes);
-                    String pollName = (new String(pollNameBytes, "UTF-8")).trim();
-                    int pollDescriptionBytesLength = buffer.getShort();
-                    if (pollDescriptionBytesLength > 3 * Constants.MAX_POLL_DESCRIPTION_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid poll description length");
-                    }
-                    byte[] pollDescriptionBytes = new byte[pollDescriptionBytesLength];
-                    buffer.get(pollDescriptionBytes);
-                    String pollDescription = (new String(pollDescriptionBytes, "UTF-8")).trim();
-                    int numberOfOptions = buffer.get();
-                    if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                        throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
-                    }
-                    String[] pollOptions = new String[numberOfOptions];
-                    for (int i = 0; i < numberOfOptions; i++) {
-                        int pollOptionBytesLength = buffer.getShort();
-                        if (pollOptionBytesLength > 3 * Constants.MAX_POLL_OPTION_LENGTH) {
-                            throw new NxtException.ValidationException("Error parsing poll options");
-                        }
-                        byte[] pollOptionBytes = new byte[pollOptionBytesLength];
-                        buffer.get(pollOptionBytes);
-                        pollOptions[i] = (new String(pollOptionBytes, "UTF-8")).trim();
-                    }
-                    byte minNumberOfOptions = buffer.get();
-                    byte maxNumberOfOptions = buffer.get();
-                    boolean optionsAreBinary = buffer.get() != 0;
-                    transaction.setAttachment(new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions,
-                            minNumberOfOptions, maxNumberOfOptions, optionsAreBinary));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error parsing poll creation parameters", e);
+                String pollName = readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
+                String pollDescription = readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+                int numberOfOptions = buffer.get();
+                if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
+                    throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
                 }
+                String[] pollOptions = new String[numberOfOptions];
+                for (int i = 0; i < numberOfOptions; i++) {
+                    pollOptions[i] = readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
+                }
+                byte minNumberOfOptions = buffer.get();
+                byte maxNumberOfOptions = buffer.get();
+                boolean optionsAreBinary = buffer.get() != 0;
+                transaction.setAttachment(new Attachment.MessagingPollCreation(pollName, pollDescription, pollOptions,
+                        minNumberOfOptions, maxNumberOfOptions, optionsAreBinary));
             }
 
             @Override
@@ -783,26 +728,16 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                try {
-                    long minFeePerByte = buffer.getLong();
-                    int numberOfUris = buffer.get();
-                    if (numberOfUris > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
-                        throw new NxtException.ValidationException("Invalid number of URIs: " + numberOfUris);
-                    }
-                    String[] uris = new String[numberOfUris];
-                    for (int i = 0; i < uris.length; i++) {
-                        int uriBytesLength = buffer.getShort();
-                        if (uriBytesLength > 3 * Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH) {
-                            throw new NxtException.ValidationException("Invalid URI length: " + uriBytesLength);
-                        }
-                        byte[] uriBytes = new byte[uriBytesLength];
-                        buffer.get(uriBytes);
-                        uris[i] = new String(uriBytes, "UTF-8");
-                    }
-                    transaction.setAttachment(new Attachment.MessagingHubAnnouncement(minFeePerByte, uris));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
+                long minFeePerByte = buffer.getLong();
+                int numberOfUris = buffer.get();
+                if (numberOfUris > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
+                    throw new NxtException.ValidationException("Invalid number of URIs: " + numberOfUris);
                 }
+                String[] uris = new String[numberOfUris];
+                for (int i = 0; i < uris.length; i++) {
+                    uris[i] = readString(buffer, buffer.getShort(), Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH);
+                }
+                transaction.setAttachment(new Attachment.MessagingHubAnnouncement(minFeePerByte, uris));
             }
 
             @Override
@@ -865,24 +800,9 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                int nameLength = buffer.get();
-                if (nameLength > 3 * Constants.MAX_ACCOUNT_NAME_LENGTH) {
-                    throw new NxtException.ValidationException("Max account info name length exceeded");
-                }
-                byte[] name = new byte[nameLength];
-                buffer.get(name);
-                int descriptionLength = buffer.getShort();
-                if (descriptionLength > 3 * Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH) {
-                    throw new NxtException.ValidationException("Max account info description length exceeded");
-                }
-                byte[] description = new byte[descriptionLength];
-                buffer.get(description);
-                try {
-                    transaction.setAttachment(new Attachment.MessagingAccountInfo(new String(name, "UTF-8").intern(),
-                            new String(description, "UTF-8").intern()));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error in asset issuance", e);
-                }
+                String name = readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
+                String description = readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
+                transaction.setAttachment(new Attachment.MessagingAccountInfo(name, description));
             }
 
             @Override
@@ -936,26 +856,12 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                int nameLength = buffer.get();
-                if (nameLength > 3 * Constants.MAX_ASSET_NAME_LENGTH) {
-                    throw new NxtException.ValidationException("Max asset name length exceeded");
-                }
-                byte[] name = new byte[nameLength];
-                buffer.get(name);
-                int descriptionLength = buffer.getShort();
-                if (descriptionLength > 3 * Constants.MAX_ASSET_DESCRIPTION_LENGTH) {
-                    throw new NxtException.ValidationException("Max asset description length exceeded");
-                }
-                byte[] description = new byte[descriptionLength];
-                buffer.get(description);
+                String name = readString(buffer, buffer.get(), Constants.MAX_ASSET_NAME_LENGTH);
+                String description = readString(buffer, buffer.getShort(), Constants.MAX_ASSET_DESCRIPTION_LENGTH);
                 long quantityQNT = buffer.getLong();
                 byte decimals = buffer.get();
-                try {
-                    transaction.setAttachment(new Attachment.ColoredCoinsAssetIssuance(new String(name, "UTF-8").intern(),
-                            new String(description, "UTF-8").intern(), quantityQNT, decimals));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error in asset issuance", e);
-                }
+                transaction.setAttachment(new Attachment.ColoredCoinsAssetIssuance(name, description,
+                        quantityQNT, decimals));
             }
 
             @Override
@@ -1034,18 +940,8 @@ public abstract class TransactionType {
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 Long assetId = Convert.zeroToNull(buffer.getLong());
                 long quantityQNT = buffer.getLong();
-                int commentLength = buffer.getShort();
-                if (commentLength > 3 * Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) {
-                    throw new NxtException.ValidationException("Max asset comment length exceeded");
-                }
-                byte[] comment = new byte[commentLength];
-                buffer.get(comment);
-                try {
-                    transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantityQNT,
-                            new String(comment, "UTF-8").intern()));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error in asset transfer", e);
-                }
+                String comment = readString(buffer, buffer.getShort(), Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH);
+                transaction.setAttachment(new Attachment.ColoredCoinsAssetTransfer(assetId, quantityQNT, comment));
             }
 
             @Override
@@ -1441,34 +1337,12 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                try {
-                    int nameBytesLength = buffer.getShort();
-                    if (nameBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid name length: " + nameBytesLength);
-                    }
-                    byte[] nameBytes = new byte[nameBytesLength];
-                    buffer.get(nameBytes);
-                    String name = new String(nameBytes, "UTF-8");
-                    int descriptionBytesLength = buffer.getShort();
-                    if (descriptionBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid description length: " + descriptionBytesLength);
-                    }
-                    byte[] descriptionBytes = new byte[descriptionBytesLength];
-                    buffer.get(descriptionBytes);
-                    String description = new String(descriptionBytes, "UTF-8");
-                    int tagsBytesLength = buffer.getShort();
-                    if (tagsBytesLength > 3 * Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH) {
-                        throw new NxtException.ValidationException("Invalid tags length: " + tagsBytesLength);
-                    }
-                    byte[] tagsBytes = new byte[tagsBytesLength];
-                    buffer.get(tagsBytes);
-                    String tags = new String(tagsBytes, "UTF-8");
-                    int quantity = buffer.getInt();
-                    long priceNQT = buffer.getLong();
-                    transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, priceNQT));
-                } catch (UnsupportedEncodingException e) {
-                    throw new NxtException.ValidationException("Error parsing goods listing", e);
-                }
+                String name = readString(buffer, buffer.getShort(), Constants.MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH);
+                String description = readString(buffer, buffer.getShort(), Constants.MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH);
+                String tags = readString(buffer, buffer.getShort(), Constants.MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH);
+                int quantity = buffer.getInt();
+                long priceNQT = buffer.getLong();
+                transaction.setAttachment(new Attachment.DigitalGoodsListing(name, description, tags, quantity, priceNQT));
             }
 
             @Override
@@ -2004,6 +1878,15 @@ public abstract class TransactionType {
 
         };
 
+    }
+
+    private static String readString(ByteBuffer buffer, int numBytes, int maxLength) throws NxtException.ValidationException {
+        if (numBytes > 3 * maxLength) {
+            throw new NxtException.ValidationException("Max parameter length exceeded");
+        }
+        byte[] bytes = new byte[numBytes];
+        buffer.get(bytes);
+        return Convert.toString(bytes);
     }
 
     public static final class UndoNotSupportedException extends NxtException {

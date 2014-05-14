@@ -26,7 +26,7 @@ public final class GetAliasURI extends APIServlet.APIRequestHandler {
             return MISSING_ALIAS;
         }
 
-        Alias aliasData = Alias.getAlias(alias.toLowerCase());
+        Alias aliasData = Alias.getAlias(alias);
         if (aliasData == null) {
             return UNKNOWN_ALIAS;
         }

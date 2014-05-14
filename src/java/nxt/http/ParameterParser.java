@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.crypto.Crypto;
@@ -9,6 +10,7 @@ import nxt.util.Convert;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.INCORRECT_ALIAS;
 import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
@@ -19,6 +21,7 @@ import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
+import static nxt.http.JSONResponses.MISSING_ALIAS;
 import static nxt.http.JSONResponses.MISSING_AMOUNT;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.MISSING_FEE;
@@ -31,6 +34,18 @@ import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 final class ParameterParser {
+
+    static Alias getAlias(HttpServletRequest req) throws ParameterException {
+        String aliasName = Convert.emptyToNull(req.getParameter("alias"));
+        if (aliasName == null) {
+            throw new ParameterException(MISSING_ALIAS);
+        }
+        Alias alias = Alias.getAlias(aliasName);
+        if (alias == null) {
+            throw new ParameterException(INCORRECT_ALIAS);
+        }
+        return alias;
+    }
 
     static long getAmountNQT(HttpServletRequest req) throws ParameterException {
         String amountValueNQT = Convert.emptyToNull(req.getParameter("amountNQT"));

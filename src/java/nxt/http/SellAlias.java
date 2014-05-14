@@ -1,15 +1,24 @@
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.Alias;
+import nxt.Attachment;
+import nxt.Constants;
+import nxt.Genesis;
+import nxt.NxtException;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
-import static nxt.http.JSONResponses.*;
+
+import static nxt.http.JSONResponses.INCORRECT_ALIAS_OWNER;
+import static nxt.http.JSONResponses.INCORRECT_PRICE;
+import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_PRICE;
 
 
-/**
- * Just simple alias transfer, with no any escrow support
- */
-public class SellAlias extends CreateTransaction {
+public final class SellAlias extends CreateTransaction {
+
     static final SellAlias instance = new SellAlias();
 
     private SellAlias() {
@@ -18,25 +27,43 @@ public class SellAlias extends CreateTransaction {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String aliasName = req.getParameter("alias");
-        long priceNQT = ParameterParser.getPriceNQT(req);
-
+        Alias alias = ParameterParser.getAlias(req);
         Account owner = ParameterParser.getSenderAccount(req);
-        Long recipient = ParameterParser.getRecipientId(req);
 
-        if (aliasName == null) {
-            return MISSING_ALIAS;
+        String priceValueNQT = Convert.emptyToNull(req.getParameter("priceNQT"));
+        if (priceValueNQT == null) {
+            return MISSING_PRICE;
+        }
+        long priceNQT;
+        try {
+            priceNQT = Long.parseLong(priceValueNQT);
+        } catch (RuntimeException e) {
+            return INCORRECT_PRICE;
+        }
+        if (priceNQT < 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
+            throw new ParameterException(INCORRECT_PRICE);
         }
 
-        if (!Alias.aliasExists(aliasName)) {
-            return INCORRECT_ALIAS;
+        String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
+        Long recipientId;
+        if (recipientValue == null || "0".equals(recipientValue)) {
+            recipientId = Genesis.CREATOR_ID;
+        } else {
+            try {
+                recipientId = Convert.parseAccountId(recipientValue);
+            } catch (RuntimeException e) {
+                return INCORRECT_RECIPIENT;
+            }
+            if (recipientId == null) {
+                return INCORRECT_RECIPIENT;
+            }
         }
 
-        if (!Alias.getAlias(aliasName).getAccount().equals(owner)) {
+        if (! alias.getAccountId().equals(owner.getId())) {
             return INCORRECT_ALIAS_OWNER;
         }
 
-        Attachment attachment = new Attachment.MessagingAliasSell(aliasName, priceNQT);
-        return createTransaction(req, owner, recipient, 0, attachment);
+        Attachment attachment = new Attachment.MessagingAliasSell(alias.getAliasName(), priceNQT);
+        return createTransaction(req, owner, recipientId, 0, attachment);
     }
 }
