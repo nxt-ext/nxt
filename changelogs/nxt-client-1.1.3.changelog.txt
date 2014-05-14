@@ -11,3 +11,4 @@ Added a help menu.
 Correct amounts on my assets page.
 Alias search on aliases page.
 Added global unconfirmed transactions to transactions page.
+Show quantity of asset available for transfer in asset transfer modal.
