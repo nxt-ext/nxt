@@ -387,7 +387,15 @@
                 	<section class="content-header">
                 		<h1>Aliases</h1>
                 		<div style="position:absolute;top:9px;right:9px;">
-							<button type="button" class="btn btn-default" data-toggle="modal" data-target="#register_alias_modal">Register Alias</button>
+							<form action="#" method="get" class="sidebar-form" id="asset_search" style="width:180px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Aliases...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+							<button type="button" class="btn btn-default" data-toggle="modal" data-target="#register_alias_modal" style="display:inline-block;vertical-align:middle;">Register Alias</button>
 						</div>
                 	</section>
                 	<section class="content">
@@ -556,7 +564,7 @@
 													<div class="input-group">
 														<input type="text" name="q" class="form-control" placeholder="Search...">
 														<span class="input-group-btn">
-														<button type="submit" name="seach" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
+														<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 														</span>
 													</div>
 												</form>     

@@ -256,5 +256,34 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	$("#asset_search").on("submit", function(e) {
+		e.preventDefault();
+
+		var alias = $.trim($("#asset_search input[name=q]").val());
+
+		NRS.sendRequest("getAliasId", {
+			"alias": alias
+		}, function(response) {
+			if (response.errorCode) {
+				$.growl("No such alias exists.", {
+					"type": "danger"
+				});
+			} else {
+				NRS.sendRequest("getTransaction", {
+					"transaction": response.id
+				}, function(response, input) {
+					if (response.errorCode) {
+						$.growl("Could not find alias transaction.", {
+							"type": "danger"
+						});
+					} else {
+						response.transaction = input.transaction;
+						NRS.showTransactionModal(response);
+					}
+				});
+			}
+		});
+	});
+
 	return NRS;
 }(NRS || {}, jQuery));

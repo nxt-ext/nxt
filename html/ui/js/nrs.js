@@ -665,33 +665,9 @@ var NRS = (function(NRS, $, undefined) {
 					});
 				}
 			});
-		} else if (/^@/.test(id)) {
-			id = id.substring(1);
-			NRS.sendRequest("getAliasId", {
-				"alias": id
-			}, function(response) {
-				if (response.errorCode) {
-					$.growl("No such alias exists.", {
-						"type": "danger"
-					});
-				} else {
-					NRS.sendRequest("getTransaction", {
-						"transaction": response.id
-					}, function(response, input) {
-						if (response.errorCode) {
-							$.growl("Could not find alias transaction.", {
-								"type": "danger"
-							});
-						} else {
-							response.transaction = input.transaction;
-							NRS.showTransactionModal(response);
-						}
-					});
-				}
-			});
 		} else {
 			if (!/^\d+$/.test(id)) {
-				$.growl("Invalid input. Search by ID, reed solomon account number, or alias (prefixed with '@').", {
+				$.growl("Invalid input. Search by ID or reed solomon account number.", {
 					"type": "danger"
 				});
 				return;

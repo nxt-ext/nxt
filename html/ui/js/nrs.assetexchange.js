@@ -1318,7 +1318,6 @@ var NRS = (function(NRS, $, undefined) {
 			var lowestAskOrder = result.ask_orders[asset.asset];
 			var highestBidOrder = result.bid_orders[asset.asset];
 
-			console.log(lowestAskOrder.toString());
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
 
 			if (highestBidOrder != -1) {
