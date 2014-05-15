@@ -16,7 +16,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.1.3";
+    public static final String VERSION = "1.1.4";
 
     private static final Properties defaultProperties = new Properties();
     static {
@@ -144,6 +144,7 @@ public final class Nxt {
         ThreadPool.shutdown();
         Db.shutdown();
         Logger.logMessage("Nxt server " + VERSION + " stopped.");
+        Logger.shutdown();
     }
 
     private static class Init {
@@ -153,12 +154,6 @@ public final class Nxt {
             long startTime = System.currentTimeMillis();
 
             Logger.logMessage("logging enabled");
-
-            if (! Nxt.getBooleanProperty("nxt.debugJetty")) {
-                System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
-                Logger.logDebugMessage("jetty logging disabled");
-            }
-
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
