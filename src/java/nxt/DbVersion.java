@@ -199,19 +199,7 @@ final class DbVersion {
             case 39:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_full_hash BINARY(32)");
             case 40:
-                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
-                     Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET full_hash = ? WHERE id = ?")) {
-                    while (iterator.hasNext()) {
-                        Transaction transaction = iterator.next();
-                        pstmt.setBytes(1, Crypto.sha256().digest(transaction.getBytes()));
-                        pstmt.setLong(2, transaction.getId());
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
+                BlockDb.deleteAll();
                 apply(null);
             case 41:
                 apply("ALTER TABLE transaction ALTER COLUMN full_hash SET NOT NULL");
