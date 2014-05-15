@@ -107,7 +107,8 @@ public final class DebugTrace {
             "transaction amount", "transaction fee", "generation fee",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity", "transaction", "lessee", "lessor guaranteed balance", "timestamp"};
+            "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
+            "sender", "recipient", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -259,6 +260,11 @@ public final class DebugTrace {
         map.put("transaction amount", String.valueOf(amount));
         map.put("transaction fee", String.valueOf(fee));
         map.put("transaction", transaction.getStringId());
+        if (isRecipient) {
+            map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+        } else {
+            map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+        }
         map.put("event", "transaction" + (isUndo ? " undo" : ""));
         return map;
     }
@@ -364,6 +370,17 @@ public final class DebugTrace {
             Attachment.ColoredCoinsOrderCancellation orderCancellation = (Attachment.ColoredCoinsOrderCancellation)attachment;
             map.put("order", Convert.toUnsignedLong(orderCancellation.getOrderId()));
             map.put("event", "order cancel");
+        } else if (attachment instanceof Attachment.MessagingArbitraryMessage) {
+            map = new HashMap<>();
+            map.put("account", Convert.toUnsignedLong(accountId));
+            map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+            map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+            map.put("event", "message");
+            if (isRecipient) {
+                map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+            } else {
+                map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+            }
         }
         return map;
     }
