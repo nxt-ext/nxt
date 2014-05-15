@@ -124,7 +124,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.forms.assignAlias = function($modal) {
+	NRS.forms.setAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
 		data.uri = $.trim(data.uri);
@@ -206,7 +206,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.forms.setAliasType(type, $("#register_alias_uri").val());
 	});
 
-	NRS.forms.assignAliasComplete = function(response, data) {
+	NRS.forms.setAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
 		}

@@ -2182,12 +2182,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group">
 								<label for="register_alias_alias">ALIAS</label>
-								<input type="text" class="form-control" name="alias" id="register_alias_alias" placeholder="Alias" tabindex="1" />
+								<input type="text" class="form-control" name="aliasName" id="register_alias_alias" placeholder="Alias" tabindex="1" />
 								<p id="register_alias_alias_noneditable" style="display:none"></p>
 							</div>
 							<div class="form-group">
 								<label for="register_alias_uri" id="register_alias_uri_label">URI</label>
-								<input type="text" class="form-control" name="uri" id="register_alias_uri" placeholder="URI" tabindex="2" />
+								<input type="text" class="form-control" name="aliasURI" id="register_alias_uri" placeholder="URI" tabindex="2" />
 								<p class="help-block" id="register_alias_help"></p>
 							</div>
 							<div class="row">
@@ -2212,7 +2212,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 			      		<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
-			      		<input type="hidden" name="request_type" value="assignAlias" />
+			      		<input type="hidden" name="request_type" value="setAlias" />
 			      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
 			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
