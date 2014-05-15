@@ -18,8 +18,12 @@ import java.util.logging.Logger;
 public class BriefLogFormatter extends Formatter {
 
     /** Format used for log messages */
-    private static final MessageFormat messageFormat =
-            new MessageFormat("{0,date,yyyy-MM-dd HH:mm:ss} {1}: {2}\n{3}");
+    private static final ThreadLocal<MessageFormat> messageFormat = new ThreadLocal<MessageFormat>() {
+        @Override
+        protected MessageFormat initialValue() {
+            return new MessageFormat("{0,date,yyyy-MM-dd HH:mm:ss} {1}: {2}\n{3}");
+        }
+    };
 
     /** Logger instance at the top of the name tree */
     private static final Logger logger = Logger.getLogger("");
@@ -55,6 +59,6 @@ public class BriefLogFormatter extends Formatter {
         } else {
             arguments[3] = "";
         }
-        return messageFormat.format(arguments);
+        return messageFormat.get().format(arguments);
     }
 }
