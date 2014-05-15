@@ -1,0 +1,19 @@
+Aliases http API cleanup. There are only two API requests to get aliases now:
+
+getAlias
+parameters: either "aliasName" (the alias name) or "alias" (the alias id)
+returns: full Alias JSON
+
+getAliases
+parameters: "timestamp" (optional timestamp) and "account" (the account id, 
+required)
+returns: list of aliases (full JSON) owned by the account, optionally filtered
+by timestamp
+
+The old getAliasId, getAliasIds, getAliasURI and listAccountAliases have been
+removed as they are redundant and the new requests return all necessary info.
+
+assignAlias has been renamed to setAlias, with "aliasName" and "aliasURI"
+parameters.
+
+

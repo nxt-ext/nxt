@@ -19,7 +19,7 @@ final class ParameterParser {
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
         String aliasName = Convert.emptyToNull(req.getParameter("alias"));
         if (aliasName == null) {
-            throw new ParameterException(MISSING_ALIAS);
+            throw new ParameterException(MISSING_ALIAS_NAME);
         }
         Alias alias = Alias.getAlias(aliasName);
         if (alias == null) {

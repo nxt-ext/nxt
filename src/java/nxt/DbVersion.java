@@ -214,21 +214,7 @@ final class DbVersion {
             case 46:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
             case 47:
-                boolean fullReset = false;
-                try (Connection con = Db.getConnection();
-                     Statement stmt = con.createStatement()) {
-                    ResultSet rs = stmt.executeQuery("SELECT * FROM transaction");
-                    if (rs.next()) {
-                        fullReset = true;
-                    }
-                    rs.close();
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
-                if (fullReset) {
-                    BlockDb.deleteAll();
-                }
+                BlockDb.deleteAll();
                 apply(null);
             case 48:
                 apply("ALTER TABLE transaction DROP COLUMN attachment");

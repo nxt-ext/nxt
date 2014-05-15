@@ -109,7 +109,7 @@ public final class DebugTrace {
             "trade price", "trade quantity", "trade cost",
             "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
-            "timestamp"};
+            "sender", "recipient", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -261,6 +261,11 @@ public final class DebugTrace {
         map.put("transaction amount", String.valueOf(amount));
         map.put("transaction fee", String.valueOf(fee));
         map.put("transaction", transaction.getStringId());
+        if (isRecipient) {
+            map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+        } else {
+            map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+        }
         map.put("event", "transaction" + (isUndo ? " undo" : ""));
         return map;
     }
@@ -322,17 +327,21 @@ public final class DebugTrace {
                 }
             }
             map.put("order quantity", String.valueOf(quantity));
-            long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
-            if (isAsk) {
-                if (isUndo) {
-                    orderCost = - orderCost;
+            try {
+                long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
+                if (isAsk) {
+                    if (isUndo) {
+                        orderCost = - orderCost;
+                    }
+                } else {
+                    if (! isUndo) {
+                        orderCost = - orderCost;
+                    }
                 }
-            } else {
-                if (! isUndo) {
-                    orderCost = - orderCost;
-                }
+                map.put("order cost", String.valueOf(orderCost));
+            } catch (ArithmeticException e) {
+                map.put("order cost", "NaN");
             }
-            map.put("order cost", String.valueOf(orderCost));
             String event = (isAsk ? "ask" : "bid") + " order" + (isUndo ? " undo" : "");
             map.put("event", event);
         } else if (attachment instanceof Attachment.ColoredCoinsAssetIssuance) {
@@ -409,6 +418,17 @@ public final class DebugTrace {
                 }
             }
             map.put("refund", String.valueOf(refundNQT));
+        } else if (attachment instanceof Attachment.MessagingArbitraryMessage) {
+            map = new HashMap<>();
+            map.put("account", Convert.toUnsignedLong(accountId));
+            map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+            map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+            map.put("event", "message");
+            if (isRecipient) {
+                map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+            } else {
+                map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+            }
         }
         return map;
     }

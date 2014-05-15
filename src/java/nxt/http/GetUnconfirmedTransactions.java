@@ -42,7 +42,7 @@ public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandl
         }
 
         JSONObject response = new JSONObject();
-        response.put("unconfirmedTransactionIds", transactions);
+        response.put("unconfirmedTransactions", transactions);
         return response;
     }
 

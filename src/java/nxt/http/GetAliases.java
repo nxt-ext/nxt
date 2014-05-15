@@ -1,32 +1,40 @@
 package nxt.http;
 
+import nxt.Account;
 import nxt.Alias;
 import nxt.NxtException;
+import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class ListAccountAliases extends APIServlet.APIRequestHandler {
+import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
-    static final ListAccountAliases instance = new ListAccountAliases();
+public final class GetAliases extends APIServlet.APIRequestHandler {
 
-    private ListAccountAliases() {
-        super("account");
+    static final GetAliases instance = new GetAliases();
+
+    private GetAliases() {
+        super("timestamp", "account");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        int timestamp = ParameterParser.getTimestamp(req);
         Long accountId = ParameterParser.getAccount(req).getId();
+
         JSONArray aliases = new JSONArray();
         for (Alias alias : Alias.getAliasesByOwner(accountId)) {
-            aliases.add(JSONData.alias(alias));
+            if (alias.getTimestamp() >= timestamp) {
+                aliases.add(JSONData.alias(alias));
+            }
         }
 
         JSONObject response = new JSONObject();
         response.put("aliases", aliases);
-
         return response;
     }
 

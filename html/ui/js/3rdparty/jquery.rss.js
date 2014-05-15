@@ -204,7 +204,7 @@
 
 		return $.extend({
 			feed: this.feedTokens,
-			url: entry.link,
+			url: String(entry.link).escapeHTML(),
 			author: entry.author,
 			date: entry.publishedDate,
 			title: entry.title,

@@ -5,6 +5,8 @@ import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
+import java.util.Arrays;
+
 public final class JSONResponses {
 
     public static final JSONStreamAware INCORRECT_ALIAS = incorrect("alias");
@@ -15,8 +17,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Constants.MAX_ALIAS_URI_LENGTH + " characters)");
     public static final JSONStreamAware MISSING_SECRET_PHRASE = missing("secretPhrase");
     public static final JSONStreamAware INCORRECT_PUBLIC_KEY = incorrect("publicKey");
-    public static final JSONStreamAware MISSING_ALIAS = missing("alias");
-    public static final JSONStreamAware MISSING_URI = missing("uri");
+    public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
+    public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
     public static final JSONStreamAware MISSING_FEE = missing("feeNQT");
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
@@ -118,6 +120,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SELLER = missing("seller");
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_NOTE = incorrect("encryptedNote");
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("encryptedGoods");
+    public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -175,14 +178,6 @@ public final class JSONResponses {
         FEATURE_NOT_AVAILABLE = JSON.prepare(response);
     }
 
-    public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "Either secretPhrase or publicKey must be specified");
-        MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = JSON.prepare(response);
-    }
-
     public static final JSONStreamAware DECRYPTION_FAILED;
     static {
         JSONObject response = new JSONObject();
@@ -215,10 +210,14 @@ public final class JSONResponses {
         DUPLICATE_FEEDBACK = JSON.prepare(response);
     }
 
-    private static JSONStreamAware missing(String paramName) {
+    private static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
-        response.put("errorDescription", "\"" + paramName + "\"" + " not specified");
+        if (paramNames.length == 1) {
+            response.put("errorDescription", "\"" + paramNames[0] + "\"" + " not specified");
+        } else {
+            response.put("errorDescription", "At least one of " + Arrays.toString(paramNames) + " must be specified");
+        }
         return JSON.prepare(response);
     }
 
