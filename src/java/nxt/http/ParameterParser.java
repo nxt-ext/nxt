@@ -21,7 +21,7 @@ import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_ALIAS_NAME;
+import static nxt.http.JSONResponses.MISSING_ALIAS_OR_ALIAS_NAME;
 import static nxt.http.JSONResponses.MISSING_AMOUNT;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.MISSING_FEE;
@@ -31,18 +31,29 @@ import static nxt.http.JSONResponses.MISSING_QUANTITY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
+import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 final class ParameterParser {
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
-        String aliasName = Convert.emptyToNull(req.getParameter("alias"));
-        if (aliasName == null) {
-            throw new ParameterException(MISSING_ALIAS_NAME);
-        }
-        Alias alias = Alias.getAlias(aliasName);
-        if (alias == null) {
+        Long aliasId;
+        try {
+            aliasId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("alias")));
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ALIAS);
+        }
+        String aliasName = Convert.emptyToNull(req.getParameter("aliasName"));
+        Alias alias;
+        if (aliasId != null) {
+            alias = Alias.getAlias(aliasId);
+        } else if (aliasName != null) {
+            alias = Alias.getAlias(aliasName);
+        } else {
+            throw new ParameterException(MISSING_ALIAS_OR_ALIAS_NAME);
+        }
+        if (alias == null) {
+            throw new ParameterException(UNKNOWN_ALIAS);
         }
         return alias;
     }

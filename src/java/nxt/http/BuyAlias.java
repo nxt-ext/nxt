@@ -16,7 +16,7 @@ public final class BuyAlias extends CreateTransaction {
     static final BuyAlias instance = new BuyAlias();
 
     private BuyAlias() {
-        super("alias", "priceNQT");
+        super("alias", "aliasName", "priceNQT");
     }
 
     @Override

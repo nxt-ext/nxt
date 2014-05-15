@@ -22,7 +22,7 @@ public final class SellAlias extends CreateTransaction {
     static final SellAlias instance = new SellAlias();
 
     private SellAlias() {
-        super("alias", "recipient", "priceNQT");
+        super("alias", "aliasName", "recipient", "priceNQT");
     }
 
     @Override
