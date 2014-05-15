@@ -3301,3 +3301,9 @@ hr {
 .list-group-item.owns_asset.active, .list-group-item.owns_asset:hover {
   border-right:5px solid #FFE545 !important;
 }
+
+.input-group-btn .btn.focus {
+    background-color: #fff;
+    color: #666;
+    border:none !important;
+}
