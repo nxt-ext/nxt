@@ -259,7 +259,15 @@ var NRS = (function(NRS, $, undefined) {
 	$("#asset_search").on("submit", function(e) {
 		e.preventDefault();
 
+		if (NRS.fetchingModalData) {
+			return;
+		}
+
+		NRS.fetchingModalData = true;
+
 		var alias = $.trim($("#asset_search input[name=q]").val());
+
+		$("#alias_info_table tbody").empty();
 
 		NRS.sendRequest("getAliasId", {
 			"alias": alias
@@ -269,16 +277,27 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				NRS.sendRequest("getTransaction", {
-					"transaction": response.id
+				NRS.sendRequest("getAlias", {
+					"alias": response.id
 				}, function(response, input) {
 					if (response.errorCode) {
-						$.growl("Could not find alias transaction.", {
+						$.growl("Could not find alias.", {
 							"type": "danger"
 						});
 					} else {
-						response.transaction = input.transaction;
-						NRS.showTransactionModal(response);
+						$("#alias_info_modal_alias").html(String(response.alias).escapeHTML());
+
+						var data = {
+							"Account": NRS.getAccountTitle(response, "account"),
+							"Last Updated": NRS.formatTimestamp(response.timestamp),
+							"DataFormattedHTML": response.uri.autoLink()
+						}
+
+						$("#alias_info_table tbody").append(NRS.createInfoTable(data));
+
+						$("#alias_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+
 					}
 				});
 			}
