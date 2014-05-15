@@ -106,7 +106,7 @@ public final class VerifyTrace {
                 Map<String,Long> accountValues = mapEntry.getValue();
                 System.out.println("account: " + accountId);
                 for (String balanceHeader : balanceHeaders) {
-                    System.out.println(balanceHeader + ": " + accountValues.get(balanceHeader));
+                    System.out.println(balanceHeader + ": " + Convert.nullToZero(accountValues.get(balanceHeader)));
                 }
                 System.out.println("totals:");
                 long totalDelta = 0;
@@ -116,7 +116,7 @@ public final class VerifyTrace {
                     System.out.println(header + ": " + delta);
                 }
                 System.out.println("total confirmed balance change: " + totalDelta);
-                long balance = accountValues.get("balance");
+                long balance = Convert.nullToZero(accountValues.get("balance"));
                 if (balance != totalDelta) {
                     System.out.println("ERROR: balance doesn't match total change!!!");
                     failed.add(accountId);
