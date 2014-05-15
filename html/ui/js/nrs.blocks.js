@@ -191,7 +191,7 @@ var NRS = (function(NRS, $, undefined) {
 								return;
 							}
 
-							block["id"] = input.block;
+							block["block"] = input.block;
 							blocks[input["_extra"].nr] = block;
 							nr_blocks++;
 
