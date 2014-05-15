@@ -26,15 +26,15 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("account", Convert.toUnsignedLong(alias.getAccountId()));
         json.put("accountRS", Convert.rsAccount(alias.getAccountId()));
-        json.put("alias", alias.getAliasName());
-        json.put("uri", alias.getURI());
+        json.put("aliasName", alias.getAliasName());
+        json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
+        json.put("alias", Convert.toUnsignedLong(alias.getId()));
         Alias.Offer offer = Alias.getOffer(alias.getAliasName());
         if (offer != null) {
             json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
             json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
         }
-
         return json;
     }
 

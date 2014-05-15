@@ -120,7 +120,7 @@ public final class Alias {
         return aliasName;
     }
 
-    public String getURI() {
+    public String getAliasURI() {
         return aliasURI;
     }
 

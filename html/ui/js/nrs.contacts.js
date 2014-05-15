@@ -5,7 +5,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.database.select("contacts", null, function(error, contacts) {
 			if (contacts.length) {
 				$.each(contacts, function(index, contact) {
-					NRS.contacts[contact.accountId] = contact;
+					NRS.contacts[contact.account] = contact;
 				});
 			}
 		});

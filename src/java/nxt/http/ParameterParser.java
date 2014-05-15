@@ -21,7 +21,7 @@ import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
 import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_ALIAS;
+import static nxt.http.JSONResponses.MISSING_ALIAS_NAME;
 import static nxt.http.JSONResponses.MISSING_AMOUNT;
 import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.MISSING_FEE;
@@ -38,7 +38,7 @@ final class ParameterParser {
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
         String aliasName = Convert.emptyToNull(req.getParameter("alias"));
         if (aliasName == null) {
-            throw new ParameterException(MISSING_ALIAS);
+            throw new ParameterException(MISSING_ALIAS_NAME);
         }
         Alias alias = Alias.getAlias(aliasName);
         if (alias == null) {
