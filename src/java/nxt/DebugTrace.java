@@ -320,17 +320,21 @@ public final class DebugTrace {
                 }
             }
             map.put("order quantity", String.valueOf(quantity));
-            long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
-            if (isAsk) {
-                if (isUndo) {
-                    orderCost = - orderCost;
+            try {
+                long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
+                if (isAsk) {
+                    if (isUndo) {
+                        orderCost = - orderCost;
+                    }
+                } else {
+                    if (! isUndo) {
+                        orderCost = - orderCost;
+                    }
                 }
-            } else {
-                if (! isUndo) {
-                    orderCost = - orderCost;
-                }
+                map.put("order cost", String.valueOf(orderCost));
+            } catch (ArithmeticException e) {
+                map.put("order cost", "NaN");
             }
-            map.put("order cost", String.valueOf(orderCost));
             String event = (isAsk ? "ask" : "bid") + " order" + (isUndo ? " undo" : "");
             map.put("event", event);
         } else if (attachment instanceof Attachment.ColoredCoinsAssetIssuance) {
