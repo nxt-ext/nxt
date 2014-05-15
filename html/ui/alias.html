@@ -12,7 +12,9 @@
 				var uri = document.getElementById("uri").value;
 				var feeNQT = 100000000 * document.getElementById("feeNXT").value;
 				var deadline = document.getElementById("deadline").value;
-				sendRequest("requestType=assignAlias&secretPhrase=" + encodeURIComponent(secretPhrase) + "&alias=" + encodeURIComponent(alias) + "&uri=" + encodeURIComponent(uri) + "&feeNQT=" + feeNQT + "&deadline=" + deadline);
+				sendRequest("requestType=setAlias&secretPhrase=" + encodeURIComponent(secretPhrase)
+                        + "&aliasName=" + encodeURIComponent(alias) + "&aliasURI=" + encodeURIComponent(uri)
+                        + "&feeNQT=" + feeNQT + "&deadline=" + deadline);
 			}
 			function sendRequest(requestParameters) {
 				var request = new XMLHttpRequest();

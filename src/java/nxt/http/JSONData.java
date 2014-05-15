@@ -26,9 +26,10 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("account", Convert.toUnsignedLong(alias.getAccount().getId()));
         json.put("accountRS", Convert.rsAccount(alias.getAccount().getId()));
-        json.put("alias", alias.getAliasName());
-        json.put("uri", alias.getURI());
+        json.put("aliasName", alias.getAliasName());
+        json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
+        json.put("alias", Convert.toUnsignedLong(alias.getId()));
         return json;
     }
 
