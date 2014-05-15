@@ -144,6 +144,7 @@ public final class Nxt {
         ThreadPool.shutdown();
         Db.shutdown();
         Logger.logMessage("Nxt server " + VERSION + " stopped.");
+        Logger.shutdown();
     }
 
     private static class Init {
@@ -153,7 +154,6 @@ public final class Nxt {
             long startTime = System.currentTimeMillis();
 
             Logger.logMessage("logging enabled");
-
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();

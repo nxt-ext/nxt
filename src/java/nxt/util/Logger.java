@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Properties;
+import java.util.logging.LogManager;
 
 /**
  * Handle logging for the Nxt node server
@@ -35,8 +36,12 @@ public final class Logger {
      * values specified in logging.properties will override the values specified in
      * logging-default.properties.  The system-wide Java logging configuration file
      * jre/lib/logging.properties will be used if no Nxt configuration file is found.
+     *
+     * We will provide our own LogManager extension to delay log handler shutdown
+     * until we no longer need logging services.
      */
     static {
+        System.setProperty("java.util.logging.manager", "nxt.util.NxtLogManager");
         try {
             boolean foundProperties = false;
             Properties loggingProperties = new Properties();
@@ -79,6 +84,13 @@ public final class Logger {
      * No constructor
      */
     private Logger() {}
+
+    /**
+     * Logger shutdown
+     */
+    public static void shutdown() {
+        ((NxtLogManager)LogManager.getLogManager()).nxtShutdown();
+    }
 
     /**
      * Add a message listener
