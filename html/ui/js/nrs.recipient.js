@@ -208,46 +208,38 @@ var NRS = (function(NRS, $, undefined) {
 
 		accountInputField.val("");
 
-		NRS.sendRequest("getAliasId", {
-			"alias": account
+		NRS.sendRequest("getAlias", {
+			"aliasName": account
 		}, function(response) {
-			if (response.id) {
-				NRS.sendRequest("getAlias", {
-					"alias": response.id
-				}, function(response) {
-					if (response.errorCode) {
-						callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
-					} else {
-						if (response.uri) {
-							var alias = response.uri;
-							var timestamp = response.timestamp;
-
-							var regex_1 = /acct:(\d+)@nxt/;
-							var regex_2 = /nacc:(\d+)/;
-
-							var match = alias.match(regex_1);
-
-							if (!match) {
-								match = alias.match(regex_2);
-							}
-
-							if (match && match[1]) {
-								NRS.getAccountError(match[1], function(response) {
-									accountInputField.val(match[1].escapeHTML());
-									callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
-								});
-							} else {
-								callout.removeClass(classes).addClass("callout-danger").html("The alias does not link to an account. " + (!alias ? "The URI is empty." : "The URI is '" + alias.escapeHTML() + "'")).show();
-							}
-						} else if (response.alias) {
-							callout.removeClass(classes).addClass("callout-danger").html("The alias links to an empty URI.").show();
-						} else {
-							callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
-						}
-					}
-				});
-			} else {
+			if (response.errorCode) {
 				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
+			} else {
+				if (response.aliasURI) {
+					var alias = String(response.aliasURI);
+					var timestamp = response.timestamp;
+
+					var regex_1 = /acct:(\d+)@nxt/;
+					var regex_2 = /nacc:(\d+)/;
+
+					var match = alias.match(regex_1);
+
+					if (!match) {
+						match = alias.match(regex_2);
+					}
+
+					if (match && match[1]) {
+						NRS.getAccountError(match[1], function(response) {
+							accountInputField.val(match[1].escapeHTML());
+							callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
+						});
+					} else {
+						callout.removeClass(classes).addClass("callout-danger").html("The alias does not link to an account. " + (!alias ? "The URI is empty." : "The URI is '" + alias.escapeHTML() + "'")).show();
+					}
+				} else if (response.aliasName) {
+					callout.removeClass(classes).addClass("callout-danger").html("The alias links to an empty URI.").show();
+				} else {
+					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
+				}
 			}
 		});
 	}
