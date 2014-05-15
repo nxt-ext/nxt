@@ -10,7 +10,7 @@ import java.util.logging.LogManager;
 public class NxtLogManager extends LogManager {
 
     /** Logging reconfiguration in progress */
-    public static boolean loggingReconfiguration = false;
+    private volatile boolean loggingReconfiguration = false;
 
     /**
      * Create the Nxt log manager
@@ -55,7 +55,7 @@ public class NxtLogManager extends LogManager {
      * Nxt shutdown is now complete, so call LogManager.reset() to terminate
      * the log handlers.
      */
-    public void nxtShutdown() {
+    void nxtShutdown() {
         super.reset();
     }
 }

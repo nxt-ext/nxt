@@ -28,13 +28,16 @@ public class BriefLogFormatter extends Formatter {
     /** Logger instance at the top of the name tree */
     private static final Logger logger = Logger.getLogger("");
 
+    /** singleton BriefLogFormatter instance */
+    private static final BriefLogFormatter briefLogFormatter = new BriefLogFormatter();
+
     /**
      * Configures JDK logging to use this class for everything
      */
-    public static void init() {
+    static void init() {
         Handler[] handlers = logger.getHandlers();
         for (Handler handler : handlers)
-            handler.setFormatter(new BriefLogFormatter());
+            handler.setFormatter(briefLogFormatter);
     }
 
     /**
@@ -61,4 +64,7 @@ public class BriefLogFormatter extends Formatter {
         }
         return messageFormat.get().format(arguments);
     }
+
+    private BriefLogFormatter() {}
+
 }
