@@ -2995,7 +2995,7 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
 }
 
 a.list-group-item-header {
-	background:#E6EEF4;
+	background:#E6EEF4 !important;
 	color:white !important;
 	padding:0 !important;
 	padding-left:15px !important;
@@ -3297,7 +3297,34 @@ hr {
   background-color:#FFFFD5 !important;
 }
 
+#asset_exchange_sidebar_content .list-group-item {
+  border-right:5px solid transparent !important;
+}
 
-.list-group-item.owns_asset.active, .list-group-item.owns_asset:hover {
+#asset_exchange_sidebar_content .list-group-item.owns_asset.active, #asset_exchange_sidebar_content .list-group-item.owns_asset:hover {
   border-right:5px solid #FFE545 !important;
+}
+
+#asset_exchange_sidebar_content .glyphicon {
+  position:absolute;
+  top:10px;
+  right:5px;
+  color:#000;
+}
+
+#asset_exchange_sidebar_content .group_icon {
+  position:absolute;
+  top:5px;
+  right:5px;
+  color:#000;
+}
+
+#asset_exchange_sidebar_content .list-group-item.active .glyphicon {
+  color:#fff;
+}
+
+.input-group-btn .btn.focus {
+    background-color: #fff;
+    color: #666;
+    border:none !important;
 }

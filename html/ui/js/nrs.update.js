@@ -16,10 +16,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		//Get latest version nr+hash of normal version
-		NRS.sendRequest("getAliasURI", {
-			"alias": "nrsversion"
+		NRS.sendRequest("getAlias", {
+			"aliasName": "nrsversion"
 		}, function(response) {
-			if (response.uri && (response = response.uri.split(" "))) {
+			if (response.aliasURI && (response = response.aliasURI.split(" "))) {
 				NRS.normalVersion.versionNr = response[0];
 				NRS.normalVersion.hash = response[1];
 
@@ -30,10 +30,10 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		//Get latest version nr+hash of beta version
-		NRS.sendRequest("getAliasURI", {
-			"alias": "nrsbetaversion"
+		NRS.sendRequest("getAlias", {
+			"aliasName": "nrsbetaversion"
 		}, function(response) {
-			if (response.uri && (response = response.uri.split(" "))) {
+			if (response.aliasURI && (response = response.aliasURI.split(" "))) {
 				NRS.betaVersion.versionNr = response[0];
 				NRS.betaVersion.hash = response[1];
 

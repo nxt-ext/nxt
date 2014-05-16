@@ -107,6 +107,19 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.positionAssetSidebar();
 			}
 		});
+
+		$("#asset_exchange_search input[name=q]").addClear({
+			right: 0,
+			top: 4,
+			onClear: function(input) {
+				$("#asset_exchange_search").trigger("submit");
+			}
+		});
+
+		$("#id_search input[name=q], #alias_search input[name=q]").addClear({
+			right: 0,
+			top: 4
+		});
 	}
 
 	NRS.getState = function(callback) {
