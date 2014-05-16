@@ -435,11 +435,11 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pageLoading();
 
 		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
-			if (response.unconfirmedTransactionIds && response.unconfirmedTransactionIds.length) {
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
 				rows = "";
 
-				for (var i = 0; i < response.unconfirmedTransactionIds.length; i++) {
-					var unconfirmedTransaction = response.unconfirmedTransactionIds[i];
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = response.unconfirmedTransactions[i];
 
 					rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
 				}

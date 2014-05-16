@@ -2,8 +2,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
 		NRS.pageLoading();
 
-		NRS.sendRequest("listAccountAliases+", {
-			"account": NRS.account
+		NRS.sendRequest("getAliases+", {
+			"account": NRS.account,
+			"timestamp": 0
 		}, function(response) {
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
@@ -16,8 +17,8 @@ var NRS = (function(NRS, $, undefined) {
 							var found = false;
 
 							for (var j = 0; j < aliases.length; j++) {
-								if (aliases[j].alias == unconfirmedTransaction.attachment.alias) {
-									aliases[j].uri = unconfirmedTransaction.attachment.uri;
+								if (aliases[j].aliasName == unconfirmedTransaction.attachment.alias) {
+									aliases[j].aliasURI = unconfirmedTransaction.attachment.uri;
 									aliases[j].tentative = true;
 									found = true;
 									break;
@@ -26,8 +27,8 @@ var NRS = (function(NRS, $, undefined) {
 
 							if (!found) {
 								aliases.push({
-									"alias": unconfirmedTransaction.attachment.alias,
-									"uri": unconfirmedTransaction.attachment.uri,
+									"aliasName": unconfirmedTransaction.attachment.alias,
+									"aliasURI": unconfirmedTransaction.attachment.uri,
 									"tentative": true
 								});
 							}
@@ -36,9 +37,9 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				aliases.sort(function(a, b) {
-					if (a.alias.toLowerCase() > b.alias.toLowerCase()) {
+					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
 						return 1;
-					} else if (a.alias.toLowerCase() < b.alias.toLowerCase()) {
+					} else if (a.aliasName.toLowerCase() < b.aliasName.toLowerCase()) {
 						return -1;
 					} else {
 						return 0;
@@ -55,12 +56,12 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < alias_count; i++) {
 					var alias = aliases[i];
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + alias.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + alias.alias.escapeHTML() + (alias.tentative ? " -  <strong>Pending</strong>" : "") + "</td><td>" + (alias.uri.indexOf("http") === 0 ? "<a href='" + alias.uri.escapeHTML() + "' target='_blank'>" + alias.uri.escapeHTML() + "</a>" : alias.uri.escapeHTML()) + "</td><td><a href='#' data-toggle='modal' data-alias='" + alias.alias.escapeHTML() + "' data-target='#register_alias_modal'>Edit</a></td></tr>";
-					if (!alias.uri) {
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + (alias.tentative ? " -  <strong>Pending</strong>" : "") + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td><a href='#' data-toggle='modal' data-alias='" + String(alias.aliasName).escapeHTML() + "' data-target='#register_alias_modal'>Edit</a></td></tr>";
+					if (!alias.aliasURI) {
 						empty_alias_count++;
-					} else if (alias.uri.indexOf("http") === 0) {
+					} else if (alias.aliasURI.indexOf("http") === 0) {
 						alias_uri_count++;
-					} else if (alias.uri.indexOf("acct:") === 0 || alias.uri.indexOf("nacc:") === 0) {
+					} else if (alias.aliasURI.indexOf("acct:") === 0 || alias.aliasURI.indexOf("nacc:") === 0) {
 						alias_account_count++;
 					}
 				}
@@ -86,15 +87,15 @@ var NRS = (function(NRS, $, undefined) {
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
-		var alias = $invoker.data("alias");
+		var alias = String($invoker.data("alias"));
 
 		if (alias) {
-			NRS.sendRequest("getAliasURI", {
-				"alias": alias
+			NRS.sendRequest("getAlias", {
+				"aliasName": alias
 			}, function(response) {
-				if (/http:\/\//i.test(response.uri)) {
+				if (/http:\/\//i.test(response.aliasURI)) {
 					NRS.forms.setAliasType("uri");
-				} else if (/acct:(\d+)@nxt/.test(response.uri) || /nacc:(\d+)/.test(response.uri)) {
+				} else if (/acct:(\d+)@nxt/.test(response.aliasURI) || /nacc:(\d+)/.test(response.aliasURI)) {
 					NRS.forms.setAliasType("account");
 				} else {
 					NRS.forms.setAliasType("general");
@@ -105,7 +106,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#register_alias_alias").val(alias.escapeHTML()).hide();
 				$("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
 				$("#register_alias_alias_update").val(1);
-				$("#register_alias_uri").val(response.uri);
+				$("#register_alias_uri").val(response.aliasURI);
 			});
 		} else {
 			$("#register_alias_modal h4.modal-title").html("Register Alias");
@@ -123,7 +124,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.forms.assignAlias = function($modal) {
+	NRS.forms.setAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
 		data.uri = $.trim(data.uri);
@@ -205,7 +206,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.forms.setAliasType(type, $("#register_alias_uri").val());
 	});
 
-	NRS.forms.assignAliasComplete = function(response, data) {
+	NRS.forms.setAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
 		}
@@ -256,7 +257,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	$("#asset_search").on("submit", function(e) {
+	$("#alias_search").on("submit", function(e) {
 		e.preventDefault();
 
 		if (NRS.fetchingModalData) {
@@ -265,41 +266,31 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.fetchingModalData = true;
 
-		var alias = $.trim($("#asset_search input[name=q]").val());
+		var alias = $.trim($("#alias_search input[name=q]").val());
 
 		$("#alias_info_table tbody").empty();
 
-		NRS.sendRequest("getAliasId", {
-			"alias": alias
-		}, function(response) {
+		NRS.sendRequest("getAlias", {
+			"aliasName": alias
+		}, function(response, input) {
 			if (response.errorCode) {
-				$.growl("No such alias exists.", {
+				$.growl("Could not find alias.", {
 					"type": "danger"
 				});
+				NRS.fetchingModalData = false;
 			} else {
-				NRS.sendRequest("getAlias", {
-					"alias": response.id
-				}, function(response, input) {
-					if (response.errorCode) {
-						$.growl("Could not find alias.", {
-							"type": "danger"
-						});
-					} else {
-						$("#alias_info_modal_alias").html(String(response.alias).escapeHTML());
+				$("#alias_info_modal_alias").html(String(response.aliasName).escapeHTML());
 
-						var data = {
-							"Account": NRS.getAccountTitle(response, "account"),
-							"Last Updated": NRS.formatTimestamp(response.timestamp),
-							"DataFormattedHTML": response.uri.autoLink()
-						}
+				var data = {
+					"Account": NRS.getAccountTitle(response, "account"),
+					"Last Updated": NRS.formatTimestamp(response.timestamp),
+					"DataFormattedHTML": String(response.aliasURI).autoLink()
+				}
 
-						$("#alias_info_table tbody").append(NRS.createInfoTable(data));
+				$("#alias_info_table tbody").append(NRS.createInfoTable(data));
 
-						$("#alias_info_modal").modal("show");
-						NRS.fetchingModalData = false;
-
-					}
-				});
+				$("#alias_info_modal").modal("show");
+				NRS.fetchingModalData = false;
 			}
 		});
 	});

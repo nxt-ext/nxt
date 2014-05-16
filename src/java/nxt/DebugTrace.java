@@ -109,7 +109,7 @@ public final class DebugTrace {
             "trade price", "trade quantity", "trade cost",
             "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
-            "sender", "recipient", "timestamp"};
+            "sender", "recipient", "block", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -280,6 +280,7 @@ public final class DebugTrace {
         }
         Map<String,String> map = getValues(accountId);
         map.put("generation fee", String.valueOf(fee));
+        map.put("block", block.getStringId());
         map.put("event", "block" + (isUndo ? " undo" : ""));
         return map;
     }
