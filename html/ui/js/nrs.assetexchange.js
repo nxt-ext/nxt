@@ -1513,6 +1513,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.goToAsset = function(asset) {
 		NRS.assetSearch = false;
+		$("#asset_exchange_clear_search").hide();
+
+		if (!NRS.showAllAssets && NRS.featuredAssets.indexOf(asset) == -1) {
+			NRS.showAllAssets = true;
+			$("#asset_exchange_show_type").html("Show Featured Assets").show();
+		}
 
 		$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
 		$("#no_asset_selected, #asset_details, #no_assets_available").hide();
