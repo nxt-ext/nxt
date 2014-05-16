@@ -1155,14 +1155,13 @@
                		<section class="content-header">
                			<h1>Blocks</h1>
 						<div style="position:absolute;top:9px;right:9px;">
-							<div class="btn-group">
-								<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-									<span class="text">All Blocks</span> <span class="caret"></span>
-								</button>
-					        	<ul id="blocks_page_type" class="dropdown-menu" role="menu" style="right:0;left:auto;">
-					        		<li><a href="#" data-type="all_blocks">All Blocks</a></li>
-					          		<li><a href="#" data-type="forged_blocks">Forged By You</a></li>
-					          	</ul>
+							<div class="btn-group" data-toggle="buttons" id="blocks_page_type">
+								<label class="btn btn-default active">
+									<input type="radio" name="blocks_page_type"> All Blocks
+								</label>
+								<label class="btn btn-default">
+									<input type="radio" name="blocks_page_type"> Forged By You
+								</label>
 							</div>
 	                	</div>
                		</section>
