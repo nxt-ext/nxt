@@ -806,7 +806,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (maxFractionLength) {
 			//allow 1 single period character
-			if (charCode == 190) {
+			if (charCode == 110 || charCode == 190) {
 				if ($(this).val().indexOf(".") != -1) {
 					e.preventDefault();
 					return false;
@@ -816,7 +816,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		} else {
 			//do not allow period
-			if (charCode == 190 || charCode == 188) {
+			if (charCode == 110 || charCode == 190 || charCode == 188) {
 				$.growl("Fractions are not allowed.", {
 					"type": "danger"
 				});
