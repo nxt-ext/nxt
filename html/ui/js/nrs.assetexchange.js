@@ -648,9 +648,11 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (!NRS.assetSearch.length) {
-				$.growl("Nothing found, please try another query.", {
-					"type": "danger"
-				});
+				if ($(".bootstrap-growl-top-right.alert-danger").length == 0) {
+					$.growl("Nothing found, please try another query.", {
+						"type": "danger"
+					});
+				}
 			} else {
 				NRS.assetExchangeSidebarLoaded();
 				$("#asset_exchange_clear_search").show();
