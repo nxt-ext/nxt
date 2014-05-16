@@ -619,8 +619,11 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#asset_exchange_search").on("submit", function(e) {
 		e.preventDefault();
+		$("#asset_exchange_search input[name=q]").trigger("input");
+	});
 
-		var input = $.trim($("#asset_exchange_search input[name=q]").val());
+	$("#asset_exchange_search input[name=q]").on("input", function(e) {
+		var input = $.trim($(this).val()).toLowerCase();
 
 		if (!input) {
 			NRS.assetSearch = false;
@@ -632,13 +635,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (/NXT\-/i.test(input)) {
 				$.each(NRS.assets, function(key, asset) {
-					if (asset.accountRS == input) {
+					if (asset.accountRS.toLowerCase() == input || asset.accountRS.toLowerCase().indexOf(input) !== -1) {
 						NRS.assetSearch.push(asset.asset);
 					}
 				});
 			} else {
 				$.each(NRS.assets, function(key, asset) {
-					if (asset.account == input || asset.asset == input || asset.name.indexOf(input) !== -1) {
+					if (asset.account == input || asset.asset == input || asset.name.toLowerCase().indexOf(input) !== -1) {
 						NRS.assetSearch.push(asset.asset);
 					}
 				});
