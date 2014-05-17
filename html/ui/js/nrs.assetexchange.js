@@ -3,9 +3,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.assetIds = [];
 	NRS.firstAssetPageLoad = true;
 	NRS.closedGroups = [];
-	NRS.featuredAssets = [];
-	NRS.featuredAssetsFetchDate = null;
-	NRS.showAllAssets = false;
 
 	NRS.pages.asset_exchange = function(callback) {
 		NRS.pageLoading();
@@ -15,33 +12,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assets = [];
 		NRS.assetIds = [];
 
-		if (NRS.downloadingBlockchain || !NRS.featuredAssets || Math.round((new Date() - NRS.featuredAssetsFetchDate) / 60) > 10) {
-			NRS.sendRequest("getAlias", {
-				"aliasName": "NRSassets"
-			}, function(response) {
-				response.aliasURI = "15344649963748848799,5934798443252900551";
-
-				if (response.aliasURI) {
-					NRS.featuredAssets = String(response.aliasURI).split(",");
-				} else {
-					NRS.featuredAssets = [];
-				}
-				NRS.featuredAssetsFetchDate = new Date();
-				NRS.loadAssetsFromDatabase(callback);
-			});
-		} else {
-			NRS.loadAssetsFromDatabase(callback);
-		}
-	}
-
-	NRS.positionAssetSidebar = function() {
-		$("#asset_exchange_sidebar").parent().css("position", "relative");
-		$("#asset_exchange_sidebar").parent().css("padding-bottom", "5px");
-		$("#asset_exchange_sidebar_content").height($(window).height() - 120);
-		$("#asset_exchange_sidebar").height($(window).height() - 120);
-	}
-
-	NRS.loadAssetsFromDatabase = function(callback) {
 		if (NRS.databaseSupport) {
 			//todo only select a few fields..
 			NRS.database.select("assets", null, function(error, assets) {
@@ -63,6 +33,13 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.loadAssetExchangeSidebar(callback);
 		}
+	}
+
+	NRS.positionAssetSidebar = function() {
+		$("#asset_exchange_sidebar").parent().css("position", "relative");
+		$("#asset_exchange_sidebar").parent().css("padding-bottom", "5px");
+		$("#asset_exchange_sidebar_content").height($(window).height() - 120);
+		$("#asset_exchange_sidebar").height($(window).height() - 120);
 	}
 
 	NRS.loadAssetExchangeSidebar = function(callback) {
@@ -231,16 +208,12 @@ var NRS = (function(NRS, $, undefined) {
 		for (var i = 0; i < NRS.assets.length; i++) {
 			var asset = NRS.assets[i];
 
-			asset.featured = (NRS.featuredAssets.indexOf(asset.asset) != -1);
-
 			if (isSearch) {
 				if (NRS.assetSearch.indexOf(asset.asset) == -1) {
 					continue;
 				} else {
 					searchResults++;
 				}
-			} else if (!NRS.showAllAssets && !asset.featured) {
-				continue;
 			}
 
 			if (asset.groupName.toLowerCase() != lastGroup) {
@@ -274,7 +247,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 
-			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : "") + ((isSearch || NRS.showAllAssets) && asset.featured ? " featured_asset" : "") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + ((isSearch || NRS.showAllAssets) && asset.featured ? "<span class='glyphicon glyphicon-star'></span></span>" : "") + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
+			rows += "<a href='#' class='list-group-item list-group-item-" + (ungrouped ? "ungrouped" : "grouped") + (ownsAsset ? " owns_asset" : "") + "' data-cache='" + i + "' data-asset='" + String(asset.asset).escapeHTML() + "'" + (!ungrouped ? " data-groupname='" + asset.groupName.escapeHTML() + "'" : "") + (isClosedGroup ? " style='display:none'" : "") + " data-closed='" + isClosedGroup + "'><h4 class='list-group-item-heading'>" + asset.name.escapeHTML() + "</h4><p class='list-group-item-text'>qty: " + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</p></a>";
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
@@ -608,16 +581,6 @@ var NRS = (function(NRS, $, undefined) {
 		return false;
 	}
 
-	$("#asset_exchange_show_type").on("click", function(e) {
-		e.preventDefault();
-
-		NRS.showAllAssets = !NRS.showAllAssets;
-
-		$(this).html(NRS.showAllAssets ? "Show Featured Assets" : "Show All Assets").show();
-
-		NRS.assetExchangeSidebarLoaded();
-	});
-
 	$("#asset_exchange_search").on("submit", function(e) {
 		e.preventDefault();
 		$("#asset_exchange_search input[name=q]").trigger("input");
@@ -630,7 +593,6 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.assetSearch = false;
 			NRS.assetExchangeSidebarLoaded();
 			$("#asset_exchange_clear_search").hide();
-			$("#asset_exchange_show_type").html(NRS.showAllAssets ? "Show Featured Assets" : "Show All Assets").show();
 		} else {
 			NRS.assetSearch = [];
 
@@ -1514,11 +1476,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.goToAsset = function(asset) {
 		NRS.assetSearch = false;
 		$("#asset_exchange_clear_search").hide();
-
-		if (!NRS.showAllAssets && NRS.featuredAssets.indexOf(asset) == -1) {
-			NRS.showAllAssets = true;
-			$("#asset_exchange_show_type").html("Show Featured Assets").show();
-		}
 
 		$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
 		$("#no_asset_selected, #asset_details, #no_assets_available").hide();
