@@ -16,6 +16,11 @@ removed as they are redundant and the new requests return all necessary info.
 assignAlias has been renamed to setAlias, with "aliasName" and "aliasURI"
 parameters.
 
+Removed getAssetsByName API.
+
+The getAssetsByIssuer API now accepts a multivalued "account" parameter and
+returns a list of lists of assets issued by those accounts.
+
 Use the slf4j logging framework. Thanks to ScripterRon for adapting our Logger
 to use slf4j! The logging can now be configured in conf/logging.properties,
 see conf/logging-default.properties for possible parameters and their defaults
