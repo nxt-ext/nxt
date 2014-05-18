@@ -37,6 +37,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
         try {
             byte[] bytes = Convert.parseHexString(transactionBytes);
             Transaction transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
+            transaction.validateAttachment();
             if (transaction.getSignature() != null) {
                 JSONObject response = new JSONObject();
                 response.put("errorCode", 4);
