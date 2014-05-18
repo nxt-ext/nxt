@@ -132,14 +132,14 @@ public abstract class TransactionType {
 
     final void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
         doLoadAttachment(transaction, buffer);
-        validateAttachment(transaction);
+        //validateAttachment(transaction);
     }
 
     abstract void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException;
 
     final void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
         doLoadAttachment(transaction, attachmentData);
-        validateAttachment(transaction);
+        //validateAttachment(transaction);
     }
 
     abstract void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException;

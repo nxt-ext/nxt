@@ -364,7 +364,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
-                transactions.add(parseTransaction((JSONObject) transactionData));
+                TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
+                transaction.validateAttachment();
+                transactions.add(transaction);
             } catch (NxtException.ValidationException e) {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
