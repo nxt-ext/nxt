@@ -31,6 +31,7 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
         try {
             byte[] bytes = Convert.parseHexString(transactionBytes);
             Transaction transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
+            transaction.validateAttachment();
             response = JSONData.unconfirmedTransaction(transaction);
             response.put("verify", transaction.verify());
         } catch (NxtException.ValidationException|RuntimeException e) {

@@ -12,7 +12,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class Asset {
 
     private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, List<Asset>> assetNameToAssetMappings = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Long, List<Asset>> accountAssets = new ConcurrentHashMap<>();
     private static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
 
@@ -22,14 +21,6 @@ public final class Asset {
 
     public static Asset getAsset(Long id) {
         return assets.get(id);
-    }
-
-    public static List<Asset> getAssets(String name) {
-        List<Asset> assets = assetNameToAssetMappings.get(name.toLowerCase());
-        if (assets == null) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(assets);
     }
 
     public static List<Asset> getAssetsIssuedBy(Long accountId) {
@@ -45,12 +36,6 @@ public final class Asset {
         if (Asset.assets.putIfAbsent(assetId, asset) != null) {
             throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
         }
-        List<Asset> assetList = assetNameToAssetMappings.get(name.toLowerCase());
-        if (assetList == null) {
-            assetList = new CopyOnWriteArrayList<>();
-            assetNameToAssetMappings.put(name.toLowerCase(), assetList);
-        }
-        assetList.add(asset);
         List<Asset> accountAssetsList = accountAssets.get(senderAccountId);
         if (accountAssetsList == null) {
             accountAssetsList = new CopyOnWriteArrayList<>();
@@ -61,15 +46,12 @@ public final class Asset {
 
     static void removeAsset(Long assetId) {
         Asset asset = Asset.assets.remove(assetId);
-        List<Asset> assetList = assetNameToAssetMappings.get(asset.getName().toLowerCase());
-        assetList.remove(asset);
         List<Asset> accountAssetList = accountAssets.get(asset.getAccountId());
         accountAssetList.remove(asset);
     }
 
     static void clear() {
         Asset.assets.clear();
-        Asset.assetNameToAssetMappings.clear();
         Asset.accountAssets.clear();
     }
 

@@ -139,14 +139,14 @@ public abstract class TransactionType {
 
     final void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
         doLoadAttachment(transaction, buffer);
-        validateAttachment(transaction);
+        //validateAttachment(transaction);
     }
 
     abstract void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException;
 
     final void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
         doLoadAttachment(transaction, attachmentData);
-        validateAttachment(transaction);
+        //validateAttachment(transaction);
     }
 
     abstract void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException;
@@ -1048,13 +1048,6 @@ public abstract class TransactionType {
                 Asset asset = Asset.getAsset(attachment.getAssetId());
                 if (asset == null || attachment.getQuantityQNT() <= 0 || attachment.getQuantityQNT() > asset.getQuantityQNT()) {
                     throw new NxtException.ValidationException("Invalid asset order placement asset or quantity: " + attachment.getJSONObject());
-                }
-                try {
-                    Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT());
-                } catch (ArithmeticException e) {
-                    if (! transaction.getStringId().equals("10723635126505376041")) {
-                        throw new NxtException.ValidationException("Invalid order price and quantity: " + transaction.getJSONObject());
-                    }
                 }
             }
 

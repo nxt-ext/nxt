@@ -8,6 +8,9 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.UNKNOWN_ASSET;
+
 public final class GetAssets extends APIServlet.APIRequestHandler {
 
     static final GetAssets instance = new GetAssets();
@@ -28,13 +31,14 @@ public final class GetAssets extends APIServlet.APIRequestHandler {
             if (assetIdString == null || assetIdString.equals("")) {
                 continue;
             }
-            Asset asset = null;
             try {
-                Long assetId = Convert.parseUnsignedLong(assetIdString);
-                asset = Asset.getAsset(assetId);
-            } catch (RuntimeException ignore) {}
-            if (asset != null) {
+                Asset asset = Asset.getAsset(Convert.parseUnsignedLong(assetIdString));
+                if (asset == null) {
+                    return UNKNOWN_ASSET;
+                }
                 assetsJSONArray.add(JSONData.asset(asset));
+            } catch (RuntimeException e) {
+                return INCORRECT_ASSET;
             }
         }
         return response;
