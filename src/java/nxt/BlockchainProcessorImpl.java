@@ -286,52 +286,53 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
             synchronized (blockchain) {
                 BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
-                boolean needsRescan;
 
                 try {
-                    while (! blockchain.getLastBlock().getId().equals(commonBlock.getId()) && popLastBlock()) {
-                    }
-
-                    int pushedForkBlocks = 0;
-                    if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
-                        for (BlockImpl block : forkBlocks) {
-                            if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
-                                try {
-                                    pushBlock(block);
-                                    pushedForkBlocks += 1;
-                                } catch (BlockNotAcceptedException e) {
-                                    peer.blacklist(e);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    needsRescan = pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0;
-                    if (needsRescan) {
-                        Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress() + ", blacklisting");
-                        peer.blacklist();
+                    Long lastBlockId = blockchain.getLastBlock().getId();
+                    while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                        lastBlockId = popLastBlock();
                     }
                 } catch (TransactionType.UndoNotSupportedException e) {
                     Logger.logDebugMessage(e.getMessage());
                     Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-                    needsRescan = true;
+                    resetTo(commonBlock);
                 }
 
-                if (needsRescan) {
-                    if (commonBlock.getNextBlockId() != null) {
-                        Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-                        Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-                        BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
+                int pushedForkBlocks = 0;
+                if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
+                    for (BlockImpl block : forkBlocks) {
+                        if (blockchain.getLastBlock().getId().equals(block.getPreviousBlockId())) {
+                            try {
+                                pushBlock(block);
+                                pushedForkBlocks += 1;
+                            } catch (BlockNotAcceptedException e) {
+                                peer.blacklist(e);
+                                break;
+                            }
+                        }
                     }
-                    Logger.logMessage("Will do a re-scan");
-                    blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-                    scan();
-                    blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
-                    Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+                }
+
+                if (pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0) {
+                    Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress() + ", blacklisting");
+                    peer.blacklist();
+                    resetTo(commonBlock);
                 }
             } // synchronized
 
+        }
+
+        private void resetTo(Block commonBlock) {
+            if (commonBlock.getNextBlockId() != null) {
+                Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+                Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
+                BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
+            }
+            Logger.logMessage("Will do a re-scan");
+            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
+            scan();
+            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
+            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
         }
 
     };
@@ -626,32 +627,27 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     }
 
-    private boolean popLastBlock() throws TransactionType.UndoNotSupportedException {
+    private Long popLastBlock() throws TransactionType.UndoNotSupportedException {
         try {
-
             synchronized (blockchain) {
                 BlockImpl block = blockchain.getLastBlock();
                 Logger.logDebugMessage("Will pop block " + block.getStringId() + " at height " + block.getHeight());
                 if (block.getId().equals(Genesis.GENESIS_BLOCK_ID)) {
-                    return false;
+                    throw new RuntimeException("Cannot pop off genesis block");
                 }
                 BlockImpl previousBlock = BlockDb.findBlock(block.getPreviousBlockId());
-                if (previousBlock == null) {
-                    Logger.logMessage("Previous block is null");
-                    throw new IllegalStateException();
-                }
                 blockListeners.notify(block, Event.BEFORE_BLOCK_UNDO);
                 blockchain.setLastBlock(block, previousBlock);
                 transactionProcessor.undo(block);
                 BlockDb.deleteBlocksFrom(block.getId());
                 blockListeners.notify(block, Event.BLOCK_POPPED);
+                return previousBlock.getId();
             } // synchronized
 
         } catch (RuntimeException e) {
             Logger.logDebugMessage("Error popping last block: " + e.getMessage());
             throw new TransactionType.UndoNotSupportedException(e.getMessage());
         }
-        return true;
     }
 
     void generateBlock(String secretPhrase) {
@@ -738,8 +734,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         byte[] payloadHash = digest.digest();
 
         BlockImpl previousBlock = blockchain.getLastBlock();
-        if (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK) {
-            Logger.logDebugMessage("Generate block below " + Constants.TRANSPARENT_FORGING_BLOCK + " no longer supported");
+        if (previousBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
             return;
         }
 
@@ -747,7 +742,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         byte[] generationSignature = digest.digest(publicKey);
 
         BlockImpl block;
-        //int version = previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK ? 1 : 2;
         int version = previousBlock.getHeight() < Constants.NQT_BLOCK ? 2 : 3;
         byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
 
@@ -763,6 +757,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         block.sign(secretPhrase);
+
+        if (isScanning) {
+            return;
+        }
 
         block.setPrevious(previousBlock);
 
@@ -843,6 +841,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Trade.clear();
             Vote.clear();
             DigitalGoodsStore.clear();
+            transactionProcessor.clear();
+            Generator.clear();
             try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
                 BlockImpl currentBlock;
@@ -884,8 +884,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw new RuntimeException(e.toString(), e);
             }
             validateAtScan = false;
-            transactionProcessor.clear();
-            Generator.clear();
             Logger.logMessage("...done");
             isScanning = false;
         } // synchronized

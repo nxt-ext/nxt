@@ -1,17 +1,12 @@
 package nxt.http;
 
-import nxt.Account;
 import nxt.Alias;
 import nxt.NxtException;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 public final class GetAliases extends APIServlet.APIRequestHandler {
 

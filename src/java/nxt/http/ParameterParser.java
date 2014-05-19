@@ -11,6 +11,8 @@ import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static nxt.http.JSONResponses.*;
 
@@ -242,16 +244,38 @@ final class ParameterParser {
         if (accountValue == null) {
             throw new ParameterException(MISSING_ACCOUNT);
         }
-        Account account;
         try {
-            account = Account.getAccount(Convert.parseAccountId(accountValue));
+            Account account = Account.getAccount(Convert.parseAccountId(accountValue));
+            if (account == null) {
+                throw new ParameterException(UNKNOWN_ACCOUNT);
+            }
+            return account;
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ACCOUNT);
         }
-        if (account == null) {
-            throw new ParameterException(UNKNOWN_ACCOUNT);
+    }
+
+    static List<Account> getAccounts(HttpServletRequest req) throws ParameterException {
+        String[] accountValues = req.getParameterValues("account");
+        if (accountValues == null || accountValues.length == 0) {
+            throw new ParameterException(MISSING_ACCOUNT);
         }
-        return account;
+        List<Account> result = new ArrayList<>();
+        for (String accountValue : accountValues) {
+            if (accountValue == null || accountValue.equals("")) {
+                continue;
+            }
+            try {
+                Account account = Account.getAccount(Convert.parseAccountId(accountValue));
+                if (account == null) {
+                    throw new ParameterException(UNKNOWN_ACCOUNT);
+                }
+                result.add(account);
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_ACCOUNT);
+            }
+        }
+        return result;
     }
 
     static int getTimestamp(HttpServletRequest req) throws ParameterException {

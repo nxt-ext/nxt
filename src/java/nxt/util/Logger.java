@@ -1,11 +1,11 @@
 package nxt.util;
+
 import nxt.Nxt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.Properties;
 import java.util.logging.LogManager;
 

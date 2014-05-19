@@ -1,7 +1,5 @@
 package nxt;
 
-import nxt.crypto.Crypto;
-import nxt.util.DbIterator;
 import nxt.util.Logger;
 
 import java.sql.Connection;

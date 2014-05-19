@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -328,21 +329,17 @@ public final class DebugTrace {
                 }
             }
             map.put("order quantity", String.valueOf(quantity));
-            try {
-                long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
-                if (isAsk) {
-                    if (isUndo) {
-                        orderCost = - orderCost;
-                    }
-                } else {
-                    if (! isUndo) {
-                        orderCost = - orderCost;
-                    }
+            BigInteger orderCost = BigInteger.valueOf(orderPlacement.getPriceNQT()).multiply(BigInteger.valueOf(orderPlacement.getQuantityQNT()));
+            if (isAsk) {
+                if (isUndo) {
+                    orderCost = orderCost.negate();
                 }
-                map.put("order cost", String.valueOf(orderCost));
-            } catch (ArithmeticException e) {
-                map.put("order cost", "NaN");
+            } else {
+                if (! isUndo) {
+                    orderCost = orderCost.negate();
+                }
             }
+            map.put("order cost", orderCost.toString());
             String event = (isAsk ? "ask" : "bid") + " order" + (isUndo ? " undo" : "");
             map.put("event", event);
         } else if (attachment instanceof Attachment.ColoredCoinsAssetIssuance) {
