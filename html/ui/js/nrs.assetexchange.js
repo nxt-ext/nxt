@@ -223,7 +223,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.saveAssetBookmarks(new Array(NRS.viewingAsset), function(newAssets) {
 				NRS.viewingAsset = false;
 				NRS.loadAssetExchangeSidebar(function() {
-					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active");
+					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active").trigger("click");
 				});
 			});
 		}
@@ -441,6 +441,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		var active = $("#asset_exchange_sidebar a.active");
+
 
 		if (active.length) {
 			active = active.data("asset");
@@ -1755,6 +1756,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.goToAsset = function(asset) {
 		NRS.assetSearch = false;
+		$("#asset_exchange_sidebar_search input[name=q]").val("");
 		$("#asset_exchange_clear_search").hide();
 
 		$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
@@ -1772,9 +1774,11 @@ var NRS = (function(NRS, $, undefined) {
 						"asset": asset
 					}, function(response) {
 						if (!response.errorCode) {
-							response.groupName = "";
-							response.viewingAsset = true;
-							NRS.loadAsset(response);
+							NRS.loadAssetExchangeSidebar(function() {
+								response.groupName = "";
+								response.viewingAsset = true;
+								NRS.loadAsset(response);
+							});
 						} else {
 							$.growl("Could not find asset.", {
 								"type": "danger"
