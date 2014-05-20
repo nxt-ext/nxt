@@ -282,6 +282,12 @@ var NRS = (function(NRS, $, undefined) {
 				accountRS: "VARCHAR(25)",
 				description: "TEXT"
 			},
+			assetIssuers: {
+				account: {
+					"primary": true,
+					"type": "VARCHAR(25)"
+				}
+			},
 			assets: {
 				account: "VARCHAR(25)",
 				accountRS: "VARCHAR(25)",
@@ -291,7 +297,6 @@ var NRS = (function(NRS, $, undefined) {
 				},
 				description: "TEXT",
 				name: "VARCHAR(10)",
-				position: "NUMBER",
 				decimals: "NUMBER",
 				quantityQNT: "VARCHAR(15)",
 				groupName: "VARCHAR(30) COLLATE NOCASE"
@@ -308,11 +313,27 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 5, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
 					NRS.loadContacts();
+
+					NRS.database.select("data", [{
+						"id": "asset_exchange_version"
+					}], function(error, result) {
+						if (!result.length) {
+							NRS.database.delete("assets", [], function(error, affected) {
+								if (!error) {
+									NRS.database.insert("data", {
+										"id": "asset_exchange_version",
+										"contents": 2
+									});
+								}
+							});
+						}
+					});
+
 					NRS.database.select("data", [{
 						"id": "closed_groups"
 					}], function(error, result) {

@@ -3328,3 +3328,10 @@ hr {
     color: #666;
     border:none !important;
 }
+
+#asset_exchange_page.no_assets .content-splitter-sidebar { 
+  display: none !important;
+}
+#asset_exchange_page.no_assets .content-splitter-right {
+  left: 0 !important;
+}

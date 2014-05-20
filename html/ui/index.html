@@ -545,11 +545,12 @@
 						</div>
 					</section>
 				</div>
-                                					
+
                 <div id="asset_exchange_page" class="page">
 	                <section class="content-header">
 	                	<h1>Asset Exchange</h1>
 	                	<div style="position:absolute;top:9px;right:9px;">
+	                		<button type="button" class="btn btn-sm btn-default" id="asset_exchange_add_asset_bookmark" data-toggle="modal" data-target="#add_asset_bookmark_modal">Add Asset</button>
 		                	<button type="button" class="btn btn-sm btn-default" id="asset_exchange_clear_search" style="display:none">Clear Search Results</button>
 	                	</div>
 	                </section>
@@ -562,7 +563,7 @@
 											<div id="asset_exchange_sidebar_search">
 												 <form action="#" method="get" class="sidebar-form" id="asset_exchange_search">
 													<div class="input-group">
-														<input type="text" name="q" class="form-control" placeholder="Search...">
+														<input type="text" name="q" class="form-control" placeholder="Search bookmarks...">
 														<span class="input-group-btn">
 														<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 														</span>
@@ -577,7 +578,7 @@
 						         </div>
 						         <div class="content-splitter-right">
 						         	<div class="content-splitter-right-inner">
-						         		<div id="no_assets_available" style="padding-top: 150px;text-align:center;display:none;">No assets available.</div>
+						         		<div id="no_assets_available" style="padding-top: 150px;text-align:center;display:none;">You don't have any assets in your bookmark list yet. Click on "Add Asset" in the top right corner to add one.</div>
 						         		<div id="no_asset_selected" style="padding-top: 150px;text-align:center;">Please select an asset in the left sidebar.</div>
 						         		<div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;">Asset data loading, please wait...<br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 						         		<div id="asset_details" style="display:none;">
@@ -1674,6 +1675,33 @@
 			</div>
 		</div>
 		
+		<div class="modal fade" id="add_asset_bookmark_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Add Asset</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label for="add_asset_bookmark_id">ASSET OR ACCOUNT ID</label>
+								<input type="text" class="form-control" name="id" id="add_asset_bookmark_id" placeholder="ID" autofocus tabindex="1" />
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<input type="hidden" name="request_type" value="addAssetBookmark" />
+						<input type="hidden" name="success_message" value="The asset has been added!" />
+						<input type="hidden" name="error_message" value="An unknown error occured!" />
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Add Asset</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
 		<div class="modal fade" id="add_contact_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -2703,8 +2731,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		<div id="asset_exchange_sidebar_context" class="context_menu dropdown clearfix">
 		    <ul class="dropdown-menu" data-container="body" role="menu" style="display:block;position:static;margin-bottom:5px;">
 		        <li><a tabindex="-1" href="#" data-option="add_to_group">Add to group</a></li>
-		        <li><a tabindex="-1" href="#" data-option="remove_from_group" data-class="list-group-item-grouped">Remove from group</a></li>
-		        <li><a tabindex="-1" href="#" data-option="add_to_ignore_list">Add to ignore list</a></li>
+		       	<li><a tabindex="-1" href="#" data-option="remove_from_group" data-class="list-group-item-grouped">Remove from group</a></li>
+		        <li><a tabindex="-1" href="#" data-option="remove_from_bookmarks" data-class="not_owns_asset">Remove from bookmarks</a></li>
 		    </ul>
 		</div>
 		
