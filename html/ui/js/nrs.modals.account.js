@@ -3,7 +3,7 @@ var NRS = (function(NRS, $, undefined) {
 		"user": 0
 	};
 
-	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table, #account_details_modal, #transaction_info_modal").on("click", "a[data-user]", function(e) {
+	$("#blocks_table, #polls_table, #contacts_table, #transactions_table, #dashboard_transactions_table, #asset_account, #asset_exchange_ask_orders_table, #asset_exchange_bid_orders_table, #account_details_modal, #transaction_info_modal, #alias_info_table").on("click", "a[data-user]", function(e) {
 		e.preventDefault();
 
 		var account = $(this).data("user");
@@ -248,16 +248,17 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.userInfoModal.aliases = function() {
-		NRS.sendRequest("listAccountAliases", {
-			"account": NRS.userInfoModal.user
+		NRS.sendRequest("getAliases", {
+			"account": NRS.userInfoModal.user,
+			"timestamp": 0
 		}, function(response) {
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
 
 				aliases.sort(function(a, b) {
-					if (a.alias.toLowerCase() > b.alias.toLowerCase()) {
+					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
 						return 1;
-					} else if (a.alias.toLowerCase() < b.alias.toLowerCase()) {
+					} else if (a.aliasName.toLowerCase() < b.aliasName.toLowerCase()) {
 						return -1;
 					} else {
 						return 0;
@@ -274,12 +275,12 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < alias_count; i++) {
 					var alias = aliases[i];
 
-					rows += "<tr data-alias='" + alias.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + alias.alias.escapeHTML() + "</td><td class='uri'>" + (alias.uri.indexOf("http") === 0 ? "<a href='" + String(alias.uri).escapeHTML() + "' target='_blank'>" + String(alias.uri).escapeHTML() + "</a>" : String(alias.uri).escapeHTML()) + "</td></tr>";
+					rows += "<tr data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td></tr>";
 					if (!alias.uri) {
 						empty_alias_count++;
-					} else if (alias.uri.indexOf("http") === 0) {
+					} else if (alias.aliasURI.indexOf("http") === 0) {
 						alias_uri_count++;
-					} else if (alias.uri.indexOf("acct:") === 0 || alias.uri.indexOf("nacc:") === 0) {
+					} else if (alias.aliasURI.indexOf("acct:") === 0 || alias.aliasURI.indexOf("nacc:") === 0) {
 						alias_account_count++;
 					}
 				}
@@ -339,8 +340,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAssetsByIssuer", {
 			"account": NRS.userInfoModal.user
 		}, function(response) {
-			if (response.assets && response.assets.length) {
-				$.each(response.assets, function(key, issuedAsset) {
+			if (response.assets && response.assets[0] && response.assets[0].length) {
+				$.each(response.assets[0], function(key, issuedAsset) {
 					if (assets[issuedAsset.asset]) {
 						assets[issuedAsset.asset].issued = true;
 					} else {

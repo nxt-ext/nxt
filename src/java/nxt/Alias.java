@@ -16,7 +16,7 @@ public final class Alias {
     }
 
     public static Alias getAlias(String aliasName) {
-        return aliases.get(aliasName);
+        return aliases.get(aliasName.toLowerCase());
     }
 
     public static Alias getAlias(Long id) {
@@ -69,7 +69,7 @@ public final class Alias {
         return aliasName;
     }
 
-    public String getURI() {
+    public String getAliasURI() {
         return aliasURI;
     }
 

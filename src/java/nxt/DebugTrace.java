@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -107,7 +108,8 @@ public final class DebugTrace {
             "transaction amount", "transaction fee", "generation fee",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
-            "asset quantity", "transaction", "lessee", "lessor guaranteed balance", "timestamp"};
+            "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
+            "sender", "recipient", "block", "timestamp"};
 
     private final Set<Long> accountIds;
     private final String logName;
@@ -259,6 +261,11 @@ public final class DebugTrace {
         map.put("transaction amount", String.valueOf(amount));
         map.put("transaction fee", String.valueOf(fee));
         map.put("transaction", transaction.getStringId());
+        if (isRecipient) {
+            map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+        } else {
+            map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+        }
         map.put("event", "transaction" + (isUndo ? " undo" : ""));
         return map;
     }
@@ -273,6 +280,7 @@ public final class DebugTrace {
         }
         Map<String,String> map = getValues(accountId);
         map.put("generation fee", String.valueOf(fee));
+        map.put("block", block.getStringId());
         map.put("event", "block" + (isUndo ? " undo" : ""));
         return map;
     }
@@ -320,17 +328,17 @@ public final class DebugTrace {
                 }
             }
             map.put("order quantity", String.valueOf(quantity));
-            long orderCost = Convert.safeMultiply(orderPlacement.getPriceNQT(), orderPlacement.getQuantityQNT());
+            BigInteger orderCost = BigInteger.valueOf(orderPlacement.getPriceNQT()).multiply(BigInteger.valueOf(orderPlacement.getQuantityQNT()));
             if (isAsk) {
                 if (isUndo) {
-                    orderCost = - orderCost;
+                    orderCost = orderCost.negate();
                 }
             } else {
                 if (! isUndo) {
-                    orderCost = - orderCost;
+                    orderCost = orderCost.negate();
                 }
             }
-            map.put("order cost", String.valueOf(orderCost));
+            map.put("order cost", orderCost.toString());
             String event = (isAsk ? "ask" : "bid") + " order" + (isUndo ? " undo" : "");
             map.put("event", event);
         } else if (attachment instanceof Attachment.ColoredCoinsAssetIssuance) {
@@ -360,6 +368,17 @@ public final class DebugTrace {
             Attachment.ColoredCoinsOrderCancellation orderCancellation = (Attachment.ColoredCoinsOrderCancellation)attachment;
             map.put("order", Convert.toUnsignedLong(orderCancellation.getOrderId()));
             map.put("event", "order cancel");
+        } else if (attachment instanceof Attachment.MessagingArbitraryMessage) {
+            map = new HashMap<>();
+            map.put("account", Convert.toUnsignedLong(accountId));
+            map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
+            map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
+            map.put("event", "message");
+            if (isRecipient) {
+                map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+            } else {
+                map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+            }
         }
         return map;
     }

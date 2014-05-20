@@ -253,7 +253,7 @@
 <hr>
 <b>Get Account Aliases:</b><br/>
 <form action="/nxt" method="POST" onsubmit="return submitForm(this);">
-    <input type="hidden" name="requestType" value="listAccountAliases"/>
+    <input type="hidden" name="requestType" value="getAliases"/>
     <table>
         <tr>
             <td>Account:</td>
@@ -266,13 +266,13 @@
     <div class="result"></div>
 </form>
 <hr>
-<b>Get Alias URI:</b><br/>
+<b>Get Alias:</b><br/>
 <form action="/nxt" method="POST" onsubmit="return submitForm(this);">
-    <input type="hidden" name="requestType" value="getAliasURI"/>
+    <input type="hidden" name="requestType" value="getAlias"/>
     <table>
         <tr>
             <td>Alias:</td>
-            <td><input type="text" name="alias"/></td>
+            <td><input type="text" name="aliasName"/></td>
         </tr>
         <tr>
             <td colspan="2"><input type="submit" value="submit"/></td>

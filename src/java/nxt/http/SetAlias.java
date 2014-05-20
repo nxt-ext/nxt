@@ -6,6 +6,7 @@ import nxt.Alias;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -14,56 +15,53 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS_LENGTH;
 import static nxt.http.JSONResponses.INCORRECT_ALIAS_NAME;
 import static nxt.http.JSONResponses.INCORRECT_URI_LENGTH;
-import static nxt.http.JSONResponses.MISSING_ALIAS;
-import static nxt.http.JSONResponses.MISSING_URI;
+import static nxt.http.JSONResponses.MISSING_ALIAS_NAME;
 
-public final class AssignAlias extends CreateTransaction {
+public final class SetAlias extends CreateTransaction {
 
-    static final AssignAlias instance = new AssignAlias();
+    static final SetAlias instance = new SetAlias();
 
-    private AssignAlias() {
-        super("alias", "uri");
+    private SetAlias() {
+        super("aliasName", "aliasURI");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String alias = req.getParameter("alias");
-        String uri = req.getParameter("uri");
+        String aliasName = Convert.emptyToNull(req.getParameter("aliasName"));
+        String aliasURI = Convert.nullToEmpty(req.getParameter("aliasURI"));
 
-        if (alias == null) {
-            return MISSING_ALIAS;
-        } else if (uri == null) {
-            return MISSING_URI;
+        if (aliasName == null) {
+            return MISSING_ALIAS_NAME;
         }
 
-        alias = alias.trim();
-        if (alias.length() == 0 || alias.length() > Constants.MAX_ALIAS_LENGTH) {
+        aliasName = aliasName.trim();
+        if (aliasName.length() == 0 || aliasName.length() > Constants.MAX_ALIAS_LENGTH) {
             return INCORRECT_ALIAS_LENGTH;
         }
 
-        String normalizedAlias = alias.toLowerCase();
+        String normalizedAlias = aliasName.toLowerCase();
         for (int i = 0; i < normalizedAlias.length(); i++) {
             if (Constants.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                 return INCORRECT_ALIAS_NAME;
             }
         }
 
-        uri = uri.trim();
-        if (uri.length() > Constants.MAX_ALIAS_URI_LENGTH) {
+        aliasURI = aliasURI.trim();
+        if (aliasURI.length() > Constants.MAX_ALIAS_URI_LENGTH) {
             return INCORRECT_URI_LENGTH;
         }
 
         Account account = ParameterParser.getSenderAccount(req);
 
-        Alias aliasData = Alias.getAlias(normalizedAlias);
-        if (aliasData != null && !aliasData.getAccount().getId().equals(account.getId())) {
+        Alias alias = Alias.getAlias(normalizedAlias);
+        if (alias != null && !alias.getAccount().getId().equals(account.getId())) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 8);
-            response.put("errorDescription", "\"" + alias + "\" is already used");
+            response.put("errorDescription", "\"" + aliasName + "\" is already used");
             return response;
         }
 
-        Attachment attachment = new Attachment.MessagingAliasAssignment(alias, uri);
+        Attachment attachment = new Attachment.MessagingAliasAssignment(aliasName, aliasURI);
         return createTransaction(req, account, attachment);
 
     }

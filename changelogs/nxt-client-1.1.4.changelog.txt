@@ -1,0 +1,43 @@
+Aliases http API cleanup. There are only two API requests to get aliases now:
+
+getAlias
+parameters: either "aliasName" (the alias name) or "alias" (the alias id)
+returns: full Alias JSON
+
+getAliases
+parameters: "timestamp" (optional timestamp) and "account" (the account id, 
+required)
+returns: list of aliases (full JSON) owned by the account, optionally filtered
+by timestamp
+
+The old getAliasId, getAliasIds, getAliasURI and listAccountAliases have been
+removed as they are redundant and the new requests return all necessary info.
+
+assignAlias has been renamed to setAlias, with "aliasName" and "aliasURI"
+parameters.
+
+Removed getAssetsByName API.
+
+The getAssetsByIssuer API now accepts a multivalued "account" parameter and
+returns a list of lists of assets issued by those accounts.
+
+Use the slf4j logging framework. Thanks to ScripterRon for adapting our Logger
+to use slf4j! The logging can now be configured in conf/logging.properties,
+see conf/logging-default.properties for possible parameters and their defaults
+and create a new conf/logging.properties file with any custom settings if
+needed.
+
+Minor DebugTrace improvements - log Arbitrary Messages events, sender and
+recipient, and generated block ids.
+
+Improvements in transaction validation and rescan logic.
+
+Client updates:
+
+No longer shows full list of assets. You must now add assets manually via either the asset ID or account issuer ID.
+
+Instant asset bookmark search (no enter needed).
+
+
+
+

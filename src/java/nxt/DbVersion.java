@@ -1,7 +1,5 @@
 package nxt;
 
-import nxt.crypto.Crypto;
-import nxt.util.DbIterator;
 import nxt.util.Logger;
 
 import java.sql.Connection;
@@ -147,71 +145,47 @@ final class DbVersion {
             case 37:
                 if (!Constants.isTestnet) {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('85.25.198.120'), ('185.4.72.115'), ('110.143.228.78'), ('54.72.7.96'), " +
-                            "('195.134.66.245'), ('vps4.nxtcrypto.org'), ('80.86.92.139'), ('174.140.167.239'), " +
-                            "('162.243.145.83'), ('node14.mynxt.info'), ('node20.mynxt.info'), ('nxtio.org'), " +
-                            "('103.224.81.143'), ('54.197.243.235'), ('217.17.88.5'), ('node0.nxtdb.info'), " +
-                            "('77.93.202.227'), ('109.87.169.253'), ('67.149.193.205'), ('178.24.158.31'), " +
-                            "('95.33.239.194'), ('65.111.181.1'), ('88.168.85.129'), ('108.170.40.2'), " +
-                            "('217.117.208.17'), ('85.214.250.44'), ('node15.mynxt.info'), ('wallet.nxtty.com'), " +
-                            "('node13.mynxt.info'), ('nxtnet.fr'), ('69.196.157.180'), ('xyzzyx.vps.nxtcrypto.org'), " +
-                            "('bitsy02.vps.nxtcrypto.org'), ('node3.mynxt.info'), ('vps9.nxtcrypto.org'), " +
-                            "('84.241.44.180'), ('158.195.217.79'), ('89.133.34.109'), ('54.72.136.132'), " +
-                            "('node10.mynxt.info'), ('107.170.95.105'), ('node01.nxtcrypto.de'), ('node19.mynxt.info'), " +
-                            "('scripterron.noip.me'), ('90.42.133.144'), ('188.120.255.97'), ('node12.mynxt.info'), " +
-                            "('198.27.64.207'), ('vps5.nxtcrypto.org'), ('185.12.44.108'), ('54.85.197.150'), " +
-                            "('46.173.9.98'), ('nxtcoin.ru'), ('bitsy05.vps.nxtcrypto.org'), ('85.185.142.244'), " +
-                            "('vps6.nxtcrypto.org'), ('62.4.23.171'), ('91.69.121.229'), ('88.198.142.92'), " +
-                            "('77.56.141.240'), ('192.241.245.96'), ('85.10.201.15'), ('188.226.227.59'), " +
-                            "('89.79.241.48'), ('94.26.187.66'), ('pakisnxt.no-ip.org'), ('bitsy01.vps.nxtcrypto.org'), " +
-                            "('bitsy04.vps.nxtcrypto.org'), ('90.188.4.177'), ('88.184.64.208'), ('87.230.14.1'), " +
-                            "('188.138.88.154'), ('node6.mynxt.info'), ('nrs02.nxtsolaris.info'), ('node17.mynxt.info'), " +
-                            "('nxt.homer.ru'), ('vps10.nxtcrypto.org'), ('bitsy03.vps.nxtcrypto.org'), " +
-                            "('xeqtorcreed2.vps.nxtcrypto.org'), ('lyynx.vps.nxtcrypto.org'), ('162.220.167.190'), " +
-                            "('67.212.71.171'), ('vps7.nxtcrypto.org'), ('144.76.97.106'), ('nxt01.now.im'), " +
-                            "('77.179.104.125'), ('2.225.88.10'), ('85.214.222.82'), ('nxtpi.zapto.org'), " +
-                            "('vps8.nxtcrypto.org'), ('node8.mynxt.info'), ('nxt.ravensbloodrealms.com'), " +
-                            "('node2.mynxt.info'), ('node9.mynxt.info'), ('91.155.101.22'), ('62.21.25.18'), " +
-                            "('node1.mynxt.info'), ('node7.mynxt.info'), ('24.21.101.161'), ('nxtportal.org'), " +
-                            "('83.212.110.150'), ('87.198.219.221'), ('nxt.sx'), ('87.148.4.4'), ('212.232.49.28'), " +
-                            "('192.210.139.55'), ('nxtx.ru'), ('node5.mynxt.info'), ('node16.mynxt.info'), " +
-                            "('24.23.120.252'), ('188.226.171.81'), ('allbits.vps.nxtcrypto.org'), ('67.212.71.173'), " +
-                            "('107.170.3.62'), ('vps11.nxtcrypto.org'), ('woll-e.net'), ('188.226.219.233'), " +
-                            "('37.187.70.29'), ('192.157.244.160'), ('node18.mynxt.info'), ('vps12.nxtcrypto.org'), " +
-                            "('54.186.204.166'), ('162.243.167.235'), ('178.210.216.146'), ('cubie-solar.mjke.de'), " +
-                            "('84.246.228.249'), ('24.161.110.115'), ('nrs01.nxtsolaris.info'), ('vps3.nxtcrypto.org'), " +
-                            "('vps1.nxtcrypto.org'), ('67.212.71.172'), ('node1.nxtdb.info'), ('node4.mynxt.info'), " +
-                            "('95.143.216.60'), ('54.201.108.14'), ('199.217.119.33'), ('54.245.255.250'), " +
-                            "('93.205.226.113'), ('77.207.118.69'), ('178.122.51.129'), ('xeqtorcreed.vps.nxtcrypto.org'), " +
-                            "('node11.mynxt.info'), ('ankhy.no-ip.biz'), ('95.85.42.178'), ('77.58.253.73')");
+                            "('77.179.106.9'), ('110.143.228.78'), ('54.72.7.96'), ('54.86.139.231'), " +
+                            "('abctc.vps.nxtcrypto.org'), ('nxt.pucchiwerk.eu'), ('185.4.72.115'), ('vps4.nxtcrypto.org'), " +
+                            "('89.250.240.63'), ('162.243.145.83'), ('85.10.199.79'), ('89.70.254.145'), " +
+                            "('103.224.81.143'), ('85.181.230.69'), ('198.199.85.20'), ('217.17.88.5'), " +
+                            "('109.87.169.253'), ('87.172.190.182'), ('67.149.193.205'), ('31.15.211.201'), " +
+                            "('178.24.158.31'), ('46.4.77.180'), ('188.226.242.50'), ('108.170.40.2'), ('217.117.208.17'), " +
+                            "('89.250.243.150'), ('178.26.207.190'), ('wallet.nxtty.com'), ('nxtnet.fr'), " +
+                            "('188.194.241.72'), ('nxt.alkeron.com'), ('xyzzyx.vps.nxtcrypto.org'), ('69.207.170.32'), " +
+                            "('bitsy02.vps.nxtcrypto.org'), ('83.240.14.35'), ('212.85.38.25'), ('212.85.38.103'), " +
+                            "('vps9.nxtcrypto.org'), ('84.241.44.180'), ('158.195.217.79'), ('89.133.34.109'), " +
+                            "('stakexplorer.com'), ('198.27.64.207'), ('vps5.nxtcrypto.org'), ('185.12.44.108'), " +
+                            "('nxtcoin.ru'), ('vps6.nxtcrypto.org'), ('92.129.239.166'), ('91.69.121.229'), " +
+                            "('nxtpi.zapto.org'), ('92.228.252.60'), ('216.8.180.222'), ('bitsy05.vps.nxtcrypto.org'), " +
+                            "('88.198.142.92'), ('31.19.188.145'), ('54.186.135.231'), ('ankhy.no-ip.biz'), " +
+                            "('94.26.187.66'), ('bitsy01.vps.nxtcrypto.org'), ('bitsy04.vps.nxtcrypto.org'), " +
+                            "('90.188.4.177'), ('88.184.64.208'), ('raspnxt.hopto.org'), ('151.236.29.228'), " +
+                            "('188.138.88.154'), ('nxt.homer.ru'), ('107.170.208.249'), ('31.150.173.6'), " +
+                            "('vps10.nxtcrypto.org'), ('bitsy03.vps.nxtcrypto.org'), ('xeqtorcreed2.vps.nxtcrypto.org'), " +
+                            "('lyynx.vps.nxtcrypto.org'), ('146.185.145.192'), ('37.138.105.143'), ('162.220.167.190'), " +
+                            "('94.74.170.10'), ('vps7.nxtcrypto.org'), ('nxt01.now.im'), ('2.225.88.10'), " +
+                            "('85.214.222.82'), ('vps8.nxtcrypto.org'), ('178.122.5.83'), ('88.160.247.181'), " +
+                            "('85.229.150.2'), ('158.195.19.226'), ('nxt.ravensbloodrealms.com'), ('105.229.251.144'), " +
+                            "('nxt.olxp.in'), ('37.59.47.155'), ('nxtportal.org'), ('87.198.219.221'), ('87.172.180.199'), " +
+                            "('36.74.56.184'), ('nxtx.ru'), ('58.95.145.117'), ('109.230.224.65'), ('www.pagezo.de'), " +
+                            "('allbits.vps.nxtcrypto.org'), ('107.170.3.62'), ('192.157.244.160'), ('vps12.nxtcrypto.org'), " +
+                            "('nacho.damnserver.com'), ('67.212.71.173'), ('vps11.nxtcrypto.org'), ('miasik.no-ip.org'), " +
+                            "('212.85.37.150'), ('217.26.24.27'), ('24.161.110.115'), ('89.70.164.196'), ('46.28.111.249'), " +
+                            "('vps1.nxtcrypto.org'), ('199.195.148.27'), ('176.226.191.152'), " +
+                            "('37.44.107.50'), ('95.143.216.60'), ('62.57.125.237'), ('xeqtorcreed.vps.nxtcrypto.org')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('2.86.61.152'), ('109.87.169.253'), ('83.212.103.14'), ('209.126.73.162'), ('nxtnet.fr'), " +
-                            "('83.212.102.194'), ('node10.mynxtcoin.org'), ('83.212.102.193'), ('50.112.241.97'), " +
-                            "('144.76.60.38'), ('209.126.73.164'), ('node9.mynxtcoin.org'), ('209.126.71.170'), " +
-                            "('node2.mynxtcoin.org'), ('209.126.73.166'), ('192.241.223.132'), ('209.126.75.158'), " +
-                            "('node3.mynxtcoin.org'), ('209.126.73.158'), ('83.212.102.244'), ('209.126.73.160'), " +
-                            "('209.126.73.152'), ('46.28.111.249'), ('83.212.103.18'), ('209.126.73.168'), " +
-                            "('209.126.73.156'), ('bug.airdns.org')");
+                            "('109.87.169.253'), ('nxtnet.fr'), ('node10.mynxtcoin.org'), ('50.112.241.97'), " +
+                            "('node9.mynxtcoin.org'), ('2.84.142.149'), ('192.241.223.132'), ('node3.mynxtcoin.org'), " +
+                            "('bug.airdns.org')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
             case 39:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_full_hash BINARY(32)");
             case 40:
-                try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getAllTransactions();
-                     Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET full_hash = ? WHERE id = ?")) {
-                    while (iterator.hasNext()) {
-                        Transaction transaction = iterator.next();
-                        pstmt.setBytes(1, Crypto.sha256().digest(transaction.getBytes()));
-                        pstmt.setLong(2, transaction.getId());
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
+                BlockDb.deleteAll();
                 apply(null);
             case 41:
                 apply("ALTER TABLE transaction ALTER COLUMN full_hash SET NOT NULL");

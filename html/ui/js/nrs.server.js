@@ -188,8 +188,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		//workaround for 1 specific case.. ugly
-		if (data.doGetAssets) {
-			data = data.doGetAssets;
+		if (data.querystring) {
+			data = data.querystring;
 			type = "POST";
 		}
 
@@ -386,7 +386,7 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 				break;
-			case "assignAlias":
+			case "setAlias":
 				if (transaction.type !== 1 || transaction.subtype !== 1) {
 					return false;
 				}
@@ -395,7 +395,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos++;
 
-				transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
+				transaction.aliasName = converters.byteArrayToString(byteArray, pos, aliasLength);
 
 				pos += aliasLength;
 
@@ -403,9 +403,9 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 2;
 
-				transaction.uri = converters.byteArrayToString(byteArray, pos, uriLength);
+				transaction.aliasURI = converters.byteArrayToString(byteArray, pos, uriLength);
 
-				if (transaction.alias !== data.alias || transaction.uri !== data.uri) {
+				if (transaction.aliasName !== data.aliasName || transaction.aliasURI !== data.aliasURI) {
 					return false;
 				}
 				break;

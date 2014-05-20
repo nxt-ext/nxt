@@ -263,15 +263,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         long amountNQT = (Long) transactionData.get("amountNQT");
         long feeNQT = (Long) transactionData.get("feeNQT");
         String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-        // ugly, remove later:
-        Long referencedTransactionId = Convert.parseUnsignedLong((String) transactionData.get("referencedTransaction"));
-        if (referencedTransactionId != null && referencedTransactionFullHash == null) {
-            Transaction referencedTransaction = Nxt.getBlockchain().getTransaction(referencedTransactionId);
-            if (referencedTransaction != null) {
-                referencedTransactionFullHash = referencedTransaction.getFullHash();
-            }
-        }
-        //
         byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
@@ -364,7 +355,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
-                transactions.add(parseTransaction((JSONObject) transactionData));
+                TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
+                transaction.validateAttachment();
+                transactions.add(transaction);
             } catch (NxtException.ValidationException e) {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
