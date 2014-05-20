@@ -394,7 +394,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void fullReset() {
         synchronized (blockchain) {
-            Logger.logMessage("Deleting blockchain...");
             //BlockDb.deleteBlock(Genesis.GENESIS_BLOCK_ID); // fails with stack overflow in H2
             BlockDb.deleteAll();
             addGenesisBlock();

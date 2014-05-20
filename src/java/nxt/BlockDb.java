@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.util.Logger;
+
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -172,6 +174,7 @@ final class BlockDb {
     }
 
     static void deleteAll() {
+        Logger.logMessage("Deleting blockchain...");
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
             try {
