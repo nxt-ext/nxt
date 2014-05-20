@@ -83,5 +83,26 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showedFormWarning = false;
 	});
 
+	NRS.showModalError = function(errorMessage, $modal) {
+		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
+
+		$modal.find(".error_message").html(String(errorMessage).escapeHTML()).show();
+		$btn.button("reset");
+		$modal.modal("unlock");
+	}
+
+	NRS.closeModal = function($modal) {
+		if (!$modal) {
+			$modal = $("div.modal.in:first");
+		}
+
+		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
+
+		$btn.button("reset");
+		$modal.modal("unlock");
+		$modal.modal("hide");
+
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
