@@ -169,22 +169,24 @@ var NRS = (function(NRS, $, undefined) {
 						description: data.description
 					};
 
-					$btn.button("reset");
-					$modal.modal("unlock");
-					$modal.modal("hide");
-					$.growl("Contact added successfully.", {
-						"type": "success"
-					});
+					setTimeout(function() {
+						$btn.button("reset");
+						$modal.modal("unlock");
+						$modal.modal("hide");
+						$.growl("Contact added successfully.", {
+							"type": "success"
+						});
 
-					if (NRS.currentPage == "contacts") {
-						NRS.pages.contacts();
-					} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
-						var heading = NRS.selectedContext.find("h4.list-group-item-heading");
-						if (heading.length) {
-							heading.html(data.name.escapeHTML());
+						if (NRS.currentPage == "contacts") {
+							NRS.pages.contacts();
+						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
+							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
+							if (heading.length) {
+								heading.html(data.name.escapeHTML());
+							}
+							NRS.selectedContext.data("context", "messages_sidebar_update_context");
 						}
-						NRS.selectedContext.data("context", "messages_sidebar_update_context");
-					}
+					}, 50);
 				});
 			}
 		});
@@ -337,21 +339,23 @@ var NRS = (function(NRS, $, undefined) {
 						description: data.description
 					};
 
-					$btn.button("reset");
-					$modal.modal("unlock");
-					$modal.modal("hide");
-					$.growl("Contact updated successfully.", {
-						"type": "success"
-					});
+					setTimeout(function() {
+						$btn.button("reset");
+						$modal.modal("unlock");
+						$modal.modal("hide");
+						$.growl("Contact updated successfully.", {
+							"type": "success"
+						});
 
-					if (NRS.currentPage == "contacts") {
-						NRS.pages.contacts();
-					} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
-						var heading = NRS.selectedContext.find("h4.list-group-item-heading");
-						if (heading.length) {
-							heading.html(data.name.escapeHTML());
+						if (NRS.currentPage == "contacts") {
+							NRS.pages.contacts();
+						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
+							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
+							if (heading.length) {
+								heading.html(data.name.escapeHTML());
+							}
 						}
-					}
+					}, 50);
 				});
 			}
 		});
@@ -382,13 +386,15 @@ var NRS = (function(NRS, $, undefined) {
 		}], function() {
 			delete NRS.contacts[$("#delete_contact_account_id").val()];
 
-			$.growl("Contact deleted successfully.", {
-				"type": "success"
-			});
+			setTimeout(function() {
+				$.growl("Contact deleted successfully.", {
+					"type": "success"
+				});
 
-			if (NRS.currentPage == "contacts") {
-				NRS.pages.contacts();
-			}
+				if (NRS.currentPage == "contacts") {
+					NRS.pages.contacts();
+				}
+			}, 50);
 		});
 
 		return {
