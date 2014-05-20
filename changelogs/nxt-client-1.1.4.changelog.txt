@@ -32,4 +32,12 @@ recipient, and generated block ids.
 
 Improvements in transaction validation and rescan logic.
 
+Client updates:
+
+No longer shows full list of assets. You must now add assets manually via either the asset ID or account issuer ID.
+
+Instant asset bookmark search (no enter needed).
+
+
+
 
