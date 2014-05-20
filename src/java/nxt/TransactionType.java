@@ -958,13 +958,6 @@ public abstract class TransactionType {
                 if (asset == null || attachment.getQuantityQNT() <= 0 || attachment.getQuantityQNT() > asset.getQuantityQNT()) {
                     throw new NxtException.ValidationException("Invalid asset order placement asset or quantity: " + attachment.getJSONObject());
                 }
-                try {
-                    Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT());
-                } catch (ArithmeticException e) {
-                    if (! transaction.getStringId().equals("10723635126505376041")) {
-                        throw new NxtException.ValidationException("Invalid order price and quantity: " + transaction.getJSONObject());
-                    }
-                }
             }
 
         }

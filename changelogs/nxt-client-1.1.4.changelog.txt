@@ -30,4 +30,6 @@ needed.
 Minor DebugTrace improvements - log Arbitrary Messages events, sender and
 recipient, and generated block ids.
 
+Improvements in transaction validation and rescan logic.
+
 
