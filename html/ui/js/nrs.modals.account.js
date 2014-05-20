@@ -340,8 +340,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAssetsByIssuer", {
 			"account": NRS.userInfoModal.user
 		}, function(response) {
-			if (response.assets && response.assets.length) {
-				$.each(response.assets, function(key, issuedAsset) {
+			if (response.assets && response.assets[0] && response.assets[0].length) {
+				$.each(response.assets[0], function(key, issuedAsset) {
 					if (assets[issuedAsset.asset]) {
 						assets[issuedAsset.asset].issued = true;
 					} else {
