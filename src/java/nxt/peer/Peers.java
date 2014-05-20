@@ -400,7 +400,7 @@ public final class Peers {
         String dumpPeersVersion = Nxt.getStringProperty("nxt.dumpPeersVersion");
         if (dumpPeersVersion != null) {
             StringBuilder buf = new StringBuilder();
-            for (Peer peer : peers.values()) {
+            for (Peer peer : new HashSet<>(peers.values())) {
                 if (peer.getAnnouncedAddress() != null && peer.shareAddress() && !peer.isBlacklisted()
                         && peer.getVersion() != null && peer.getVersion().startsWith(dumpPeersVersion)) {
                     buf.append("('").append(peer.getAnnouncedAddress()).append("'), ");
