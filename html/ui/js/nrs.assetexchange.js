@@ -189,7 +189,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (response.assets && response.assets[0] && response.assets[0].length) {
 						NRS.saveAssetBookmarks(response.assets[0], NRS.forms.addAssetBookmarkComplete);
 					}
-					NRS.saveAssetIssuer(data.id);
+					//NRS.saveAssetIssuer(data.id);
 				}
 			});
 		} else {
@@ -205,7 +205,7 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							if (response.assets && response.assets[0] && response.assets[0].length) {
 								NRS.saveAssetBookmarks(response.assets[0], NRS.forms.addAssetBookmarkComplete);
-								NRS.saveAssetIssuer(data.id);
+								//NRS.saveAssetIssuer(data.id);
 							} else {
 								NRS.showModalError("No asset found.", $modal);
 							}
@@ -257,6 +257,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	/*
 	NRS.saveAssetIssuer = function(issuer) {
 		if (!/^NXT\-/i.test(issuer)) {
 			var address = new NxtAddress();
@@ -277,7 +278,7 @@ var NRS = (function(NRS, $, undefined) {
 				}]);
 			}
 		});
-	}
+	}*/
 
 	NRS.saveAssetBookmarks = function(assets, callback) {
 		var newAssetIds = [];
@@ -1368,10 +1369,10 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			} else {
 				//todo save delteed asset ids from accountissuers
-
 				NRS.database.delete("assets", [{
 					"asset": assetId
 				}], function(error, affected) {
+					/*
 					$.each(NRS.assets, function(key, asset) {
 						if (asset.asset == assetId) {
 							NRS.database.select("assets", [{
@@ -1385,7 +1386,7 @@ var NRS = (function(NRS, $, undefined) {
 							});
 						}
 					});
-
+					*/
 					setTimeout(function() {
 						NRS.pages.asset_exchange();
 						$.growl("Asset removed from bookmarks successfully.", {
