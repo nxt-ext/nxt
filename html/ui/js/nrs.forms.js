@@ -56,7 +56,31 @@ var NRS = (function(NRS, $, undefined) {
 
 		$form.find(":input").each(function() {
 			if ($(this).is(":invalid")) {
-				$modal.find(".error_message").html($(this).attr("name").capitalize().escapeHTML() + " is invalid.").show();
+				var error = "";
+				var name = String($(this).attr("name")).capitalize();
+				var value = $(this).val();
+
+				if ($(this).hasAttr("max")) {
+					var max = $(this).attr("max");
+
+					if (value > max) {
+						error = name.escapeHTML() + ": Maximum value is " + String(max).escapeHTML() + ".";
+					}
+				}
+
+				if ($(this).hasAttr("min")) {
+					var min = $(this).attr("min");
+
+					if (value < min) {
+						error = name.escapeHTML() + ": Minimum value is " + String(min).escapeHTML() + ".";
+					}
+				}
+
+				if (!error) {
+					error = name.escapeHTML() + " is invalid.";
+				}
+
+				$modal.find(".error_message").html(error).show();
 				NRS.unlockForm($modal, $btn);
 				invalidElement = true;
 				return false;

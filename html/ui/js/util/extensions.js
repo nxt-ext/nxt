@@ -60,6 +60,12 @@ if (typeof Object.keys !== "function") {
 	})();
 }
 
+$.fn.hasAttr = function(name) {
+	var attr = this.attr(name);
+
+	return attr !== undefined && attr !== false;
+};
+
 //https://github.com/bryanwoods/autolink-js/blob/master/autolink.js
 (function() {
 	var autoLink,

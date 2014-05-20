@@ -108,6 +108,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
+		/*
 		$("#asset_exchange_search input[name=q]").addClear({
 			right: 0,
 			top: 4,
@@ -119,7 +120,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#id_search input[name=q], #alias_search input[name=q]").addClear({
 			right: 0,
 			top: 4
-		});
+		});*/
 	}
 
 	NRS.getState = function(callback) {
@@ -291,7 +292,6 @@ var NRS = (function(NRS, $, undefined) {
 				},
 				description: "TEXT",
 				name: "VARCHAR(10)",
-				position: "NUMBER",
 				decimals: "NUMBER",
 				quantityQNT: "VARCHAR(15)",
 				groupName: "VARCHAR(30) COLLATE NOCASE"
@@ -313,6 +313,22 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.databaseSupport = true;
 
 					NRS.loadContacts();
+
+					NRS.database.select("data", [{
+						"id": "asset_exchange_version"
+					}], function(error, result) {
+						if (!result.length) {
+							NRS.database.delete("assets", [], function(error, affected) {
+								if (!error) {
+									NRS.database.insert("data", {
+										"id": "asset_exchange_version",
+										"contents": 2
+									});
+								}
+							});
+						}
+					});
+
 					NRS.database.select("data", [{
 						"id": "closed_groups"
 					}], function(error, result) {

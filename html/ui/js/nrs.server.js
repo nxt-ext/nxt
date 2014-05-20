@@ -188,8 +188,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		//workaround for 1 specific case.. ugly
-		if (data.doGetAssets) {
-			data = data.doGetAssets;
+		if (data.querystring) {
+			data = data.querystring;
 			type = "POST";
 		}
 
