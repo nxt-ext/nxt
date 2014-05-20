@@ -371,6 +371,7 @@ final class TransactionImpl implements Transaction {
         return data;
     }
 
+    @Override
     public void validateAttachment() throws NxtException.ValidationException {
         type.validateAttachment(this);
     }

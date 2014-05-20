@@ -87,9 +87,11 @@ var NRS = (function(NRS, $, undefined) {
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
-		var alias = String($invoker.data("alias"));
+		var alias = $invoker.data("alias");
 
 		if (alias) {
+			alias = String(alias);
+
 			NRS.sendRequest("getAlias", {
 				"aliasName": alias
 			}, function(response) {
@@ -214,7 +216,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.currentPage == "aliases") {
 			var $table = $("#aliases_table tbody");
 
-			var $row = $table.find("tr[data-alias=" + data.alias.toLowerCase().escapeHTML() + "]");
+			var $row = $table.find("tr[data-alias=" + String(data.alias).toLowerCase().escapeHTML() + "]");
 
 			if ($row.length) {
 				$row.addClass("tentative");
@@ -228,11 +230,11 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var $rows = $table.find("tr");
 
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.alias.toLowerCase().escapeHTML() + "'><td class='alias'>" + data.alias.escapeHTML() + " -  <strong>Pending</strong></td><td class='uri'>" + (data.uri && data.uri.indexOf("http") === 0 ? "<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + data.uri.escapeHTML() + "</a>" : String(data.uri).escapeHTML()) + "</td><td>Edit</td></tr>";
+				var rowToAdd = "<tr class='tentative' data-alias='" + String(data.alias).toLowerCase().escapeHTML() + "'><td class='alias'>" + data.alias.escapeHTML() + " -  <strong>Pending</strong></td><td class='uri'>" + (data.uri && data.uri.indexOf("http") === 0 ? "<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + data.uri.escapeHTML() + "</a>" : String(data.uri).escapeHTML()) + "</td><td>Edit</td></tr>";
 
 				var rowAdded = false;
 
-				var newAlias = data.alias.toLowerCase();
+				var newAlias = String(data.alias).toLowerCase();
 
 				if ($rows.length) {
 					$rows.each(function() {

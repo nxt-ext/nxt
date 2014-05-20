@@ -310,22 +310,21 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pageLoaded();
 	}
 
-	$("#blocks_page_type li a").click(function(e) {
+	$("#blocks_page_type .btn").click(function(e) {
+		//	$("#blocks_page_type li a").click(function(e) {
 		e.preventDefault();
 
-		var type = $(this).data("type");
+		var type = $.trim($(this).text()).toLowerCase();
 
-		if (type) {
-			NRS.blocksPageType = type;
+		if (type == "forged by you") {
+			NRS.blocksPageType = "forged_blocks";
 		} else {
-			NRS.blocksPageType = null;
+			NRS.blocksPageType = "";
 		}
-
-		$(this).parents(".btn-group").find(".text").text($(this).text());
 
 		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
 		$("#blocks_table tbody").empty();
-		$("#blocks_table").parent().addClass("data-loading");
+		$("#blocks_table").parent().addClass("data-loading").removeClass("data-empty");
 
 		NRS.pages.blocks();
 	});
@@ -333,7 +332,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("#goto_forged_blocks").click(function(e) {
 		e.preventDefault();
 
-		$("#blocks_page_type").parent().find(".text").text("Forged By You");
+		$("#blocks_page_type").find(".btn:last").button("toggle");
 		NRS.blocksPageType = "forged_blocks";
 		NRS.goToPage("blocks");
 	});
