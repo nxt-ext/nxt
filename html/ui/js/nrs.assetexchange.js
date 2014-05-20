@@ -188,6 +188,8 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					if (response.assets && response.assets[0] && response.assets[0].length) {
 						NRS.saveAssetBookmarks(response.assets[0], NRS.forms.addAssetBookmarkComplete);
+					} else {
+						NRS.showModalError("No assets found by this account.", $modal);
 					}
 					//NRS.saveAssetIssuer(data.id);
 				}
@@ -246,14 +248,10 @@ var NRS = (function(NRS, $, undefined) {
 				"type": "success"
 			});
 
-			if (NRS.assets.length >= 10 && newAssets.length > 1) {
-				$("#asset_exchange_search input[name=q]").val(newAssets[0].accountRS).trigger("input");
-			} else {
-				NRS.loadAssetExchangeSidebar(function(callback) {
-					$("#asset_exchange_sidebar a.active").removeClass("active");
-					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active").trigger("click");
-				});
-			}
+			NRS.loadAssetExchangeSidebar(function(callback) {
+				$("#asset_exchange_sidebar a.active").removeClass("active");
+				$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active").trigger("click");
+			});
 		}
 	}
 
