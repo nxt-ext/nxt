@@ -688,7 +688,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (balance.asset == assetId) {
 					NRS.currentAsset.yourBalanceNQT = balance.unconfirmedBalanceQNT;
-					$("#your_asset_balance").html(NRS.formatQuantity(asset.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
+					$("#your_asset_balance").html(NRS.formatQuantity(balance.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
 					if (balance.unconfirmedBalanceQNT == "0") {
 						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
 					} else {
