@@ -62,6 +62,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 
+			/*
 			//find new assets from contacts and asset issuers, check once every 30 minutes..
 			if (!NRS.lastIssuerCheck || (new Date().getTime() - NRS.lastIssuerCheck.getTime()) / 1000 > 60 * 30) {
 				NRS.lastIssuerCheck = new Date();
@@ -111,7 +112,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					}
 				});
-			}
+			}*/
 		} else {
 			//for users without db support, we only need to fetch owned assets
 			if (NRS.accountInfo.unconfirmedAssetBalances) {
