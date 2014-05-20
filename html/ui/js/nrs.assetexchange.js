@@ -4,6 +4,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.closedGroups = [];
 	NRS.assetSearch = false;
 	NRS.lastIssuerCheck = false;
+	NRS.viewingAsset = false; //viewing non-bookmarked asset
 
 	NRS.pages.asset_exchange = function(callback) {
 		NRS.pageLoading();
@@ -69,7 +70,7 @@ var NRS = (function(NRS, $, undefined) {
 					var accounts = [];
 
 					$.each(issuers, function(index, issuer) {
-						accounts.push(issuer.accountRS);
+						accounts.push(issuer.account);
 					});
 
 					$.each(NRS.contacts, function(index, contact) {
@@ -91,11 +92,21 @@ var NRS = (function(NRS, $, undefined) {
 							"querystring": qs
 						}, function(response) {
 							if (response.assets && response.assets.length) {
-								NRS.saveAssetBookmarks(response.assets, function(newAssets) {
-									if (newAssets.length) {
-										NRS.pages.asset_exchange();
-									}
+								var newAssets = [];
+
+								$.each(response.assets, function(key, issuer) {
+									$.each(issuer, function(key, asset) {
+										newAssets.push(asset);
+									});
 								});
+
+								if (newAssets.length) {
+									NRS.saveAssetBookmarks(newAssets, function(newAssets) {
+										if (newAssets.length) {
+											NRS.pages.asset_exchange();
+										}
+									});
+								}
 							}
 						});
 					}
@@ -174,8 +185,8 @@ var NRS = (function(NRS, $, undefined) {
 				if (response.errorCode) {
 					NRS.showModalError(response.errorDescription, $modal);
 				} else {
-					if (response.assets && response.assets.length) {
-						NRS.saveAssetBookmarks(response.assets, NRS.forms.addAssetBookmarkComplete);
+					if (response.assets && response.assets[0] && response.assets[0].length) {
+						NRS.saveAssetBookmarks(response.assets[0], NRS.forms.addAssetBookmarkComplete);
 					}
 					NRS.saveAssetIssuer(data.id);
 				}
@@ -191,12 +202,12 @@ var NRS = (function(NRS, $, undefined) {
 						if (response.errorCode) {
 							NRS.showModalError(response.errorDescription, $modal);
 						} else {
-							if (response.assets && response.assets.length) {
-								NRS.saveAssetBookmarks(response.assets, NRS.forms.addAssetBookmarkComplete);
+							if (response.assets && response.assets[0] && response.assets[0].length) {
+								NRS.saveAssetBookmarks(response.assets[0], NRS.forms.addAssetBookmarkComplete);
+								NRS.saveAssetIssuer(data.id);
 							} else {
 								NRS.showModalError("No asset found.", $modal);
 							}
-							NRS.saveAssetIssuer(data.id);
 						}
 					});
 				} else {
@@ -206,6 +217,17 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	$("#asset_exchange_bookmark_this_asset").on("click", function() {
+		if (NRS.viewingAsset) {
+			NRS.saveAssetBookmarks(new Array(NRS.viewingAsset), function(newAssets) {
+				NRS.viewingAsset = false;
+				NRS.loadAssetExchangeSidebar(function() {
+					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active");
+				});
+			});
+		}
+	});
+
 	NRS.forms.addAssetBookmarkComplete = function(newAssets, submittedAssets) {
 		NRS.assetSearch = false;
 
@@ -214,6 +236,7 @@ var NRS = (function(NRS, $, undefined) {
 			$.growl((submittedAssets.length == 1 ? "Asset" : "Assets") + " already in bookmark list.", {
 				"type": "danger"
 			});
+			$("#asset_exchange_sidebar a.active").removeClass("active");
 			$("#asset_exchange_sidebar a[data-asset=" + submittedAssets[0].asset + "]").addClass("active").trigger("click");
 			return;
 		} else {
@@ -226,6 +249,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#asset_exchange_search input[name=q]").val(newAssets[0].accountRS).trigger("input");
 			} else {
 				NRS.loadAssetExchangeSidebar(function(callback) {
+					$("#asset_exchange_sidebar a.active").removeClass("active");
 					$("#asset_exchange_sidebar a[data-asset=" + newAssets[0].asset + "]").addClass("active").trigger("click");
 				});
 			}
@@ -300,7 +324,10 @@ var NRS = (function(NRS, $, undefined) {
 					});
 
 					if (callback) {
-						callback(newAssets, assets);
+						//for some reason we need to wait a little or DB won't be able to fetch inserted record yet..
+						setTimeout(function() {
+							callback(newAssets, assets);
+						}, 50);
 					}
 				});
 			}
@@ -319,7 +346,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.assets.length) {
 			NRS.pageLoaded();
 			$("#asset_exchange_sidebar_content").empty();
-			$("#no_asset_selected, #loading_asset_data").hide();
+			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results").hide();
 			$("#no_assets_available").show();
 			$("#asset_exchange_page").addClass("no_assets");
 			return;
@@ -363,7 +390,7 @@ var NRS = (function(NRS, $, undefined) {
 		var ungrouped = true;
 		var isClosedGroup = false;
 
-		var isSearch = NRS.assetSearch && NRS.assetSearch.length;
+		var isSearch = NRS.assetSearch !== false;
 		var searchResults = 0;
 
 		for (var i = 0; i < NRS.assets.length; i++) {
@@ -440,19 +467,37 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_exchange_sidebar_search").hide();
 		}
 
-		$("#no_assets_available").hide();
+		if (isSearch && NRS.assetSearch.length == 0) {
+			$("#no_asset_search_results").show();
+			$("#asset_details, #no_asset_selected, #no_assets_available").hide();
+		} else if (!$("#asset_exchange_sidebar a.active").length) {
+			$("#no_asset_selected").show();
+			$("#asset_details, #no_assets_available, #no_asset_search_results").hide();
+		} else if (active) {
+			$("#no_assets_available, #no_asset_selected, #no_asset_search_results").hide();
+		}
+
+		if (NRS.viewingAsset) {
+			$("#asset_exchange_bookmark_this_asset").show();
+		} else {
+			$("#asset_exchange_bookmark_this_asset").hide();
+		}
 
 		NRS.pageLoaded(callback);
 	}
 
 	NRS.incoming.asset_exchange = function() {
-		//refresh active asset
-		var $active = $("#asset_exchange_sidebar a.active");
+		if (!NRS.viewingAsset) {
+			//refresh active asset
+			var $active = $("#asset_exchange_sidebar a.active");
 
-		if ($active.length) {
-			$active.trigger("click", [{
-				"refresh": true
-			}]);
+			if ($active.length) {
+				$active.trigger("click", [{
+					"refresh": true
+				}]);
+			}
+		} else {
+			NRS.loadAsset(NRS.viewingAsset, true);
 		}
 
 		//update assets owned (colored)
@@ -551,7 +596,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#asset_exchange_sidebar a.active").removeClass("active");
 			$("#asset_exchange_sidebar a[data-asset=" + assetId + "]").addClass("active");
 
-			$("#no_asset_selected, #loading_asset_data, #no_assets_available").hide();
+			$("#no_asset_selected, #loading_asset_data, #no_assets_available, #no_asset_search_results").hide();
 			$("#asset_details").show().parent().animate({
 				"scrollTop": 0
 			}, 0);
@@ -597,6 +642,35 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#asset_exchange_duplicates_warning").hide();
 			}
+
+			if (NRS.databaseSupport) {
+				NRS.sendRequest("getAsset", {
+					"asset": assetId
+				}, function(response) {
+					if (!response.errorCode) {
+						if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name || response.quantityQNT != asset.quantityQNT) {
+							NRS.database.delete("assets", [{
+								"asset": asset.asset
+							}], function() {
+								setTimeout(function() {
+									NRS.pages.asset_exchange();
+									$.growl("Invalid asset.", {
+										"type": "danger"
+									});
+								}, 50);
+							});
+						}
+					}
+				});
+			}
+
+			if (asset.viewingAsset) {
+				$("#asset_exchange_bookmark_this_asset").show();
+				NRS.viewingAsset = asset;
+			} else {
+				$("#asset_exchange_bookmark_this_asset").hide();
+				NRS.viewingAsset = false;
+			}
 		}
 
 		if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
@@ -609,12 +683,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (NRS.accountInfo.unconfirmedAssetBalances) {
 			for (var i = 0; i < NRS.accountInfo.unconfirmedAssetBalances.length; i++) {
-				var asset = NRS.accountInfo.unconfirmedAssetBalances[i];
+				var balance = NRS.accountInfo.unconfirmedAssetBalances[i];
 
-				if (asset.asset == assetId) {
-					NRS.currentAsset.yourBalanceNQT = asset.unconfirmedBalanceQNT;
+				if (balance.asset == assetId) {
+					NRS.currentAsset.yourBalanceNQT = balance.unconfirmedBalanceQNT;
 					$("#your_asset_balance").html(NRS.formatQuantity(asset.unconfirmedBalanceQNT, NRS.currentAsset.decimals));
-					if (asset.unconfirmedBalanceQNT == "0") {
+					if (balance.unconfirmedBalanceQNT == "0") {
 						$("#sell_automatic_price").addClass("zero").removeClass("nonzero");
 					} else {
 						$("#sell_automatic_price").addClass("nonzero").removeClass("zero");
@@ -776,18 +850,18 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				});
 			}
-
+			/*
 			if (!NRS.assetSearch.length) {
 				if ($(".bootstrap-growl-top-right.alert-danger").length == 0) {
 					$.growl("Nothing found, please try another query.", {
 						"type": "danger"
 					});
 				}
-			} else {
-				NRS.loadAssetExchangeSidebar();
-				$("#asset_exchange_clear_search").show();
-				$("#asset_exchange_show_type").hide();
-			}
+			} else {*/
+			NRS.loadAssetExchangeSidebar();
+			$("#asset_exchange_clear_search").show();
+			$("#asset_exchange_show_type").hide();
+			//	}
 		}
 	});
 
@@ -1195,11 +1269,12 @@ var NRS = (function(NRS, $, undefined) {
 		}, [{
 			"groupName": oldGroupName
 		}], function() {
-			NRS.pages.asset_exchange();
-		});
-
-		$.growl("Group name updated successfully.", {
-			"type": "success"
+			setTimeout(function() {
+				NRS.pages.asset_exchange();
+				$.growl("Group name updated successfully.", {
+					"type": "success"
+				});
+			}, 50);
 		});
 
 		return {
@@ -1226,7 +1301,6 @@ var NRS = (function(NRS, $, undefined) {
 				$("#asset_exchange_group_title").html(String(asset.name).escapeHTML());
 
 				NRS.database.select("assets", [], function(error, assets) {
-
 					//NRS.database.execute("SELECT DISTINCT groupName FROM assets", [], function(groupNames) {					
 					var groupNames = [];
 
@@ -1268,10 +1342,12 @@ var NRS = (function(NRS, $, undefined) {
 			}, [{
 				"asset": assetId
 			}], function() {
-				NRS.pages.asset_exchange();
-				$.growl("Asset removed from group successfully.", {
-					"type": "success"
-				});
+				setTimeout(function() {
+					NRS.pages.asset_exchange();
+					$.growl("Asset removed from group successfully.", {
+						"type": "success"
+					});
+				}, 50);
 			});
 		} else if (option == "remove_from_bookmarks") {
 			var ownsAsset = false;
@@ -1290,9 +1366,11 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
+				//todo save delteed asset ids from accountissuers
+
 				NRS.database.delete("assets", [{
 					"asset": assetId
-				}], function() {
+				}], function(error, affected) {
 					$.each(NRS.assets, function(key, asset) {
 						if (asset.asset == assetId) {
 							NRS.database.select("assets", [{
@@ -1306,10 +1384,13 @@ var NRS = (function(NRS, $, undefined) {
 							});
 						}
 					});
-					NRS.pages.asset_exchange();
-					$.growl("Asset removed from bookmarks successfully.", {
-						"type": "success"
-					});
+
+					setTimeout(function() {
+						NRS.pages.asset_exchange();
+						$.growl("Asset removed from bookmarks successfully.", {
+							"type": "success"
+						});
+					}, 50);
 				});
 			}
 		}
@@ -1340,16 +1421,18 @@ var NRS = (function(NRS, $, undefined) {
 		}, [{
 			"asset": assetId
 		}], function() {
-			NRS.pages.asset_exchange();
-			if (!groupName) {
-				$.growl("Asset removed from group successfully.", {
-					"type": "success"
-				});
-			} else {
-				$.growl("Asset added to group successfully.", {
-					"type": "success"
-				});
-			}
+			setTimeout(function() {
+				NRS.pages.asset_exchange();
+				if (!groupName) {
+					$.growl("Asset removed from group successfully.", {
+						"type": "success"
+					});
+				} else {
+					$.growl("Asset added to group successfully.", {
+						"type": "success"
+					});
+				}
+			}, 50);
 		});
 
 		return {
@@ -1673,7 +1756,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#asset_exchange_clear_search").hide();
 
 		$("#asset_exchange_sidebar a.list-group-item.active").removeClass("active");
-		$("#no_asset_selected, #asset_details, #no_assets_available").hide();
+		$("#no_asset_selected, #asset_details, #no_assets_available, #no_asset_search_results").hide();
 		$("#loading_asset_data").show();
 
 		$("ul.sidebar-menu a[data-page=asset_exchange]").last().trigger("click", [{
@@ -1687,13 +1770,9 @@ var NRS = (function(NRS, $, undefined) {
 						"asset": asset
 					}, function(response) {
 						if (!response.errorCode) {
-							NRS.cacheAsset(response);
-							NRS.loadAssetExchangeSidebar(function() {
-								var assetLink = $("#asset_exchange_sidebar a[data-asset=" + asset + "]");
-								if (assetLink.length) {
-									assetLink.click();
-								}
-							});
+							response.groupName = "";
+							response.viewingAsset = true;
+							NRS.loadAsset(response);
 						} else {
 							$.growl("Could not find asset.", {
 								"type": "danger"

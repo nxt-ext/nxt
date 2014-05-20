@@ -551,6 +551,7 @@
 	                	<h1>Asset Exchange</h1>
 	                	<div style="position:absolute;top:9px;right:9px;">
 	                		<button type="button" class="btn btn-sm btn-default" id="asset_exchange_add_asset_bookmark" data-toggle="modal" data-target="#add_asset_bookmark_modal">Add Asset</button>
+	                		<button type="button" class="btn btn-sm btn-default" id="asset_exchange_bookmark_this_asset" style="display:none">Bookmark This Asset</button>
 		                	<button type="button" class="btn btn-sm btn-default" id="asset_exchange_clear_search" style="display:none">Clear Search Results</button>
 	                	</div>
 	                </section>
@@ -579,6 +580,7 @@
 						         <div class="content-splitter-right">
 						         	<div class="content-splitter-right-inner">
 						         		<div id="no_assets_available" style="padding-top: 150px;text-align:center;display:none;">You don't have any assets in your bookmark list yet. Click on "Add Asset" in the top right corner to add one.</div>
+						         		<div id="no_asset_search_results" style="padding-top: 150px;text-align:center;display:none;">No assets found that match search query.</div>
 						         		<div id="no_asset_selected" style="padding-top: 150px;text-align:center;">Please select an asset in the left sidebar.</div>
 						         		<div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;">Asset data loading, please wait...<br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 						         		<div id="asset_details" style="display:none;">
@@ -1686,7 +1688,7 @@
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
-								<label for="add_asset_bookmark_id">ASSET OR ACCOUNT ID</label>
+								<label for="add_asset_bookmark_id">ASSET OR ACCOUNT ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body"></i></label>
 								<input type="text" class="form-control" name="id" id="add_asset_bookmark_id" placeholder="ID" autofocus tabindex="1" />
 							</div>
 						</form>

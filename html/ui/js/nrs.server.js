@@ -190,7 +190,7 @@ var NRS = (function(NRS, $, undefined) {
 		//workaround for 1 specific case.. ugly
 		if (data.querystring) {
 			data = data.querystring;
-			//type = "POST";
+			type = "POST";
 		}
 
 		ajaxCall({
