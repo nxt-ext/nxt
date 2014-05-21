@@ -233,6 +233,9 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS cluster_defining_block_height INT");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS cluster_defining_block_id BIGINT");
+            case 53:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
