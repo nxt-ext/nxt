@@ -236,8 +236,8 @@ var NRS = (function(NRS, $, undefined) {
 							"Type": "Ask Order Placement",
 							"Asset Name": asset.name,
 							"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
-							"Price": transaction.attachment.priceNQT,
-							"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals)
+							"PriceFormattedHTML": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+							"TotalFormattedHTML": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -262,8 +262,8 @@ var NRS = (function(NRS, $, undefined) {
 							"Type": "Bid Order Placement",
 							"Asset Name": asset.name,
 							"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
-							"Price": transaction.attachment.priceNQT,
-							"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals)
+							"PriceFormattedHTML": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+							"TotalFormattedHTML": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 						};
 
 						if (transaction.sender != NRS.account) {
@@ -292,8 +292,8 @@ var NRS = (function(NRS, $, undefined) {
 									"Type": "Ask Order Cancellation",
 									"Asset Name": asset.name,
 									"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
-									"Price": transaction.attachment.priceNQT,
-									"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals)
+									"PriceFormattedHTML": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+									"TotalFormattedHTML": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 								};
 
 								if (transaction.sender != NRS.account) {
@@ -326,8 +326,8 @@ var NRS = (function(NRS, $, undefined) {
 									"Type": "Bid Order Cancellation",
 									"Asset Name": asset.name,
 									"Quantity": [transaction.attachment.quantityQNT, asset.decimals],
-									"Price": transaction.attachment.priceNQT,
-									"Total": NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT, asset.decimals),
+									"PriceFormattedHTML": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
+									"TotalFormattedHTML": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
 								};
 
 								if (transaction.sender != NRS.account) {
