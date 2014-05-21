@@ -84,6 +84,8 @@ final class TransactionDb {
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
+            int clusterDefiningBlockHeight = rs.getInt("cluster_defining_block_height");
+            Long clusterDefiningBlockId = rs.getLong("cluster_defining_block_id");
             byte[] signature = rs.getBytes("signature");
             Long blockId = rs.getLong("block_id");
             int height = rs.getInt("height");
@@ -95,7 +97,7 @@ final class TransactionDb {
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                        referencedTransactionFullHash, signature, blockId, height, id, senderId, blockTimestamp, fullHash);
+                        referencedTransactionFullHash, clusterDefiningBlockHeight, clusterDefiningBlockId, signature, blockId, height, id, senderId, blockTimestamp, fullHash);
             if (attachmentBytes != null) {
                 ByteBuffer buffer = ByteBuffer.wrap(attachmentBytes);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);

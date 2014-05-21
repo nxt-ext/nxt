@@ -60,4 +60,8 @@ public interface Transaction extends Comparable<Transaction> {
     Collection<TransactionType> getPhasedTransactionTypes();
     */
 
+    int getClusterDefiningBlockHeight();
+
+    Long getClusterDefiningBlockId();
+
 }

@@ -181,8 +181,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                       long amountNQT, long feeNQT, String referencedTransactionFullHash)
             throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
-                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
+        int timestamp = Convert.getEpochTime();
+        Block clusterDefiningBlock = EconomicClustering.getClusterDefiningBlockId(timestamp);
+        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, timestamp, deadline, senderPublicKey,
+                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlock.getHeight(), clusterDefiningBlock.getId(), null);
         transaction.validateAttachment();
         return transaction;
     }
@@ -191,8 +193,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
                                       long amountNQT, long feeNQT, String referencedTransactionFullHash, Attachment attachment)
             throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
-                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
+        int timestamp = Convert.getEpochTime();
+        Block clusterDefiningBlock = EconomicClustering.getClusterDefiningBlockId(timestamp);
+        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), timestamp, deadline,
+                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlock.getHeight(), clusterDefiningBlock.getId(), null);
         transaction.setAttachment(attachment);
         transaction.validateAttachment();
         return transaction;
@@ -239,6 +243,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
             referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
         }
+        int clusterDefiningBlockHeight;
+        Long clusterDefiningBlockId;
+        if (BlockchainImpl.getInstance().getLastBlock().getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_8) {
+            clusterDefiningBlockHeight = buffer.getInt();
+            clusterDefiningBlockId = buffer.getLong();
+        } else {
+            clusterDefiningBlockHeight = 0;
+            clusterDefiningBlockId = Long.valueOf(0);
+        }
         byte[] signature = new byte[64];
         buffer.get(signature);
         signature = Convert.emptyToNull(signature);
@@ -246,7 +259,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         TransactionImpl transaction;
         transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, signature);
+                amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlockHeight, clusterDefiningBlockId, signature);
         transactionType.loadAttachment(transaction, buffer);
 
         return transaction;
@@ -263,11 +276,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         long amountNQT = (Long) transactionData.get("amountNQT");
         long feeNQT = (Long) transactionData.get("feeNQT");
         String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
+        int clusterDefiningBlockHeight = ((Long)transactionData.get("clusterDefiningBlockHeight")).intValue();
+        Long clusterDefiningBlockId = Convert.parseUnsignedLong((String)transactionData.get("clusterDefiningBlockId"));
         byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, signature);
+                amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlockHeight, clusterDefiningBlockId, signature);
 
         JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
         transactionType.loadAttachment(transaction, attachmentData);

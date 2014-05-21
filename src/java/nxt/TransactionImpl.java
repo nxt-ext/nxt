@@ -21,6 +21,8 @@ final class TransactionImpl implements Transaction {
     private final long feeNQT;
     private final String referencedTransactionFullHash;
     private final TransactionType type;
+    private final int clusterDefiningBlockHeight;
+    private final Long clusterDefiningBlockId;
 
     private int height = Integer.MAX_VALUE;
     private Long blockId;
@@ -35,7 +37,7 @@ final class TransactionImpl implements Transaction {
     private volatile String fullHash;
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    long amountNQT, long feeNQT, String referencedTransactionFullHash, byte[] signature) throws NxtException.ValidationException {
+                    long amountNQT, long feeNQT, String referencedTransactionFullHash, int clusterDefiningBlockHeight, Long clusterDefiningBlockId, byte[] signature) throws NxtException.ValidationException {
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
@@ -55,17 +57,19 @@ final class TransactionImpl implements Transaction {
         this.amountNQT = amountNQT;
         this.feeNQT = feeNQT;
         this.referencedTransactionFullHash = referencedTransactionFullHash;
+        this.clusterDefiningBlockHeight = clusterDefiningBlockHeight;
+        this.clusterDefiningBlockId = clusterDefiningBlockId;
         this.signature = signature;
         this.type = type;
     }
 
     TransactionImpl(TransactionType type, int timestamp, short deadline, byte[] senderPublicKey, Long recipientId,
-                    long amountNQT, long feeNQT, byte[] referencedTransactionFullHash, byte[] signature, Long blockId, int height,
+                    long amountNQT, long feeNQT, byte[] referencedTransactionFullHash, int clusterDefiningBlockHeight, Long clusterDefiningBlockId, byte[] signature, Long blockId, int height,
                     Long id, Long senderId, int blockTimestamp, byte[] fullHash)
             throws NxtException.ValidationException {
         this(type, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
                 referencedTransactionFullHash == null ? null : Convert.toHexString(referencedTransactionFullHash),
-                signature);
+                clusterDefiningBlockHeight, clusterDefiningBlockId, signature);
         this.blockId = blockId;
         this.height = height;
         this.id = id;
@@ -274,6 +278,10 @@ final class TransactionImpl implements Transaction {
                 buffer.putLong(0L);
             }
         }
+        if (BlockchainImpl.getInstance().getLastBlock().getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_8) {
+            buffer.putInt(clusterDefiningBlockHeight);
+            buffer.putLong(clusterDefiningBlockId);
+        }
         buffer.put(signature != null ? signature : new byte[64]);
         if (attachment != null) {
             buffer.put(attachment.getBytes());
@@ -312,11 +320,23 @@ final class TransactionImpl implements Transaction {
         if (referencedTransactionFullHash != null) {
             json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
+        json.put("clusterDefiningBlockHeight", clusterDefiningBlockHeight);
+        json.put("clusterDefiningBlockId", Convert.toUnsignedLong(clusterDefiningBlockId));
         json.put("signature", Convert.toHexString(signature));
         if (attachment != null) {
             json.put("attachment", attachment.getJSONObject());
         }
         return json;
+    }
+
+    @Override
+    public int getClusterDefiningBlockHeight() {
+        return clusterDefiningBlockHeight;
+    }
+
+    @Override
+    public Long getClusterDefiningBlockId() {
+        return clusterDefiningBlockId;
     }
 
     @Override
@@ -345,6 +365,9 @@ final class TransactionImpl implements Transaction {
         if (signature == null) {
             return false;
         }
+        if (BlockchainImpl.getInstance().getLastBlock().getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_8 && !EconomicClustering.validateClusterDefiningBlock(this.getClusterDefiningBlockHeight(), this.getClusterDefiningBlockId())) {
+            return false;
+        }
         byte[] data = zeroSignature(getBytes());
         return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
@@ -354,7 +377,7 @@ final class TransactionImpl implements Transaction {
     }
 
     private int signatureOffset() {
-        return 1 + 1 + 4 + 2 + 32 + 8 + (useNQT() ? 8 + 8 + 32 : 4 + 4 + 8);
+        return 1 + 1 + 4 + 2 + 32 + 8 + (useNQT() ? 8 + 8 + 32 : 4 + 4 + 8) + (BlockchainImpl.getInstance().getLastBlock().getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8 ? 0 : (4 + 8));
     }
 
     private boolean useNQT() {
