@@ -37,7 +37,9 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
             byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
             JSONObject response = new JSONObject();
             response.put("data", Convert.toHexString(decrypted));
-            response.put("text", new String(decrypted, "UTF-8"));
+            try {
+                response.put("text", new String(decrypted, "UTF-8"));
+            } catch (RuntimeException ignore) {}
             return response;
         } catch (UnsupportedEncodingException | RuntimeException e) {
             Logger.logDebugMessage(e.toString(), e);
