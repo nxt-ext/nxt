@@ -340,7 +340,7 @@ final class BlockImpl implements Block {
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 
-            return hit.compareTo(target) < 0 && hit.compareTo(prevTarget) >= 0;
+            return hit.compareTo(target) < 0 && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8 || hit.compareTo(prevTarget) >= 0);
 
         } catch (RuntimeException e) {
 
