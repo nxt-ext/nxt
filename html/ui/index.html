@@ -100,6 +100,15 @@
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> Issue Asset</a></li>
                         	</ul>
                         </li>
+                        <li class="treeview" id="sidebar_dgs">
+                        	<a href="#" data-page="dgs"><i class="fa fa-shopping-cart"></i><span>Digital Goods</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+                            <ul class="treeview-menu" style="display: none;">
+                                 <li><a href="#" data-page="dgs"><i class="fa fa-angle-double-right"></i> Digital Goods</a></li>
+                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Goods</a></li>
+                                <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> My Listings</a></li>
+                                <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> List Goods</a></li>
+                        	</ul>
+                        </li>
                         <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span>Contacts</span></a></li>
                         <li><a href="#" data-page="messages"><i class="fa fa-envelope"></i> <span>Messages</span></a></li>
                         <li><a href="#" data-page="aliases"><i class="fa fa-bookmark"></i> <span>Aliases</span></a></li>
@@ -1519,7 +1528,6 @@
 			</div>
 		</div>
 		
-		
 		<div class="modal fade" id="cancel_order_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-wide">
 		    	<div class="modal-content">
@@ -1880,7 +1888,230 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 				</div>
 			</div>
 		</div>
-				
+		
+		<div class="modal fade" id="dgs_listing_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Digital Goods Listing</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label for="dgs_listing_name">NAME <i class="fa fa-question-circle show_popover" data-content="The name is non-unique. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
+								<input type="text" class="form-control" name="name" id="dgs_listing_name" placeholder="Digital Goods Name" autofocus tabindex="1" />
+							</div>
+							<div class="form-group">
+								<label for="dgs_listing_description">DESCRIPTION</label>
+								<textarea class="form-control" id="dgs_listing_description" name="description" rows="3" tabindex="2"></textarea>
+							</div>
+							<div class="form-group">
+								<label for="dgs_listing_tags">TAGS <i class="fa fa-question-circle show_popover" data-content="Choose up to 3 tags, separate them with comma's." data-container="body" style="color:#4CAA6E" ></i></label>
+								<input type="text" class="form-control" name="tags" id="dgs_listing_tags" placeholder="Tags (categories)" tabindex="3" />
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_listing_quantity">QUANTITY</label>
+						                <input type="number" name="quantity" id="dgs_listing_quantity" class="form-control" min="1" placeholder="Quantity" tabindex="4">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_listing_price">PRICE</label>
+						                <input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" data-default="0" value="0" tabindex="5">
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_listing_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_listing_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_listing_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_listing_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_listing_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_listing_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<input type="hidden" name="request_type" value="dgsListing" />
+						<input type="hidden" name="success_message" value="The digital goods listing has been created and will be available soon." />
+						<input type="hidden" name="error_message" value="An unknown error occured! Digital good may or may not be created." />
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Create Listing</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_delisting_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-wide">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Confirm Digital Goods Delisting</h4>
+		      		</div>
+		      		<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<p>If you are sure you want to delist your good, type your secret phrase to confirm.
+							<input type="hidden" name="goods" id="dgs_delisting_goods" value="" />
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_delisting_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_delisting_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_delisting_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_delisting_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="3">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_delisting_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_delisting_password" class="form-control" placeholder="" tabindex="1">
+							</div>
+						</form>
+		      		</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="dgsDelisting" />
+			      		<input type="hidden" name="success_message" value="The digital good has been delisted successfully." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delist</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Delist My Good</button>
+			      	</div>
+		    	</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_price_change_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-wide">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Digital Goods Price Change</h4>
+		      		</div>
+		      		<div class="modal-body">			
+						<form role="form">
+							<input type="hidden" name="goods" id="dgs_price_change_goods" value="" />
+							<div class="row">
+								<div id="dgs_price_change_info"></div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_price_change_old_price">OLD PRICE</label>
+										<span id="dgs_price_change_old_price"></span>
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_price_change_price">NEW PRICE</label>
+										<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="0" tabindex="1">
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_price_change_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_price_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_price_change_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_price_change_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="3">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_price_change_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_price_change_password" class="form-control" placeholder="" tabindex="4">
+							</div>
+						</form>
+		      		</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="dgsPriceChange" />
+			      		<input type="hidden" name="success_message" value="The digital good price has been changed successfully." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Price</button>
+			      	</div>
+		    	</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_quantity_change_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-wide">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Digital Goods Quantity Change</h4>
+		      		</div>
+		      		<div class="modal-body">			
+						<form role="form">
+							<input type="hidden" name="goods" id="dgs_quantity_change_goods" value="" />
+							<div class="row">
+								<div id="dgs_quantity_change_info"></div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_quantity_change_current_quantity">CURRENT QUANTITY</label>
+										<span id="dgs_quantity_change_current_quantity"></span>
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_quantity_change_delta_quantity">QUANTITY CHANGE (+ or -)</label>
+										<input type="number" name="deltaQuantity" id="dgs_quantity_change_delta_quantity" class="form-control" placeholder="Add or Remove From Quantity" data-default="0" value="0" tabindex="1">
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_quantity_change_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_quantity_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_quantity_change_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_quantity_change_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="3">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_quantity_change_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_quantity_change_password" class="form-control" placeholder="" tabindex="4">
+							</div>
+						</form>
+		      		</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="dgsQuantityChange" />
+			      		<input type="hidden" name="success_message" value="The digital good quantity has been changed successfully." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
+			      	</div>
+		    	</div>
+			</div>
+		</div>
+
 		<div class="modal fade" id="create_poll_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
