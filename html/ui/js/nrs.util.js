@@ -500,7 +500,15 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.format = function(params, no_escaping) {
-		var amount = params.amount;
+		if (typeof params != "object") {
+			params = {
+				"amount": String(params),
+				"negative": false,
+				"afterComma": ""
+			};
+		}
+
+		var amount = String(params.amount);
 
 		var digits = amount.split("").reverse();
 		var formattedAmount = "";
