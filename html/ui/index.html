@@ -101,12 +101,12 @@
                         	</ul>
                         </li>
                         <li class="treeview" id="sidebar_dgs">
-                        	<a href="#" data-page="dgs"><i class="fa fa-shopping-cart"></i><span>Digital Goods</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+                        	<a href="#" data-page="dgs"><i class="fa fa-shopping-cart"></i><span>Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                                 <li><a href="#" data-page="dgs"><i class="fa fa-angle-double-right"></i> Digital Goods</a></li>
-                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Goods</a></li>
-                                <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> My Listings</a></li>
-                                <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> List Goods</a></li>
+                                 <li><a href="#" data-page="dgs"><i class="fa fa-angle-double-right"></i> Marketplace</a></li>
+                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Items</a></li>
+                                <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> My Items For Sale</a></li>
+                                <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> List Item For Sale</a></li>
                         	</ul>
                         </li>
                         <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span>Contacts</span></a></li>
@@ -244,14 +244,14 @@
 					           		<li><a href="#" data-type="2:3">Bid Order Placement</a></li>
 					           		<li><a href="#" data-type="2:4">Ask Order Cancellation</a></li>
 					           		<li><a href="#" data-type="2:5">Bid Order Cancellation</a></li>
-					           		<li><a href="#" data-type="3:0">Digital Goods Store Listing</a></li>
-					           		<li><a href="#" data-type="3:1">Digital Goods Store Delisting</a></li>
-					           		<li><a href="#" data-type="3:2">Digital Goods Store Price Change</a></li>
-					           		<li><a href="#" data-type="3:3">Digital Goods Store Quantity Change</a></li>
-					           		<li><a href="#" data-type="3:4">Digital Goods Store Purchase</a></li>
-					           		<li><a href="#" data-type="3:5">Digital Goods Store Delivery</a></li>
-					           		<li><a href="#" data-type="3:6">Digital Goods Store Feedback</a></li>
-					           		<li><a href="#" data-type="3:7">Digital Goods Store Refund</a></li>
+					           		<li><a href="#" data-type="3:0">Marketplace Listing</a></li>
+					           		<li><a href="#" data-type="3:1">Marketplace Removal</a></li>
+					           		<li><a href="#" data-type="3:2">Marketplace Price Change</a></li>
+					           		<li><a href="#" data-type="3:3">Marketplace Quantity Change</a></li>
+					           		<li><a href="#" data-type="3:4">Marketplace Purchase</a></li>
+					           		<li><a href="#" data-type="3:5">Marketplace Delivery</a></li>
+					           		<li><a href="#" data-type="3:6">Marketplace Feedback</a></li>
+					           		<li><a href="#" data-type="3:7">Marketplace Refund</a></li>
 					           		<li><a href="#" data-type="4:0">Balance Leasing</a></li>
 					           		<li><a href="#" data-type="unconfirmed">Unconfirmed Transactions</a></li>
 					          	</ul>
@@ -834,7 +834,7 @@
                 
                 <div id="my_dgs_listings_page" class="page">
                     <section class="content-header">
-                    	<h1>Digital Goods Store Listings</h1>
+                    	<h1>Marketplace Listings</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
 							<button id="add_dgs_listing_button" type="button" class="btn btn-default" data-toggle="modal" data-target="#dgs_listing_modal">Add Listing</button>
 						</div>
@@ -857,7 +857,7 @@
                 			    </tbody>
                 			</table>
                 			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                			<div class="data-empty-container"><p>No digital goods store listings yet, <a href="#" data-toggle="modal" data-target="#dgs_listing_modal">add one.</a></p></div>
+                			<div class="data-empty-container"><p>No marketplace listings yet, <a href="#" data-toggle="modal" data-target="#dgs_listing_modal">add one.</a></p></div>
                 		</div>
                     </section>
                 </div>
@@ -1933,14 +1933,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Digital Goods Listing</h4>
+		        		<h4 class="modal-title">Marketplace Listing</h4>
 		      		</div>
 			      	<div class="modal-body">			
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="dgs_listing_name">NAME <i class="fa fa-question-circle show_popover" data-content="The name is non-unique. Should be between 3 and 10 characters long." data-container="body" style="color:#4CAA6E" ></i></label>
-								<input type="text" class="form-control" name="name" id="dgs_listing_name" placeholder="Digital Goods Name" autofocus tabindex="1" />
+								<input type="text" class="form-control" name="name" id="dgs_listing_name" placeholder="Item Name" autofocus tabindex="1" />
 							</div>
 							<div class="form-group">
 								<label for="dgs_listing_description">DESCRIPTION</label>
@@ -1986,10 +1986,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
 						<input type="hidden" name="request_type" value="dgsListing" />
-						<input type="hidden" name="success_message" value="The digital goods listing has been created and will be available soon." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Digital good may or may not be created." />
+						<input type="hidden" name="success_message" value="The marketplace listing has been created and will be available soon." />
+						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace listing may or may not be created." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Create Listing</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Put For Sale</button>
 				    </div>
 				</div>
 			</div>
@@ -2000,7 +2000,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Confirm Digital Goods Delisting</h4>
+		        		<h4 class="modal-title">Confirm Marketplace Removal</h4>
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
@@ -2029,9 +2029,9 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 			      		<input type="hidden" name="request_type" value="dgsDelisting" />
-			      		<input type="hidden" name="success_message" value="The digital good has been delisted successfully." />
-				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delist</button>
-				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Delist My Good</button>
+			      		<input type="hidden" name="success_message" value="The item has been removed from the marketplace successfully." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Remove</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Remove My Item</button>
 			      	</div>
 		    	</div>
 			</div>
@@ -2042,10 +2042,11 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Digital Goods Price Change</h4>
+		        		<h4 class="modal-title">Marketplace Item Price Change</h4>
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
 							<input type="hidden" name="goods" id="dgs_price_change_goods" value="" />
 							<div class="row">
 								<div id="dgs_price_change_info"></div>
@@ -2086,7 +2087,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 			      		<input type="hidden" name="request_type" value="dgsPriceChange" />
-			      		<input type="hidden" name="success_message" value="The digital good price has been changed successfully." />
+			      		<input type="hidden" name="success_message" value="The marketplace item's price has been changed successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Price</button>
 			      	</div>
@@ -2099,10 +2100,11 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Digital Goods Quantity Change</h4>
+		        		<h4 class="modal-title">Marketplace Item Quantity Change</h4>
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
 							<input type="hidden" name="goods" id="dgs_quantity_change_goods" value="" />
 							<div class="row">
 								<div id="dgs_quantity_change_info"></div>
@@ -2143,11 +2145,109 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 			      		<input type="hidden" name="request_type" value="dgsQuantityChange" />
-			      		<input type="hidden" name="success_message" value="The digital good quantity has been changed successfully." />
+			      		<input type="hidden" name="success_message" value="The marketplace item's quantity has been changed successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
 			      	</div>
 		    	</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_refund_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Marketplace Purchase Refund</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<input type="hidden" name="purchase" id="dgs_refund_purchase" value="" />
+							<div class="form-group">
+								<label for="dgs_refund_note">NOTE</label>
+								<textarea class="form-control" id="dgs_refund_note" name="note" rows="3" tabindex="2"></textarea>
+							</div>
+							<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="form-group">
+									<label for="dgs_refund_refund">REFUND</label>
+					                <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_refund_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_refund_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_refund_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_refund_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<input type="hidden" name="request_type" value="dgsRefund" />
+						<input type="hidden" name="success_message" value="The marketplace purchase has been refunded." />
+						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be refunded." />
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Refund Purchase</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_feedback_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Marketplace Purchase Feedback</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<input type="hidden" name="purchase" id="dgs_feedback_purchase" value="" />
+							<div class="form-group">
+								<label for="dgs_feedback_note">NOTE</label>
+								<textarea class="form-control" id="dgs_feedback_note" name="note" rows="3" tabindex="2"></textarea>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_feedback_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_feedback_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_feedback_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_feedback_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_feedback_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_feedback_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<input type="hidden" name="request_type" value="dgsFeedback" />
+						<input type="hidden" name="success_message" value="The marketplace purchase feedback has been submitted." />
+						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase feedback may or may not be submitted." />
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Submit Feedback</button>
+				    </div>
+				</div>
 			</div>
 		</div>
 

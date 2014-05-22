@@ -181,28 +181,28 @@ var NRS = (function(NRS, $, undefined) {
 								} else if (transaction.type == 3) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Digital Goods Listing";
+											transactionType = "Marketplace Listing";
 											break;
 										case 1:
-											transactionType = "Digital Goods Delisting";
+											transactionType = "Marketplace Removal";
 											break;
 										case 2:
-											transactionType = "Digtal Goods Price Change";
+											transactionType = "Marketplace Price Change";
 											break;
 										case 3:
-											transactionType = "Digital Goods Quantity Change";
+											transactionType = "Marketplace Quantity Change";
 											break;
 										case 4:
-											transactionType = "Digital Goods Purchase";
+											transactionType = "Marketplace Purchase";
 											break;
 										case 5:
-											transactionType = "Digital Goods Delivery";
+											transactionType = "Marketplace Delivery";
 											break;
 										case 6:
-											transactionType = "Digital Goods Feedback";
+											transactionType = "Marketplace Feedback";
 											break;
 										case 7:
-											transactionType = "Digital Goods Refund";
+											transactionType = "Marketplace Refund";
 											break;
 									}
 								} else if (transaction.type == 4) {
