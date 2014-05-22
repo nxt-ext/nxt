@@ -88,8 +88,8 @@ var NRS = (function(NRS, $, undefined) {
 
 			$table.prepend(rowToAdd);
 
-			if ($("#polls_table").parent().hasClass("data-empty")) {
-				$("#polls_table").parent().removeClass("data-empty");
+			if ($("#my_dgs_listings_table").parent().hasClass("data-empty")) {
+				$("#my_dgs_listings_table").parent().removeClass("data-empty");
 			}
 		}
 	}
