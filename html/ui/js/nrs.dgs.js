@@ -21,7 +21,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
+				rows += "<tr class='tentative'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-id='" + String(unconfirmedTransaction.id).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td>" + String(unconfirmedTransaction.tags).escapeHTML() + "</td><td>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-id='" + String(unconfirmedTransaction.id).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-id='" + String(unconfirmedTransaction.id).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-id='" + String(unconfirmedTransaction.id).escapeHTML() + "'>Delete</a></td></tr>";
 			}
 		}
 
@@ -51,7 +51,7 @@ var NRS = (function(NRS, $, undefined) {
 							for (var i = 0; i < nr_transactions; i++) {
 								var transaction = transactions[transactionIds[i]];
 
-								rows += NRS.getTransactionRowHTML(transaction);
+								rows += "<tr><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-id='" + String(transaction.id).escapeHTML() + "'>" + String(transaction.name).escapeHTML() + "</a></td><td>" + String(transaction.tags).escapeHTML() + "</td><td>" + NRS.format(transaction.quantity) + "</td><td>" + NRS.formatAmount(transaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-id='" + String(transaction.id).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-id='" + String(transaction.id).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-id='" + String(transaction.id).escapeHTML() + "'>Delete</a></td></tr>";
 							}
 
 							$("#my_dgs_listings_table tbody").empty().append(rows);
