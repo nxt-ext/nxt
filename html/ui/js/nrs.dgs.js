@@ -76,5 +76,23 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.forms.dgsListingComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		if (NRS.currentPage == "my_dgs_listings") {
+			var $table = $("#my_dgs_listings_table tbody");
+
+			var rowToAdd = "<tr class='tentative'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-id='" + String(data.id).escapeHTML() + "'>" + String(data.name).escapeHTML() + "</a></td><td>" + String(data.tags).escapeHTML() + "</td><td>" + NRS.format(data.quantity) + "</td><td>" + NRS.formatAmount(data.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-id='" + String(data.id).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-id='" + String(data.id).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-id='" + String(data.id).escapeHTML() + "'>Delete</a></td></tr>";
+
+			$table.prepend(rowToAdd);
+
+			if ($("#polls_table").parent().hasClass("data-empty")) {
+				$("#polls_table").parent().removeClass("data-empty");
+			}
+		}
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
