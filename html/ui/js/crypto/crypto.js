@@ -78,6 +78,69 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		return value;
 	}
 
+	/**
+	 * Encrypt a message given a private key and a public key.
+	 * @param1: plaintext         Array of bytes: message that needs to be encrypted
+	 * @param2: myPrivateKey      Array of bytes: private key of the sender of the message
+	 * @param3: theirPublicKey    Array of bytes: public key of the receiver of the message
+	 *
+	 * @return:                   Array of bytes:
+	 *                               First 16 bytes is the initialization vector.
+	 *                               Rest is the encrypted text.
+	 */
+	function aesEncrypt(plaintext, myPrivateKey, theirPublicKey) {
+		// CryptoJS likes WordArray parameters
+		var text = converters.byteArrayToWordArray(plaintext);
+		var sharedKey = crypto.getSharedKey(myPrivateKey, theirPublicKey);
+		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+		var tmp = new Uint8Array(16);
+		window.crypto.getRandomValues(tmp);
+		var iv = converters.byteArrayToWordArray(tmp);
+		var encrypted = CryptoJS.AES.encrypt(text, key, {
+			iv: iv
+		});
+		var ivOut = wordArrayToByteArray(encrypted.iv);
+		var ciphertextOut = wordArrayToByteArray(encrypted.ciphertext);
+
+		return ivOut.concat(ciphertextOut);
+	}
+
+	/**
+	 * Decrypt a message given a private key and a public key.
+	 * @param1: ivCiphertext      Array of bytes:
+	 *                               First 16 bytes is the initialization vector.
+	 *                               Rest is the encrypted text.
+	 * @param2: myPrivateKey      Array of bytes: private key of the sender of the message
+	 * @param3: theirPublicKey    Array of bytes: public key of the receiver of the message
+	 *
+	 * @return:                   Array of bytes: decrypted text.
+	 */
+	function aesDecrypt(ivCiphertext, myPrivateKey, theirPublicKey) {
+		if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
+			throw {
+				name: "invalid ciphertext"
+			};
+		}
+		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
+		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
+		var sharedKey = crypto.getSharedKey(myPrivateKey, theirPublicKey);
+		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+		var encrypted = CryptoJS.lib.CipherParams.create({
+			ciphertext: ciphertext,
+			iv: iv,
+			key: key
+		});
+		var decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+			iv: iv
+		});
+		var plaintext = wordArrayToByteArray(decrypted);
+
+		return plaintext;
+	}
+
+	function getSharedKey(key1, key2) {
+		return converters.shortArrayToByteArray(curve25519(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
+	}
 
 	function sign(message, secretPhrase) {
 		var messageBytes = converters.hexStringToByteArray(message);
@@ -126,6 +189,8 @@ var nxtCrypto = function(curve25519, hash, converters) {
 	return {
 		getPublicKey: getPublicKey,
 		getPrivateKey: getPrivateKey,
+		aesEncrypt: aesEncrypt,
+		aesDecrypt: aesDecrypt,
 		getAccountId: getAccountId,
 		sign: sign,
 		verify: verify
