@@ -67,13 +67,72 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 			} else {
-
 				$("#my_dgs_listings_table tbody").empty().append(rows);
 				NRS.dataLoadFinished($("#my_dgs_listings_table"));
 
 				NRS.pageLoaded();
 			}
 		});
+	}
+
+	NRS.forms.dgsListing = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		if (!data.description) {
+			return {
+				"error": "Description is a required field."
+			};
+		}
+
+		$.each(data, function(key, value) {
+			data[key] = $.trim(value);
+		});
+
+		if (!data.description) {
+			return {
+				"error": "Description is a required field."
+			};
+		}
+
+		if (data.tags) {
+			data.tags = data.tags.toLowerCase();
+
+			var tags = data.tags.split(",");
+
+			if (tags.length > 3) {
+				return {
+					"error": "A maximum of 3 tags is allowed."
+				};
+			} else {
+				var clean_tags = [];
+
+				for (var i = 0; i < tags.length; i++) {
+					var tag = $.trim(tags[i]);
+
+					if (tag.length < 3 || tag.length > 20) {
+						return {
+							"error": "Incorrect \"tag\" (length must be in [3..20] range)"
+						};
+					} else if (!tag.match(/^[a-z]+$/i)) {
+						return {
+							"error": "Incorrect \"tag\" (must contain only alphabetic characters)"
+						};
+					} else if (clean_tags.indexOf(tag) > -1) {
+						return {
+							"error": "The same tag was inserted multiple times."
+						};
+					} else {
+						clean_tags.push(tag);
+					}
+				}
+
+				data.tags = clean_tags;
+			}
+		}
+
+		return {
+			"data": data
+		};
 	}
 
 	NRS.forms.dgsListingComplete = function(response, data) {
