@@ -126,7 +126,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				data.tags = clean_tags;
+				data.tags = clean_tags.join(",")
 			}
 		}
 
@@ -152,6 +152,31 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 	}
+
+	$("#dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal").on("bs.show.modal", function() {
+		var $invoker = $(e.relatedTarget);
+
+		var goodId = $invoker.data("id");
+
+		$invoker.find("input[name=goods]").val(goodId);
+
+		NRS.sendRequest("getTransaction", {
+			"transaction": goodId
+		}, function(response) {
+			if (response.errorCode) {
+				NRS.closeModal();
+				$.growl("Error fetching good info.", {
+					"type": "danger"
+				});
+			} else {
+				var output = "<h3>" + String(response.attachment.name).escapeHTML() + "</h3><strong>Price</strong>: " + NRS.formatAmount(response.attachment.priceNQT) + " NXT<br /><strong>Quantity</strong>: " + NRS.format(response.attachment.quantity);
+			}
+			$invoker.find(".good_info").html(output);
+		});
+	}).on("hidden.bs.modal", function() {
+		var output = "Loading...";
+		$invoker.find(".good_info").html(output);
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));

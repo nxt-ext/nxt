@@ -3335,3 +3335,14 @@ hr {
 #asset_exchange_page.no_assets .content-splitter-right {
   left: 0 !important;
 }
+
+.good_info {
+  padding:5px;
+  border:1px solid black;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  background:#efefef;
+  color:black;
+  margin:5px;
+}
