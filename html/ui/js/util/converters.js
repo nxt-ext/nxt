@@ -120,6 +120,37 @@ var converters = function() {
 
 			return wordArray;
 		},
+		// assumes wordArray is Big-Endian
+		wordArrayToByteArray: function(wordArray) {
+			var len = wordArray.words.length;
+			if (len == 0) {
+				return new Array(0);
+			}
+			var byteArray = new Array(wordArray.sigBytes);
+			var offset = 0,
+				word, i;
+			for (i = 0; i < len - 1; i++) {
+				word = wordArray.words[i];
+				byteArray[offset++] = word >> 24;
+				byteArray[offset++] = (word >> 16) & 0xff;
+				byteArray[offset++] = (word >> 8) & 0xff;
+				byteArray[offset++] = word & 0xff;
+			}
+			word = wordArray.words[len - 1];
+			byteArray[offset++] = word >> 24;
+			if (wordArray.sigBytes % 4 == 0) {
+				byteArray[offset++] = (word >> 16) & 0xff;
+				byteArray[offset++] = (word >> 8) & 0xff;
+				byteArray[offset++] = word & 0xff;
+			}
+			if (wordArray.sigBytes % 4 > 1) {
+				byteArray[offset++] = (word >> 16) & 0xff;
+			}
+			if (wordArray.sigBytes % 4 > 2) {
+				byteArray[offset++] = (word >> 8) & 0xff;
+			}
+			return byteArray;
+		},
 		byteArrayToString: function(bytes, opt_startIndex, length) {
 			if (length == 0) {
 				return "";

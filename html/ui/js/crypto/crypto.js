@@ -5,7 +5,6 @@ var hash = {
 };
 
 var nxtCrypto = function(curve25519, hash, converters) {
-
 	function simpleHash(message) {
 		hash.init();
 		hash.update(message);
@@ -24,11 +23,24 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		return true;
 	}
 
-	//adjusted by wesley
-	function getPublicKey(secretPhrase) {
-		var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
-		var digest = simpleHash(secretPhraseBytes);
-		return converters.byteArrayToHexString(curve25519.keygen(digest).p);
+	function getPublicKey(secretPhrase, isAccountNumber) {
+		if (isAccountNumber) {
+			var accountNumber = secretPhrase;
+			//synchronous!
+			NRS.sendRequest("getAccountPublicKey", {
+				"account": accountNumber
+			}, function(response) {
+				if (!response.publicKey) {
+					throw new Exception("Account does not have a public key.");
+				} else {
+					return response.publicKey;
+				}
+			}, false);
+		} else {
+			var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
+			var digest = simpleHash(secretPhraseBytes);
+			return converters.byteArrayToHexString(curve25519.keygen(digest).p);
+		}
 	}
 
 	function getPrivateKey(secretPhrase) {
@@ -78,20 +90,75 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		return value;
 	}
 
+	function encryptData(plaintext, myPrivateKey, theirPublicKey) {
+		try {
+			var compressedPlaintext = pako.deflate(new Uint8Array(converters.stringToByteArray(plaintext)));
+
+			var nonce = new Uint8Array(32);
+			window.crypto.getRandomValues(nonce);
+
+			var data = nxtCrypto.aesEncrypt(compressedPlainText, myPrivateKey, theirPublicKey, nonce);
+
+			return {
+				"nonce": nonce,
+				"data": data
+			};
+		} catch (e) {
+			//
+		}
+	}
+
+	//var myPrivateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(myPassword));
+	//var theirPublicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(theirAccount, true));
+
+	function decryptData(data, nonce, myPrivateKey, theirPublicKey) {
+		try {
+
+			var compressedPlaintext = nxtCrypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
+
+			var binData = new Uint8Array(compressedPlaintext);
+
+			var data = pako.inflate(binData);
+
+			return data;
+
+			/*
+			// Decode base64 (convert ascii to binary)
+			var strData = atob(compressedPlaintext);
+
+			// Convert binary string to character-number array
+			var charData = strData.split('').map(function(x) {
+				return x.charCodeAt(0);
+			});
+
+			// Convert gunzipped byteArray back to ascii string:
+			var strData = String.fromCharCode.apply(null, new Uint16Array(data));
+
+			return strData;
+			*/
+		} catch (e) {
+			//..
+		}
+	}
+
 	/**
 	 * Encrypt a message given a private key and a public key.
 	 * @param1: plaintext         Array of bytes: message that needs to be encrypted
 	 * @param2: myPrivateKey      Array of bytes: private key of the sender of the message
 	 * @param3: theirPublicKey    Array of bytes: public key of the receiver of the message
+	 * @param4: nonce             Array of bytes: the nonce
 	 *
 	 * @return:                   Array of bytes:
 	 *                               First 16 bytes is the initialization vector.
 	 *                               Rest is the encrypted text.
 	 */
-	function aesEncrypt(plaintext, myPrivateKey, theirPublicKey) {
+	function aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce) {
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
 		var sharedKey = crypto.getSharedKey(myPrivateKey, theirPublicKey);
+		for (var i = 0; i < 32; i++) {
+        	sharedKey[i] ^= nonce[i];
+    	}
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 		var tmp = new Uint8Array(16);
 		window.crypto.getRandomValues(tmp);
@@ -99,23 +166,24 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
 			iv: iv
 		});
-		var ivOut = wordArrayToByteArray(encrypted.iv);
-		var ciphertextOut = wordArrayToByteArray(encrypted.ciphertext);
+		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
+		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
 
 		return ivOut.concat(ciphertextOut);
 	}
 
 	/**
 	 * Decrypt a message given a private key and a public key.
-	 * @param1: ivCiphertext      Array of bytes:
+	 * @param1: ivCiphertext      Array of bytes: 
 	 *                               First 16 bytes is the initialization vector.
 	 *                               Rest is the encrypted text.
 	 * @param2: myPrivateKey      Array of bytes: private key of the sender of the message
 	 * @param3: theirPublicKey    Array of bytes: public key of the receiver of the message
-	 *
+	 * @param4: nonce             Array of bytes: the nonce
+	 * 
 	 * @return:                   Array of bytes: decrypted text.
 	 */
-	function aesDecrypt(ivCiphertext, myPrivateKey, theirPublicKey) {
+	function aesDecrypt(ivCiphertext, myPrivateKey, theirPublicKey, nonce) {
 		if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
 			throw {
 				name: "invalid ciphertext"
@@ -124,6 +192,9 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
 		var sharedKey = crypto.getSharedKey(myPrivateKey, theirPublicKey);
+		for (var i = 0; i < 32; i++) {
+        	sharedKey[i] ^= nonce[i];
+    	}
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 		var encrypted = CryptoJS.lib.CipherParams.create({
 			ciphertext: ciphertext,
@@ -133,7 +204,7 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		var decrypted = CryptoJS.AES.decrypt(encrypted, key, {
 			iv: iv
 		});
-		var plaintext = wordArrayToByteArray(decrypted);
+		var plaintext = converters.wordArrayToByteArray(decrypted);
 
 		return plaintext;
 	}
@@ -189,8 +260,8 @@ var nxtCrypto = function(curve25519, hash, converters) {
 	return {
 		getPublicKey: getPublicKey,
 		getPrivateKey: getPrivateKey,
-		aesEncrypt: aesEncrypt,
-		aesDecrypt: aesDecrypt,
+		encryptData: encryptData,
+		decryptData: decryptData,
 		getAccountId: getAccountId,
 		sign: sign,
 		verify: verify
