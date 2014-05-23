@@ -7,6 +7,7 @@ import nxt.util.Listeners;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -272,7 +273,7 @@ public final class DigitalGoodsStore {
 
     }
 
-    private static final ConcurrentMap<Long, Goods> goodsMap = new ConcurrentHashMap<>();
+    private static final Map<Long, Goods> goodsMap = Collections.synchronizedMap(new LinkedHashMap<Long, Goods>());
     private static final ConcurrentMap<Long, Purchase> purchasesMap = new ConcurrentHashMap<>();
     private static final Collection<Goods> allGoods = Collections.unmodifiableCollection(goodsMap.values());
     private static final Collection<Purchase> allPurchases = Collections.unmodifiableCollection(purchasesMap.values());
