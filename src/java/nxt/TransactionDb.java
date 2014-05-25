@@ -133,8 +133,8 @@ final class TransactionDb {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
-                        + "block_timestamp, full_hash) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "block_timestamp, full_hash, cluster_defining_block_height, cluster_defining_block_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -161,6 +161,8 @@ final class TransactionDb {
                     }
                     pstmt.setInt(++i, transaction.getBlockTimestamp());
                     pstmt.setBytes(++i, Convert.parseHexString(transaction.getFullHash()));
+                    pstmt.setInt(++i, transaction.getClusterDefiningBlockHeight());
+                    pstmt.setLong(++i, transaction.getClusterDefiningBlockId());
                     pstmt.executeUpdate();
                 }
             }
