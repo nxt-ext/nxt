@@ -350,6 +350,108 @@ var NRS = (function(NRS, $, undefined) {
 					incorrect = true;
 					break;
 			}
+		} else if (transaction.type == 3) {
+			switch (transaction.subtype) {
+				case 0:
+					var data = {
+						"Type": "Marketplace Listing",
+						"Name": transaction.attachment.name,
+						"Description": transaction.attachment.description,
+						"Price": transaction.attachment.priceNQT,
+						"quantityFormattedHTML": NRS.format(transaction.attachment.quantity),
+						"Seller": NRS.getAccountFormatted(transaction, "sender")
+					};
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				case 1:
+					async = true;
+
+					NRS.sendRequest("getDGSGood", {
+						"goods": transaction.attachment.goods
+					}, function(goods) {
+						var data = {
+							"Type": "Marketplace Removal",
+							"Item Name": goods.name,
+							"Seller": NRS.getAccountFormatted(goods, "seller")
+						};
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
+					break;
+				case 2:
+					async = true;
+
+					NRS.sendRequest("getDGSGood", {
+						"goods": transaction.attachment.goods
+					}, function(goods) {
+						var data = {
+							"Type": "Marketplace Price Change",
+							"Item Name": goods.name,
+							"New PriceFormattedHTML": NRS.formatAmount(transaction.attachment.priceNQT) + " NXT",
+							"Seller": NRS.getAccountFormatted(goods, "seller")
+						};
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
+					break;
+				case 3:
+					async = true;
+
+					NRS.sendRequest("getDGSGood", {
+						"goods": transaction.attachment.goods
+					}, function(goods) {
+						var data = {
+							"Type": "Marketplace Quantity Change",
+							"Item Name": goods.name,
+							"Delta Quantity": transaction.attachment.deltaQuantity,
+							"Seller": NRS.getAccountFormatted(goods, "seller")
+						};
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
+					break;
+				case 4:
+					var data = {
+						"Type": "Marketplace Purchase"
+					};
+					break;
+				case 5:
+					var data = {
+						"Type": "Marketplace Delivery"
+					};
+					break;
+				case 6:
+					var data = {
+						"Type": "Marketplace Feedback"
+					};
+					break;
+				case 7:
+					var data = {
+						"Type": "Marketplace Refund"
+					};
+					break;
+				default:
+					incorrect = true;
+					break
+			}
 		} else if (transaction.type == 4) {
 			switch (transaction.subtype) {
 				case 0:
