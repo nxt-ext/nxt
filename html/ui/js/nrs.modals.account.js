@@ -181,28 +181,28 @@ var NRS = (function(NRS, $, undefined) {
 								} else if (transaction.type == 3) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Marketplace Listing";
+											transactionType = "Market Listing";
 											break;
 										case 1:
-											transactionType = "Marketplace Removal";
+											transactionType = "Market Removal";
 											break;
 										case 2:
-											transactionType = "Marketplace Price Change";
+											transactionType = "Market Price Change";
 											break;
 										case 3:
-											transactionType = "Marketplace Quantity Change";
+											transactionType = "Market QTY Change";
 											break;
 										case 4:
-											transactionType = "Marketplace Purchase";
+											transactionType = "Market Purchase";
 											break;
 										case 5:
-											transactionType = "Marketplace Delivery";
+											transactionType = "Market Delivery";
 											break;
 										case 6:
-											transactionType = "Marketplace Feedback";
+											transactionType = "Market Feedback";
 											break;
 										case 7:
-											transactionType = "Marketplace Refund";
+											transactionType = "Market Refund";
 											break;
 									}
 								} else if (transaction.type == 4) {
