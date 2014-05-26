@@ -2536,7 +2536,7 @@ background:#33363f
   }
 
   body.reed_solomon .modal-dialog-wide, .modal-dialog-wider {
-    width: 800px;
+    width: 840px;
   }
 }
 
@@ -3336,7 +3336,7 @@ hr {
   left: 0 !important;
 }
 
-.good_info {
+.goods_info {
   padding:5px;
   border:1px solid black;
   -webkit-border-radius: 5px;
@@ -3345,4 +3345,12 @@ hr {
   background:#efefef;
   color:black;
   margin:5px;
+  margin-bottom:15px;
+}
+
+.goods_info h3 {
+  margin-bottom:5px;
+  margin-top:0px;
+  font-size:16px;
+  font-weight:bold;
 }
