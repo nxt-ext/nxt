@@ -3354,3 +3354,22 @@ hr {
   font-size:16px;
   font-weight:bold;
 }
+
+#dgs_page_contents h3 {
+  margin-top:0;
+  margin-bottom:5px;
+  font-size:20px;
+  font-weight:bold;
+}
+
+#dgs_page_contents span.tags {
+  color:#999999;
+}
+
+#dgs_page_contents .price, #dgs_page_contents .description {
+  margin-bottom:5px;
+}
+
+#dgs_page_contents hr {
+  border-top:1px solid #ddd;
+}

@@ -1,35 +1,75 @@
 var NRS = (function(NRS, $, undefined) {
-	NRS.pages.dgs = function() {
+	NRS.pages.newest_dgs = function() {
 		NRS.pageLoading();
 
-		NRS.sendRequest("getDGSGoods", {
+		var content = "";
+
+		NRS.sendRequest("getDGSGoods+", {
 			"firstIndex": 0,
 			"lastIndex": 100
 		}, function(response) {
-			if (response.errorCode) {
+			if (response.goods && response.goods.length) {
+				for (var i = 0; i < response.goods.length; i++) {
+					var good = response.goods[i];
 
+					content += NRS.getMarketplaceItemHTML(good);
+				}
+
+				$("#dgs_page_contents").empty().append(content);
+				NRS.dataLoadFinished($("#dgs_page_contents"));
+
+				NRS.pageLoaded();
 			} else {
+				$("#dgs_page_contents").empty();
+				NRS.dataLoadFinished($("#dgs_page_contents"));
 
+				NRS.pageLoaded();
 			}
 		});
+	}
+
+	NRS.getMarketplaceItemHTML = function(good) {
+		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+			"<strong>Account</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + NRS.getAccountTitle(good, "seller") + "</a></span><br>" +
+			"<strong>Marketplace Id</strong>: &nbsp;<a href='#''>" + String(good.goods).escapeHTML() + "</a>" +
+			"</div>" +
+			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
+			"<span class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></span>" +
+			"<div class='description'>" + String(good.description).escapeHTML().nl2br() + "</div>" +
+			"<span class='tags'><strong>Tags</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
 	}
 
 	NRS.pages.purchased_dgs = function() {
 		NRS.pageLoading();
 
+		var goods = {};
+
 		NRS.sendRequest("getDGSPurchases", {
 			"buyer": NRS.account,
 			"timestamp": 0
 		}, function(response) {
-			if (response.errorCode) {
+			if (response.purchases && response.purchases.length) {
+				var nr_goods = 0;
 
+				for (var i = 0; i < response.purchases.length; i++) {
+					NRS.sendRequest("getDGSGood", {
+						"goods": response.purchases[i].goods
+					}, function(good) {
+						goods[good.goods] = good;
+						nr_goods++;
+
+						if (nr_goods == response.purchases.length) {
+							NRS.pageLoaded();
+						}
+					});
+				}
 			} else {
-
+				NRS.pageLoaded();
 			}
 		});
 	}
 
-	NRS.pages.pending_purchases = function() {
+	NRS.pages.pending_purchases_dgs = function() {
 		NRS.pageLoading();
 
 		NRS.sendRequest("getDGSPendingPurchases", {
@@ -56,11 +96,11 @@ var NRS = (function(NRS, $, undefined) {
 					continue;
 				}
 
-				rows += "<tr class='tentative' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td>" + String(unconfirmedTransaction.tags).escapeHTML() + "</td><td class='quantity'>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td class='price'>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Delete</a></td></tr>";
+				rows += "<tr class='tentative' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td class='price'>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Delete</a></td></tr>";
 			}
 		}
 
-		NRS.sendRequest("getDGSGoods", {
+		NRS.sendRequest("getDGSGoods+", {
 			"seller": NRS.account,
 			"firstIndex": 0,
 			"lastIndex": 0
@@ -92,7 +132,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					rows += "<tr class='" + (tentative ? "tentative" : "") + (deleted ? " tentative-crossed" : "") + "' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td>" + String(good.tags).escapeHTML() + "</td><td class='quantity'>" + (quantityFormatted ? good.quantity : NRS.format(good.quantity)) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Delete</a></td></tr>";
+					rows += "<tr class='" + (tentative ? "tentative" : "") + (deleted ? " tentative-crossed" : "") + "' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + (quantityFormatted ? good.quantity : NRS.format(good.quantity)) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Delete</a></td></tr>";
 				}
 
 				$("#my_dgs_listings_table tbody").empty().append(rows);
@@ -100,7 +140,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				NRS.pageLoaded();
 			} else {
-				$("#my_dgs_listings_table tbody").empty().append(rows);
+				$("#my_dgs_listings_table tbody").empty();
 				NRS.dataLoadFinished($("#my_dgs_listings_table"));
 
 				NRS.pageLoaded();
@@ -273,6 +313,16 @@ var NRS = (function(NRS, $, undefined) {
 		};
 	}*/
 
+	NRS.forms.dgsPurchase = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		data.deliveryDeadlineTimestamp = Math.floor(new Date().getTime() / 1000) + 60 * 60 * data.deliveryDeadlineTimestamp;
+
+		return {
+			"data": data
+		};
+	}
+
 	NRS.forms.dgsQuantityChange = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
@@ -325,16 +375,18 @@ var NRS = (function(NRS, $, undefined) {
 		$("#my_dgs_listings_table tr[data-goods=" + String(data.goods).escapeHTML() + "]").addClass("tentative").find(".price").html(NRS.formatAmount(data.priceNQT) + " NXT");
 	}
 
-	$("#dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal").on("show.bs.modal", function(e) {
+	$("#dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 
-		var goodId = $invoker.data("goods");
+		var type = $modal.attr("id");
 
-		$modal.find("input[name=goods]").val(goodId);
+		var goods = $invoker.data("goods");
+
+		$modal.find("input[name=goods]").val(goods);
 
 		NRS.sendRequest("getDGSGood", {
-			"goods": goodId
+			"goods": goods
 		}, function(response) {
 			if (response.errorCode) {
 				e.preventDefault();
@@ -343,16 +395,19 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			} else {
 				var output = "<strong>Item Name</strong>: " + String(response.name).escapeHTML();
+				if (type == "dgs_purchase_modal") {
+					output += "<br /><div style='max-height:250px;overflow:auto;'>" + String(response.description).escapeHTML().nl2br() + "</div>";
+				}
 			}
 
 			$modal.find(".goods_info").html(output);
-
-			var type = $modal.attr("id");
 
 			if (type == "dgs_quantity_change_modal") {
 				$("#dgs_quantity_change_current_quantity, #dgs_quantity_change_quantity").val(String(response.quantity).escapeHTML());
 			} else if (type == "dgs_price_change_modal") {
 				$("#dgs_price_change_current_price, #dgs_price_change_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
+			} else if (type == "dgs_purchase_modal") {
+				$("#dgs_purchase_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
 			}
 		}, false);
 	}).on("hidden.bs.modal", function(e) {

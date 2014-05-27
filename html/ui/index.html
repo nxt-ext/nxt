@@ -104,9 +104,12 @@
                         	<a href="#" data-page="dgs"><i class="fa fa-shopping-cart"></i><span>Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="dgs"><i class="fa fa-angle-double-right"></i> Marketplace</a></li>
-                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Items</a></li>
-                                <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> My Items For Sale</a></li>
-                                <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> List Item For Sale</a></li>
+                            	 <li><a href="#" data-page="newest_dgs"><i class="fa fa-angle-double-right"></i> Newest Products</a></li>
+                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Products
+                            	</a></li>
+                                <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> My Products For Sale</a></li>
+                                <li><a href="#" data-page="pending_purchases_dgs"><i class="fa fa-angle-double-right"></i> My Pending Orders</a></li>
+                                <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> List Product For Sale</a></li>
                         	</ul>
                         </li>
                         <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span>Contacts</span></a></li>
@@ -832,11 +835,87 @@
 					</section>
                 </div>
                 
+                <div id="dgs_page" class="page">
+                    <section class="content-header">
+                    	<h1>Marketplace</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+                    </section>
+
+                    <section class="content">
+                  		<div class="data-container">
+                  			<p>Description of the decentralized marketplace goes here.</p>
+                  		</div>
+                  	</section>
+                </div>
+
+                <div id="newest_dgs_page" class="page">
+                    <section class="content-header">
+                    	<h1>Newest Products</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+                    </section>
+                	
+                    <section class="content">
+                  		<div class="data-container data-loading">
+                  			<div id="dgs_page_contents">
+
+                  			</div>
+                  		</div>
+                  	</section>
+                </div>
+
+                <div id="purchased_dgs_page" class="page">
+                    <section class="content-header">
+                    	<h1>Purchased Products</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+                    </section>
+                	
+                    <section class="content">
+                  		<div class="data-container data-loading">
+
+                  		</div>
+                  	</section>
+                </div>
+
                 <div id="my_dgs_listings_page" class="page">
                     <section class="content-header">
-                    	<h1>Marketplace Listings</h1>
+                    	<h1>My Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<button id="add_dgs_listing_button" type="button" class="btn btn-default" data-toggle="modal" data-target="#dgs_listing_modal">Add Listing</button>
+							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+							<button id="add_dgs_listing_button" type="button" class="btn btn-default" data-toggle="modal" data-target="#dgs_listing_modal">List Product For Sale</button>
 						</div>
                     </section>
                 	
@@ -846,7 +925,6 @@
                 				<thead>
                 			    <tr>
                 			        <th>Name</th>
-                			        <th>Tags</th>
                 			        <th>Quantity</th>
                 			        <th>Price</th>
                 			        <th style="width:10%">Actions</th>
@@ -861,7 +939,29 @@
                 		</div>
                     </section>
                 </div>
-          
+
+                <div id="pending_purchases_dgs_page" class="page">
+                    <section class="content-header">
+                    	<h1>My Pending Orders</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+                    </section>
+                	
+                    <section class="content">
+                  		<div class="data-container data-loading">
+
+                  		</div>
+                  	</section>
+                </div>
+
                 <div id="settings_page" class="page">
 					<section class="content-header"><h1>Settings</h1></section>
 					<section class="content" id="settings_box">
@@ -1933,7 +2033,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Marketplace Listing</h4>
+		        		<h4 class="modal-title">List Product For Sale</h4>
 		      		</div>
 			      	<div class="modal-body">			
 						<form role="form">
@@ -1944,7 +2044,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group">
 								<label for="dgs_listing_description">DESCRIPTION</label>
-								<textarea class="form-control" id="dgs_listing_description" name="description" rows="3" tabindex="2"></textarea>
+								<textarea class="form-control" id="dgs_listing_description" name="description" rows="3" tabindex="2" placeholder="Enter a description"></textarea>
 							</div>
 							<div class="form-group">
 								<label for="dgs_listing_tags">TAGS <i class="fa fa-question-circle show_popover" data-content="Choose up to 3 tags, separate them with comma's." data-container="body" style="color:#4CAA6E" ></i></label>
@@ -1953,14 +2053,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
-										<label for="dgs_listing_quantity">QUANTITY</label>
-						                <input type="number" name="quantity" id="dgs_listing_quantity" class="form-control" min="1" placeholder="Quantity" tabindex="4">
+										<label for="dgs_listing_price">PRICE</label>
+						                <input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="5">
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
-										<label for="dgs_listing_price">PRICE</label>
-						                <input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="5">
+										<label for="dgs_listing_quantity">QUANTITY</label>
+						                <input type="number" name="quantity" id="dgs_listing_quantity" class="form-control" min="1" placeholder="Quantity" tabindex="4">
 									</div>
 								</div>
 							</div>
@@ -2153,6 +2253,74 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
 			      	</div>
 		    	</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_purchase_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Marketplace Purchase</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="row">
+								<div class="goods_info">Loading...</div>
+							</div>
+							<input type="hidden" name="goods" id="dgs_purchase_goods" value="" />
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_purchase_price">PRICE</label>
+						                <input type="number" name="priceNXT" id="dgs_purchase_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="1">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_purchase_quantity">QUANTITY</label>
+						                <input type="number" name="quantity" id="dgs_purchase_quantity" class="form-control" min="1" data-default="1" value="1" placeholder="Quantity" tabindex="2">
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="dgs_purchase_delivery_deadline_timestamp">DELIVERY DEADLINE (HOURS)</label>
+								<input type="number" name="deliveryDeadlineTimestamp" id="dgs_purchase_delivery_deadline_timestamp" class="form-control" placeholder="Deadline" min="1" data-default="48" value="48" tabindex="3">
+							</div>
+
+							<div class="form-group">
+								<label for="dgs_purchase_note">NOTE</label>
+								<textarea class="form-control" id="dgs_purchase_note" name="note" rows="3" tabindex="4"></textarea>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_purchase_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_purchase_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="5">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_purchase_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_purchase_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="6">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_purchase_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_purchase_password" class="form-control" placeholder="" tabindex="7">
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<input type="hidden" name="request_type" value="dgsPurchase" />
+						<input type="hidden" name="success_message" value="The marketplace item has been purchased." />
+						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Purchase</button>
+				    </div>
+				</div>
 			</div>
 		</div>
 
