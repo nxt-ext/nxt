@@ -56,7 +56,14 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getMarketplacePendingPurchaseHTML = function(purchase) {
-		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+		//do not show if refund has been initiated or order has been delivered
+		if (NRS.hasUnconfirmedTransaction(3, [5, 7], {
+			"purchase": purchase.purchase
+		})) {
+			return "";
+		}
+
+		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>Buyer</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" +
 			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods.goods).escapeHTML() + "</a>" +
 			"</div>" +
@@ -67,9 +74,9 @@ var NRS = (function(NRS, $, undefined) {
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
 			"</table>" +
-			"<button type='button' class='btn btn-default' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Refund</button> " +
-			"<button type='button' class='btn btn-default' data-toggle='modal' data-target='#dgs_deliver_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Deliver Goods</button>" +
-			"<hr />";
+			"<button type='button' class='btn btn-default btn-refund' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Refund</button> " +
+			"<button type='button' class='btn btn-default btn-deliver' data-toggle='modal' data-target='#dgs_deliver_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Deliver Goods</button>" +
+			"<hr /></div>";
 	}
 
 	NRS.pages.purchased_dgs = function() {
@@ -145,16 +152,16 @@ var NRS = (function(NRS, $, undefined) {
 								content += NRS.getMarketplacePendingPurchaseHTML(purchase);
 							}
 
-							$("#pending_purchased_dgs_page_contents").empty().append(content);
-							NRS.dataLoadFinished($("#pending_purchased_dgs_page_contents"));
+							$("#pending_purchases_dgs_page_contents").empty().append(content);
+							NRS.dataLoadFinished($("#pending_purchases_dgs_page_contents"));
 
 							NRS.pageLoaded();
 						}
 					});
 				}
 			} else {
-				$("#pending_purchased_dgs_page_contents").empty();
-				NRS.dataLoadFinished($("#pending_purchased_dgs_page_contents"));
+				$("#pending_purchases_dgs_page_contents").empty();
+				NRS.dataLoadFinished($("#pending_purchases_dgs_page_contents"));
 
 				NRS.pageLoaded();
 			}
@@ -458,8 +465,17 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-
+		$("#pending_purchases_dgs_page_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
 	}
+
+	NRS.forms.dgsDeliverComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		$("#pending_purchases_dgs_page_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
+	}
+
 	$("#dgs_refund_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
