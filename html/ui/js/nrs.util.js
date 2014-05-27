@@ -953,5 +953,39 @@ var NRS = (function(NRS, $, undefined) {
 		return amount;
 	}
 
+	NRS.hasUnconfirmedTransaction = function(type, subtype, fields) {
+		if (!NRS.unconfirmedTransactions.length) {
+			return false;
+		}
+
+		if (typeof type == "number") {
+			type = [type];
+		}
+
+		if (typeof subtype == "number") {
+			subtype = [subtype];
+		}
+
+		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+
+			if (type.indexOf(unconfirmedTransaction.type) == -1 || subtype.indexOf(unconfirmedTransaction.subtype) == -1) {
+				continue;
+			}
+
+			if (fields) {
+				for (var key in fields) {
+					if (unconfirmedTransaction[key] == fields[key]) {
+						return true;
+					}
+				}
+			} else {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
