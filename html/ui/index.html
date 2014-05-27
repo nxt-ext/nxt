@@ -874,7 +874,7 @@
                 	
                     <section class="content">
                   		<div class="data-container data-loading">
-                  			<div id="dgs_page_contents">
+                  			<div id="newest_dgs_page_contents" class="dgs_page_contents">
 
                   			</div>
                   		</div>
@@ -898,7 +898,9 @@
                 	
                     <section class="content">
                   		<div class="data-container data-loading">
+                  			<div id="purchased_dgs_page_contents" class="dgs_page_contents">
 
+                  			</div>
                   		</div>
                   	</section>
                 </div>
@@ -957,7 +959,9 @@
                 	
                     <section class="content">
                   		<div class="data-container data-loading">
+                  			<div id="pending_purchased_dgs_page_contents" class="dgs_page_contents">
 
+                  			</div>
                   		</div>
                   	</section>
                 </div>
@@ -2334,16 +2338,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			      	<div class="modal-body">			
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="row">
+								<div class="purchase_info">Loading...</div>
+							</div>
 							<input type="hidden" name="purchase" id="dgs_refund_purchase" value="" />
 							<div class="form-group">
 								<label for="dgs_refund_note">NOTE</label>
 								<textarea class="form-control" id="dgs_refund_note" name="note" rows="3" tabindex="2"></textarea>
 							</div>
-							<div class="col-xs-6 col-sm-6 col-md-6">
-								<div class="form-group">
-									<label for="dgs_refund_refund">REFUND</label>
-					                <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
-								</div>
+							<div class="form-group">
+								<label for="dgs_refund_refund">REFUND</label>
+				                <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
 							</div>
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
