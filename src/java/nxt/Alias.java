@@ -82,14 +82,14 @@ public final class Alias {
         aliasesToSell.put(aliasName.toLowerCase(), new Offer(priceNQT, buyerId));
     }
 
-    static void changeOwner(Account newOwner, Long transactionId, String aliasName, int timestamp) {
+    static void changeOwner(Account newOwner, String aliasName, int timestamp) {
         String normalizedName = aliasName.toLowerCase();
         Alias oldAlias = aliases.get(normalizedName);
-        Alias newAlias = new Alias(newOwner, transactionId, aliasName, oldAlias.aliasURI, timestamp);
+        Long id = oldAlias.getId();
+        Alias newAlias = new Alias(newOwner, id, aliasName, oldAlias.aliasURI, timestamp);
         aliasesToSell.remove(normalizedName);
         aliases.put(normalizedName, newAlias);
-        aliasIdToAliasMappings.remove(oldAlias.getId());
-        aliasIdToAliasMappings.put(transactionId, newAlias);
+        aliasIdToAliasMappings.put(id, newAlias);
     }
 
     static void clear() {

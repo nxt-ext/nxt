@@ -19,13 +19,23 @@ import static nxt.http.JSONResponses.*;
 final class ParameterParser {
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
-        String aliasName = Convert.emptyToNull(req.getParameter("alias"));
-        if (aliasName == null) {
-            throw new ParameterException(MISSING_ALIAS_NAME);
-        }
-        Alias alias = Alias.getAlias(aliasName);
-        if (alias == null) {
+        Long aliasId;
+        try {
+            aliasId = Convert.parseUnsignedLong(Convert.emptyToNull(req.getParameter("alias")));
+        } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ALIAS);
+        }
+        String aliasName = Convert.emptyToNull(req.getParameter("aliasName"));
+        Alias alias;
+        if (aliasId != null) {
+            alias = Alias.getAlias(aliasId);
+        } else if (aliasName != null) {
+            alias = Alias.getAlias(aliasName);
+        } else {
+            throw new ParameterException(MISSING_ALIAS_OR_ALIAS_NAME);
+        }
+        if (alias == null) {
+            throw new ParameterException(UNKNOWN_ALIAS);
         }
         return alias;
     }

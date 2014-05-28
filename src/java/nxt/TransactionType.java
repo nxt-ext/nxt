@@ -450,7 +450,7 @@ public abstract class TransactionType {
                 if (priceNQT > 0) {
                     Alias.addSellOffer(aliasName, priceNQT, buyerId);
                 } else {
-                    Alias.changeOwner(Account.getAccount(buyerId), transaction.getId(), aliasName, transaction.getBlockTimestamp());
+                    Alias.changeOwner(Account.getAccount(buyerId), aliasName, transaction.getBlockTimestamp());
                 }
             }
 
@@ -525,7 +525,7 @@ public abstract class TransactionType {
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
-                Alias.changeOwner(senderAccount, transaction.getId(), aliasName, transaction.getBlockTimestamp());
+                Alias.changeOwner(senderAccount, aliasName, transaction.getBlockTimestamp());
             }
 
             @Override
