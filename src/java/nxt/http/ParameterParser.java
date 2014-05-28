@@ -4,37 +4,17 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.Constants;
+import nxt.DigitalGoodsStore;
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
-import static nxt.http.JSONResponses.INCORRECT_ALIAS;
-import static nxt.http.JSONResponses.INCORRECT_AMOUNT;
-import static nxt.http.JSONResponses.INCORRECT_ASSET;
-import static nxt.http.JSONResponses.INCORRECT_FEE;
-import static nxt.http.JSONResponses.INCORRECT_ORDER;
-import static nxt.http.JSONResponses.INCORRECT_PRICE;
-import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
-import static nxt.http.JSONResponses.INCORRECT_QUANTITY;
-import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
-import static nxt.http.JSONResponses.INCORRECT_TIMESTAMP;
-import static nxt.http.JSONResponses.MISSING_ACCOUNT;
-import static nxt.http.JSONResponses.MISSING_ALIAS_OR_ALIAS_NAME;
-import static nxt.http.JSONResponses.MISSING_AMOUNT;
-import static nxt.http.JSONResponses.MISSING_ASSET;
-import static nxt.http.JSONResponses.MISSING_FEE;
-import static nxt.http.JSONResponses.MISSING_ORDER;
-import static nxt.http.JSONResponses.MISSING_PRICE;
-import static nxt.http.JSONResponses.MISSING_QUANTITY;
-import static nxt.http.JSONResponses.MISSING_RECIPIENT;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
-import static nxt.http.JSONResponses.UNKNOWN_ALIAS;
-import static nxt.http.JSONResponses.UNKNOWN_ASSET;
+import static nxt.http.JSONResponses.*;
 
 final class ParameterParser {
 
@@ -141,7 +121,7 @@ final class ParameterParser {
             throw new ParameterException(INCORRECT_QUANTITY);
         }
         if (quantityQNT <= 0 || quantityQNT > Constants.MAX_ASSET_QUANTITY_QNT) {
-            throw new ParameterException(INCORRECT_QUANTITY);
+            throw new ParameterException(INCORRECT_ASSET_QUANTITY);
         }
         return quantityQNT;
     }
@@ -156,6 +136,96 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_ORDER);
         }
+    }
+
+    static DigitalGoodsStore.Goods getGoods(HttpServletRequest req) throws ParameterException {
+        String goodsValue = Convert.emptyToNull(req.getParameter("goods"));
+        if (goodsValue == null) {
+            throw new ParameterException(MISSING_GOODS);
+        }
+        DigitalGoodsStore.Goods goods;
+        try {
+            Long goodsId = Convert.parseUnsignedLong(goodsValue);
+            goods = DigitalGoodsStore.getGoods(goodsId);
+            if (goods == null) {
+                throw new ParameterException(UNKNOWN_GOODS);
+            }
+            return goods;
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_GOODS);
+        }
+    }
+
+    static int getGoodsQuantity(HttpServletRequest req) throws ParameterException {
+        String quantityString = Convert.emptyToNull(req.getParameter("quantity"));
+        try {
+            int quantity = Integer.parseInt(quantityString);
+            if (quantity < 0 || quantity > Constants.MAX_DGS_LISTING_QUANTITY) {
+                throw new ParameterException(INCORRECT_QUANTITY);
+            }
+            return quantity;
+        } catch (NumberFormatException e) {
+            throw new ParameterException(INCORRECT_QUANTITY);
+        }
+    }
+
+    static byte[] getNote(HttpServletRequest req) throws ParameterException {
+        try {
+            return Convert.nullToEmpty(req.getParameter("note")).getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new ParameterException(INCORRECT_DGS_NOTE);
+        }
+    }
+
+    static EncryptedData getEncryptedNote(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+        String encryptedNote = Convert.emptyToNull(req.getParameter("encryptedNote"));
+        String encryptedNoteNonce = Convert.emptyToNull(req.getParameter("encryptedNoteNonce"));
+        if (encryptedNote != null && encryptedNoteNonce != null) {
+            try {
+                return new EncryptedData(Convert.parseHexString(encryptedNote), Convert.parseHexString(encryptedNoteNonce));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_DGS_ENCRYPTED_NOTE);
+            }
+        }
+        String secretPhrase = getSecretPhrase(req);
+        return recipientAccount.encryptTo(getNote(req), secretPhrase);
+    }
+
+    static EncryptedData getEncryptedGoods(HttpServletRequest req) throws ParameterException {
+        String encryptedGoodsData = Convert.emptyToNull(req.getParameter("encryptedGoodsData"));
+        String encryptedGoodsNonce = Convert.emptyToNull(req.getParameter("encryptedGoodsNonce"));
+        if (encryptedGoodsData != null && encryptedGoodsNonce != null) {
+            try {
+                return new EncryptedData(Convert.parseHexString(encryptedGoodsData), Convert.parseHexString(encryptedGoodsNonce));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_DGS_ENCRYPTED_GOODS);
+            }
+        }
+        return null;
+    }
+
+    static DigitalGoodsStore.Purchase getPurchase(HttpServletRequest req) throws ParameterException {
+        String purchaseIdString = Convert.emptyToNull(req.getParameter("purchase"));
+        if (purchaseIdString == null) {
+            throw new ParameterException(MISSING_PURCHASE);
+        }
+        try {
+            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(Convert.parseUnsignedLong(purchaseIdString));
+            if (purchase == null) {
+                throw new ParameterException(INCORRECT_PURCHASE);
+            }
+            return purchase;
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PURCHASE);
+        }
+    }
+
+    static String getSecretPhrase(HttpServletRequest req) throws ParameterException {
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        if (secretPhrase == null) {
+            throw new ParameterException(MISSING_SECRET_PHRASE);
+        }
+        return secretPhrase;
     }
 
     static Account getSenderAccount(HttpServletRequest req) throws ParameterException {
@@ -250,6 +320,24 @@ final class ParameterParser {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
         return recipientId;
+    }
+
+    static Long getSellerId(HttpServletRequest req) throws ParameterException {
+        String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
+        try {
+            return Convert.parseUnsignedLong(sellerIdValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
+    }
+
+    static Long getBuyerId(HttpServletRequest req) throws ParameterException {
+        String buyerIdValue = Convert.emptyToNull(req.getParameter("buyer"));
+        try {
+            return Convert.parseUnsignedLong(buyerIdValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
     }
 
     private ParameterParser() {} // never

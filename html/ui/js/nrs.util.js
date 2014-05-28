@@ -500,7 +500,15 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.format = function(params, no_escaping) {
-		var amount = params.amount;
+		if (typeof params != "object") {
+			params = {
+				"amount": String(params),
+				"negative": false,
+				"afterComma": ""
+			};
+		}
+
+		var amount = String(params.amount);
 
 		var digits = amount.split("").reverse();
 		var formattedAmount = "";
@@ -572,7 +580,11 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatTimestamp = function(timestamp, date_only) {
-		var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000);
+		if (typeof timestamp == "object") {
+			var date = timestamp;
+		} else {
+			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000);
+		}
 
 		if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
 			var d = date.getDate();
@@ -904,7 +916,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
 				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
-			} else if (key == "Sender" || key == "Recipient" || key == "Account") {
+			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {
 				value = String(value).escapeHTML().nl2br();
@@ -939,6 +951,40 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return amount;
+	}
+
+	NRS.hasUnconfirmedTransaction = function(type, subtype, fields) {
+		if (!NRS.unconfirmedTransactions.length) {
+			return false;
+		}
+
+		if (typeof type == "number") {
+			type = [type];
+		}
+
+		if (typeof subtype == "number") {
+			subtype = [subtype];
+		}
+
+		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+
+			if (type.indexOf(unconfirmedTransaction.type) == -1 || subtype.indexOf(unconfirmedTransaction.subtype) == -1) {
+				continue;
+			}
+
+			if (fields) {
+				for (var key in fields) {
+					if (unconfirmedTransaction[key] == fields[key]) {
+						return true;
+					}
+				}
+			} else {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	return NRS;

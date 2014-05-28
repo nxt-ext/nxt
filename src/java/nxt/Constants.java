@@ -34,12 +34,12 @@ public final class Constants {
     public static final int MAX_POLL_OPTION_LENGTH = 100;
     public static final int MAX_POLL_OPTION_COUNT = 100;
 
-    public static final int MAX_DIGITAL_GOODS_QUANTITY = 1000000000;
-    public static final int MAX_DIGITAL_GOODS_LISTING_NAME_LENGTH = 100;
-    public static final int MAX_DIGITAL_GOODS_LISTING_DESCRIPTION_LENGTH = 1000;
-    public static final int MAX_DIGITAL_GOODS_LISTING_TAGS_LENGTH = 100;
-    public static final int MAX_DIGITAL_GOODS_NOTE_LENGTH = 1000;
-    public static final int MAX_DIGITAL_GOODS_LENGTH = 1000;
+    public static final int MAX_DGS_LISTING_QUANTITY = 1000000000;
+    public static final int MAX_DGS_LISTING_NAME_LENGTH = 100;
+    public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
+    public static final int MAX_DGS_NOTE_LENGTH = 1000;
+    public static final int MAX_DGS_GOODS_LENGTH = 10240;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;

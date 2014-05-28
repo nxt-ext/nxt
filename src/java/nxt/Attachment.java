@@ -1,12 +1,11 @@
 package nxt;
 
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
@@ -20,9 +19,7 @@ public interface Attachment {
     TransactionType getTransactionType();
 
 
-    public final static class MessagingArbitraryMessage implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingArbitraryMessage implements Attachment {
 
         private final byte[] message;
 
@@ -66,9 +63,7 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasAssignment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingAliasAssignment implements Attachment {
 
         private final String aliasName;
         private final String aliasURI;
@@ -124,8 +119,8 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasSell implements Attachment, Serializable {
-        static final long serialVersionUID = 0;
+    public final static class MessagingAliasSell implements Attachment {
+
         private final String aliasName;
         private final long priceNQT;
 
@@ -174,8 +169,8 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasBuy implements Attachment, Serializable {
-        static final long serialVersionUID = 0;
+    public final static class MessagingAliasBuy implements Attachment {
+
         private final String aliasName;
 
         public MessagingAliasBuy(String aliasName) {
@@ -216,9 +211,7 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingPollCreation implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingPollCreation implements Attachment {
 
         private final String pollName;
         private final String pollDescription;
@@ -312,9 +305,7 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingVoteCasting implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingVoteCasting implements Attachment {
 
         private final Long pollId;
         private final byte[] pollVote;
@@ -371,9 +362,7 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingHubAnnouncement implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingHubAnnouncement implements Attachment {
 
         private final long minFeePerByteNQT;
         private final String[] uris;
@@ -433,9 +422,7 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingAccountInfo implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingAccountInfo implements Attachment {
 
         private final String name;
         private final String description;
@@ -487,9 +474,7 @@ public interface Attachment {
 
     }
 
-    public final static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class ColoredCoinsAssetIssuance implements Attachment {
 
         private final String name;
         private final String description;
@@ -561,9 +546,7 @@ public interface Attachment {
         }
     }
 
-    public final static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class ColoredCoinsAssetTransfer implements Attachment {
 
         private final Long assetId;
         private final long quantityQNT;
@@ -623,9 +606,7 @@ public interface Attachment {
 
     }
 
-    abstract static class ColoredCoinsOrderPlacement implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    abstract static class ColoredCoinsOrderPlacement implements Attachment {
 
         private final Long assetId;
         private final long quantityQNT;
@@ -684,8 +665,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -699,8 +678,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -712,9 +689,7 @@ public interface Attachment {
 
     }
 
-    abstract static class ColoredCoinsOrderCancellation implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    abstract static class ColoredCoinsOrderCancellation implements Attachment {
 
         private final Long orderId;
 
@@ -755,8 +730,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsAskOrderCancellation(Long orderId) {
             super(orderId);
         }
@@ -770,8 +743,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsBidOrderCancellation(Long orderId) {
             super(orderId);
         }
@@ -783,9 +754,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsListing implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsListing implements Attachment {
 
         private final String name;
         private final String description;
@@ -853,9 +822,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsDelisting implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsDelisting implements Attachment {
 
         private final Long goodsId;
 
@@ -897,9 +864,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsPriceChange implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsPriceChange implements Attachment {
 
         private final Long goodsId;
         private final long priceNQT;
@@ -947,9 +912,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsQuantityChange implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsQuantityChange implements Attachment {
 
         private final Long goodsId;
         private final int deltaQuantity;
@@ -997,21 +960,19 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsPurchase implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsPurchase implements Attachment {
 
         private final Long goodsId;
         private final int quantity;
         private final long priceNQT;
-        private final int deliveryDeadline;
-        private final XoredData note;
+        private final int deliveryDeadlineTimestamp;
+        private final EncryptedData note;
 
-        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp, EncryptedData note) {
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
-            this.deliveryDeadline = deliveryDeadline;
+            this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
             this.note = note;
         }
 
@@ -1028,7 +989,7 @@ public interface Attachment {
                 buffer.putLong(goodsId);
                 buffer.putInt(quantity);
                 buffer.putLong(priceNQT);
-                buffer.putInt(deliveryDeadline);
+                buffer.putInt(deliveryDeadlineTimestamp);
                 buffer.putShort((short)note.getData().length);
                 buffer.put(note.getData());
                 buffer.put(note.getNonce());
@@ -1045,7 +1006,7 @@ public interface Attachment {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("quantity", quantity);
             attachment.put("priceNQT", priceNQT);
-            attachment.put("deliveryDeadline", deliveryDeadline);
+            attachment.put("deliveryDeadlineTimestamp", deliveryDeadlineTimestamp);
             attachment.put("note", Convert.toHexString(note.getData()));
             attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
@@ -1062,21 +1023,19 @@ public interface Attachment {
 
         public long getPriceNQT() { return priceNQT; }
 
-        public int getDeliveryDeadline() { return deliveryDeadline; }
+        public int getDeliveryDeadlineTimestamp() { return deliveryDeadlineTimestamp; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
-    public final static class DigitalGoodsDelivery implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsDelivery implements Attachment {
 
         private final Long purchaseId;
-        private final XoredData goods;
+        private final EncryptedData goods;
         private final long discountNQT;
 
-        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discountNQT) {
+        public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, long discountNQT) {
             this.purchaseId = purchaseId;
             this.goods = goods;
             this.discountNQT = discountNQT;
@@ -1108,7 +1067,7 @@ public interface Attachment {
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            attachment.put("goods", Convert.toHexString(goods.getData()));
+            attachment.put("goodsData", Convert.toHexString(goods.getData()));
             attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
             attachment.put("discountNQT", discountNQT);
             return attachment;
@@ -1121,20 +1080,18 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public XoredData getGoods() { return goods; }
+        public EncryptedData getGoods() { return goods; }
 
         public long getDiscountNQT() { return discountNQT; }
 
     }
 
-    public final static class DigitalGoodsFeedback implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsFeedback implements Attachment {
 
         private final Long purchaseId;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsFeedback(Long purchaseId, XoredData note) {
+        public DigitalGoodsFeedback(Long purchaseId, EncryptedData note) {
             this.purchaseId = purchaseId;
             this.note = note;
         }
@@ -1181,19 +1138,17 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
-    public final static class DigitalGoodsRefund implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsRefund implements Attachment {
 
         private final Long purchaseId;
         private final long refundNQT;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsRefund(Long purchaseId, long refundNQT, XoredData note) {
+        public DigitalGoodsRefund(Long purchaseId, long refundNQT, EncryptedData note) {
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
             this.note = note;
@@ -1245,13 +1200,11 @@ public interface Attachment {
 
         public long getRefundNQT() { return refundNQT; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
-    public final static class AccountControlEffectiveBalanceLeasing implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class AccountControlEffectiveBalanceLeasing implements Attachment {
 
         private final short period;
 

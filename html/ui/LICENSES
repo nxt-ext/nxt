@@ -24,3 +24,5 @@ ajaxretry.js - MIT - https://github.com/dcherman/jQuery.ajaxRetry
 ajaxmultiqueue.js - MIT - https://github.com/GeReV/jQuery.ajaxMultiQueue
 autolink.js - MIT - https://github.com/bryanwoods/autolink-js
 addclear.js - https://github.com/skorecky/Add-Clear
+cryptojs - BSD - https://code.google.com/p/crypto-js/
+pako.js - MIT - https://github.com/nodeca/pako
