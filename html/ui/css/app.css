@@ -2536,7 +2536,7 @@ background:#33363f
   }
 
   body.reed_solomon .modal-dialog-wide, .modal-dialog-wider {
-    width: 800px;
+    width: 840px;
   }
 }
 
@@ -3334,4 +3334,42 @@ hr {
 }
 #asset_exchange_page.no_assets .content-splitter-right {
   left: 0 !important;
+}
+
+.goods_info, .purchase_info {
+  padding:5px;
+  border:1px solid black;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  background:#efefef;
+  color:black;
+  margin:5px;
+  margin-bottom:15px;
+}
+
+.goods_info h3, .purchase_info h3 {
+  margin-bottom:5px;
+  margin-top:0px;
+  font-size:16px;
+  font-weight:bold;
+}
+
+.dgs_page_contents h3 {
+  margin-top:0;
+  margin-bottom:5px;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.dgs_page_contents span.tags {
+  color:#999999;
+}
+
+.dgs_page_contents .price, #dgs_page_contents .description {
+  margin-bottom:5px;
+}
+
+.dgs_page_contents hr {
+  border-top:1px solid #ddd;
 }

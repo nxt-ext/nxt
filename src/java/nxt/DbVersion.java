@@ -185,7 +185,6 @@ final class DbVersion {
             case 39:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_full_hash BINARY(32)");
             case 40:
-                BlockDb.deleteAll();
                 apply(null);
             case 41:
                 apply("ALTER TABLE transaction ALTER COLUMN full_hash SET NOT NULL");
@@ -197,30 +196,11 @@ final class DbVersion {
             case 44:
                 apply(null);
             case 45:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 apply(null);
             case 46:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
             case 47:
-                try (Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET attachment_bytes = ? where db_id = ?");
-                     Statement stmt = con.createStatement()) {
-                    ResultSet rs = stmt.executeQuery("SELECT * FROM transaction");
-                    while (rs.next()) {
-                        long dbId = rs.getLong("db_id");
-                        Attachment attachment = (Attachment)rs.getObject("attachment");
-                        if (attachment != null) {
-                            pstmt.setBytes(1, attachment.getBytes());
-                        } else {
-                            pstmt.setNull(1, Types.VARBINARY);
-                        }
-                        pstmt.setLong(2, dbId);
-                        pstmt.executeUpdate();
-                    }
-                    con.commit();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
+                BlockDb.deleteAll();
                 apply(null);
             case 48:
                 apply("ALTER TABLE transaction DROP COLUMN attachment");

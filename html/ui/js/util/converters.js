@@ -93,6 +93,64 @@ var converters = function() {
 
 			return value;
 		},
+		// create a wordArray that is Big-Endian
+		byteArrayToWordArray: function(byteArray) {
+			var i = 0,
+				offset = 0,
+				word = 0,
+				len = byteArray.length;
+			var words = new Uint32Array(((len / 4) | 0) + (len % 4 == 0 ? 0 : 1));
+
+			while (i < (len - (len % 4))) {
+				words[offset++] = (byteArray[i++] << 24) | (byteArray[i++] << 16) | (byteArray[i++] << 8) | (byteArray[i++]);
+			}
+			if (len % 4 != 0) {
+				word = byteArray[i++] << 24;
+				if (len % 4 > 1) {
+					word = word | byteArray[i++] << 16;
+				}
+				if (len % 4 > 2) {
+					word = word | byteArray[i++] << 8;
+				}
+				words[offset] = word;
+			}
+			var wordArray = new Object();
+			wordArray.sigBytes = len;
+			wordArray.words = words;
+
+			return wordArray;
+		},
+		// assumes wordArray is Big-Endian
+		wordArrayToByteArray: function(wordArray) {
+			var len = wordArray.words.length;
+			if (len == 0) {
+				return new Array(0);
+			}
+			var byteArray = new Array(wordArray.sigBytes);
+			var offset = 0,
+				word, i;
+			for (i = 0; i < len - 1; i++) {
+				word = wordArray.words[i];
+				byteArray[offset++] = word >> 24;
+				byteArray[offset++] = (word >> 16) & 0xff;
+				byteArray[offset++] = (word >> 8) & 0xff;
+				byteArray[offset++] = word & 0xff;
+			}
+			word = wordArray.words[len - 1];
+			byteArray[offset++] = word >> 24;
+			if (wordArray.sigBytes % 4 == 0) {
+				byteArray[offset++] = (word >> 16) & 0xff;
+				byteArray[offset++] = (word >> 8) & 0xff;
+				byteArray[offset++] = word & 0xff;
+			}
+			if (wordArray.sigBytes % 4 > 1) {
+				byteArray[offset++] = (word >> 16) & 0xff;
+			}
+			if (wordArray.sigBytes % 4 > 2) {
+				byteArray[offset++] = (word >> 8) & 0xff;
+			}
+			return byteArray;
+		},
 		byteArrayToString: function(bytes, opt_startIndex, length) {
 			if (length == 0) {
 				return "";

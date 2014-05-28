@@ -3,6 +3,7 @@ package nxt.util;
 import nxt.Constants;
 import nxt.crypto.Crypto;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
@@ -132,6 +133,22 @@ public final class Convert {
             }
         }
         return null;
+    }
+
+    public static byte[] toBytes(String s) {
+        try {
+            return s.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static String toString(byte[] bytes) {
+        try {
+            return new String(bytes, "UTF-8").trim().intern();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {

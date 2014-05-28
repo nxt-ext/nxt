@@ -1,13 +1,11 @@
 package nxt;
 
-import nxt.crypto.XoredData;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
@@ -21,16 +19,12 @@ public interface Attachment {
     TransactionType getTransactionType();
 
 
-    public final static class MessagingArbitraryMessage implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingArbitraryMessage implements Attachment {
 
         private final byte[] message;
 
         public MessagingArbitraryMessage(byte[] message) {
-
             this.message = message;
-
         }
 
         @Override
@@ -47,7 +41,6 @@ public interface Attachment {
             buffer.put(message);
 
             return buffer.array();
-
         }
 
         @Override
@@ -70,9 +63,7 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingAliasAssignment implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingAliasAssignment implements Attachment {
 
         private final String aliasName;
         private final String aliasURI;
@@ -86,37 +77,21 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            try {
-                return 1 + aliasName.getBytes("UTF-8").length + 2 + aliasURI.getBytes("UTF-8").length;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+            return 1 + Convert.toBytes(aliasName).length + 2 + Convert.toBytes(aliasURI).length;
         }
 
         @Override
         public byte[] getBytes() {
+            byte[] alias = Convert.toBytes(this.aliasName);
+            byte[] uri = Convert.toBytes(this.aliasURI);
 
-            try {
-
-                byte[] alias = this.aliasName.getBytes("UTF-8");
-                byte[] uri = this.aliasURI.getBytes("UTF-8");
-
-                ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)alias.length);
-                buffer.put(alias);
-                buffer.putShort((short)uri.length);
-                buffer.put(uri);
-
-                return buffer.array();
-
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-
-            }
-
+            ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)alias.length);
+            buffer.put(alias);
+            buffer.putShort((short)uri.length);
+            buffer.put(uri);
+            return buffer.array();
         }
 
         @Override
@@ -144,9 +119,99 @@ public interface Attachment {
         }
     }
 
-    public final static class MessagingPollCreation implements Attachment, Serializable {
+    public final static class MessagingAliasSell implements Attachment {
 
-        static final long serialVersionUID = 0;
+        private final String aliasName;
+        private final long priceNQT;
+
+        public MessagingAliasSell(String aliasName, long priceNQT) {
+            this.aliasName = aliasName;
+            this.priceNQT = priceNQT;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_SELL;
+        }
+
+        @Override
+        public int getSize() {
+            return 1 + Convert.toBytes(aliasName).length + 8;
+        }
+
+        @Override
+        //todo: fix ???
+        public byte[] getBytes() {
+            byte[] aliasBytes = Convert.toBytes(aliasName);
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)aliasBytes.length);
+            buffer.put(aliasBytes);
+            buffer.putLong(priceNQT);
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("alias", aliasName);
+            attachment.put("priceNQT", priceNQT);
+            return attachment;
+        }
+
+        public String getAliasName(){
+            return aliasName;
+        }
+
+        public long getPriceNQT(){
+            return priceNQT;
+        }
+    }
+
+    public final static class MessagingAliasBuy implements Attachment {
+
+        private final String aliasName;
+
+        public MessagingAliasBuy(String aliasName) {
+            this.aliasName = aliasName;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ALIAS_BUY;
+        }
+
+        @Override
+        public int getSize() {
+            return 1 + Convert.toBytes(aliasName).length;
+        }
+
+        @Override
+        //todo: fix ???
+        public byte[] getBytes() {
+            byte[] aliasBytes = Convert.toBytes(aliasName);
+
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)aliasBytes.length);
+            buffer.put(aliasBytes);
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("alias", aliasName);
+            return attachment;
+        }
+
+        public String getAliasName(){
+            return aliasName;
+        }
+    }
+
+    public final static class MessagingPollCreation implements Attachment {
 
         private final String pollName;
         private final String pollDescription;
@@ -167,55 +232,39 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            try {
-                int size = 2 + pollName.getBytes("UTF-8").length + 2 + pollDescription.getBytes("UTF-8").length + 1;
-                for (String pollOption : pollOptions) {
-                    size += 2 + pollOption.getBytes("UTF-8").length;
-                }
-                size +=  1 + 1 + 1;
-                return size;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
+            int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 1;
+            for (String pollOption : pollOptions) {
+                size += 2 + Convert.toBytes(pollOption).length;
             }
+            size +=  1 + 1 + 1;
+            return size;
         }
 
         @Override
         public byte[] getBytes() {
-
-            try {
-
-                byte[] name = this.pollName.getBytes("UTF-8");
-                byte[] description = this.pollDescription.getBytes("UTF-8");
-                byte[][] options = new byte[this.pollOptions.length][];
-                for (int i = 0; i < this.pollOptions.length; i++) {
-                    options[i] = this.pollOptions[i].getBytes("UTF-8");
-                }
-
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putShort((short)name.length);
-                buffer.put(name);
-                buffer.putShort((short)description.length);
-                buffer.put(description);
-                buffer.put((byte)options.length);
-                for (byte[] option : options) {
-                    buffer.putShort((short) option.length);
-                    buffer.put(option);
-                }
-                buffer.put(this.minNumberOfOptions);
-                buffer.put(this.maxNumberOfOptions);
-                buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
-
-                return buffer.array();
-
-            } catch (RuntimeException | UnsupportedEncodingException e) {
-
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-
+            byte[] name = Convert.toBytes(this.pollName);
+            byte[] description = Convert.toBytes(this.pollDescription);
+            byte[][] options = new byte[this.pollOptions.length][];
+            for (int i = 0; i < this.pollOptions.length; i++) {
+                options[i] = Convert.toBytes(this.pollOptions[i]);
             }
 
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putShort((short)name.length);
+            buffer.put(name);
+            buffer.putShort((short)description.length);
+            buffer.put(description);
+            buffer.put((byte)options.length);
+            for (byte[] option : options) {
+                buffer.putShort((short) option.length);
+                buffer.put(option);
+            }
+            buffer.put(this.minNumberOfOptions);
+            buffer.put(this.maxNumberOfOptions);
+            buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
+
+            return buffer.array();
         }
 
         @Override
@@ -256,9 +305,7 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingVoteCasting implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingVoteCasting implements Attachment {
 
         private final Long pollId;
         private final byte[] pollVote;
@@ -315,9 +362,7 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingHubAnnouncement implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingHubAnnouncement implements Attachment {
 
         private final long minFeePerByteNQT;
         private final String[] uris;
@@ -329,37 +374,25 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            try {
-                int size = 8 + 1;
-                for (String uri : uris) {
-                    size += 2 + uri.getBytes("UTF-8").length;
-                }
-                return size;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
+            int size = 8 + 1;
+            for (String uri : uris) {
+                size += 2 + Convert.toBytes(uri).length;
             }
+            return size;
         }
 
         @Override
         public byte[] getBytes() {
-
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(minFeePerByteNQT);
-                buffer.put((byte) uris.length);
-                for (String uri : uris) {
-                    byte[] uriBytes = uri.getBytes("UTF-8");
-                    buffer.putShort((short)uriBytes.length);
-                    buffer.put(uriBytes);
-                }
-                return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putLong(minFeePerByteNQT);
+            buffer.put((byte) uris.length);
+            for (String uri : uris) {
+                byte[] uriBytes = Convert.toBytes(uri);
+                buffer.putShort((short)uriBytes.length);
+                buffer.put(uriBytes);
             }
-
+            return buffer.array();
         }
 
         @Override
@@ -389,9 +422,7 @@ public interface Attachment {
 
     }
 
-    public final static class MessagingAccountInfo implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class MessagingAccountInfo implements Attachment {
 
         private final String name;
         private final String description;
@@ -403,32 +434,21 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            try {
-                return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length;
         }
 
         @Override
         public byte[] getBytes() {
-            try {
-                byte[] name = this.name.getBytes("UTF-8");
-                byte[] description = this.description.getBytes("UTF-8");
+            byte[] name = Convert.toBytes(this.name);
+            byte[] description = Convert.toBytes(this.description);
 
-                ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)name.length);
-                buffer.put(name);
-                buffer.putShort((short)description.length);
-                buffer.put(description);
-
-                return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+            ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)name.length);
+            buffer.put(name);
+            buffer.putShort((short)description.length);
+            buffer.put(description);
+            return buffer.array();
         }
 
         @Override
@@ -454,9 +474,7 @@ public interface Attachment {
 
     }
 
-    public final static class ColoredCoinsAssetIssuance implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class ColoredCoinsAssetIssuance implements Attachment {
 
         private final String name;
         private final String description;
@@ -474,36 +492,23 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            try {
-                return 1 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 8 + 1;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+            return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 8 + 1;
         }
 
         @Override
         public byte[] getBytes() {
+            byte[] name = Convert.toBytes(this.name);
+            byte[] description = Convert.toBytes(this.description);
 
-            try {
-                byte[] name = this.name.getBytes("UTF-8");
-                byte[] description = this.description.getBytes("UTF-8");
-
-                ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 8 + 1);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)name.length);
-                buffer.put(name);
-                buffer.putShort((short)description.length);
-                buffer.put(description);
-                buffer.putLong(quantityQNT);
-                buffer.put(decimals);
-
-                return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
-
+            ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 8 + 1);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.put((byte)name.length);
+            buffer.put(name);
+            buffer.putShort((short)description.length);
+            buffer.put(description);
+            buffer.putLong(quantityQNT);
+            buffer.put(decimals);
+            return buffer.array();
         }
 
         @Override
@@ -541,51 +546,33 @@ public interface Attachment {
         }
     }
 
-    public final static class ColoredCoinsAssetTransfer implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class ColoredCoinsAssetTransfer implements Attachment {
 
         private final Long assetId;
         private final long quantityQNT;
         private final String comment;
 
         public ColoredCoinsAssetTransfer(Long assetId, long quantityQNT, String comment) {
-
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = Convert.nullToEmpty(comment);
-
         }
 
         @Override
         public int getSize() {
-            try {
-                return 8 + 8 + 2 + comment.getBytes("UTF-8").length;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+            return 8 + 8 + 2 + Convert.toBytes(comment).length;
         }
 
         @Override
         public byte[] getBytes() {
-
-            try {
-                byte[] commentBytes = this.comment.getBytes("UTF-8");
-
-                ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 2 + commentBytes.length);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(Convert.nullToZero(assetId));
-                buffer.putLong(quantityQNT);
-                buffer.putShort((short) commentBytes.length);
-                buffer.put(commentBytes);
-
-                return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
-
+            byte[] commentBytes = Convert.toBytes(this.comment);
+            ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 2 + commentBytes.length);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putLong(Convert.nullToZero(assetId));
+            buffer.putLong(quantityQNT);
+            buffer.putShort((short) commentBytes.length);
+            buffer.put(commentBytes);
+            return buffer.array();
         }
 
         @Override
@@ -619,9 +606,7 @@ public interface Attachment {
 
     }
 
-    abstract static class ColoredCoinsOrderPlacement implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    abstract static class ColoredCoinsOrderPlacement implements Attachment {
 
         private final Long assetId;
         private final long quantityQNT;
@@ -680,8 +665,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -695,8 +678,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -708,9 +689,7 @@ public interface Attachment {
 
     }
 
-    abstract static class ColoredCoinsOrderCancellation implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    abstract static class ColoredCoinsOrderCancellation implements Attachment {
 
         private final Long orderId;
 
@@ -751,8 +730,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsAskOrderCancellation(Long orderId) {
             super(orderId);
         }
@@ -766,8 +743,6 @@ public interface Attachment {
 
     public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
-        static final long serialVersionUID = 0;
-
         public ColoredCoinsBidOrderCancellation(Long orderId) {
             super(orderId);
         }
@@ -779,9 +754,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsListing implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsListing implements Attachment {
 
         private final String name;
         private final String description;
@@ -799,36 +772,26 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            try {
-                return 2 + name.getBytes("UTF-8").length + 2 + description.getBytes("UTF-8").length + 2
-                        + tags.getBytes("UTF-8").length + 4 + 8;
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+            return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
+                        + Convert.toBytes(tags).length + 4 + 8;
         }
 
         @Override
         public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                byte[] nameBytes = name.getBytes("UTF-8");
-                buffer.putShort((short)nameBytes.length);
-                buffer.put(nameBytes);
-                byte[] descriptionBytes = description.getBytes("UTF-8");
-                buffer.putShort((short)descriptionBytes.length);
-                buffer.put(descriptionBytes);
-                byte[] tagsBytes = tags.getBytes("UTF-8");
-                buffer.putShort((short)tagsBytes.length);
-                buffer.put(tagsBytes);
-                buffer.putInt(quantity);
-                buffer.putLong(priceNQT);
-                return buffer.array();
-            } catch (RuntimeException|UnsupportedEncodingException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            byte[] nameBytes = Convert.toBytes(name);
+            buffer.putShort((short)nameBytes.length);
+            buffer.put(nameBytes);
+            byte[] descriptionBytes = Convert.toBytes(description);
+            buffer.putShort((short)descriptionBytes.length);
+            buffer.put(descriptionBytes);
+            byte[] tagsBytes = Convert.toBytes(tags);
+            buffer.putShort((short)tagsBytes.length);
+            buffer.put(tagsBytes);
+            buffer.putInt(quantity);
+            buffer.putLong(priceNQT);
+            return buffer.array();
         }
 
         @Override
@@ -859,9 +822,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsDelisting implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsDelisting implements Attachment {
 
         private final Long goodsId;
 
@@ -903,9 +864,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsPriceChange implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsPriceChange implements Attachment {
 
         private final Long goodsId;
         private final long priceNQT;
@@ -953,9 +912,7 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsQuantityChange implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsQuantityChange implements Attachment {
 
         private final Long goodsId;
         private final int deltaQuantity;
@@ -1003,21 +960,19 @@ public interface Attachment {
 
     }
 
-    public final static class DigitalGoodsPurchase implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsPurchase implements Attachment {
 
         private final Long goodsId;
         private final int quantity;
         private final long priceNQT;
-        private final int deliveryDeadline;
-        private final XoredData note;
+        private final int deliveryDeadlineTimestamp;
+        private final EncryptedData note;
 
-        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadline, XoredData note) {
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp, EncryptedData note) {
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
-            this.deliveryDeadline = deliveryDeadline;
+            this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
             this.note = note;
         }
 
@@ -1034,7 +989,7 @@ public interface Attachment {
                 buffer.putLong(goodsId);
                 buffer.putInt(quantity);
                 buffer.putLong(priceNQT);
-                buffer.putInt(deliveryDeadline);
+                buffer.putInt(deliveryDeadlineTimestamp);
                 buffer.putShort((short)note.getData().length);
                 buffer.put(note.getData());
                 buffer.put(note.getNonce());
@@ -1051,7 +1006,7 @@ public interface Attachment {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("quantity", quantity);
             attachment.put("priceNQT", priceNQT);
-            attachment.put("deliveryDeadline", deliveryDeadline);
+            attachment.put("deliveryDeadlineTimestamp", deliveryDeadlineTimestamp);
             attachment.put("note", Convert.toHexString(note.getData()));
             attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
@@ -1068,21 +1023,19 @@ public interface Attachment {
 
         public long getPriceNQT() { return priceNQT; }
 
-        public int getDeliveryDeadline() { return deliveryDeadline; }
+        public int getDeliveryDeadlineTimestamp() { return deliveryDeadlineTimestamp; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
-    public final static class DigitalGoodsDelivery implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsDelivery implements Attachment {
 
         private final Long purchaseId;
-        private final XoredData goods;
+        private final EncryptedData goods;
         private final long discountNQT;
 
-        public DigitalGoodsDelivery(Long purchaseId, XoredData goods, long discountNQT) {
+        public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, long discountNQT) {
             this.purchaseId = purchaseId;
             this.goods = goods;
             this.discountNQT = discountNQT;
@@ -1114,7 +1067,7 @@ public interface Attachment {
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            attachment.put("goods", Convert.toHexString(goods.getData()));
+            attachment.put("goodsData", Convert.toHexString(goods.getData()));
             attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
             attachment.put("discountNQT", discountNQT);
             return attachment;
@@ -1127,20 +1080,18 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public XoredData getGoods() { return goods; }
+        public EncryptedData getGoods() { return goods; }
 
         public long getDiscountNQT() { return discountNQT; }
 
     }
 
-    public final static class DigitalGoodsFeedback implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsFeedback implements Attachment {
 
         private final Long purchaseId;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsFeedback(Long purchaseId, XoredData note) {
+        public DigitalGoodsFeedback(Long purchaseId, EncryptedData note) {
             this.purchaseId = purchaseId;
             this.note = note;
         }
@@ -1187,19 +1138,17 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
-    public final static class DigitalGoodsRefund implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class DigitalGoodsRefund implements Attachment {
 
         private final Long purchaseId;
         private final long refundNQT;
-        private final XoredData note;
+        private final EncryptedData note;
 
-        public DigitalGoodsRefund(Long purchaseId, long refundNQT, XoredData note) {
+        public DigitalGoodsRefund(Long purchaseId, long refundNQT, EncryptedData note) {
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
             this.note = note;
@@ -1251,13 +1200,11 @@ public interface Attachment {
 
         public long getRefundNQT() { return refundNQT; }
 
-        public XoredData getNote() { return note; }
+        public EncryptedData getNote() { return note; }
 
     }
 
-    public final static class AccountControlEffectiveBalanceLeasing implements Attachment, Serializable {
-
-        static final long serialVersionUID = 0;
+    public final static class AccountControlEffectiveBalanceLeasing implements Attachment {
 
         private final short period;
 
@@ -1298,7 +1245,5 @@ public interface Attachment {
         public short getPeriod() {
             return period;
         }
-
     }
-
 }

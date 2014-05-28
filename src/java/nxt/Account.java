@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -197,7 +198,7 @@ public final class Account {
     private volatile int nextLeasingHeightFrom;
     private volatile int nextLeasingHeightTo;
     private volatile Long nextLesseeId;
-    private Set<Long> lessorIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
+    private final Set<Long> lessorIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
 
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
@@ -238,6 +239,20 @@ public final class Account {
         return publicKey;
     }
 
+    public EncryptedData encryptTo(byte[] data, String senderSecretPhrase) {
+        if (getPublicKey() == null) {
+            throw new IllegalArgumentException("Recipient account doesn't have a public key set");
+        }
+        return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), publicKey);
+    }
+
+    public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase) {
+        if (getPublicKey() == null) {
+            throw new IllegalArgumentException("Sender account doesn't have a public key set");
+        }
+        return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
+    }
+
     public synchronized long getBalanceNQT() {
         return balanceNQT;
     }
@@ -255,7 +270,7 @@ public final class Account {
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
-                && (publicKey == null || keyHeight == -1 || lastBlock.getHeight() - keyHeight <= 1440)) {
+                && (getPublicKey() == null || lastBlock.getHeight() - keyHeight <= 1440)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
 
