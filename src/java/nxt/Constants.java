@@ -82,6 +82,10 @@ public final class Constants {
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
 
+    public static final int RULE_TERMINATOR = 600; /* cfb: This constant defines a straight edge when "longest chain"
+                                                        rule is outweighed by "economic majority" rule; the terminator
+                                                        is set as number of seconds before the current time. */
+
     private Constants() {} // never
 
 }

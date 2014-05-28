@@ -18,10 +18,10 @@ final class EconomicClustering {
 
     static Block getClusterDefiningBlockId(int timestamp) {
         Block block = BlockchainImpl.getInstance().getLastBlock();
-        while (block.getTimestamp() >= timestamp) {
+        do {
             block = BlockchainImpl.getInstance().getBlock(block.getPreviousBlockId());
-        }
-        return BlockchainImpl.getInstance().getBlock(block.getPreviousBlockId());
+        } while (block.getTimestamp() > timestamp - Constants.RULE_TERMINATOR);
+        return block;
     }
 
     static boolean validateClusterDefiningBlock(int height, Long id) {
