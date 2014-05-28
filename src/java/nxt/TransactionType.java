@@ -1662,6 +1662,7 @@ public abstract class TransactionType {
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null
+                        || attachment.getDiscountNQT() > purchase.getPriceNQT()
                         || !transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSONObject());
                 }
