@@ -506,6 +506,7 @@ public final class DigitalGoodsStore {
         buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
         purchase.setRefundNote(encryptedNote);
         purchase.setRefundNQT(refundNQT);
+        pendingPurchasesMap.remove(purchaseId);
         purchaseListeners.notify(purchase, Event.REFUND);
     }
 
@@ -517,6 +518,9 @@ public final class DigitalGoodsStore {
         buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
         purchase.setRefundNote(null);
         purchase.setRefundNQT(0);
+        if (purchase.encryptedGoods == null) {
+            pendingPurchasesMap.put(purchaseId, purchase);
+        }
     }
 
     static void feedback(Long purchaseId, EncryptedData encryptedNote) {
