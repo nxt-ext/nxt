@@ -121,6 +121,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_NOTE = incorrect("encryptedNote");
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("encryptedGoods");
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
+    public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
+    public static final JSONStreamAware MISSING_HEIGHT = missing("height");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
