@@ -59,14 +59,26 @@ public final class APIServlet extends HttpServlet {
         map.put("cancelBidOrder", CancelBidOrder.instance);
         map.put("castVote", CastVote.instance);
         map.put("createPoll", CreatePoll.instance);
+        map.put("decryptFrom", DecryptFrom.instance);
+        map.put("dgsListing", DGSListing.instance);
+        map.put("dgsDelisting", DGSDelisting.instance);
+        map.put("dgsDelivery", DGSDelivery.instance);
+        map.put("dgsFeedback", DGSFeedback.instance);
+        map.put("dgsPriceChange", DGSPriceChange.instance);
+        map.put("dgsPurchase", DGSPurchase.instance);
+        map.put("dgsQuantityChange", DGSQuantityChange.instance);
+        map.put("dgsRefund", DGSRefund.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
+        map.put("encryptTo", EncryptTo.instance);
         map.put("generateToken", GenerateToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountId", GetAccountId.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
+        map.put("sellAlias", SellAlias.instance);
+        map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
         map.put("getAliases", GetAliases.instance);
         map.put("getAllAssets", GetAllAssets.instance);
@@ -79,6 +91,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockId", GetBlockId.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getConstants", GetConstants.instance);
+        map.put("getDGSGoods", GetDGSGoods.instance);
+        map.put("getDGSGood", GetDGSGood.instance);
+        map.put("getDGSPurchases", GetDGSPurchases.instance);
+        map.put("getDGSPurchase", GetDGSPurchase.instance);
+        map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         if (Constants.isTestnet) {

@@ -5,6 +5,7 @@ import nxt.Alias;
 import nxt.Asset;
 import nxt.Attachment;
 import nxt.Block;
+import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.Poll;
@@ -24,12 +25,17 @@ final class JSONData {
 
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();
-        json.put("account", Convert.toUnsignedLong(alias.getAccount().getId()));
-        json.put("accountRS", Convert.rsAccount(alias.getAccount().getId()));
+        json.put("account", Convert.toUnsignedLong(alias.getAccountId()));
+        json.put("accountRS", Convert.rsAccount(alias.getAccountId()));
         json.put("aliasName", alias.getAliasName());
         json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
         json.put("alias", Convert.toUnsignedLong(alias.getId()));
+        Alias.Offer offer = Alias.getOffer(alias.getAliasName());
+        if (offer != null) {
+            json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
+            json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
+        }
         return json;
     }
 
@@ -95,6 +101,7 @@ final class JSONData {
         json.put("height", block.getHeight());
         json.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
         json.put("generatorRS", Convert.rsAccount(block.getGeneratorId()));
+        json.put("generatorPublicKey", Convert.toHexString(block.getGeneratorPublicKey()));
         json.put("timestamp", block.getTimestamp());
         json.put("numberOfTransactions", block.getTransactionIds().size());
         json.put("totalAmountNQT", String.valueOf(block.getTotalAmountNQT()));
@@ -119,6 +126,20 @@ final class JSONData {
             transactions.add(Convert.toUnsignedLong(transactionId));
         }
         json.put("transactions", transactions);
+        return json;
+    }
+
+    static JSONObject goods(DigitalGoodsStore.Goods goods) {
+        JSONObject json = new JSONObject();
+        json.put("goods", Convert.toUnsignedLong(goods.getId()));
+        json.put("name", goods.getName());
+        json.put("description", goods.getDescription());
+        json.put("quantity", goods.getQuantity());
+        json.put("priceNQT", String.valueOf(goods.getPriceNQT()));
+        json.put("seller", Convert.toUnsignedLong(goods.getSellerId()));
+        json.put("sellerRS", Convert.rsAccount(goods.getSellerId()));
+        json.put("tags", goods.getTags());
+        json.put("delisted", goods.isDelisted());
         return json;
     }
 
@@ -178,6 +199,42 @@ final class JSONData {
             voters.add(Convert.toUnsignedLong(voterId));
         }
         json.put("voters", voters);
+        return json;
+    }
+
+    static JSONObject purchase(DigitalGoodsStore.Purchase purchase) {
+        JSONObject json = new JSONObject();
+        json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
+        json.put("goods", Convert.toUnsignedLong(purchase.getGoodsId()));
+        json.put("seller", Convert.toUnsignedLong(purchase.getSellerId()));
+        json.put("sellerRS", Convert.rsAccount(purchase.getSellerId()));
+        json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));
+        json.put("quantity", purchase.getQuantity());
+        json.put("buyer", Convert.toUnsignedLong(purchase.getBuyerId()));
+        json.put("buyerRS", Convert.rsAccount(purchase.getBuyerId()));
+        json.put("timestamp", purchase.getTimestamp());
+        json.put("deliveryDeadlineTimestamp", purchase.getDeliveryDeadlineTimestamp());
+        json.put("note", Convert.toHexString(purchase.getNote().getData()));
+        json.put("noteNonce", Convert.toHexString(purchase.getNote().getNonce()));
+        json.put("pending", purchase.isPending());
+        if (purchase.getEncryptedGoods() != null) {
+            json.put("goodsData", Convert.toHexString(purchase.getEncryptedGoods().getData()));
+            json.put("goodsDataNonce", Convert.toHexString(purchase.getEncryptedGoods().getNonce()));
+        }
+        if (purchase.getFeedbackNote() != null) {
+            json.put("feedbackNote", Convert.toHexString(purchase.getFeedbackNote().getData()));
+            json.put("feedbackNoteNonce", Convert.toHexString(purchase.getFeedbackNote().getNonce()));
+        }
+        if (purchase.getRefundNote() != null) {
+            json.put("refundNote", Convert.toHexString(purchase.getRefundNote().getData()));
+            json.put("refundNoteNonce", Convert.toHexString(purchase.getRefundNote().getNonce()));
+        }
+        if (purchase.getDiscountNQT() > 0) {
+            json.put("discountNQT", String.valueOf(purchase.getDiscountNQT()));
+        }
+        if (purchase.getRefundNQT() > 0) {
+            json.put("refundNQT", String.valueOf(purchase.getRefundNQT()));
+        }
         return json;
     }
 

@@ -60,7 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//convert NXT to NQT...
 		try {
-			var nxtFields = ["feeNXT", "amountNXT"];
+			var nxtFields = ["feeNXT", "amountNXT", "priceNXT"];
 
 			for (var i = 0; i < nxtFields.length; i++) {
 				var nxtField = nxtFields[i];
@@ -640,7 +640,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsListing":
+			case "dgsListing":
 				if (transaction.type !== 3 && transaction.subtype != 0) {
 					return false;
 				}
@@ -680,7 +680,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsDelisting":
+			case "dgsDelisting":
 				if (transaction.type !== 3 && transaction.subtype !== 1) {
 					return false;
 				}
@@ -692,7 +692,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsPriceChange":
+			case "dgsPriceChange":
 				if (transaction.type !== 3 && transaction.subtype !== 2) {
 					return false;
 				}
@@ -708,7 +708,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsQuantityChange":
+			case "dgsQuantityChange":
 				if (transaction.type !== 3 && transaction.subtype !== 3) {
 					return false;
 				}
@@ -724,7 +724,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsPurchase":
+			case "dgsPurchase":
 				if (transaction.type !== 3 && transaction.subtype !== 4) {
 					return false;
 				}
@@ -761,7 +761,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsDelivery":
+			case "dgsDelivery":
 				if (transaction.type !== 3 && transaction.subtype !== 5) {
 					return false;
 				}
@@ -790,7 +790,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsFeedback":
+			case "dgsFeedback":
 				if (transaction.type !== 3 && transaction.subtype !== 6) {
 					return false;
 				}
@@ -815,7 +815,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				break;
-			case "digitalGoodsRefund":
+			case "dgsRefund":
 				if (transaction.type !== 3 && transaction.subtype !== 7) {
 					return false;
 				}
