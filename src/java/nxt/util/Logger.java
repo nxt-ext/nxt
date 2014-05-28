@@ -89,7 +89,9 @@ public final class Logger {
      * Logger shutdown
      */
     public static void shutdown() {
-        ((NxtLogManager)LogManager.getLogManager()).nxtShutdown();
+        if (LogManager.getLogManager() instanceof NxtLogManager) {
+            ((NxtLogManager) LogManager.getLogManager()).nxtShutdown();
+        }
     }
 
     /**

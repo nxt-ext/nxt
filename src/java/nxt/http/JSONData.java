@@ -100,6 +100,7 @@ final class JSONData {
         json.put("height", block.getHeight());
         json.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
         json.put("generatorRS", Convert.rsAccount(block.getGeneratorId()));
+        json.put("generatorPublicKey", Convert.toHexString(block.getGeneratorPublicKey()));
         json.put("timestamp", block.getTimestamp());
         json.put("numberOfTransactions", block.getTransactionIds().size());
         json.put("totalAmountNQT", String.valueOf(block.getTotalAmountNQT()));
