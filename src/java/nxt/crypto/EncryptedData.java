@@ -19,11 +19,6 @@ public final class EncryptedData {
     private final byte[] data;
     private final byte[] nonce;
 
-    public EncryptedData() {
-        this.data = null;
-        this.nonce = null;
-    }
-
     public EncryptedData(byte[] data, byte[] nonce) {
         this.data = data;
         this.nonce = nonce;

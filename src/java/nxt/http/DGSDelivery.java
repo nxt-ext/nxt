@@ -61,9 +61,9 @@ public final class DGSDelivery extends CreateTransaction {
                 if (goodsDataString != null) {
                     goodsData = Convert.parseHexString(goodsDataString);
                 } else {
-                    goodsData = Convert.nullToEmpty(req.getParameter("goodsText")).getBytes("UTF-8");
+                    goodsData = Convert.toBytes(Convert.nullToEmpty(req.getParameter("goodsText")));
                 }
-            } catch (UnsupportedEncodingException|RuntimeException e) {
+            } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
             encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);

@@ -170,11 +170,7 @@ final class ParameterParser {
     }
 
     static byte[] getNote(HttpServletRequest req) throws ParameterException {
-        try {
-            return Convert.nullToEmpty(req.getParameter("note")).getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new ParameterException(INCORRECT_DGS_NOTE);
-        }
+        return Convert.toBytes(Convert.nullToEmpty(req.getParameter("note")));
     }
 
     static EncryptedData getEncryptedNote(HttpServletRequest req, Account recipientAccount) throws ParameterException {
