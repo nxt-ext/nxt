@@ -263,10 +263,10 @@ public final class DigitalGoodsStore {
         @Override
         public int compareTo(Purchase other) {
             if (this.timestamp < other.timestamp) {
-                return -1;
+                return 1;
             }
             if (this.timestamp > other.timestamp) {
-                return 1;
+                return -1;
             }
             return Long.compare(this.id, other.id);
         }
