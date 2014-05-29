@@ -978,7 +978,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 8 + 4 + 8 + 4 + 2 + note.getData().length + 32;
+            return 8 + 4 + 8 + 4 + 2 + note.getData().length + note.getNonce().length;
         }
 
         @Override
@@ -1043,7 +1043,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 8 + 2 + goods.getData().length + 32 + 8;
+            return 8 + 2 + goods.getData().length + goods.getNonce().length + 8;
         }
 
         @Override
@@ -1099,7 +1099,7 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                return 8 + 2 + note.getData().length + 32;
+                return 8 + 2 + note.getData().length + note.getNonce().length;
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -1157,7 +1157,7 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                return 8 + 8 + 2 + note.getData().length + 32;
+                return 8 + 8 + 2 + note.getData().length + note.getNonce().length;
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
