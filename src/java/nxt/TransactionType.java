@@ -31,6 +31,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ACCOUNT_INFO = 5;
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
+    private static final byte SUBTYPE_MESSAGING_ENCRYPTED_MESSAGE = 8;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -77,6 +78,8 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_SELL;
                     case SUBTYPE_MESSAGING_ALIAS_BUY:
                         return Messaging.ALIAS_BUY;
+                    case SUBTYPE_MESSAGING_ENCRYPTED_MESSAGE:
+                        return Messaging.ENCRYPTED_MESSAGE;
                     default:
                         return null;
                 }
@@ -340,6 +343,49 @@ public abstract class TransactionType {
                 Attachment.MessagingArbitraryMessage attachment = (Attachment.MessagingArbitraryMessage) transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0 || attachment.getMessage().length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                     throw new NxtException.ValidationException("Invalid arbitrary message: " + attachment.getJSONObject());
+                }
+            }
+
+        };
+
+        public final static TransactionType ENCRYPTED_MESSAGE = new Messaging() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ENCRYPTED_MESSAGE;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                EncryptedData encryptedMessage = readEncryptedData(buffer, buffer.getShort(), Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+                transaction.setAttachment(new Attachment.MessagingEncryptedMessage(encryptedMessage));
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                EncryptedData encryptedMessage = new EncryptedData(Convert.parseHexString((String)attachmentData.get("message")),
+                        Convert.parseHexString((String)attachmentData.get("nonce")));
+                transaction.setAttachment(new Attachment.MessagingEncryptedMessage(encryptedMessage));
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ENCRYPTED_MESSAGES_BLOCK) {
+                    throw new NotYetEnabledException("Encrypted messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.MessagingEncryptedMessage attachment = (Attachment.MessagingEncryptedMessage) transaction.getAttachment();
+                if (transaction.getAmountNQT() != 0
+                        || attachment.getEncryptedMessage().getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH
+                        || attachment.getEncryptedMessage().getNonce().length != (attachment.getEncryptedMessage().getData().length == 0 ? 0 : 32)) {
+                    throw new NxtException.ValidationException("Invalid encrypted message: " + attachment.getJSONObject());
                 }
             }
 
@@ -1589,7 +1635,7 @@ public abstract class TransactionType {
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
                 if (attachment.getQuantity() <= 0 || attachment.getQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
-                        || attachment.getNote().getData().length > 3 * Constants.MAX_DGS_NOTE_LENGTH
+                        || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != (attachment.getNote().getData().length == 0 ? 0 : 32)
                         || goods == null || goods.isDelisted()
                         || attachment.getQuantity() > goods.getQuantity()
@@ -1868,7 +1914,7 @@ public abstract class TransactionType {
         if (noteBytesLength == 0) {
             return EncryptedData.EMPTY_DATA;
         }
-        if (noteBytesLength > 3 * maxLength) {
+        if (noteBytesLength > maxLength) {
             throw new NxtException.ValidationException("Max note length exceeded");
         }
         byte[] noteBytes = new byte[noteBytesLength];

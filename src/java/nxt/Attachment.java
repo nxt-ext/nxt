@@ -63,6 +63,48 @@ public interface Attachment {
         }
     }
 
+    public final static class MessagingEncryptedMessage implements Attachment {
+
+        private final EncryptedData encryptedMessage;
+
+        public MessagingEncryptedMessage(EncryptedData encryptedMessage) {
+            this.encryptedMessage = encryptedMessage;
+        }
+
+        @Override
+        public int getSize() {
+            return 2 + encryptedMessage.getData().length + encryptedMessage.getNonce().length;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putShort((short)encryptedMessage.getData().length);
+            buffer.put(encryptedMessage.getData());
+            buffer.put(encryptedMessage.getNonce());
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("message", Convert.toHexString(encryptedMessage.getData()));
+            attachment.put("nonce", Convert.toHexString(encryptedMessage.getNonce()));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ENCRYPTED_MESSAGE;
+        }
+
+        public EncryptedData getEncryptedMessage() {
+            return encryptedMessage;
+        }
+
+    }
+
     public final static class MessagingAliasAssignment implements Attachment {
 
         private final String aliasName;
