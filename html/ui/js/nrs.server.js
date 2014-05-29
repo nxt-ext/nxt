@@ -326,8 +326,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		var refHash = byteArray.slice(64, 96);
 		transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
-		if (transaction.referencedTransactionFullHash == "0") {
+		if (transaction.referencedTransactionFullHash == "0000000000000000000000000000000000000000000000000000000000000000") {
 			transaction.referencedTransactionFullHash = null;
+			transaction.referencedTransactionId = null;
 		} else {
 			transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
 		}
@@ -354,10 +355,19 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 
-		if ("referencedTransactionFullHash" in data && transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
+		if ("referencedTransactionFullHash" in data) {
+			if (transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
+				return false;
+			}
+		} else if (transaction.referencedTransactionFullHash !== null) {
 			return false;
 		}
-		if ("referencedTransactionId" in data && transaction.referencedTransactionId !== data.referencedTransactionId) {
+
+		if ("referencedTransactionId" in data) {
+			if (transaction.referencedTransactionId !== data.referencedTransactionId) {
+				return false;
+			}
+		} else if (transaction.referencedTransactionId !== null) {
 			return false;
 		}
 
@@ -545,6 +555,38 @@ var NRS = (function(NRS, $, undefined) {
 				pos += descriptionLength;
 
 				if (transaction.name !== data.name || transaction.description !== data.description) {
+					return false;
+				}
+
+				break;
+			case "sellAlias":
+				if (transaction.type !== 1 || transaction.subtype !== 6) {
+					return false;
+				}
+
+				var aliasLength = parseInt(byteArray[pos], 10);
+
+				pos++;
+
+				transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
+
+				pos += aliasLength;
+
+				transaction.priceNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
+
+				if (transaction.alias !== data.aliasName || transaction.priceNQT !== data.priceNQT) {
+					return false;
+				}
+
+				break;
+			case "buyAlias":
+				var aliasLength = parseInt(byteArray[pos], 10);
+
+				pos++;
+
+				transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
+
+				if (transaction.alias !== data.aliasName) {
 					return false;
 				}
 
