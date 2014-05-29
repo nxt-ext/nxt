@@ -177,6 +177,37 @@ var NRS = (function(NRS, $, undefined) {
 					$("#transaction_info_table").show();
 
 					break;
+				case 6:
+					var type = (transaction.attachment.priceNQT == "0" ? "Alias Transfer" : "Alias Sale");
+
+					var data = {
+						"Type": type,
+						"Alias Name": transaction.attachment.alias
+					}
+
+					if (type == "Alias Sale") {
+						data["Price"] = transaction.attachment.priceNQT
+					}
+
+					data["Recipient"] = NRS.getAccountTitle(transaction, "recipient");
+					data["Sender"] = NRS.getAccountTitle(transaction, "sender");
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
+				case 7:
+					var data = {
+						"Type": "Alias Buy",
+						"Alias Name": transaction.attachment.alias,
+						"Recipient": NRS.getAccountTitle(transaction, "recipient"),
+						"Sender": NRS.getAccountTitle(transaction, "sender")
+					}
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+
+					break;
 				default:
 					incorrect = true;
 					break;
@@ -471,7 +502,14 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		console.log("here we are");
+		console.log(transaction);
+
 		if (incorrect) {
+			$.growl("Invalid or unknown transaction type.", {
+				"type": "danger"
+			});
+
 			NRS.fetchingModalData = false;
 			return;
 		}
