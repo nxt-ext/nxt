@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getMarketplacePendingPurchaseHTML = function(purchase) {
 		//do not show if refund has been initiated or order has been delivered
-		if (NRS.hasUnconfirmedTransaction(3, [5, 7], {
+		if (NRS.getUnconfirmedTransaction(3, [5, 7], {
 			"purchase": purchase.purchase
 		})) {
 			return "";

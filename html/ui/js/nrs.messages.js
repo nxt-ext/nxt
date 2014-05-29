@@ -111,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.messages = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
+		if (NRS.hasTransactionUpdates(transactions)) {
 			//save current scrollTop    	
 			var activeAccount = $("#messages_sidebar a.active");
 
