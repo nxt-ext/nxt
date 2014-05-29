@@ -2924,6 +2924,53 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		  	</div>
 		</div>
 
+		<div class="modal fade" id="cancel_alias_sale_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-700">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Cancel Alias Sale</h4>
+		      		</div>
+			      	<div class="modal-body">	
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label>ALIAS</label>
+								<p class="alias_name_display"></p>
+								<input type="hidden" name="aliasName" value="" />
+								<input type="hidden" name="cancelSale" value="1" />
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="cancel_alias_sale_fee">FEE</label>
+										<input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="1">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="cancel_alias_sale_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="cancel_alias_sale_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="2">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="cancel_alias_sale_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
+							</div>
+						</form>
+					</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="sellAlias" />
+			      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
+			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cancel Sale</button>
+			    	</div>
+				</div>
+		  	</div>
+		</div>
+
 		<div class="modal fade modal-no-hide" id="generate_token_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">

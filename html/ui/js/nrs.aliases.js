@@ -68,10 +68,18 @@ var NRS = (function(NRS, $, undefined) {
 						alias.priceNQT = unconfirmedTransaction.priceNQT;
 					}
 
+					var allowCancel = false;
+
 					if (alias.buyer) {
 						if (alias.priceNQT == "0") {
-							alias.status = "Transfer In Progress";
+							if (alias.buyer == NRS.account) {
+								alias.status = "Cancelling Sale";
+							} else {
+								alias.status = "Transfer In Progress";
+							}
 						} else {
+							allowCancel = true;
+
 							if (alias.buyer != NRS.genesis) {
 								alias.status = "For Sale (direct)";
 							} else {
@@ -84,7 +92,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a></td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -113,7 +121,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#transfer_alias_modal, #sell_alias_modal").on("show.bs.modal", function(e) {
+	$("#transfer_alias_modal, #sell_alias_modal, #cancel_alias_sale_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var alias = String($invoker.data("alias"));
@@ -128,6 +136,20 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	NRS.forms.sellAlias = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		if (data.cancelSale) {
+			data.priceNQT = "0";
+			data.recipient = NRS.account;
+			delete data.cancelSale;
+		}
+
+		return {
+			"data": data
+		};
+	}
+
 	NRS.forms.sellAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
@@ -139,7 +161,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		//transfer
 		if (data.priceNQT == "0") {
-			$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
+			if (data.recipient == NRS.account) {
+				$row.find("td.status").html("<span class='label label-info'>Cancelling Sale</span>");
+			} else {
+				$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
+			}
 		} else {
 			if (data.recipient != "0") {
 				$row.find("td.status").html("<span class='label label-info'>For Sale (direct)</span>");
