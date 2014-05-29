@@ -10,7 +10,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 
 import static nxt.http.JSONResponses.ALREADY_DELIVERED;
 import static nxt.http.JSONResponses.INCORRECT_DGS_DISCOUNT;

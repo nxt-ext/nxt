@@ -274,7 +274,7 @@ public final class DigitalGoodsStore {
     }
 
     private static final Map<Long, Goods> goodsMap = Collections.synchronizedMap(new LinkedHashMap<Long, Goods>());
-    private static final ConcurrentMap<Long, Purchase> purchasesMap = new ConcurrentHashMap<>();
+    private static final Map<Long, Purchase> purchasesMap = Collections.synchronizedMap(new LinkedHashMap<Long, Purchase>());
     private static final Collection<Goods> allGoods = Collections.unmodifiableCollection(goodsMap.values());
     private static final Collection<Purchase> allPurchases = Collections.unmodifiableCollection(purchasesMap.values());
     private static final ConcurrentMap<Long, Purchase> pendingPurchasesMap = new ConcurrentHashMap<>();
