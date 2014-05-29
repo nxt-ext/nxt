@@ -7,7 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 public final class GetDGSGoods extends APIServlet.APIRequestHandler {
 
@@ -43,9 +42,9 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
                 goodsJSON.add(JSONData.goods(goods[goods.length - 1 - i]));
             }
         } else {
-            Collection<DigitalGoodsStore.Goods> goods = DigitalGoodsStore.getSellerGoods(sellerId);
-            for (DigitalGoodsStore.Goods good : goods) {
-                goodsJSON.add(JSONData.goods(good));
+            DigitalGoodsStore.Goods[] goods = DigitalGoodsStore.getSellerGoods(sellerId).toArray(new DigitalGoodsStore.Goods[0]);
+            for (int i = firstIndex; i <= lastIndex && i < goods.length; i++) {
+                goodsJSON.add(JSONData.goods(goods[i]));
             }
         }
         response.put("goods", goodsJSON);
