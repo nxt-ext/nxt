@@ -16,15 +16,12 @@ public final class EncryptedData {
         }
     };
 
-    private final byte[] data;
-    private final byte[] nonce;
-
-    public EncryptedData(byte[] data, byte[] nonce) {
-        this.data = data;
-        this.nonce = nonce;
-    }
+    public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
 
     public static EncryptedData encrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
+        if (plaintext.length == 0) {
+            return EMPTY_DATA;
+        }
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
             gzip.write(plaintext);
@@ -40,7 +37,18 @@ public final class EncryptedData {
         }
     }
 
+    private final byte[] data;
+    private final byte[] nonce;
+
+    public EncryptedData(byte[] data, byte[] nonce) {
+        this.data = data;
+        this.nonce = nonce;
+    }
+
     public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
+        if (data.length == 0) {
+            return data;
+        }
         byte[] compressedPlaintext = Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
         try (ByteArrayInputStream bis = new ByteArrayInputStream(compressedPlaintext);
              GZIPInputStream gzip = new GZIPInputStream(bis);
