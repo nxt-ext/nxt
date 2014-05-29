@@ -344,7 +344,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var $rows = $table.find("tr");
 
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>";
+				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a> <a class='btn btn-xs btn-default' href='#'>Cancel Sale</a></td></tr>";
 
 				var rowAdded = false;
 

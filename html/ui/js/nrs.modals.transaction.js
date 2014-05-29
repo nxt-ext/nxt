@@ -178,7 +178,15 @@ var NRS = (function(NRS, $, undefined) {
 
 					break;
 				case 6:
-					var type = (transaction.attachment.priceNQT == "0" ? "Alias Transfer" : "Alias Sale");
+					if (transaction.attachment.priceNQT == "0") {
+						if (transaction.sender == transaction.recipient) {
+							var type = "Alias Sale Cancellation";
+						} else {
+							var type = "Alias Transfer";
+						}
+					} else {
+						var type = "Alias Sale";
+					}
 
 					var data = {
 						"Type": type,
@@ -189,7 +197,10 @@ var NRS = (function(NRS, $, undefined) {
 						data["Price"] = transaction.attachment.priceNQT
 					}
 
-					data["Recipient"] = NRS.getAccountTitle(transaction, "recipient");
+					if (type != "Alias Sale Cancellation") {
+						data["Recipient"] = NRS.getAccountTitle(transaction, "recipient");
+					}
+
 					data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));

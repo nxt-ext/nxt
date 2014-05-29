@@ -158,7 +158,11 @@ var NRS = (function(NRS, $, undefined) {
 											break;
 										case 6:
 											if (transaction.attachment.priceNQT == "0") {
-												transactionType = "Alias Transfer";
+												if (transaction.sender == transaction.recipient) {
+													transactionType = "Alias Sale Cancellation";
+												} else {
+													transactionType = "Alias Transfer";
+												}
 											} else {
 												transactionType = "Alias Sale";
 											}
