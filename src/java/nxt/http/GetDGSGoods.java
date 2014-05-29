@@ -30,7 +30,7 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
 
         if (sellerId == null) {
             DigitalGoodsStore.Goods[] goods = DigitalGoodsStore.getAllGoods().toArray(new DigitalGoodsStore.Goods[0]);
-            for (int i = firstIndex; goodsJSON.size() <= lastIndex - firstIndex + 1 && i < goods.length; i++) {
+            for (int i = firstIndex; firstIndex + goodsJSON.size() - 1 <= lastIndex && i < goods.length; i++) {
                 DigitalGoodsStore.Goods good = goods[goods.length - 1 - i];
                 if (inStockOnly && (((good.isDelisted() || good.getQuantity() == 0)))) {
                     continue;
