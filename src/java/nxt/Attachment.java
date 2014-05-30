@@ -1246,4 +1246,185 @@ public interface Attachment {
             return period;
         }
     }
+
+    public final static class MonetarySystemCurrencyIssuance implements Attachment {
+
+        public MonetarySystemCurrencyIssuance() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.CURRENCY_ISSUANCE;
+        }
+
+    }
+
+    public final static class MonetarySystemReserveIncrease implements Attachment {
+
+        public MonetarySystemReserveIncrease() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.RESERVE_INCREASE;
+        }
+
+    }
+
+    public final static class MonetarySystemReserveClaim implements Attachment {
+
+        public MonetarySystemReserveClaim() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.RESERVE_CLAIM;
+        }
+
+    }
+
+    public final static class MonetarySystemMoneyTransfer implements Attachment {
+
+        public MonetarySystemMoneyTransfer() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.MONEY_TRANSFER;
+        }
+
+    }
+
+    public final static class MonetarySystemExchangeSetting implements Attachment {
+
+        public MonetarySystemExchangeSetting() {
+
+        }
+
+        @Override
+        public int getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.EXCHANGE_SETTING;
+        }
+
+    }
+
 }

@@ -20,6 +20,7 @@ public abstract class TransactionType {
     private static final byte TYPE_COLORED_COINS = 2;
     private static final byte TYPE_DIGITAL_GOODS = 3;
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
+    private static final byte TYPE_MONETARY_SYSTEM = 5;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
@@ -47,6 +48,12 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_DELIVERY = 5;
     private static final byte SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
+
+    private static final byte SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE = 0;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER = 3;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING = 4;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -124,6 +131,19 @@ public abstract class TransactionType {
                         return AccountControl.EFFECTIVE_BALANCE_LEASING;
                     default:
                         return null;
+                }
+            case TYPE_MONETARY_SYSTEM:
+                switch (subtype) {
+                    case SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE:
+                        return MonetarySystem.CURRENCY_ISSUANCE;
+                    case SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE:
+                        return MonetarySystem.RESERVE_INCREASE;
+                    case SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM:
+                        return MonetarySystem.RESERVE_CLAIM;
+                    case SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER:
+                        return MonetarySystem.MONEY_TRANSFER;
+                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING:
+                        return MonetarySystem.EXCHANGE_SETTING;
                 }
             default:
                 return null;
@@ -1879,6 +1899,217 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
+            }
+
+        };
+
+    }
+
+    public static abstract class MonetarySystem extends TransactionType {
+
+        private MonetarySystem() {
+        }
+
+        @Override
+        public final byte getType() {
+            return TransactionType.TYPE_MONETARY_SYSTEM;
+        }
+
+        @Override
+        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
+        public static final TransactionType CURRENCY_ISSUANCE = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_CURRENCY_ISSUANCE;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of currency issuance not supported");
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            }
+
+        };
+
+        public static final TransactionType RESERVE_INCREASE = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of reserve increase not supported");
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            }
+
+        };
+
+        public static final TransactionType RESERVE_CLAIM = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of reserve claim not supported");
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            }
+
+        };
+
+        public static final TransactionType MONEY_TRANSFER = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of money transfer not supported");
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            }
+
+        };
+
+        public static final TransactionType EXCHANGE_SETTING = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of exchange setting not supported");
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
             }
 
         };
