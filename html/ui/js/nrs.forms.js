@@ -172,17 +172,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {
-			if (response.errorCode) {
-				if (NRS.forms.errorMessages[requestType] && NRS.forms.errorMessages[requestType][response.errorCode]) {
-					$modal.find(".error_message").html(NRS.forms.errorMessages[requestType][response.errorCode].escapeHTML()).show();
-				} else if (NRS.forms.errorMessages[originalRequestType] && NRS.forms.errorMessages[originalRequestType][response.errorCode]) {
-					$modal.find(".error_message").html(NRS.forms.errorMessages[originalRequestType][response.errorCode].escapeHTML()).show();
-				} else {
-					$modal.find(".error_message").html(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.").show();
-				}
-				NRS.unlockForm($modal, $btn);
-			} else if (response.fullHash) {
-				//should we add a fake transaction to the recent transactions?? or just wait until the next block comes!??
+			if (response.fullHash) {
 				NRS.unlockForm($modal, $btn);
 
 				if (!$modal.hasClass("modal-no-hide")) {
@@ -216,6 +206,18 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.accountInfo && !NRS.accountInfo.publicKey) {
 					$("#dashboard_message").hide();
 				}
+			} else if (response.errorCode) {
+				if (NRS.forms.errorMessages[requestType] && NRS.forms.errorMessages[requestType][response.errorCode]) {
+					$modal.find(".error_message").html(NRS.forms.errorMessages[requestType][response.errorCode].escapeHTML()).show();
+				} else if (NRS.forms.errorMessages[originalRequestType] && NRS.forms.errorMessages[originalRequestType][response.errorCode]) {
+					$modal.find(".error_message").html(NRS.forms.errorMessages[originalRequestType][response.errorCode].escapeHTML()).show();
+				} else {
+					$modal.find(".error_message").html(response.errorDescription ? String(response.errorDescription).escapeHTML() : "Unknown error occured.").show();
+				}
+				NRS.unlockForm($modal, $btn);
+			} else if (response.error) {
+				$modal.find(".error_message").html(String(response.error).escapeHTML()).show();
+				NRS.unlockForm($modal, $btn);
 			} else {
 				var sentToFunction = false;
 

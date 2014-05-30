@@ -195,31 +195,80 @@ var NRS = (function(NRS, $, undefined) {
 		$modal.find(".callout").hide();
 	});
 
+	$("#buy_alias_modal").on("show.bs.modal", function(e) {
+		var $modal = $(this);
+
+		var $invoker = $(e.relatedTarget);
+
+		NRS.fetchingModalData = true;
+
+		var alias = String($invoker.data("alias"));
+
+		NRS.sendRequest("getAlias", {
+			"aliasName": alias
+		}, function(response) {
+			NRS.fetchingModalData = false;
+
+			if (response.errorCode) {
+				e.preventDefault();
+				$.growl("Could not find alias.", {
+					"type": "danger"
+				});
+			} else {
+				if (!response.buyer) {
+					e.preventDefault();
+					$.growl("This alias is no longer for sale.", {
+						"type": "danger"
+					});
+				} else if (response.buyer != NRS.genesis && response.buyer != NRS.account) {
+					e.preventDefault();
+					$.growl("This alias is offered for sale to another account pending decision.", {
+						"type": "danger"
+					});
+				} else {
+					$modal.find("input[name=aliasName]").val(alias.escapeHTML());
+					$modal.find(".alias_name_display").html(alias.escapeHTML());
+					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT));
+				}
+			}
+		}, false);
+	});
+
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var alias = $invoker.data("alias");
 
 		if (alias) {
+			NRS.fetchingModalData = true;
+
 			alias = String(alias);
 
 			NRS.sendRequest("getAlias", {
 				"aliasName": alias
 			}, function(response) {
-				if (/http:\/\//i.test(response.aliasURI)) {
-					NRS.forms.setAliasType("uri");
-				} else if (/acct:(\d+)@nxt/.test(response.aliasURI) || /nacc:(\d+)/.test(response.aliasURI)) {
-					NRS.forms.setAliasType("account");
+				if (response.errorCode) {
+					e.preventDefault();
+					$.growl("Could not find alias.", {
+						"type": "danger"
+					});
+					NRS.fetchingModalData = false;
 				} else {
-					NRS.forms.setAliasType("general");
-				}
+					if (/http:\/\//i.test(response.aliasURI)) {
+						NRS.forms.setAliasType("uri");
+					} else if (/acct:(\d+)@nxt/.test(response.aliasURI) || /nacc:(\d+)/.test(response.aliasURI)) {
+						NRS.forms.setAliasType("account");
+					} else {
+						NRS.forms.setAliasType("general");
+					}
 
-				$("#register_alias_modal h4.modal-title").html("Update Alias");
-				$("#register_alias_modal .btn-primary").html("Update");
-				$("#register_alias_alias").val(alias.escapeHTML()).hide();
-				$("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
-				$("#register_alias_alias_update").val(1);
-				$("#register_alias_uri").val(response.aliasURI);
+					$("#register_alias_modal h4.modal-title").html("Update Alias");
+					$("#register_alias_modal .btn-primary").html("Update");
+					$("#register_alias_alias").val(alias.escapeHTML()).hide();
+					$("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
+					$("#register_alias_alias_update").val(1);
+					$("#register_alias_uri").val(response.aliasURI);
+				}
 			}, false);
 		} else {
 			$("#register_alias_modal h4.modal-title").html("Register Alias");
@@ -401,6 +450,18 @@ var NRS = (function(NRS, $, undefined) {
 					"Account": NRS.getAccountTitle(response, "account"),
 					"Last Updated": NRS.formatTimestamp(response.timestamp),
 					"DataFormattedHTML": String(response.aliasURI).autoLink()
+				}
+
+				if (response.buyer) {
+					if (response.buyer == NRS.account) {
+						$("#alias_sale_callout").html("You have been offered this alias for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>").show();
+					} else if (response.buyer == NRS.genesis) {
+						$("#alias_sale_callout").html("This alias is offered for sale for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>").show();
+					} else {
+						$("#alias_sale_callout").html("This alias is offered for sale to another account pending decision.").show();
+					}
+				} else {
+					$("#alias_sale_callout").hide();
 				}
 
 				$("#alias_info_table tbody").append(NRS.createInfoTable(data));
