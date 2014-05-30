@@ -10,7 +10,6 @@ import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -170,11 +169,7 @@ final class ParameterParser {
     }
 
     static byte[] getNote(HttpServletRequest req) throws ParameterException {
-        try {
-            return Convert.nullToEmpty(req.getParameter("note")).getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new ParameterException(INCORRECT_DGS_NOTE);
-        }
+        return Convert.toBytes(Convert.nullToEmpty(req.getParameter("note")));
     }
 
     static EncryptedData getEncryptedNote(HttpServletRequest req, Account recipientAccount) throws ParameterException {
@@ -338,6 +333,28 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
+    }
+
+    static int getFirstIndex(HttpServletRequest req) {
+        int firstIndex;
+        try {
+            firstIndex = Integer.parseInt(req.getParameter("firstIndex"));
+            if (firstIndex < 0) {
+                return 0;
+            }
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+        return firstIndex;
+    }
+
+    static int getLastIndex(HttpServletRequest req) {
+        try {
+            return Integer.parseInt(req.getParameter("lastIndex"));
+        } catch (NumberFormatException e) {
+            return Integer.MAX_VALUE;
+        }
+
     }
 
     private ParameterParser() {} // never

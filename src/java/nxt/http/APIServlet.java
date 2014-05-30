@@ -128,6 +128,8 @@ public final class APIServlet extends HttpServlet {
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
         map.put("placeBidOrder", PlaceBidOrder.instance);
+        map.put("readEncryptedNote", ReadEncryptedNote.instance);
+        map.put("sendEncryptedNote", SendEncryptedNote.instance);
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);

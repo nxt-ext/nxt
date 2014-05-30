@@ -2530,7 +2530,7 @@ background:#33363f
 /* wesley */
 
 @media screen and (min-width: 800px) {
-  body .modal-dialog-wide {
+  body .modal-dialog-wide, body .modal-dialog-700 {
     width: 700px;
     margin: 30px auto;
   }

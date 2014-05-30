@@ -153,8 +153,7 @@ public final class Nxt {
         static {
 
             long startTime = System.currentTimeMillis();
-
-            Logger.logMessage("logging enabled");
+            Logger.init();
             Db.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();

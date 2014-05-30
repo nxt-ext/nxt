@@ -1996,7 +1996,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.open_orders = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
+		if (NRS.hasTransactionUpdates(transactions)) {
 			NRS.pages.open_orders();
 		}
 	}
