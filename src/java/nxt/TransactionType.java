@@ -55,6 +55,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
     private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER = 3;
     private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING = 4;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING = 5;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -147,6 +148,8 @@ public abstract class TransactionType {
                         return MonetarySystem.MONEY_TRANSFER;
                     case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING:
                         return MonetarySystem.EXCHANGE_SETTING;
+                    case SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING:
+                        return MonetarySystem.MONEY_MINTING;
                 }
             default:
                 return null;
@@ -2121,6 +2124,44 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 throw new UndoNotSupportedException("Reversal of exchange setting not supported");
+            }
+
+            @Override
+            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            }
+
+        };
+
+        public static final TransactionType MONEY_MINTING = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING;
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of money minting not supported");
             }
 
             @Override

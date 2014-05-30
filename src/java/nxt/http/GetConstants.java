@@ -180,6 +180,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("value", TransactionType.MonetarySystem.EXCHANGE_SETTING.getSubtype());
         subtype.put("description", "Exchange setting");
         subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", TransactionType.MonetarySystem.MONEY_MINTING.getSubtype());
+        subtype.put("description", "Money minting");
+        subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         response.put("transactionTypes", transactionTypes);
