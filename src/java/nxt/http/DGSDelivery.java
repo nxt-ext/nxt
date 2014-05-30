@@ -10,7 +10,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 
 import static nxt.http.JSONResponses.ALREADY_DELIVERED;
 import static nxt.http.JSONResponses.INCORRECT_DGS_DISCOUNT;
@@ -46,7 +45,7 @@ public final class DGSDelivery extends CreateTransaction {
         } catch (RuntimeException e) {
             return INCORRECT_DGS_DISCOUNT;
         }
-        if (discountNQT < 0 || discountNQT > Constants.MAX_BALANCE_NQT) {
+        if (discountNQT < 0 || discountNQT > Constants.MAX_BALANCE_NQT || discountNQT > purchase.getPriceNQT()) {
             return INCORRECT_DGS_DISCOUNT;
         }
 
@@ -61,9 +60,9 @@ public final class DGSDelivery extends CreateTransaction {
                 if (goodsDataString != null) {
                     goodsData = Convert.parseHexString(goodsDataString);
                 } else {
-                    goodsData = Convert.nullToEmpty(req.getParameter("goodsText")).getBytes("UTF-8");
+                    goodsData = Convert.toBytes(Convert.nullToEmpty(req.getParameter("goodsText")));
                 }
-            } catch (UnsupportedEncodingException|RuntimeException e) {
+            } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
             encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);

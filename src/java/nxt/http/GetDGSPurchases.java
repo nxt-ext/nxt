@@ -14,34 +14,47 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
     static final GetDGSPurchases instance = new GetDGSPurchases();
 
     private GetDGSPurchases() {
-        super("seller", "buyer", "timestamp");
+        super("seller", "buyer", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        int timestamp = ParameterParser.getTimestamp(req);
         Long sellerId = ParameterParser.getSellerId(req);
         Long buyerId = ParameterParser.getBuyerId(req);
+        int firstIndex = ParameterParser.getFirstIndex(req);
+        int lastIndex = ParameterParser.getLastIndex(req);
+
+        JSONObject response = new JSONObject();
+        JSONArray purchasesJSON = new JSONArray();
+        response.put("purchases", purchasesJSON);
+
+        if (sellerId == null && buyerId == null) {
+            DigitalGoodsStore.Purchase[] purchases = DigitalGoodsStore.getAllPurchases().toArray(new DigitalGoodsStore.Purchase[0]);
+            for (int i = firstIndex; i <= lastIndex && i < purchases.length; i++) {
+                purchasesJSON.add(JSONData.purchase(purchases[purchases.length - 1 - i]));
+            }
+            return response;
+        }
 
         Collection<DigitalGoodsStore.Purchase> purchases;
-        if (sellerId == null && buyerId == null) {
-            purchases = DigitalGoodsStore.getAllPurchases();
-        } else if (sellerId != null && buyerId == null) {
+        if (sellerId != null && buyerId == null) {
             purchases = DigitalGoodsStore.getSellerPurchases(sellerId);
         } else if (sellerId == null) {
             purchases = DigitalGoodsStore.getBuyerPurchases(buyerId);
         } else {
             purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId);
         }
-        JSONObject response = new JSONObject();
-        JSONArray purchasesJSON = new JSONArray();
+        int i = 0;
         for (DigitalGoodsStore.Purchase purchase : purchases) {
-            if (purchase.getTimestamp() >= timestamp) {
+            if (i > lastIndex) {
+                break;
+            }
+            if (i >= firstIndex) {
                 purchasesJSON.add(JSONData.purchase(purchase));
             }
+            i++;
         }
-        response.put("purchases", purchasesJSON);
         return response;
     }
 

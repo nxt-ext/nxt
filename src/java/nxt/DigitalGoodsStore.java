@@ -263,10 +263,10 @@ public final class DigitalGoodsStore {
         @Override
         public int compareTo(Purchase other) {
             if (this.timestamp < other.timestamp) {
-                return -1;
+                return 1;
             }
             if (this.timestamp > other.timestamp) {
-                return 1;
+                return -1;
             }
             return Long.compare(this.id, other.id);
         }
@@ -274,7 +274,7 @@ public final class DigitalGoodsStore {
     }
 
     private static final Map<Long, Goods> goodsMap = Collections.synchronizedMap(new LinkedHashMap<Long, Goods>());
-    private static final ConcurrentMap<Long, Purchase> purchasesMap = new ConcurrentHashMap<>();
+    private static final Map<Long, Purchase> purchasesMap = Collections.synchronizedMap(new LinkedHashMap<Long, Purchase>());
     private static final Collection<Goods> allGoods = Collections.unmodifiableCollection(goodsMap.values());
     private static final Collection<Purchase> allPurchases = Collections.unmodifiableCollection(purchasesMap.values());
     private static final ConcurrentMap<Long, Purchase> pendingPurchasesMap = new ConcurrentHashMap<>();
@@ -506,6 +506,7 @@ public final class DigitalGoodsStore {
         buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
         purchase.setRefundNote(encryptedNote);
         purchase.setRefundNQT(refundNQT);
+        pendingPurchasesMap.remove(purchaseId);
         purchaseListeners.notify(purchase, Event.REFUND);
     }
 
@@ -517,6 +518,9 @@ public final class DigitalGoodsStore {
         buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
         purchase.setRefundNote(null);
         purchase.setRefundNQT(0);
+        if (purchase.encryptedGoods == null) {
+            pendingPurchasesMap.put(purchaseId, purchase);
+        }
     }
 
     static void feedback(Long purchaseId, EncryptedData encryptedNote) {

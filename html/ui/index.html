@@ -239,8 +239,12 @@
 					          		<li><a href="#" data-type="0:0">Ordinary Payment</a></li>
 					           		<li><a href="#" data-type="1:0">Arbitrary Message</a></li>
 					           		<li><a href="#" data-type="1:1">Alias Assignment</a></li>
+					           		<li><a href="#" data-type="1:6">Alias Sale</a></li>
+					           		<li><a href="#" data-type="1:7">Alias Buy</a></li>
 					           		<li><a href="#" data-type="1:2">Poll Creation</a></li>
 					           		<li><a href="#" data-type="1:3">Vote Casting</a></li>
+					           		<li><a href="#" data-type="1:4">Hub Announcement</a></li>
+					           		<li><a href="#" data-type="1:5">Account Info</a></li>
 					           		<li><a href="#" data-type="2:0">Asset Issuance</a></li>
 					           		<li><a href="#" data-type="2:1">Asset Transfer</a></li>
 					           		<li><a href="#" data-type="2:2">Ask Order Placement</a></li>
@@ -469,7 +473,8 @@
 							    <tr>
 							        <th>Alias</th>
 							        <th>URI</th>
-							        <th>Edit</th>
+							        <th style="width:5%">Status</th>
+							        <th style="width:10%">Actions</th>
 							    </tr>
 							    </thead>
 							    <tbody>
@@ -1818,7 +1823,7 @@
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
 						<input type="hidden" name="request_type" value="transferAsset" />
-						<input type="hidden" name="success_message" value="The asset has been transferred!" />
+						<input type="hidden" name="success_message" value="The asset transfer is in progress!" />
 						<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be transferred." />
 						<input type="hidden" name="converted_account_id" value="" />
 				     	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -2576,7 +2581,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		</div>
 		
 		<div class="modal fade" id="send_money_modal" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog modal-dialog-wide">
+			<div class="modal-dialog modal-dialog-700">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -2796,6 +2801,180 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		  	</div>
 		</div>
 		
+		<div class="modal fade" id="transfer_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Transfer Alias</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label>ALIAS</label>
+								<p class="alias_name_display"></p>
+								<input type="hidden" name="aliasName" value="" />
+								<input type="hidden" name="priceNQT" value="0" />
+							</div>
+							<div class="form-group">
+								<label for="transfer_alias_recipient">RECIPIENT</label>
+								<div class="input-group">
+								    <input type="text" class="form-control" name="recipient" id="transfer_alias_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
+								    <span class="input-group-btn btn-group recipient_selector">
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+								    	<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    </span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="transfer_alias_fee">FEE</label>
+										<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="transfer_alias_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="transfer_alias_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="transfer_alias_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="5">
+							</div>
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+						</form>
+					</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="sellAlias" />
+			      		<input type="hidden" name="success_message" value="Your alias transfer is in progress!" />
+			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be transferred." />
+			      		<input type="hidden" name="converted_account_id" value="" />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Alias</button>
+			    	</div>
+				</div>
+		  	</div>
+		</div>
+
+		<div class="modal fade" id="sell_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-700">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Sell Alias</h4>
+		      		</div>
+			      	<div class="modal-body">	
+						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+							<li class="active"><a href="#" id="sell_alias_to_specific_account">Sell to Specific Account</a></li>
+							<li><a href="#" id="sell_alias_to_anyone">Sell to Anyone</a></li>
+						</ul>		
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label>ALIAS</label>
+								<p class="alias_name_display"></p>
+								<input type="hidden" name="aliasName" value="" />
+							</div>
+							<div class="form-group" id="sell_alias_recipient_div">
+								<label for="sell_alias_recipient">RECIPIENT</label>
+								<div class="input-group">
+								    <input type="text" class="form-control" name="recipient" id="sell_alias_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
+								    <span class="input-group-btn btn-group recipient_selector">
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>
+								    	<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    </span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="sell_alias_price">PRICE</label>
+						                <input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
+									</div>
+								</div>
+								<div class="col-xs-3 col-sm-3 col-md-3">
+									<div class="form-group">
+										<label for="sell_alias_fee">FEE</label>
+										<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+									</div>
+								</div>
+								<div class="col-xs-3 col-sm-3 col-md-3">
+									<div class="form-group">
+										<label for="sell_alias_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="sell_alias_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="sell_alias_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="5">
+							</div>
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+						</form>
+					</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="sellAlias" />
+			      		<input type="hidden" name="success_message" value="Your alias has been put up for sale successfully!" />
+			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be put up for sale." />
+			      		<input type="hidden" name="converted_account_id" value="" />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Sell Alias</button>
+			    	</div>
+				</div>
+		  	</div>
+		</div>
+
+		<div class="modal fade" id="cancel_alias_sale_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-700">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Cancel Alias Sale</h4>
+		      		</div>
+			      	<div class="modal-body">	
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label>ALIAS</label>
+								<p class="alias_name_display"></p>
+								<input type="hidden" name="aliasName" value="" />
+								<input type="hidden" name="cancelSale" value="1" />
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="cancel_alias_sale_fee">FEE</label>
+										<input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="1">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="cancel_alias_sale_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="cancel_alias_sale_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="2">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="cancel_alias_sale_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
+							</div>
+						</form>
+					</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="sellAlias" />
+			      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
+			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cancel Sale</button>
+			    	</div>
+				</div>
+		  	</div>
+		</div>
+
 		<div class="modal fade modal-no-hide" id="generate_token_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">

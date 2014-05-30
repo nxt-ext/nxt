@@ -63,6 +63,48 @@ public interface Attachment {
         }
     }
 
+    public final static class MessagingEncryptedMessage implements Attachment {
+
+        private final EncryptedData encryptedMessage;
+
+        public MessagingEncryptedMessage(EncryptedData encryptedMessage) {
+            this.encryptedMessage = encryptedMessage;
+        }
+
+        @Override
+        public int getSize() {
+            return 2 + encryptedMessage.getData().length + encryptedMessage.getNonce().length;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putShort((short)encryptedMessage.getData().length);
+            buffer.put(encryptedMessage.getData());
+            buffer.put(encryptedMessage.getNonce());
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("message", Convert.toHexString(encryptedMessage.getData()));
+            attachment.put("nonce", Convert.toHexString(encryptedMessage.getNonce()));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ENCRYPTED_MESSAGE;
+        }
+
+        public EncryptedData getEncryptedMessage() {
+            return encryptedMessage;
+        }
+
+    }
+
     public final static class MessagingAliasAssignment implements Attachment {
 
         private final String aliasName;
@@ -978,7 +1020,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 8 + 4 + 8 + 4 + 2 + note.getData().length + 32;
+            return 8 + 4 + 8 + 4 + 2 + note.getData().length + note.getNonce().length;
         }
 
         @Override
@@ -1043,7 +1085,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 8 + 2 + goods.getData().length + 32 + 8;
+            return 8 + 2 + goods.getData().length + goods.getNonce().length + 8;
         }
 
         @Override
@@ -1099,7 +1141,7 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                return 8 + 2 + note.getData().length + 32;
+                return 8 + 2 + note.getData().length + note.getNonce().length;
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -1157,7 +1199,7 @@ public interface Attachment {
         @Override
         public int getSize() {
             try {
-                return 8 + 8 + 2 + note.getData().length + 32;
+                return 8 + 8 + 2 + note.getData().length + note.getNonce().length;
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;

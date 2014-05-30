@@ -18,6 +18,7 @@ public final class Constants {
     public static final int MAX_ALIAS_LENGTH = 100;
 
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
+    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
 
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
@@ -64,6 +65,7 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int ALIAS_TRANSFER_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
+    public static final int ENCRYPTED_MESSAGES_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

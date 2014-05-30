@@ -953,7 +953,7 @@ var NRS = (function(NRS, $, undefined) {
 		return amount;
 	}
 
-	NRS.hasUnconfirmedTransaction = function(type, subtype, fields) {
+	NRS.getUnconfirmedTransaction = function(type, subtype, fields) {
 		if (!NRS.unconfirmedTransactions.length) {
 			return false;
 		}
@@ -976,15 +976,19 @@ var NRS = (function(NRS, $, undefined) {
 			if (fields) {
 				for (var key in fields) {
 					if (unconfirmedTransaction[key] == fields[key]) {
-						return true;
+						return unconfirmedTransaction;
 					}
 				}
 			} else {
-				return true;
+				return unconfirmedTransaction;
 			}
 		}
 
 		return false;
+	}
+
+	NRS.hasTransactionUpdates = function(transactions) {
+		return (transactions && transactions.length || NRS.unconfirmedTransactionsChange || NRS.state.isScanning);
 	}
 
 	return NRS;

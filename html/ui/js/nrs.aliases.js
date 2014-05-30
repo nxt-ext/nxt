@@ -56,7 +56,44 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < alias_count; i++) {
 					var alias = aliases[i];
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + (alias.tentative ? " -  <strong>Pending</strong>" : "") + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td><a href='#' data-toggle='modal' data-alias='" + String(alias.aliasName).escapeHTML() + "' data-target='#register_alias_modal'>Edit</a></td></tr>";
+					alias.status = "/";
+
+					var unconfirmedTransaction = NRS.getUnconfirmedTransaction(1, 6, {
+						"alias": alias.aliasName
+					});
+
+					if (unconfirmedTransaction) {
+						alias.tentative = true;
+						alias.buyer = unconfirmedTransaction.recipient;
+						alias.priceNQT = unconfirmedTransaction.priceNQT;
+					}
+
+					var allowCancel = false;
+
+					if (alias.buyer) {
+						if (alias.priceNQT == "0") {
+							if (alias.buyer == NRS.account) {
+								alias.status = "Cancelling Sale";
+							} else {
+								alias.status = "Transfer In Progress";
+							}
+						} else {
+							allowCancel = true;
+
+							if (alias.buyer != NRS.genesis) {
+								alias.status = "For Sale (direct)";
+							} else {
+								alias.status = "For Sale (indirect)";
+							}
+						}
+					}
+
+					if (alias.status != "/") {
+						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
+					}
+
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
+
 					if (!alias.aliasURI) {
 						empty_alias_count++;
 					} else if (alias.aliasURI.indexOf("http") === 0) {
@@ -84,6 +121,80 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	$("#transfer_alias_modal, #sell_alias_modal, #cancel_alias_sale_modal").on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+
+		var alias = String($invoker.data("alias"));
+
+		$(this).find("input[name=aliasName]").val(alias.escapeHTML());
+		$(this).find(".alias_name_display").html(alias.escapeHTML());
+
+		if ($(this).attr("id") == "sell_alias_modal") {
+			$(this).find("ul.nav-pills li").removeClass("active");
+			$(this).find("ul.nav-pills li:first-child").addClass("active");
+			$("#sell_alias_recipient_div").show();
+		}
+	});
+
+	NRS.forms.sellAlias = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		if (data.cancelSale) {
+			data.priceNQT = "0";
+			data.recipient = NRS.account;
+			delete data.cancelSale;
+		}
+
+		return {
+			"data": data
+		};
+	}
+
+	NRS.forms.sellAliasComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		var $row = $("#aliases_table tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
+
+		$row.addClass("tentative");
+
+		//transfer
+		if (data.priceNQT == "0") {
+			if (data.recipient == NRS.account) {
+				$row.find("td.status").html("<span class='label label-info'>Cancelling Sale</span>");
+			} else {
+				$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
+			}
+		} else {
+			if (data.recipient != "0") {
+				$row.find("td.status").html("<span class='label label-info'>For Sale (direct)</span>");
+			} else {
+				$row.find("td.status").html("<span class='label label-info'>For Sale (indirect)</span>");
+			}
+		}
+	}
+
+	$("#sell_alias_to_specific_account, #sell_alias_to_anyone").on("click", function(e) {
+		e.preventDefault();
+
+		$(this).closest("ul").find("li").removeClass("active");
+		$(this).parent().addClass("active");
+
+		var $modal = $(this).closest(".modal");
+
+		if ($(this).attr("id") == "sell_alias_to_anyone") {
+			$modal.find("input[name=recipient]").val("0");
+			$("#sell_alias_recipient_div").hide();
+		} else {
+			$modal.find("input[name=recipient]").val("");
+			$("#sell_alias_recipient_div").show();
+		}
+
+		$modal.find("input[name=converted_account_id]").val("");
+		$modal.find(".callout").hide();
+	});
+
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
@@ -109,7 +220,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
 				$("#register_alias_alias_update").val(1);
 				$("#register_alias_uri").val(response.aliasURI);
-			});
+			}, false);
 		} else {
 			$("#register_alias_modal h4.modal-title").html("Register Alias");
 			$("#register_alias_modal .btn-primary").html("Register");
@@ -121,7 +232,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.incoming.aliases = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
+		if (NRS.hasTransactionUpdates(transactions)) {
 			NRS.pages.aliases();
 		}
 	}
@@ -214,27 +325,30 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.currentPage == "aliases") {
+			data.aliasName = String(data.aliasName).escapeHTML();
+			data.aliasURI = String(data.aliasURI).escapeHTML();
+
 			var $table = $("#aliases_table tbody");
 
-			var $row = $table.find("tr[data-alias=" + String(data.alias).toLowerCase().escapeHTML() + "]");
+			var $row = $table.find("tr[data-alias=" + data.aliasName.toLowerCase() + "]");
 
 			if ($row.length) {
 				$row.addClass("tentative");
-				$row.find("td.alias").html(data.alias.escapeHTML() + " - <strong>Pending</strong>");
+				$row.find("td.alias").html(data.aliasName);
 
-				if (data.uri && data.uri.indexOf("http") === 0) {
-					$row.find("td.uri").html("<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + String(data.uri).escapeHTML() + "</a>");
+				if (data.aliasURI && data.aliasURI.indexOf("http") === 0) {
+					$row.find("td.uri").html("<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>");
 				} else {
-					$row.find("td.uri").html(String(data.uri).escapeHTML());
+					$row.find("td.uri").html(data.aliasURI);
 				}
 			} else {
 				var $rows = $table.find("tr");
 
-				var rowToAdd = "<tr class='tentative' data-alias='" + String(data.alias).toLowerCase().escapeHTML() + "'><td class='alias'>" + data.alias.escapeHTML() + " -  <strong>Pending</strong></td><td class='uri'>" + (data.uri && data.uri.indexOf("http") === 0 ? "<a href='" + String(data.uri).escapeHTML() + "' target='_blank'>" + data.uri.escapeHTML() + "</a>" : String(data.uri).escapeHTML()) + "</td><td>Edit</td></tr>";
+				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a> <a class='btn btn-xs btn-default' href='#'>Cancel Sale</a></td></tr>";
 
 				var rowAdded = false;
 
-				var newAlias = String(data.alias).toLowerCase();
+				var newAlias = data.aliasName.toLowerCase();
 
 				if ($rows.length) {
 					$rows.each(function() {
