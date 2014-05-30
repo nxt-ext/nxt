@@ -6,6 +6,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
+		//todo get encrypted messages...
+
 		NRS.sendRequest("getAccountTransactionIds+", {
 			"account": NRS.account,
 			"timestamp": 0,
@@ -258,52 +260,44 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
-	NRS.encryptMessage = function(secretPhrase, publicKey, message) {
+	NRS.encryptMessage = function(message, theirAccountId, mySecretPhrase) {
+		mySecretPhrase = "wutwutwut";
+
 		try {
-			var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
-			var publicKey = converters.hexStringToByteArray(publicKey);
+			var myPrivateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(mySecretPhrase));
+			var theirPublicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(theirAccountId, true));
 
-			var messageBytes = converters.stringToByteArray(message);
+			var encrypted = nxtCrypto.encryptData(converters.stringToByteArray(message), myPrivateKey, theirPublicKey);
 
-			var xored = new XoredData().encrypt(messageBytes, privateKey, publicKey);
-
-			return converters.stringToHexString("CRYPTED!") + converters.byteArrayToHexString(xored.nonce) + converters.byteArrayToHexString(xored.data);
+			return {
+				"message": converters.byteArrayToHexString(encrypted.data),
+				"nonce": converters.byteArrayToHexString(encrypted.nonce)
+			};
 		} catch (e) {
+			console.log("here we are");
+			console.log(e);
+
 			return null;
 		}
 	}
 
-	NRS.decryptMessage = function(secretPhrase, publicKey, message) {
-		if (typeof secretPhrase == "string") {
-			var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
-		} else {
-			var privateKey = secretPhrase;
-		}
-		if (typeof publicKey == "string") {
-			publicKey = converters.hexStringToByteArray(publicKey);
-		}
+	NRS.decryptMessage = function(message, nonce, theirAccountId, mySecretPhrase) {
+		mySecretPhrase = "wutwutwut";
+		try {
+			var myPrivateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(mySecretPhrase));
+			var theirPublicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(theirAccountId, true));
 
-		if (message.indexOf("4352595054454421") === 0) { //starts with CRYPTED!
-			try {
-				var xored = new XoredData();
-
-				var byteArray = converters.hexStringToByteArray(message);
-
-				xored.nonce = byteArray.slice(8, 40);
-				xored.data = byteArray.slice(40);
-
-				var decrypt = xored.decrypt(privateKey, publicKey);
-
-				return converters.byteArrayToString(decrypt);
-			} catch (e) {
-				return null;
-			}
-		} else {
-			return message;
+			return nxtCrypto.decryptData(converters.hexStringToByteArray(message), converters.hexStringToByteArray(nonce), myPrivateKey, theirPublicKey);
+		} catch (err) {
+			console.log("er");
+			console.log(err);
+			return err;
 		}
 	}
 
 	NRS.forms.sendMessage = function($modal) {
+		var requestType = "sendMessage";
+
 		var data = {
 			"recipient": $.trim($("#send_message_recipient").val()),
 			"feeNXT": $.trim($("#send_message_fee").val()),
@@ -319,36 +313,18 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		var hex = "";
 		var error = "";
 
 		if ($("#send_message_encrypt").is(":checked")) {
-			NRS.sendRequest("getAccountPublicKey", {
-				"account": $("#send_message_recipient").val()
-			}, function(response) {
-				if (!response.publicKey) {
-					error = "Could not find public key for recipient, which is necessary for sending encrypted messages.";
-					return;
-				}
+			var encrypted = NRS.encryptMessage(message, data.recipient, NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase);
 
-				hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase, response.publicKey, message);
-			}, false);
+			requestType = "sendEncryptedNote";
+
+			data["encryptedNote"] = encrypted.message;
+			data["encryptedNoteNonce"] = encrypted.nonce;
 		} else {
-			hex = converters.stringToHexString("") + converters.stringToHexString(message);
-
-			/*
-		    hex = NRS.convertToHex8(message);
-	        var back = NRS.convertFromHex8(hex);
-	           	
-	        if (back != message) {
-	           	hex =  NRS.convertToHex16("\uFEFF" + message);
-            }*/
+			data["message"] = converters.stringToHexString(message);
 		}
-
-		data["_extra"] = {
-			"message": message
-		};
-		data["message"] = hex;
 
 		if (error) {
 			return {
@@ -356,8 +332,12 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
+		data["_extra"] = {
+			"message": message
+		};
+
 		return {
-			"requestType": "sendMessage",
+			"requestType": requestType,
 			"data": data
 		};
 	}
@@ -407,19 +387,9 @@ var NRS = (function(NRS, $, undefined) {
 		var error = "";
 
 		if ($("#inline_message_encrypt").is(":checked")) {
-			NRS.sendRequest("getAccountPublicKey", {
-				"account": $("#inline_message_recipient").val()
-			}, function(response) {
-				if (!response.publicKey) {
-					$.growl("Could not find public key for recipient, which is necessary for sending encrypted messages.", {
-						"type": "danger"
-					});
-				}
-
-				hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase, response.publicKey, message);
-			}, false);
+			hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase, data.recipient, message);
 		} else {
-			hex = converters.stringToHexString("") + converters.stringToHexString(message); //todo
+			hex = converters.stringToHexString(message);
 		}
 
 		data["_extra"] = {

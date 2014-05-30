@@ -20,8 +20,12 @@ var converters = function() {
 	return {
 		byteArrayToHexString: function(bytes) {
 			var str = '';
-			for (var i = 0; i < bytes.length; ++i)
+			for (var i = 0; i < bytes.length; ++i) {
+				if (bytes[i] < 0) {
+					bytes[i] += 256;
+				}
 				str += nibbleToChar[bytes[i] >> 4] + nibbleToChar[bytes[i] & 0x0F];
+			}
 
 			return str;
 		},
