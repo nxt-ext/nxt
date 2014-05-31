@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
+import java.util.List;
 
 public interface Attachment {
 
@@ -1291,20 +1292,49 @@ public interface Attachment {
 
     public final static class MonetarySystemCurrencyIssuance implements Attachment {
 
-        public MonetarySystemCurrencyIssuance() {
+        private final String name;
+        private final String code;
+        private final String description;
+        private final byte type;
+        private final long totalSupplyNQT;
+        private final int issuanceHeight;
+        private final long minReservePerUnitNQT;
+        private final long mintingSlope;
 
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupplyNQT, int issuanceHeight, long minReservePerUnitNQT, long mintingSlope) {
+            this.name = name;
+            this.code = code;
+            this.description = description;
+            this.type = type;
+            this.totalSupplyNQT = totalSupplyNQT;
+            this.issuanceHeight = issuanceHeight;
+            this.minReservePerUnitNQT = minReservePerUnitNQT;
+            this.mintingSlope = mintingSlope;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 1 + Convert.toBytes(name).length + 3 + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 8;
         }
 
         @Override
         public byte[] getBytes() {
             try {
+                byte[] name = Convert.toBytes(this.name);
+                byte[] description = Convert.toBytes(this.description);
+
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.put((byte)name.length);
+                buffer.put(name);
+                buffer.put(Convert.toBytes(code));
+                buffer.putShort((short) description.length);
+                buffer.put(description);
+                buffer.put(type);
+                buffer.putLong(totalSupplyNQT);
+                buffer.putInt(issuanceHeight);
+                buffer.putLong(minReservePerUnitNQT);
+                buffer.putLong(mintingSlope);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1315,6 +1345,14 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            attachment.put("name", name);
+            attachment.put("code", code);
+            attachment.put("description", description);
+            attachment.put("type", type);
+            attachment.put("totalSupplyNQT", totalSupplyNQT);
+            attachment.put("issuanceHeight", issuanceHeight);
+            attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
+            attachment.put("mintingSlope", mintingSlope);
             return attachment;
         }
 
@@ -1323,17 +1361,53 @@ public interface Attachment {
             return TransactionType.MonetarySystem.CURRENCY_ISSUANCE;
         }
 
+        public String getName() {
+            return name;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public byte getType() {
+            return type;
+        }
+
+        public long getTotalSupplyNQT() {
+            return totalSupplyNQT;
+        }
+
+        public int getIssuanceHeight() {
+            return issuanceHeight;
+        }
+
+        public long getMinReservePerUnitNQT() {
+            return minReservePerUnitNQT;
+        }
+
+        public long getMintingSlope() {
+            return mintingSlope;
+        }
+
     }
 
     public final static class MonetarySystemReserveIncrease implements Attachment {
 
-        public MonetarySystemReserveIncrease() {
+        private final Long currencyId;
+        private final long amountNQT;
 
+        public MonetarySystemReserveIncrease(Long currencyId, long amountNQT) {
+            this.currencyId = currencyId;
+            this.amountNQT = amountNQT;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 8;
         }
 
         @Override
@@ -1341,6 +1415,8 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(Convert.nullToZero(currencyId));
+                buffer.putLong(amountNQT);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1351,6 +1427,8 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("amountNQT", amountNQT);
             return attachment;
         }
 
@@ -1359,17 +1437,29 @@ public interface Attachment {
             return TransactionType.MonetarySystem.RESERVE_INCREASE;
         }
 
+        public Long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getAmountNQT() {
+            return amountNQT;
+        }
+
     }
 
     public final static class MonetarySystemReserveClaim implements Attachment {
 
-        public MonetarySystemReserveClaim() {
+        private final Long currencyId;
+        private final long units;
 
+        public MonetarySystemReserveClaim(Long currencyId, long units) {
+            this.currencyId = currencyId;
+            this.units = units;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 8;
         }
 
         @Override
@@ -1377,6 +1467,8 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(currencyId);
+                buffer.putLong(units);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1387,6 +1479,8 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("units", units);
             return attachment;
         }
 
@@ -1395,24 +1489,72 @@ public interface Attachment {
             return TransactionType.MonetarySystem.RESERVE_CLAIM;
         }
 
+        public Long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
     }
 
     public final static class MonetarySystemMoneyTransfer implements Attachment {
 
-        public MonetarySystemMoneyTransfer() {
+        public static final class Entry {
 
+            private final Long recipientId;
+            private final Long currencyId;
+            private final long units;
+
+            public Entry(Long recipientId, Long currencyId, long units) {
+                this.recipientId = recipientId;
+                this.currencyId = currencyId;
+                this.units = units;
+            }
+
+            public Long getRecipientId() {
+                return recipientId;
+            }
+
+            public Long getCurrencyId() {
+                return currencyId;
+            }
+
+            public long getUnits() {
+                return units;
+            }
+
+        }
+
+        private final List<Entry> entries;
+        private final String comment;
+
+        public MonetarySystemMoneyTransfer(List<Entry> entries, String comment) {
+            this.entries = entries;
+            this.comment = Convert.nullToEmpty(comment);
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 2 + entries.size() * (8 + 8 + 8) + 2 + Convert.toBytes(comment).length;
         }
 
         @Override
         public byte[] getBytes() {
             try {
+                byte[] comment = Convert.toBytes(this.comment);
+
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putShort((short)entries.size());
+                for (Entry entry : entries) {
+                    buffer.putLong(entry.getRecipientId());
+                    buffer.putLong(entry.getCurrencyId());
+                    buffer.putLong(entry.getUnits());
+                }
+                buffer.putShort((short)comment.length);
+                buffer.put(comment);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1423,6 +1565,16 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            JSONArray entriesArray = new JSONArray();
+            for (Entry entry : entries) {
+                JSONObject entryObject = new JSONObject();
+                entryObject.put("recipient", Convert.toUnsignedLong(entry.getRecipientId()));
+                entryObject.put("currency", Convert.toUnsignedLong(entry.getCurrencyId()));
+                entryObject.put("units", entry.getUnits());
+                entriesArray.add(entryObject);
+            }
+            attachment.put("transfers", entriesArray);
+            attachment.put("comment", comment);
             return attachment;
         }
 
@@ -1431,17 +1583,45 @@ public interface Attachment {
             return TransactionType.MonetarySystem.MONEY_TRANSFER;
         }
 
+        public int getNumberOfEntries() {
+            return entries.size();
+        }
+
+        public Entry getEntry(int index) {
+            return entries.get(index);
+        }
+
+        public String getComment() {
+            return comment;
+        }
+
     }
 
     public final static class MonetarySystemExchangeSetting implements Attachment {
 
-        public MonetarySystemExchangeSetting() {
+        private final Long currencyId;
+        private final long buyingRateNQT;
+        private final long sellingRateNQT;
+        private final long totalBuyingLimitNQT;
+        private final long totalSellingLimit;
+        private final long initialNXTSupplyNQT;
+        private final long initialCurrencySupply;
+        private final int expirationHeight;
 
+        public MonetarySystemExchangeSetting(Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimitNQT, long totalSellingLimit, long initialNXTSupplyNQT, long initialCurrencySupply, int expirationHeight) {
+            this.currencyId = currencyId;
+            this.buyingRateNQT = buyingRateNQT;
+            this.sellingRateNQT = sellingRateNQT;
+            this.totalBuyingLimitNQT = totalBuyingLimitNQT;
+            this.totalSellingLimit = totalSellingLimit;
+            this.initialNXTSupplyNQT = initialNXTSupplyNQT;
+            this.initialCurrencySupply = initialCurrencySupply;
+            this.expirationHeight = expirationHeight;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 8 + 8 + 8 + 8 + 8 + 8 + 4;
         }
 
         @Override
@@ -1449,6 +1629,14 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(currencyId);
+                buffer.putLong(buyingRateNQT);
+                buffer.putLong(sellingRateNQT);
+                buffer.putLong(totalBuyingLimitNQT);
+                buffer.putLong(totalSellingLimit);
+                buffer.putLong(initialNXTSupplyNQT);
+                buffer.putLong(initialCurrencySupply);
+                buffer.putInt(expirationHeight);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1459,6 +1647,14 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("buyingRateNQT", buyingRateNQT);
+            attachment.put("sellingRateNQT", sellingRateNQT);
+            attachment.put("totalBuyingLimitNQT", totalBuyingLimitNQT);
+            attachment.put("totalSellingLimit", totalSellingLimit);
+            attachment.put("initialNXTSupplyNQT", initialNXTSupplyNQT);
+            attachment.put("initialCurrencySupply", initialCurrencySupply);
+            attachment.put("expirationHeight", expirationHeight);
             return attachment;
         }
 
@@ -1467,17 +1663,57 @@ public interface Attachment {
             return TransactionType.MonetarySystem.EXCHANGE_SETTING;
         }
 
+        public Long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getBuyingRateNQT() {
+            return buyingRateNQT;
+        }
+
+        public long getSellingRateNQT() {
+            return sellingRateNQT;
+        }
+
+        public long getTotalBuyingLimitNQT() {
+            return totalBuyingLimitNQT;
+        }
+
+        public long getTotalSellingLimit() {
+            return totalSellingLimit;
+        }
+
+        public long getInitialNXTSupplyNQT() {
+            return initialNXTSupplyNQT;
+        }
+
+        public long getInitialCurrencySupply() {
+            return initialCurrencySupply;
+        }
+
+        public int getExpirationHeight() {
+            return expirationHeight;
+        }
+
     }
 
     public final static class MonetarySystemMoneyMinting implements Attachment {
 
-        public MonetarySystemMoneyMinting() {
+        private final Long currencyId;
+        private final int units;
+        private final int counter;
+        private final long nonce;
 
+        public MonetarySystemMoneyMinting(Long currencyId, int units, int counter, long nonce) {
+            this.currencyId = currencyId;
+            this.units = units;
+            this.counter = counter;
+            this.nonce = nonce;
         }
 
         @Override
         public int getSize() {
-            return 0;
+            return 8 + 4 + 4 + 8;
         }
 
         @Override
@@ -1485,6 +1721,10 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(currencyId);
+                buffer.putInt(units);
+                buffer.putInt(counter);
+                buffer.putLong(nonce);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1495,12 +1735,32 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("units", units);
+            attachment.put("counter", counter);
+            attachment.put("nonce", nonce);
             return attachment;
         }
 
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.MonetarySystem.MONEY_MINTING;
+        }
+
+        public Long getCurrencyId() {
+            return currencyId;
+        }
+
+        public int getUnits() {
+            return units;
+        }
+
+        public int getCounter() {
+            return counter;
+        }
+
+        public long getNonce() {
+            return nonce;
         }
 
     }
