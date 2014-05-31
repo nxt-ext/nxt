@@ -1707,21 +1707,21 @@ public interface Attachment {
 
     public final static class MonetarySystemMoneyMinting implements Attachment {
 
+        private final long nonce;
         private final Long currencyId;
         private final int units;
         private final int counter;
-        private final long nonce;
 
-        public MonetarySystemMoneyMinting(Long currencyId, int units, int counter, long nonce) {
+        public MonetarySystemMoneyMinting(long nonce, Long currencyId, int units, int counter) {
+            this.nonce = nonce;
             this.currencyId = currencyId;
             this.units = units;
             this.counter = counter;
-            this.nonce = nonce;
         }
 
         @Override
         public int getSize() {
-            return 8 + 4 + 4 + 8;
+            return 8 + 8 + 4 + 4;
         }
 
         @Override
@@ -1729,10 +1729,10 @@ public interface Attachment {
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(nonce);
                 buffer.putLong(currencyId);
                 buffer.putInt(units);
                 buffer.putInt(counter);
-                buffer.putLong(nonce);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1743,16 +1743,20 @@ public interface Attachment {
         @Override
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
+            attachment.put("nonce", nonce);
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("units", units);
             attachment.put("counter", counter);
-            attachment.put("nonce", nonce);
             return attachment;
         }
 
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.MonetarySystem.MONEY_MINTING;
+        }
+
+        public long getNonce() {
+            return nonce;
         }
 
         public Long getCurrencyId() {
@@ -1765,10 +1769,6 @@ public interface Attachment {
 
         public int getCounter() {
             return counter;
-        }
-
-        public long getNonce() {
-            return nonce;
         }
 
     }
