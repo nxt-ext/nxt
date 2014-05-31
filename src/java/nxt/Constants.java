@@ -46,6 +46,12 @@ public final class Constants {
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
     public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
+    public static final int MIN_CURRENCY_NAME_LENGTH = 3;
+    public static final int MAX_CURRENCY_NAME_LENGTH = 10;
+    public static final int CURRENCY_CODE_LENGTH = 3;
+    public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_MONEY_TRANSFER_COMMENT_LENGTH = 1000;
+
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
 
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
@@ -65,6 +71,7 @@ public final class Constants {
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int ALIAS_TRANSFER_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int ENCRYPTED_MESSAGES_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
+    public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
@@ -82,6 +89,10 @@ public final class Constants {
     }
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+    public static final String ALLOWED_CURRENCY_CODE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    public static final byte MIN_CURRENCY_TYPE = 1;
+    public static final byte MAX_CURRENCY_TYPE = 3;
 
     private Constants() {} // never
 

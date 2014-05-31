@@ -1314,7 +1314,7 @@ public interface Attachment {
 
         @Override
         public int getSize() {
-            return 1 + Convert.toBytes(name).length + 3 + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 8;
+            return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 8;
         }
 
         @Override
