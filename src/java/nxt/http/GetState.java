@@ -54,7 +54,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             numberOfTrades += assetTrades.size();
         }
         response.put("numberOfTrades", numberOfTrades);
-        response.put("numberOfAliases", Alias.getAllAliases().size());
+        response.put("numberOfAliases", Alias.getCount());
         response.put("numberOfPolls", Poll.getAllPolls().size());
         response.put("numberOfVotes", Vote.getVotes().size());
         response.put("numberOfPeers", Peers.getAllPeers().size());

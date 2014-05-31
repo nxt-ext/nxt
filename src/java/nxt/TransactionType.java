@@ -415,7 +415,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(),
+                Alias.addOrUpdateAlias(transaction.getId(), senderAccount, attachment.getAliasName(),
                         attachment.getAliasURI(), transaction.getBlockTimestamp());
             }
 
@@ -423,12 +423,7 @@ public abstract class TransactionType {
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
                 Alias alias = Alias.getAlias(attachment.getAliasName());
-                if (alias.getId().equals(transaction.getId())) {
-                    Alias.remove(alias);
-                } else {
-                    // alias has been updated, can't tell what was its previous uri
-                    throw new UndoNotSupportedException("Reversal of alias assignment not supported");
-                }
+                Alias.rollbackAlias(alias.getId());
             }
 
             @Override
@@ -502,7 +497,10 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException("Reversal of alias sell offer not supported");
+                Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName());
+                Alias.rollbackAlias(alias.getId());
+                Alias.rollbackOffer(alias.getId());
             }
 
             @Override
@@ -576,7 +574,10 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException("Reversal of alias buy not supported");
+                Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName());
+                Alias.rollbackAlias(alias.getId());
+                Alias.rollbackOffer(alias.getId());
             }
 
             @Override
@@ -605,7 +606,7 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Alias is owned by account other than recipient: "
                             + Convert.toUnsignedLong(alias.getAccountId()));
                 }
-                Alias.Offer offer = Alias.getOffer(aliasName);
+                Alias.Offer offer = Alias.getOffer(alias);
                 if (offer == null) {
                     throw new NxtException.ValidationException("Alias is not for sale: " + aliasName);
                 }

@@ -1,11 +1,12 @@
 package nxt;
 
-import java.util.ArrayList;
+import nxt.util.DbTable;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public final class Alias {
 
@@ -13,10 +14,16 @@ public final class Alias {
 
         private final long priceNQT;
         private final Long buyerId;
+        private final Long aliasId;
 
-        private Offer(long priceNQT, Long buyerId) {
+        private Offer(Long aliasId, long priceNQT, Long buyerId) {
             this.priceNQT = priceNQT;
             this.buyerId = buyerId;
+            this.aliasId = aliasId;
+        }
+
+        public Long getId() {
+            return aliasId;
         }
 
         public long getPriceNQT() {
@@ -29,86 +36,156 @@ public final class Alias {
 
     }
 
-    private static final ConcurrentMap<String, Alias> aliases = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, Alias> aliasIdToAliasMappings = new ConcurrentHashMap<>();
-    private static final Collection<Alias> allAliases = Collections.unmodifiableCollection(aliases.values());
-    private static final ConcurrentMap<String, Offer> aliasesToSell = new ConcurrentHashMap<>();
+    private static DbTable<Alias> aliasTable = new DbTable<Alias>() {
 
-    public static Collection<Alias> getAllAliases() {
-        return allAliases;
+        @Override
+        protected String table() {
+            return "alias";
+        }
+
+        @Override
+        protected Long getId(Alias alias) {
+            return alias.getId();
+        }
+
+        @Override
+        protected Alias load(Connection con, ResultSet rs) {
+            try {
+                Long id = rs.getLong("id");
+                Long accountId = rs.getLong("account_id");
+                String aliasName = rs.getString("alias_name");
+                String aliasURI = rs.getString("alias_uri");
+                int timestamp = rs.getInt("timestamp");
+                return new Alias(id, accountId, aliasName, aliasURI, timestamp);
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+
+        @Override
+        protected void save(Connection con, Alias alias) {
+            try {
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
+                        + "alias_uri, timestamp, height) "
+                        + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                    int i = 0;
+                    pstmt.setLong(++i, alias.getId());
+                    pstmt.setLong(++i, alias.getAccountId());
+                    pstmt.setString(++i, alias.getAliasName());
+                    pstmt.setString(++i, alias.getAliasURI());
+                    pstmt.setInt(++i, alias.getTimestamp());
+                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+    };
+
+    private static DbTable<Offer> offerTable = new DbTable<Offer>() {
+
+        @Override
+        protected String table() {
+            return "alias_offer";
+        }
+
+        @Override
+        protected Long getId(Offer offer) {
+            return offer.getId();
+        }
+
+        @Override
+        protected Offer load(Connection con, ResultSet rs) {
+            try {
+                Long aliasId = rs.getLong("id");
+                long priceNQT = rs.getLong("price");
+                Long buyerId  = rs.getLong("buyer_id");
+                return new Offer(aliasId, priceNQT, buyerId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+
+        @Override
+        protected void save(Connection con, Offer offer) {
+            try {
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
+                        + "height) VALUES (?, ?, ?, ?)")) {
+                    int i = 0;
+                    pstmt.setLong(++i, offer.getId());
+                    pstmt.setLong(++i, offer.getPriceNQT());
+                    pstmt.setLong(++i, offer.getBuyerId());
+                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+    };
+
+    public static int getCount() {
+        return aliasTable.getCount();
     }
 
     public static Collection<Alias> getAliasesByOwner(Long accountId) {
-        List<Alias> filtered = new ArrayList<>();
-        for (Alias alias : Alias.getAllAliases()) {
-            if (alias.getAccountId().equals(accountId)) {
-                filtered.add(alias);
-            }
-        }
-        return filtered;
+        return aliasTable.getManyBy("account_id", accountId);
     }
 
     public static Alias getAlias(String aliasName) {
-        return aliases.get(aliasName.toLowerCase());
+        return aliasTable.getBy("alias_name_lower", aliasName.toLowerCase());
     }
 
     public static Alias getAlias(Long id) {
-        return aliasIdToAliasMappings.get(id);
+        return aliasTable.get(id);
     }
 
-    public static Offer getOffer(String aliasName) {
-        return aliasesToSell.get(aliasName.toLowerCase());
+    public static Offer getOffer(Alias alias) {
+        return offerTable.get(alias.getId());
     }
 
-    static void addOrUpdateAlias(Account account, Long transactionId, String aliasName, String aliasURI, int timestamp) {
-        String normalizedAlias = aliasName.toLowerCase();
-        Alias oldAlias = aliases.get(normalizedAlias);
-        if (oldAlias == null) {
-            Alias newAlias = new Alias(account, transactionId, aliasName, aliasURI, timestamp);
-            aliases.put(normalizedAlias, newAlias);
-            aliasIdToAliasMappings.put(transactionId, newAlias);
-        } else {
-            oldAlias.aliasURI = aliasURI.intern();
-            oldAlias.timestamp = timestamp;
-        }
+    static void addOrUpdateAlias(Long transactionId, Account account, String aliasName, String aliasURI, int timestamp) {
+        Alias alias = getAlias(aliasName);
+        Long aliasId = alias == null ? transactionId : alias.getId();
+        aliasTable.insert(new Alias(aliasId, account.getId(), aliasName, aliasURI, timestamp));
     }
 
-    static void remove(Alias alias) {
-        aliases.remove(alias.getAliasName().toLowerCase());
-        aliasIdToAliasMappings.remove(alias.getId());
+    static void rollbackAlias(Long aliasId) {
+        aliasTable.deleteAfter(aliasId, Nxt.getBlockchain().getHeight());
     }
 
     static void addSellOffer(String aliasName, long priceNQT, Long buyerId) {
-        aliasesToSell.put(aliasName.toLowerCase(), new Offer(priceNQT, buyerId));
+        Alias alias = getAlias(aliasName);
+        offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+    }
+
+    static void rollbackOffer(Long aliasId) {
+        offerTable.deleteAfter(aliasId, Nxt.getBlockchain().getHeight());
     }
 
     static void changeOwner(Account newOwner, String aliasName, int timestamp) {
-        String normalizedName = aliasName.toLowerCase();
-        Alias oldAlias = aliases.get(normalizedName);
-        Long id = oldAlias.getId();
-        Alias newAlias = new Alias(newOwner, id, aliasName, oldAlias.aliasURI, timestamp);
-        aliasesToSell.remove(normalizedName);
-        aliases.put(normalizedName, newAlias);
-        aliasIdToAliasMappings.put(id, newAlias);
+        Alias oldAlias = getAlias(aliasName);
+        aliasTable.insert(new Alias(oldAlias.id, newOwner.getId(), aliasName, oldAlias.aliasURI, timestamp));
+        offerTable.invalidate(oldAlias.id);
     }
 
     static void clear() {
-        aliases.clear();
-        aliasIdToAliasMappings.clear();
-        aliasesToSell.clear();
+        aliasTable.truncate();
+        offerTable.truncate();
     }
 
     private final Long accountId;
     private final Long id;
     private final String aliasName;
-    private volatile String aliasURI;
-    private volatile int timestamp;
+    private final String aliasURI;
+    private final int timestamp;
 
-    private Alias(Account account, Long id, String aliasName, String aliasURI, int timestamp) {
-        this.accountId = account.getId();
+    private Alias(Long id, Long accountId, String aliasName, String aliasURI, int timestamp) {
         this.id = id;
-        this.aliasName = aliasName.intern();
-        this.aliasURI = aliasURI.intern();
+        this.accountId = accountId;
+        this.aliasName = aliasName;
+        this.aliasURI = aliasURI;
         this.timestamp = timestamp;
     }
 

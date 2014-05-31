@@ -5,7 +5,6 @@ import nxt.Attachment;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.TransactionType;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;

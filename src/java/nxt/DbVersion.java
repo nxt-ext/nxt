@@ -210,6 +210,22 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
+                apply("CREATE TABLE alias (id BIGINT NOT NULL, account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
+                        + "alias_name_lower VARCHAR AS LOWER (alias_name) NOT NULL, "
+                        + "alias_uri VARCHAR NOT NULL, timestamp INT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 53:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_id_height_idx ON alias (id, height DESC)");
+            case 54:
+                apply("CREATE INDEX IF NOT EXISTS alias_account_id_idx ON alias (account_id)");
+            case 55:
+                apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
+            case 56:
+                apply("CREATE TABLE alias_offer (id BIGINT NOT NULL, price BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
+            case 57:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_offer_id_height_idx ON alias_offer (id, height DESC)");
+            case 58:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

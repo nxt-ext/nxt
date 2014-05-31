@@ -31,7 +31,7 @@ final class JSONData {
         json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
         json.put("alias", Convert.toUnsignedLong(alias.getId()));
-        Alias.Offer offer = Alias.getOffer(alias.getAliasName());
+        Alias.Offer offer = Alias.getOffer(alias);
         if (offer != null) {
             json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
             json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
