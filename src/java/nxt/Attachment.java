@@ -1299,9 +1299,10 @@ public interface Attachment {
         private final long totalSupplyNQT;
         private final int issuanceHeight;
         private final long minReservePerUnitNQT;
-        private final long mintingSlope;
+        private final byte minDifficulty;
+        private final byte maxDifficulty;
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupplyNQT, int issuanceHeight, long minReservePerUnitNQT, long mintingSlope) {
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupplyNQT, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty) {
             this.name = name;
             this.code = code;
             this.description = description;
@@ -1309,12 +1310,13 @@ public interface Attachment {
             this.totalSupplyNQT = totalSupplyNQT;
             this.issuanceHeight = issuanceHeight;
             this.minReservePerUnitNQT = minReservePerUnitNQT;
-            this.mintingSlope = mintingSlope;
+            this.minDifficulty = minDifficulty;
+            this.maxDifficulty = maxDifficulty;
         }
 
         @Override
         public int getSize() {
-            return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 8;
+            return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 1 + 1;
         }
 
         @Override
@@ -1334,7 +1336,8 @@ public interface Attachment {
                 buffer.putLong(totalSupplyNQT);
                 buffer.putInt(issuanceHeight);
                 buffer.putLong(minReservePerUnitNQT);
-                buffer.putLong(mintingSlope);
+                buffer.put(minDifficulty);
+                buffer.put(maxDifficulty);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1352,7 +1355,8 @@ public interface Attachment {
             attachment.put("totalSupplyNQT", totalSupplyNQT);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
-            attachment.put("mintingSlope", mintingSlope);
+            attachment.put("minDifficulty", minDifficulty & 0xFF);
+            attachment.put("maxDifficulty", maxDifficulty & 0xFF);
             return attachment;
         }
 
@@ -1389,8 +1393,12 @@ public interface Attachment {
             return minReservePerUnitNQT;
         }
 
-        public long getMintingSlope() {
-            return mintingSlope;
+        public byte getMinDifficulty() {
+            return minDifficulty;
+        }
+
+        public byte getMaxDifficulty() {
+            return maxDifficulty;
         }
 
     }
