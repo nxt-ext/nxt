@@ -73,30 +73,10 @@ var NRS = (function(NRS, $, undefined) {
 		if (transaction.type == 1) {
 			switch (transaction.subtype) {
 				case 0:
-					var hex = transaction.attachment.message;
-
-					//password: return {"requestType": "sendMessage", "data": data};
-
-					var message;
-
-					if (hex.indexOf("4352595054454421") === 0) { //starts with CRYPTED!
-						NRS.sendRequest("getAccountPublicKey", {
-							"account": (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient)
-						}, function(response) {
-							if (!response.publicKey) {
-								$.growl("Could not find public key for recipient, which is necessary for sending encrypted messages.", {
-									"type": "danger"
-								});
-							}
-
-							message = NRS.decryptMessage("return {\"requestType\": \"sendMessage\", \"data\": data};", response.publicKey, hex);
-						}, false);
-					} else {
-						try {
-							message = converters.hexStringToString(hex);
-						} catch (err) {
-							message = "Could not convert hex to string: " + hex;
-						}
+					try {
+						var message = converters.hexStringToString(transaction.attachment.message);
+					} catch (err) {
+						var message = "Could not convert hex to string: " + String(transaction.attachment.message);
 					}
 
 					var sender_info = "";
@@ -113,6 +93,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					$("#transaction_info_output").html(message.escapeHTML().nl2br() + "<br /><br />" + sender_info).show();
+
 					break;
 				case 1:
 					var data = {
@@ -217,6 +198,31 @@ var NRS = (function(NRS, $, undefined) {
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
+
+					break;
+				case 8:
+					var data = {
+						"Type": "Encrypted Message"
+					}
+
+					try {
+						var message = NRS.decryptMessage(transaction.attachment.message, transaction.attachment.nonce, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient));
+					} catch (err) {
+						var message = "Could not convert hex to string: " + String(transaction.attachment.message);
+					}
+
+					if (transaction.sender == NRS.account || transaction.recipient == NRS.account) {
+						if (transaction.sender == NRS.account) {
+							sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient");
+						} else {
+							sender_info = "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
+						}
+					} else {
+						sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient") + "<br />";
+						sender_info += "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
+					}
+
+					$("#transaction_info_output").html(message.escapeHTML().nl2br() + "<br /><br />" + sender_info).show();
 
 					break;
 				default:
@@ -512,9 +518,6 @@ var NRS = (function(NRS, $, undefined) {
 					break;
 			}
 		}
-
-		console.log("here we are");
-		console.log(transaction);
 
 		if (incorrect) {
 			$.growl("Invalid or unknown transaction type.", {

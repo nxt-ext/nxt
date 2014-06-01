@@ -238,6 +238,7 @@
 					        		<li><a href="#" data-type="">All Transactions</a></li>
 					          		<li><a href="#" data-type="0:0">Ordinary Payment</a></li>
 					           		<li><a href="#" data-type="1:0">Arbitrary Message</a></li>
+					           		<li><a href="#" data-type="1:8">Encrypted Message</a></li>
 					           		<li><a href="#" data-type="1:1">Alias Assignment</a></li>
 					           		<li><a href="#" data-type="1:6">Alias Sale</a></li>
 					           		<li><a href="#" data-type="1:7">Alias Buy</a></li>
@@ -2659,7 +2660,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="send_message_message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-								<div style="display:none"><label for="send_message_encrypt" style="font-weight:normal;"><input type="checkbox" name="encrypt" id="send_message_encrypt" /> Encrypt Message</label></div>
+								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" style="margin-top:5px;vertical-align:top;" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
 							</div>
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2801,6 +2802,56 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		  	</div>
 		</div>
 		
+		<div class="modal fade" id="buy_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Buy Alias</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="form-group">
+								<label>ALIAS</label>
+								<p class="alias_name_display"></p>
+								<input type="hidden" name="aliasName" value="" />
+							</div>
+							<div class="form-group">
+								<label>PRICE</label>
+						        <input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="1">
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="buy_alias_fee">FEE</label>
+										<input type="number" name="feeNXT" id="buy_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="buy_alias_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="buy_alias_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="3">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="buy_alias_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="buy_alias_password" class="form-control" placeholder="" tabindex="4">
+							</div>
+						</form>
+					</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+			      		<input type="hidden" name="request_type" value="buyAlias" />
+			      		<input type="hidden" name="success_message" value="Your alias buy is in progress!" />
+			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not have been bought." />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Buy Alias</button>
+			    	</div>
+				</div>
+		  	</div>
+		</div>
+
 		<div class="modal fade" id="transfer_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -3109,6 +3160,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			      		    	
 			      		    </tbody>
 			      		</table>
+
+			      		<div class="callout callout-info" id="alias_sale_callout" style="display:none;margin-top:10px;margin-bottom:0;"></div>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
 						<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
