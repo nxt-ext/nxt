@@ -287,16 +287,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             synchronized (blockchain) {
                 BigInteger curCumulativeDifficulty = blockchain.getLastBlock().getCumulativeDifficulty();
 
-                try {
-                    Long lastBlockId = blockchain.getLastBlock().getId();
-                    while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                        lastBlockId = popLastBlock();
-                    }
-                } catch (TransactionType.UndoNotSupportedException e) {
-                    Logger.logDebugMessage(e.getMessage());
-                    Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-                    resetTo(commonBlock);
-                }
+                popOffTo(commonBlock);
 
                 int pushedForkBlocks = 0;
                 if (blockchain.getLastBlock().getId().equals(commonBlock.getId())) {
@@ -314,12 +305,25 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 if (pushedForkBlocks > 0 && blockchain.getLastBlock().getCumulativeDifficulty().compareTo(curCumulativeDifficulty) < 0) {
-                    Logger.logDebugMessage("Rescan caused by peer " + peer.getPeerAddress() + ", blacklisting");
+                    Logger.logDebugMessage("Pop off caused by peer " + peer.getPeerAddress() + ", blacklisting");
                     peer.blacklist();
-                    resetTo(commonBlock);
+                    popOffTo(commonBlock);
                 }
             } // synchronized
 
+        }
+
+        private void popOffTo(Block commonBlock) {
+            try {
+                Long lastBlockId = blockchain.getLastBlock().getId();
+                while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                    lastBlockId = popLastBlock();
+                }
+            } catch (TransactionType.UndoNotSupportedException e) {
+                Logger.logDebugMessage(e.getMessage());
+                Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
+                resetTo(commonBlock);
+            }
         }
 
         private void resetTo(Block commonBlock) {

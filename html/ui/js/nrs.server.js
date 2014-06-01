@@ -395,6 +395,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (transaction.message !== data.message) {
 					return false;
 				}
+
 				break;
 			case "setAlias":
 				if (transaction.type !== 1 || transaction.subtype !== 1) {
@@ -580,6 +581,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				break;
 			case "buyAlias":
+				if (transaction.type !== 1 && transaction.subtype !== 7) {
+					return false;
+				}
+
 				var aliasLength = parseInt(byteArray[pos], 10);
 
 				pos++;
@@ -587,6 +592,24 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
 
 				if (transaction.alias !== data.aliasName) {
+					return false;
+				}
+
+				break;
+			case "sendEncryptedNote":
+				if (transaction.type !== 1 && transaction.subtype !== 8) {
+					return false;
+				}
+
+				var messageLength = converters.byteArrayToSignedShort(byteArray, pos);
+
+				pos += 2;
+
+				var slice = byteArray.slice(pos, pos + messageLength);
+
+				transaction.message = converters.byteArrayToHexString(slice);
+
+				if (transaction.message != data.message) {
 					return false;
 				}
 

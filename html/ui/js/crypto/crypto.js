@@ -26,6 +26,8 @@ var nxtCrypto = function(curve25519, hash, converters) {
 	function getPublicKey(secretPhrase, isAccountNumber) {
 		if (isAccountNumber) {
 			var accountNumber = secretPhrase;
+			var publicKey = "";
+
 			//synchronous!
 			NRS.sendRequest("getAccountPublicKey", {
 				"account": accountNumber
@@ -33,9 +35,11 @@ var nxtCrypto = function(curve25519, hash, converters) {
 				if (!response.publicKey) {
 					throw new Exception("Account does not have a public key.");
 				} else {
-					return response.publicKey;
+					publicKey = response.publicKey;
 				}
 			}, false);
+
+			return publicKey;
 		} else {
 			var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
 			var digest = simpleHash(secretPhraseBytes);
@@ -92,73 +96,46 @@ var nxtCrypto = function(curve25519, hash, converters) {
 
 	function encryptData(plaintext, myPrivateKey, theirPublicKey) {
 		try {
-			var compressedPlaintext = pako.deflate(new Uint8Array(converters.stringToByteArray(plaintext)));
+			var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
 
 			var nonce = new Uint8Array(32);
 			window.crypto.getRandomValues(nonce);
 
-			var data = nxtCrypto.aesEncrypt(compressedPlainText, myPrivateKey, theirPublicKey, nonce);
+			var data = aesEncrypt(compressedPlaintext, myPrivateKey, theirPublicKey, nonce);
 
 			return {
 				"nonce": nonce,
 				"data": data
 			};
 		} catch (e) {
+			console.log(e);
 			//
 		}
 	}
 
-	//var myPrivateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(myPassword));
-	//var theirPublicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(theirAccount, true));
-
 	function decryptData(data, nonce, myPrivateKey, theirPublicKey) {
 		try {
-
-			var compressedPlaintext = nxtCrypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
+			var compressedPlaintext = aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
 
 			var binData = new Uint8Array(compressedPlaintext);
 
 			var data = pako.inflate(binData);
 
-			return data;
-
-			/*
-			// Decode base64 (convert ascii to binary)
-			var strData = atob(compressedPlaintext);
-
-			// Convert binary string to character-number array
-			var charData = strData.split('').map(function(x) {
-				return x.charCodeAt(0);
-			});
-
-			// Convert gunzipped byteArray back to ascii string:
-			var strData = String.fromCharCode.apply(null, new Uint16Array(data));
-
-			return strData;
-			*/
+			return converters.byteArrayToString(data);
 		} catch (e) {
+			console.log("errr");
+			console.log(e);
 			//..
 		}
 	}
 
-	/**
-	 * Encrypt a message given a private key and a public key.
-	 * @param1: plaintext         Array of bytes: message that needs to be encrypted
-	 * @param2: myPrivateKey      Array of bytes: private key of the sender of the message
-	 * @param3: theirPublicKey    Array of bytes: public key of the receiver of the message
-	 * @param4: nonce             Array of bytes: the nonce
-	 *
-	 * @return:                   Array of bytes:
-	 *                               First 16 bytes is the initialization vector.
-	 *                               Rest is the encrypted text.
-	 */
 	function aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce) {
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
-		var sharedKey = crypto.getSharedKey(myPrivateKey, theirPublicKey);
+		var sharedKey = getSharedKey(myPrivateKey, theirPublicKey);
 		for (var i = 0; i < 32; i++) {
-        	sharedKey[i] ^= nonce[i];
-    	}
+			sharedKey[i] ^= nonce[i];
+		}
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 		var tmp = new Uint8Array(16);
 		window.crypto.getRandomValues(tmp);
@@ -172,17 +149,6 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		return ivOut.concat(ciphertextOut);
 	}
 
-	/**
-	 * Decrypt a message given a private key and a public key.
-	 * @param1: ivCiphertext      Array of bytes: 
-	 *                               First 16 bytes is the initialization vector.
-	 *                               Rest is the encrypted text.
-	 * @param2: myPrivateKey      Array of bytes: private key of the sender of the message
-	 * @param3: theirPublicKey    Array of bytes: public key of the receiver of the message
-	 * @param4: nonce             Array of bytes: the nonce
-	 * 
-	 * @return:                   Array of bytes: decrypted text.
-	 */
 	function aesDecrypt(ivCiphertext, myPrivateKey, theirPublicKey, nonce) {
 		if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
 			throw {
@@ -191,10 +157,10 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		}
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
-		var sharedKey = crypto.getSharedKey(myPrivateKey, theirPublicKey);
+		var sharedKey = getSharedKey(myPrivateKey, theirPublicKey);
 		for (var i = 0; i < 32; i++) {
-        	sharedKey[i] ^= nonce[i];
-    	}
+			sharedKey[i] ^= nonce[i];
+		}
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 		var encrypted = CryptoJS.lib.CipherParams.create({
 			ciphertext: ciphertext,
@@ -210,7 +176,7 @@ var nxtCrypto = function(curve25519, hash, converters) {
 	}
 
 	function getSharedKey(key1, key2) {
-		return converters.shortArrayToByteArray(curve25519(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
+		return converters.shortArrayToByteArray(curve25519_(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
 	}
 
 	function sign(message, secretPhrase) {
