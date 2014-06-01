@@ -210,7 +210,7 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
-                apply("CREATE TABLE alias (id BIGINT NOT NULL, account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS alias (id BIGINT NOT NULL, account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
                         + "alias_name_lower VARCHAR AS LOWER (alias_name) NOT NULL, "
                         + "alias_uri VARCHAR NOT NULL, timestamp INT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -221,11 +221,18 @@ final class DbVersion {
             case 55:
                 apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
             case 56:
-                apply("CREATE TABLE alias_offer (id BIGINT NOT NULL, price BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS alias_offer (id BIGINT NOT NULL, price BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 57:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_offer_id_height_idx ON alias_offer (id, height DESC)");
             case 58:
+                apply("CREATE TABLE IF NOT EXISTS asset (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "name VARCHAR NOT NULL, description VARCHAR, quantity BIGINT NOT NULL, decimals TINYINT NOT NULL)");
+            case 59:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_idx ON asset (id)");
+            case 60:
+                apply("CREATE INDEX IF NOT EXISTS asset_account_id_idx ON asset (account_id)");
+            case 61:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

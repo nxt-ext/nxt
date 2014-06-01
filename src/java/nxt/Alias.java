@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.DbTable;
+import nxt.util.VersioningDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,7 +36,7 @@ public final class Alias {
 
     }
 
-    private static DbTable<Alias> aliasTable = new DbTable<Alias>() {
+    private static VersioningDbTable<Alias> aliasTable = new VersioningDbTable<Alias>() {
 
         @Override
         protected String table() {
@@ -49,41 +49,33 @@ public final class Alias {
         }
 
         @Override
-        protected Alias load(Connection con, ResultSet rs) {
-            try {
-                Long id = rs.getLong("id");
-                Long accountId = rs.getLong("account_id");
-                String aliasName = rs.getString("alias_name");
-                String aliasURI = rs.getString("alias_uri");
-                int timestamp = rs.getInt("timestamp");
-                return new Alias(id, accountId, aliasName, aliasURI, timestamp);
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
+        protected Alias load(Connection con, ResultSet rs) throws SQLException {
+            Long id = rs.getLong("id");
+            Long accountId = rs.getLong("account_id");
+            String aliasName = rs.getString("alias_name");
+            String aliasURI = rs.getString("alias_uri");
+            int timestamp = rs.getInt("timestamp");
+            return new Alias(id, accountId, aliasName, aliasURI, timestamp);
         }
 
         @Override
-        protected void save(Connection con, Alias alias) {
-            try {
-                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
-                        + "alias_uri, timestamp, height) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)")) {
-                    int i = 0;
-                    pstmt.setLong(++i, alias.getId());
-                    pstmt.setLong(++i, alias.getAccountId());
-                    pstmt.setString(++i, alias.getAliasName());
-                    pstmt.setString(++i, alias.getAliasURI());
-                    pstmt.setInt(++i, alias.getTimestamp());
-                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                    pstmt.executeUpdate();
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
+        protected void save(Connection con, Alias alias) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
+                    + "alias_uri, timestamp, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, alias.getId());
+                pstmt.setLong(++i, alias.getAccountId());
+                pstmt.setString(++i, alias.getAliasName());
+                pstmt.setString(++i, alias.getAliasURI());
+                pstmt.setInt(++i, alias.getTimestamp());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
             }
         }
     };
 
-    private static DbTable<Offer> offerTable = new DbTable<Offer>() {
+    private static VersioningDbTable<Offer> offerTable = new VersioningDbTable<Offer>() {
 
         @Override
         protected String table() {
@@ -96,31 +88,23 @@ public final class Alias {
         }
 
         @Override
-        protected Offer load(Connection con, ResultSet rs) {
-            try {
-                Long aliasId = rs.getLong("id");
-                long priceNQT = rs.getLong("price");
-                Long buyerId  = rs.getLong("buyer_id");
-                return new Offer(aliasId, priceNQT, buyerId);
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
+        protected Offer load(Connection con, ResultSet rs) throws SQLException {
+            Long aliasId = rs.getLong("id");
+            long priceNQT = rs.getLong("price");
+            Long buyerId  = rs.getLong("buyer_id");
+            return new Offer(aliasId, priceNQT, buyerId);
         }
 
         @Override
-        protected void save(Connection con, Offer offer) {
-            try {
-                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
-                        + "height) VALUES (?, ?, ?, ?)")) {
-                    int i = 0;
-                    pstmt.setLong(++i, offer.getId());
-                    pstmt.setLong(++i, offer.getPriceNQT());
-                    pstmt.setLong(++i, offer.getBuyerId());
-                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                    pstmt.executeUpdate();
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
+        protected void save(Connection con, Offer offer) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
+                    + "height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, offer.getId());
+                pstmt.setLong(++i, offer.getPriceNQT());
+                pstmt.setLong(++i, offer.getBuyerId());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
             }
         }
     };
@@ -167,7 +151,8 @@ public final class Alias {
     static void changeOwner(Account newOwner, String aliasName, int timestamp) {
         Alias oldAlias = getAlias(aliasName);
         aliasTable.insert(new Alias(oldAlias.id, newOwner.getId(), aliasName, oldAlias.aliasURI, timestamp));
-        offerTable.invalidate(oldAlias.id);
+        Offer offer = getOffer(oldAlias);
+        offerTable.delete(offer);
     }
 
     static void clear() {

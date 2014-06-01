@@ -1,58 +1,86 @@
 package nxt;
 
-import nxt.util.Convert;
+import nxt.util.DbTable;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class Asset {
 
-    private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, List<Asset>> accountAssets = new ConcurrentHashMap<>();
-    private static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
+    private static DbTable<Asset> assetTable = new DbTable<Asset>() {
+
+        @Override
+        protected String table() {
+            return "asset";
+        }
+
+        @Override
+        protected Asset load(Connection con, ResultSet rs) throws SQLException {
+            Long assetId = rs.getLong("id");
+            Long accountId = rs.getLong("account_id");
+            String name = rs.getString("name");
+            String description = rs.getString("description");
+            long quantityQNT = rs.getLong("quantity");
+            byte decimals = rs.getByte("decimals");
+            return new Asset(assetId, accountId, name, description, quantityQNT, decimals);
+        }
+
+        @Override
+        protected void save(Connection con, Asset asset) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
+                    + "description, quantity, decimals) VALUES (?, ?, ?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, asset.getId());
+                pstmt.setLong(++i, asset.getAccountId());
+                pstmt.setString(++i, asset.getName());
+                pstmt.setString(++i, asset.getDescription());
+                pstmt.setLong(++i, asset.getQuantityQNT());
+                pstmt.setByte(++i, asset.getDecimals());
+                pstmt.executeUpdate();
+            }
+        }
+
+        @Override
+        protected void delete(Connection con, Asset asset) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM asset WHERE id = ?")) {
+                pstmt.setLong(1, asset.getId());
+                pstmt.executeUpdate();
+            }
+        }
+
+    };
 
     public static Collection<Asset> getAllAssets() {
-        return allAssets;
+        return assetTable.getAll();
+    }
+
+    public static int getCount() {
+        return assetTable.getCount();
     }
 
     public static Asset getAsset(Long id) {
-        return assets.get(id);
+        return assetTable.get(id);
     }
 
     public static List<Asset> getAssetsIssuedBy(Long accountId) {
-        List<Asset> assets = accountAssets.get(accountId);
-        if (assets == null) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(assets);
+        return assetTable.getManyBy("account_id", accountId);
     }
 
-    static void addAsset(Long assetId, Long senderAccountId, String name, String description, long quantityQNT, byte decimals) {
-        Asset asset = new Asset(assetId, senderAccountId, name, description, quantityQNT, decimals);
-        if (Asset.assets.putIfAbsent(assetId, asset) != null) {
-            throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
-        }
-        List<Asset> accountAssetsList = accountAssets.get(senderAccountId);
-        if (accountAssetsList == null) {
-            accountAssetsList = new CopyOnWriteArrayList<>();
-            accountAssets.put(senderAccountId, accountAssetsList);
-        }
-        accountAssetsList.add(asset);
+    static void addAsset(Long assetId, Long accountId, String name, String description, long quantityQNT, byte decimals) {
+        Asset asset = new Asset(assetId, accountId, name, description, quantityQNT, decimals);
+        assetTable.insert(asset);
     }
 
     static void removeAsset(Long assetId) {
-        Asset asset = Asset.assets.remove(assetId);
-        List<Asset> accountAssetList = accountAssets.get(asset.getAccountId());
-        accountAssetList.remove(asset);
+        assetTable.delete(getAsset(assetId));
     }
 
     static void clear() {
-        Asset.assets.clear();
-        Asset.accountAssets.clear();
+        assetTable.truncate();
     }
 
     private final Long assetId;

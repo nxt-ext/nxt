@@ -14,16 +14,15 @@ public abstract class DbTable<T> {
 
     protected abstract String table();
 
-    protected abstract Long getId(T t);
+    protected abstract T load(Connection con, ResultSet rs) throws SQLException;
 
-    protected abstract T load(Connection con, ResultSet rs);
+    protected abstract void save(Connection con, T t) throws SQLException;
 
-    protected abstract void save(Connection con, T t);
+    protected abstract void delete(Connection con, T t) throws SQLException;
 
-    public final T get(Long id) {
+    public T get(Long id) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE id = ? AND latest = TRUE LIMIT 1")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?")) {
             pstmt.setLong(1, id);
             return get(con, pstmt);
         } catch (SQLException e) {
@@ -31,22 +30,10 @@ public abstract class DbTable<T> {
         }
     }
 
-    public final T get(Long id, int height) {
+    public T getBy(String columnName, String value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE id = ? AND height <= ? LIMIT 1")) {
-            pstmt.setLong(1, id);
-            pstmt.setInt(2, height);
-            return get(con, pstmt);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final T getBy(String columnName, String value) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ? AND latest = TRUE")) {
+                     + " WHERE " + columnName + " = ?")) {
             pstmt.setString(1, value);
             return get(con, pstmt);
         } catch (SQLException e) {
@@ -54,10 +41,23 @@ public abstract class DbTable<T> {
         }
     }
 
-    public final List<T> getManyBy(String columnName, Long value) {
+    protected final T get(Connection con, PreparedStatement pstmt) throws SQLException {
+        try (ResultSet rs = pstmt.executeQuery()) {
+            T t = null;
+            if (rs.next()) {
+                t = load(con, rs);
+            }
+            if (rs.next()) {
+                throw new RuntimeException("Multiple records found");
+            }
+            return t;
+        }
+    }
+
+    public List<T> getManyBy(String columnName, Long value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ? AND latest = TRUE")) {
+                     + " WHERE " + columnName + " = ?")) {
             pstmt.setLong(1, value);
             List<T> result = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -71,23 +71,23 @@ public abstract class DbTable<T> {
         }
     }
 
-    private T get(Connection con, PreparedStatement pstmt) throws SQLException {
-        try (ResultSet rs = pstmt.executeQuery()) {
-            T t = null;
-            if (rs.next()) {
-                t = load(con, rs);
+    public List<T> getAll() {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table());
+             ResultSet rs = pstmt.executeQuery()) {
+            List<T> result = new ArrayList<>();
+            while (rs.next()) {
+                result.add(load(con, rs));
             }
-            if (rs.next()) {
-                throw new RuntimeException("Multiple records found");
-            }
-            return t;
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
         }
     }
 
     public int getCount() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table()
-                     + " WHERE latest = TRUE");
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table());
              ResultSet rs = pstmt.executeQuery()) {
             rs.next();
             return rs.getInt(1);
@@ -97,12 +97,8 @@ public abstract class DbTable<T> {
     }
 
     public void insert(T t) {
-        try (Connection con = Db.getConnection();
-        PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                + " SET latest = FALSE WHERE id = ? AND latest = TRUE limit 1")) {
+        try (Connection con = Db.getConnection()) {
             try {
-                pstmt.setLong(1, getId(t));
-                pstmt.executeUpdate();
                 save(con, t);
                 con.commit();
             } catch (SQLException e) {
@@ -114,20 +110,13 @@ public abstract class DbTable<T> {
         }
     }
 
-    public void deleteAfter(Long id, int height) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
-                     + " WHERE id = ? AND height > ?");
-             PreparedStatement pstmtSetLast = con.prepareStatement("UPDATE " + table()
-                     + " SET latest = TRUE WHERE id = ? AND height ="
-                     + " (SELECT MAX(height) FROM " + table() + " WHERE id = ?)")) {
+    public final void delete(T t) {
+        if (t == null) {
+            return;
+        }
+        try (Connection con = Db.getConnection()) {
             try {
-                pstmtDelete.setLong(1, id);
-                pstmtDelete.setInt(2, height);
-                pstmtDelete.executeUpdate();
-                pstmtSetLast.setLong(1, id);
-                pstmtSetLast.setLong(2, id);
-                pstmtSetLast.executeUpdate();
+                delete(con, t);
                 con.commit();
             } catch (SQLException e) {
                 con.rollback();
@@ -138,24 +127,7 @@ public abstract class DbTable<T> {
         }
     }
 
-    public void invalidate(Long id) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                     + " SET latest = FALSE WHERE id = ? AND latest = TRUE limit 1")) {
-            try {
-                pstmt.setLong(1, id);
-                pstmt.executeUpdate();
-                con.commit();
-            } catch (SQLException e) {
-                con.rollback();
-                throw e;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public void truncate() {
+    public final void truncate() {
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
             try {
