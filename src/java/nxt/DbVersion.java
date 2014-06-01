@@ -233,6 +233,14 @@ final class DbVersion {
             case 60:
                 apply("CREATE INDEX IF NOT EXISTS asset_account_id_idx ON asset (account_id)");
             case 61:
+                apply("CREATE TABLE IF NOT EXISTS trade (db_id INT IDENTITY, asset_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
+                        + "ask_order_id BIGINT NOT NULL, bid_order_id BIGINT NOT NULL, quantity BIGINT NOT NULL, "
+                        + "price BIGINT NOT NULL, timestamp INT NOT NULL)");
+            case 62:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS trade_ask_bid_idx ON trade (ask_order_id, bid_order_id)");
+            case 63:
+                apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id)");
+            case 64:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

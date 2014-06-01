@@ -36,7 +36,7 @@ public final class Alias {
 
     }
 
-    private static VersioningDbTable<Alias> aliasTable = new VersioningDbTable<Alias>() {
+    private static final VersioningDbTable<Alias> aliasTable = new VersioningDbTable<Alias>() {
 
         @Override
         protected String table() {
@@ -73,9 +73,10 @@ public final class Alias {
                 pstmt.executeUpdate();
             }
         }
+
     };
 
-    private static VersioningDbTable<Offer> offerTable = new VersioningDbTable<Offer>() {
+    private static final VersioningDbTable<Offer> offerTable = new VersioningDbTable<Offer>() {
 
         @Override
         protected String table() {
@@ -107,6 +108,7 @@ public final class Alias {
                 pstmt.executeUpdate();
             }
         }
+
     };
 
     public static int getCount() {

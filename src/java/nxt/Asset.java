@@ -11,7 +11,7 @@ import java.util.List;
 
 public final class Asset {
 
-    private static DbTable<Asset> assetTable = new DbTable<Asset>() {
+    private static final DbTable<Asset> assetTable = new DbTable<Asset>() {
 
         @Override
         protected String table() {
