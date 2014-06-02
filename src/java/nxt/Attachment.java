@@ -1705,6 +1705,66 @@ public interface Attachment {
 
     }
 
+    public final static class MonetarySystemExchange implements Attachment {
+
+        private final Long currencyId;
+        private final long amountNQT;
+        private final long units;
+
+        public MonetarySystemExchange(Long currencyId, long amountNQT, long units) {
+            this.currencyId = currencyId;
+            this.amountNQT = amountNQT;
+            this.units = units;
+        }
+
+        @Override
+        public int getSize() {
+            return 8 + 8 + 8;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(getSize());
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.putLong(currencyId);
+                buffer.putLong(amountNQT);
+                buffer.putLong(units);
+                return buffer.array();
+            } catch (RuntimeException e) {
+                Logger.logMessage("Error in getBytes", e);
+                return null;
+            }
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("currency", Convert.toUnsignedLong(currencyId));
+            attachment.put("amountNQT", amountNQT);
+            attachment.put("units", units);
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.EXCHANGE;
+        }
+
+        public Long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getAmountNQT() {
+            return amountNQT;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
+    }
+
     public final static class MonetarySystemMoneyMinting implements Attachment {
 
         private final long nonce;
