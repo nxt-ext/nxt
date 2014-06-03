@@ -3,6 +3,7 @@ package nxt.peer;
 import nxt.Account;
 import nxt.Block;
 import nxt.Constants;
+import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.util.JSON;
@@ -359,9 +360,18 @@ public final class Peers {
             }
             Set<String> toDelete = new HashSet<>(oldPeers);
             toDelete.removeAll(currentPeers);
-            PeerDb.deletePeers(toDelete);
-            currentPeers.removeAll(oldPeers);
-            PeerDb.addPeers(currentPeers);
+            try {
+                Db.beginTransaction();
+                PeerDb.deletePeers(toDelete);
+                currentPeers.removeAll(oldPeers);
+                PeerDb.addPeers(currentPeers);
+                Db.commitTransaction();
+            } catch (Exception e) {
+                Db.rollbackTransaction();
+                throw e;
+            } finally {
+                Db.endTransaction();
+            }
         }
 
     };

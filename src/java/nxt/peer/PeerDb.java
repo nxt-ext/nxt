@@ -28,34 +28,26 @@ final class PeerDb {
     }
 
     static void deletePeers(Collection<String> peers) {
-        try (Connection con = Db.beginTransaction();
+        try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("DELETE FROM peer WHERE address = ?")) {
             for (String peer : peers) {
                 pstmt.setString(1, peer);
                 pstmt.executeUpdate();
             }
-            Db.commitTransaction();
         } catch (SQLException e) {
-            Db.rollbackTransaction();
             throw new RuntimeException(e.toString(), e);
-        } finally {
-            Db.endTransaction();
         }
     }
 
     static void addPeers(Collection<String> peers) {
-        try (Connection con = Db.beginTransaction();
+        try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("INSERT INTO peer (address) values (?)")) {
             for (String peer : peers) {
                 pstmt.setString(1, peer);
                 pstmt.executeUpdate();
             }
-            Db.commitTransaction();
         } catch (SQLException e) {
-            Db.rollbackTransaction();
             throw new RuntimeException(e.toString(), e);
-        } finally {
-            Db.endTransaction();
         }
     }
 
