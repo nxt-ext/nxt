@@ -3508,6 +3508,23 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 
+		<div id="decrypt_note_form_container" style="display:none;">
+			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;">
+				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this message.</div>
+				<div class="form-group secret_phrase">
+					<label for="decrypt_note_form_password">SECRET PHRASE</label>
+					<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
+				</div>
+
+				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember password for decryption</label></div>
+
+				<input type="hidden" name="otherAccount" value="" />
+				<input type="hidden" name="encryptedNote" value="" />
+				<input type="hidden" name="encryptedNoteNonce" value="" />
+		        <button type="button" class="btn btn-primary">Decrypt</button>
+			</form>
+		</div>
+
 		<div id="asset_exchange_sidebar_context" class="context_menu dropdown clearfix">
 		    <ul class="dropdown-menu" data-container="body" role="menu" style="display:block;position:static;margin-bottom:5px;">
 		        <li><a tabindex="-1" href="#" data-option="add_to_group">Add to group</a></li>
