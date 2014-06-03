@@ -98,13 +98,7 @@ public abstract class DbTable<T> {
 
     public void insert(T t) {
         try (Connection con = Db.getConnection()) {
-            try {
-                save(con, t);
-                con.commit();
-            } catch (SQLException e) {
-                con.rollback();
-                throw e;
-            }
+            save(con, t);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -115,13 +109,7 @@ public abstract class DbTable<T> {
             return;
         }
         try (Connection con = Db.getConnection()) {
-            try {
-                delete(con, t);
-                con.commit();
-            } catch (SQLException e) {
-                con.rollback();
-                throw e;
-            }
+            delete(con, t);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -130,15 +118,9 @@ public abstract class DbTable<T> {
     public final void truncate() {
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
-            try {
-                stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
-                stmt.executeUpdate("TRUNCATE TABLE " + table());
-                stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
-                con.commit();
-            } catch (SQLException e) {
-                con.rollback();
-                throw e;
-            }
+            stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
+            stmt.executeUpdate("TRUNCATE TABLE " + table());
+            stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

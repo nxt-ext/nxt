@@ -102,15 +102,9 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
         try (Connection con = Db.getConnection();
         PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
                 + " SET latest = FALSE WHERE id = ? AND latest = TRUE limit 1")) {
-            try {
-                pstmt.setLong(1, getId(t));
-                pstmt.executeUpdate();
-                save(con, t);
-                con.commit();
-            } catch (SQLException e) {
-                con.rollback();
-                throw e;
-            }
+            pstmt.setLong(1, getId(t));
+            pstmt.executeUpdate();
+            save(con, t);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -123,18 +117,12 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
              PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()
                      + " SET latest = TRUE WHERE id = ? AND height ="
                      + " (SELECT MAX(height) FROM " + table() + " WHERE id = ?)")) {
-            try {
-                pstmtDelete.setLong(1, id);
-                pstmtDelete.setInt(2, height);
-                pstmtDelete.executeUpdate();
-                pstmtSetLatest.setLong(1, id);
-                pstmtSetLatest.setLong(2, id);
-                pstmtSetLatest.executeUpdate();
-                con.commit();
-            } catch (SQLException e) {
-                con.rollback();
-                throw e;
-            }
+            pstmtDelete.setLong(1, id);
+            pstmtDelete.setInt(2, height);
+            pstmtDelete.executeUpdate();
+            pstmtSetLatest.setLong(1, id);
+            pstmtSetLatest.setLong(2, id);
+            pstmtSetLatest.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

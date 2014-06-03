@@ -10,7 +10,7 @@ import java.sql.Statement;
 final class DbVersion {
 
     static void init() {
-        try (Connection con = Db.getConnection(); Statement stmt = con.createStatement()) {
+        try (Connection con = Db.beginTransaction(); Statement stmt = con.createStatement()) {
             int nextUpdate = 1;
             try {
                 ResultSet rs = stmt.executeQuery("SELECT next_update FROM version");
@@ -27,11 +27,14 @@ final class DbVersion {
                 Logger.logMessage("Initializing an empty database");
                 stmt.executeUpdate("CREATE TABLE version (next_update INT NOT NULL)");
                 stmt.executeUpdate("INSERT INTO version VALUES (1)");
-                con.commit();
+                Db.commitTransaction();
             }
             update(nextUpdate);
         } catch (SQLException e) {
+            Db.rollbackTransaction();
             throw new RuntimeException(e.toString(), e);
+        } finally {
+            Db.endTransaction();
         }
 
     }
@@ -44,9 +47,9 @@ final class DbVersion {
                     stmt.executeUpdate(sql);
                 }
                 stmt.executeUpdate("UPDATE version SET next_update = (SELECT next_update + 1 FROM version)");
-                con.commit();
+                Db.commitTransaction();
             } catch (SQLException e) {
-                con.rollback();
+                Db.rollbackTransaction();
                 throw e;
             }
         } catch (SQLException e) {

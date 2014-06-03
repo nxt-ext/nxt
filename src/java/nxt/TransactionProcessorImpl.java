@@ -47,14 +47,23 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
 
                     synchronized (BlockchainImpl.getInstance()) {
-                        Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
-                        while (iterator.hasNext()) {
-                            TransactionImpl transaction = iterator.next();
-                            if (transaction.getExpiration() < curTime) {
-                                iterator.remove();
-                                transaction.undoUnconfirmed();
-                                removedUnconfirmedTransactions.add(transaction);
+                        try {
+                            Db.beginTransaction();
+                            Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
+                            while (iterator.hasNext()) {
+                                TransactionImpl transaction = iterator.next();
+                                if (transaction.getExpiration() < curTime) {
+                                    iterator.remove();
+                                    transaction.undoUnconfirmed();
+                                    removedUnconfirmedTransactions.add(transaction);
+                                }
                             }
+                            Db.commitTransaction();
+                        } catch (Exception e) {
+                            Db.rollbackTransaction();
+                            throw e;
+                        } finally {
+                            Db.endTransaction();
                         }
                     }
 
@@ -386,34 +395,41 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
 
                 synchronized (BlockchainImpl.getInstance()) {
-
-                    if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
-                        break; // not ready to process transactions
-                    }
-
-                    Long id = transaction.getId();
-                    if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
-                            || ! transaction.verify()) {
-                        continue;
-                    }
-
-                    if (transaction.applyUnconfirmed()) {
-                        if (sendToPeers) {
-                            if (nonBroadcastedTransactions.containsKey(id)) {
-                                Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
-                                        + " that we generated, will not forward to peers");
-                                nonBroadcastedTransactions.remove(id);
-                            } else {
-                                sendToPeersTransactions.add(transaction);
-                            }
+                    try {
+                        Db.beginTransaction();
+                        if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
+                            break; // not ready to process transactions
                         }
-                        unconfirmedTransactions.put(id, transaction);
-                        addedUnconfirmedTransactions.add(transaction);
-                    } else {
-                        addedDoubleSpendingTransactions.add(transaction);
+
+                        Long id = transaction.getId();
+                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
+                                || !transaction.verify()) {
+                            continue;
+                        }
+
+                        if (transaction.applyUnconfirmed()) {
+                            if (sendToPeers) {
+                                if (nonBroadcastedTransactions.containsKey(id)) {
+                                    Logger.logDebugMessage("Received back transaction " + transaction.getStringId()
+                                            + " that we generated, will not forward to peers");
+                                    nonBroadcastedTransactions.remove(id);
+                                } else {
+                                    sendToPeersTransactions.add(transaction);
+                                }
+                            }
+                            unconfirmedTransactions.put(id, transaction);
+                            addedUnconfirmedTransactions.add(transaction);
+                        } else {
+                            addedDoubleSpendingTransactions.add(transaction);
+                        }
+                        Db.commitTransaction();
+                    } catch (Exception e) {
+                        Db.rollbackTransaction();
+                        throw e;
+                    } finally {
+                        Db.endTransaction();
                     }
                 }
-
             } catch (RuntimeException e) {
                 Logger.logMessage("Error processing transaction", e);
             }
