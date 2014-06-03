@@ -160,6 +160,21 @@ var NRS = (function(NRS, $, undefined) {
 
 		var secretPhrase = "";
 
+		//unknown account..
+		if (type == "POST" && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
+			if (callback) {
+				callback({
+					"errorCode": 2,
+					"errorDescription": "You have a brand new account, fund it with some coins first."
+				}, data);
+			} else {
+				$.growl("You have a brand new account, fund it with some coins first.", {
+					"type": "danger"
+				});
+			}
+			return;
+		}
+
 		if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
 			if (NRS.rememberPassword) {
 				secretPhrase = NRS.password;
