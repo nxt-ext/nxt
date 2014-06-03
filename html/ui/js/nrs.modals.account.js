@@ -170,6 +170,9 @@ var NRS = (function(NRS, $, undefined) {
 										case 7:
 											transactionType = "Alias Buy";
 											break;
+										case 8:
+											transactionType = "Encrypted Message";
+											break;
 									}
 								} else if (transaction.type == 2) {
 									switch (transaction.subtype) {

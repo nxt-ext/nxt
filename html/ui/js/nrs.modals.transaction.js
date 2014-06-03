@@ -83,16 +83,17 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (transaction.sender == NRS.account || transaction.recipient == NRS.account) {
 						if (transaction.sender == NRS.account) {
-							sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient");
+							sender_info = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient");
+
 						} else {
-							sender_info = "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
+							sender_info = "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 						}
 					} else {
-						sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient") + "<br />";
-						sender_info += "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
+						sender_info = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient") + "<br />";
+						sender_info += "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 					}
 
-					$("#transaction_info_output").html(message.escapeHTML().nl2br() + "<br /><br />" + sender_info).show();
+					$("#transaction_info_output").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> Public Message</div><div style='padding-bottom:10px'>" + message.escapeHTML().nl2br() + "</div>" + sender_info).show();
 
 					break;
 				case 1:
@@ -205,24 +206,55 @@ var NRS = (function(NRS, $, undefined) {
 						"Type": "Encrypted Message"
 					}
 
-					try {
-						var message = NRS.decryptMessage(transaction.attachment.message, transaction.attachment.nonce, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient));
-					} catch (err) {
-						var message = "Could not convert hex to string: " + String(transaction.attachment.message);
-					}
+					var showDecryptionForm = false;
 
-					if (transaction.sender == NRS.account || transaction.recipient == NRS.account) {
+					if (transaction.recipient == NRS.account || transaction.sender == NRS.account) {
+						try {
+							var message = NRS.decryptMessage(transaction.attachment.message, {
+								"nonce": transaction.attachment.nonce,
+								"accountId": (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient)
+							});
+						} catch (err) {
+							var message = String(err.message ? err.message : err);
+							if (err.errorCode && err.errorCode == 1) {
+								showDecryptionForm = true;
+							}
+						}
+
 						if (transaction.sender == NRS.account) {
-							sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient");
+							sender_info = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient");
 						} else {
-							sender_info = "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
+							sender_info = "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 						}
 					} else {
-						sender_info = "<strong>To</strong>: " + NRS.getAccountTitle(transaction, "recipient") + "<br />";
-						sender_info += "<strong>From</strong>: " + NRS.getAccountTitle(transaction, "sender");
+						var message = "This is an encrypted message not addressed to you. You cannot read it's contents.";
+
+						sender_info = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient") + "<br />";
+						sender_info += "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 					}
 
-					$("#transaction_info_output").html(message.escapeHTML().nl2br() + "<br /><br />" + sender_info).show();
+					var output = "<div style='color:#999999;padding-bottom:10px'><i class='fa fa-lock'></i> Encrypted Message</div>";
+
+					if (showDecryptionForm) {
+						output += "<div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='padding-bottom:10px;display:none'></div>";
+					} else {
+						output += "<div style='padding-bottom:10px'>" + message.escapeHTML().nl2br() + "</div>"
+					}
+
+					output += sender_info;
+
+					$("#transaction_info_output").html(output);
+
+
+					if (showDecryptionForm) {
+						$("#decrypt_note_form_container input[name=otherAccount]").val(transaction.recipient == NRS.account ? transaction.sender : transaction.recipient);
+						$("#decrypt_note_form_container input[name=encryptedNote]").val(transaction.attachment.message);
+						$("#decrypt_note_form_container input[name=encryptedNoteNonce]").val(transaction.attachment.nonce);
+						$("#decrypt_note_form_container").detach().appendTo("#transaction_info_decryption_form");
+						$("#decrypt_note_form_container").show();
+					}
+
+					$("#transaction_info_output").show();
 
 					break;
 				default:
@@ -533,6 +565,40 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.fetchingModalData = false;
 		}
 	}
+
+	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
+		if ($("#decrypt_note_form_container").length) {
+			$("#decrypt_note_form_container input").val("");
+			$("#decrypt_note_form_container").hide().detach().appendTo("body");
+			$("#transaction_info_decrypted_note").html("").hide();
+		}
+	});
+
+	$("#decrypt_note_form_container").on("submit", function(e) {
+		e.preventDefault();
+
+		var message = $(this).find("input[name=encryptedNote]").val();
+		var nonce = $(this).find("input[name=encryptedNoteNonce]").val();
+		var otherAccount = $(this).find("input[name=otherAccount]").val();
+		var password = $(this).find("input[name=secretPhrase]").val();
+		var rememberPassword = $(this).find("input[name=rememberPassword]").is(":checked");
+
+		try {
+			var message = NRS.decryptMessage(message, {
+				"nonce": nonce,
+				"accountId": otherAccount
+			}, password);
+			$(this).hide();
+			$("#transaction_info_decrypted_note").html(message.escapeHTML().nl2br()).show();
+		} catch (err) {
+			var message = String(err.message ? err.message : err);
+			$(this).find(".callout").html(message.escapeHTML());
+		}
+
+		if (rememberPassword) {
+			NRS.decryptionPassword = password;
+		}
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));
