@@ -722,6 +722,10 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	}
 
+	NRS.getAccountLink = function(object, acc) {
+		return "<a href='#' data-user='" + String(object[acc]).escapeHTML() + "'>" + NRS.getAccountTitle(object, acc) + "</a>";
+	}
+
 	NRS.getAccountTitle = function(object, acc) {
 		var type = typeof object;
 
