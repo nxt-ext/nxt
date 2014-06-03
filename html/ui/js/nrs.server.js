@@ -96,7 +96,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//check to see if secretPhrase supplied matches logged in account, if not - show error.
 		if ("secretPhrase" in data) {
-			var accountId = NRS.generateAccountId(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase);
+			var accountId = NRS.generateAccountId(NRS.rememberPassword ? NRS.password : data.secretPhrase);
 			if (accountId != NRS.account) {
 				if (callback) {
 					callback({
@@ -162,7 +162,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
 			if (NRS.rememberPassword) {
-				secretPhrase = sessionStorage.getItem("secret");
+				secretPhrase = NRS.password;
 			} else {
 				secretPhrase = data.secretPhrase;
 			}
@@ -176,7 +176,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.accountInfo.publicKey = data.publicKey;
 			}
 		} else if (type == "POST" && NRS.rememberPassword) {
-			data.secretPhrase = sessionStorage.getItem("secret");
+			data.secretPhrase = NRS.password;
 		}
 
 		$.support.cors = true;

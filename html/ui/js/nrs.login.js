@@ -1,5 +1,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.newlyCreatedAccount = false;
+	NRS.password = "";
+	NRS.decryptionPassword = "";
 
 	NRS.allowLoginViaEnter = function() {
 		$("#login_password").keypress(function(e) {
@@ -182,10 +184,7 @@ var NRS = (function(NRS, $, undefined) {
 					if ($("#remember_password").is(":checked")) {
 						NRS.rememberPassword = true;
 						$("#remember_password").prop("checked", false);
-						sessionStorage.setItem("secret", password);
-						$.growl("Remember to log out at the end of your session so as to clear the password from memory.", {
-							"type": "danger"
-						});
+						NRS.password = password;
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
 					}
@@ -322,9 +321,8 @@ var NRS = (function(NRS, $, undefined) {
 			$("#stop_forging_modal .show_logout").show();
 			$("#stop_forging_modal").modal("show");
 		} else {
-			if (NRS.rememberPassword) {
-				sessionStorage.removeItem("secret");
-			}
+			NRS.decryptionPassword = "";
+			NRS.password = "";
 			window.location.reload();
 		}
 	}
