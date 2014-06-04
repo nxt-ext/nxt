@@ -5,12 +5,9 @@ import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public abstract class TransactionType {
@@ -1954,12 +1951,37 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                String name = readString(buffer, buffer.get(), Constants.MAX_CURRENCY_NAME_LENGTH);
+                byte[] codeBytes = new byte[Constants.CURRENCY_CODE_LENGTH];
+                buffer.get(codeBytes);
+                String code;
+                try {
+                    code = new String(codeBytes, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    code = "";
+                }
+                String description = readString(buffer, buffer.getShort(), Constants.MAX_CURRENCY_DESCRIPTION_LENGTH);
+                byte type = buffer.get();
+                long totalSupplyNQT = buffer.getLong();
+                int issuanceHeight = buffer.getInt();
+                long minReservePerUnitNQT = buffer.getLong();
+                byte minDifficulty = buffer.get();
+                byte maxDifficulty = buffer.get();
+                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupplyNQT, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                String name = (String)attachmentData.get("name");
+                String code = (String)attachmentData.get("code");
+                String description = (String)attachmentData.get("description");
+                byte type = ((Long)attachmentData.get("type")).byteValue();
+                long totalSupplyNQT = (Long)attachmentData.get("totalSupplyNQT");
+                int issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
+                long minReservePerUnitNQT = (Long)attachmentData.get("minReservePerUnitNQT");
+                byte minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
+                byte maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
+                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupplyNQT, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
             }
 
             @Override
@@ -1992,12 +2014,16 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                Long currencyId = buffer.getLong();
+                long amountNQT = buffer.getLong();
+                transaction.setAttachment(new Attachment.MonetarySystemReserveIncrease(currencyId, amountNQT));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                Long currencyId = (Long)attachmentData.get("currency");
+                long amountNQT = (Long)attachmentData.get("amountNQT");
+                transaction.setAttachment(new Attachment.MonetarySystemReserveIncrease(currencyId, amountNQT));
             }
 
             @Override
@@ -2030,12 +2056,16 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                Long currencyId = buffer.getLong();
+                long units = buffer.getLong();
+                transaction.setAttachment(new Attachment.MonetarySystemReserveClaim(currencyId, units));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                Long currencyId = (Long)attachmentData.get("currency");
+                long units = (Long)attachmentData.get("units");
+                transaction.setAttachment(new Attachment.MonetarySystemReserveClaim(currencyId, units));
             }
 
             @Override
@@ -2068,12 +2098,31 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                List<Attachment.MonetarySystemMoneyTransfer.Entry> entries = new LinkedList<>();
+                short numberOfEntries = buffer.getShort();
+                for (int i = 0; i < numberOfEntries; i++) {
+                    Long recipientId = buffer.getLong();
+                    Long currencyId = buffer.getLong();
+                    long units = buffer.getLong();
+                    entries.add(new Attachment.MonetarySystemMoneyTransfer.Entry(recipientId, currencyId, units));
+                }
+                String comment = readString(buffer, buffer.getShort(), Constants.MAX_MONEY_TRANSFER_COMMENT_LENGTH);
+                transaction.setAttachment(new Attachment.MonetarySystemMoneyTransfer(entries, comment));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                List<Attachment.MonetarySystemMoneyTransfer.Entry> entries = new LinkedList<>();
+                JSONArray entriesArray = (JSONArray)attachmentData.get("transfers");
+                for (int i = 0; i < entriesArray.size(); i++) {
+                    JSONObject entryObject = (JSONObject)entriesArray.get(i);
+                    Long recipientId = (Long)entryObject.get("recipient");
+                    Long currencyId = (Long)entryObject.get("currency");
+                    long units = (Long)entryObject.get("units");
+                    entries.add(new Attachment.MonetarySystemMoneyTransfer.Entry(recipientId, currencyId, units));
+                }
+                String comment = (String)attachmentData.get("comment");
+                transaction.setAttachment(new Attachment.MonetarySystemMoneyTransfer(entries, comment));
             }
 
             @Override
@@ -2106,12 +2155,28 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                Long currencyId = buffer.getLong();
+                long buyingRateNQT = buffer.getLong();
+                long sellingRateNQT = buffer.getLong();
+                long totalBuyingLimitNQT = buffer.getLong();
+                long totalSellingLimit = buffer.getLong();
+                long initialNXTSupplyNQT = buffer.getLong();
+                long initialCurrencySupply = buffer.getLong();
+                int expirationHeight = buffer.getInt();
+                transaction.setAttachment(new Attachment.MonetarySystemExchangeSetting(currencyId, buyingRateNQT, sellingRateNQT, totalBuyingLimitNQT, totalSellingLimit, initialNXTSupplyNQT, initialCurrencySupply, expirationHeight));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                Long currencyId = (Long)attachmentData.get("currency");
+                long buyingRateNQT = (Long)attachmentData.get("buyingRateNQT");
+                long sellingRateNQT = (Long)attachmentData.get("sellingRateNQT");
+                long totalBuyingLimitNQT = (Long)attachmentData.get("totalBuyingLimitNQT");
+                long totalSellingLimit = (Long)attachmentData.get("totalSellingLimit");
+                long initialNXTSupplyNQT = (Long)attachmentData.get("initialNXTSupplyNQT");
+                long initialCurrencySupply = (Long)attachmentData.get("initialCurrencySupply");
+                int expirationHeight = ((Long)attachmentData.get("expirationHeight")).intValue();
+                transaction.setAttachment(new Attachment.MonetarySystemExchangeSetting(currencyId, buyingRateNQT, sellingRateNQT, totalBuyingLimitNQT, totalSellingLimit, initialNXTSupplyNQT, initialCurrencySupply, expirationHeight));
             }
 
             @Override
@@ -2144,12 +2209,18 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                Long currencyId = buffer.getLong();
+                long amountNQT = buffer.getLong();
+                long units = buffer.getLong();
+                transaction.setAttachment(new Attachment.MonetarySystemExchange(currencyId, amountNQT, units));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                Long currencyId = (Long)attachmentData.get("currency");
+                long amountNQT = (Long)attachmentData.get("amountNQT");
+                long units = (Long)attachmentData.get("units");
+                transaction.setAttachment(new Attachment.MonetarySystemExchange(currencyId, amountNQT, units));
             }
 
             @Override
@@ -2182,12 +2253,20 @@ public abstract class TransactionType {
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-
+                long nonce = buffer.getLong();
+                Long currencyId = buffer.getLong();
+                int units = buffer.getInt();
+                int counter = buffer.getInt();
+                transaction.setAttachment(new Attachment.MonetarySystemMoneyMinting(nonce, currencyId, units, counter));
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
+                long nonce = (Long)attachmentData.get("nonce");
+                Long currencyId = (Long)attachmentData.get("currency");
+                int units = ((Long)attachmentData.get("units")).intValue();
+                int counter = ((Long)attachmentData.get("counter")).intValue();
+                transaction.setAttachment(new Attachment.MonetarySystemMoneyMinting(nonce, currencyId, units, counter));
             }
 
             @Override
