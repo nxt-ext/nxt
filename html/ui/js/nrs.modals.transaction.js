@@ -210,9 +210,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (transaction.recipient == NRS.account || transaction.sender == NRS.account) {
 						try {
-							var message = NRS.decryptMessage(transaction.attachment.message, {
+							var message = NRS.decryptNote(transaction.attachment.message, {
 								"nonce": transaction.attachment.nonce,
-								"accountId": (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient)
+								"account": (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient)
 							});
 						} catch (err) {
 							var message = String(err.message ? err.message : err);
@@ -509,14 +509,54 @@ var NRS = (function(NRS, $, undefined) {
 
 					break;
 				case 4:
-					var data = {
-						"Type": "Marketplace Purchase"
-					};
+					async = true;
+
+					NRS.sendRequest("getDGSGood", {
+						"goods": transaction.attachment.goods
+					}, function(goods) {
+						var data = {
+							"Type": "Marketplace Purchase",
+							"Item Name": goods.name,
+							"Price": transaction.attachment.priceNQT,
+							"quantityFormattedHTML": NRS.format(transaction.attachment.quantity),
+							"Buyer": NRS.getAccountFormatted(transaction, "sender"),
+							"Seller": NRS.getAccountFormatted(goods, "seller")
+						};
+
+						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+						$("#transaction_info_table").show();
+
+						$("#transaction_info_modal").modal("show");
+						NRS.fetchingModalData = false;
+					});
+
 					break;
 				case 5:
-					var data = {
-						"Type": "Marketplace Delivery"
-					};
+					async = true;
+
+					NRS.sendRequest("getDGSPurchase", {
+						"purchase": transaction.attachment.purchase
+					}, function(purchase) {
+						NRS.sendRequest("getDGSGood", {
+							"goods": purchase.goods
+						}, function(goods) {
+							var data = {
+								"Type": "Marketplace Delivery",
+								"Item Name": goods.name,
+								"Price": purchase.priceNQT,
+								"quantityFormattedHTML": NRS.format(purchase.quantity),
+								"Buyer": NRS.getAccountFormatted(purchase, "buyer"),
+								"Seller": NRS.getAccountFormatted(purchase, "seller")
+							};
+
+							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+							$("#transaction_info_table").show();
+
+							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
+						});
+					});
+
 					break;
 				case 6:
 					var data = {
@@ -584,9 +624,9 @@ var NRS = (function(NRS, $, undefined) {
 		var rememberPassword = $(this).find("input[name=rememberPassword]").is(":checked");
 
 		try {
-			var message = NRS.decryptMessage(message, {
+			var message = NRS.decryptNote(message, {
 				"nonce": nonce,
-				"accountId": otherAccount
+				"account": otherAccount
 			}, password);
 			$(this).hide();
 			$("#transaction_info_decrypted_note").html(message.escapeHTML().nl2br()).show();
