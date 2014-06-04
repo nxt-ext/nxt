@@ -183,7 +183,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (sharedKey != -1) {
 						try {
-							decoded = NRS.decryptMessage(message.message, {
+							decoded = NRS.decryptNote(message.message, {
 								"nonce": message.nonce,
 								"sharedKey": sharedKey
 							});
@@ -192,7 +192,7 @@ var NRS = (function(NRS, $, undefined) {
 							//.. handle
 						}
 					} else {
-						console.log("no shared key");
+						//console.log("no shared key");
 					}
 				} else {
 					try {
@@ -283,7 +283,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
-	NRS.encryptMessage = function(message, options, secretPhrase) {
+	NRS.encryptNote = function(message, options, secretPhrase) {
 		try {
 			if (!options.sharedKey) {
 				if (!options.privateKey) {
@@ -302,13 +302,13 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (!options.publicKey) {
-					if (!options.accountId) {
+					if (!options.account) {
 						throw {
 							"message": "Account ID not specified.",
 							"errorCode": 4
 						};
 					}
-					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.accountId, true));
+					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
 				}
 			}
 
@@ -319,14 +319,18 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
-			throw {
-				"message": "The message could not be encrypted.",
-				"errorCode": 3
-			};
+			if (err.errorCode && (err.errorCode == 3 || err.errorCode == 4)) {
+				throw err;
+			} else {
+				throw {
+					"message": "The message could not be encrypted.",
+					"errorCode": 3
+				};
+			}
 		}
 	}
 
-	NRS.decryptMessage = function(message, options, secretPhrase) {
+	NRS.decryptNote = function(message, options, secretPhrase) {
 		try {
 			if (!options.sharedKey) {
 				if (!options.privateKey) {
@@ -345,13 +349,13 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (!options.publicKey) {
-					if (!options.accountId) {
+					if (!options.account) {
 						throw {
 							"message": "Account ID not specified.",
 							"errorCode": 4
 						};
 					}
-					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.accountId, true));
+					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
 				}
 			}
 
@@ -386,8 +390,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		if ($("#send_message_encrypt").is(":checked")) {
 			try {
-				var encrypted = NRS.encryptMessage(message, {
-					"accountId": data.recipient
+				var encrypted = NRS.encryptNote(message, {
+					"account": data.recipient
 				}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
 
 				requestType = "sendEncryptedNote";
@@ -458,8 +462,8 @@ var NRS = (function(NRS, $, undefined) {
 		var error = "";
 
 		if ($("#inline_message_encrypt").is(":checked")) {
-			hex = NRS.encryptMessage(message, {
-				"accountId": data.recipient
+			hex = NRS.encryptNote(message, {
+				"account": data.recipient
 			}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
 		} else {
 			hex = converters.stringToHexString(message);
