@@ -218,8 +218,8 @@ var NRS = (function(NRS, $, undefined) {
 					var alias = String(response.aliasURI);
 					var timestamp = response.timestamp;
 
-					var regex_1 = /acct:(\d+)@nxt/;
-					var regex_2 = /nacc:(\d+)/;
+					var regex_1 = /acct:(.*)@nxt/;
+					var regex_2 = /nacc:(.*)/;
 
 					var match = alias.match(regex_1);
 
@@ -228,6 +228,8 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					if (match && match[1]) {
+						match[1] = String(match[1]).toUpperCase();
+
 						NRS.getAccountError(match[1], function(response) {
 							accountInputField.val(match[1].escapeHTML());
 							callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();

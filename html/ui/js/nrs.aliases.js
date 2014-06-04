@@ -92,7 +92,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -256,8 +256,9 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					if (/http:\/\//i.test(response.aliasURI)) {
 						NRS.forms.setAliasType("uri");
-					} else if (/acct:(\d+)@nxt/.test(response.aliasURI) || /nacc:(\d+)/.test(response.aliasURI)) {
+					} else if ((aliasURI = /acct:(.*)@nxt/.exec(response.aliasURI)) || (aliasURI = /nacc:(.*)/.exec(response.aliasURI))) {
 						NRS.forms.setAliasType("account");
+						response.aliasURI = String(aliasURI[1]).toUpperCase();
 					} else {
 						NRS.forms.setAliasType("general");
 					}
@@ -289,20 +290,22 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.setAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
-		data.uri = $.trim(data.uri);
+		data.aliasURI = $.trim(data.aliasURI).toLowerCase();
 
 		if (data.type == "account") {
-			if (!(/acct:(\d+)@nxt/.test(data.uri)) && !(/nacc:(\d+)/.test(data.uri))) {
-				if (/^\d+$/.test(data.uri)) {
-					data.uri = "acct:" + data.uri + "@nxt";
+			if (!(/acct:(.*)@nxt/.test(data.aliasURI)) && !(/nacc:(.*)/.test(data.aliasURI))) {
+				if (/^\d+$/.test(data.aliasURI)) {
+					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
+				} else if (/^(NXT\-)/i.test(data.aliasURI)) {
+					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
 				} else {
 					return {
 						"error": "Invalid account ID."
 					};
 				}
 			}
-
 		}
+
 		delete data["type"];
 
 		if ($("#register_alias_alias_update").val() == 1) {
@@ -324,7 +327,9 @@ var NRS = (function(NRS, $, undefined) {
 			$("#register_alias_uri_label").html("URI");
 			$("#register_alias_uri").prop("placeholder", "URI");
 			if (uri) {
-				if (!/https?:\/\//i.test(uri)) {
+				if (uri == NRS.accountRS) {
+					$("#register_alias_uri").val("http://");
+				} else if (!/https?:\/\//i.test(uri)) {
 					$("#register_alias_uri").val("http://" + uri);
 				} else {
 					$("#register_alias_uri").val(uri);
@@ -338,29 +343,34 @@ var NRS = (function(NRS, $, undefined) {
 			$("#register_alias_uri").prop("placeholder", "Account ID");
 			$("#register_alias_uri").val("");
 			if (uri) {
-				if (!(/acct:(\d+)@nxt/.test(uri)) && !(/nacc:(\d+)/.test(uri))) {
+				if (!(/acct:(.*)@nxt/.test(uri)) && !(/nacc:(.*)/.test(uri))) {
 					if (/^\d+$/.test(uri)) {
-						$("#register_alias_uri").val("acct:" + uri + "@nxt");
+						$("#register_alias_uri").val(uri);
 					} else {
-						$("#register_alias_uri").val("");
+						$("#register_alias_uri").val(NRS.accountRS);
 					}
 				} else {
-					$("#register_alias_uri").val("");
+					$("#register_alias_uri").val(uri);
 				}
 			} else {
-				$("#register_alias_uri").val("");
+				$("#register_alias_uri").val(NRS.accountRS);
 			}
 			$("#register_alias_help").html("The alias will reference the account number entered and can be used to send Nxt to, messages, etc..").show();
 		} else {
 			$("#register_alias_uri_label").html("Data");
 			$("#register_alias_uri").prop("placeholder", "Data");
 			if (uri) {
-				$("#register_alias_uri").val(uri);
-			} else {
-				$("#register_alias_uri").val("");
+				if (uri == NRS.accountRS) {
+					$("#register_alias_uri").val("");
+				} else if (uri == "http://") {
+					$("#register_alias_uri").val("");
+				} else {
+					$("#register_alias_uri").val(uri);
+				}
 			}
-			$("#register_alias_help").html("The alias can contain any data you want.").show();
 		}
+
+		$("#register_alias_help").html("The alias can contain any data you want.").show();
 	}
 
 	$("#register_alias_type").on("change", function() {
