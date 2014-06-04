@@ -28,6 +28,10 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.selectedContext = null;
 
 	NRS.currentPage = "dashboard";
+	NRS.currentSubPage = "";
+	NRS.pageNumber = 1;
+	NRS.itemsPerPage = 5;
+
 	NRS.pages = {};
 	NRS.incoming = {};
 
@@ -222,6 +226,8 @@ var NRS = (function(NRS, $, undefined) {
 		//NRS.previousPage = NRS.currentPage;
 		NRS.currentPage = page;
 		NRS.currentSubPage = "";
+		NRS.pageNumber = 1;
+		NRS.showPageNumbers = false;
 
 		if (NRS.pages[page]) {
 			if (data && data.callback) {
@@ -243,10 +249,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.goToPage = function(page) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
+		NRS.currentPage = page;
+		NRS.currentSubPage = "";
+		NRS.pageNumber = 1;
+		NRS.showPageNumbers = false;
+
 		if ($link.length) {
 			$link.trigger("click");
 		} else {
-			NRS.currentPage = page;
 			$("ul.sidebar-menu a.active").removeClass("active");
 			$(".page").hide();
 			$("#" + page + "_page").show();
@@ -257,16 +267,59 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pageLoading = function() {
+		NRS.hasMorePages = false;
+
 		var $pageHeader = $("#" + NRS.currentPage + "_page .content-header h1");
 		$pageHeader.find(".loading_dots").remove();
 		$pageHeader.append("<span class='loading_dots'><span>.</span><span>.</span><span>.</span></span>");
 	}
 
 	NRS.pageLoaded = function(callback) {
-		$("#" + NRS.currentPage + "_page .content-header h1").find(".loading_dots").remove();
+		var $currentPage = $("#" + NRS.currentPage + "_page");
+
+		$currentPage.find(".content-header h1 .loading_dots").remove();
+
+		if ($currentPage.hasClass("paginated")) {
+			NRS.addPagination();
+		}
+
 		if (callback) {
 			callback();
 		}
+	}
+
+	NRS.addPagination = function(section) {
+		var output = "";
+
+		if (NRS.pageNumber == 2) {
+			output += "<a href='#' data-page='1'>&laquo; Previous Page</a>";
+		} else if (NRS.pageNumber > 2) {
+			//output += "<a href='#' data-page='1'>&laquo; First Page</a>";
+			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; Previous Page</a>";
+		}
+		if (NRS.hasMorePages) {
+			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>Next Page &raquo;</a>";
+		}
+
+		var $paginationContainer = $("#" + NRS.currentPage + "_page .data-pagination");
+
+		if ($paginationContainer.length) {
+			$paginationContainer.html(output);
+		}
+	}
+
+	$(".data-pagination").on("click", "a", function(e) {
+		e.preventDefault();
+
+		NRS.goToPageNumber($(this).data("page"));
+	});
+
+	NRS.goToPageNumber = function(pageNumber) {
+		/*if (!pageLoaded) {
+			return;
+		}*/
+		NRS.pageNumber = pageNumber;
+		NRS.pages[NRS.currentPage]();
 	}
 
 	NRS.createDatabase = function(callback) {
