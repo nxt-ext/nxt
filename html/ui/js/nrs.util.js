@@ -920,7 +920,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
 				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
-			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller") {
+			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller" || key == "Buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {
 				value = String(value).escapeHTML().nl2br();

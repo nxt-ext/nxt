@@ -3338,11 +3338,11 @@ hr {
 
 .goods_info, .purchase_info {
   padding:5px;
-  border:1px solid black;
+  border:1px solid #ccc;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
-  background:#efefef;
+  background:#fafafa;
   color:black;
   margin:5px;
   margin-bottom:15px;
@@ -3373,3 +3373,18 @@ hr {
 .dgs_page_contents hr {
   border-top:1px solid #ddd;
 }
+
+table.purchase {
+  margin-bottom:5px;
+}
+
+table.purchase td {
+  vertical-align:top;
+  padding-right:5px;
+  padding-bottom:5px;
+}
+
+.data-pagination {
+  text-align:center;
+}
+

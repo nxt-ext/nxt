@@ -863,7 +863,7 @@
                   	</section>
                 </div>
 
-                <div id="newest_dgs_page" class="page">
+                <div id="newest_dgs_page" class="paginated page">
                     <section class="content-header">
                     	<h1>Newest Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
@@ -884,10 +884,11 @@
 
                   			</div>
                   		</div>
+                  		<div class="data-pagination"></div>
                   	</section>
                 </div>
 
-                <div id="purchased_dgs_page" class="page">
+                <div id="purchased_dgs_page" class="paginated page">
                     <section class="content-header">
                     	<h1>Purchased Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
@@ -908,10 +909,11 @@
 
                   			</div>
                   		</div>
+                  		<div class="data-pagination"></div>
                   	</section>
                 </div>
 
-                <div id="my_dgs_listings_page" class="page">
+                <div id="my_dgs_listings_page" class="paginated page">
                     <section class="content-header">
                     	<h1>My Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
@@ -945,10 +947,11 @@
                 			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                 			<div class="data-empty-container"><p>No marketplace listings yet, <a href="#" data-toggle="modal" data-target="#dgs_listing_modal">add one.</a></p></div>
                 		</div>
+                		<div class="data-pagination">
                     </section>
                 </div>
 
-                <div id="pending_purchases_dgs_page" class="page">
+                <div id="pending_purchases_dgs_page" class="paginated page">
                     <section class="content-header">
                     	<h1>My Pending Orders</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
@@ -969,6 +972,7 @@
 
                   			</div>
                   		</div>
+                  		<div class="data-pagination"></div>
                   	</section>
                 </div>
 
@@ -2329,6 +2333,60 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Purchase</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_delivery_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Marketplace Purchase Delivery</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="row">
+								<div class="purchase_info">Loading...</div>
+							</div>
+							<input type="hidden" name="purchase" id="dgs_delivery_purchase" value="" />
+							<div class="form-group">
+								<label for="dgs_delivery_data">DATA</label>
+								<textarea class="form-control" id="dgs_delivery_data" name="data" rows="3" tabindex="2"></textarea>
+								<div style="margin-top:3px"><input type="checkbox" name="binaryData" id="dgs_delivery_binary_data" style="margin-top:5px;vertical-align:top;" /> <label for="dgs_delivery_binary_data" style="font-weight:normal;"> Data is binary</label></div>
+							</div>
+							<div class="form-group">
+								<label for="dgs_delivery_discount">DISCOUNT</label>
+				                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+							</div>
+							<div class="row">
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_delivery_fee">FEE</label>
+										<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+									</div>
+								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_delivery_deadline">DEADLINE (HOURS)</label>
+										<input type="number" name="deadline" id="dgs_delivery_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+									</div>
+								</div>
+							</div>
+							<div class="form-group secret_phrase">
+								<label for="dgs_delivery_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+						<input type="hidden" name="request_type" value="dgsDelivery" />
+						<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
+						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be delivered." />
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Deliver Purchase</button>
 				    </div>
 				</div>
 			</div>

@@ -101,13 +101,13 @@ var nxtCrypto = function(curve25519, hash, converters) {
 
 		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
 
-		var nonce = new Uint8Array(32);
-		window.crypto.getRandomValues(nonce);
+		options.nonce = new Uint8Array(32);
+		window.crypto.getRandomValues(options.nonce);
 
 		var data = aesEncrypt(compressedPlaintext, options);
 
 		return {
-			"nonce": nonce,
+			"nonce": options.nonce,
 			"data": data
 		};
 	}
