@@ -212,6 +212,14 @@ public final class JSONResponses {
         DUPLICATE_FEEDBACK = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware GOODS_NOT_DELIVERED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Goods have not been delivered yet");
+        GOODS_NOT_DELIVERED = JSON.prepare(response);
+    }
+
     private static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
