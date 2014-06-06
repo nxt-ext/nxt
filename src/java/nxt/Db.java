@@ -14,9 +14,9 @@ public final class Db {
     private static volatile JdbcConnectionPool cp;
     private static volatile int maxActiveConnections;
 
-    private static ThreadLocal<Connection> localConnection = new ThreadLocal<>();
+    private static final ThreadLocal<Connection> localConnection = new ThreadLocal<>();
 
-    private static class DbConnection extends FilteredConnection {
+    private static final class DbConnection extends FilteredConnection {
 
         private DbConnection(Connection con) {
             super(con);
