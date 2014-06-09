@@ -564,6 +564,42 @@ var NRS = (function(NRS, $, undefined) {
 					};
 					break;
 				case 7:
+					async = true;
+
+					NRS.sendRequest("getDGSPurchase", {
+						"purchase": transaction.attachment.purchase
+					}, function(purchase) {
+						NRS.sendRequest("getDGSGood", {
+							"goods": purchase.goods
+						}, function(goods) {
+							var data = {
+								"Type": "Marketplace Refund",
+								"Item Name": goods.name,
+								"Refund": transaction.attachment.refundNQT,
+								"Buyer": NRS.getAccountFormatted(purchase, "buyer"),
+								"Seller": NRS.getAccountFormatted(purchase, "seller")
+							};
+
+							if (transaction.attachment.note && purchase.buyer == NRS.account) {
+								try {
+									data["Note"] = NRS.decryptNote(transaction.attachment.note, {
+										"nonce": transaction.attachment.noteNonce,
+										"account": purchase.seller
+									});
+								} catch (err) {
+									console.log(err);
+									data["Note"] = "Could not decrypt note.";
+								}
+							}
+							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+							$("#transaction_info_table").show();
+
+							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
+						});
+					});
+
+
 					var data = {
 						"Type": "Marketplace Refund"
 					};

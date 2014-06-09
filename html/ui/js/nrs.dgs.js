@@ -22,6 +22,8 @@ var NRS = (function(NRS, $, undefined) {
 				$("#newest_dgs_page_contents").empty().append(content);
 				NRS.dataLoadFinished($("#newest_dgs_page_contents"));
 
+				NRS.showMore($("#newest_dgs_page_contents"));
+
 				NRS.pageLoaded();
 			} else {
 				$("#newest_dgs_page_contents").empty();
@@ -38,8 +40,8 @@ var NRS = (function(NRS, $, undefined) {
 			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(good.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
-			"<span class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></span>" +
-			"<div class='description'>" + String(good.description).escapeHTML().nl2br() + "</div>" +
+			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
+			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
 			"<span class='tags'><strong>Tags</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
 	}
 
@@ -48,7 +50,7 @@ var NRS = (function(NRS, $, undefined) {
 			"<strong>Seller</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>" +
 			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods.goods).escapeHTML() + "</a>" +
 			"</div>" +
-			"<h3 class='title'><a href='#' data-goods='" + String(purchase.goods.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(purchase.goods.name).escapeHTML() + "</a></h3>" +
+			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_delivery_modal'>" + String(purchase.goods.name).escapeHTML() + "</a></h3>" +
 			"<table>" +
 			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
 			"<tr><td><strong>Order Status</strong>:</td><td>" + (purchase.pending ? "<span class='label label-warning'>Pending</span>" : "Complete") + "</td></tr>" +
@@ -71,13 +73,12 @@ var NRS = (function(NRS, $, undefined) {
 			"<strong>Buyer</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" +
 			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods.goods).escapeHTML() + "</a>" +
 			"</div>" +
-			"<h3 class='title'><a href='#' data-goods='" + String(purchase.goods.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(purchase.goods.name).escapeHTML() + "</a></h3>" +
+			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_purchase_modal'>" + String(purchase.goods.name).escapeHTML() + "</a></h3>" +
 			"<table class='purchase' style='margin-bottom:5px'>" +
 			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
 			"<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
-			(purchase.note ? "<tr><td><strong>Note</strong>:</td><td>" + String(purchase.note).escapeHTML().nl2br() + "</td></tr>" : "") +
 			"</table>" +
 			"<button type='button' class='btn btn-default btn-refund' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Refund</button> " +
 			"<button type='button' class='btn btn-default btn-deliver' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Deliver Goods</button>" +
@@ -166,17 +167,6 @@ var NRS = (function(NRS, $, undefined) {
 							for (var j = 0; j < response.purchases.length; j++) {
 								var purchase = response.purchases[j];
 								purchase.goods = goods[purchase.goods];
-
-								if (purchase.note) {
-									try {
-										purchase.note = NRS.decryptNote(purchase.note, {
-											"nonce": purchase.noteNonce,
-											"account": purchase.buyer
-										});
-									} catch (err) {
-										purchase.note = String(err.message);
-									}
-								}
 
 								content += NRS.getMarketplacePendingPurchaseHTML(purchase);
 							}
@@ -391,6 +381,18 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.dgsRefund = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		NRS.sendRequest("getDGSPurchase", {
+			"purchase": data.purchase
+		}, function(response) {
+			if (response.errorCode) {
+				return {
+					"error": "Could not fetch purchase."
+				};
+			} else {
+				data.buyer = response.buyer;
+			}
+		}, false);
+
 		if (data.note) {
 			try {
 				var encrypted = NRS.encryptNote(data.note, {
@@ -425,7 +427,6 @@ var NRS = (function(NRS, $, undefined) {
 					"error": "Could not fetch purchase."
 				};
 			} else {
-				console.log(response);
 				data.buyer = response.buyer;
 			}
 		}, false);
@@ -436,25 +437,17 @@ var NRS = (function(NRS, $, undefined) {
 					"account": data.buyer
 				});
 
-				if (data.binaryData) {
-					data.encryptedGoodsData = encrypted.nonce;
-					data.encryptedGoodsNonce = encrypted.data;
-				} else {
-					data.encryptedGoodsText = encrypted.data;
-					data.encryptedGoodsNonce = encrypted.nonce;
-				}
+				data.encryptedGoodsData = encrypted.message;
+				data.encryptedGoodsNonce = encrypted.nonce;
 			} catch (err) {
 				return {
 					"error": err.message
 				};
 			}
-
-			delete data.goods;
 		}
 
 		delete data.buyer;
 		delete data.data;
-		delete data.binaryData;
 
 		return {
 			"data": data
@@ -539,7 +532,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#pending_purchases_dgs_page_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
 	}
 
-	$("#dgs_refund_modal, #dgs_delivery_modal").on("show.bs.modal", function(e) {
+	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 
@@ -567,12 +560,36 @@ var NRS = (function(NRS, $, undefined) {
 							"type": "danger"
 						});
 					} else {
-						var output = "<strong>Product Name</strong>: " + String(good.name).escapeHTML() + "<br /><strong>Price</strong>: " + NRS.formatAmount(response.priceNQT) + " NXT<br /><strong>Quantity</strong>: " + NRS.format(response.quantity);
+						var output = "<table>";
+						output += "<tr><td><strong>Product</strong>:</td><td>" + String(good.name).escapeHTML() + "</td></tr>";
+						output += "<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
+						output += "<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(response.quantity) + "</td></tr>";
+
+						if (type == "dgs_delivery_modal" || type == "dgs_refund_modal") {
+							if (response.note) {
+								try {
+									response.note = NRS.decryptNote(response.note, {
+										"nonce": response.noteNonce,
+										"account": response.buyer
+									});
+								} catch (err) {
+									response.note = String(err.message);
+								}
+							}
+
+							output += "<tr><td><strong>Note</strong>:</td><td>" + String(response.note).escapeHTML().nl2br() + "</td></tr>";
+						}
+
+						output += "</table>";
 
 						$modal.find(".purchase_info").html(output);
 
 						if (type == "dgs_refund_modal") {
 							$("#dgs_refund_refund").val(NRS.convertToNXT(response.priceNQT));
+						} else if (type == "dgs_view_purchase_modal") {
+							console.log(response);
+						} else if (type == "dgs_view_delivery_modal") {
+							console.log(response);
 						}
 					}
 				}, false);
