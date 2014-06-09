@@ -59,7 +59,5 @@ public final class CastVote extends CreateTransaction {
 
         Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
         return createTransaction(req, account, attachment);
-
     }
-
 }

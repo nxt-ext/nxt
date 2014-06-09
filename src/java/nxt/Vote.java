@@ -14,15 +14,13 @@ public final class Vote {
     private final Long id;
     private final Long pollId;
     private final Long voterId;
-    private final byte[] vote;
+    private final byte[] vote; //vote[i]==0 means no(or not being chosen), 1 means yes(or an option being chosen)
 
     private Vote(Long id, Long pollId, Long voterId, byte[] vote) {
-
         this.id = id;
         this.pollId = pollId;
         this.voterId = voterId;
         this.vote = vote;
-
     }
 
     static Vote addVote(Long id, Long pollId, Long voterId, byte[] vote) {

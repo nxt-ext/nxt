@@ -27,7 +27,17 @@ public abstract class NxtException extends Exception {
         ValidationException(String message, Throwable cause) {
             super(message, cause);
         }
+    }
 
+    public static class IllegalStateException extends NxtException {
+
+        IllegalStateException(String message) {
+            super(message);
+        }
+
+        IllegalStateException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
 }

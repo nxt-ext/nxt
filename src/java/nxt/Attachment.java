@@ -257,28 +257,40 @@ public interface Attachment {
 
         private final String pollName;
         private final String pollDescription;
+        private final int finishBlockHeight;
         private final String[] pollOptions;
         private final byte minNumberOfOptions, maxNumberOfOptions;
-        private final boolean optionsAreBinary;
 
-        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
+        private final byte optionModel;
+        private final byte votingModel;
+        private final byte countingModel;
+        private final long assetId;
+
+
+        public MessagingPollCreation(String pollName, String pollDescription, int finishBlockHeight,
+                                     String[] pollOptions, byte minNumberOfOptions, byte maxNumberOfOptions,
+                                     byte optionModel, byte votingModel, byte countingModel, long assetId) {
 
             this.pollName = pollName;
             this.pollDescription = pollDescription;
+            this.finishBlockHeight = finishBlockHeight;
             this.pollOptions = pollOptions;
             this.minNumberOfOptions = minNumberOfOptions;
             this.maxNumberOfOptions = maxNumberOfOptions;
-            this.optionsAreBinary = optionsAreBinary;
 
+            this.optionModel = optionModel;
+            this.votingModel = votingModel;
+            this.countingModel = countingModel;
+            this.assetId = assetId;
         }
 
         @Override
         public int getSize() {
-            int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 1;
+            int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 4 + 1;
             for (String pollOption : pollOptions) {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
-            size +=  1 + 1 + 1;
+            size +=  1 + 1 + 1 + 1 + 1 + 8;
             return size;
         }
 
@@ -293,10 +305,11 @@ public interface Attachment {
 
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putShort((short)name.length);
+            buffer.putShort((short) name.length);
             buffer.put(name);
-            buffer.putShort((short)description.length);
+            buffer.putShort((short) description.length);
             buffer.put(description);
+            buffer.putInt(finishBlockHeight);
             buffer.put((byte)options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
@@ -304,7 +317,10 @@ public interface Attachment {
             }
             buffer.put(this.minNumberOfOptions);
             buffer.put(this.maxNumberOfOptions);
-            buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
+            buffer.put(this.optionModel);
+            buffer.put(this.votingModel);
+            buffer.put(this.countingModel);
+            buffer.putLong(this.assetId);
 
             return buffer.array();
         }
@@ -315,6 +331,7 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
+            attachment.put("finishBlockHeight", this.finishBlockHeight);
             JSONArray options = new JSONArray();
             if (this.pollOptions != null) {
                 Collections.addAll(options, this.pollOptions);
@@ -322,10 +339,11 @@ public interface Attachment {
             attachment.put("options", options);
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
-            attachment.put("optionsAreBinary", this.optionsAreBinary);
-
+            attachment.put("optionModel", this.optionModel);
+            attachment.put("votingModel", this.votingModel);
+            attachment.put("countingModel", this.countingModel);
+            attachment.put("assetId", this.assetId);
             return attachment;
-
         }
 
         @Override
@@ -337,14 +355,21 @@ public interface Attachment {
 
         public String getPollDescription() { return pollDescription; }
 
+        public int getFinishBlockHeight() { return finishBlockHeight; }
+
         public String[] getPollOptions() { return pollOptions; }
 
         public byte getMinNumberOfOptions() { return minNumberOfOptions; }
 
         public byte getMaxNumberOfOptions() { return maxNumberOfOptions; }
 
-        public boolean isOptionsAreBinary() { return optionsAreBinary; }
+        public byte getOptionModel(){ return optionModel; }
 
+        public byte getVotingModel(){ return votingModel; }
+
+        public byte getCountingModel(){ return countingModel; }
+
+        public long getAssetId(){ return assetId; }
     }
 
     public final static class MessagingVoteCasting implements Attachment {
@@ -353,10 +378,8 @@ public interface Attachment {
         private final byte[] pollVote;
 
         public MessagingVoteCasting(Long pollId, byte[] pollVote) {
-
             this.pollId = pollId;
             this.pollVote = pollVote;
-
         }
 
         @Override
@@ -524,12 +547,10 @@ public interface Attachment {
         private final byte decimals;
 
         public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
-
             this.name = name;
             this.description = Convert.nullToEmpty(description);
             this.quantityQNT = quantityQNT;
             this.decimals = decimals;
-
         }
 
         @Override

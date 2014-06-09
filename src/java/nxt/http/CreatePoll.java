@@ -1,26 +1,14 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Attachment;
-import nxt.Constants;
-import nxt.NxtException;
+import nxt.*;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static nxt.http.JSONResponses.INCORRECT_MAXNUMBEROFOPTIONS;
-import static nxt.http.JSONResponses.INCORRECT_MINNUMBEROFOPTIONS;
-import static nxt.http.JSONResponses.INCORRECT_OPTIONSAREBINARY;
-import static nxt.http.JSONResponses.INCORRECT_POLL_DESCRIPTION_LENGTH;
-import static nxt.http.JSONResponses.INCORRECT_POLL_NAME_LENGTH;
-import static nxt.http.JSONResponses.INCORRECT_POLL_OPTION_LENGTH;
-import static nxt.http.JSONResponses.MISSING_DESCRIPTION;
-import static nxt.http.JSONResponses.MISSING_MAXNUMBEROFOPTIONS;
-import static nxt.http.JSONResponses.MISSING_MINNUMBEROFOPTIONS;
-import static nxt.http.JSONResponses.MISSING_NAME;
-import static nxt.http.JSONResponses.MISSING_OPTIONSAREBINARY;
+import static nxt.http.JSONResponses.*;
 
 public final class CreatePoll extends CreateTransaction {
 
@@ -36,9 +24,15 @@ public final class CreatePoll extends CreateTransaction {
 
         String nameValue = req.getParameter("name");
         String descriptionValue = req.getParameter("description");
+
+        String finishHeightValue = Convert.emptyToNull(req.getParameter("finishHeight"));
+
         String minNumberOfOptionsValue = req.getParameter("minNumberOfOptions");
         String maxNumberOfOptionsValue = req.getParameter("maxNumberOfOptions");
-        String optionsAreBinaryValue = req.getParameter("optionsAreBinary");
+
+        String optionModelValue = Convert.emptyToNull(req.getParameter("optionModel"));
+        String votingModelValue = Convert.emptyToNull(req.getParameter("votingModel"));
+        String parameter1Value = Convert.emptyToNull(req.getParameter("parameter1"));
 
         if (nameValue == null) {
             return MISSING_NAME;
@@ -48,8 +42,12 @@ public final class CreatePoll extends CreateTransaction {
             return MISSING_MINNUMBEROFOPTIONS;
         } else if (maxNumberOfOptionsValue == null) {
             return MISSING_MAXNUMBEROFOPTIONS;
-        } else if (optionsAreBinaryValue == null) {
-            return MISSING_OPTIONSAREBINARY;
+        } else if (optionModelValue == null) {
+            return MISSING_OPTIONMODEL;
+        } else if (votingModelValue == null) {
+            return MISSING_VOTINGMODEL;
+        } else if (finishHeightValue == null) {
+            return MISSING_FINISHHEIGHT;
         }
 
         if (nameValue.length() > Constants.MAX_POLL_NAME_LENGTH) {
@@ -86,19 +84,42 @@ public final class CreatePoll extends CreateTransaction {
             return INCORRECT_MAXNUMBEROFOPTIONS;
         }
 
-        boolean optionsAreBinary;
+        int finishHeight;
         try {
-            optionsAreBinary = Boolean.parseBoolean(optionsAreBinaryValue);
+            finishHeight = Integer.parseInt(finishHeightValue);
         } catch (NumberFormatException e) {
-            return INCORRECT_OPTIONSAREBINARY;
+            return INCORRECT_FINISHHEIGHT;
+        }
+
+        byte optionModel;
+        try {
+            optionModel = Byte.parseByte(optionModelValue);
+        } catch (NumberFormatException e) {
+            return INCORRECT_OPTIONMODEL;
+        }
+
+        byte votingModel;
+        try {
+            votingModel = Byte.parseByte(votingModelValue);
+        } catch (NumberFormatException e) {
+            return INCORRECT_VOTINGMODEL;
+        }
+
+        long parameter1 = 0;
+        if(parameter1Value != null){
+            try {
+                parameter1 = Long.parseLong(parameter1Value);
+            } catch (NumberFormatException e) {
+                return INCORRECT_PARAMETER1;
+            }
         }
 
         Account account = ParameterParser.getSenderAccount(req);
 
         Attachment attachment = new Attachment.MessagingPollCreation(nameValue.trim(), descriptionValue.trim(),
-                options.toArray(new String[options.size()]), minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+                finishHeight,
+                options.toArray(new String[options.size()]), minNumberOfOptions, maxNumberOfOptions,
+                optionModel, votingModel, Poll.COUNTING_AT_THE_END, parameter1);
         return createTransaction(req, account, attachment);
-
     }
-
 }

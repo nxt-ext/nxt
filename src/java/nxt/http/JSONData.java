@@ -193,7 +193,6 @@ final class JSONData {
         json.put("options", options);
         json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
         json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
-        json.put("optionsAreBinary", poll.isOptionsAreBinary());
         JSONArray voters = new JSONArray();
         for (Long voterId : poll.getVoters().keySet()) {
             voters.add(Convert.toUnsignedLong(voterId));
