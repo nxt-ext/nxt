@@ -10,6 +10,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.DUPLICATE_FEEDBACK;
+import static nxt.http.JSONResponses.GOODS_NOT_DELIVERED;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 
 public final class DGSFeedback extends CreateTransaction {
@@ -31,6 +32,9 @@ public final class DGSFeedback extends CreateTransaction {
         }
         if (purchase.getFeedbackNote() != null) {
             return DUPLICATE_FEEDBACK;
+        }
+        if (purchase.getEncryptedGoods() == null) {
+            return GOODS_NOT_DELIVERED;
         }
 
         Account sellerAccount = Account.getAccount(purchase.getSellerId());

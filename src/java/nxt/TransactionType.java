@@ -1689,7 +1689,8 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPendingPurchase(attachment.getPurchaseId());
                 if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
-                        || attachment.getGoods().getNonce().length != (attachment.getGoods().getData().length == 0 ? 0 : 32)
+                        || attachment.getGoods().getData().length == 0
+                        || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null
                         || attachment.getDiscountNQT() > purchase.getPriceNQT()
@@ -1742,6 +1743,7 @@ public abstract class TransactionType {
                 if (attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != (attachment.getNote().getData().length == 0 ? 0 : 32)
                         || purchase == null
+                        || purchase.getEncryptedGoods() == null
                         || purchase.getFeedbackNote() != null
                         || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSONObject());
@@ -1819,6 +1821,7 @@ public abstract class TransactionType {
                         || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != (attachment.getNote().getData().length == 0 ? 0 : 32)
                         || purchase == null
+                        || purchase.getEncryptedGoods() == null
                         || purchase.getRefundNote() != null
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSONObject());

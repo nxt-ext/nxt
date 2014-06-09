@@ -101,7 +101,7 @@ final class DbVersion {
             case 16:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS block_timestamp INT");
             case 17:
-                apply("UPDATE transaction SET block_timestamp = (SELECT timestamp FROM block WHERE block.id = transaction.block_id)");
+                apply(null);
             case 18:
                 apply("ALTER TABLE transaction ALTER COLUMN block_timestamp SET NOT NULL");
             case 19:
@@ -123,13 +123,13 @@ final class DbVersion {
             case 27:
                 apply("ALTER TABLE transaction ALTER COLUMN fee BIGINT");
             case 28:
-                apply("UPDATE block SET total_amount = total_amount * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 29:
-                apply("UPDATE block SET total_fee = total_fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 30:
-                apply("UPDATE transaction SET amount = amount * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 31:
-                apply("UPDATE transaction SET fee = fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 32:
                 apply(null);
             case 33:
@@ -189,8 +189,7 @@ final class DbVersion {
             case 42:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
             case 43:
-                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
-                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
+                apply(null);
             case 44:
                 apply(null);
             case 45:
