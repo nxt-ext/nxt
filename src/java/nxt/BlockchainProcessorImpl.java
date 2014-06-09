@@ -844,6 +844,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Trade.clear();
             Vote.clear();
             DigitalGoodsStore.clear();
+            Currency.clear();
             transactionProcessor.clear();
             Generator.clear();
             try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {

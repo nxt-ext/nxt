@@ -1962,12 +1962,12 @@ public abstract class TransactionType {
                 }
                 String description = readString(buffer, buffer.getShort(), Constants.MAX_CURRENCY_DESCRIPTION_LENGTH);
                 byte type = buffer.get();
-                long totalSupplyNQT = buffer.getLong();
+                long totalSupply = buffer.getLong();
                 int issuanceHeight = buffer.getInt();
                 long minReservePerUnitNQT = buffer.getLong();
                 byte minDifficulty = buffer.get();
                 byte maxDifficulty = buffer.get();
-                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupplyNQT, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
+                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
             }
 
             @Override
@@ -1976,12 +1976,12 @@ public abstract class TransactionType {
                 String code = (String)attachmentData.get("code");
                 String description = (String)attachmentData.get("description");
                 byte type = ((Long)attachmentData.get("type")).byteValue();
-                long totalSupplyNQT = (Long)attachmentData.get("totalSupplyNQT");
+                long totalSupply = (Long)attachmentData.get("totalSupply");
                 int issuanceHeight = ((Long)attachmentData.get("issuanceHeight")).intValue();
                 long minReservePerUnitNQT = (Long)attachmentData.get("minReservePerUnitNQT");
                 byte minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
                 byte maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
-                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupplyNQT, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
+                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
             }
 
             @Override

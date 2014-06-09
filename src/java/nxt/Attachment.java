@@ -1296,18 +1296,18 @@ public interface Attachment {
         private final String code;
         private final String description;
         private final byte type;
-        private final long totalSupplyNQT;
+        private final long totalSupply;
         private final int issuanceHeight;
         private final long minReservePerUnitNQT;
         private final byte minDifficulty;
         private final byte maxDifficulty;
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupplyNQT, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty) {
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty) {
             this.name = name;
             this.code = code;
             this.description = description;
             this.type = type;
-            this.totalSupplyNQT = totalSupplyNQT;
+            this.totalSupply = totalSupply;
             this.issuanceHeight = issuanceHeight;
             this.minReservePerUnitNQT = minReservePerUnitNQT;
             this.minDifficulty = minDifficulty;
@@ -1333,7 +1333,7 @@ public interface Attachment {
                 buffer.putShort((short) description.length);
                 buffer.put(description);
                 buffer.put(type);
-                buffer.putLong(totalSupplyNQT);
+                buffer.putLong(totalSupply);
                 buffer.putInt(issuanceHeight);
                 buffer.putLong(minReservePerUnitNQT);
                 buffer.put(minDifficulty);
@@ -1352,7 +1352,7 @@ public interface Attachment {
             attachment.put("code", code);
             attachment.put("description", description);
             attachment.put("type", type);
-            attachment.put("totalSupplyNQT", totalSupplyNQT);
+            attachment.put("totalSupply", totalSupply);
             attachment.put("issuanceHeight", issuanceHeight);
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
             attachment.put("minDifficulty", minDifficulty & 0xFF);
@@ -1381,8 +1381,8 @@ public interface Attachment {
             return type;
         }
 
-        public long getTotalSupplyNQT() {
-            return totalSupplyNQT;
+        public long getTotalSupply() {
+            return totalSupply;
         }
 
         public int getIssuanceHeight() {
