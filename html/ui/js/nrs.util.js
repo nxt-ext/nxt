@@ -995,5 +995,53 @@ var NRS = (function(NRS, $, undefined) {
 		return (transactions && transactions.length || NRS.unconfirmedTransactionsChange || NRS.state.isScanning);
 	}
 
+	NRS.showMore = function($el) {
+		var adjustheight = 40;
+		var moreText = "Show more...";
+		var lessText = "Show less...";
+
+		$el.find(".showmore > .moreblock").each(function() {
+			if ($(this).height() > adjustheight) {
+				$(this).css("height", adjustheight).css("overflow", "hidden");
+				$(this).parent(".showmore").append(' <a href="#" class="adjust"></a>');
+				$(this).parent(".showmore").find("a.adjust").text(moreText).click(function() {
+					if ($(this).text() == moreText) {
+						$(this).parents("div:first").find(".moreblock").css('height', 'auto').css('overflow', 'visible');
+						$(this).parents("div:first").find("p.continued").css('display', 'none');
+						$(this).text(lessText);
+					} else {
+						$(this).parents("div:first").find(".moreblock").css('height', adjustheight).css('overflow', 'hidden');
+						$(this).parents("div:first").find("p.continued").css('display', 'block');
+						$(this).text(moreText);
+					}
+				});
+			}
+		});
+	}
+
+	NRS.showFullDescription = function($el) {
+		$el.addClass("open").removeClass("closed");
+		$el.find(".description_toggle").text("Less...");
+	}
+
+	NRS.showPartialDescription = function($el) {
+		if ($el.hasClass("open") || $el.height() > 40) {
+			$el.addClass("closed").removeClass("open");
+			$el.find(".description_toggle").text("More...");
+		} else {
+			$el.find(".description_toggle").text("");
+		}
+	}
+
+	$("body").on(".description_toggle", "click", function(e) {
+		e.preventDefault();
+
+		if ($(this).closest(".description").hasClass("open")) {
+			NRS.showPartialDescription();
+		} else {
+			NRS.showFullDescription();
+		}
+	});
+
 	return NRS;
 }(NRS || {}, jQuery));
