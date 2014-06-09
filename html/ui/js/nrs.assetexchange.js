@@ -572,7 +572,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.database.select("assets", [{
 				"asset": assetId
 			}], function(error, asset) {
-				if (!error) {
+				if (asset && asset.length) {
 					NRS.loadAsset(asset[0], refresh);
 				}
 			});
