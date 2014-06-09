@@ -361,7 +361,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#delete_contact_modal").on('show.bs.modal', function(e) {
+	$("#delete_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var contactId = $invoker.data("contact");
@@ -374,7 +374,7 @@ var NRS = (function(NRS, $, undefined) {
 			contact = contact[0];
 
 			$("#delete_contact_name").html(contact.name.escapeHTML());
-			$("#delete_contact_account_id").val(contact.accountId);
+			$("#delete_contact_account_id").val(NRS.getAccountFormatted(contact, "account"));
 		});
 	});
 
