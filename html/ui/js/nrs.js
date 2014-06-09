@@ -249,14 +249,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.goToPage = function(page) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
-		NRS.currentPage = page;
-		NRS.currentSubPage = "";
-		NRS.pageNumber = 1;
-		NRS.showPageNumbers = false;
-
 		if ($link.length) {
 			$link.trigger("click");
 		} else {
+			NRS.currentPage = page;
+			NRS.currentSubPage = "";
+			NRS.pageNumber = 1;
+			NRS.showPageNumbers = false;
+
 			$("ul.sidebar-menu a.active").removeClass("active");
 			$(".page").hide();
 			$("#" + page + "_page").show();
@@ -361,7 +361,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 2, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -370,7 +370,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.database.select("data", [{
 						"id": "asset_exchange_version"
 					}], function(error, result) {
-						if (!result.length) {
+						if (!result || !result.length) {
 							NRS.database.delete("assets", [], function(error, affected) {
 								if (!error) {
 									NRS.database.insert("data", {
@@ -385,7 +385,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.database.select("data", [{
 						"id": "closed_groups"
 					}], function(error, result) {
-						if (result.length) {
+						if (result && result.length) {
 							NRS.closedGroups = result[0].contents.split("#");
 						} else {
 							NRS.database.insert("data", {
@@ -397,11 +397,18 @@ var NRS = (function(NRS, $, undefined) {
 					if (callback) {
 						callback();
 					}
+				} else {
+					if (callback) {
+						callback();
+					}
 				}
 			});
 		} catch (err) {
 			NRS.database = null;
 			NRS.databaseSupport = false;
+			if (callback) {
+				callback();
+			}
 		}
 	}
 
@@ -457,7 +464,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.database.select("data", [{
 						"id": "asset_balances_" + NRS.account
 					}], function(error, asset_balance) {
-						if (!error && asset_balance.length) {
+						if (asset_balance && asset_balance.length) {
 							var previous_balances = asset_balance[0].contents;
 
 							if (!NRS.accountInfo.assetBalances) {
