@@ -3358,7 +3358,7 @@ hr {
 .dgs_page_contents h3 {
   margin-top:0;
   margin-bottom:5px;
-  font-size:20px;
+  font-size:18px;
   font-weight:bold;
 }
 
@@ -3366,7 +3366,7 @@ hr {
   color:#999999;
 }
 
-.dgs_page_contents .price, #dgs_page_contents .description {
+.dgs_page_contents .price, .dgs_page_contents .showmore {
   margin-bottom:5px;
 }
 
@@ -3387,4 +3387,3 @@ table.purchase td {
 .data-pagination {
   text-align:center;
 }
-
