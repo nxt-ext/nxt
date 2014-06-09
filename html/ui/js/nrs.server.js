@@ -60,7 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//convert NXT to NQT...
 		try {
-			var nxtFields = ["feeNXT", "amountNXT", "priceNXT"];
+			var nxtFields = ["feeNXT", "amountNXT", "priceNXT", "refundNXT", "discountNXT"];
 
 			for (var i = 0; i < nxtFields.length; i++) {
 				var nxtField = nxtFields[i];
