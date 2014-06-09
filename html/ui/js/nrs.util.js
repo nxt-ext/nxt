@@ -729,19 +729,21 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.getAccountTitle = function(object, acc) {
 		var type = typeof object;
 
+		var formattedAcc = "";
+
 		if (type == "string" || type == "number") {
-			acc = object;
+			formattedAcc = object;
 			object = null;
+		} else {
+			formattedAcc = (NRS.settings["reed_solomon"] ? String(object[acc + "RS"]).escapeHTML() : String(object[acc]).escapeHTML());
 		}
 
-		if (acc in NRS.contacts) {
-			return NRS.contacts[acc].name.escapeHTML();
-		} else if (acc == NRS.account || acc == NRS.accountRS) {
+		if (formattedAcc in NRS.contacts) {
+			return NRS.contacts[formattedAcc].name.escapeHTML();
+		} else if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
 			return "You";
-		} else if (!object) {
-			return String(acc).escapeHTML();
 		} else {
-			return NRS.getAccountFormatted(object, acc);
+			return String(formattedAcc).escapeHTML();
 		}
 	}
 
