@@ -3,7 +3,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.contacts = {};
 
 		NRS.database.select("contacts", null, function(error, contacts) {
-			if (contacts.length) {
+			if (contacts && contacts.length) {
 				$.each(contacts, function(index, contact) {
 					NRS.contacts[contact.account] = contact;
 				});
@@ -26,7 +26,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#contact_page_database_error").hide();
 
 		NRS.database.select("contacts", null, function(error, contacts) {
-			if (contacts.length) {
+			if (contacts && contacts.length) {
 				var rows = "";
 
 				contacts.sort(function(a, b) {
@@ -145,7 +145,7 @@ var NRS = (function(NRS, $, undefined) {
 		}, {
 			"name": data.name
 		}], function(error, contacts) {
-			if (contacts.length) {
+			if (contacts && contacts.length) {
 				if (contacts[0].name == data.name) {
 					$modal.find(".error_message").html("A contact with this name already exists.").show();
 				} else {
@@ -313,7 +313,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.database.select("contacts", [{
 			"account": data.account_id
 		}], function(error, contacts) {
-			if (contacts.length && contacts[0].id != contactId) {
+			if (contacts && contacts.length && contacts[0].id != contactId) {
 				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
 				$btn.button("reset");
 				$modal.modal("unlock");
