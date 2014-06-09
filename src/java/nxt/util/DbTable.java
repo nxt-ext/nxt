@@ -20,6 +20,10 @@ public abstract class DbTable<T> {
 
     protected abstract void delete(Connection con, T t) throws SQLException;
 
+    protected String defaultSort() {
+        return "ORDER BY height DESC";
+    }
+
     public T get(Long id) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?")) {
@@ -57,15 +61,9 @@ public abstract class DbTable<T> {
     public List<T> getManyBy(String columnName, Long value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ?")) {
+                     + " WHERE " + columnName + " = ? " + defaultSort())) {
             pstmt.setLong(1, value);
-            List<T> result = new ArrayList<>();
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(load(con, rs));
-                }
-            }
-            return result;
+            return getManyBy(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -73,11 +71,20 @@ public abstract class DbTable<T> {
 
     public List<T> getAll() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table());
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " " + defaultSort())) {
+            return getManyBy(con, pstmt);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public final List<T> getManyBy(Connection con, PreparedStatement pstmt) {
+        try {
             List<T> result = new ArrayList<>();
-            while (rs.next()) {
-                result.add(load(con, rs));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(load(con, rs));
+                }
             }
             return result;
         } catch (SQLException e) {

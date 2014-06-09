@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHandler {
 
@@ -28,11 +29,15 @@ public final class GetAccountCurrentAskOrderIds extends APIServlet.APIRequestHan
             // ignore
         }
 
+        List<Order.Ask> askOrders;
+        if (assetId == null) {
+            askOrders = Order.Ask.getAskOrdersByAccount(accountId);
+        } else {
+            askOrders = Order.Ask.getAskOrdersByAccountAsset(accountId, assetId);
+        }
         JSONArray orderIds = new JSONArray();
-        for (Order.Ask askOrder : Order.Ask.getAllAskOrders()) {
-            if ((assetId == null || askOrder.getAssetId().equals(assetId)) && askOrder.getAccount().getId().equals(accountId)) {
-                orderIds.add(Convert.toUnsignedLong(askOrder.getId()));
-            }
+        for (Order.Ask askOrder : askOrders) {
+            orderIds.add(Convert.toUnsignedLong(askOrder.getId()));
         }
 
         JSONObject response = new JSONObject();

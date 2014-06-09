@@ -53,7 +53,7 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
     public final List<T> getManyBy(String columnName, Long value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE " + columnName + " = ? AND latest = TRUE")) {
+                     + " WHERE " + columnName + " = ? AND latest = TRUE " + defaultSort())) {
             pstmt.setLong(1, value);
             List<T> result = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -71,7 +71,7 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
     public final List<T> getAll() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE latest = TRUE")) {
+                     + " WHERE latest = TRUE " + defaultSort())) {
             List<T> result = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

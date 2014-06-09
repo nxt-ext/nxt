@@ -220,7 +220,7 @@ final class DbVersion {
             case 53:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_id_height_idx ON alias (id, height DESC)");
             case 54:
-                apply("CREATE INDEX IF NOT EXISTS alias_account_id_idx ON alias (account_id)");
+                apply("CREATE INDEX IF NOT EXISTS alias_account_id_idx ON alias (account_id, height DESC)");
             case 55:
                 apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
             case 56:
@@ -238,12 +238,32 @@ final class DbVersion {
             case 61:
                 apply("CREATE TABLE IF NOT EXISTS trade (db_id INT IDENTITY, asset_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
                         + "ask_order_id BIGINT NOT NULL, bid_order_id BIGINT NOT NULL, quantity BIGINT NOT NULL, "
-                        + "price BIGINT NOT NULL, timestamp INT NOT NULL)");
+                        + "price BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
             case 62:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS trade_ask_bid_idx ON trade (ask_order_id, bid_order_id)");
             case 63:
-                apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id)");
+                apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id, height)");
             case 64:
+                apply("CREATE TABLE IF NOT EXISTS ask_order (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL, "
+                        + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 65:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS ask_order_id_height_idx ON ask_order (id, height DESC)");
+            case 66:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_account_id_idx ON ask_order (account_id, height DESC)");
+            case 67:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_asset_id_price_idx ON ask_order (asset_id, price)");
+            case 68:
+                apply("CREATE TABLE IF NOT EXISTS bid_order (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL, "
+                        + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 69:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS bid_order_id_height_idx ON bid_order (id, height DESC)");
+            case 70:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_account_id_idx ON bid_order (account_id, height DESC)");
+            case 71:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_asset_id_price_idx ON bid_order (asset_id, price DESC)");
+            case 72:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

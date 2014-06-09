@@ -47,7 +47,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
         response.put("numberOfAssets", Asset.getCount());
-        response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
+        response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());
         response.put("numberOfAliases", Alias.getCount());
         response.put("numberOfPolls", Poll.getAllPolls().size());

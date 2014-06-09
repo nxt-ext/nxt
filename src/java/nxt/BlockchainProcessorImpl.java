@@ -597,7 +597,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             Long assetId = accountAccumulatedAssetQuantitiesEntry.getKey();
                             Long quantityQNT = accountAccumulatedAssetQuantitiesEntry.getValue();
                             if (senderAccount.getAssetBalanceQNT(assetId) < quantityQNT) {
-                                throw new BlockNotAcceptedException("Asset balance not sufficient in sender account " + Convert.toUnsignedLong(senderAccount.getId()));
+                                throw new BlockNotAcceptedException("Asset balance not sufficient in sender account "
+                                        + Convert.toUnsignedLong(senderAccount.getId()));
                             }
                         }
                     }

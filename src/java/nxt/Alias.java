@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
+import java.util.List;
 
 public final class Alias {
 
@@ -115,7 +115,7 @@ public final class Alias {
         return aliasTable.getCount();
     }
 
-    public static Collection<Alias> getAliasesByOwner(Long accountId) {
+    public static List<Alias> getAliasesByOwner(Long accountId) {
         return aliasTable.getManyBy("account_id", accountId);
     }
 

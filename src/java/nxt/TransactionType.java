@@ -1134,12 +1134,9 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
-                Order.Ask askOrder = Order.Ask.removeOrder(transaction.getId());
-                if (askOrder == null || askOrder.getQuantityQNT() != attachment.getQuantityQNT()
-                        || !askOrder.getAssetId().equals(attachment.getAssetId())) {
-                    //undoing of partially filled orders not supported yet
-                    throw new UndoNotSupportedException("Ask order already filled");
-                }
+                Order.Ask.rollbackOrder(transaction.getId());
+                // TODO
+                throw new UndoNotSupportedException("Ask order already filled");
             }
 
             @Override
@@ -1200,12 +1197,9 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
-                Order.Bid bidOrder = Order.Bid.removeOrder(transaction.getId());
-                if (bidOrder == null || bidOrder.getQuantityQNT() != attachment.getQuantityQNT()
-                        || !bidOrder.getAssetId().equals(attachment.getAssetId())) {
-                    //undoing of partially filled orders not supported yet
-                    throw new UndoNotSupportedException("Bid order already filled");
-                }
+                Order.Bid.rollbackOrder(transaction.getId());
+                // TODO
+                throw new UndoNotSupportedException("Bid order already filled");
             }
 
             @Override
@@ -1282,10 +1276,13 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation) transaction.getAttachment();
-                Order order = Order.Ask.removeOrder(attachment.getOrderId());
+                Order.Ask.removeOrder(attachment.getOrderId());
+                // TODO
+                /*
                 if (order != null) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(order.getAssetId(), order.getQuantityQNT());
                 }
+                */
             }
 
             @Override
@@ -1319,10 +1316,13 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation) transaction.getAttachment();
-                Order order = Order.Bid.removeOrder(attachment.getOrderId());
+                Order.Bid.removeOrder(attachment.getOrderId());
+                // TODO
+                /*
                 if (order != null) {
                     senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(order.getQuantityQNT(), order.getPriceNQT()));
                 }
+                */
             }
 
             @Override

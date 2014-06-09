@@ -35,13 +35,14 @@ public final class Trade {
             long quantityQNT = rs.getLong("quantity");
             long priceNQT = rs.getLong("price");
             int timestamp = rs.getInt("timestamp");
-            return new Trade(blockId, timestamp, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
+            int height = rs.getInt("height");
+            return new Trade(blockId, timestamp, height, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
         }
 
         @Override
         protected void save(Connection con, Trade trade) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                    + "ask_order_id, bid_order_id, quantity, price, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                    + "ask_order_id, bid_order_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, trade.getAssetId());
                 pstmt.setLong(++i, trade.getBlockId());
@@ -50,6 +51,7 @@ public final class Trade {
                 pstmt.setLong(++i, trade.getQuantityQNT());
                 pstmt.setLong(++i, trade.getPriceNQT());
                 pstmt.setInt(++i, trade.getTimestamp());
+                pstmt.setInt(++i, trade.getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -86,8 +88,8 @@ public final class Trade {
         return tradeTable.getManyBy("asset_id", assetId);
     }
 
-    static void addTrade(Long assetId, int timestamp, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
-        Trade trade = new Trade(blockId, timestamp, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
+    static void addTrade(Long assetId, int timestamp, int height, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
+        Trade trade = new Trade(blockId, timestamp, height, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
     }
@@ -99,13 +101,15 @@ public final class Trade {
     private final int timestamp;
     private final Long assetId;
     private final Long blockId;
+    private final int height;
     private final Long askOrderId, bidOrderId;
     private final long quantityQNT;
     private final long priceNQT;
 
-    private Trade(Long blockId, int timestamp, Long assetId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
+    private Trade(Long blockId, int timestamp, int height, Long assetId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
 
         this.blockId = blockId;
+        this.height = height;
         this.assetId = assetId;
         this.timestamp = timestamp;
         this.askOrderId = askOrderId;
@@ -128,5 +132,9 @@ public final class Trade {
     public Long getAssetId() { return assetId; }
     
     public int getTimestamp() { return timestamp; }
+
+    public int getHeight() {
+        return height;
+    }
 
 }

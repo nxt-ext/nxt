@@ -147,8 +147,8 @@ public final class DebugTrace {
 
     // Note: Trade events occur before the change in account balances
     private void trace(Trade trade) {
-        Long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccount().getId();
-        Long bidAccountId = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccount().getId();
+        Long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccountId();
+        Long bidAccountId = Order.Bid.getBidOrder(trade.getBidOrderId()).getAccountId();
         if (include(askAccountId)) {
             log(getValues(askAccountId, trade, true));
         }
