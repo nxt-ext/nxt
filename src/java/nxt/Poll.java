@@ -1,17 +1,59 @@
 package nxt;
 
-import nxt.util.Convert;
+import nxt.util.DbTable;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public final class Poll {
 
-    private static final ConcurrentMap<Long, Poll> polls = new ConcurrentHashMap<>();
-    private static final Collection<Poll> allPolls = Collections.unmodifiableCollection(polls.values());
+    private static final DbTable<Poll> pollTable = new DbTable<Poll>() {
+
+        @Override
+        protected String table() {
+            return "poll";
+        }
+
+        @Override
+        protected Poll load(Connection con, ResultSet rs) throws SQLException {
+            Long id = rs.getLong("id");
+            String name = rs.getString("name");
+            String description = rs.getString("description");
+            String[] options = (String[])rs.getArray("options").getArray();
+            byte minNumberOfOptions = rs.getByte("min_num_options");
+            byte maxNumberOfOptions = rs.getByte("max_num_options");
+            boolean optionsAreBinary = rs.getBoolean("binary_options");
+            return new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+        }
+
+        @Override
+        protected void save(Connection con, Poll poll) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
+                    + "options, min_num_options, max_num_options, binary_options) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                pstmt.setString(++i, poll.getName());
+                pstmt.setString(++i, poll.getDescription());
+                pstmt.setObject(++i, poll.getOptions());
+                pstmt.setByte(++i, poll.getMinNumberOfOptions());
+                pstmt.setByte(++i, poll.getMaxNumberOfOptions());
+                pstmt.setBoolean(++i, poll.isOptionsAreBinary());
+                pstmt.executeUpdate();
+            }
+        }
+
+        @Override
+        protected void delete(Connection con, Poll poll) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM poll WHERE id = ?")) {
+                pstmt.setLong(1, poll.getId());
+                pstmt.executeUpdate();
+            }
+        }
+    };
 
     private final Long id;
     private final String name;
@@ -19,10 +61,8 @@ public final class Poll {
     private final String[] options;
     private final byte minNumberOfOptions, maxNumberOfOptions;
     private final boolean optionsAreBinary;
-    private final ConcurrentMap<Long, Long> voters;
 
     private Poll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
-
         this.id = id;
         this.name = name;
         this.description = description;
@@ -30,26 +70,22 @@ public final class Poll {
         this.minNumberOfOptions = minNumberOfOptions;
         this.maxNumberOfOptions = maxNumberOfOptions;
         this.optionsAreBinary = optionsAreBinary;
-        this.voters = new ConcurrentHashMap<>();
-
     }
 
     static void addPoll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
-        if (polls.putIfAbsent(id, new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary)) != null) {
-            throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
-        }
-    }
-
-    public static Collection<Poll> getAllPolls() {
-        return allPolls;
+        pollTable.insert(new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary));
     }
 
     static void clear() {
-        polls.clear();
+        pollTable.truncate();
     }
 
     public static Poll getPoll(Long id) {
-        return polls.get(id);
+        return pollTable.get(id);
+    }
+
+    public static List<Poll> getAllPolls() {
+        return pollTable.getAll();
     }
 
     public Long getId() {
@@ -69,11 +105,7 @@ public final class Poll {
     public boolean isOptionsAreBinary() { return optionsAreBinary; }
 
     public Map<Long, Long> getVoters() {
-        return Collections.unmodifiableMap(voters);
-    }
-
-    void addVoter(Long voterId, Long voteId) {
-        voters.put(voterId, voteId);
+        return Vote.getVoters(this);
     }
 
 }

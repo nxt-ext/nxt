@@ -51,7 +51,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfTrades", Trade.getCount());
         response.put("numberOfAliases", Alias.getCount());
         response.put("numberOfPolls", Poll.getAllPolls().size());
-        response.put("numberOfVotes", Vote.getVotes().size());
+        response.put("numberOfVotes", Vote.getCount());
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Nxt.getBlockchainProcessor().getLastBlockchainFeeder();

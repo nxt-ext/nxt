@@ -213,7 +213,8 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
-                apply("CREATE TABLE IF NOT EXISTS alias (id BIGINT NOT NULL, account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS alias (id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES transaction (id), "
+                        + "account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
                         + "alias_name_lower VARCHAR AS LOWER (alias_name) NOT NULL, "
                         + "alias_uri VARCHAR NOT NULL, timestamp INT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -224,19 +225,22 @@ final class DbVersion {
             case 55:
                 apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
             case 56:
-                apply("CREATE TABLE IF NOT EXISTS alias_offer (id BIGINT NOT NULL, price BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS alias_offer (id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES alias (id), "
+                        + "price BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 57:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_offer_id_height_idx ON alias_offer (id, height DESC)");
             case 58:
-                apply("CREATE TABLE IF NOT EXISTS asset (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS asset (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
+                        + "transaction (id), account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, description VARCHAR, quantity BIGINT NOT NULL, decimals TINYINT NOT NULL)");
             case 59:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_idx ON asset (id)");
             case 60:
                 apply("CREATE INDEX IF NOT EXISTS asset_account_id_idx ON asset (account_id)");
             case 61:
-                apply("CREATE TABLE IF NOT EXISTS trade (db_id INT IDENTITY, asset_id BIGINT NOT NULL, block_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS trade (db_id INT IDENTITY, asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) "
+                        + "REFERENCES asset (id), block_id BIGINT NOT NULL, FOREIGN KEY (block_id) REFERENCES block (id), "
                         + "ask_order_id BIGINT NOT NULL, bid_order_id BIGINT NOT NULL, quantity BIGINT NOT NULL, "
                         + "price BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
             case 62:
@@ -244,8 +248,10 @@ final class DbVersion {
             case 63:
                 apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id, height)");
             case 64:
-                apply("CREATE TABLE IF NOT EXISTS ask_order (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS ask_order (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
+                        + "transaction (id), account_id BIGINT NOT NULL, "
+                        + "asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) REFERENCES asset (id), price BIGINT NOT NULL, "
+                        + "quantity BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 65:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS ask_order_id_height_idx ON ask_order (id, height DESC)");
@@ -254,8 +260,10 @@ final class DbVersion {
             case 67:
                 apply("CREATE INDEX IF NOT EXISTS ask_order_asset_id_price_idx ON ask_order (asset_id, price)");
             case 68:
-                apply("CREATE TABLE IF NOT EXISTS bid_order (db_id INT IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
-                        + "asset_id BIGINT NOT NULL, price BIGINT NOT NULL, quantity BIGINT NOT NULL, height INT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS bid_order (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
+                        + "transaction (id), account_id BIGINT NOT NULL, "
+                        + "asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) REFERENCES asset (id), price BIGINT NOT NULL, "
+                        + "quantity BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 69:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS bid_order_id_height_idx ON bid_order (id, height DESC)");
@@ -264,6 +272,27 @@ final class DbVersion {
             case 71:
                 apply("CREATE INDEX IF NOT EXISTS bid_order_asset_id_price_idx ON bid_order (asset_id, price DESC)");
             case 72:
+                apply("CREATE TABLE IF NOT EXISTS vote (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
+                        + "transaction (id), poll_id BIGINT NOT NULL, "
+                        + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL)");
+            case 73:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
+            case 74:
+                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
+            case 75:
+                apply("CREATE TABLE IF NOT EXISTS poll (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
+                        + "transaction (id), name VARCHAR NOT NULL, "
+                        + "description VARCHAR, options ARRAY, min_num_options TINYINT, max_num_options TINYINT, "
+                        +" binary_options BOOLEAN)");
+            case 76:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
+            case 77:
+                apply("ALTER TABLE vote ADD FOREIGN KEY (poll_id) REFERENCES poll (id)");
+            case 78:
+                apply("ALTER TABLE trade ADD FOREIGN KEY (ask_order_id) REFERENCES ask_order (id)");
+            case 79:
+                apply("ALTER TABLE trade ADD FOREIGN KEY (bid_order_id) REFERENCES bid_order (id)");
+            case 80:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

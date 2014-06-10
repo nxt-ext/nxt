@@ -737,7 +737,6 @@ public abstract class TransactionType {
                 if (poll != null) {
                     Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(),
                             attachment.getPollVote());
-                    poll.addVoter(transaction.getSenderId(), vote.getId());
                 }
             }
 
@@ -1276,13 +1275,12 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAskOrderCancellation attachment = (Attachment.ColoredCoinsAskOrderCancellation) transaction.getAttachment();
+                Order order = Order.Ask.getAskOrder(attachment.getOrderId());
                 Order.Ask.removeOrder(attachment.getOrderId());
                 // TODO
-                /*
                 if (order != null) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(order.getAssetId(), order.getQuantityQNT());
                 }
-                */
             }
 
             @Override
@@ -1316,13 +1314,12 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsBidOrderCancellation attachment = (Attachment.ColoredCoinsBidOrderCancellation) transaction.getAttachment();
+                Order order = Order.Bid.getBidOrder(attachment.getOrderId());
                 Order.Bid.removeOrder(attachment.getOrderId());
                 // TODO
-                /*
                 if (order != null) {
                     senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(order.getQuantityQNT(), order.getPriceNQT()));
                 }
-                */
             }
 
             @Override
