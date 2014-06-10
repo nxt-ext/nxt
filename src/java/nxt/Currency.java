@@ -1,9 +1,11 @@
 package nxt;
 
 import nxt.util.Convert;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -11,6 +13,8 @@ public final class Currency {
 
     private static final ConcurrentMap<Long, Currency> currencies = new ConcurrentHashMap<>();
     private static final Collection<Currency> allCurrencies = Collections.unmodifiableCollection(currencies.values());
+    private static final Set<String> currencyNames = new ConcurrentHashSet<>();
+    private static final Set<String> currencyCodes = new ConcurrentHashSet<>();
 
     static {
         addNXTCurrency();
@@ -33,11 +37,21 @@ public final class Currency {
         if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }
+        currencyNames.add(name.toLowerCase());
+        currencyCodes.add(code);
     }
 
     static void clear() {
         currencies.clear();
         addNXTCurrency();
+    }
+
+    static boolean isNameSquatted(String name) {
+        return currencyNames.contains(name);
+    }
+
+    static boolean isCodeSquatted(String code) {
+        return currencyCodes.contains(code);
     }
 
     private final Long currencyId;
@@ -102,6 +116,11 @@ public final class Currency {
 
     public byte getMaxDifficulty() {
         return maxDifficulty;
+    }
+
+    public static boolean isIssued(Long currencyId) {
+        Currency currency = currencies.get(currencyId);
+        return currency != null && currency.getIssuanceHeight() < BlockchainImpl.getInstance().getLastBlock().getHeight();
     }
 
 }

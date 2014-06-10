@@ -50,6 +50,7 @@ public final class Constants {
     public static final int MAX_CURRENCY_NAME_LENGTH = 10;
     public static final int CURRENCY_CODE_LENGTH = 3;
     public static final int MAX_CURRENCY_DESCRIPTION_LENGTH = 1000;
+    public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MONEY_TRANSFER_COMMENT_LENGTH = 1000;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
@@ -90,9 +91,6 @@ public final class Constants {
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
     public static final String ALLOWED_CURRENCY_CODE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static final byte MIN_CURRENCY_TYPE = 1;
-    public static final byte MAX_CURRENCY_TYPE = 3;
 
     private Constants() {} // never
 

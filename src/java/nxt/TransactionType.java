@@ -1985,8 +1985,68 @@ public abstract class TransactionType {
             }
 
             @Override
-            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                return true; // TODO: cfb: @JLP, how is it better to check duplicates of NAMES and CODES if the same NAME and CODE is allowed?
+            }
 
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
+
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
+                        || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
+                        || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH
+                        || attachment.getTotalSupply() <= 0 || attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
+                        || attachment.getIssuanceHeight() < 0
+                        || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
+                }
+                switch (attachment.getType()) {
+                    case 1: { // This currency is issued by a single entity immediately, all the money belongs to this entity
+                        if (attachment.getIssuanceHeight() != 0
+                                || attachment.getMinDifficulty() != 0
+                                || attachment.getMaxDifficulty() != 0) {
+                            throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
+                        }
+                    } break;
+
+                    case 2: { // This currency is issued at some height if min required amount of NXT is collected, the money is split proportionally to reserved NXT
+                        if (attachment.getIssuanceHeight() == 0
+                                || attachment.getMinDifficulty() != 0
+                                || attachment.getMaxDifficulty() != 0) {
+                            throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
+                        }
+                    } break;
+
+                    case 3: { // This currency is issued at some height, the money is minted over time in a PoW manner
+                        if (attachment.getIssuanceHeight() == 0) {
+                            throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
+                        }
+                    } break;
+
+                    default: {
+                        throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
+                    }
+                }
+
+                String normalizedName = attachment.getName().toLowerCase();
+                for (int i = 0; i < normalizedName.length(); i++) {
+                    if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
+                        throw new NxtException.ValidationException("Invalid currency name: " + normalizedName);
+                    }
+                }
+                if (Currency.isNameSquatted(normalizedName)) {
+                    throw new NxtException.ValidationException("Currency name already squatted: " + normalizedName);
+                }
+                for (int i = 0; i < attachment.getCode().length(); i++) {
+                    if (Constants.ALLOWED_CURRENCY_CODE_LETTERS.indexOf(attachment.getCode().charAt(i)) < 0) {
+                        throw new NxtException.ValidationException("Invalid currency code: " + attachment.getCode());
+                    }
+                }
+                if (Currency.isCodeSquatted(attachment.getCode())) {
+                    throw new NxtException.ValidationException("Currency code already squatted: " + attachment.getCode());
+                }
             }
 
             @Override
@@ -2028,7 +2088,13 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
 
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || !Currency.isIssued(attachment.getCurrencyId())
+                        || attachment.getAmountNQT() <= 0) {
+                    throw new NxtException.ValidationException("Invalid reserve increase: " + attachment.getJSONObject());
+                }
             }
 
             @Override
@@ -2070,7 +2136,13 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
 
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || !Currency.isIssued(attachment.getCurrencyId())
+                        || attachment.getUnits() <= 0) {
+                    throw new NxtException.ValidationException("Invalid reserve claim: " + attachment.getJSONObject());
+                }
             }
 
             @Override
@@ -2127,7 +2199,18 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
 
+                for (int i = 0; i < attachment.getSize(); i++) {
+                    Attachment.MonetarySystemMoneyTransfer.Entry entry = attachment.getEntry(i);
+                    if (Currency.getCurrency(entry.getCurrencyId()) == null
+                            || entry.getUnits() <= 0) {
+                        throw new NxtException.ValidationException("Invalid money transfer: " + attachment.getJSONObject());
+                    }
+                }
+                if (attachment.getComment().length() > Constants.MAX_MONEY_TRANSFER_COMMENT_LENGTH) {
+                    throw new NxtException.ValidationException("Invalid money transfer: " + attachment.getJSONObject());
+                }
             }
 
             @Override
@@ -2181,7 +2264,19 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
 
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || !Currency.isIssued(attachment.getCurrencyId())
+                        || attachment.getBuyingRateNQT() <= 0
+                        || attachment.getSellingRateNQT() <= 0
+                        || attachment.getTotalBuyingLimitNQT() < 0
+                        || attachment.getTotalSellingLimit() < 0
+                        || attachment.getInitialNXTSupplyNQT() < 0
+                        || attachment.getInitialCurrencySupply() < 0
+                        || attachment.getExpirationHeight() < 0) {
+                    throw new NxtException.ValidationException("Invalid exchange setting: " + attachment.getJSONObject());
+                }
             }
 
             @Override
@@ -2225,7 +2320,14 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
 
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || !Currency.isIssued(attachment.getCurrencyId())
+                        || attachment.getAmountNQT() <= 0
+                        || attachment.getUnits() <= 0) {
+                    throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
+                }
             }
 
             @Override
@@ -2271,7 +2373,13 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting)transaction.getAttachment();
 
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || !Currency.isIssued(attachment.getCurrencyId())
+                        || attachment.getUnits() <= 0) {
+                    throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
+                }
             }
 
             @Override
