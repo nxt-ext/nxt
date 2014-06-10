@@ -841,8 +841,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.dataLoadFinished = function($table, fadeIn) {
-		var $parent = $table.parent();
+	NRS.dataLoadFinished = function($el, fadeIn) {
+		var $parent = $el.parent();
 
 		if (fadeIn) {
 			$parent.hide();
@@ -852,16 +852,28 @@ var NRS = (function(NRS, $, undefined) {
 
 		var extra = $parent.data("extra");
 
-		if ($table.find("tbody tr").length > 0) {
-			$parent.removeClass("data-empty");
-			if ($parent.data("no-padding")) {
-				$parent.parent().addClass("no-padding");
-			}
+		var empty = false;
 
-			if (extra) {
-				$(extra).show();
+		if ($el.is("table")) {
+			if ($el.find("tbody tr").length > 0) {
+				$parent.removeClass("data-empty");
+				if ($parent.data("no-padding")) {
+					$parent.parent().addClass("no-padding");
+				}
+
+				if (extra) {
+					$(extra).show();
+				}
+			} else {
+				empty = true;
 			}
 		} else {
+			if ($.trim($el.html()).length == 0) {
+				empty = true;
+			}
+		}
+
+		if (empty) {
 			$parent.addClass("data-empty");
 			if ($parent.data("no-padding")) {
 				$parent.parent().removeClass("no-padding");
