@@ -146,7 +146,7 @@ public abstract class Order {
             @Override
             protected void save(Connection con, Ask ask) throws SQLException {
                 try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO ask_order (id, account_id, asset_id, "
-                        + "price, quantity, height) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?)")) {
+                        + "price, quantity, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
                     int i = 0;
                     pstmt.setLong(++i, ask.getId());
                     pstmt.setLong(++i, ask.getAccountId());
@@ -284,7 +284,7 @@ public abstract class Order {
             @Override
             protected void save(Connection con, Bid bid) throws SQLException {
                 try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO bid_order (id, account_id, asset_id, "
-                        + "price, quantity, height) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?)")) {
+                        + "price, quantity, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
                     int i = 0;
                     pstmt.setLong(++i, bid.getId());
                     pstmt.setLong(++i, bid.getAccountId());
