@@ -1,3 +1,4 @@
+#!/bin/sh
 CP=conf/:classes/:lib/*
 SP=src/java/
 
