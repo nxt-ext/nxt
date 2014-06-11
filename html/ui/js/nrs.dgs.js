@@ -46,24 +46,24 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getMarketplacePurchaseHTML = function(purchase) {
-		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+		return "<div" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>Seller</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>" +
-			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods.goods).escapeHTML() + "</a>" +
+			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
-			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_delivery_modal'>" + String(purchase.goods.name).escapeHTML() + "</a></h3>" +
+			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_delivery_modal'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
 			"<table>" +
 			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
-			"<tr><td><strong>Order Status</strong>:</td><td>" + (purchase.pending ? "<span class='label label-warning'>Pending</span>" : "Complete") + "</td></tr>" +
+			"<tr><td><strong>Order Status</strong>:</td><td>" + (purchase.unconfirmed ? "Tentative" : (purchase.pending ? "<span class='label label-warning'>Pending</span>" : "Complete")) + "</td></tr>" +
 			(purchase.pending ? "<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" : "") +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
-			"</table>" +
+			"</table></div>" +
 			"<hr />";
 	}
 
 	NRS.getMarketplacePendingPurchaseHTML = function(purchase) {
 		//do not show if refund has been initiated or order has been delivered
-		if (NRS.getUnconfirmedTransaction(3, [5, 7], {
+		if (NRS.getUnconfirmedTransactionFromCache(3, [5, 7], {
 			"purchase": purchase.purchase
 		})) {
 			return "";
@@ -88,45 +88,40 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.purchased_dgs = function() {
 		NRS.pageLoading();
 
-		var goods = {};
+		var rows = "";
+
+		if (NRS.pageNumber == 1) {
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4);
+
+			if (unconfirmedTransactions) {
+				for (var i = 0; i < unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = unconfirmedTransactions[i];
+					rows += NRS.getMarketplacePurchaseHTML(unconfirmedTransaction);
+				}
+			}
+		}
 
 		NRS.sendRequest("getDGSPurchases", {
 			"buyer": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4);
+
 			if (response.purchases && response.purchases.length) {
 				if (response.purchases.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;
 					response.purchases.pop();
 				}
 
-				var nr_goods = 0;
-
 				for (var i = 0; i < response.purchases.length; i++) {
-					NRS.sendRequest("getDGSGood", {
-						"goods": response.purchases[i].goods
-					}, function(good) {
-						goods[good.goods] = good;
-						nr_goods++;
-
-						if (nr_goods == response.purchases.length) {
-							var content = "";
-
-							for (var j = 0; j < response.purchases.length; j++) {
-								var purchase = response.purchases[j];
-								purchase.goods = goods[purchase.goods];
-
-								content += NRS.getMarketplacePurchaseHTML(purchase);
-							}
-
-							$("#purchased_dgs_page_contents").empty().append(content);
-							NRS.dataLoadFinished($("#purchased_dgs_page_contents"));
-
-							NRS.pageLoaded();
-						}
-					});
+					rows += NRS.getMarketplacePurchaseHTML(response.purchases[i]);
 				}
+
+				$("#purchased_dgs_page_contents").empty().append(rows);
+				NRS.dataLoadFinished($("#purchased_dgs_page_contents"));
+
+				NRS.pageLoaded();
 			} else {
 				$("#purchased_dgs_page_contents").empty();
 				NRS.dataLoadFinished($("#purchased_dgs_page_contents"));
@@ -192,18 +187,16 @@ var NRS = (function(NRS, $, undefined) {
 
 		var rows = "";
 
-		if (NRS.unconfirmedTransactions.length) {
-			for (var j = 0; j < NRS.unconfirmedTransactions.length; j++) {
-				var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
+		var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 0);
 
-				if (unconfirmedTransaction.type != 3 || unconfirmedTransaction.subtype != 0) {
-					continue;
-				}
-
+		if (unconfirmedTransactions) {
+			for (var i = 0; i < unconfirmedTransactions.length; i++) {
+				var unconfirmedTransaction = unconfirmedTransactions[i];
 				rows += "<tr class='tentative' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td class='price'>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>Delete</a></td></tr>";
 			}
 		}
 
+		//inStockOnly doesn't work here, need to get all but delisted.
 		NRS.sendRequest("getDGSGoods+", {
 			"seller": NRS.account,
 			"firstIndex": 0,
@@ -217,22 +210,20 @@ var NRS = (function(NRS, $, undefined) {
 					var tentative = false;
 					var quantityFormatted = false;
 
-					if (NRS.unconfirmedTransactions.length) {
-						for (var j = 0; j < NRS.unconfirmedTransactions.length; j++) {
-							var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
+					var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(3, [1, 2, 3], {
+						"goods": good.goods
+					});
 
-							if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.goods == good.goods) {
-								if (unconfirmedTransaction.subtype == 1) { //delisting
-									deleted = tentative = true;
-								} else if (unconfirmedTransaction.subtype == 2) { //price change
-									good.priceNQT = unconfirmedTransaction.priceNQT;
-									tentative = true;
-								} else if (unconfirmedTransaction.subtype == 3) { //quantity change
-									good.quantity = NRS.format(good.quantity) + " " + NRS.format(unconfirmedTransaction.deltaQuantity);
-									tentative = true;
-									quantityFormatted = true;
-								}
-							}
+					if (unconfirmedTransaction) {
+						if (unconfirmedTransaction.subtype == 1) {
+							deleted = tentative = true;
+						} else if (unconfirmedTransaction.subtype == 2) {
+							good.priceNQT = unconfirmedTransaction.priceNQT;
+							tentative = true;
+						} else {
+							good.quantity = NRS.format(good.quantity) + " " + NRS.format(unconfirmedTransaction.deltaQuantity);
+							tentative = true;
+							quantityFormatted = true;
 						}
 					}
 
@@ -326,7 +317,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.currentPage == "my_dgs_listings") {
 			var $table = $("#my_dgs_listings_table tbody");
 
-			var rowToAdd = "<tr class='tentative' data-goods='" + String(response.transaction).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>" + String(data.name).escapeHTML() + "</a></td><td>" + String(data.tags).escapeHTML() + "</td><td class='quantity'>" + NRS.format(data.quantity) + "</td><td class='price'>" + NRS.formatAmount(data.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>Delete</a></td></tr>";
+			var rowToAdd = "<tr class='tentative' data-goods='" + String(response.transaction).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>" + String(data.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(data.quantity) + "</td><td class='price'>" + NRS.formatAmount(data.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(response.transaction).escapeHTML() + "'>Delete</a></td></tr>";
 
 			$table.prepend(rowToAdd);
 
