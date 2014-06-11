@@ -46,6 +46,6 @@ Improved logging, to handle the case when Nxt is embedded as a library.
 Minor improvements: getState and getBlockchainStatus now also show application
 name, block JSON also shows generatorPublickKey.
 
-Updated jetty to version 9.2.0.
+Updated jetty to version 9.2.1.
 
 
