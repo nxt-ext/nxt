@@ -1,13 +1,9 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.peers = function() {
-		var response;
-
-		NRS.pageLoading();
-
 		NRS.sendRequest("getPeers+", function(response) {
 			if (response.peers && response.peers.length) {
 				var peers = {};
-				var nr_peers = 0;
+				var nrPeers = 0;
 
 				for (var i = 0; i < response.peers.length; i++) {
 					NRS.sendRequest("getPeer+", {
@@ -22,9 +18,9 @@ var NRS = (function(NRS, $, undefined) {
 							peers[input.peer] = peer;
 						}
 
-						nr_peers++;
+						nrPeers++;
 
-						if (nr_peers == response.peers.length) {
+						if (nrPeers == response.peers.length) {
 							var rows = "";
 							var uploaded = 0;
 							var downloaded = 0;
@@ -32,7 +28,7 @@ var NRS = (function(NRS, $, undefined) {
 							var up_to_date = 0;
 							var active_peers = 0;
 
-							for (var i = 0; i < nr_peers; i++) {
+							for (var i = 0; i < nrPeers; i++) {
 								var peer = peers[response.peers[i]];
 
 								if (!peer) {
@@ -57,37 +53,24 @@ var NRS = (function(NRS, $, undefined) {
 								}
 							}
 
-							$("#peers_table tbody").empty().append(rows);
-							NRS.dataLoadFinished($("#peers_table"));
 							$("#peers_uploaded_volume").html(NRS.formatVolume(uploaded)).removeClass("loading_dots");
 							$("#peers_downloaded_volume").html(NRS.formatVolume(downloaded)).removeClass("loading_dots");
 							$("#peers_connected").html(connected).removeClass("loading_dots");
 							$("#peers_up_to_date").html(up_to_date + '/' + active_peers).removeClass("loading_dots");
 
-							peers = {};
-
-							NRS.pageLoaded();
+							NRS.dataLoaded(rows);
 						}
 					});
-
-					if (NRS.currentPage != "peers") {
-						peers = {};
-						return;
-					}
 				}
 			} else {
-				$("#peers_table tbody").empty();
-				NRS.dataLoadFinished($("#peers_table"));
-
 				$("#peers_uploaded_volume, #peers_downloaded_volume, #peers_connected, #peers_up_to_date").html("0").removeClass("loading_dots");
-
-				NRS.pageLoaded();
+				NRS.dataLoaded();
 			}
 		});
 	}
 
 	NRS.incoming.peers = function() {
-		NRS.pages.peers();
+		NRS.loadPage("peers");
 	}
 
 	return NRS;

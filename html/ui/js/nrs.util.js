@@ -841,6 +841,27 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.dataLoaded = function(data, noPageLoad) {
+		console.log(NRS.currentPage);
+		var $el = $("#" + NRS.currentPage + "_contents");
+
+		if (!$el.length) {
+			$el = $("#" + NRS.currentPage + "_table");
+		}
+
+		$el.empty();
+
+		if (data) {
+			$el.append(data);
+		}
+
+		NRS.dataLoadFinished($el);
+
+		if (!noPageLoad) {
+			NRS.pageLoaded();
+		}
+	}
+
 	NRS.dataLoadFinished = function($el, fadeIn) {
 		var $parent = $el.parent();
 
@@ -1050,6 +1071,12 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showMore = function($el) {
+		if (!$el) {
+			$el = $("#" + NRS.currentPage + "_contents");
+			if (!$el.length) {
+				$el = $("#" + NRS.currentPage + "_table");
+			}
+		}
 		var adjustheight = 40;
 		var moreText = "Show more...";
 		var lessText = "Show less...";

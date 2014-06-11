@@ -159,8 +159,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.blocks = function() {
-		NRS.pageLoading();
-
 		if (NRS.blocksPageType == "forged_blocks") {
 			$("#forged_fees_total_box, #forged_blocks_total_box").show();
 			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").hide();
@@ -171,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response) {
 				if (response.blockIds && response.blockIds.length) {
 					var blocks = [];
-					var nr_blocks = 0;
+					var nrBlocks = 0;
 
 					var blockIds = response.blockIds.reverse().slice(0, 100);
 
@@ -193,17 +191,12 @@ var NRS = (function(NRS, $, undefined) {
 
 							block["block"] = input.block;
 							blocks[input["_extra"].nr] = block;
-							nr_blocks++;
+							nrBlocks++;
 
-							if (nr_blocks == blockIds.length) {
+							if (nrBlocks == blockIds.length) {
 								NRS.blocksPageLoaded(blocks);
 							}
 						});
-
-						if (NRS.currentPage != "blocks") {
-							blocks = {};
-							return;
-						}
 					}
 				} else {
 					NRS.blocksPageLoaded([]);
@@ -234,7 +227,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.blocks = function() {
-		NRS.pages.blocks();
+		NRS.loadPage("blocks");
 	}
 
 	NRS.finish100Blocks = function(response) {
@@ -272,9 +265,6 @@ var NRS = (function(NRS, $, undefined) {
 			var startingTime = endingTime = time = 0;
 		}
 
-		$("#blocks_table tbody").empty().append(rows);
-		NRS.dataLoadFinished($("#blocks_table"));
-
 		if (blocks.length) {
 			var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
 			var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
@@ -307,7 +297,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#blocks_average_generation_time").html(Math.round(time / 100) + "s").removeClass("loading_dots");
 		}
 
-		NRS.pageLoaded();
+		NRS.dataLoaded(rows);
 	}
 
 	$("#blocks_page_type .btn").click(function(e) {
@@ -326,7 +316,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#blocks_table tbody").empty();
 		$("#blocks_table").parent().addClass("data-loading").removeClass("data-empty");
 
-		NRS.pages.blocks();
+		NRS.loadPage("blocks");
 	});
 
 	$("#goto_forged_blocks").click(function(e) {

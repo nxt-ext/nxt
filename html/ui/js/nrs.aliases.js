@@ -1,7 +1,5 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
-		NRS.pageLoading();
-
 		NRS.sendRequest("getAliases+", {
 			"account": NRS.account,
 			"timestamp": 0
@@ -283,7 +281,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.incoming.aliases = function(transactions) {
 		if (NRS.hasTransactionUpdates(transactions)) {
-			NRS.pages.aliases();
+			NRS.loadPage("aliases");
 		}
 	}
 

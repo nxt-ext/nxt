@@ -230,6 +230,8 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showPageNumbers = false;
 
 		if (NRS.pages[page]) {
+			NRS.pageLoading();
+
 			if (data && data.callback) {
 				NRS.pages[page](data.callback);
 			} else if (data) {
@@ -246,6 +248,11 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.goToPage($(this).data("page"));
 	});
 
+	NRS.loadPage = function(page, callback) {
+		NRS.pageLoading();
+		NRS.pages[page](callback);
+	}
+
 	NRS.goToPage = function(page) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
@@ -261,6 +268,8 @@ var NRS = (function(NRS, $, undefined) {
 			$(".page").hide();
 			$("#" + page + "_page").show();
 			if (NRS.pages[page]) {
+				NRS.pageLoading();
+
 				NRS.pages[page]();
 			}
 		}
@@ -319,6 +328,9 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}*/
 		NRS.pageNumber = pageNumber;
+
+		NRS.pageLoading();
+
 		NRS.pages[NRS.currentPage]();
 	}
 

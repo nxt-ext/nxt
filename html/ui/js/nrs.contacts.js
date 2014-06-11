@@ -12,8 +12,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.contacts = function() {
-		NRS.pageLoading();
-
 		if (!NRS.databaseSupport) {
 			$("#contact_page_database_error").show();
 			$("#contacts_table_container").hide();
@@ -26,9 +24,9 @@ var NRS = (function(NRS, $, undefined) {
 		$("#contact_page_database_error").hide();
 
 		NRS.database.select("contacts", null, function(error, contacts) {
-			if (contacts && contacts.length) {
-				var rows = "";
+			var rows = "";
 
+			if (contacts && contacts.length) {
 				contacts.sort(function(a, b) {
 					if (a.name.toLowerCase() > b.name.toLowerCase()) {
 						return 1;
@@ -50,17 +48,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + NRS.getAccountFormatted(contact, "account") + "' class='user_info'>" + NRS.getAccountFormatted(contact, "account") + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
 				});
-
-				$("#contacts_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#contacts_table"));
-
-				NRS.pageLoaded();
-			} else {
-				$("#contacts_table tbody").empty();
-				NRS.dataLoadFinished($("#contacts_table"));
-
-				NRS.pageLoaded();
 			}
+
+			NRS.dataLoaded(rows);
 		});
 	}
 
@@ -178,7 +168,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 
 						if (NRS.currentPage == "contacts") {
-							NRS.pages.contacts();
+							NRS.loadPage("contacts");
 						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
 							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
 							if (heading.length) {
@@ -348,7 +338,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 
 						if (NRS.currentPage == "contacts") {
-							NRS.pages.contacts();
+							NRS.loadPage("contacts");
 						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
 							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
 							if (heading.length) {
@@ -392,7 +382,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 
 				if (NRS.currentPage == "contacts") {
-					NRS.pages.contacts();
+					NRS.loadPage("contacts");
 				}
 			}, 50);
 		});

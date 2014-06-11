@@ -6,8 +6,6 @@ var NRS = (function(NRS, $, undefined) {
 	var messageTypesChecked = 0;
 
 	NRS.pages.messages = function(callback) {
-		NRS.pageLoading();
-
 		NRS.messages = {};
 
 		totalMessages = 0;
@@ -139,14 +137,14 @@ var NRS = (function(NRS, $, undefined) {
 				activeAccount = -1;
 			}
 
-			NRS.pages.messages(function() {
+			NRS.loadPage("messages", function() {
 				$("#messages_sidebar a[data-account=" + activeAccount + "]").trigger("click");
 			});
 		}
 	}
 
-	$("#messages_sidebar").on("click", "a", function(event) {
-		event.preventDefault();
+	$("#messages_sidebar").on("click", "a", function(e) {
+		e.preventDefault();
 
 		$("#messages_sidebar a.active").removeClass("active");
 		$(this).addClass("active");
