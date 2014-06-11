@@ -971,7 +971,11 @@ var NRS = (function(NRS, $, undefined) {
 		return amount;
 	}
 
-	NRS.getUnconfirmedTransaction = function(type, subtype, fields) {
+	NRS.getUnconfirmedTransactionFromCache = function(type, subtype, fields) {
+		return NRS.getUnconfirmedTransactionsFromCache(type, subtype, fields, true);
+	}
+
+	NRS.getUnconfirmedTransactionsFromCache = function(type, subtype, fields, single) {
 		if (!NRS.unconfirmedTransactions.length) {
 			return false;
 		}
@@ -984,6 +988,8 @@ var NRS = (function(NRS, $, undefined) {
 			subtype = [subtype];
 		}
 
+		var unconfirmedTransactions = [];
+
 		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
@@ -994,15 +1000,47 @@ var NRS = (function(NRS, $, undefined) {
 			if (fields) {
 				for (var key in fields) {
 					if (unconfirmedTransaction[key] == fields[key]) {
-						return unconfirmedTransaction;
+						if (single) {
+							return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+						} else {
+							unconfirmedTransactions.push(unconfirmedTransaction);
+						}
 					}
 				}
 			} else {
-				return unconfirmedTransaction;
+				if (single) {
+					return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+				} else {
+					unconfirmedTransactions.push(unconfirmedTransaction);
+				}
 			}
 		}
 
-		return false;
+		if (single || unconfirmedTransactions.length == 0) {
+			return false;
+		} else {
+			$.each(unconfirmedTransactions, function(key, val) {
+				unconfirmedTransactions[key] = NRS.completeUnconfirmedTransactionDetails(val);
+			});
+
+			return unconfirmedTransactions;
+		}
+	}
+
+	NRS.completeUnconfirmedTransactionDetails = function(unconfirmedTransaction) {
+		if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 4 && !unconfirmedTransaction.name) {
+			NRS.sendRequest("getDGSGood", {
+				"goods": unconfirmedTransaction.attachment.goods
+			}, function(response) {
+				unconfirmedTransaction.name = response.name;
+				unconfirmedTransaction.buyer = unconfirmedTransaction.sender;
+				unconfirmedTransaction.buyerRS = unconfirmedTransaction.senderRS;
+				unconfirmedTransaction.seller = response.seller;
+				unconfirmedTransaction.sellerRS = response.sellerRS;
+			}, false);
+		}
+
+		return unconfirmedTransaction;
 	}
 
 	NRS.hasTransactionUpdates = function(transactions) {
