@@ -842,17 +842,13 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.dataLoaded = function(data, noPageLoad) {
-		console.log(NRS.currentPage);
 		var $el = $("#" + NRS.currentPage + "_contents");
 
-		if (!$el.length) {
+		if ($el.length) {
+			$el.empty().append(data);
+		} else {
 			$el = $("#" + NRS.currentPage + "_table");
-		}
-
-		$el.empty();
-
-		if (data) {
-			$el.append(data);
+			$el.find("tbody").empty().append(data);
 		}
 
 		NRS.dataLoadFinished($el);

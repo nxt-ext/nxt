@@ -2827,12 +2827,12 @@ tr.tentative td {
 	background-color: #DAE3F2 !important;
 }
 
-tr.tentative td a {
+.tentative a {
 	pointer-events: none;
 	cursor: default;
 	color:black;
 }
-tr.tentative-allow-links td a {
+.tentative-allow-links a {
 	pointer-events:auto !important;
 	cursor:pointer !important;
 	color:#3c8dbc !important;

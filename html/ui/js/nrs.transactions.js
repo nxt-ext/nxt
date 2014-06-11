@@ -357,13 +357,14 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.transactionsPageType) {
 			params.type = NRS.transactionsPageType.type;
 			params.subtype = NRS.transactionsPageType.subtype;
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, params.subtype);
+		} else {
+			var unconfirmedTransactions = NRS.unconfirmedTransactions;
 		}
-
-		var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, params.subtype);
 
 		if (unconfirmedTransactions) {
 			for (var i = 0; i < unconfirmedTransactions.length; i++) {
-				rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
+				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
 			}
 		}
 

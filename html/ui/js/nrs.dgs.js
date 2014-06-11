@@ -27,27 +27,23 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getMarketplacePendingPurchaseHTML = function(purchase) {
-		//do not show if refund has been initiated or order has been delivered
-		if (NRS.getUnconfirmedTransactionFromCache(3, [5, 7], {
+		var delivered = NRS.getUnconfirmedTransactionsFromCache(3, [5, 7], {
 			"purchase": purchase.purchase
-		})) {
-			return "";
-		}
+		});
 
-		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (delivered ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>Buyer</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" +
-			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods.goods).escapeHTML() + "</a>" +
+			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
-			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_purchase_modal'>" + String(purchase.goods.name).escapeHTML() + "</a></h3>" +
+			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_purchase_modal'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
 			"<table class='purchase' style='margin-bottom:5px'>" +
 			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
 			"<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
 			"</table>" +
-			"<button type='button' class='btn btn-default btn-refund' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Refund</button> " +
-			"<button type='button' class='btn btn-default btn-deliver' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Deliver Goods</button>" +
-			"<hr /></div>";
+			"<span class='delivery'>" + (!delivered ? "<button type='button' class='btn btn-default btn-deliver' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(purchase.purchase).escapeHTML() + "'>Deliver Goods</button>" : "Delivered") + "</span>" +
+			"</div><hr />";
 	}
 
 	NRS.pages.newest_dgs = function() {
@@ -136,51 +132,25 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.pending_purchases_dgs = function() {
-		var goods = {};
-
 		NRS.sendRequest("getDGSPendingPurchases", {
 			"seller": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
+			var content = "";
+
 			if (response.purchases && response.purchases.length) {
 				if (response.purchases.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;
 					response.purchases.pop();
 				}
 
-				var nr_goods = 0;
-
 				for (var i = 0; i < response.purchases.length; i++) {
-					NRS.sendRequest("getDGSGood", {
-						"goods": response.purchases[i].goods
-					}, function(good) {
-						goods[good.goods] = good;
-						nr_goods++;
-
-						if (nr_goods == response.purchases.length) {
-							var content = "";
-
-							for (var j = 0; j < response.purchases.length; j++) {
-								var purchase = response.purchases[j];
-								purchase.goods = goods[purchase.goods];
-
-								content += NRS.getMarketplacePendingPurchaseHTML(purchase);
-							}
-
-							$("#pending_purchases_dgs_page_contents").empty().append(content);
-							NRS.dataLoadFinished($("#pending_purchases_dgs_page_contents"));
-
-							NRS.pageLoaded();
-						}
-					});
+					content += NRS.getMarketplacePendingPurchaseHTML(response.purchases[i]);
 				}
-			} else {
-				$("#pending_purchases_dgs_page_contents").empty();
-				NRS.dataLoadFinished($("#pending_purchases_dgs_page_contents"));
-
-				NRS.pageLoaded();
 			}
+
+			NRS.dataLoaded(content);
 		});
 	}
 
@@ -505,7 +475,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#pending_purchases_dgs_page_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
+		$("#pending_purchases_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
 	}
 
 	NRS.forms.dgsDeliveryComplete = function(response, data) {
@@ -513,7 +483,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#pending_purchases_dgs_page_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
+		$("#pending_purchases_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").addClass("tentative").find("span.delivery").html("Delivered");
 	}
 
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal").on("show.bs.modal", function(e) {
