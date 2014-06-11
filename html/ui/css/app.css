@@ -2816,6 +2816,12 @@ tr.your-order td {
 	background-color: #FFFAF0 !important;
 }
 
+div.tentative {
+  font-style: italic !important;
+  background-color: #DAE3F2 !important;
+  padding:5px;
+}
+
 tr.tentative td {
 	font-style: italic !important;
 	background-color: #DAE3F2 !important;

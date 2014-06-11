@@ -1038,6 +1038,8 @@ var NRS = (function(NRS, $, undefined) {
 				unconfirmedTransaction.seller = response.seller;
 				unconfirmedTransaction.sellerRS = response.sellerRS;
 			}, false);
+		} else if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 0) {
+			unconfirmedTransaction.goods = unconfirmedTransaction.transaction;
 		}
 
 		return unconfirmedTransaction;
