@@ -104,6 +104,7 @@
                         	<a href="#" data-page="dgs"><i class="fa fa-shopping-cart"></i><span>Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                                  <li><a href="#" data-page="dgs"><i class="fa fa-angle-double-right"></i> Marketplace</a></li>
+                            	 <li id="dgs_seller_page_link" style="display:none"><a href="#" data-page="dgs_seller"><i class="fa fa-angle-double-right"></i> Seller Products</a></li>
                             	 <li><a href="#" data-page="newest_dgs"><i class="fa fa-angle-double-right"></i> Newest Products</a></li>
                             	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Products
                             	</a></li>
@@ -845,9 +846,9 @@
                     <section class="content-header">
                     	<h1>Marketplace</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
 								<div class="input-group">
-									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
 									<span class="input-group-btn">
 										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 									</span>
@@ -863,13 +864,40 @@
                   	</section>
                 </div>
 
+                <div id="dgs_seller_page" class="paginated page">
+                    <section class="content-header">
+                    	<h1>Products By Seller</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+					</section>
+
+					<section class="content">
+                  		<div class="data-container data-loading">
+                  			<div id="dgs_seller_contents" class="dgs_page_contents">
+
+                  			</div>
+                  			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+							<div class="data-empty-container"><p>No products found.</p></div>
+                  		</div>
+                  		<div class="data-pagination"></div>
+                  	</section>
+                </div>
+
                 <div id="newest_dgs_page" class="paginated page">
                     <section class="content-header">
                     	<h1>Newest Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
 								<div class="input-group">
-									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
 									<span class="input-group-btn">
 										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 									</span>
@@ -880,7 +908,7 @@
                 	
                     <section class="content">
                   		<div class="data-container data-loading">
-                  			<div id="newest_dgs_page_contents" class="dgs_page_contents">
+                  			<div id="newest_dgs_contents" class="dgs_page_contents">
 
                   			</div>
                   			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -894,9 +922,9 @@
                     <section class="content-header">
                     	<h1>Purchased Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
 								<div class="input-group">
-									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
 									<span class="input-group-btn">
 										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 									</span>
@@ -907,7 +935,7 @@
                 	
                     <section class="content">
                   		<div class="data-container data-loading">
-                  			<div id="purchased_dgs_page_contents" class="dgs_page_contents">
+                  			<div id="purchased_dgs_contents" class="dgs_page_contents">
 
                   			</div>
                   			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -921,9 +949,9 @@
                     <section class="content-header">
                     	<h1>My Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
 								<div class="input-group">
-									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
 									<span class="input-group-btn">
 										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 									</span>
@@ -959,9 +987,9 @@
                     <section class="content-header">
                     	<h1>My Pending Orders</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
 								<div class="input-group">
-									<input type="text" name="q" class="form-control" placeholder="Search Products or Markets...">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
 									<span class="input-group-btn">
 										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
 									</span>

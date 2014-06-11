@@ -1,39 +1,4 @@
 var NRS = (function(NRS, $, undefined) {
-	NRS.pages.newest_dgs = function() {
-		NRS.pageLoading();
-
-		var content = "";
-
-		NRS.sendRequest("getDGSGoods+", {
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
-			if (response.goods && response.goods.length) {
-				if (response.goods.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.goods.pop();
-				}
-				for (var i = 0; i < response.goods.length; i++) {
-					var good = response.goods[i];
-
-					content += NRS.getMarketplaceItemHTML(good);
-				}
-
-				$("#newest_dgs_page_contents").empty().append(content);
-				NRS.dataLoadFinished($("#newest_dgs_page_contents"));
-
-				NRS.showMore($("#newest_dgs_page_contents"));
-
-				NRS.pageLoaded();
-			} else {
-				$("#newest_dgs_page_contents").empty();
-				NRS.dataLoadFinished($("#newest_dgs_page_contents"));
-
-				NRS.pageLoaded();
-			}
-		});
-	}
-
 	NRS.getMarketplaceItemHTML = function(good) {
 		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>Seller</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='user_info'>" + NRS.getAccountTitle(good, "seller") + "</a></span><br>" +
@@ -85,10 +50,59 @@ var NRS = (function(NRS, $, undefined) {
 			"<hr /></div>";
 	}
 
-	NRS.pages.purchased_dgs = function() {
-		NRS.pageLoading();
+	NRS.pages.newest_dgs = function() {
+		var content = "";
 
-		var rows = "";
+		NRS.sendRequest("getDGSGoods+", {
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			if (response.goods && response.goods.length) {
+				if (response.goods.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.goods.pop();
+				}
+
+				for (var i = 0; i < response.goods.length; i++) {
+					content += NRS.getMarketplaceItemHTML(response.goods[i]);
+				}
+			}
+
+			NRS.dataLoaded(content);
+			NRS.showMore();
+		});
+	}
+
+	NRS.pages.dgs_seller = function() {
+		var content = "";
+
+		var seller = $(".dgs_search input[name=q]").val();
+
+		NRS.sendRequest("getDGSGoods+", {
+			"seller": seller,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			if (response.goods && response.goods.length) {
+				if (response.goods.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.goods.pop();
+				}
+
+				var content = "";
+
+				for (var i = 0; i < response.goods.length; i++) {
+					content += NRS.getMarketplaceItemHTML(response.goods[i]);
+				}
+			}
+
+			NRS.dataLoaded(content);
+			NRS.showMore();
+		});
+	}
+
+	NRS.pages.purchased_dgs = function() {
+		var content = "";
 
 		if (NRS.pageNumber == 1) {
 			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4);
@@ -96,7 +110,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (unconfirmedTransactions) {
 				for (var i = 0; i < unconfirmedTransactions.length; i++) {
 					var unconfirmedTransaction = unconfirmedTransactions[i];
-					rows += NRS.getMarketplacePurchaseHTML(unconfirmedTransaction);
+					content += NRS.getMarketplacePurchaseHTML(unconfirmedTransaction);
 				}
 			}
 		}
@@ -106,8 +120,6 @@ var NRS = (function(NRS, $, undefined) {
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
-			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4);
-
 			if (response.purchases && response.purchases.length) {
 				if (response.purchases.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;
@@ -115,25 +127,15 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				for (var i = 0; i < response.purchases.length; i++) {
-					rows += NRS.getMarketplacePurchaseHTML(response.purchases[i]);
+					content += NRS.getMarketplacePurchaseHTML(response.purchases[i]);
 				}
-
-				$("#purchased_dgs_page_contents").empty().append(rows);
-				NRS.dataLoadFinished($("#purchased_dgs_page_contents"));
-
-				NRS.pageLoaded();
-			} else {
-				$("#purchased_dgs_page_contents").empty();
-				NRS.dataLoadFinished($("#purchased_dgs_page_contents"));
-
-				NRS.pageLoaded();
 			}
+
+			NRS.dataLoaded(content);
 		});
 	}
 
 	NRS.pages.pending_purchases_dgs = function() {
-		NRS.pageLoading();
-
 		var goods = {};
 
 		NRS.sendRequest("getDGSPendingPurchases", {
@@ -183,8 +185,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.my_dgs_listings = function() {
-		NRS.pageLoading();
-
 		var rows = "";
 
 		var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 0);
@@ -229,23 +229,15 @@ var NRS = (function(NRS, $, undefined) {
 
 					rows += "<tr class='" + (tentative ? "tentative" : "") + (deleted ? " tentative-crossed" : "") + "' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + (quantityFormatted ? good.quantity : NRS.format(good.quantity)) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Change Price</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Change QTY</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>Delete</a></td></tr>";
 				}
-
-				$("#my_dgs_listings_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#my_dgs_listings_table"));
-
-				NRS.pageLoaded();
-			} else {
-				$("#my_dgs_listings_table tbody").empty();
-				NRS.dataLoadFinished($("#my_dgs_listings_table"));
-
-				NRS.pageLoaded();
 			}
+
+			NRS.dataLoaded(rows);
 		});
 	}
 
 	NRS.incoming.my_dgs_listings = function(transactions) {
 		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
-			NRS.pages.my_dgs_listings();
+			NRS.loadPage("my_dgs_listings");
 		}
 	}
 
@@ -331,6 +323,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (response.alreadyProcessed) {
 			return;
 		}
+
 		$("#my_dgs_listings_table tr[data-goods=" + String(data.goods).escapeHTML() + "]").addClass("tentative tentative-crossed");
 	}
 
@@ -629,6 +622,24 @@ var NRS = (function(NRS, $, undefined) {
 	}).on("hidden.bs.modal", function(e) {
 		$(this).find(".goods_info").html("Loading...");
 		$("#dgs_quantity_change_current_quantity, #dgs_price_change_current_price, #dgs_quantity_change_quantity, #dgs_price_change_price").val("0");
+	});
+
+	$(".dgs_search").on("submit", function(e) {
+		e.preventDefault();
+
+		var seller = $.trim($(this).find("input[name=q]").val());
+
+		$(".dgs_search input[name=q]").val(seller);
+
+		if (/^\d+$/.test(seller) || /^(NXT\-)/i.test(seller)) {
+			$("#dgs_seller_page_link").show();
+
+			NRS.goToPage("dgs_seller");
+		} else {
+			$.growl("Invalid seller ID.", {
+				"type": "danger"
+			});
+		}
 	});
 
 	return NRS;
