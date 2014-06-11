@@ -58,7 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					alias.status = "/";
 
-					var unconfirmedTransaction = NRS.getUnconfirmedTransaction(1, 6, {
+					var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(1, 6, {
 						"alias": alias.aliasName
 					});
 
