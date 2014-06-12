@@ -14,6 +14,10 @@ public final class SuperComplexNumber {
 
     private final Map<Long, Long> values = new HashMap<>();
 
+    public Map<Long, Long> getValues() {
+        return values;
+    }
+
     public long get(Long measure) {
         Long value = values.get(measure);
         return value == null ? 0 : value;
@@ -21,6 +25,22 @@ public final class SuperComplexNumber {
 
     public void add(Long measure, long value) {
         values.put(measure, Convert.safeAdd(get(measure), value));
+    }
+
+    public void add(SuperComplexNumber otherSuperComplexNumber) {
+        for (Map.Entry<Long, Long> entry : otherSuperComplexNumber.values.entrySet()) {
+            add(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public void subtract(Long measure, long value) {
+        values.put(measure, Convert.safeSubtract(get(measure), value));
+    }
+
+    public void subtract(SuperComplexNumber otherSuperComplexNumber) {
+        for (Map.Entry<Long, Long> entry : otherSuperComplexNumber.values.entrySet()) {
+            subtract(entry.getKey(), entry.getValue());
+        }
     }
 
     public boolean isCovered(SuperComplexNumber otherSuperComplexNumber) {

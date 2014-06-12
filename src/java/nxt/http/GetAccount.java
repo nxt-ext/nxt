@@ -56,7 +56,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             }
 
             JSONArray assetBalances = new JSONArray();
-            for (Map.Entry<Long, Long> assetBalanceEntry : account.getAssetBalancesQNT().entrySet()) {
+            for (Map.Entry<Long, Long> assetBalanceEntry : account.getAssetBalances().getValues().entrySet()) {
 
                 JSONObject assetBalance = new JSONObject();
                 assetBalance.put("asset", Convert.toUnsignedLong(assetBalanceEntry.getKey()));
@@ -69,7 +69,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             }
 
             JSONArray unconfirmedAssetBalances = new JSONArray();
-            for (Map.Entry<Long, Long> unconfirmedAssetBalanceEntry : account.getUnconfirmedAssetBalancesQNT().entrySet()) {
+            for (Map.Entry<Long, Long> unconfirmedAssetBalanceEntry : account.getUnconfirmedAssetBalances().getValues().entrySet()) {
 
                 JSONObject unconfirmedAssetBalance = new JSONObject();
                 unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(unconfirmedAssetBalanceEntry.getKey()));

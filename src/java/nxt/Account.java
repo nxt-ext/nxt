@@ -197,11 +197,11 @@ public final class Account {
     private volatile Long nextLesseeId;
     private final Set<Long> lessorIds = Collections.newSetFromMap(new ConcurrentHashMap<Long,Boolean>());
 
-    private final Map<Long, Long> assetBalances = new HashMap<>();
-    private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
+    private final SuperComplexNumber assetBalances = new SuperComplexNumber();
+    private final SuperComplexNumber unconfirmedAssetBalances = new SuperComplexNumber();
 
-    private final Map<Long, Long> currencyBalances = new HashMap<>();
-    private final Map<Long, Long> unconfirmedCurrencyBalances = new HashMap<>();
+    private final SuperComplexNumber currencyBalances = new SuperComplexNumber();
+    private final SuperComplexNumber unconfirmedCurrencyBalances = new SuperComplexNumber();
 
     private volatile String name;
     private volatile String description;
@@ -256,12 +256,8 @@ public final class Account {
     public synchronized SuperComplexNumber getSuperBalance() {
         SuperComplexNumber superBalance = new SuperComplexNumber();
         superBalance.add(Constants.NXT_CURRENCY_ID, getUnconfirmedBalanceNQT());
-        for (Map.Entry<Long, Long> entry : getUnconfirmedAssetBalancesQNT().entrySet()) {
-            superBalance.add(entry.getKey(), entry.getValue());
-        }
-        for (Map.Entry<Long, Long> entry : getUnconfirmedCurrencyBalancesQNT().entrySet()) {
-            superBalance.add(entry.getKey(), entry.getValue());
-        }
+        superBalance.add(unconfirmedAssetBalances);
+        superBalance.add(unconfirmedCurrencyBalances);
         return superBalance;
     }
 
@@ -352,24 +348,8 @@ public final class Account {
         return unconfirmedAssetBalances.get(assetId);
     }
 
-    public Map<Long, Long> getAssetBalancesQNT() {
-        return Collections.unmodifiableMap(assetBalances);
-    }
-
-    public Map<Long, Long> getUnconfirmedAssetBalancesQNT() {
-        return Collections.unmodifiableMap(unconfirmedAssetBalances);
-    }
-
     public synchronized Long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
         return unconfirmedCurrencyBalances.get(currencyId);
-    }
-
-    public Map<Long, Long> getCurrencyBalancesQNT() {
-        return Collections.unmodifiableMap(currencyBalances);
-    }
-
-    public Map<Long, Long> getUnconfirmedCurrencyBalancesQNT() {
-        return Collections.unmodifiableMap(unconfirmedCurrencyBalances);
     }
 
     public Long getCurrentLesseeId() {
@@ -487,18 +467,21 @@ public final class Account {
         }
     }
 
+    public SuperComplexNumber getAssetBalances() {
+        return assetBalances;
+    }
+
+    public SuperComplexNumber getUnconfirmedAssetBalances() {
+        return unconfirmedAssetBalances;
+    }
+
     synchronized long getAssetBalanceQNT(Long assetId) {
-        return Convert.nullToZero(assetBalances.get(assetId));
+        return assetBalances.get(assetId);
     }
 
     void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Long assetBalance = assetBalances.get(assetId);
-            if (assetBalance == null) {
-                assetBalances.put(assetId, quantityQNT);
-            } else {
-                assetBalances.put(assetId, Convert.safeAdd(assetBalance, quantityQNT));
-            }
+            assetBalances.add(assetId, quantityQNT);
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
@@ -506,12 +489,7 @@ public final class Account {
 
     void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
-            if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantityQNT);
-            } else {
-                unconfirmedAssetBalances.put(assetId, Convert.safeAdd(unconfirmedAssetBalance, quantityQNT));
-            }
+            unconfirmedAssetBalances.add(assetId, quantityQNT);
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
@@ -519,18 +497,8 @@ public final class Account {
 
     void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         synchronized (this) {
-            Long assetBalance = assetBalances.get(assetId);
-            if (assetBalance == null) {
-                assetBalances.put(assetId, quantityQNT);
-            } else {
-                assetBalances.put(assetId, Convert.safeAdd(assetBalance, quantityQNT));
-            }
-            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
-            if (unconfirmedAssetBalance == null) {
-                unconfirmedAssetBalances.put(assetId, quantityQNT);
-            } else {
-                unconfirmedAssetBalances.put(assetId, Convert.safeAdd(unconfirmedAssetBalance, quantityQNT));
-            }
+            assetBalances.add(assetId, quantityQNT);
+            unconfirmedAssetBalances.add(assetId, quantityQNT);
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
@@ -538,47 +506,38 @@ public final class Account {
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
+    public SuperComplexNumber getCurrencyBalances() {
+        return currencyBalances;
+    }
+
+    public SuperComplexNumber getUnconfirmedCurrencyBalances() {
+        return unconfirmedCurrencyBalances;
+    }
+
     synchronized long getCurrencyBalanceQNT(Long currencyId) {
-        return Convert.nullToZero(currencyBalances.get(currencyId));
+        return currencyBalances.get(currencyId);
     }
 
     void addToCurrencyBalanceQNT(Long currencyId, long units) {
         synchronized (this) {
-            Long currencyBalance = currencyBalances.get(currencyId);
-            if (currencyBalance == null) {
-                currencyBalances.put(currencyId, units);
-            } else {
-                currencyBalances.put(currencyId, Convert.safeAdd(currencyBalance, units));
-            }
+            currencyBalances.add(currencyId, units);
         }
+        // TODO: Add listener notification if necessary
     }
 
     void addToUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
         synchronized (this) {
-            Long unconfirmedCurrencyBalance = unconfirmedCurrencyBalances.get(currencyId);
-            if (unconfirmedCurrencyBalance == null) {
-                unconfirmedCurrencyBalances.put(currencyId, units);
-            } else {
-                unconfirmedCurrencyBalances.put(currencyId, Convert.safeAdd(unconfirmedCurrencyBalance, units));
-            }
+            unconfirmedCurrencyBalances.add(currencyId, units);
         }
+        // TODO: Add listener notification if necessary
     }
 
     void addToCurrencyAndUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
         synchronized (this) {
-            Long currencyBalance = currencyBalances.get(currencyId);
-            if (currencyBalance == null) {
-                currencyBalances.put(currencyId, units);
-            } else {
-                currencyBalances.put(currencyId, Convert.safeAdd(currencyBalance, units));
-            }
-            Long unconfirmedCurrencyBalance = unconfirmedCurrencyBalances.get(currencyId);
-            if (unconfirmedCurrencyBalance == null) {
-                unconfirmedCurrencyBalances.put(currencyId, units);
-            } else {
-                unconfirmedCurrencyBalances.put(currencyId, Convert.safeAdd(unconfirmedCurrencyBalance, units));
-            }
+            currencyBalances.add(currencyId, units);
+            unconfirmedCurrencyBalances.add(currencyId, units);
         }
+        // TODO: Add listener notification if necessary
     }
 
     void addToBalanceNQT(long amountNQT) {
