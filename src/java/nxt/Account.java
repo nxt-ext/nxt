@@ -259,6 +259,9 @@ public final class Account {
         for (Map.Entry<Long, Long> entry : getUnconfirmedAssetBalancesQNT().entrySet()) {
             superBalance.add(entry.getKey(), entry.getValue());
         }
+        for (Map.Entry<Long, Long> entry : getUnconfirmedCurrencyBalancesQNT().entrySet()) {
+            superBalance.add(entry.getKey(), entry.getValue());
+        }
         return superBalance;
     }
 
