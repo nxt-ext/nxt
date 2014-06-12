@@ -206,6 +206,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
         json.put("goods", Convert.toUnsignedLong(purchase.getGoodsId()));
+        json.put("name", purchase.getName());
         json.put("seller", Convert.toUnsignedLong(purchase.getSellerId()));
         json.put("sellerRS", Convert.rsAccount(purchase.getSellerId()));
         json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));

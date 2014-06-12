@@ -1,38 +1,49 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.messages = {};
 
+	var totalMessages = 0;
+	var totalMessagesLoaded = 0;
+	var messageTypesChecked = 0;
+
 	NRS.pages.messages = function(callback) {
-		NRS.pageLoading();
+		NRS.messages = {};
+
+		totalMessages = 0;
+		totalMessagesLoaded = 0;
+		messageTypesChecked = 0;
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
-		//todo get encrypted messages...
+		NRS.getAccountMessages("public", function() {
+			NRS.getAccountMessagesComplete(callback);
+		});
 
+		NRS.getAccountMessages("private", function() {
+			NRS.getAccountMessagesComplete(callback);
+		});
+	}
+
+	NRS.getAccountMessages = function(type, callback) {
 		NRS.sendRequest("getAccountTransactionIds+", {
 			"account": NRS.account,
 			"timestamp": 0,
 			"type": 1,
-			"subtype": 0
+			"subtype": (type == "public" ? 0 : 8)
 		}, function(response) {
+			messageTypesChecked++;
+
 			if (response.transactionIds && response.transactionIds.length) {
-				var transactionIds = response.transactionIds.reverse().slice(0, 100);
-				var nrTransactions = transactionIds.length;
+				var transactionIds = response.transactionIds.reverse().slice(0, 75);
+				var nrTransactions = 0;
 
-				NRS.messages = {};
+				totalMessages += transactionIds.length;
 
-				var transactionsChecked = 0;
-
-				for (var i = 0; i < nrTransactions; i++) {
+				for (var i = 0; i < transactionIds.length; i++) {
 					NRS.sendRequest("getTransaction+", {
 						"transaction": transactionIds[i]
 					}, function(response) {
-						//check if error.
-
-						if (NRS.currentPage != "messages") {
-							return;
-						}
-
-						transactionsChecked++;
+						nrTransactions++;
+						totalMessagesLoaded++;
 
 						var otherUser = (response.recipient == NRS.account ? response.sender : response.recipient);
 
@@ -42,74 +53,77 @@ var NRS = (function(NRS, $, undefined) {
 
 						NRS.messages[otherUser].push(response);
 
-						if (transactionsChecked == nrTransactions) {
-							var rows = "";
-							var menu = "";
-
-							var sortedMessages = [];
-
-							for (var otherUser in NRS.messages) {
-								NRS.messages[otherUser].sort(function(a, b) {
-									if (a.timestamp > b.timestamp) {
-										return 1;
-									} else if (a.timestamp < b.timestamp) {
-										return -1;
-									} else {
-										return 0;
-									}
-								});
-
-								var otherUserRS = (otherUser == NRS.messages[otherUser][0].sender ? NRS.messages[otherUser][0].senderRS : NRS.messages[otherUser][0].recipientRS);
-
-								sortedMessages.push({
-									"timestamp": NRS.messages[otherUser][NRS.messages[otherUser].length - 1].timestamp,
-									"user": otherUser,
-									"userRS": otherUserRS
-								});
-							}
-
-							sortedMessages.sort(function(a, b) {
-								if (a.timestamp < b.timestamp) {
-									return 1;
-								} else if (a.timestamp > b.timestamp) {
-									return -1;
-								} else {
-									return 0;
-								}
-							});
-
-							for (var i = 0; i < sortedMessages.length; i++) {
-								var sortedMessage = sortedMessages[i];
-
-								var extra = "";
-
-								if (sortedMessage.user in NRS.contacts) {
-									extra = " data-contact='" + NRS.getAccountTitle(sortedMessage, "user") + "' data-context='messages_sidebar_update_context'";
-								}
-
-								//menu += "<li><a href='#' data-account='" + NRS.getAccountFormatted(sortedMessage[user]) + "'><strong>" + NRS.getAccountTitle(sortedMessage, "user") + "</strong><br />" + NRS.formatTimestamp(sortedMessage.timestamp) + "</a></li>";
-
-								rows += "<a href='#' class='list-group-item' data-account='" + NRS.getAccountFormatted(sortedMessage, "user") + "' data-account-id='" + NRS.getAccountFormatted(sortedMessage.user) + "'" + extra + "><h4 class='list-group-item-heading'>" + NRS.getAccountTitle(sortedMessage, "user") + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(sortedMessage.timestamp) + "</p></a>";
-							}
-
-							$("#messages_sidebar").empty().append(rows);
-							//	$("#messages_sidebar_menu").empty().append(menu);
-
-							NRS.pageLoaded(callback);
+						if (nrTransactions == transactionIds.length) {
+							callback();
 						}
 					});
-
-					if (NRS.currentPage != "messages") {
-						return;
-					}
 				}
 			} else {
+				callback();
+			}
+		});
+	}
+
+	NRS.getAccountMessagesComplete = function(callback) {
+		if (totalMessages == totalMessagesLoaded && messageTypesChecked == 2) {
+			if (NRS.totalMessages == 0) {
 				$("#no_message_selected").hide();
 				$("#no_messages_available").show();
 				$("#messages_sidebar").empty();
 				NRS.pageLoaded(callback);
+			} else {
+				var rows = "";
+				var menu = "";
+
+				var sortedMessages = [];
+
+				for (var otherUser in NRS.messages) {
+					NRS.messages[otherUser].sort(function(a, b) {
+						if (a.timestamp > b.timestamp) {
+							return 1;
+						} else if (a.timestamp < b.timestamp) {
+							return -1;
+						} else {
+							return 0;
+						}
+					});
+
+					var otherUserRS = (otherUser == NRS.messages[otherUser][0].sender ? NRS.messages[otherUser][0].senderRS : NRS.messages[otherUser][0].recipientRS);
+
+					sortedMessages.push({
+						"timestamp": NRS.messages[otherUser][NRS.messages[otherUser].length - 1].timestamp,
+						"user": otherUser,
+						"userRS": otherUserRS
+					});
+				}
+
+				sortedMessages.sort(function(a, b) {
+					if (a.timestamp < b.timestamp) {
+						return 1;
+					} else if (a.timestamp > b.timestamp) {
+						return -1;
+					} else {
+						return 0;
+					}
+				});
+
+				for (var i = 0; i < sortedMessages.length; i++) {
+					var sortedMessage = sortedMessages[i];
+
+					var extra = "";
+
+					if (sortedMessage.user in NRS.contacts) {
+						extra = " data-contact='" + NRS.getAccountTitle(sortedMessage, "user") + "' data-context='messages_sidebar_update_context'";
+					}
+
+					rows += "<a href='#' class='list-group-item' data-account='" + NRS.getAccountFormatted(sortedMessage, "user") + "' data-account-id='" + NRS.getAccountFormatted(sortedMessage.user) + "'" + extra + "><h4 class='list-group-item-heading'>" + NRS.getAccountTitle(sortedMessage, "user") + "</h4><p class='list-group-item-text'>" + NRS.formatTimestamp(sortedMessage.timestamp) + "</p></a>";
+				}
+
+				$("#messages_sidebar").empty().append(rows);
+
+				NRS.pageLoaded(callback);
 			}
-		});
+		}
 	}
 
 	NRS.incoming.messages = function(transactions) {
@@ -123,14 +137,14 @@ var NRS = (function(NRS, $, undefined) {
 				activeAccount = -1;
 			}
 
-			NRS.pages.messages(function() {
+			NRS.loadPage("messages", function() {
 				$("#messages_sidebar a[data-account=" + activeAccount + "]").trigger("click");
 			});
 		}
 	}
 
-	$("#messages_sidebar").on("click", "a", function(event) {
-		event.preventDefault();
+	$("#messages_sidebar").on("click", "a", function(e) {
+		e.preventDefault();
 
 		$("#messages_sidebar a.active").removeClass("active");
 		$(this).addClass("active");
@@ -147,38 +161,46 @@ var NRS = (function(NRS, $, undefined) {
 
 		var messages = NRS.messages[otherUser];
 
-		var otherUserPublicKey = null;
+		var sharedKey = null;
 
 		if (messages) {
 			for (var i = 0; i < messages.length; i++) {
-				var hex = messages[i].attachment.message;
-				var decoded, extra;
+				var message = messages[i].attachment;
 
-				if (hex.indexOf("4352595054454421") === 0) { //starts with CRYPTED!
-					if (!otherUserPublicKey) {
-						NRS.sendRequest("getAccountPublicKey", {
-							"account": otherUser
-						}, function(response) {
-							if (!response.publicKey) {
-								otherUserPublicKey = -1;
-							} else {
-								otherUserPublicKey = response.publicKey;
-							}
-						}, false);
+				var decoded = "";
+				var extra = "";
+
+				if (messages[i].subtype == 8) {
+					if (!sharedKey) {
+						try {
+							sharedKey = nxtCrypto.getSharedKeyWithAccount(otherUser);
+						} catch (err) {
+							sharedKey = -1;
+						}
 					}
 
-					if (otherUserPublicKey != -1) {
-						decoded = NRS.decryptMessage(sessionStorage.getItem("secret"), otherUserPublicKey, hex);
+					if (sharedKey != -1) {
+						try {
+							decoded = NRS.decryptNote(message.message, {
+								"nonce": message.nonce,
+								"sharedKey": sharedKey
+							});
+						} catch (err) {
+							var message = String(err.message ? err.message : err);
+							//.. handle
+						}
+					} else {
+						//console.log("no shared key");
 					}
 				} else {
 					try {
-						decoded = converters.hexStringToString(hex);
+						decoded = converters.hexStringToString(message.message);
 					} catch (err) {
 						//legacy...
-						if (hex.indexOf("feff") === 0) {
-							decoded = NRS.convertFromHex16(hex);
+						if (message.message.indexOf("feff") === 0) {
+							decoded = NRS.convertFromHex16(message.message);
 						} else {
-							decoded = NRS.convertFromHex8(hex);
+							decoded = NRS.convertFromHex8(message.message);
 						}
 					}
 				}
@@ -188,7 +210,6 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					decoded = "<i class='fa fa-warning'></i> Could not decrypt message.";
 					extra = "decryption_failed";
-
 				}
 
 				var day = NRS.formatTimestamp(messages[i].timestamp, true);
@@ -260,38 +281,90 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
-	NRS.encryptMessage = function(message, theirAccountId, mySecretPhrase) {
-		mySecretPhrase = "wutwutwut";
-
+	NRS.encryptNote = function(message, options, secretPhrase) {
 		try {
-			var myPrivateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(mySecretPhrase));
-			var theirPublicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(theirAccountId, true));
+			if (!options.sharedKey) {
+				if (!options.privateKey) {
+					if (!secretPhrase) {
+						if (NRS.rememberPassword) {
+							secretPhrase = NRS.password;
+						} else {
+							throw {
+								"message": "Your password required to encrypt this message.",
+								"errorCode": 3
+							};
+						}
+					}
 
-			var encrypted = nxtCrypto.encryptData(converters.stringToByteArray(message), myPrivateKey, theirPublicKey);
+					options.privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
+				}
+
+				if (!options.publicKey) {
+					if (!options.account) {
+						throw {
+							"message": "Account ID not specified.",
+							"errorCode": 4
+						};
+					}
+					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
+				}
+			}
+
+			var encrypted = nxtCrypto.encryptData(converters.stringToByteArray(message), options);
 
 			return {
 				"message": converters.byteArrayToHexString(encrypted.data),
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
-		} catch (e) {
-			console.log("here we are");
-			console.log(e);
-
-			return null;
+		} catch (err) {
+			if (err.errorCode && (err.errorCode == 3 || err.errorCode == 4)) {
+				throw err;
+			} else {
+				throw {
+					"message": "The message could not be encrypted.",
+					"errorCode": 3
+				};
+			}
 		}
 	}
 
-	NRS.decryptMessage = function(message, nonce, theirAccountId, mySecretPhrase) {
-		mySecretPhrase = "wutwutwut";
+	NRS.decryptNote = function(message, options, secretPhrase) {
 		try {
-			var myPrivateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(mySecretPhrase));
-			var theirPublicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(theirAccountId, true));
+			if (!options.sharedKey) {
+				if (!options.privateKey) {
+					if (!secretPhrase) {
+						if (NRS.rememberPassword) {
+							secretPhrase = NRS.password;
+						} else {
+							throw {
+								"message": "Your password required to encrypt this message.",
+								"errorCode": 3
+							};
+						}
+					}
 
-			return nxtCrypto.decryptData(converters.hexStringToByteArray(message), converters.hexStringToByteArray(nonce), myPrivateKey, theirPublicKey);
+					options.privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
+				}
+
+				if (!options.publicKey) {
+					if (!options.account) {
+						throw {
+							"message": "Account ID not specified.",
+							"errorCode": 4
+						};
+					}
+					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
+				}
+			}
+
+			options.nonce = converters.hexStringToByteArray(options.nonce);
+
+			return nxtCrypto.decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
-			console.log("er");
-			console.log(err);
-			return err;
+			throw {
+				"message": "The message could not be decrypted.",
+				"errorCode": 2
+			};
 		}
 	}
 
@@ -313,23 +386,23 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		var error = "";
-
 		if ($("#send_message_encrypt").is(":checked")) {
-			var encrypted = NRS.encryptMessage(message, data.recipient, NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase);
+			try {
+				var encrypted = NRS.encryptNote(message, {
+					"account": data.recipient
+				}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
 
-			requestType = "sendEncryptedNote";
+				requestType = "sendEncryptedNote";
 
-			data["encryptedNote"] = encrypted.message;
-			data["encryptedNoteNonce"] = encrypted.nonce;
+				data["encryptedNote"] = encrypted.message;
+				data["encryptedNoteNonce"] = encrypted.nonce;
+			} catch (err) {
+				return {
+					"error": "Could not encrypt message."
+				};
+			}
 		} else {
 			data["message"] = converters.stringToHexString(message);
-		}
-
-		if (error) {
-			return {
-				"error": error
-			};
 		}
 
 		data["_extra"] = {
@@ -387,7 +460,9 @@ var NRS = (function(NRS, $, undefined) {
 		var error = "";
 
 		if ($("#inline_message_encrypt").is(":checked")) {
-			hex = NRS.encryptMessage(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase, data.recipient, message);
+			hex = NRS.encryptNote(message, {
+				"account": data.recipient
+			}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
 		} else {
 			hex = converters.stringToHexString(message);
 		}

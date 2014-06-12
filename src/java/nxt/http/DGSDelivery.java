@@ -62,6 +62,9 @@ public final class DGSDelivery extends CreateTransaction {
                 } else {
                     goodsData = Convert.toBytes(Convert.nullToEmpty(req.getParameter("goodsText")));
                 }
+                if (goodsData.length == 0) {
+                    return INCORRECT_DGS_GOODS;
+                }
             } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }

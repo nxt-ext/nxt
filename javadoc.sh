@@ -1,3 +1,4 @@
+#!/bin/sh
 CP=nxt.jar:lib/*:conf
 SP=src/java/
 

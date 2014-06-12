@@ -722,22 +722,28 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	}
 
+	NRS.getAccountLink = function(object, acc) {
+		return "<a href='#' data-user='" + String(object[acc]).escapeHTML() + "'>" + NRS.getAccountTitle(object, acc) + "</a>";
+	}
+
 	NRS.getAccountTitle = function(object, acc) {
 		var type = typeof object;
 
+		var formattedAcc = "";
+
 		if (type == "string" || type == "number") {
-			acc = object;
+			formattedAcc = object;
 			object = null;
+		} else {
+			formattedAcc = (NRS.settings["reed_solomon"] ? String(object[acc + "RS"]).escapeHTML() : String(object[acc]).escapeHTML());
 		}
 
-		if (acc in NRS.contacts) {
-			return NRS.contacts[acc].name.escapeHTML();
-		} else if (acc == NRS.account || acc == NRS.accountRS) {
+		if (formattedAcc in NRS.contacts) {
+			return NRS.contacts[formattedAcc].name.escapeHTML();
+		} else if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
 			return "You";
-		} else if (!object) {
-			return String(acc).escapeHTML();
 		} else {
-			return NRS.getAccountFormatted(object, acc);
+			return String(formattedAcc).escapeHTML();
 		}
 	}
 
@@ -835,8 +841,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.dataLoadFinished = function($table, fadeIn) {
-		var $parent = $table.parent();
+	NRS.dataLoaded = function(data, noPageLoad) {
+		var $el = $("#" + NRS.currentPage + "_contents");
+
+		if ($el.length) {
+			$el.empty().append(data);
+		} else {
+			$el = $("#" + NRS.currentPage + "_table");
+			$el.find("tbody").empty().append(data);
+		}
+
+		NRS.dataLoadFinished($el);
+
+		if (!noPageLoad) {
+			NRS.pageLoaded();
+		}
+	}
+
+	NRS.dataLoadFinished = function($el, fadeIn) {
+		var $parent = $el.parent();
 
 		if (fadeIn) {
 			$parent.hide();
@@ -846,16 +869,28 @@ var NRS = (function(NRS, $, undefined) {
 
 		var extra = $parent.data("extra");
 
-		if ($table.find("tbody tr").length > 0) {
-			$parent.removeClass("data-empty");
-			if ($parent.data("no-padding")) {
-				$parent.parent().addClass("no-padding");
-			}
+		var empty = false;
 
-			if (extra) {
-				$(extra).show();
+		if ($el.is("table")) {
+			if ($el.find("tbody tr").length > 0) {
+				$parent.removeClass("data-empty");
+				if ($parent.data("no-padding")) {
+					$parent.parent().addClass("no-padding");
+				}
+
+				if (extra) {
+					$(extra).show();
+				}
+			} else {
+				empty = true;
 			}
 		} else {
+			if ($.trim($el.html()).length == 0) {
+				empty = true;
+			}
+		}
+
+		if (empty) {
 			$parent.addClass("data-empty");
 			if ($parent.data("no-padding")) {
 				$parent.parent().removeClass("no-padding");
@@ -916,7 +951,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
 				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
-			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller") {
+			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller" || key == "Buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {
 				value = String(value).escapeHTML().nl2br();
@@ -953,7 +988,11 @@ var NRS = (function(NRS, $, undefined) {
 		return amount;
 	}
 
-	NRS.getUnconfirmedTransaction = function(type, subtype, fields) {
+	NRS.getUnconfirmedTransactionFromCache = function(type, subtype, fields) {
+		return NRS.getUnconfirmedTransactionsFromCache(type, subtype, fields, true);
+	}
+
+	NRS.getUnconfirmedTransactionsFromCache = function(type, subtype, fields, single) {
 		if (!NRS.unconfirmedTransactions.length) {
 			return false;
 		}
@@ -966,6 +1005,8 @@ var NRS = (function(NRS, $, undefined) {
 			subtype = [subtype];
 		}
 
+		var unconfirmedTransactions = [];
+
 		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
@@ -976,20 +1017,108 @@ var NRS = (function(NRS, $, undefined) {
 			if (fields) {
 				for (var key in fields) {
 					if (unconfirmedTransaction[key] == fields[key]) {
-						return unconfirmedTransaction;
+						if (single) {
+							return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+						} else {
+							unconfirmedTransactions.push(unconfirmedTransaction);
+						}
 					}
 				}
 			} else {
-				return unconfirmedTransaction;
+				if (single) {
+					return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+				} else {
+					unconfirmedTransactions.push(unconfirmedTransaction);
+				}
 			}
 		}
 
-		return false;
+		if (single || unconfirmedTransactions.length == 0) {
+			return false;
+		} else {
+			$.each(unconfirmedTransactions, function(key, val) {
+				unconfirmedTransactions[key] = NRS.completeUnconfirmedTransactionDetails(val);
+			});
+
+			return unconfirmedTransactions;
+		}
+	}
+
+	NRS.completeUnconfirmedTransactionDetails = function(unconfirmedTransaction) {
+		if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 4 && !unconfirmedTransaction.name) {
+			NRS.sendRequest("getDGSGood", {
+				"goods": unconfirmedTransaction.attachment.goods
+			}, function(response) {
+				unconfirmedTransaction.name = response.name;
+				unconfirmedTransaction.buyer = unconfirmedTransaction.sender;
+				unconfirmedTransaction.buyerRS = unconfirmedTransaction.senderRS;
+				unconfirmedTransaction.seller = response.seller;
+				unconfirmedTransaction.sellerRS = response.sellerRS;
+			}, false);
+		} else if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 0) {
+			unconfirmedTransaction.goods = unconfirmedTransaction.transaction;
+		}
+
+		return unconfirmedTransaction;
 	}
 
 	NRS.hasTransactionUpdates = function(transactions) {
 		return (transactions && transactions.length || NRS.unconfirmedTransactionsChange || NRS.state.isScanning);
 	}
+
+	NRS.showMore = function($el) {
+		if (!$el) {
+			$el = $("#" + NRS.currentPage + "_contents");
+			if (!$el.length) {
+				$el = $("#" + NRS.currentPage + "_table");
+			}
+		}
+		var adjustheight = 40;
+		var moreText = "Show more...";
+		var lessText = "Show less...";
+
+		$el.find(".showmore > .moreblock").each(function() {
+			if ($(this).height() > adjustheight) {
+				$(this).css("height", adjustheight).css("overflow", "hidden");
+				$(this).parent(".showmore").append(' <a href="#" class="adjust"></a>');
+				$(this).parent(".showmore").find("a.adjust").text(moreText).click(function() {
+					if ($(this).text() == moreText) {
+						$(this).parents("div:first").find(".moreblock").css('height', 'auto').css('overflow', 'visible');
+						$(this).parents("div:first").find("p.continued").css('display', 'none');
+						$(this).text(lessText);
+					} else {
+						$(this).parents("div:first").find(".moreblock").css('height', adjustheight).css('overflow', 'hidden');
+						$(this).parents("div:first").find("p.continued").css('display', 'block');
+						$(this).text(moreText);
+					}
+				});
+			}
+		});
+	}
+
+	NRS.showFullDescription = function($el) {
+		$el.addClass("open").removeClass("closed");
+		$el.find(".description_toggle").text("Less...");
+	}
+
+	NRS.showPartialDescription = function($el) {
+		if ($el.hasClass("open") || $el.height() > 40) {
+			$el.addClass("closed").removeClass("open");
+			$el.find(".description_toggle").text("More...");
+		} else {
+			$el.find(".description_toggle").text("");
+		}
+	}
+
+	$("body").on(".description_toggle", "click", function(e) {
+		e.preventDefault();
+
+		if ($(this).closest(".description").hasClass("open")) {
+			NRS.showPartialDescription();
+		} else {
+			NRS.showFullDescription();
+		}
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));

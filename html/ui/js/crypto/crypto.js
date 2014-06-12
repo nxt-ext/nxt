@@ -33,7 +33,7 @@ var nxtCrypto = function(curve25519, hash, converters) {
 				"account": accountNumber
 			}, function(response) {
 				if (!response.publicKey) {
-					throw new Exception("Account does not have a public key.");
+					throw "Account does not have a public key.";
 				} else {
 					publicKey = response.publicKey;
 				}
@@ -94,85 +94,128 @@ var nxtCrypto = function(curve25519, hash, converters) {
 		return value;
 	}
 
-	function encryptData(plaintext, myPrivateKey, theirPublicKey) {
-		try {
-			var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
-
-			var nonce = new Uint8Array(32);
-			window.crypto.getRandomValues(nonce);
-
-			var data = aesEncrypt(compressedPlaintext, myPrivateKey, theirPublicKey, nonce);
-
-			return {
-				"nonce": nonce,
-				"data": data
-			};
-		} catch (e) {
-			console.log(e);
-			//
+	function encryptData(plaintext, options) {
+		if (!options.sharedKey) {
+			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
 		}
+
+		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
+
+		options.nonce = new Uint8Array(32);
+		window.crypto.getRandomValues(options.nonce);
+
+		var data = aesEncrypt(compressedPlaintext, options);
+
+		return {
+			"nonce": options.nonce,
+			"data": data
+		};
 	}
 
-	function decryptData(data, nonce, myPrivateKey, theirPublicKey) {
-		try {
-			var compressedPlaintext = aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
-
-			var binData = new Uint8Array(compressedPlaintext);
-
-			var data = pako.inflate(binData);
-
-			return converters.byteArrayToString(data);
-		} catch (e) {
-			console.log("errr");
-			console.log(e);
-			//..
+	function decryptData(data, options) {
+		if (!options.sharedKey) {
+			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
 		}
+
+		var compressedPlaintext = aesDecrypt(data, options);
+
+		var binData = new Uint8Array(compressedPlaintext);
+
+		var data = pako.inflate(binData);
+
+		return converters.byteArrayToString(data);
 	}
 
-	function aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce) {
+	function aesEncrypt(plaintext, options) {
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
-		var sharedKey = getSharedKey(myPrivateKey, theirPublicKey);
-		for (var i = 0; i < 32; i++) {
-			sharedKey[i] ^= nonce[i];
+
+		if (!options.sharedKey) {
+			var sharedKey = getSharedKey(options.privateKey, options.publicKey);
+		} else {
+			var sharedKey = options.sharedKey.slice(0); //clone
 		}
+
+		for (var i = 0; i < 32; i++) {
+			sharedKey[i] ^= options.nonce[i];
+		}
+
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+
 		var tmp = new Uint8Array(16);
 		window.crypto.getRandomValues(tmp);
+
 		var iv = converters.byteArrayToWordArray(tmp);
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
 			iv: iv
 		});
+
 		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
+
 		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
 
 		return ivOut.concat(ciphertextOut);
 	}
 
-	function aesDecrypt(ivCiphertext, myPrivateKey, theirPublicKey, nonce) {
+	function aesDecrypt(ivCiphertext, options) {
 		if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
 			throw {
 				name: "invalid ciphertext"
 			};
 		}
+
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
-		var sharedKey = getSharedKey(myPrivateKey, theirPublicKey);
-		for (var i = 0; i < 32; i++) {
-			sharedKey[i] ^= nonce[i];
+
+		if (!options.sharedKey) {
+			var sharedKey = getSharedKey(options.privateKey, options.publicKey);
+		} else {
+			var sharedKey = options.sharedKey.slice(0); //clone
 		}
+
+
+		for (var i = 0; i < 32; i++) {
+			sharedKey[i] ^= options.nonce[i];
+		}
+
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+
 		var encrypted = CryptoJS.lib.CipherParams.create({
 			ciphertext: ciphertext,
 			iv: iv,
 			key: key
 		});
+
 		var decrypted = CryptoJS.AES.decrypt(encrypted, key, {
 			iv: iv
 		});
+
 		var plaintext = converters.wordArrayToByteArray(decrypted);
 
 		return plaintext;
+	}
+
+	function getSharedKeyWithAccount(account, secretPhrase) {
+		try {
+			if (!secretPhrase) {
+				if (NRS.rememberPassword) {
+					secretPhrase = NRS.password;
+				} else {
+					throw {
+						"message": "Your password required to encrypt this message.",
+						"errorCode": 3
+					};
+				}
+			}
+
+			var privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
+
+			var publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(account, true));
+
+			return getSharedKey(privateKey, publicKey);
+		} catch (err) {
+			throw err;
+		}
 	}
 
 	function getSharedKey(key1, key2) {
@@ -226,6 +269,7 @@ var nxtCrypto = function(curve25519, hash, converters) {
 	return {
 		getPublicKey: getPublicKey,
 		getPrivateKey: getPrivateKey,
+		getSharedKeyWithAccount: getSharedKeyWithAccount,
 		encryptData: encryptData,
 		decryptData: decryptData,
 		getAccountId: getAccountId,

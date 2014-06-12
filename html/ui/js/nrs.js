@@ -28,6 +28,10 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.selectedContext = null;
 
 	NRS.currentPage = "dashboard";
+	NRS.currentSubPage = "";
+	NRS.pageNumber = 1;
+	NRS.itemsPerPage = 5;
+
 	NRS.pages = {};
 	NRS.incoming = {};
 
@@ -222,8 +226,12 @@ var NRS = (function(NRS, $, undefined) {
 		//NRS.previousPage = NRS.currentPage;
 		NRS.currentPage = page;
 		NRS.currentSubPage = "";
+		NRS.pageNumber = 1;
+		NRS.showPageNumbers = false;
 
 		if (NRS.pages[page]) {
+			NRS.pageLoading();
+
 			if (data && data.callback) {
 				NRS.pages[page](data.callback);
 			} else if (data) {
@@ -240,6 +248,11 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.goToPage($(this).data("page"));
 	});
 
+	NRS.loadPage = function(page, callback) {
+		NRS.pageLoading();
+		NRS.pages[page](callback);
+	}
+
 	NRS.goToPage = function(page) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
@@ -247,26 +260,78 @@ var NRS = (function(NRS, $, undefined) {
 			$link.trigger("click");
 		} else {
 			NRS.currentPage = page;
+			NRS.currentSubPage = "";
+			NRS.pageNumber = 1;
+			NRS.showPageNumbers = false;
+
 			$("ul.sidebar-menu a.active").removeClass("active");
 			$(".page").hide();
 			$("#" + page + "_page").show();
 			if (NRS.pages[page]) {
+				NRS.pageLoading();
+
 				NRS.pages[page]();
 			}
 		}
 	}
 
 	NRS.pageLoading = function() {
+		NRS.hasMorePages = false;
+
 		var $pageHeader = $("#" + NRS.currentPage + "_page .content-header h1");
 		$pageHeader.find(".loading_dots").remove();
 		$pageHeader.append("<span class='loading_dots'><span>.</span><span>.</span><span>.</span></span>");
 	}
 
 	NRS.pageLoaded = function(callback) {
-		$("#" + NRS.currentPage + "_page .content-header h1").find(".loading_dots").remove();
+		var $currentPage = $("#" + NRS.currentPage + "_page");
+
+		$currentPage.find(".content-header h1 .loading_dots").remove();
+
+		if ($currentPage.hasClass("paginated")) {
+			NRS.addPagination();
+		}
+
 		if (callback) {
 			callback();
 		}
+	}
+
+	NRS.addPagination = function(section) {
+		var output = "";
+
+		if (NRS.pageNumber == 2) {
+			output += "<a href='#' data-page='1'>&laquo; Previous Page</a>";
+		} else if (NRS.pageNumber > 2) {
+			//output += "<a href='#' data-page='1'>&laquo; First Page</a>";
+			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; Previous Page</a>";
+		}
+		if (NRS.hasMorePages) {
+			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>Next Page &raquo;</a>";
+		}
+
+		var $paginationContainer = $("#" + NRS.currentPage + "_page .data-pagination");
+
+		if ($paginationContainer.length) {
+			$paginationContainer.html(output);
+		}
+	}
+
+	$(".data-pagination").on("click", "a", function(e) {
+		e.preventDefault();
+
+		NRS.goToPageNumber($(this).data("page"));
+	});
+
+	NRS.goToPageNumber = function(pageNumber) {
+		/*if (!pageLoaded) {
+			return;
+		}*/
+		NRS.pageNumber = pageNumber;
+
+		NRS.pageLoading();
+
+		NRS.pages[NRS.currentPage]();
 	}
 
 	NRS.createDatabase = function(callback) {
@@ -308,7 +373,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 
 		try {
-			NRS.database = new WebDB("NRS_USER_DB", schema, 1, 4, function(error, db) {
+			NRS.database = new WebDB("NRS_USER_DB", schema, 2, 4, function(error, db) {
 				if (!error) {
 					NRS.databaseSupport = true;
 
@@ -317,7 +382,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.database.select("data", [{
 						"id": "asset_exchange_version"
 					}], function(error, result) {
-						if (!result.length) {
+						if (!result || !result.length) {
 							NRS.database.delete("assets", [], function(error, affected) {
 								if (!error) {
 									NRS.database.insert("data", {
@@ -332,7 +397,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.database.select("data", [{
 						"id": "closed_groups"
 					}], function(error, result) {
-						if (result.length) {
+						if (result && result.length) {
 							NRS.closedGroups = result[0].contents.split("#");
 						} else {
 							NRS.database.insert("data", {
@@ -344,11 +409,18 @@ var NRS = (function(NRS, $, undefined) {
 					if (callback) {
 						callback();
 					}
+				} else {
+					if (callback) {
+						callback();
+					}
 				}
 			});
 		} catch (err) {
 			NRS.database = null;
 			NRS.databaseSupport = false;
+			if (callback) {
+				callback();
+			}
 		}
 	}
 
@@ -404,7 +476,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.database.select("data", [{
 						"id": "asset_balances_" + NRS.account
 					}], function(error, asset_balance) {
-						if (!error && asset_balance.length) {
+						if (asset_balance && asset_balance.length) {
 							var previous_balances = asset_balance[0].contents;
 
 							if (!NRS.accountInfo.assetBalances) {

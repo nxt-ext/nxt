@@ -55,7 +55,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#rss_news_enable").on("click", function() {
 		NRS.updateSettings("news", 1);
-		NRS.pages.news();
+		NRS.loadPage("news");
 	});
 
 	return NRS;

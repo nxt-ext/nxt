@@ -31,13 +31,13 @@ public final class Logger {
     private static final Listeners<Exception, Event> exceptionListeners = new Listeners<>();
 
     /** Our logger instance */
-    private static org.slf4j.Logger log;
+    private static final org.slf4j.Logger log;
 
     /** Enable stack traces */
-    private static boolean enableStackTraces;
+    private static final boolean enableStackTraces;
 
     /** Enable log traceback */
-    private static boolean enableLogTraceback;
+    private static final boolean enableLogTraceback;
 
     /**
      * No constructor
@@ -53,7 +53,7 @@ public final class Logger {
      * files will be used.  Entries in logging.properties will override entries in
      * logging-default.properties.
      */
-    public static void init() {
+    static {
         String oldManager = System.getProperty("java.util.logging.manager");
         System.setProperty("java.util.logging.manager", "nxt.util.NxtLogManager");
         if (!(LogManager.getLogManager() instanceof NxtLogManager)) {
@@ -93,6 +93,8 @@ public final class Logger {
         enableLogTraceback = Nxt.getBooleanProperty("nxt.enableLogTraceback");
         logInfoMessage("logging enabled");
     }
+
+    public static void init() {}
 
     /**
      * Logger shutdown

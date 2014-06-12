@@ -844,7 +844,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.database.select("data", [{
 				"id": "settings"
 			}], function(error, result) {
-				if (result.length) {
+				if (result && result.length) {
 					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
 				} else {
 					NRS.database.insert("data", {

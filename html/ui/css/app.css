@@ -2816,17 +2816,23 @@ tr.your-order td {
 	background-color: #FFFAF0 !important;
 }
 
+div.tentative {
+  font-style: italic !important;
+  background-color: #DAE3F2 !important;
+  padding:5px;
+}
+
 tr.tentative td {
 	font-style: italic !important;
 	background-color: #DAE3F2 !important;
 }
 
-tr.tentative td a {
+.tentative a {
 	pointer-events: none;
 	cursor: default;
 	color:black;
 }
-tr.tentative-allow-links td a {
+.tentative-allow-links a {
 	pointer-events:auto !important;
 	cursor:pointer !important;
 	color:#3c8dbc !important;
@@ -3338,11 +3344,11 @@ hr {
 
 .goods_info, .purchase_info {
   padding:5px;
-  border:1px solid black;
+  border:1px solid #ccc;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
-  background:#efefef;
+  background:#fafafa;
   color:black;
   margin:5px;
   margin-bottom:15px;
@@ -3358,7 +3364,7 @@ hr {
 .dgs_page_contents h3 {
   margin-top:0;
   margin-bottom:5px;
-  font-size:20px;
+  font-size:18px;
   font-weight:bold;
 }
 
@@ -3366,10 +3372,24 @@ hr {
   color:#999999;
 }
 
-.dgs_page_contents .price, #dgs_page_contents .description {
+.dgs_page_contents .price, .dgs_page_contents .showmore {
   margin-bottom:5px;
 }
 
 .dgs_page_contents hr {
   border-top:1px solid #ddd;
+}
+
+table.purchase {
+  margin-bottom:5px;
+}
+
+table.purchase td {
+  vertical-align:top;
+  padding-right:5px;
+  padding-bottom:5px;
+}
+
+.data-pagination {
+  text-align:center;
 }
