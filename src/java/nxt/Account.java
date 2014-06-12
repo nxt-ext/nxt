@@ -2,10 +2,7 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
-import nxt.util.Convert;
-import nxt.util.Listener;
-import nxt.util.Listeners;
-import nxt.util.Logger;
+import nxt.util.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -251,6 +248,15 @@ public final class Account {
             throw new IllegalArgumentException("Sender account doesn't have a public key set");
         }
         return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
+    }
+
+    public synchronized SuperComplexNumber getSuperBalance() {
+        SuperComplexNumber superBalance = new SuperComplexNumber();
+        superBalance.add(Constants.NXT_CURRENCY_ID, getUnconfirmedBalanceNQT());
+        for (Map.Entry<Long, Long> entry : getUnconfirmedAssetBalancesQNT().entrySet()) {
+            superBalance.add(entry.getKey(), entry.getValue());
+        }
+        return superBalance;
     }
 
     public synchronized long getBalanceNQT() {

@@ -3,13 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
-import nxt.util.DbIterator;
-import nxt.util.JSON;
-import nxt.util.Listener;
-import nxt.util.Listeners;
-import nxt.util.Logger;
-import nxt.util.ThreadPool;
+import nxt.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -527,8 +521,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 Map<TransactionType, Set<String>> duplicates = new HashMap<>();
-                Map<Long, Long> accumulatedAmounts = new HashMap<>();
-                Map<Long, Map<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
+                Map<Long, SuperComplexNumber> spendings = new HashMap<>();
                 long calculatedTotalAmount = 0;
                 long calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
@@ -575,7 +568,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                     calculatedTotalAmount += transaction.getAmountNQT();
 
-                    transaction.updateTotals(accumulatedAmounts, accumulatedAssetQuantities);
+                    transaction.updateSpendings(spendings);
 
                     calculatedTotalFee += transaction.getFeeNQT();
 
@@ -589,21 +582,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
                     throw new BlockNotAcceptedException("Payload hash doesn't match");
                 }
-                for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
-                    Account senderAccount = Account.getAccount(accumulatedAmountEntry.getKey());
-                    if (senderAccount.getBalanceNQT() < accumulatedAmountEntry.getValue()) {
-                        throw new BlockNotAcceptedException("Not enough funds in sender account: " + Convert.toUnsignedLong(senderAccount.getId()));
-                    }
-                }
-
-                for (Map.Entry<Long, Map<Long, Long>> accumulatedAssetQuantitiesEntry : accumulatedAssetQuantities.entrySet()) {
-                    Account senderAccount = Account.getAccount(accumulatedAssetQuantitiesEntry.getKey());
-                    for (Map.Entry<Long, Long> accountAccumulatedAssetQuantitiesEntry : accumulatedAssetQuantitiesEntry.getValue().entrySet()) {
-                        Long assetId = accountAccumulatedAssetQuantitiesEntry.getKey();
-                        Long quantityQNT = accountAccumulatedAssetQuantitiesEntry.getValue();
-                        if (senderAccount.getAssetBalanceQNT(assetId) < quantityQNT) {
-                            throw new BlockNotAcceptedException("Asset balance not sufficient in sender account " + Convert.toUnsignedLong(senderAccount.getId()));
-                        }
+                for (Map.Entry<Long, SuperComplexNumber> spendingEntry : spendings.entrySet()) {
+                    Account senderAccount = Account.getAccount(spendingEntry.getKey());
+                    if (!spendingEntry.getValue().isCovered(senderAccount.getSuperBalance())) {
+                        throw new BlockNotAcceptedException("Spendings not covered with sender account superbalance (" + Convert.toUnsignedLong(senderAccount.getId()) + ")");
                     }
                 }
 

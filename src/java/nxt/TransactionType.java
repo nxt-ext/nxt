@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import nxt.util.SuperComplexNumber;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -231,8 +232,7 @@ public abstract class TransactionType {
 
     abstract void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException;
 
-    abstract void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount);
+    abstract void updateSpending(Transaction transaction, SuperComplexNumber spending);
 
     boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
         return false;
@@ -291,8 +291,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
             @Override
@@ -325,8 +324,7 @@ public abstract class TransactionType {
         }
 
         @Override
-        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+        void updateSpending(Transaction transaction, SuperComplexNumber spending) {
         }
 
         public final static TransactionType ARBITRARY_MESSAGE = new Messaging() {
@@ -970,8 +968,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
             @Override
@@ -1052,22 +1049,10 @@ public abstract class TransactionType {
                 senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
-
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
-                Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderId());
-                if (accountAccumulatedAssetQuantities == null) {
-                    accountAccumulatedAssetQuantities = new HashMap<>();
-                    accumulatedAssetQuantities.put(transaction.getSenderId(), accountAccumulatedAssetQuantities);
-                }
-                Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAssetId());
-                if (assetAccumulatedAssetQuantities == null) {
-                    assetAccumulatedAssetQuantities = 0L;
-                }
-                accountAccumulatedAssetQuantities.put(attachment.getAssetId(),
-                        Convert.safeAdd(assetAccumulatedAssetQuantities, attachment.getQuantityQNT()));
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
+                spending.add(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
             @Override
@@ -1171,20 +1156,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
-                Map<Long, Long> accountAccumulatedAssetQuantities = accumulatedAssetQuantities.get(transaction.getSenderId());
-                if (accountAccumulatedAssetQuantities == null) {
-                    accountAccumulatedAssetQuantities = new HashMap<>();
-                    accumulatedAssetQuantities.put(transaction.getSenderId(), accountAccumulatedAssetQuantities);
-                }
-                Long assetAccumulatedAssetQuantities = accountAccumulatedAssetQuantities.get(attachment.getAssetId());
-                if (assetAccumulatedAssetQuantities == null) {
-                    assetAccumulatedAssetQuantities = 0L;
-                }
-                accountAccumulatedAssetQuantities.put(attachment.getAssetId(),
-                        Convert.safeAdd(assetAccumulatedAssetQuantities, attachment.getQuantityQNT()));
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement)transaction.getAttachment();
+                spending.add(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
         };
@@ -1237,11 +1211,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
-                accumulatedAmounts.put(transaction.getSenderId(),
-                        Convert.safeAdd(accumulatedAmount, Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT())));
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement)transaction.getAttachment();
+                spending.add(Constants.NXT_CURRENCY_ID, Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT()));
             }
 
         };
@@ -1268,8 +1240,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                                    Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
             @Override
@@ -1378,8 +1349,7 @@ public abstract class TransactionType {
         }
 
         @Override
-        void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                          Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+        void updateSpending(Transaction transaction, SuperComplexNumber spending) {
         }
 
         @Override
@@ -1630,11 +1600,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
-                accumulatedAmounts.put(transaction.getSenderId(),
-                        Convert.safeAdd(accumulatedAmount, Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT())));
+                spending.add(Constants.NXT_CURRENCY_ID, Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
             }
 
             @Override
@@ -1827,11 +1795,9 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                              Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                accumulatedAmounts.put(transaction.getSenderId(),
-                        Convert.safeAdd(accumulatedAmount, attachment.getRefundNQT()));
+                spending.add(Constants.NXT_CURRENCY_ID, attachment.getRefundNQT());
             }
 
             @Override
@@ -1872,8 +1838,8 @@ public abstract class TransactionType {
         }
 
         @Override
-        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+        void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+        }
 
         public static final TransactionType EFFECTIVE_BALANCE_LEASING = new AccountControl() {
 
@@ -2060,7 +2026,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };
@@ -2108,7 +2074,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };
@@ -2156,7 +2122,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };
@@ -2224,7 +2190,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };
@@ -2290,7 +2256,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };
@@ -2341,7 +2307,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };
@@ -2378,7 +2344,7 @@ public abstract class TransactionType {
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getUnits() <= 0) {
-                    throw new NxtException.ValidationException("Invalid money minting: " + attachment.getJSONObject());
+                    throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
                 }
             }
 
@@ -2393,7 +2359,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts, Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
             }
 
         };

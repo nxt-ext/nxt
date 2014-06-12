@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
+import nxt.util.SuperComplexNumber;
 import org.json.simple.JSONObject;
 
 import java.math.BigInteger;
@@ -410,14 +411,14 @@ final class TransactionImpl implements Transaction {
         type.undo(this, senderAccount, recipientAccount);
     }
 
-    void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
-        Long senderId = getSenderId();
-        Long accumulatedAmount = accumulatedAmounts.get(senderId);
-        if (accumulatedAmount == null) {
-            accumulatedAmount = 0L;
+    void updateSpendings(Map<Long, SuperComplexNumber> spendings) {
+        SuperComplexNumber spending = spendings.get(getSenderId());
+        if (spending == null) {
+            spending = new SuperComplexNumber();
+            spendings.put(getSenderId(), spending);
         }
-        accumulatedAmounts.put(senderId, Convert.safeAdd(accumulatedAmount, Convert.safeAdd(amountNQT, feeNQT)));
-        type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
+        spending.add(Constants.NXT_CURRENCY_ID, Convert.safeAdd(amountNQT, feeNQT));
+        type.updateSpending(this, spending);
     }
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {

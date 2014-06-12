@@ -7,7 +7,7 @@ import java.util.Map;
  * SuperComplexNumber is a number represented in a form similar to standard complex numbers (http://en.wikipedia.org/wiki/Complex_number).
  * The main contract of this class is to provide a convenient way to detect attempts to spend more money/assets/etc.
  * than is available on an account balance.
- * Pay attention that SuperComplexNumber does not necessarily inherits properties of conventional complex numbers.
+ * Pay attention that SuperComplexNumber does not necessarily inherit properties of conventional complex numbers.
  */
 
 public final class SuperComplexNumber {
@@ -20,7 +20,7 @@ public final class SuperComplexNumber {
     }
 
     public void add(Long measure, long value) {
-        values.put(measure, get(measure) + value);
+        values.put(measure, Convert.safeAdd(get(measure), value));
     }
 
     public boolean isCovered(SuperComplexNumber otherSuperComplexNumber) {

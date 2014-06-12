@@ -92,6 +92,8 @@ public final class Constants {
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
     public static final String ALLOWED_CURRENCY_CODE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+    public static final Long NXT_CURRENCY_ID = Long.valueOf(0);
+
     private Constants() {} // never
 
 }
