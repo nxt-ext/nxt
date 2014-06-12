@@ -35,8 +35,7 @@ public final class TransferAsset extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        Long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
-        if (assetBalance == null || quantityQNT > assetBalance) {
+        if (quantityQNT > account.getUnconfirmedAssetBalanceQNT(asset.getId())) {
             return NOT_ENOUGH_ASSETS;
         }
 

@@ -344,11 +344,11 @@ public final class Account {
 
     }
 
-    public synchronized Long getUnconfirmedAssetBalanceQNT(Long assetId) {
+    public synchronized long getUnconfirmedAssetBalanceQNT(Long assetId) {
         return unconfirmedAssetBalances.get(assetId);
     }
 
-    public synchronized Long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
+    public synchronized long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
         return unconfirmedCurrencyBalances.get(currencyId);
     }
 
