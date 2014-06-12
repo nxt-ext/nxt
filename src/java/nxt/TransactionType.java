@@ -2378,7 +2378,7 @@ public abstract class TransactionType {
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getUnits() <= 0) {
-                    throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
+                    throw new NxtException.ValidationException("Invalid money minting: " + attachment.getJSONObject());
                 }
             }
 
