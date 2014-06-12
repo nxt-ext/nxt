@@ -200,6 +200,9 @@ public final class Account {
     private final Map<Long, Long> assetBalances = new HashMap<>();
     private final Map<Long, Long> unconfirmedAssetBalances = new HashMap<>();
 
+    private final Map<Long, Long> currencyBalances = new HashMap<>();
+    private final Map<Long, Long> unconfirmedCurrencyBalances = new HashMap<>();
+
     private volatile String name;
     private volatile String description;
 
@@ -352,6 +355,18 @@ public final class Account {
 
     public Map<Long, Long> getUnconfirmedAssetBalancesQNT() {
         return Collections.unmodifiableMap(unconfirmedAssetBalances);
+    }
+
+    public synchronized Long getUnconfirmedCurrencyBalanceQNT(Long currencyId) {
+        return unconfirmedCurrencyBalances.get(currencyId);
+    }
+
+    public Map<Long, Long> getCurrencyBalancesQNT() {
+        return Collections.unmodifiableMap(currencyBalances);
+    }
+
+    public Map<Long, Long> getUnconfirmedCurrencyBalancesQNT() {
+        return Collections.unmodifiableMap(unconfirmedCurrencyBalances);
     }
 
     public Long getCurrentLesseeId() {
@@ -518,6 +533,49 @@ public final class Account {
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
+    }
+
+    synchronized long getCurrencyBalanceQNT(Long currencyId) {
+        return Convert.nullToZero(currencyBalances.get(currencyId));
+    }
+
+    void addToCurrencyBalanceQNT(Long currencyId, long units) {
+        synchronized (this) {
+            Long currencyBalance = currencyBalances.get(currencyId);
+            if (currencyBalance == null) {
+                currencyBalances.put(currencyId, units);
+            } else {
+                currencyBalances.put(currencyId, Convert.safeAdd(currencyBalance, units));
+            }
+        }
+    }
+
+    void addToUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
+        synchronized (this) {
+            Long unconfirmedCurrencyBalance = unconfirmedCurrencyBalances.get(currencyId);
+            if (unconfirmedCurrencyBalance == null) {
+                unconfirmedCurrencyBalances.put(currencyId, units);
+            } else {
+                unconfirmedCurrencyBalances.put(currencyId, Convert.safeAdd(unconfirmedCurrencyBalance, units));
+            }
+        }
+    }
+
+    void addToCurrencyAndUnconfirmedCurrencyBalanceQNT(Long currencyId, long units) {
+        synchronized (this) {
+            Long currencyBalance = currencyBalances.get(currencyId);
+            if (currencyBalance == null) {
+                currencyBalances.put(currencyId, units);
+            } else {
+                currencyBalances.put(currencyId, Convert.safeAdd(currencyBalance, units));
+            }
+            Long unconfirmedCurrencyBalance = unconfirmedCurrencyBalances.get(currencyId);
+            if (unconfirmedCurrencyBalance == null) {
+                unconfirmedCurrencyBalances.put(currencyId, units);
+            } else {
+                unconfirmedCurrencyBalances.put(currencyId, Convert.safeAdd(unconfirmedCurrencyBalance, units));
+            }
+        }
     }
 
     void addToBalanceNQT(long amountNQT) {
