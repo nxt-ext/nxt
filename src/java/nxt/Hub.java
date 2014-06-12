@@ -1,12 +1,15 @@
 package nxt;
 
+import nxt.util.VersioningDbTable;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class Hub {
 
@@ -33,14 +36,51 @@ public class Hub {
 
     }
 
-    private static final ConcurrentMap<Long, Hub> hubs = new ConcurrentHashMap<>();
+    private static final VersioningDbTable<Hub> hubTable = new VersioningDbTable<Hub>() {
+
+        @Override
+        protected Long getId(Hub hub) {
+            return hub.getAccountId();
+        }
+
+        @Override
+        protected String table() {
+            return "hub";
+        }
+
+        @Override
+        protected Hub load(Connection con, ResultSet rs) throws SQLException {
+            Long accountId = rs.getLong("account_id");
+            long minFeePerByteNQT = rs.getLong("min_fee_per_byte");
+            String[] uris = (String[])rs.getObject("uris");
+            return new Hub(accountId, minFeePerByteNQT, uris);
+        }
+
+        @Override
+        protected void save(Connection con, Hub hub) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO hub (account_id, min_fee_per_byte, "
+                    + "uris, height) KEY (account_id, height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, hub.getAccountId());
+                pstmt.setLong(++i, hub.getMinFeePerByteNQT());
+                pstmt.setObject(++i, hub.getUris().toArray(new String[hub.getUris().size()]));
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+    };
 
     static void addOrUpdateHub(Long accountId, long minFeePerByteNQT, String[] uris) {
-        hubs.put(accountId, new Hub(accountId, minFeePerByteNQT, uris));
+        hubTable.insert(new Hub(accountId, minFeePerByteNQT, uris));
     }
 
-    static void removeHub(Long accountId) {
-        hubs.remove(accountId);
+    static void rollbackHub(Long accountId) {
+        hubTable.deleteAfter(accountId, Nxt.getBlockchain().getHeight());
+    }
+
+    static void clear() {
+        hubTable.truncate();
     }
 
     private static Long lastBlockId;
@@ -60,11 +100,12 @@ public class Hub {
                 if (! currentLastBlockId.equals(block.getId())) {
                     return Collections.emptyList();
                 }
-                for (Map.Entry<Long, Hub> hubEntry : hubs.entrySet()) {
-                    Account account = Account.getAccount(hubEntry.getKey());
+                List<Hub> hubs = hubTable.getAll();
+                for (Hub hub : hubs) {
+                    Account account = Account.getAccount(hub.getAccountId());
                     if (account != null && account.getEffectiveBalanceNXT() >= Constants.MIN_HUB_EFFECTIVE_BALANCE
                             && account.getPublicKey() != null) {
-                        currentHits.add(new Hit(hubEntry.getValue(), Generator.getHitTime(account, block)));
+                        currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
                     }
                 }
             }

@@ -282,7 +282,7 @@ final class DbVersion {
             case 75:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), name VARCHAR NOT NULL, "
-                        + "description VARCHAR, options ARRAY, min_num_options TINYINT, max_num_options TINYINT, "
+                        + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         +" binary_options BOOLEAN)");
             case 76:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
@@ -293,6 +293,11 @@ final class DbVersion {
             case 79:
                 apply("ALTER TABLE trade ADD FOREIGN KEY (bid_order_id) REFERENCES bid_order (id)");
             case 80:
+                apply("CREATE TABLE IF NOT EXISTS hub (db_id INT IDENTITY, account_id BIGINT NOT NULL, min_fee_per_byte "
+                        + "BIGINT NOT NULL, uris ARRAY NOT NULL, height INT NOT NULL)");
+            case 81:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS hub_account_id_height_idx ON hub (account_id, height)");
+            case 82:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

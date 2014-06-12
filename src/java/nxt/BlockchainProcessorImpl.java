@@ -851,6 +851,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Poll.clear();
             Trade.clear();
             Vote.clear();
+            Hub.clear();
             DigitalGoodsStore.clear();
             transactionProcessor.clear();
             Generator.clear();
