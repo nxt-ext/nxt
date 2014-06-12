@@ -1946,6 +1946,10 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
@@ -2053,6 +2057,10 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
@@ -2117,6 +2125,10 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
@@ -2196,6 +2208,10 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
 
                 for (int i = 0; i < attachment.getSize(); i++) {
@@ -2277,6 +2293,10 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
@@ -2352,6 +2372,10 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
@@ -2431,12 +2455,16 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+
                 Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getUnits() <= 0) {
-                    throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
+                    throw new NxtException.ValidationException("Invalid money minting: " + attachment.getJSONObject());
                 }
             }
 
