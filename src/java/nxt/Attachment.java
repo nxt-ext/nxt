@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import nxt.util.SuperComplexNumber;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -1603,6 +1604,14 @@ public interface Attachment {
             return comment;
         }
 
+        public SuperComplexNumber getTransfer() {
+            SuperComplexNumber superComplexNumber = new SuperComplexNumber();
+            for (Entry entry : entries) {
+                superComplexNumber.add(entry.getCurrencyId(), entry.getUnits());
+            }
+            return superComplexNumber;
+        }
+
     }
 
     public final static class MonetarySystemExchangeSetting implements Attachment {
@@ -1761,6 +1770,18 @@ public interface Attachment {
 
         public long getUnits() {
             return units;
+        }
+
+        public boolean isValid() {
+            return (amountNQT > 0 && units < 0) || (amountNQT < 0 && units > 0);
+        }
+
+        public boolean isPurchase() {
+            return amountNQT > 0;
+        }
+
+        public boolean isSale() {
+            return amountNQT < 0;
         }
 
     }

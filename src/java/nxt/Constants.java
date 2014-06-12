@@ -46,6 +46,7 @@ public final class Constants {
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
     public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
+    public static final long CURRENCY_ISSUANCE_FEE_NQT = 1000 * ONE_NXT;
     public static final int MIN_CURRENCY_NAME_LENGTH = 3;
     public static final int MAX_CURRENCY_NAME_LENGTH = 10;
     public static final int CURRENCY_CODE_LENGTH = 3;

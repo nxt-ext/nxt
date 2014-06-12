@@ -1897,15 +1897,6 @@ public abstract class TransactionType {
             return TransactionType.TYPE_MONETARY_SYSTEM;
         }
 
-        @Override
-        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            return true;
-        }
-
-        @Override
-        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
-
         public static final TransactionType CURRENCY_ISSUANCE = new MonetarySystem() {
 
             @Override
@@ -1958,6 +1949,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getFeeNQT() < Constants.CURRENCY_ISSUANCE_FEE_NQT
                         || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
                         || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH
@@ -2014,6 +2006,15 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
 
             }
@@ -2062,6 +2063,22 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
+                if (senderAccount.getUnconfirmedBalanceNQT() >= Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply(), attachment.getAmountNQT())) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply(), attachment.getAmountNQT()));
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
+                senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply(), attachment.getAmountNQT()));
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
 
             }
@@ -2107,6 +2124,22 @@ public abstract class TransactionType {
                         || attachment.getUnits() <= 0) {
                     throw new NxtException.ValidationException("Invalid reserve claim: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
+                if (senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getUnits()) {
+                    senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), -attachment.getUnits());
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
+                senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), attachment.getUnits());
             }
 
             @Override
@@ -2178,6 +2211,22 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
+                if (attachment.getTransfer().isCovered(senderAccount.getUnconfirmedCurrencyBalances())) {
+                    senderAccount.getUnconfirmedCurrencyBalances().subtract(attachment.getTransfer());
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
+                senderAccount.getUnconfirmedCurrencyBalances().add(attachment.getTransfer());
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
 
             }
@@ -2244,6 +2293,25 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
+                if (senderAccount.getUnconfirmedBalanceNQT() >= attachment.getInitialNXTSupplyNQT() && senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getInitialCurrencySupply()) {
+                    senderAccount.addToUnconfirmedBalanceNQT(-attachment.getInitialNXTSupplyNQT());
+                    senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), -attachment.getInitialCurrencySupply());
+                    return true;
+                }
+                return false;
+
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
+                senderAccount.addToUnconfirmedBalanceNQT(attachment.getInitialNXTSupplyNQT());
+                senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), attachment.getInitialCurrencySupply());
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
 
             }
@@ -2288,9 +2356,35 @@ public abstract class TransactionType {
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || !Currency.isIssued(attachment.getCurrencyId())
-                        || attachment.getAmountNQT() <= 0
-                        || attachment.getUnits() <= 0) {
+                        || attachment.isValid()) {
                     throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
+                if (attachment.isPurchase()) {
+                    if (senderAccount.getUnconfirmedBalanceNQT() >= attachment.getAmountNQT()) {
+                        senderAccount.addToUnconfirmedBalanceNQT(-attachment.getAmountNQT());
+                        return true;
+                    }
+                } else {
+                    if (senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getUnits()) {
+                        senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), -attachment.getUnits());
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
+                if (attachment.isPurchase()) {
+                    senderAccount.addToUnconfirmedBalanceNQT(attachment.getAmountNQT());
+                } else {
+                    senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), attachment.getUnits());
                 }
             }
 
@@ -2344,6 +2438,15 @@ public abstract class TransactionType {
                         || attachment.getUnits() <= 0) {
                     throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return true;
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             }
 
             @Override

@@ -253,7 +253,7 @@ public final class Account {
         return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
     }
 
-    public synchronized SuperComplexNumber getSuperBalance() {
+    public synchronized SuperComplexNumber getUnconfirmedSuperBalance() {
         SuperComplexNumber superBalance = new SuperComplexNumber();
         superBalance.add(Constants.NXT_CURRENCY_ID, getUnconfirmedBalanceNQT());
         superBalance.add(unconfirmedAssetBalances);

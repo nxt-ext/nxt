@@ -584,8 +584,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 for (Map.Entry<Long, SuperComplexNumber> spendingEntry : spendings.entrySet()) {
                     Account senderAccount = Account.getAccount(spendingEntry.getKey());
-                    if (!spendingEntry.getValue().isCovered(senderAccount.getSuperBalance())) {
-                        throw new BlockNotAcceptedException("Spendings not covered with sender account superbalance (" + Convert.toUnsignedLong(senderAccount.getId()) + ")");
+                    if (!spendingEntry.getValue().isCovered(senderAccount.getUnconfirmedSuperBalance())) {
+                        throw new BlockNotAcceptedException("Spendings not covered with sender account unconfirmed superbalance (" + Convert.toUnsignedLong(senderAccount.getId()) + ")");
                     }
                 }
 
