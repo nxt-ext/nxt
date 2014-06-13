@@ -415,8 +415,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                Alias.addOrUpdateAlias(transaction.getId(), senderAccount, attachment.getAliasName(),
-                        attachment.getAliasURI(), transaction.getBlockTimestamp());
+                Alias.addOrUpdateAlias(transaction, attachment);
             }
 
             @Override
@@ -485,14 +484,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 final Attachment.MessagingAliasSell attachment =
                         (Attachment.MessagingAliasSell) transaction.getAttachment();
-                final String aliasName = attachment.getAliasName();
-                final long priceNQT = attachment.getPriceNQT();
-                final Long buyerId = recipientAccount.getId();
-                if (priceNQT > 0) {
-                    Alias.addSellOffer(aliasName, priceNQT, buyerId);
-                } else {
-                    Alias.changeOwner(Account.getAccount(buyerId), aliasName, transaction.getBlockTimestamp());
-                }
+                Alias.sellAlias(transaction, attachment);
             }
 
             @Override
@@ -569,7 +561,7 @@ public abstract class TransactionType {
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
-                Alias.changeOwner(senderAccount, aliasName, transaction.getBlockTimestamp());
+                Alias.changeOwner(transaction.getSenderId(), aliasName, transaction.getBlockTimestamp());
             }
 
             @Override
@@ -669,8 +661,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
-                Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(), attachment.getPollOptions(),
-                        attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.isOptionsAreBinary());
+                Poll.addPoll(transaction, attachment);
             }
 
             @Override
@@ -735,8 +726,7 @@ public abstract class TransactionType {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
                 Poll poll = Poll.getPoll(attachment.getPollId());
                 if (poll != null) {
-                    Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(),
-                            attachment.getPollVote());
+                    Vote.addVote(transaction, attachment);
                 }
             }
 
@@ -806,7 +796,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement) transaction.getAttachment();
-                Hub.addOrUpdateHub(senderAccount.getId(), attachment.getMinFeePerByteNQT(), attachment.getUris());
+                Hub.addOrUpdateHub(transaction, attachment);
             }
 
             @Override
@@ -929,8 +919,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) transaction.getAttachment();
                 Long assetId = transaction.getId();
-                Asset.addAsset(assetId, transaction.getSenderId(), attachment.getName(), attachment.getDescription(),
-                        attachment.getQuantityQNT(), attachment.getDecimals());
+                Asset.addAsset(transaction, attachment);
                 senderAccount.addToAssetAndUnconfirmedAssetBalanceQNT(assetId, attachment.getQuantityQNT());
             }
 
@@ -1125,8 +1114,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
                 if (Asset.getAsset(attachment.getAssetId()) != null) {
-                    Order.Ask.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(),
-                            attachment.getQuantityQNT(), attachment.getPriceNQT());
+                    Order.Ask.addOrder(transaction, attachment);
                 }
             }
 
@@ -1188,8 +1176,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
                 if (Asset.getAsset(attachment.getAssetId()) != null) {
-                    Order.Bid.addOrder(transaction.getId(), senderAccount, attachment.getAssetId(),
-                            attachment.getQuantityQNT(), attachment.getPriceNQT());
+                    Order.Bid.addOrder(transaction, attachment);
                 }
             }
 
@@ -1402,8 +1389,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing) transaction.getAttachment();
-                DigitalGoodsStore.listGoods(transaction.getId(), transaction.getSenderId(), attachment.getName(), attachment.getDescription(),
-                        attachment.getTags(), attachment.getQuantity(), attachment.getPriceNQT(), transaction.getTimestamp());
+                DigitalGoodsStore.listGoods(transaction, attachment);
             }
 
             @Override
@@ -1615,9 +1601,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
-                DigitalGoodsStore.purchase(transaction.getId(), transaction.getSenderId(), attachment.getGoodsId(),
-                        attachment.getQuantity(), attachment.getPriceNQT(), attachment.getDeliveryDeadlineTimestamp(),
-                        attachment.getNote(), transaction.getTimestamp());
+                DigitalGoodsStore.purchase(transaction, attachment);
             }
 
             @Override
@@ -1672,8 +1656,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-                DigitalGoodsStore.deliver(transaction.getSenderId(), attachment.getPurchaseId(),
-                        attachment.getDiscountNQT(), attachment.getGoods());
+                DigitalGoodsStore.deliver(transaction, attachment);
             }
 
             @Override

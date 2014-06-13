@@ -21,11 +21,7 @@ public final class Vote {
 
         @Override
         protected Vote load(Connection con, ResultSet rs) throws SQLException {
-            Long id = rs.getLong("id");
-            Long pollId = rs.getLong("poll_id");
-            Long voterId = rs.getLong("voter_id");
-            byte[] voteBytes = rs.getBytes("vote_bytes");
-            return new Vote(id, pollId, voterId, voteBytes);
+            return new Vote(rs);
         }
 
         @Override
@@ -50,8 +46,8 @@ public final class Vote {
         }
     };
 
-    static Vote addVote(Long id, Long pollId, Long voterId, byte[] voteBytes) {
-        Vote vote = new Vote(id, pollId, voterId, voteBytes);
+    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
+        Vote vote = new Vote(transaction, attachment);
         voteTable.insert(vote);
         return vote;
     }
@@ -88,11 +84,18 @@ public final class Vote {
     private final Long voterId;
     private final byte[] voteBytes;
 
-    private Vote(Long id, Long pollId, Long voterId, byte[] voteBytes) {
-        this.id = id;
-        this.pollId = pollId;
-        this.voterId = voterId;
-        this.voteBytes = voteBytes;
+    private Vote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
+        this.id = transaction.getId();
+        this.pollId = attachment.getPollId();
+        this.voterId = transaction.getSenderId();
+        this.voteBytes = attachment.getPollVote();
+    }
+
+    private Vote(ResultSet rs) throws SQLException {
+        this.id = rs.getLong("id");
+        this.pollId = rs.getLong("poll_id");
+        this.voterId = rs.getLong("voter_id");
+        this.voteBytes = rs.getBytes("vote_bytes");
     }
 
     public Long getId() {

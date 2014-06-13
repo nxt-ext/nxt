@@ -50,10 +50,7 @@ public class Hub {
 
         @Override
         protected Hub load(Connection con, ResultSet rs) throws SQLException {
-            Long accountId = rs.getLong("account_id");
-            long minFeePerByteNQT = rs.getLong("min_fee_per_byte");
-            String[] uris = (String[])rs.getObject("uris");
-            return new Hub(accountId, minFeePerByteNQT, uris);
+            return new Hub(rs);
         }
 
         @Override
@@ -71,8 +68,8 @@ public class Hub {
 
     };
 
-    static void addOrUpdateHub(Long accountId, long minFeePerByteNQT, String[] uris) {
-        hubTable.insert(new Hub(accountId, minFeePerByteNQT, uris));
+    static void addOrUpdateHub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
+        hubTable.insert(new Hub(transaction, attachment));
     }
 
     static void rollbackHub(Long accountId) {
@@ -122,10 +119,16 @@ public class Hub {
     private final long minFeePerByteNQT;
     private final List<String> uris;
 
-    private Hub(Long accountId, long minFeePerByteNQT, String[] uris) {
-        this.accountId = accountId;
-        this.minFeePerByteNQT = minFeePerByteNQT;
-        this.uris = Collections.unmodifiableList(Arrays.asList(uris));
+    private Hub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
+        this.accountId = transaction.getSenderId();
+        this.minFeePerByteNQT = attachment.getMinFeePerByteNQT();
+        this.uris = Collections.unmodifiableList(Arrays.asList(attachment.getUris()));
+    }
+
+    private Hub(ResultSet rs) throws SQLException {
+        this.accountId = rs.getLong("account_id");
+        this.minFeePerByteNQT = rs.getLong("min_fee_per_byte");
+        this.uris = Collections.unmodifiableList(Arrays.asList((String[])rs.getObject("uris")));
     }
 
     public Long getAccountId() {

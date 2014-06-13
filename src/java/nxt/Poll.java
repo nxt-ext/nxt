@@ -20,14 +20,7 @@ public final class Poll {
 
         @Override
         protected Poll load(Connection con, ResultSet rs) throws SQLException {
-            Long id = rs.getLong("id");
-            String name = rs.getString("name");
-            String description = rs.getString("description");
-            String[] options = (String[])rs.getArray("options").getArray();
-            byte minNumberOfOptions = rs.getByte("min_num_options");
-            byte maxNumberOfOptions = rs.getByte("max_num_options");
-            boolean optionsAreBinary = rs.getBoolean("binary_options");
-            return new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary);
+            return new Poll(rs);
         }
 
         @Override
@@ -62,18 +55,28 @@ public final class Poll {
     private final byte minNumberOfOptions, maxNumberOfOptions;
     private final boolean optionsAreBinary;
 
-    private Poll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
+    private Poll(Long id, Attachment.MessagingPollCreation attachment) {
         this.id = id;
-        this.name = name;
-        this.description = description;
-        this.options = options;
-        this.minNumberOfOptions = minNumberOfOptions;
-        this.maxNumberOfOptions = maxNumberOfOptions;
-        this.optionsAreBinary = optionsAreBinary;
+        this.name = attachment.getPollName();
+        this.description = attachment.getPollDescription();
+        this.options = attachment.getPollOptions();
+        this.minNumberOfOptions = attachment.getMinNumberOfOptions();
+        this.maxNumberOfOptions = attachment.getMaxNumberOfOptions();
+        this.optionsAreBinary = attachment.isOptionsAreBinary();
     }
 
-    static void addPoll(Long id, String name, String description, String[] options, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
-        pollTable.insert(new Poll(id, name, description, options, minNumberOfOptions, maxNumberOfOptions, optionsAreBinary));
+    private Poll(ResultSet rs) throws SQLException {
+        this.id = rs.getLong("id");
+        this.name = rs.getString("name");
+        this.description = rs.getString("description");
+        this.options = (String[])rs.getArray("options").getArray();
+        this.minNumberOfOptions = rs.getByte("min_num_options");
+        this.maxNumberOfOptions = rs.getByte("max_num_options");
+        this.optionsAreBinary = rs.getBoolean("binary_options");
+    }
+
+    static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {
+        pollTable.insert(new Poll(transaction.getId(), attachment));
     }
 
     static void clear() {

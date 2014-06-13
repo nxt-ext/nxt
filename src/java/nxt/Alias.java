@@ -50,12 +50,7 @@ public final class Alias {
 
         @Override
         protected Alias load(Connection con, ResultSet rs) throws SQLException {
-            Long id = rs.getLong("id");
-            Long accountId = rs.getLong("account_id");
-            String aliasName = rs.getString("alias_name");
-            String aliasURI = rs.getString("alias_uri");
-            int timestamp = rs.getInt("timestamp");
-            return new Alias(id, accountId, aliasName, aliasURI, timestamp);
+            return new Alias(rs);
         }
 
         @Override
@@ -131,28 +126,36 @@ public final class Alias {
         return offerTable.get(alias.getId());
     }
 
-    static void addOrUpdateAlias(Long transactionId, Account account, String aliasName, String aliasURI, int timestamp) {
-        Alias alias = getAlias(aliasName);
-        Long aliasId = alias == null ? transactionId : alias.getId();
-        aliasTable.insert(new Alias(aliasId, account.getId(), aliasName, aliasURI, timestamp));
+    static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
+        Alias alias = getAlias(attachment.getAliasName());
+        Long aliasId = alias == null ? transaction.getId() : alias.getId();
+        aliasTable.insert(new Alias(aliasId, transaction, attachment));
     }
 
     static void rollbackAlias(Long aliasId) {
         aliasTable.deleteAfter(aliasId, Nxt.getBlockchain().getHeight());
     }
 
-    static void addSellOffer(String aliasName, long priceNQT, Long buyerId) {
-        Alias alias = getAlias(aliasName);
-        offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+    static void sellAlias(Transaction transaction, Attachment.MessagingAliasSell attachment) {
+        final String aliasName = attachment.getAliasName();
+        final long priceNQT = attachment.getPriceNQT();
+        final Long buyerId = transaction.getRecipientId();
+        if (priceNQT > 0) {
+            Alias alias = getAlias(aliasName);
+            offerTable.insert(new Offer(alias.id, priceNQT, buyerId));
+        } else {
+            changeOwner(buyerId, aliasName, transaction.getBlockTimestamp());
+        }
+
     }
 
     static void rollbackOffer(Long aliasId) {
         offerTable.deleteAfter(aliasId, Nxt.getBlockchain().getHeight());
     }
 
-    static void changeOwner(Account newOwner, String aliasName, int timestamp) {
+    static void changeOwner(Long newOwnerId, String aliasName, int timestamp) {
         Alias oldAlias = getAlias(aliasName);
-        aliasTable.insert(new Alias(oldAlias.id, newOwner.getId(), aliasName, oldAlias.aliasURI, timestamp));
+        aliasTable.insert(new Alias(oldAlias.id, newOwnerId, aliasName, oldAlias.aliasURI, timestamp));
         Offer offer = getOffer(oldAlias);
         offerTable.delete(offer);
     }
@@ -174,6 +177,19 @@ public final class Alias {
         this.aliasName = aliasName;
         this.aliasURI = aliasURI;
         this.timestamp = timestamp;
+    }
+
+    private Alias(Long aliasId, Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
+        this(aliasId, transaction.getSenderId(), attachment.getAliasName(), attachment.getAliasURI(),
+                transaction.getBlockTimestamp());
+    }
+
+    private Alias(ResultSet rs) throws SQLException {
+        this.id = rs.getLong("id");
+        this.accountId = rs.getLong("account_id");
+        this.aliasName = rs.getString("alias_name");
+        this.aliasURI = rs.getString("alias_uri");
+        this.timestamp = rs.getInt("timestamp");
     }
 
     public Long getId() {

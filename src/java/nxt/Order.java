@@ -60,15 +60,24 @@ public abstract class Order {
     private final long priceNQT;
     private final int height;
 
-    private volatile long quantityQNT;
+    private long quantityQNT;
 
-    private Order(Long id, Long accountId, Long assetId, long quantityQNT, long priceNQT, int height) {
-        this.id = id;
-        this.accountId = accountId;
-        this.assetId = assetId;
-        this.quantityQNT = quantityQNT;
-        this.priceNQT = priceNQT;
-        this.height = height;
+    private Order(Transaction transaction, Attachment.ColoredCoinsOrderPlacement attachment) {
+        this.id = transaction.getId();
+        this.accountId = transaction.getSenderId();
+        this.assetId = attachment.getAssetId();
+        this.quantityQNT = attachment.getQuantityQNT();
+        this.priceNQT = attachment.getPriceNQT();
+        this.height = transaction.getHeight();
+    }
+
+    private Order(ResultSet rs) throws SQLException {
+        this.id = rs.getLong("id");
+        this.accountId = rs.getLong("account_id");
+        this.assetId = rs.getLong("asset_id");
+        this.priceNQT = rs.getLong("price");
+        this.quantityQNT = rs.getLong("quantity");
+        this.height = rs.getInt("height");
     }
 
     public Long getId() {
@@ -134,13 +143,7 @@ public abstract class Order {
 
             @Override
             protected Ask load(Connection con, ResultSet rs) throws SQLException {
-                Long id = rs.getLong("id");
-                Long accountId = rs.getLong("account_id");
-                Long assetId = rs.getLong("asset_id");
-                long priceNQT = rs.getLong("price");
-                long quantityQNT = rs.getLong("quantity");
-                int height = rs.getInt("height");
-                return new Order.Ask(id, accountId, assetId, quantityQNT, priceNQT, height);
+                return new Ask(rs);
             }
 
             @Override
@@ -215,10 +218,10 @@ public abstract class Order {
             }
         }
 
-        static void addOrder(Long transactionId, Account senderAccount, Long assetId, long quantityQNT, long priceNQT) {
-            Ask order = new Ask(transactionId, senderAccount.getId(), assetId, quantityQNT, priceNQT, Nxt.getBlockchain().getHeight());
+        static void addOrder(Transaction transaction, Attachment.ColoredCoinsAskOrderPlacement attachment) {
+            Ask order = new Ask(transaction, attachment);
             askOrderTable.insert(order);
-            matchOrders(assetId);
+            matchOrders(attachment.getAssetId());
         }
 
         static void rollbackOrder(Long orderId) {
@@ -229,8 +232,12 @@ public abstract class Order {
             askOrderTable.delete(getAskOrder(orderId));
         }
 
-        private Ask(Long orderId, Long accountId, Long assetId, long quantityQNT, long priceNQT, int height) {
-            super(orderId, accountId, assetId, quantityQNT, priceNQT, height);
+        private Ask(Transaction transaction, Attachment.ColoredCoinsAskOrderPlacement attachment) {
+            super(transaction, attachment);
+        }
+
+        private Ask(ResultSet rs) throws SQLException {
+            super(rs);
         }
 
         private void updateQuantityQNT(long quantityQNT) {
@@ -272,13 +279,7 @@ public abstract class Order {
 
             @Override
             protected Bid load(Connection con, ResultSet rs) throws SQLException {
-                Long id = rs.getLong("id");
-                Long accountId = rs.getLong("account_id");
-                Long assetId = rs.getLong("asset_id");
-                long priceNQT = rs.getLong("price");
-                long quantityQNT = rs.getLong("quantity");
-                int height = rs.getInt("height");
-                return new Order.Bid(id, accountId, assetId, quantityQNT, priceNQT, height);
+                return new Bid(rs);
             }
 
             @Override
@@ -352,10 +353,10 @@ public abstract class Order {
             }
         }
 
-        static void addOrder(Long transactionId, Account senderAccount, Long assetId, long quantityQNT, long priceNQT) {
-            Bid order = new Bid(transactionId, senderAccount.getId(), assetId, quantityQNT, priceNQT, Nxt.getBlockchain().getHeight());
+        static void addOrder(Transaction transaction, Attachment.ColoredCoinsBidOrderPlacement attachment) {
+            Bid order = new Bid(transaction, attachment);
             bidOrderTable.insert(order);
-            matchOrders(assetId);
+            matchOrders(attachment.getAssetId());
         }
 
         static void rollbackOrder(Long orderId) {
@@ -366,8 +367,12 @@ public abstract class Order {
             bidOrderTable.delete(getBidOrder(orderId));
         }
 
-        private Bid(Long orderId, Long accountId, Long assetId, long quantityQNT, long priceNQT, int height) {
-            super(orderId, accountId, assetId, quantityQNT, priceNQT, height);
+        private Bid(Transaction transaction, Attachment.ColoredCoinsBidOrderPlacement attachment) {
+            super(transaction, attachment);
+        }
+
+        private Bid(ResultSet rs) throws SQLException {
+            super(rs);
         }
 
         private void updateQuantityQNT(long quantityQNT) {

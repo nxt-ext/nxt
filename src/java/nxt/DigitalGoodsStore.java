@@ -115,21 +115,20 @@ public final class DigitalGoodsStore {
         private final String description;
         private final String tags;
         private final int timestamp;
-        private volatile int quantity;
-        private volatile long priceNQT;
-        private volatile boolean delisted;
+        private int quantity;
+        private long priceNQT;
+        private boolean delisted;
 
-        private Goods(Long id, Long sellerId, String name, String description, String tags, int quantity, long priceNQT,
-                      int timestamp) {
-            this.id = id;
-            this.sellerId = sellerId;
-            this.name = name;
-            this.description = description;
-            this.tags = tags;
-            this.quantity = quantity;
-            this.priceNQT = priceNQT;
+        private Goods(Transaction transaction, Attachment.DigitalGoodsListing attachment) {
+            this.id = transaction.getId();
+            this.sellerId = transaction.getSenderId();
+            this.name = attachment.getName();
+            this.description = attachment.getDescription();
+            this.tags = attachment.getTags();
+            this.quantity = attachment.getQuantity();
+            this.priceNQT = attachment.getPriceNQT();
             this.delisted = false;
-            this.timestamp = timestamp;
+            this.timestamp = transaction.getTimestamp();
         }
 
         private Goods(ResultSet rs) throws SQLException {
@@ -269,25 +268,24 @@ public final class DigitalGoodsStore {
         private final int deadline;
         private final EncryptedData note;
         private final int timestamp;
-        private volatile boolean isPending;
-        private volatile EncryptedData encryptedGoods;
-        private volatile EncryptedData refundNote;
-        private volatile EncryptedData feedbackNote;
-        private volatile long discountNQT;
-        private volatile long refundNQT;
+        private boolean isPending;
+        private EncryptedData encryptedGoods;
+        private EncryptedData refundNote;
+        private EncryptedData feedbackNote;
+        private long discountNQT;
+        private long refundNQT;
 
-        private Purchase(Long id, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
-                         int deadline, EncryptedData note, int timestamp, boolean isPending) {
-            this.id = id;
-            this.buyerId = buyerId;
-            this.goodsId = goodsId;
+        private Purchase(Transaction transaction, Attachment.DigitalGoodsPurchase attachment, Long sellerId) {
+            this.id = transaction.getId();
+            this.buyerId = transaction.getSenderId();
+            this.goodsId = attachment.getGoodsId();
             this.sellerId = sellerId;
-            this.quantity = quantity;
-            this.priceNQT = priceNQT;
-            this.deadline = deadline;
-            this.note = note;
-            this.timestamp = timestamp;
-            this.isPending = isPending;
+            this.quantity = attachment.getQuantity();
+            this.priceNQT = attachment.getPriceNQT();
+            this.deadline = attachment.getDeliveryDeadlineTimestamp();
+            this.note = attachment.getNote();
+            this.timestamp = transaction.getTimestamp();
+            this.isPending = true;
         }
 
         private Purchase(ResultSet rs) throws SQLException {
@@ -527,10 +525,8 @@ public final class DigitalGoodsStore {
         }
     }
 
-    private static void addPurchase(Long purchaseId, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
-                                   int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
-        Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT,
-                deliveryDeadlineTimestamp, note, timestamp, true);
+    private static void addPurchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment, Long sellerId) {
+        Purchase purchase = new Purchase(transaction, attachment, sellerId);
         Purchase.purchaseTable.insert(purchase);
         purchaseListeners.notify(purchase, Event.PURCHASE);
     }
@@ -540,9 +536,8 @@ public final class DigitalGoodsStore {
         Purchase.purchaseTable.truncate();
     }
 
-    static void listGoods(Long goodsId, Long sellerId, String name, String description, String tags,
-                                 int quantity, long priceNQT, int timestamp) {
-        Goods goods = new Goods(goodsId, sellerId, name, description, tags, quantity, priceNQT, timestamp);
+    static void listGoods(Transaction transaction, Attachment.DigitalGoodsListing attachment) {
+        Goods goods = new Goods(transaction, attachment);
         Goods.goodsTable.insert(goods);
         goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
@@ -590,17 +585,15 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void purchase(Long purchaseId, Long buyerId, Long goodsId, int quantity, long priceNQT,
-                                int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
-        Goods goods = Goods.goodsTable.get(goodsId);
-        if (! goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
-                && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getHeight()) {
-            goods.changeQuantity(-quantity);
-            addPurchase(purchaseId, buyerId, goodsId, goods.getSellerId(), quantity, priceNQT,
-                    deliveryDeadlineTimestamp, note, timestamp);
+    static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
+        Goods goods = Goods.goodsTable.get(attachment.getGoodsId());
+        if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
+                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getHeight()) {
+            goods.changeQuantity(-attachment.getQuantity());
+            addPurchase(transaction, attachment, goods.getSellerId());
         } else {
-            Account buyer = Account.getAccount(buyerId);
-            buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(quantity, priceNQT));
+            Account buyer = Account.getAccount(transaction.getSenderId());
+            buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
             // restoring the unconfirmed balance if purchase not successful, however buyer still lost the transaction fees
         }
     }
@@ -616,18 +609,18 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void deliver(Long sellerId, Long purchaseId, long discountNQT, EncryptedData encryptedGoods) {
-        Purchase purchase = getPendingPurchase(purchaseId);
+    static void deliver(Transaction transaction, Attachment.DigitalGoodsDelivery attachment) {
+        Purchase purchase = getPendingPurchase(attachment.getPurchaseId());
         if (purchase != null) {
             purchase.setPending(false);
             long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
             Account buyer = Account.getAccount(purchase.getBuyerId());
-            buyer.addToBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
-            buyer.addToUnconfirmedBalanceNQT(discountNQT);
-            Account seller = Account.getAccount(sellerId);
-            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
-            purchase.setEncryptedGoods(encryptedGoods);
-            purchase.setDiscountNQT(discountNQT);
+            buyer.addToBalanceNQT(Convert.safeSubtract(attachment.getDiscountNQT(), totalWithoutDiscount));
+            buyer.addToUnconfirmedBalanceNQT(attachment.getDiscountNQT());
+            Account seller = Account.getAccount(transaction.getSenderId());
+            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, attachment.getDiscountNQT()));
+            purchase.setEncryptedGoods(attachment.getGoods());
+            purchase.setDiscountNQT(attachment.getDiscountNQT());
             purchaseListeners.notify(purchase, Event.DELIVERY);
         }
     }

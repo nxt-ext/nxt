@@ -20,13 +20,7 @@ public final class Asset {
 
         @Override
         protected Asset load(Connection con, ResultSet rs) throws SQLException {
-            Long assetId = rs.getLong("id");
-            Long accountId = rs.getLong("account_id");
-            String name = rs.getString("name");
-            String description = rs.getString("description");
-            long quantityQNT = rs.getLong("quantity");
-            byte decimals = rs.getByte("decimals");
-            return new Asset(assetId, accountId, name, description, quantityQNT, decimals);
+            return new Asset(rs);
         }
 
         @Override
@@ -70,9 +64,8 @@ public final class Asset {
         return assetTable.getManyBy("account_id", accountId);
     }
 
-    static void addAsset(Long assetId, Long accountId, String name, String description, long quantityQNT, byte decimals) {
-        Asset asset = new Asset(assetId, accountId, name, description, quantityQNT, decimals);
-        assetTable.insert(asset);
+    static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
+        assetTable.insert(new Asset(transaction, attachment));
     }
 
     static void removeAsset(Long assetId) {
@@ -90,13 +83,22 @@ public final class Asset {
     private final long quantityQNT;
     private final byte decimals;
 
-    private Asset(Long assetId, Long accountId, String name, String description, long quantityQNT, byte decimals) {
-        this.assetId = assetId;
-        this.accountId = accountId;
-        this.name = name;
-        this.description = description;
-        this.quantityQNT = quantityQNT;
-        this.decimals = decimals;
+    private Asset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
+        this.assetId = transaction.getId();
+        this.accountId = transaction.getSenderId();
+        this.name = attachment.getName();
+        this.description = attachment.getDescription();
+        this.quantityQNT = attachment.getQuantityQNT();
+        this.decimals = attachment.getDecimals();
+    }
+
+    private Asset(ResultSet rs) throws SQLException {
+        this.assetId = rs.getLong("id");
+        this.accountId = rs.getLong("account_id");
+        this.name = rs.getString("name");
+        this.description = rs.getString("description");
+        this.quantityQNT = rs.getLong("quantity");
+        this.decimals = rs.getByte("decimals");
     }
 
     public Long getId() {
