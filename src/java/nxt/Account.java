@@ -684,6 +684,10 @@ public final class Account {
         }
     }
 
+    long getAssetBalanceQNTIncludingOrders(long assetId, int height) {
+        return 0; // TODO: Implement after JLP completes the DB stuff
+    }
+
     void addToAssetBalanceQNT(long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
@@ -824,6 +828,15 @@ public final class Account {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public void payDividends(Long assetId, int height, boolean issuerIncluded, long amountNQTPerQNT) {
+        Asset asset = Asset.getAsset(assetId);
+        long quantityQNT = asset.getQuantityQNT() - (issuerIncluded ? 0 : getAssetBalanceQNTIncludingOrders(assetId, height));
+        addToBalanceNQT(-Convert.safeMultiply(amountNQTPerQNT, quantityQNT));
+        for (Asset.Owner owner : asset.getOwners(height)) {
+            Account.getAccount(owner.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(owner.getQuantityQNT() * amountNQTPerQNT);
         }
     }
 

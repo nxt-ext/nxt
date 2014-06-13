@@ -962,6 +962,85 @@ public interface Attachment extends Appendix {
 
     }
 
+    public final static class ColoredCoinsDividendPayment extends AbstractAttachment {
+
+        private final Long assetId;
+        private final int height;
+        private final boolean issuerIncluded;
+        private final long amountNQTPerQNT;
+
+        ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersiont) {
+            super(buffer, transactionVersiont);
+            this.assetId = buffer.getLong();
+            this.height = buffer.getInt();
+            this.issuerIncluded = buffer.get() != 0;
+            this.amountNQTPerQNT = buffer.getLong();
+        }
+
+        ColoredCoinsDividendPayment(JSONObject attachmentData) {
+            super(attachmentData);
+            this.assetId = (Long)attachmentData.get("asset");
+            this.height = ((Long)attachmentData.get("height")).intValue();
+            this.issuerIncluded = (Boolean)attachmentData.get("issuerIncluded");
+            this.amountNQTPerQNT = (Long)attachmentData.get("amountNQTPerQNT");
+        }
+
+        public ColoredCoinsDividendPayment(Long assetId, int height, boolean issuerIncluded, long amountNQTPerQNT) {
+            this.assetId = assetId;
+            this.height = height;
+            this.issuerIncluded = issuerIncluded;
+            this.amountNQTPerQNT = amountNQTPerQNT;
+        }
+
+        @Override
+        public String getAppendixName() {
+            return "DividendPayment";
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 4 + 1 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(assetId);
+            buffer.putInt(height);
+            buffer.put(issuerIncluded ? (byte)1 : (byte)0);
+            buffer.putLong(amountNQTPerQNT);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("asset", Convert.toUnsignedLong(assetId));
+            attachment.put("height", height);
+            attachment.put("issuerIncluded", issuerIncluded);
+            attachment.put("amountNQTPerQNT", amountNQTPerQNT);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.DIVIDEND_PAYMENT;
+        }
+
+        public Long getAssetId() {
+            return assetId;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public boolean isIssuerIncluded() {
+            return issuerIncluded;
+        }
+
+        public long getAmountNQTPerQNT() {
+            return amountNQTPerQNT;
+        }
+
+    }
+
     public final static class DigitalGoodsListing extends AbstractAttachment {
 
         private final String name;

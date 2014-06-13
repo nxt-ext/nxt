@@ -102,6 +102,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("value", TransactionType.ColoredCoins.BID_ORDER_CANCELLATION.getSubtype());
         subtype.put("description", "Bid order cancellation");
         subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", TransactionType.ColoredCoins.DIVIDEND_PAYMENT.getSubtype());
+        subtype.put("description", "Dividend payment");
+        subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         transactionType = new JSONObject();
