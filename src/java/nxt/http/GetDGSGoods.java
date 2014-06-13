@@ -7,7 +7,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
+import java.util.List;
 
 public final class GetDGSGoods extends APIServlet.APIRequestHandler {
 
@@ -28,19 +28,17 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
         JSONArray goodsJSON = new JSONArray();
         response.put("goods", goodsJSON);
 
+        List<DigitalGoodsStore.Goods> goods;
         if (sellerId == null) {
-            DigitalGoodsStore.Goods[] goods = DigitalGoodsStore.getAllGoods().toArray(new DigitalGoodsStore.Goods[0]);
-            for (int i = firstIndex; firstIndex + goodsJSON.size() - 1 <= lastIndex && i < goods.length; i++) {
-                DigitalGoodsStore.Goods good = goods[goods.length - 1 - i];
-                if (inStockOnly && (((good.isDelisted() || good.getQuantity() == 0)))) {
-                    continue;
-                }
-                goodsJSON.add(JSONData.goods(goods[goods.length - 1 - i]));
+            if (inStockOnly) {
+                goods = DigitalGoodsStore.getGoodsInStock();
+            } else {
+                goods = DigitalGoodsStore.getAllGoods();
             }
-            return response;
+        } else {
+            goods = DigitalGoodsStore.getSellerGoods(sellerId, inStockOnly);
         }
 
-        Collection<DigitalGoodsStore.Goods> goods = DigitalGoodsStore.getSellerGoods(sellerId);
         int i = 0;
         for (DigitalGoodsStore.Goods good : goods) {
             if (i > lastIndex) {
