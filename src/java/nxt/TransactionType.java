@@ -1953,6 +1953,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
                         || transaction.getFeeNQT() < Constants.CURRENCY_ISSUANCE_FEE_NQT
                         || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
                         || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
@@ -2064,6 +2065,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getAmountNQT() <= 0) {
                     throw new NxtException.ValidationException("Invalid reserve increase: " + attachment.getJSONObject());
@@ -2132,6 +2134,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getUnits() <= 0) {
                     throw new NxtException.ValidationException("Invalid reserve claim: " + attachment.getJSONObject());
@@ -2216,12 +2219,14 @@ public abstract class TransactionType {
 
                 for (int i = 0; i < attachment.getSize(); i++) {
                     Attachment.MonetarySystemMoneyTransfer.Entry entry = attachment.getEntry(i);
-                    if (Currency.getCurrency(entry.getCurrencyId()) == null
+                    if (!Currency.isIssued(entry.getCurrencyId())
                             || entry.getUnits() <= 0) {
                         throw new NxtException.ValidationException("Invalid money transfer: " + attachment.getJSONObject());
                     }
                 }
-                if (attachment.getComment().length() > Constants.MAX_MONEY_TRANSFER_COMMENT_LENGTH) {
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
+                        || attachment.getComment().length() > Constants.MAX_MONEY_TRANSFER_COMMENT_LENGTH) {
                     throw new NxtException.ValidationException("Invalid money transfer: " + attachment.getJSONObject());
                 }
             }
@@ -2300,6 +2305,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getBuyingRateNQT() <= 0
                         || attachment.getSellingRateNQT() <= 0
@@ -2379,6 +2385,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.isValid()) {
                     throw new NxtException.ValidationException("Invalid exchange: " + attachment.getJSONObject());
@@ -2462,6 +2469,7 @@ public abstract class TransactionType {
                 Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getUnits() <= 0) {
                     throw new NxtException.ValidationException("Invalid money minting: " + attachment.getJSONObject());
