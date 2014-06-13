@@ -47,6 +47,9 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
                 break;
             }
             if (i >= firstIndex) {
+                if (inStockOnly && (((good.isDelisted() || good.getQuantity() == 0)))) {
+                    continue;
+                }
                 goodsJSON.add(JSONData.goods(good));
             }
             i++;
