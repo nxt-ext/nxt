@@ -172,7 +172,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {
-			if (response.fullHash) {
+			if (response.fullHash && (!response.error || response.error != "Double spending transaction")) {
 				NRS.unlockForm($modal, $btn);
 
 				if (!$modal.hasClass("modal-no-hide")) {
