@@ -242,7 +242,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode) {
+			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode && !response.error) {
 				var publicKey = NRS.generatePublicKey(secretPhrase);
 				var signature = nxtCrypto.sign(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
@@ -288,6 +288,11 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				if (response.errorCode && !response.errorDescription) {
 					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
+				} else if (response.error && !response.errorDescription) {
+					response.errorDescription = (typeof response.error == "string" ? response.error : "Unknown error occured.");
+					if (!response.errorCode) {
+						response.errorCode = 1;
+					}
 				}
 
 				if (callback) {
