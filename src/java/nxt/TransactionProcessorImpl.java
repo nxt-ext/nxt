@@ -283,7 +283,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         block.apply();
         for (TransactionImpl transaction : block.getTransactions()) {
             if (! unconfirmedTransactions.containsKey(transaction.getId())) {
-                transaction.applyUnconfirmed();
+                if (! transaction.applyUnconfirmed()) {
+                    throw new RuntimeException("Double spending transaction: " + transaction.getStringId());
+                }
             }
             //TODO: Phaser not yet implemented
             //Phaser.processTransaction(transaction);

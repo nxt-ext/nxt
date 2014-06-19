@@ -503,6 +503,7 @@ public final class Account {
         synchronized (this) {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
+            checkBalance();
         }
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
@@ -515,6 +516,7 @@ public final class Account {
         }
         synchronized (this) {
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
+            checkBalance();
         }
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -524,6 +526,7 @@ public final class Account {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
+            checkBalance();
         }
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
@@ -534,6 +537,21 @@ public final class Account {
     void addToForgedBalanceNQT(long amountNQT) {
         synchronized(this) {
             this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
+        }
+    }
+
+    private void checkBalance() {
+        if (id.equals(Genesis.CREATOR_ID)) {
+            return;
+        }
+        if (balanceNQT < 0) {
+            throw new RuntimeException("Negative balance for account " + Convert.toUnsignedLong(id));
+        }
+        if (unconfirmedBalanceNQT < 0) {
+            throw new RuntimeException("Negative unconfirmed balance for account " + Convert.toUnsignedLong(id));
+        }
+        if (unconfirmedBalanceNQT > balanceNQT) {
+            throw new RuntimeException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
         }
     }
 
