@@ -1,0 +1,4 @@
+Fixed a special case in the calculation of unconfirmed balance. Added additional
+checks for account balances.
+
+
