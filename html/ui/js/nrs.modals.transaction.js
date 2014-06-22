@@ -778,6 +778,10 @@ var NRS = (function(NRS, $, undefined) {
 		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
 	});
 
+	$("#decrypt_note_form_container button.btn-primary").click(function() {
+		$("#decrypt_note_form_container").trigger("submit");
+	});
+
 	$("#decrypt_note_form_container").on("submit", function(e) {
 		e.preventDefault();
 
