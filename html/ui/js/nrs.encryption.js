@@ -21,9 +21,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		var output = "";
 
+		var identifier = (options.identifier ? transaction[options.identifier] : transaction.transaction);
+
 		//check in cache first..
-		if (_decryptedTransactions && _decryptedTransactions[transaction.transaction]) {
-			var decryptedTransaction = _decryptedTransactions[transaction.transaction];
+		if (_decryptedTransactions && _decryptedTransactions[identifier]) {
+			var decryptedTransaction = _decryptedTransactions[identifier];
 
 			$.each(fields, function(key, title) {
 				if (typeof title != "string") {
@@ -35,7 +37,7 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
-					delete _decryptedTransactions[transaction.transaction];
+					delete _decryptedTransactions[identifier];
 					return false;
 				}
 			});
@@ -78,8 +80,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (showDecryptionForm) {
-			var identifier = (options.identifier ? transaction[identifier] : transaction.transaction);
-
 			_encryptedNote = {
 				"transaction": transaction,
 				"fields": fields,
