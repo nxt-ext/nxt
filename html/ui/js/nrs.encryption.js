@@ -188,6 +188,13 @@ var NRS = (function(NRS, $, undefined) {
 
 		_decryptedTransactions[_encryptedNote.identifier] = decryptedFields;
 
+		//only save 150 decryptions maximum in cache...
+		var decryptionKeys = Object.keys(_decryptedTransactions);
+
+		if (decryptionKeys.length > 150) {
+			delete _decryptedTransactions[decryptionKeys[0]];
+		}
+
 		NRS.removeDecryptionForm();
 
 		var outputEl = (_encryptedNote.options.outputEl ? String(_encryptedNote.options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
