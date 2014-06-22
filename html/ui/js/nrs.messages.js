@@ -290,8 +290,8 @@ var NRS = (function(NRS, $, undefined) {
 							secretPhrase = NRS.password;
 						} else {
 							throw {
-								"message": "Your password required to encrypt this message.",
-								"errorCode": 3
+								"message": "Your password is required to encrypt this message.",
+								"errorCode": 1
 							};
 						}
 					}
@@ -303,7 +303,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (!options.account) {
 						throw {
 							"message": "Account ID not specified.",
-							"errorCode": 4
+							"errorCode": 2
 						};
 					}
 					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
@@ -317,7 +317,7 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
-			if (err.errorCode && (err.errorCode == 3 || err.errorCode == 4)) {
+			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {
 				throw {
@@ -337,8 +337,8 @@ var NRS = (function(NRS, $, undefined) {
 							secretPhrase = NRS.password;
 						} else {
 							throw {
-								"message": "Your password required to encrypt this message.",
-								"errorCode": 3
+								"message": "Your password is required to decrypt this message.",
+								"errorCode": 1
 							};
 						}
 					}
@@ -350,7 +350,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (!options.account) {
 						throw {
 							"message": "Account ID not specified.",
-							"errorCode": 4
+							"errorCode": 2
 						};
 					}
 					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
@@ -361,10 +361,14 @@ var NRS = (function(NRS, $, undefined) {
 
 			return nxtCrypto.decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
-			throw {
-				"message": "The message could not be decrypted.",
-				"errorCode": 2
-			};
+			if (err.errorCode && err.errorCode < 3) {
+				throw err;
+			} else {
+				throw {
+					"message": "The message could not be decrypted.",
+					"errorCode": 3
+				};
+			}
 		}
 	}
 
