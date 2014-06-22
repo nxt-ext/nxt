@@ -1,7 +1,6 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.newlyCreatedAccount = false;
 	NRS.password = "";
-	NRS.decryptionPassword = "";
 
 	NRS.allowLoginViaEnter = function() {
 		$("#login_password").keypress(function(e) {
@@ -321,7 +320,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#stop_forging_modal .show_logout").show();
 			$("#stop_forging_modal").modal("show");
 		} else {
-			NRS.decryptionPassword = "";
+			NRS.unsetDecryptionPassword();
 			NRS.password = "";
 			window.location.reload();
 		}
