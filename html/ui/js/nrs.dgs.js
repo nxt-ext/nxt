@@ -586,15 +586,21 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					} else {
 						var output = "<table>";
-						output += "<tr><th><strong>Product</strong>:</th><td>" + String(good.name).escapeHTML() + "</td></tr>";
+						output += "<tr><th style='width:85px'><strong>Product</strong>:</th><td>" + String(good.name).escapeHTML() + "</td></tr>";
 						output += "<tr><th><strong>Price</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 						output += "<tr><th><strong>Quantity</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
+
+						if (response.seller == NRS.account) {
+							output += "<tr><th><strong>Buyer</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(response, "buyer") + "</a></td></tr>";
+						} else {
+							output += "<tr><th><strong>Seller</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "seller") + "' class='user_info'>" + NRS.getAccountTitle(response, "seller") + "</a></td></tr>";
+						}
 
 						if (type == "dgs_view_refund_modal") {
 							output += "<tr><th><strong>Refund Price</strong>:</th><td>" + NRS.formatAmount(response.refundNQT) + " NXT</td></tr>";
 						}
 
-						if (response.note && (type == "dgs_delivery_modal" || type == "dgs_refund_modal")) {
+						if (response.note && (type == "dgs_view_purchase_modal" || type == "dgs_delivery_modal")) {
 							output += "<tr><th><strong>Note</strong>:</th><td id='" + type + "_note'></td></tr>";
 						}
 
@@ -602,7 +608,7 @@ var NRS = (function(NRS, $, undefined) {
 
 						$modal.find(".purchase_info").html(output);
 
-						if (response.note && (type == "dgs_delivery_modal" || type == "dgs_refund_modal")) {
+						if (response.note && (type == "dgs_view_purchase_modal" || type == "dgs_delivery_modal")) {
 							try {
 								NRS.tryToDecrypt(response, {
 									"note": ""
@@ -724,10 +730,16 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				var output = "<strong>Product Name</strong>: " + String(response.name).escapeHTML();
+				var output = "<table>";
+				output += "<tr><th style='width:85px'><strong>Product</strong>:</th><td>" + String(response.name).escapeHTML() + "</td></tr>";
+				output += "<tr><th><strong>Price</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
+				output += "<tr><th><strong>Seller</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "seller") + "' class='user_info'>" + NRS.getAccountTitle(response, "seller") + "</a></td></tr>";
+
 				if (type == "dgs_purchase_modal") {
-					output += "<br /><div style='max-height:250px;overflow:auto;'>" + String(response.description).escapeHTML().nl2br() + "</div>";
+					output += "<tr><td colspan='2'><div style='max-height:250px;overflow:auto;'>" + String(response.description).escapeHTML().nl2br() + "</div></td></tr>";
 				}
+
+				output += "</table>";
 			}
 
 			$modal.find(".goods_info").html(output);
