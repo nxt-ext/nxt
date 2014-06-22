@@ -898,6 +898,8 @@ var NRS = (function(NRS, $, undefined) {
 			if (extra) {
 				$(extra).hide();
 			}
+		} else {
+			$parent.removeClass("data-empty");
 		}
 
 		if (fadeIn) {
