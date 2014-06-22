@@ -84,7 +84,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.publicKey) {
 				callback({
 					"type": "info",
-					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + "NXT.",
+					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + " NXT.",
 					"account": response
 				});
 			} else {
@@ -104,7 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						callback({
 							"type": "danger",
-							"message": "There is a problem with the recipient account: " + response.errorDescription,
+							"message": "There is a problem with the recipient account: " + String(response.errorDescription).escapeHTML(),
 							"account": null
 						});
 					}
@@ -139,17 +139,12 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					if (response.account) {
-						var message = "The recipient address translates to account <strong>" + String(response.account.account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which").escapeHTML();
-					} else {
-						var message = response.message.escapeHTML();
-					}
+					var message = response.message.escapeHTML();
 
 					callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
 				});
 			} else {
 				if (address.guess.length == 1) {
-
 					callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, did you mean <span class='malformed_address' data-address='" + String(address.guess[0]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[0], account) + "</span> ?").show();
 				} else if (address.guess.length > 1) {
 					var html = "The recipient address is malformed, did you mean:<ul>";
@@ -206,7 +201,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": account
 		}, function(response) {
 			if (response.errorCode) {
-				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
+				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + String(response.errorDescription).escapeHTML() : "The alias does not exist.").show();
 			} else {
 				if (response.aliasURI) {
 					var alias = String(response.aliasURI);
@@ -237,7 +232,7 @@ var NRS = (function(NRS, $, undefined) {
 
 						NRS.getAccountError(match[1], function(response) {
 							accountInputField.val(match[1].escapeHTML());
-							callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
+							callout.html("The alias links to account <strong>" + String(match[1]).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
 						});
 					} else {
 						callout.removeClass(classes).addClass("callout-danger").html("The alias does not link to an account. " + (!alias ? "The URI is empty." : "The URI is '" + alias.escapeHTML() + "'")).show();
@@ -245,7 +240,7 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (response.aliasName) {
 					callout.removeClass(classes).addClass("callout-danger").html("The alias links to an empty URI.").show();
 				} else {
-					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
+					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + String(response.errorDescription).escapeHTML() : "The alias does not exist.").show();
 				}
 			}
 		});
