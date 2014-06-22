@@ -2346,25 +2346,26 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="goods_info">Loading...</div>
 							</div>
 							<input type="hidden" name="goods" id="dgs_purchase_goods" value="" />
+							<input type="hidden" name="priceNQT" id="dgs_purchase_price" value="" />
+
+							<div class="form-group">
+								<label for="dgs_total_purchase_price">PRICE</label>
+								<p id="dgs_total_purchase_price"></p>
+							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
-									<div class="form-group">
-										<label for="dgs_purchase_price">PRICE</label>
-						                <input type="number" name="priceNXT" id="dgs_purchase_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="1">
-									</div>
-								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_purchase_quantity">QUANTITY</label>
 						                <input type="number" name="quantity" id="dgs_purchase_quantity" class="form-control" min="1" data-default="1" value="1" placeholder="Quantity" tabindex="2">
 									</div>
 								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_purchase_delivery_deadline_timestamp">DELIVERY DEADLINE (HOURS)</label>
+										<input type="number" name="deliveryDeadlineTimestamp" id="dgs_purchase_delivery_deadline_timestamp" class="form-control" placeholder="Deadline" min="1" data-default="48" value="48" tabindex="3">
+									</div>
+								</div>
 							</div>
-							<div class="form-group">
-								<label for="dgs_purchase_delivery_deadline_timestamp">DELIVERY DEADLINE (HOURS)</label>
-								<input type="number" name="deliveryDeadlineTimestamp" id="dgs_purchase_delivery_deadline_timestamp" class="form-control" placeholder="Deadline" min="1" data-default="48" value="48" tabindex="3">
-							</div>
-
 							<div class="form-group">
 								<label for="dgs_purchase_note">NOTE</label>
 								<textarea class="form-control" id="dgs_purchase_note" name="note" rows="3" tabindex="4"></textarea>

@@ -31,11 +31,12 @@ var NRS = (function(NRS, $, undefined) {
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='" + (modal ? modal : "#dgs_view_delivery_modal") + "'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
 			"<table>" +
-			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
+			"<tr><td style='width:150px'><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
 			"<tr><td><strong>Order Status</strong>:</td><td>" + (statusHTML ? statusHTML : status) + "</td></tr>" +
 			(purchase.pending ? "<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" : "") +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
+			(purchase.seller == NRS.account && purchase.feedbackNote ? "<tr><td><strong>Feedback</strong>:</td><td>Includes feedback</td></tr>" : "") +
 			"</table></div>" +
 			"<hr />";
 	}
@@ -51,7 +52,7 @@ var NRS = (function(NRS, $, undefined) {
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_purchase_modal'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
 			"<table class='purchase' style='margin-bottom:5px'>" +
-			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
+			"<tr><td style='width:150px'><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
 			"<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
@@ -606,6 +607,7 @@ var NRS = (function(NRS, $, undefined) {
 								NRS.tryToDecrypt(response, {
 									"note": ""
 								}, (response.buyer == NRS.account ? response.seller : response.buyer), {
+									"identifier": "purchase",
 									"formEl": "#" + type + "_note",
 									"outputEl": "#" + type + "_note",
 									"showFormOnClick": true
@@ -625,6 +627,7 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.tryToDecrypt(response, {
 								"refundNote": "Refund Note"
 							}, (response.buyer == NRS.account ? response.seller : response.buyer), {
+								"identifier": "purchase",
 								"noPadding": true,
 								"formEl": "#dgs_view_refund_output",
 								"outputEl": "#dgs_view_refund_output"
@@ -651,6 +654,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							NRS.tryToDecrypt(response, fieldsToDecrypt, (response.buyer == NRS.account ? response.seller : response.buyer), {
+								"identifier": "purchase",
 								"noPadding": true,
 								"formEl": "#dgs_view_delivery_output",
 								"outputEl": "#dgs_view_delivery_output"
@@ -733,11 +737,19 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (type == "dgs_price_change_modal") {
 				$("#dgs_price_change_current_price, #dgs_price_change_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
 			} else if (type == "dgs_purchase_modal") {
-				$("#dgs_purchase_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
+				$("#dgs_purchase_price").val(String(response.priceNQT).escapeHTML());
+				$("#dgs_total_purchase_price").html(NRS.formatAmount(response.priceNQT) + " NXT");
+
+				$("#dgs_purchase_quantity").on("change", function() {
+					var totalNQT = new BigInteger(response.priceNQT).multiply(new BigInteger(String($(this).val()))).toString();
+					$("#dgs_total_purchase_price").html(NRS.formatAmount(totalNQT) + " NXT");
+				});
 			}
 		}, false);
 	}).on("hidden.bs.modal", function(e) {
-		removeDecryptionForm($(this));
+		$("#dgs_purchase_quantity").off("change");
+
+		NRS.removeDecryptionForm($(this));
 
 		$(this).find(".goods_info").html("Loading...");
 		$("#dgs_quantity_change_current_quantity, #dgs_price_change_current_price, #dgs_quantity_change_quantity, #dgs_price_change_price").val("0");

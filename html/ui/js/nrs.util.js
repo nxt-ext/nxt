@@ -534,7 +534,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatAmount = function(amount, round, no_escaping) {
-
 		if (typeof amount == "undefined") {
 			return "0";
 		} else if (typeof amount == "string") {
