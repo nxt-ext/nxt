@@ -3354,6 +3354,21 @@ hr {
   margin-bottom:15px;
 }
 
+.goods_info table, .purchase_info table {
+  width:100%;
+}
+
+.purchase_info th, .purchase_info td {
+  vertical-align:top;
+}
+
+.purchase_info th {
+  white-space:nowrap;
+}
+
+.purchase_info td {
+  width:99%;
+}
 .goods_info h3, .purchase_info h3 {
   margin-bottom:5px;
   margin-top:0px;
