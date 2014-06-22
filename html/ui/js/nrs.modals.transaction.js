@@ -681,9 +681,7 @@ var NRS = (function(NRS, $, undefined) {
 			options = {};
 		}
 
-		console.log(transaction);
-		console.log(fields);
-		console.log(account);
+		var nrFields = Object.keys(fields).length;
 
 		var formEl = (options.formEl ? String(options.formEl).escapeHTML() : "#transaction_info_output_bottom");
 		var outputEl = (options.outputEl ? String(options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
@@ -700,7 +698,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label>" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -709,8 +707,6 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 		}
-
-		console.log("output = " + output);
 
 		if (!output) {
 			$.each(fields, function(key, title) {
@@ -743,16 +739,12 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label>" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
 				}
 			});
 		}
 
-		console.log("show decryption for m " + showDecryptionForm);
-
 		if (showDecryptionForm) {
-			console.log("yes");
-
 			var identifier = (options.identifier ? transaction[identifier] : transaction.transaction);
 
 			NRS.encryptedNote = {
@@ -765,33 +757,24 @@ var NRS = (function(NRS, $, undefined) {
 
 			//	$("#transaction_info_output_bottom").html("<div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='padding-bottom:10px;display:none'></div>");
 
-			console.log("form element = " + formEl);
-
-			console.log($("#decrypt_note_form_container").length);
-
-			console.log("sho wthe derypt note form container");
-			console.log($("#decrypt_note_form_container").length);
-
 			$("#decrypt_note_form_container").detach().appendTo(formEl);
 
 			$("#decrypt_note_form_container, " + formEl).show();
 		} else {
-			removeDecryptionForm();
+			NRS.removeDecryptionForm();
 			$(outputEl).html(output).show();
 		}
 	}
 
-	function removeDecryptionForm() {
-		console.log("remove decryption form");
-		if ($("#decrypt_note_form_container").length) {
-			console.log("detach!!");
+	NRS.removeDecryptionForm = function($modal) {
+		if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && $("#decrypt_note_form_container").length)) {
 			$("#decrypt_note_form_container input").val("");
 			$("#decrypt_note_form_container").hide().detach().appendTo("body");
 		}
 	}
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
-		removeDecryptionForm();
+		NRS.removeDecryptionForm($(this));
 		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
 	});
 
@@ -801,7 +784,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $form = $(this);
 
 		if (!NRS.encryptedNote) {
-			$form.find(".callout").html("Encrypted note not found.");
+			$form.find(".callout").html("Encrypted note not found.").show();
 			return;
 		}
 
@@ -813,11 +796,16 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (NRS.decryptionPassword) {
 				password = NRS.decryptionPassword;
 			} else {
-
+				$form.find(".callout").html("Secret phrase is a required field.").show();
+				return;
 			}
 		}
 
-		//check if password is correct..
+		var accountId = NRS.generateAccountId(password);
+		if (accountId != NRS.account) {
+			$form.find(".callout").html("Incorrect secret phrase.").show();
+			return;
+		}
 
 		var rememberPassword = $form.find("input[name=rememberPassword]").is(":checked");
 
@@ -829,6 +817,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		var inAttachment = ("attachment" in NRS.encryptedNote.transaction);
 
+		var nrFields = Object.keys(NRS.encryptedNote.fields).length;
+
 		$.each(NRS.encryptedNote.fields, function(key, title) {
 			var note = (inAttachment ? NRS.encryptedNote.transaction.attachment[key] : NRS.encryptedNote.transaction[key]);
 
@@ -839,11 +829,6 @@ var NRS = (function(NRS, $, undefined) {
 				var noteNonce = (inAttachment ? NRS.encryptedNote.transaction.attachment[key + "Nonce"] : NRS.encryptedNote.transaction[key + "Nonce"]);
 			}
 
-			console.log("note = " + note);
-			console.log("nonce = " + noteNonce);
-			console.log("other account = " + otherAccount);
-			console.log("password = " + password);
-
 			try {
 				var note = NRS.decryptNote(note, {
 					"nonce": noteNonce,
@@ -852,7 +837,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				decryptedFields[key] = note;
 
-				output += "<div" + (!NRS.encryptedNote.options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label>" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
+				output += "<div" + (!NRS.encryptedNote.options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
 			} catch (err) {
 				decryptionError = true;
 				var message = String(err.message ? err.message : err);
@@ -868,7 +853,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.decryptedTransactions[NRS.encryptedNote.identifier] = decryptedFields;
 
-		removeDecryptionForm();
+		NRS.removeDecryptionForm();
 
 		var outputEl = (NRS.encryptedNote.options.outputEl ? String(NRS.encryptedNote.options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
 
