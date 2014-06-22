@@ -2535,7 +2535,7 @@ background:#33363f
     margin: 30px auto;
   }
 
-  body.reed_solomon .modal-dialog-wide, .modal-dialog-wider {
+  body .modal-dialog-wide, .modal-dialog-wider {
     width: 840px;
   }
 }

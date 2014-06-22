@@ -169,15 +169,11 @@ var NRS = (function(NRS, $, undefined) {
 				}], function(error, contact) {
 					if (!error && contact.length) {
 						contact = contact[0];
-						NRS.getAccountError((NRS.settings["reed_solomon"] ? contact.accountRS : contact.account), function(response) {
+						NRS.getAccountError(contact.accountRS, function(response) {
 							callout.removeClass(classes).addClass("callout-" + response.type).html("The contact links to account <strong>" + NRS.getAccountFormatted(contact, "account") + "</strong>. " + response.message.escapeHTML()).show();
 
 							if (response.type == "info" || response.type == "warning") {
-								if (NRS.settings["reed_solomon"]) {
-									accountInputField.val(contact.accountRS);
-								} else {
-									accountInputField.val(contact.account);
-								}
+								accountInputField.val(contact.accountRS);
 							}
 						});
 					} else if (/^[a-z0-9]+$/i.test(account)) {

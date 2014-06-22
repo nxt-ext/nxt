@@ -734,7 +734,7 @@ var NRS = (function(NRS, $, undefined) {
 			formattedAcc = object;
 			object = null;
 		} else {
-			formattedAcc = (NRS.settings["reed_solomon"] ? String(object[acc + "RS"]).escapeHTML() : String(object[acc]).escapeHTML());
+			formattedAcc = String(object[acc + "RS"]).escapeHTML();
 		}
 
 		if (formattedAcc in NRS.contacts) {
@@ -751,10 +751,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (type == "string" || type == "number") {
 			return String(object).escapeHTML();
-		} else if (NRS.settings["reed_solomon"]) {
-			return String(object[acc + "RS"]).escapeHTML();
 		} else {
-			return String(object[acc]).escapeHTML();
+			return String(object[acc + "RS"]).escapeHTML();
 		}
 	}
 
@@ -816,9 +814,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getClipboardText = function(type) {
 		switch (type) {
-			case "account_id":
-				return NRS.account;
-				break;
 			case "account_rs":
 				return NRS.accountRS;
 				break;

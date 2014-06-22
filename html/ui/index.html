@@ -68,10 +68,9 @@
                         	<div class="pull-left info">
                         		<div style="margin-bottom:5px;"><a href="#" id="account_name" data-toggle="modal" data-target="#account_info_modal">No Name Set</a></div>
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
-	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
+	                        		<span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
 										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account ID</a></li>
-										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Numeric Account	ID</a></li>
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
 									</ul>
@@ -309,21 +308,21 @@
 					<section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%;">
 						<div class="content-spliter">
 					      <div class="content-splitter-inner">
-					          <div class="content-splitter-sidebar" id="message_sidebar" style="width:200px;overflow-x:hidden;">
+					          <div class="content-splitter-sidebar" id="message_sidebar" style="width:245px;overflow-x:hidden;">
 					              <div class="content-splitter-sidebar-inner">
 					              	<div class="list-group unselectable sidebar_context" id="messages_sidebar">
 				                        <div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
 					              	</div>
 						             </div>
 						         </div>
-						         <div class="content-splitter-right" id="message_content">
+						         <div class="content-splitter-right" id="message_content" style="left:245px">
 						         	<div class="content-splitter-right-inner">
 						         		<div id="no_message_selected" style="padding-top: 150px;text-align:center;">Please select a contact in the left sidebar.</div>
 						         		<div id="no_messages_available" style="padding-top: 150px;text-align:center;display:none;">No messages available, <a href="#" data-toggle="modal" data-target="#send_message_modal">send one</a>.</div>
 						         		
 						         		<div id="message_details">
 							           	</div>
-							           	<form role="form" id="inline_message_form" method="post" style="display:none;position:fixed;bottom:0;right:20px;left:440px;">
+							           	<form role="form" id="inline_message_form" method="post" style="display:none;position:fixed;bottom:0;right:20px;left:485px;">
 							           		<div class="form-group">
 							           			<textarea class="form-control" name="inline_message_text" id="inline_message_text" rows="3" placeholder="Message"></textarea>
 							           		</div>
@@ -1037,15 +1036,6 @@
 							                <option value="0">No</option>
 							            </select>
 							            <p class="help-block">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
-							        </div>
-							        <div class="form-group">
-							        <!-- rs -->
-							            <label for="settings_reed_solomon">Use Reed Solomon Format</label>
-							            <select name="reed_solomon" id="settings_reed_solomon" class="form-control" style="width:150px">
-							                <option value="1">Yes</option>
-							                <option value="0">No</option>
-							            </select>
-							            <p class="help-block">The reed solomon format has built-in error detection.</p>
 							        </div>
 									<div class="form-group">
 							            <label for="settings_animate_forging">Animate Forging Indicator</label>
