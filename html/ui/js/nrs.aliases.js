@@ -292,10 +292,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (data.type == "account") {
 			if (!(/acct:(.*)@nxt/.test(data.aliasURI)) && !(/nacc:(.*)/.test(data.aliasURI))) {
-				if (/^\d+$/.test(data.aliasURI)) {
+				if (/^(NXT\-)/i.test(data.aliasURI)) {
 					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
-				} else if (/^(NXT\-)/i.test(data.aliasURI)) {
-					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
+				} else if (/^\d+$/.test(data.aliasURI)) {
+					return {
+						"error": "Numeric account ID's are no longer allowed."
+					};
 				} else {
 					return {
 						"error": "Invalid account ID."
@@ -366,9 +368,8 @@ var NRS = (function(NRS, $, undefined) {
 					$("#register_alias_uri").val(uri);
 				}
 			}
+			$("#register_alias_help").html("The alias can contain any data you want.").show();
 		}
-
-		$("#register_alias_help").html("The alias can contain any data you want.").show();
 	}
 
 	$("#register_alias_type").on("change", function() {
