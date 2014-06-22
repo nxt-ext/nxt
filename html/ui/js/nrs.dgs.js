@@ -11,14 +11,28 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getMarketplacePurchaseHTML = function(purchase) {
+		var status, statusHTML, modal;
+
+		if (purchase.unconfirmed) {
+			status = "Tentative";
+		} else if (purchase.pending) {
+			status = "Pending";
+			statusHTML = "<span class='label label-warning'>Pending</span>";
+		} else if (purchase.refundNQT) {
+			status = "Refunded";
+			modal = "#dgs_view_refund_modal";
+		} else {
+			status = "Complete";
+		}
+
 		return "<div" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>Seller</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>" +
 			"<strong>Product Id</strong>: &nbsp;<a href='#''>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
-			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_delivery_modal'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
+			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='" + (modal ? modal : "#dgs_view_delivery_modal") + "'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
 			"<table>" +
 			"<tr><td><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
-			"<tr><td><strong>Order Status</strong>:</td><td>" + (purchase.unconfirmed ? "Tentative" : (purchase.pending ? "<span class='label label-warning'>Pending</span>" : "Complete")) + "</td></tr>" +
+			"<tr><td><strong>Order Status</strong>:</td><td>" + (statusHTML ? statusHTML : status) + "</td></tr>" +
 			(purchase.pending ? "<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" : "") +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
@@ -26,7 +40,7 @@ var NRS = (function(NRS, $, undefined) {
 			"<hr />";
 	}
 
-	NRS.getMarketplacePendingPurchaseHTML = function(purchase) {
+	NRS.getMarketplacePendingOrderHTML = function(purchase) {
 		var delivered = NRS.getUnconfirmedTransactionsFromCache(3, [5, 7], {
 			"purchase": purchase.purchase
 		});
@@ -131,7 +145,30 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.pages.pending_purchases_dgs = function() {
+	NRS.pages.completed_orders_dgs = function() {
+		NRS.sendRequest("getDGSPurchases", {
+			"seller": NRS.account,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+		}, function(response) {
+			var content = "";
+
+			if (response.purchases && response.purchases.length) {
+				if (response.purchases.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.purchases.pop();
+				}
+
+				for (var i = 0; i < response.purchases.length; i++) {
+					content += NRS.getMarketplacePurchaseHTML(response.purchases[i]);
+				}
+			}
+
+			NRS.dataLoaded(content);
+		});
+	}
+
+	NRS.pages.pending_orders_dgs = function() {
 		NRS.sendRequest("getDGSPendingPurchases", {
 			"seller": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -146,7 +183,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				for (var i = 0; i < response.purchases.length; i++) {
-					content += NRS.getMarketplacePendingPurchaseHTML(response.purchases[i]);
+					content += NRS.getMarketplacePendingOrderHTML(response.purchases[i]);
 				}
 			}
 
@@ -297,24 +334,45 @@ var NRS = (function(NRS, $, undefined) {
 		$("#my_dgs_listings_table tr[data-goods=" + String(data.goods).escapeHTML() + "]").addClass("tentative tentative-crossed");
 	}
 
-	/*
 	NRS.forms.dgsFeedback = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		NRS.sendRequest("getDGSPurchase", {
+			"purchase": data.purchase
+		}, function(response) {
+			if (response.errorCode) {
+				return {
+					"error": "Could not fetch purchase."
+				};
+			} else {
+				data.seller = response.seller;
+			}
+		}, false);
+
 		if (data.note) {
-			var encrypted = nxtCrypto.encryptData(data.note);
+			try {
+				var encrypted = NRS.encryptNote(data.note, {
+					"account": data.seller
+				}, data.secretPhrase);
 
-			data.encryptedNoteNonce = encrypted.nonce;
-			data.encryptedNote = encrypted.data;
-
+				data.encryptedNoteNonce = encrypted.nonce;
+				data.encryptedNote = encrypted.message;
+			} catch (err) {
+				return {
+					"error": err.message
+				};
+			}
 			delete data.note;
 		}
+
+		delete data.seller;
 
 		return {
 			"data": data
 		};
 	}
 
+	/*
 	NRS.forms.dgsPurchase = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
@@ -338,20 +396,24 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getDGSPurchase", {
 			"purchase": data.purchase
 		}, function(response) {
-			if (response.errorCode) {
-				return {
-					"error": "Could not fetch purchase."
-				};
-			} else {
+			if (!response.errorCode) {
 				data.buyer = response.buyer;
+			} else {
+				data.buyer = false;
 			}
 		}, false);
+
+		if (data.buyer === false) {
+			return {
+				"error": "Could not fetch purchase."
+			};
+		}
 
 		if (data.note) {
 			try {
 				var encrypted = NRS.encryptNote(data.note, {
 					"account": data.buyer
-				});
+				}, data.secretPhrase);
 
 				data.encryptedNoteNonce = encrypted.nonce;
 				data.encryptedNote = encrypted.message;
@@ -376,20 +438,24 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getDGSPurchase", {
 			"purchase": data.purchase
 		}, function(response) {
-			if (response.errorCode) {
-				return {
-					"error": "Could not fetch purchase."
-				};
-			} else {
+			if (!response.errorCode) {
 				data.buyer = response.buyer;
+			} else {
+				data.buyer = false;
 			}
 		}, false);
+
+		if (data.buyer === false) {
+			return {
+				"error": "Could not fetch purchase."
+			};
+		}
 
 		if (data.data) {
 			try {
 				var encrypted = NRS.encryptNote(data.data, {
 					"account": data.buyer
-				});
+				}, data.secretPhrase);
 
 				data.encryptedGoodsData = encrypted.message;
 				data.encryptedGoodsNonce = encrypted.nonce;
@@ -424,11 +490,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getDGSGood", {
 			"goods": data.goods
 		}, function(response) {
-			if (response.errorCode) {
-				return {
-					"error": "Could not fetch good."
-				};
-			} else {
+			if (!response.errorCode) {
 				if (data.quantity == response.quantity) {
 					data.deltaQuantity = "0";
 				} else if (data.quantity > response.quantity) {
@@ -436,8 +498,16 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					data.deltaQuantity = "-" + (response.quantity - data.quantity);
 				}
+			} else {
+				data.deltaQuantity = false;
 			}
 		}, false);
+
+		if (data.deltaQuantity === false) {
+			return {
+				"error": "Could not fetch goods."
+			};
+		}
 
 		if (data.deltaQuantity == "0") {
 			return {
@@ -475,7 +545,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#pending_purchases_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
+		$("#pending_orders_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
 	}
 
 	NRS.forms.dgsDeliveryComplete = function(response, data) {
@@ -483,10 +553,10 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#pending_purchases_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").addClass("tentative").find("span.delivery").html("Delivered");
+		$("#pending_orders_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").addClass("tentative").find("span.delivery").html("Delivered");
 	}
 
-	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal").on("show.bs.modal", function(e) {
+	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 
@@ -515,43 +585,120 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					} else {
 						var output = "<table>";
-						output += "<tr><td><strong>Product</strong>:</td><td>" + String(good.name).escapeHTML() + "</td></tr>";
-						output += "<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
-						output += "<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(response.quantity) + "</td></tr>";
+						output += "<tr><th><strong>Product</strong>:</th><td>" + String(good.name).escapeHTML() + "</td></tr>";
+						output += "<tr><th><strong>Price</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
+						output += "<tr><th><strong>Quantity</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 
-						if (type == "dgs_delivery_modal" || type == "dgs_refund_modal") {
-							if (response.note) {
-								try {
-									response.note = NRS.decryptNote(response.note, {
-										"nonce": response.noteNonce,
-										"account": response.buyer
-									});
-								} catch (err) {
-									response.note = String(err.message);
-								}
-							}
+						if (type == "dgs_view_refund_modal") {
+							output += "<tr><th><strong>Refund Price</strong>:</th><td>" + NRS.formatAmount(response.refundNQT) + " NXT</td></tr>";
+						}
 
-							output += "<tr><td><strong>Note</strong>:</td><td>" + String(response.note).escapeHTML().nl2br() + "</td></tr>";
+						if (response.note && (type == "dgs_delivery_modal" || type == "dgs_refund_modal")) {
+							output += "<tr><th><strong>Note</strong>:</th><td id='" + type + "_note'></td></tr>";
 						}
 
 						output += "</table>";
 
 						$modal.find(".purchase_info").html(output);
 
+						if (response.note && (type == "dgs_delivery_modal" || type == "dgs_refund_modal")) {
+							try {
+								NRS.tryToDecrypt(response, {
+									"note": ""
+								}, (response.buyer == NRS.account ? response.seller : response.buyer), {
+									"formEl": "#" + type + "_note",
+									"outputEl": "#" + type + "_note",
+									"showFormOnClick": true
+								});
+							} catch (err) {
+								response.note = String(err.message);
+							}
+						}
+
 						if (type == "dgs_refund_modal") {
+							$("#dgs_refund_purchase").val(response.purchase);
 							$("#dgs_refund_refund").val(NRS.convertToNXT(response.priceNQT));
 						} else if (type == "dgs_view_purchase_modal") {
-							console.log(response);
+							var $btn = $modal.find("button.btn-primary");
+							$btn.data("purchase", response.purchase);
+						} else if (type == "dgs_view_refund_modal") {
+							NRS.tryToDecrypt(response, {
+								"refundNote": "Refund Note"
+							}, (response.buyer == NRS.account ? response.seller : response.buyer), {
+								"noPadding": true,
+								"formEl": "#dgs_view_refund_output",
+								"outputEl": "#dgs_view_refund_output"
+							});
 						} else if (type == "dgs_view_delivery_modal") {
-							console.log(response);
+							if (response.pending) {
+								e.preventDefault();
+								$.growl("The goods have not yet been delivered.", {
+									"type": "warning"
+								});
+								return;
+							}
+
+							var fieldsToDecrypt = {
+								"goodsData": "Data"
+							};
+
+							if (response.feedbackNote) {
+								fieldsToDecrypt["feedbackNote"] = "Feedback Given";
+							}
+
+							if (response.refundNote) {
+								fieldsToDecrypt["refundNote"] = "Refund Note";
+							}
+
+							NRS.tryToDecrypt(response, fieldsToDecrypt, (response.buyer == NRS.account ? response.seller : response.buyer), {
+								"noPadding": true,
+								"formEl": "#dgs_view_delivery_output",
+								"outputEl": "#dgs_view_delivery_output"
+							});
+
+							var $btn = $modal.find("button.btn-primary");
+
+							if (!response.feedbackNote) {
+								if (NRS.account == response.buyer) {
+									$btn.data("purchase", response.purchase);
+									$btn.attr("data-target", "#dgs_feedback_modal");
+									$btn.html("Give Feedback");
+									$btn.show();
+								} else {
+									$btn.hide();
+								}
+							} else {
+								$btn.hide();
+							}
+
+							if (!response.refundNote && NRS.account == response.seller) {
+								var $btn = $modal.find("button.btn-primary");
+								$btn.data("purchase", response.purchase);
+								$btn.attr("data-target", "#dgs_refund_modal");
+								$btn.html("Refund purchase");
+								$btn.show();
+							}
 						}
 					}
 				}, false);
 			}
 		}, false);
 	}).on("hidden.bs.modal", function(e) {
+		var type = $(this).attr("id");
+
+		NRS.removeDecryptionForm($(this));
+
 		$(this).find(".purchase_info").html("Loading...");
-		$("#dgs_refund_purchase, #dgs_delivery_purchase").val("");
+
+		if (type == "dgs_refund_modal") {
+			$("#dgs_refund_purchase").val("");
+		} else if (type == "dgs_view_delivery_modal") {
+			$("#dgs_delivery_purchase").val("");
+		}
+
+		if (type == "dgs_view_delivery_modal") {
+			$(this).find("button.btn-primary").data("purchase", "");
+		}
 	});
 
 	$("#dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
@@ -590,6 +737,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}, false);
 	}).on("hidden.bs.modal", function(e) {
+		removeDecryptionForm($(this));
+
 		$(this).find(".goods_info").html("Loading...");
 		$("#dgs_quantity_change_current_quantity, #dgs_price_change_current_price, #dgs_quantity_change_quantity, #dgs_price_change_price").val("0");
 	});
