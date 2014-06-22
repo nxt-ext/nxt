@@ -195,9 +195,7 @@ var NRS = (function(NRS, $, undefined) {
 				callout.removeClass(classes).addClass("callout-danger").html("The recipient account is malformed, please adjust.").show();
 			}
 		} else {
-			NRS.getAccountError(account, function(response) {
-				callout.removeClass(classes).addClass("callout-" + response.type).html(response.message.escapeHTML()).show();
-			});
+			callout.removeClass(classes).addClass("callout-danger").html("Numeric account IDs are no longer allowed.").show();
 		}
 	}
 

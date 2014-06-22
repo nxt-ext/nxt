@@ -128,9 +128,19 @@ var NRS = (function(NRS, $, undefined) {
 			data.deadline = String(data.deadline * 60); //hours to minutes
 		}
 
+		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+			$modal.find(".error_message").html("Secret phrase is a required field.").show();
+			NRS.unlockForm($modal, $btn);
+			return;
+		}
+
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
-			if (!/^\d+$/.test(data.recipient) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
+			if (/^\d+$/.test(data.recipient)) {
+				$modal.find(".error_message").html("Numeric account IDs are no longer allowed.").show();
+				NRS.unlockForm($modal, $btn);
+				return;
+			} else if (!/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
 				var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
 				if (!convertedAccountId || (!/^\d+$/.test(convertedAccountId) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(convertedAccountId))) {
 					$modal.find(".error_message").html("Invalid account ID.").show();
@@ -143,12 +153,6 @@ var NRS = (function(NRS, $, undefined) {
 					};
 				}
 			}
-		}
-
-		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
-			$modal.find(".error_message").html("Secret phrase is a required field.").show();
-			NRS.unlockForm($modal, $btn);
-			return;
 		}
 
 		if (!NRS.showedFormWarning) {
