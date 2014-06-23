@@ -173,7 +173,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (messages[i].subtype == 8) {
 					if (!sharedKey) {
 						try {
-							sharedKey = nxtCrypto.getSharedKeyWithAccount(otherUser);
+							sharedKey = NRS.getSharedKeyWithAccount(otherUser);
 						} catch (err) {
 							sharedKey = -1;
 						}
@@ -281,97 +281,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
-	NRS.encryptNote = function(message, options, secretPhrase) {
-		try {
-			if (!options.sharedKey) {
-				if (!options.privateKey) {
-					if (!secretPhrase) {
-						if (NRS.rememberPassword) {
-							secretPhrase = NRS.password;
-						} else {
-							throw {
-								"message": "Your password is required to encrypt this message.",
-								"errorCode": 1
-							};
-						}
-					}
-
-					options.privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
-				}
-
-				if (!options.publicKey) {
-					if (!options.account) {
-						throw {
-							"message": "Account ID not specified.",
-							"errorCode": 2
-						};
-					}
-					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
-				}
-			}
-
-			var encrypted = nxtCrypto.encryptData(converters.stringToByteArray(message), options);
-
-			return {
-				"message": converters.byteArrayToHexString(encrypted.data),
-				"nonce": converters.byteArrayToHexString(encrypted.nonce)
-			};
-		} catch (err) {
-			if (err.errorCode && err.errorCode < 3) {
-				throw err;
-			} else {
-				throw {
-					"message": "The message could not be encrypted.",
-					"errorCode": 3
-				};
-			}
-		}
-	}
-
-	NRS.decryptNote = function(message, options, secretPhrase) {
-		try {
-			if (!options.sharedKey) {
-				if (!options.privateKey) {
-					if (!secretPhrase) {
-						if (NRS.rememberPassword) {
-							secretPhrase = NRS.password;
-						} else {
-							throw {
-								"message": "Your password is required to decrypt this message.",
-								"errorCode": 1
-							};
-						}
-					}
-
-					options.privateKey = converters.hexStringToByteArray(nxtCrypto.getPrivateKey(secretPhrase));
-				}
-
-				if (!options.publicKey) {
-					if (!options.account) {
-						throw {
-							"message": "Account ID not specified.",
-							"errorCode": 2
-						};
-					}
-					options.publicKey = converters.hexStringToByteArray(nxtCrypto.getPublicKey(options.account, true));
-				}
-			}
-
-			options.nonce = converters.hexStringToByteArray(options.nonce);
-
-			return nxtCrypto.decryptData(converters.hexStringToByteArray(message), options);
-		} catch (err) {
-			if (err.errorCode && err.errorCode < 3) {
-				throw err;
-			} else {
-				throw {
-					"message": "The message could not be decrypted.",
-					"errorCode": 3
-				};
-			}
-		}
-	}
-
 	NRS.forms.sendMessage = function($modal) {
 		var requestType = "sendMessage";
 
@@ -437,7 +346,7 @@ var NRS = (function(NRS, $, undefined) {
 				return;
 			}
 
-			var accountId = NRS.generateAccountId(data.secretPhrase);
+			var accountId = NRS.getAccountId(data.secretPhrase);
 
 			if (accountId != NRS.account) {
 				$.growl("Incorrect secret phrase.", {

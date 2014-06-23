@@ -84,7 +84,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//gets account id from secret phrase client side, used only for login.
 		if (requestType == "getAccountId") {
-			var accountId = NRS.generateAccountId(data.secretPhrase, true);
+			var accountId = NRS.getAccountId(data.secretPhrase);
 
 			if (callback) {
 				callback({
@@ -96,7 +96,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//check to see if secretPhrase supplied matches logged in account, if not - show error.
 		if ("secretPhrase" in data) {
-			var accountId = NRS.generateAccountId(NRS.rememberPassword ? NRS.password : data.secretPhrase);
+			var accountId = NRS.getAccountId(NRS.rememberPassword ? NRS.password : data.secretPhrase);
 			if (accountId != NRS.account) {
 				if (callback) {
 					callback({
@@ -244,9 +244,9 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode && !response.error) {
 				var publicKey = NRS.generatePublicKey(secretPhrase);
-				var signature = nxtCrypto.sign(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
+				var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
-				if (!nxtCrypto.verify(signature, response.unsignedTransactionBytes, publicKey)) {
+				if (!NRS.verifyBytes(signature, response.unsignedTransactionBytes, publicKey)) {
 					if (callback) {
 						callback({
 							"errorCode": 1,

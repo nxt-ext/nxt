@@ -2,6 +2,226 @@ var NRS = (function(NRS, $, undefined) {
 	var _decryptionPassword;
 	var _decryptedTransactions = {};
 	var _encryptedNote = null;
+	var _hash = {
+		init: SHA256_init,
+		update: SHA256_write,
+		getBytes: SHA256_finalize
+	};
+
+	NRS.generatePublicKey = function(secretPhrase) {
+		return NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+	}
+
+	NRS.getPublicKey = function(secretPhrase, isAccountNumber) {
+		if (isAccountNumber) {
+			var accountNumber = secretPhrase;
+			var publicKey = "";
+
+			//synchronous!
+			NRS.sendRequest("getAccountPublicKey", {
+				"account": accountNumber
+			}, function(response) {
+				if (!response.publicKey) {
+					throw "Account does not have a public key.";
+				} else {
+					publicKey = response.publicKey;
+				}
+			}, false);
+
+			return publicKey;
+		} else {
+			var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
+			var digest = simpleHash(secretPhraseBytes);
+			return converters.byteArrayToHexString(curve25519.keygen(digest).p);
+		}
+	}
+
+	NRS.getPrivateKey = function(secretPhrase) {
+		SHA256_init();
+		SHA256_write(converters.stringToByteArray(secretPhrase));
+		return converters.shortArrayToHexString(curve25519_clamp(converters.byteArrayToShortArray(SHA256_finalize())));
+	}
+
+	NRS.getAccountId = function(secretPhrase) {
+		var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+
+		/*	
+		if (NRS.accountInfo && NRS.accountInfo.publicKey && publicKey != NRS.accountInfo.publicKey) {
+			return -1;
+		}
+		*/
+
+		var hex = converters.hexStringToByteArray(publicKey);
+
+		_hash.init();
+		_hash.update(hex);
+
+		var account = _hash.getBytes();
+
+		account = converters.byteArrayToHexString(account);
+
+		var slice = (converters.hexStringToByteArray(account)).slice(0, 8);
+
+		return byteArrayToBigInteger(slice).toString();
+	}
+
+	NRS.encryptNote = function(message, options, secretPhrase) {
+		try {
+			if (!options.sharedKey) {
+				if (!options.privateKey) {
+					if (!secretPhrase) {
+						if (NRS.rememberPassword) {
+							secretPhrase = NRS.password;
+						} else {
+							throw {
+								"message": "Your password is required to encrypt this message.",
+								"errorCode": 1
+							};
+						}
+					}
+
+					options.privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
+				}
+
+				if (!options.publicKey) {
+					if (!options.account) {
+						throw {
+							"message": "Account ID not specified.",
+							"errorCode": 2
+						};
+					}
+					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+				}
+			}
+
+			var encrypted = encryptData(converters.stringToByteArray(message), options);
+
+			return {
+				"message": converters.byteArrayToHexString(encrypted.data),
+				"nonce": converters.byteArrayToHexString(encrypted.nonce)
+			};
+		} catch (err) {
+			if (err.errorCode && err.errorCode < 3) {
+				throw err;
+			} else {
+				throw {
+					"message": "The message could not be encrypted.",
+					"errorCode": 3
+				};
+			}
+		}
+	}
+
+	NRS.decryptNote = function(message, options, secretPhrase) {
+		try {
+			if (!options.sharedKey) {
+				if (!options.privateKey) {
+					if (!secretPhrase) {
+						if (NRS.rememberPassword) {
+							secretPhrase = NRS.password;
+						} else {
+							throw {
+								"message": "Your password is required to decrypt this message.",
+								"errorCode": 1
+							};
+						}
+					}
+
+					options.privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
+				}
+
+				if (!options.publicKey) {
+					if (!options.account) {
+						throw {
+							"message": "Account ID not specified.",
+							"errorCode": 2
+						};
+					}
+					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+				}
+			}
+
+			options.nonce = converters.hexStringToByteArray(options.nonce);
+
+			return decryptData(converters.hexStringToByteArray(message), options);
+		} catch (err) {
+			if (err.errorCode && err.errorCode < 3) {
+				throw err;
+			} else {
+				throw {
+					"message": "The message could not be decrypted.",
+					"errorCode": 3
+				};
+			}
+		}
+	}
+
+	NRS.getSharedKeyWithAccount = function(account, secretPhrase) {
+		try {
+			if (!secretPhrase) {
+				if (NRS.rememberPassword) {
+					secretPhrase = NRS.password;
+				} else {
+					throw {
+						"message": "Your password required to encrypt this message.",
+						"errorCode": 3
+					};
+				}
+			}
+
+			var privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
+
+			var publicKey = converters.hexStringToByteArray(NRS.getPublicKey(account, true));
+
+			return getSharedKey(privateKey, publicKey);
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	NRS.signBytes = function(message, secretPhrase) {
+		var messageBytes = converters.hexStringToByteArray(message);
+		var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
+
+		var digest = simpleHash(secretPhraseBytes);
+		var s = curve25519.keygen(digest).s;
+
+		var m = simpleHash(messageBytes);
+
+		_hash.init();
+		_hash.update(m);
+		_hash.update(s);
+		var x = _hash.getBytes();
+
+		var y = curve25519.keygen(x).p;
+
+		_hash.init();
+		_hash.update(m);
+		_hash.update(y);
+		var h = _hash.getBytes();
+
+		var v = curve25519.sign(h, x, s);
+
+		return converters.byteArrayToHexString(v.concat(h));
+	}
+
+	NRS.verifyBytes = function(signature, message, publicKey) {
+		var signatureBytes = converters.hexStringToByteArray(signature);
+		var messageBytes = converters.hexStringToByteArray(message);
+		var publicKeyBytes = converters.hexStringToByteArray(publicKey);
+		var v = signatureBytes.slice(0, 32);
+		var h = signatureBytes.slice(32);
+		var y = curve25519.verify(v, h, publicKeyBytes);
+
+		var m = simpleHash(messageBytes);
+
+		_hash.init();
+		_hash.update(m);
+		_hash.update(y);
+		var h2 = _hash.getBytes();
+
+		return areByteArraysEqual(h, h2);
+	}
 
 	NRS.unsetDecryptionPassword = function() {
 		_decryptionPassword = "";
@@ -136,7 +356,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		var accountId = NRS.generateAccountId(password);
+		var accountId = NRS.getAccountId(password);
 		if (accountId != NRS.account) {
 			$form.find(".callout").html("Incorrect secret phrase.").show();
 			return;
@@ -207,6 +427,148 @@ var NRS = (function(NRS, $, undefined) {
 			_decryptionPassword = password;
 		}
 	});
+
+	function simpleHash(message) {
+		_hash.init();
+		_hash.update(message);
+		return _hash.getBytes();
+	}
+
+	function areByteArraysEqual(bytes1, bytes2) {
+		if (bytes1.length !== bytes2.length)
+			return false;
+
+		for (var i = 0; i < bytes1.length; ++i) {
+			if (bytes1[i] !== bytes2[i])
+				return false;
+		}
+
+		return true;
+	}
+
+	function curve25519_clamp(curve) {
+		curve[0] &= 0xFFF8;
+		curve[15] &= 0x7FFF;
+		curve[15] |= 0x4000;
+		return curve;
+	}
+
+	function byteArrayToBigInteger(byteArray, startIndex) {
+		var value = new BigInteger("0", 10);
+		var temp1, temp2;
+		for (var i = byteArray.length - 1; i >= 0; i--) {
+			temp1 = value.multiply(new BigInteger("256", 10));
+			temp2 = temp1.add(new BigInteger(byteArray[i].toString(10), 10));
+			value = temp2;
+		}
+
+		return value;
+	}
+
+	function aesEncrypt(plaintext, options) {
+		// CryptoJS likes WordArray parameters
+		var text = converters.byteArrayToWordArray(plaintext);
+
+		if (!options.sharedKey) {
+			var sharedKey = getSharedKey(options.privateKey, options.publicKey);
+		} else {
+			var sharedKey = options.sharedKey.slice(0); //clone
+		}
+
+		for (var i = 0; i < 32; i++) {
+			sharedKey[i] ^= options.nonce[i];
+		}
+
+		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+
+		var tmp = new Uint8Array(16);
+		window.crypto.getRandomValues(tmp);
+
+		var iv = converters.byteArrayToWordArray(tmp);
+		var encrypted = CryptoJS.AES.encrypt(text, key, {
+			iv: iv
+		});
+
+		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
+
+		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
+
+		return ivOut.concat(ciphertextOut);
+	}
+
+	function aesDecrypt(ivCiphertext, options) {
+		if (ivCiphertext.length < 16 || ivCiphertext.length % 16 != 0) {
+			throw {
+				name: "invalid ciphertext"
+			};
+		}
+
+		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
+		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
+
+		if (!options.sharedKey) {
+			var sharedKey = getSharedKey(options.privateKey, options.publicKey);
+		} else {
+			var sharedKey = options.sharedKey.slice(0); //clone
+		}
+
+
+		for (var i = 0; i < 32; i++) {
+			sharedKey[i] ^= options.nonce[i];
+		}
+
+		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+
+		var encrypted = CryptoJS.lib.CipherParams.create({
+			ciphertext: ciphertext,
+			iv: iv,
+			key: key
+		});
+
+		var decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+			iv: iv
+		});
+
+		var plaintext = converters.wordArrayToByteArray(decrypted);
+
+		return plaintext;
+	}
+
+	function encryptData(plaintext, options) {
+		if (!options.sharedKey) {
+			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
+		}
+
+		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
+
+		options.nonce = new Uint8Array(32);
+		window.crypto.getRandomValues(options.nonce);
+
+		var data = aesEncrypt(compressedPlaintext, options);
+
+		return {
+			"nonce": options.nonce,
+			"data": data
+		};
+	}
+
+	function decryptData(data, options) {
+		if (!options.sharedKey) {
+			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
+		}
+
+		var compressedPlaintext = aesDecrypt(data, options);
+
+		var binData = new Uint8Array(compressedPlaintext);
+
+		var data = pako.inflate(binData);
+
+		return converters.byteArrayToString(data);
+	}
+
+	function getSharedKey(key1, key2) {
+		return converters.shortArrayToByteArray(curve25519_(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
+	}
 
 	return NRS;
 }(NRS || {}, jQuery));

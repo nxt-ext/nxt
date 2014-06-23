@@ -702,14 +702,6 @@ var NRS = (function(NRS, $, undefined) {
 		return hex;
 	}
 
-	NRS.generatePublicKey = function(secretPhrase) {
-		return nxtCrypto.getPublicKey(converters.stringToHexString(secretPhrase));
-	}
-
-	NRS.generateAccountId = function(secretPhrase) {
-		return nxtCrypto.getAccountId(secretPhrase);
-	}
-
 	NRS.getFormData = function($form) {
 		var serialized = $form.serializeArray();
 		var data = {};
