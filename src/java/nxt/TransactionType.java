@@ -8,7 +8,6 @@ import org.json.simple.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -200,8 +199,10 @@ public abstract class TransactionType {
 
     abstract void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException;
 
+    /*
     abstract void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount);
+    */
 
     boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
         return false;
@@ -257,9 +258,11 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+            */
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -288,9 +291,11 @@ public abstract class TransactionType {
         @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
+        /*
         @Override
         final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+        */
 
         public final static TransactionType ARBITRARY_MESSAGE = new Messaging() {
 
@@ -804,9 +809,11 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+            */
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -896,7 +903,7 @@ public abstract class TransactionType {
                 senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
-
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
@@ -913,6 +920,7 @@ public abstract class TransactionType {
                 accountAccumulatedAssetQuantities.put(attachment.getAssetId(),
                         Convert.safeAdd(assetAccumulatedAssetQuantities, attachment.getQuantityQNT()));
             }
+            */
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -1014,6 +1022,7 @@ public abstract class TransactionType {
                 senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
@@ -1030,6 +1039,7 @@ public abstract class TransactionType {
                 accountAccumulatedAssetQuantities.put(attachment.getAssetId(),
                         Convert.safeAdd(assetAccumulatedAssetQuantities, attachment.getQuantityQNT()));
             }
+            */
 
         };
 
@@ -1080,6 +1090,7 @@ public abstract class TransactionType {
                 senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT()));
             }
 
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
@@ -1087,6 +1098,7 @@ public abstract class TransactionType {
                 accumulatedAmounts.put(transaction.getSenderId(),
                         Convert.safeAdd(accumulatedAmount, Convert.safeMultiply(attachment.getQuantityQNT(), attachment.getPriceNQT())));
             }
+            */
 
         };
 
@@ -1111,9 +1123,11 @@ public abstract class TransactionType {
                 return true;
             }
 
+            /*
             @Override
             final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                     Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+            */
 
             @Override
             final void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
@@ -1217,9 +1231,11 @@ public abstract class TransactionType {
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
+        /*
         @Override
         void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                           Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+        */
 
         @Override
         final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -1498,6 +1514,7 @@ public abstract class TransactionType {
                 senderAccount.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
             }
 
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
@@ -1505,6 +1522,7 @@ public abstract class TransactionType {
                 accumulatedAmounts.put(transaction.getSenderId(),
                         Convert.safeAdd(accumulatedAmount, Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT())));
             }
+            */
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
@@ -1707,6 +1725,7 @@ public abstract class TransactionType {
                 DigitalGoodsStore.undoRefund(transaction.getSenderId(), attachment.getPurchaseId(), attachment.getRefundNQT());
             }
 
+            /*
             @Override
             void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                               Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
@@ -1714,6 +1733,7 @@ public abstract class TransactionType {
                 accumulatedAmounts.put(transaction.getSenderId(),
                         Convert.safeAdd(accumulatedAmount, attachment.getRefundNQT()));
             }
+            */
 
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
@@ -1749,9 +1769,11 @@ public abstract class TransactionType {
         @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
+        /*
         @Override
         final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
                                 Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {}
+        */
 
         public static final TransactionType EFFECTIVE_BALANCE_LEASING = new AccountControl() {
 

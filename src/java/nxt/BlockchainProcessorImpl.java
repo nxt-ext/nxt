@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -524,89 +525,116 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 Map<TransactionType, Set<String>> duplicates = new HashMap<>();
-                Map<Long, Long> accumulatedAmounts = new HashMap<>();
-                Map<Long, Map<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
+                //Map<Long, Long> accumulatedAmounts = new HashMap<>();
+                //Map<Long, Map<Long, Long>> accumulatedAssetQuantities = new HashMap<>();
                 long calculatedTotalAmount = 0;
                 long calculatedTotalFee = 0;
                 MessageDigest digest = Crypto.sha256();
 
-                for (TransactionImpl transaction : block.getTransactions()) {
+                Set<Long> unappliedUnconfirmed = transactionProcessor.undoAllUnconfirmed();
+                Set<Long> appliedUnconfirmed = new HashSet<>();
 
-                    // cfb: Block 303 contains a transaction which expired before the block timestamp
-                    if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
-                            || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() != 303)) {
-                        throw new TransactionNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
-                                + " for transaction " + transaction.getStringId() + ", current time is " + curTime
-                                + ", block timestamp is " + block.getTimestamp(), transaction);
+                try {
+
+                    for (TransactionImpl transaction : block.getTransactions()) {
+
+                        // cfb: Block 303 contains a transaction which expired before the block timestamp
+                        if (transaction.getTimestamp() > curTime + 15 || transaction.getTimestamp() > block.getTimestamp() + 15
+                                || (transaction.getExpiration() < block.getTimestamp() && previousLastBlock.getHeight() != 303)) {
+                            throw new TransactionNotAcceptedException("Invalid transaction timestamp " + transaction.getTimestamp()
+                                    + " for transaction " + transaction.getStringId() + ", current time is " + curTime
+                                    + ", block timestamp is " + block.getTimestamp(), transaction);
+                        }
+                        if (TransactionDb.hasTransaction(transaction.getId())) {
+                            throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
+                                    + " is already in the blockchain", transaction);
+                        }
+                        if (transaction.getReferencedTransactionFullHash() != null) {
+                            if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                    && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
+                                    || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
+                                    && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
+                                throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
+                                        + transaction.getReferencedTransactionFullHash()
+                                        + " for transaction " + transaction.getStringId(), transaction);
+                            }
+                        }
+                        if (!transaction.verify()) {
+                            throw new TransactionNotAcceptedException("Signature verification failed for transaction "
+                                    + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
+                        }
+                        if (transaction.getId().equals(Long.valueOf(0L))) {
+                            throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
+                        }
+                        if (transaction.isDuplicate(duplicates)) {
+                            throw new TransactionNotAcceptedException("Transaction is a duplicate: "
+                                    + transaction.getStringId(), transaction);
+                        }
+                        try {
+                            transaction.validateAttachment();
+                        } catch (NxtException.ValidationException e) {
+                            throw new TransactionNotAcceptedException(e.getMessage(), transaction);
+                        }
+
+                        if (transaction.applyUnconfirmed()) {
+                            appliedUnconfirmed.add(transaction.getId());
+                        } else {
+                            throw new TransactionNotAcceptedException("Double spending transaction: " + transaction.getStringId(), transaction);
+                        }
+
+                        calculatedTotalAmount += transaction.getAmountNQT();
+
+                        //transaction.updateTotals(accumulatedAmounts, accumulatedAssetQuantities);
+
+                        calculatedTotalFee += transaction.getFeeNQT();
+
+                        digest.update(transaction.getBytes());
+
                     }
-                    if (TransactionDb.hasTransaction(transaction.getId())) {
-                        throw new TransactionNotAcceptedException("Transaction " + transaction.getStringId()
-                                + " is already in the blockchain", transaction);
+
+                    if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
+                        throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
                     }
-                    if (transaction.getReferencedTransactionFullHash() != null) {
-                        if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                                && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.getReferencedTransactionFullHash())))
-                                || (previousLastBlock.getHeight() >= Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
-                                && !hasAllReferencedTransactions(transaction, transaction.getTimestamp(), 0))) {
-                            throw new TransactionNotAcceptedException("Missing or invalid referenced transaction "
-                                    + transaction.getReferencedTransactionFullHash()
-                                    + " for transaction " + transaction.getStringId(), transaction);
+                    if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
+                        throw new BlockNotAcceptedException("Payload hash doesn't match");
+                    }
+
+                    /*
+                    for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
+                        Account senderAccount = Account.getAccount(accumulatedAmountEntry.getKey());
+                        if (senderAccount.getBalanceNQT() < accumulatedAmountEntry.getValue()) {
+                            throw new BlockNotAcceptedException("Not enough funds in sender account: " + Convert.toUnsignedLong(senderAccount.getId()));
                         }
                     }
-                    if (! transaction.verify()) {
-                        throw new TransactionNotAcceptedException("Signature verification failed for transaction "
-                                + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
-                    }
-                    if (transaction.getId().equals(Long.valueOf(0L))) {
-                        throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
-                    }
-                    if (transaction.isDuplicate(duplicates)) {
-                        throw new TransactionNotAcceptedException("Transaction is a duplicate: "
-                                + transaction.getStringId(), transaction);
-                    }
-                    try {
-                        transaction.validateAttachment();
-                    } catch (NxtException.ValidationException e) {
-                        throw new TransactionNotAcceptedException(e.getMessage(), transaction);
-                    }
 
-                    calculatedTotalAmount += transaction.getAmountNQT();
-
-                    transaction.updateTotals(accumulatedAmounts, accumulatedAssetQuantities);
-
-                    calculatedTotalFee += transaction.getFeeNQT();
-
-                    digest.update(transaction.getBytes());
-
-                }
-
-                if (calculatedTotalAmount != block.getTotalAmountNQT() || calculatedTotalFee != block.getTotalFeeNQT()) {
-                    throw new BlockNotAcceptedException("Total amount or fee don't match transaction totals");
-                }
-                if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
-                    throw new BlockNotAcceptedException("Payload hash doesn't match");
-                }
-                for (Map.Entry<Long, Long> accumulatedAmountEntry : accumulatedAmounts.entrySet()) {
-                    Account senderAccount = Account.getAccount(accumulatedAmountEntry.getKey());
-                    if (senderAccount.getBalanceNQT() < accumulatedAmountEntry.getValue()) {
-                        throw new BlockNotAcceptedException("Not enough funds in sender account: " + Convert.toUnsignedLong(senderAccount.getId()));
-                    }
-                }
-
-                for (Map.Entry<Long, Map<Long, Long>> accumulatedAssetQuantitiesEntry : accumulatedAssetQuantities.entrySet()) {
-                    Account senderAccount = Account.getAccount(accumulatedAssetQuantitiesEntry.getKey());
-                    for (Map.Entry<Long, Long> accountAccumulatedAssetQuantitiesEntry : accumulatedAssetQuantitiesEntry.getValue().entrySet()) {
-                        Long assetId = accountAccumulatedAssetQuantitiesEntry.getKey();
-                        Long quantityQNT = accountAccumulatedAssetQuantitiesEntry.getValue();
-                        if (senderAccount.getAssetBalanceQNT(assetId) < quantityQNT) {
-                            throw new BlockNotAcceptedException("Asset balance not sufficient in sender account " + Convert.toUnsignedLong(senderAccount.getId()));
+                    for (Map.Entry<Long, Map<Long, Long>> accumulatedAssetQuantitiesEntry : accumulatedAssetQuantities.entrySet()) {
+                        Account senderAccount = Account.getAccount(accumulatedAssetQuantitiesEntry.getKey());
+                        for (Map.Entry<Long, Long> accountAccumulatedAssetQuantitiesEntry : accumulatedAssetQuantitiesEntry.getValue().entrySet()) {
+                            Long assetId = accountAccumulatedAssetQuantitiesEntry.getKey();
+                            Long quantityQNT = accountAccumulatedAssetQuantitiesEntry.getValue();
+                            if (senderAccount.getAssetBalanceQNT(assetId) < quantityQNT) {
+                                throw new BlockNotAcceptedException("Asset balance not sufficient in sender account " + Convert.toUnsignedLong(senderAccount.getId()));
+                            }
                         }
                     }
+                    */
+
+                    block.setPrevious(previousLastBlock);
+
+                    addBlock(block);
+
+                    unappliedUnconfirmed.removeAll(appliedUnconfirmed);
+
+                } catch (TransactionNotAcceptedException | RuntimeException e) {
+                    for (TransactionImpl transaction : block.getTransactions()) {
+                        if (appliedUnconfirmed.contains(transaction.getId())) {
+                            transaction.undoUnconfirmed();
+                        }
+                    }
+                    throw e;
+                } finally {
+                    transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
                 }
-
-                block.setPrevious(previousLastBlock);
-
-                addBlock(block);
 
             } catch (RuntimeException e) {
                 Logger.logMessage("Error pushing block", e);
@@ -662,7 +690,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
-        Map<Long, Long> accumulatedAmounts = new HashMap<>();
+        //Map<Long, Long> accumulatedAmounts = new HashMap<>();
 
         long totalAmountNQT = 0;
         long totalFeeNQT = 0;
@@ -695,6 +723,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
+                /*
                 Long sender = transaction.getSenderId();
                 Long accumulatedAmount = accumulatedAmounts.get(sender);
                 if (accumulatedAmount == null) {
@@ -711,6 +740,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage("Transaction " + transaction.getStringId() + " causes overflow, skipping", e);
                     continue;
                 }
+                */
 
                 newTransactions.put(transaction.getId(), transaction);
                 payloadLength += transactionLength;
@@ -869,7 +899,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
-                        transactionProcessor.apply(currentBlock);
+                        currentBlock.apply();
+                        for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                            if (! transaction.applyUnconfirmed()) {
+                                throw new TransactionNotAcceptedException("Double spending transaction: "
+                                        + transaction.getStringId(), transaction);
+                            }
+                            transaction.apply();
+                        }
                         blockListeners.notify(currentBlock, Event.AFTER_BLOCK_APPLY);
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();
