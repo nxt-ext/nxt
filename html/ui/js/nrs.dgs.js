@@ -84,6 +84,10 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.incoming.newest_dgs = function() {
+		NRS.loadPage("newest_dgs");
+	}
+
 	NRS.pages.dgs_seller = function() {
 		var content = "";
 
@@ -110,6 +114,10 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.dataLoaded(content);
 			NRS.showMore();
 		});
+	}
+
+	NRS.incoming.dgs_seller = function() {
+		NRS.loadPage("dgs_seller");
 	}
 
 	NRS.pages.purchased_dgs = function() {
@@ -146,6 +154,12 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.incoming.purchased_dgs = function(transactions) {
+		if (NRS.hasTransactionUpdates(transactions)) {
+			NRS.loadPage("purchased_dgs");
+		}
+	}
+
 	NRS.pages.completed_orders_dgs = function() {
 		NRS.sendRequest("getDGSPurchases", {
 			"seller": NRS.account,
@@ -169,6 +183,10 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.incoming.completed_orders_dgs = function() {
+		NRS.loadPage("completed_orders_dgs");
+	}
+
 	NRS.pages.pending_orders_dgs = function() {
 		NRS.sendRequest("getDGSPendingPurchases", {
 			"seller": NRS.account,
@@ -190,6 +208,10 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.dataLoaded(content);
 		});
+	}
+
+	NRS.incoming.pending_orders_dgs = function() {
+		NRS.loadPage("pending_orders_dgs");
 	}
 
 	NRS.pages.my_dgs_listings = function() {
@@ -244,9 +266,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.incoming.my_dgs_listings = function(transactions) {
-		if (transactions || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
-			NRS.loadPage("my_dgs_listings");
-		}
+		NRS.loadPage("my_dgs_listings");
 	}
 
 	NRS.forms.dgsListing = function($modal) {
@@ -373,23 +393,45 @@ var NRS = (function(NRS, $, undefined) {
 		};
 	}
 
-	/*
 	NRS.forms.dgsPurchase = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		NRS.sendRequest("getDGSGood", {
+			"goods": data.goods
+		}, function(response) {
+			if (response.errorCode) {
+				return {
+					"error": "Could not fetch goods."
+				};
+			} else {
+				data.seller = response.seller;
+			}
+		}, false);
+
 		if (data.note) {
-			var encrypted = nxtCrypto.encryptData(data.note);
+			try {
+				var encrypted = NRS.encryptNote(data.note, {
+					"account": data.seller
+				}, data.secretPhrase);
 
-			data.encryptedNoteNonce = encrypted.nonce;
-			data.encryptedNote = encrypted.data;
-
+				data.encryptedNoteNonce = encrypted.nonce;
+				data.encryptedNote = encrypted.message;
+			} catch (err) {
+				return {
+					"error": err.message
+				};
+			}
 			delete data.note;
 		}
+
+		data.deliveryDeadlineTimestamp = Math.floor(new Date().getTime() / 1000) + 60 * 60 * data.deliveryDeadlineTimestamp;
+
+		delete data.seller;
 
 		return {
 			"data": data
 		};
-	}*/
+	}
 
 	NRS.forms.dgsRefund = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
@@ -469,16 +511,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		delete data.buyer;
 		delete data.data;
-
-		return {
-			"data": data
-		};
-	}
-
-	NRS.forms.dgsPurchase = function($modal) {
-		var data = NRS.getFormData($modal.find("form:first"));
-
-		data.deliveryDeadlineTimestamp = Math.floor(new Date().getTime() / 1000) + 60 * 60 * data.deliveryDeadlineTimestamp;
 
 		return {
 			"data": data

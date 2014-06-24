@@ -30,7 +30,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.currentPage = "dashboard";
 	NRS.currentSubPage = "";
 	NRS.pageNumber = 1;
-	NRS.itemsPerPage = 5;
+	NRS.itemsPerPage = 50;
 
 	NRS.pages = {};
 	NRS.incoming = {};
@@ -777,7 +777,6 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (NRS.blocks && NRS.blocks.length >= 10) {
 				for (var i = 0; i < 10; i++) {
-					console.log(NRS.blocks[i]);
 					if (NRS.blocks[i].generator != NRS.account) {
 						onAFork = false;
 						break;
