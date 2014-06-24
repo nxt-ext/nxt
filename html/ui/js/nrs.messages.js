@@ -70,6 +70,14 @@ var NRS = (function(NRS, $, undefined) {
 				$("#messages_sidebar").empty();
 				NRS.pageLoaded(callback);
 			} else {
+				var activeAccount = false;
+
+				var $active = $("#messages_sidebar a.active");
+
+				if ($active.length) {
+					activeAccount = $active.data("account");
+				}
+
 				var rows = "";
 				var menu = "";
 
@@ -119,6 +127,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#messages_sidebar").empty().append(rows);
 
+				if (activeAccount) {
+					$("#messages_sidebar a[data-account=" + activeAccount + "]").addClass("active").trigger("click");
+				}
+
 				NRS.pageLoaded(callback);
 			}
 		}
@@ -135,13 +147,12 @@ var NRS = (function(NRS, $, undefined) {
 				activeAccount = -1;
 			}
 
-			NRS.loadPage("messages", function() {
-				$("#messages_sidebar a[data-account=" + activeAccount + "]").trigger("click");
-			});
+			NRS.loadPage("messages");
 		}
 	}
 
 	$("#messages_sidebar").on("click", "a", function(e) {
+		console.log("IN CLICK");
 		e.preventDefault();
 
 		$("#messages_sidebar a.active").removeClass("active");
@@ -247,7 +258,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					output += "<dd class='to tentative" + (extra ? " " + extra : "") + "'><p>" + (extra == "to_decrypt" ? "<i class='fa fa-warning'></i> " : "") + String(decoded).escapeHTML().nl2br() + "</p></dd>";
+					output += "<dd class='to tentative" + (extra ? " " + extra : "") + "'><p>" + (extra == "to_decrypt" ? "<i class='fa fa-warning'></i> " : (extra == "decrypted" ? "<i class='fa fa-lock'></i> " : "")) + String(decoded).escapeHTML().nl2br() + "</p></dd>";
 				}
 			}
 		}
