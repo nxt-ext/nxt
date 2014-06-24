@@ -106,11 +106,20 @@ var NRS = (function(NRS, $, undefined) {
 			$(".popover").remove();
 		});
 
-		$(window).on("resize.asset", function() {
+		_fix();
+
+		$(window).on("resize", function() {
+			_fix();
+
 			if (NRS.currentPage == "asset_exchange") {
 				NRS.positionAssetSidebar();
 			}
 		});
+
+		$("[data-toggle='tooltip']").tooltip();
+
+		$(".sidebar .treeview").tree();
+
 
 		/*
 		$("#asset_exchange_search input[name=q]").addClear({
@@ -125,6 +134,20 @@ var NRS = (function(NRS, $, undefined) {
 			right: 0,
 			top: 4
 		});*/
+	}
+
+	function _fix() {
+		var height = $(window).height() - $("body > .header").height();
+		$(".wrapper").css("min-height", height + "px");
+		var content = $(".wrapper").height();
+
+		$(".content.content-stretch:visible").width($(".page:visible").width());
+
+		if (content > height) {
+			$(".left-side, html, body").css("min-height", content + "px");
+		} else {
+			$(".left-side, html, body").css("min-height", height + "px");
+		}
 	}
 
 	NRS.getState = function(callback) {
