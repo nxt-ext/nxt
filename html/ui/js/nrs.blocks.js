@@ -110,6 +110,7 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "success"
 				});
 				NRS.checkAliasVersions();
+				NRS.checkIfOnAFork();
 			} else {
 				NRS.updateBlockchainDownloadProgress();
 			}

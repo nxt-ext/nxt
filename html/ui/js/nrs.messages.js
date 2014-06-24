@@ -152,7 +152,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#messages_sidebar").on("click", "a", function(e) {
-		console.log("IN CLICK");
 		e.preventDefault();
 
 		$("#messages_sidebar a.active").removeClass("active");
@@ -451,9 +450,6 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.sendMessageComplete = function(response, data) {
-		console.log(response);
-		console.log(data);
-
 		data.message = data._extra.message;
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
@@ -528,7 +524,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (data.rememberPassword) {
-			console.log("set decryption password to " + data.secretPhrase);
 			NRS.setDecryptionPassword(data.secretPhrase);
 		}
 

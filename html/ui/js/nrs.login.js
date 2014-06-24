@@ -245,6 +245,8 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					}
 
+					NRS.checkIfOnAFork();
+
 					NRS.setupClipboardFunctionality();
 
 					if (callback) {

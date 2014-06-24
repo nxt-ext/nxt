@@ -227,8 +227,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		//always refresh peers and unconfirmed transactions..
-		if (NRS.currentPage == "peers" || (NRS.currentPage == "transactions" && NRS.transactionsPageType == "unconfirmed")) {
-			NRS.incoming.unconfirmed_transactions();
+		if (NRS.currentPage == "peers") {
+			NRS.incoming.peers();
+		} else if (NRS.currentPage == "transactions" && NRS.transactionsPageType == "unconfirmed") {
+			NRS.incoming.transactions();
 		} else {
 			if (!oldBlock || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 				if (NRS.incoming[NRS.currentPage]) {

@@ -771,6 +771,28 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.checkIfOnAFork = function() {
+		if (!NRS.downloadingBlockchain) {
+			var onAFork = true;
+
+			if (NRS.blocks && NRS.blocks.length >= 10) {
+				for (var i = 0; i < 10; i++) {
+					console.log(NRS.blocks[i]);
+					if (NRS.blocks[i].generator != NRS.account) {
+						onAFork = false;
+						break;
+					}
+				}
+			}
+
+			if (onAFork) {
+				$.growl("<strong>Warning</strong>: You are most likely on a fork (you have forged the last 10 blocks).", {
+					"type": "danger"
+				});
+			}
+		}
+	}
+
 	$("#id_search").on("submit", function(e) {
 		e.preventDefault();
 
