@@ -3,6 +3,7 @@ var NRS = (function(NRS, $, undefined) {
 		"submit_on_enter": 0,
 		"animate_forging": 1,
 		"news": -1,
+		"console_log": 0,
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000"
@@ -392,6 +393,12 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.settings["news"] != -1) {
 			$("#settings_news_initial").remove();
 		}
+
+		if (NRS.inApp) {
+			$("#settings_console_log_div").hide();
+		}
+
+		NRS.pageLoaded();
 	}
 
 	NRS.cssGradient = function(start, stop) {
@@ -889,6 +896,16 @@ var NRS = (function(NRS, $, undefined) {
 				$("#news_link").hide();
 			} else if (NRS.settings["news"] == 1) {
 				$("#news_link").show();
+			}
+		}
+
+		if (!NRS.inApp) {
+			if (!key || key == "console_log") {
+				if (NRS.settings["console_log"] == 0) {
+					$("#show_console").hide();
+				} else {
+					$("#show_console").show();
+				}
 			}
 		}
 	}
