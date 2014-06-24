@@ -121,6 +121,8 @@ var NRS = (function(NRS, $, undefined) {
 					if (!secretPhrase) {
 						if (NRS.rememberPassword) {
 							secretPhrase = NRS.password;
+						} else if (_decryptionPassword) {
+							secretPhrase = _decryptionPassword;
 						} else {
 							throw {
 								"message": "Your password is required to decrypt this message.",
@@ -241,6 +243,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.setDecryptionPassword = function(password) {
 		_decryptionPassword = password;
+	}
+
+	NRS.addDecryptedTransaction = function(identifier, content) {
+		if (!_decryptedTransactions[identifier]) {
+			_decryptedTransactions[identifier] = content;
+		}
 	}
 
 	NRS.tryToDecryptMessage = function(message) {

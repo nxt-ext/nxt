@@ -218,15 +218,36 @@ var NRS = (function(NRS, $, undefined) {
 			for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 				var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
-				if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subtype == 0 && unconfirmedTransaction.recipient == otherUser) {
-					var hex = unconfirmedTransaction.attachment.message;
-					if (hex.indexOf("feff") === 0) {
-						var decoded = NRS.convertFromHex16(hex);
+				if (unconfirmedTransaction.type == 1 && (unconfirmedTransaction.subtype == 0 || unconfirmedTransaction.subtype == 8) && unconfirmedTransaction.recipient == otherUser) {
+					var decoded = "";
+					var extra = "";
+
+					if (unconfirmedTransaction.subtype == 8) {
+						try {
+							decoded = NRS.tryToDecryptMessage(unconfirmedTransaction);
+							extra = "decrypted";
+						} catch (err) {
+							if (err.errorCode && err.errorCode == 1) {
+								decoded = "Your password is needed to decrypt this message.";
+								extra = "to_decrypt";
+							} else {
+								decoded = "An unknown error occured during decryption.";
+							}
+						}
 					} else {
-						var decoded = NRS.convertFromHex8(hex);
+						try {
+							decoded = converters.hexStringToString(unconfirmedTransaction.attachment.message);
+						} catch (err) {
+							//legacy...
+							if (unconfirmedTransaction.attachment.message.indexOf("feff") === 0) {
+								decoded = NRS.convertFromHex16(unconfirmedTransaction.attachment.message);
+							} else {
+								decoded = NRS.convertFromHex8(unconfirmedTransaction.attachment.message);
+							}
+						}
 					}
 
-					output += "<dd class='to tentative'><p>" + decoded.escapeHTML().nl2br() + "</p></dd>";
+					output += "<dd class='to tentative" + (extra ? " " + extra : "") + "'><p>" + (extra == "to_decrypt" ? "<i class='fa fa-warning'></i> " : "") + String(decoded).escapeHTML().nl2br() + "</p></dd>";
 				}
 			}
 		}
@@ -360,23 +381,33 @@ var NRS = (function(NRS, $, undefined) {
 
 		$btn.button("loading");
 
-		var hex = "";
-		var error = "";
+		var requestType = "sendMessage";
 
 		if ($("#inline_message_encrypt").is(":checked")) {
-			hex = NRS.encryptNote(message, {
-				"account": data.recipient
-			}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
+			try {
+				var encrypted = NRS.encryptNote(message, {
+					"account": data.recipient
+				}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
+
+				requestType = "sendEncryptedNote";
+
+				data["encryptedNote"] = encrypted.message;
+				data["encryptedNoteNonce"] = encrypted.nonce;
+			} catch (err) {
+				$.growl("Could not encrypt message.", {
+					"type": "danger"
+				});
+				return;
+			}
 		} else {
-			hex = converters.stringToHexString(message);
+			data["message"] = converters.stringToHexString(message);
 		}
 
 		data["_extra"] = {
 			"message": message
 		};
-		data["message"] = hex;
 
-		NRS.sendRequest("sendMessage", data, function(response, input) {
+		NRS.sendRequest(requestType, data, function(response, input) {
 			if (response.errorCode) {
 				$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", {
 					type: "danger"
@@ -388,9 +419,13 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#inline_message_text").val("");
 
+				NRS.addDecryptedTransaction(response.transaction, {
+					"message": String(data["_extra"].message)
+				});
+
 				NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
 					if (!alreadyProcessed) {
-						$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data["_extra"].message.escapeHTML() + "</p></dd>");
+						$("#message_details dl.chat").append("<dd class='to tentative" + (requestType == "sendEncryptedNote" ? " decrypted" : "") + "'><p>" + (requestType == "sendEncryptedNote" ? "<i class='fa fa-lock'></i> " : "") + String(data["_extra"].message).escapeHTML() + "</p></dd>");
 					}
 				});
 
@@ -405,6 +440,9 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.sendMessageComplete = function(response, data) {
+		console.log(response);
+		console.log(data);
+
 		data.message = data._extra.message;
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
@@ -416,6 +454,10 @@ var NRS = (function(NRS, $, undefined) {
 				"type": "success"
 			});
 		}
+
+		NRS.addDecryptedTransaction(response.transaction, {
+			"message": String(data["_extra"].message)
+		});
 
 		if (NRS.currentPage == "messages") {
 			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0)).getTime();
@@ -433,8 +475,10 @@ var NRS = (function(NRS, $, undefined) {
 				$sidebar.prepend($existing);
 				$existing.find("p.list-group-item-text").html(NRS.formatTimestamp(now));
 
+				var isEncrypted = (data.requestType == "sendEncryptedNote");
+
 				if ($existing.hasClass("active")) {
-					$("#message_details dl.chat").append("<dd class='to tentative'><p>" + data.message.escapeHTML() + "</p></dd>");
+					$("#message_details dl.chat").append("<dd class='to tentative" + (isEncrypted ? " decrypted" : "") + "'><p>" + (isEncrypted ? "<i class='fa fa-lock'></i> " : "") + data.message.escapeHTML() + "</p></dd>");
 				}
 			} else {
 				var accountTitle = NRS.getAccountTitle(data, "recipient");
@@ -473,6 +517,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (data.rememberPassword) {
+			console.log("set decryption password to " + data.secretPhrase);
 			NRS.setDecryptionPassword(data.secretPhrase);
 		}
 
