@@ -316,7 +316,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#stop_forging_modal .show_logout").show();
 			$("#stop_forging_modal").modal("show");
 		} else {
-			NRS.unsetDecryptionPassword();
+			NRS.setDecryptionPassword("");
 			NRS.password = "";
 			window.location.reload();
 		}

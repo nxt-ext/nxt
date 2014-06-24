@@ -3209,12 +3209,21 @@ table.settings td {
 	cursor:pointer;
 }
 
-.decryption_failed {
+dd.to_decrypt p {
+  background:yellow !important;
+  cursor:pointer;
+}
+
+dd.to_decrypt p::before {
+  border-right: 1.5em solid yellow !important;
+}
+
+dd.decryption_failed p {
 	background:red !important;
 	color:white !important;
 }
 
-.decryption_failed::before {
+dd.decryption_failed p::before {
 	border-right: 1.5em solid red !important;
 }
 

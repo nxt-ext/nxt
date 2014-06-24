@@ -2,6 +2,8 @@ var NRS = (function(NRS, $, undefined) {
 	var _decryptionPassword;
 	var _decryptedTransactions = {};
 	var _encryptedNote = null;
+	var _sharedKeys = {};
+
 	var _hash = {
 		init: SHA256_init,
 		update: SHA256_write,
@@ -156,24 +158,38 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.getSharedKeyWithAccount = function(account, secretPhrase) {
+	NRS.getSharedKeyWithAccount = function(account) {
 		try {
-			if (!secretPhrase) {
-				if (NRS.rememberPassword) {
-					secretPhrase = NRS.password;
-				} else {
-					throw {
-						"message": "Your password required to encrypt this message.",
-						"errorCode": 3
-					};
-				}
+			if (account in _sharedKeys) {
+				return _sharedKeys[account];
+			}
+
+			var secretPhrase;
+
+			if (NRS.rememberPassword) {
+				secretPhrase = NRS.password;
+			} else if (_decryptionPassword) {
+				secretPhrase = _decryptionPassword;
+			} else {
+				throw {
+					"message": "Your password is required.",
+					"errorCode": 3
+				};
 			}
 
 			var privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
 
 			var publicKey = converters.hexStringToByteArray(NRS.getPublicKey(account, true));
 
-			return getSharedKey(privateKey, publicKey);
+			var sharedKey = getSharedKey(privateKey, publicKey);
+
+			var sharedKeys = Object.keys(_sharedKeys);
+
+			if (sharedKeys.length > 50) {
+				delete _sharedKeys[sharedKeys[0]];
+			}
+
+			_sharedKeys[account] = sharedKey;
 		} catch (err) {
 			throw err;
 		}
@@ -223,8 +239,25 @@ var NRS = (function(NRS, $, undefined) {
 		return areByteArraysEqual(h, h2);
 	}
 
-	NRS.unsetDecryptionPassword = function() {
-		_decryptionPassword = "";
+	NRS.setDecryptionPassword = function(password) {
+		_decryptionPassword = password;
+	}
+
+	NRS.tryToDecryptMessage = function(message) {
+		if (_decryptedTransactions && _decryptedTransactions[message.transaction]) {
+			return _decryptedTransactions[message.transaction].message;
+		}
+
+		try {
+			var decoded = NRS.decryptNote(message.attachment.message, {
+				"nonce": message.attachment.nonce,
+				"account": (message.recipient == NRS.account ? message.sender : message.recipient)
+			});
+
+			return decoded;
+		} catch (err) {
+			throw err;
+		}
 	}
 
 	NRS.tryToDecrypt = function(transaction, fields, account, options) {
@@ -324,11 +357,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
-		NRS.removeDecryptionForm($(this));
-		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
-	});
-
 	$("#decrypt_note_form_container button.btn-primary").click(function() {
 		$("#decrypt_note_form_container").trigger("submit");
 	});
@@ -427,6 +455,46 @@ var NRS = (function(NRS, $, undefined) {
 			_decryptionPassword = password;
 		}
 	});
+
+	NRS.decryptAllMessages = function(messages, password) {
+		if (!password) {
+			throw {
+				"message": "Secret phrase is a required field.",
+				"errorCode": 1
+			};
+		} else {
+			var accountId = NRS.getAccountId(password);
+			if (accountId != NRS.account) {
+				throw {
+					"message": "Incorrect secret phrase.",
+					"errorCode": 2
+				};
+			}
+		}
+
+		try {
+			for (var otherUser in messages) {
+				for (var key in messages[otherUser]) {
+					var message = messages[otherUser][key];
+
+					if (message.type = 1 && message.subtype == 8) {
+						if (!_decryptedTransactions[message.transaction]) {
+							var decoded = NRS.decryptNote(message.attachment.message, {
+								"nonce": message.attachment.nonce,
+								"account": otherUser
+							}, password);
+
+							_decryptedTransactions[message.transaction] = {
+								"message": decoded
+							};
+						}
+					}
+				}
+			}
+		} catch (err) {
+			throw err;
+		}
+	}
 
 	function simpleHash(message) {
 		_hash.init();

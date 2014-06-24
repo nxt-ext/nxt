@@ -3671,6 +3671,38 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 
+
+		<div class="modal fade" id="messages_decrypt_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Decrypt Messages</h4>
+		      		</div>
+		      		<div class="modal-body">
+						<form role="form">
+							<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this message.</div>
+							<div class="form-group secret_phrase">
+								<label for="decrypt_note_form_password">SECRET PHRASE</label>
+								<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+
+							<div class="form-group" style="margin-bottom:0">
+								<input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember password for decryption</label>
+							</div>
+						</form>
+		      		</div>
+		      		<div class="modal-footer" style="margin-top:0;">
+		      			<input type="hidden" name="request_type" value="decryptMessages" />
+						<input type="hidden" name="success_message" value="The message(s) have been decrypted!" />
+						<input type="hidden" name="error_message" value="An unknown error occured!" />
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Decrypting...">Decrypt</button>
+			      	</div>
+		      	</div>
+		    </div>
+		</div>
+
 		<div id="decrypt_note_form_container" style="display:none;">
 			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;">
 				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this message.</div>

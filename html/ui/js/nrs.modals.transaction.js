@@ -671,5 +671,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
+		NRS.removeDecryptionForm($(this));
+		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
+	});
+
 	return NRS;
 }(NRS || {}, jQuery));
