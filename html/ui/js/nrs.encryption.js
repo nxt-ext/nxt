@@ -545,6 +545,13 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	function aesEncrypt(plaintext, options) {
+		if (!window.crypto) {
+			throw {
+				"errorCode": -1,
+				"message": "Your browser is unsupported."
+			};
+		}
+
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
 
@@ -614,6 +621,13 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	function encryptData(plaintext, options) {
+		if (!window.crypto) {
+			throw {
+				"errorCode": -1,
+				"message": "Your browser is unsupported."
+			};
+		}
+
 		if (!options.sharedKey) {
 			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
 		}
