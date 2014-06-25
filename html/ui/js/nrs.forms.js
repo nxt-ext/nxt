@@ -43,6 +43,7 @@ var NRS = (function(NRS, $, undefined) {
 			var $form = $modal.find("form:first");
 		}
 
+
 		var requestType = $form.find("input[name=request_type]").val();
 		var successMessage = $form.find("input[name=success_message]").val();
 		var errorMessage = $form.find("input[name=error_message]").val();

@@ -2,7 +2,13 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	var _password;
+
 	NRS.multiQueue = null;
+
+	NRS.setServerPassword = function(password) {
+		_password = password;
+	}
 
 	NRS.sendOutsideRequest = function(url, data, callback, async) {
 		if ($.isFunction(data)) {
@@ -99,7 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//check to see if secretPhrase supplied matches logged in account, if not - show error.
 		if ("secretPhrase" in data) {
-			var accountId = NRS.getAccountId(NRS.rememberPassword ? NRS.password : data.secretPhrase);
+			var accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
 			if (accountId != NRS.account) {
 				if (callback) {
 					callback({
@@ -181,7 +187,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
 			if (NRS.rememberPassword) {
-				secretPhrase = NRS.password;
+				secretPhrase = _password;
 			} else {
 				secretPhrase = data.secretPhrase;
 			}
@@ -195,7 +201,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.accountInfo.publicKey = data.publicKey;
 			}
 		} else if (type == "POST" && NRS.rememberPassword) {
-			data.secretPhrase = NRS.password;
+			data.secretPhrase = _password;
 		}
 
 		$.support.cors = true;

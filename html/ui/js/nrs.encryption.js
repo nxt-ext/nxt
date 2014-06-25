@@ -2,6 +2,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	var _password;
 	var _decryptionPassword;
 	var _decryptedTransactions = {};
 	var _encryptedNote = null;
@@ -76,7 +77,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (!options.privateKey) {
 					if (!secretPhrase) {
 						if (NRS.rememberPassword) {
-							secretPhrase = NRS.password;
+							secretPhrase = _password;
 						} else {
 							throw {
 								"message": "Your password is required to encrypt this message.",
@@ -123,7 +124,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (!options.privateKey) {
 					if (!secretPhrase) {
 						if (NRS.rememberPassword) {
-							secretPhrase = NRS.password;
+							secretPhrase = _password;
 						} else if (_decryptionPassword) {
 							secretPhrase = _decryptionPassword;
 						} else {
@@ -172,7 +173,7 @@ var NRS = (function(NRS, $, undefined) {
 			var secretPhrase;
 
 			if (NRS.rememberPassword) {
-				secretPhrase = NRS.password;
+				secretPhrase = _password;
 			} else if (_decryptionPassword) {
 				secretPhrase = _decryptionPassword;
 			} else {
@@ -242,6 +243,10 @@ var NRS = (function(NRS, $, undefined) {
 		var h2 = _hash.getBytes();
 
 		return areByteArraysEqual(h, h2);
+	}
+
+	NRS.setEncryptionPassword = function(password) {
+		_password = password;
 	}
 
 	NRS.setDecryptionPassword = function(password) {
@@ -385,8 +390,8 @@ var NRS = (function(NRS, $, undefined) {
 		var password = $form.find("input[name=secretPhrase]").val();
 
 		if (!password) {
-			if (NRS.password) {
-				password = NRS.password;
+			if (NRS.rememberPassword) {
+				password = _password;
 			} else if (_decryptionPassword) {
 				password = _decryptionPassword;
 			} else {

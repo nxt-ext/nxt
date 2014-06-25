@@ -1639,13 +1639,14 @@
 								<label for="lease_balance_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="success_message" value="Your balance will be leased out in 1440 blocks." />
+			      			<input type="hidden" name="request_type" value="leaseBalance" />
+			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
-		      			<input type="hidden" name="success_message" value="Your balance will be leased out in 1440 blocks." />
-		      			<input type="hidden" name="request_type" value="leaseBalance" />
-		      			<input type="hidden" name="converted_account_id" value="" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Lease Balance</button>
 		      		</div>
@@ -1670,11 +1671,12 @@
 								<label for="stop_forging_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="stop_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="request_type" value="stopForging" />
+			      			<input type="hidden" name="success_message" value="Forging has been stopped." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="stopForging" />
-			      		<input type="hidden" name="success_message" value="Forging has been stopped." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Continue Forging</button>
 				        <button type="button" class="btn btn-primary" id="stop_forging_button" data-loading-text="Submitting...">Stop Forging <span class="show_logout">and Logout</span></button>
 			      	</div>
@@ -1699,11 +1701,12 @@
 								<label for="start_forging_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="start_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="request_type" value="startForging" />
+			      			<input type="hidden" name="success_message" value="Forging has been started." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="startForging" />
-			      		<input type="hidden" name="success_message" value="Forging has been started." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="start_forging_button" data-loading-text="Submitting...">Start Forging</button>
 			      	</div>
@@ -1741,13 +1744,14 @@
 								<label for="cancel_order_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="cancel_order_type"  id="cancel_order_type" />
+				      		<input type="hidden" name="request_type" value="cancelOrder" />
+				      		<input type="hidden" name="success_message" value="The __ order has been cancelled." />
+							<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have been cancelled." />			      		
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="cancel_order_type"  id="cancel_order_type" />
-			      		<input type="hidden" name="request_type" value="cancelOrder" />
-			      		<input type="hidden" name="success_message" value="The __ order has been cancelled." />
-						<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have been cancelled." />			      		
 				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Cancel</button>
 				        <button type="button" class="btn btn-primary" id="cancel_order_button" data-loading-text="Submitting...">Cancel My Order</button>
 			      	</div>
@@ -1786,13 +1790,14 @@
 								<label for="asset_order_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="asset_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="asset_order_type"  id="asset_order_type" />
+				      		<input type="hidden" name="request_type" value="orderAsset" />
+				      		<input type="hidden" name="success_message" value="The __ order has been submitted." />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have gone through." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="asset_order_type"  id="asset_order_type" />
-			      		<input type="hidden" name="request_type" value="orderAsset" />
-			      		<input type="hidden" name="success_message" value="The __ order has been submitted." />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have gone through." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="asset_order_modal_button"></button>
 			      	</div>
@@ -1853,14 +1858,15 @@
 								<label for="transfer_asset_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="6">
 							</div>
+
+							<input type="hidden" name="request_type" value="transferAsset" />
+							<input type="hidden" name="success_message" value="The asset transfer is in progress!" />
+							<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be transferred." />
+							<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="transferAsset" />
-						<input type="hidden" name="success_message" value="The asset transfer is in progress!" />
-						<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be transferred." />
-						<input type="hidden" name="converted_account_id" value="" />
 				     	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Asset</button>
 					</div>
@@ -1882,12 +1888,13 @@
 								<label for="add_asset_bookmark_id">ASSET OR ACCOUNT ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body"></i></label>
 								<input type="text" class="form-control" name="id" id="add_asset_bookmark_id" placeholder="ID" autofocus tabindex="1" />
 							</div>
+
+							<input type="hidden" name="request_type" value="addAssetBookmark" />
+							<input type="hidden" name="success_message" value="The asset has been added!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="addAssetBookmark" />
-						<input type="hidden" name="success_message" value="The asset has been added!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Add Asset</button>
 				    </div>
@@ -1922,14 +1929,15 @@
 								<label for="add_contact_description">DESCRIPTION</label>
 								<textarea class="form-control" id="add_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional"></textarea>
 							</div>
+
+							<input type="hidden" name="request_type" value="addContact" />
+							<input type="hidden" name="success_message" value="The contact has been created!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
+							<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="addContact" />
-						<input type="hidden" name="success_message" value="The contact has been created!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
-						<input type="hidden" name="converted_account_id" value="" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Add Contact</button>
 				    </div>
@@ -1964,15 +1972,16 @@
 								<label for="update_contact_description">DESCRIPTION</label>
 								<textarea class="form-control" id="update_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional"></textarea>
 							</div>
+
+							<input type="hidden" name="contact_id" id="update_contact_id" value="" />
+							<input type="hidden" name="request_type" value="updateContact" />
+							<input type="hidden" name="success_message" value="The contact has been updated successfully!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
+							<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="contact_id" id="update_contact_id" value="" />
-						<input type="hidden" name="request_type" value="updateContact" />
-						<input type="hidden" name="success_message" value="The contact has been updated successfully!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
-						<input type="hidden" name="converted_account_id" value="" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Update Contact</button>
 				    </div>
@@ -1991,14 +2000,15 @@
 						<form role="form">
 							<div class="callout callout-danger">Are you sure you want to delete this contact?</div>
 							<p><strong>Name</strong>: <span id="delete_contact_name"></span></p>
+
+							<input type="hidden" name="contact_id" id="delete_contact_id" value="" />
+							<input type="hidden" name="account_id" id="delete_contact_account_id" value="" />
+							<input type="hidden" name="request_type" value="deleteContact" />
+							<input type="hidden" name="success_message" value="The contact has been deleted successfully!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="contact_id" id="delete_contact_id" value="" />
-						<input type="hidden" name="account_id" id="delete_contact_account_id" value="" />
-						<input type="hidden" name="request_type" value="deleteContact" />
-						<input type="hidden" name="success_message" value="The contact has been deleted successfully!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delete</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Yes, Delete Contact</button>
 				    </div>
@@ -2059,12 +2069,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="issue_asset_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="issueAsset" />
+							<input type="hidden" name="success_message" value="The asset has been created and will be available soon." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be created." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="issueAsset" />
-						<input type="hidden" name="success_message" value="The asset has been created and will be available soon." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be created." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Issue Asset</button>
 				    </div>
@@ -2126,12 +2137,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_listing_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_listing_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsListing" />
+							<input type="hidden" name="success_message" value="The marketplace listing has been created and will be available soon." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace listing may or may not be created." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsListing" />
-						<input type="hidden" name="success_message" value="The marketplace listing has been created and will be available soon." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace listing may or may not be created." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Put For Sale</button>
 				    </div>
@@ -2172,11 +2184,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_delisting_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delisting_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsDelisting" />
+				      		<input type="hidden" name="success_message" value="The item has been removed from the marketplace successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="dgsDelisting" />
-			      		<input type="hidden" name="success_message" value="The item has been removed from the marketplace successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delete</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Delete My Item</button>
 			      	</div>
@@ -2230,11 +2243,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_price_change_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_price_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsPriceChange" />
+				      		<input type="hidden" name="success_message" value="The marketplace item's price has been changed successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="dgsPriceChange" />
-			      		<input type="hidden" name="success_message" value="The marketplace item's price has been changed successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Price</button>
 			      	</div>
@@ -2288,11 +2302,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_quantity_change_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_quantity_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsQuantityChange" />
+				      		<input type="hidden" name="success_message" value="The marketplace item's quantity has been changed successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="dgsQuantityChange" />
-			      		<input type="hidden" name="success_message" value="The marketplace item's quantity has been changed successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
 			      	</div>
@@ -2356,12 +2371,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_purchase_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_purchase_password" class="form-control" placeholder="" tabindex="7">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsPurchase" />
+							<input type="hidden" name="success_message" value="The marketplace item has been purchased." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsPurchase" />
-						<input type="hidden" name="success_message" value="The marketplace item has been purchased." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Purchase</button>
 				    </div>
@@ -2410,12 +2426,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_delivery_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsDelivery" />
+							<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be delivered." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsDelivery" />
-						<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be delivered." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Deliver Purchase</button>
 				    </div>
@@ -2533,12 +2550,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_refund_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsRefund" />
+							<input type="hidden" name="success_message" value="The marketplace purchase has been refunded." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be refunded." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsRefund" />
-						<input type="hidden" name="success_message" value="The marketplace purchase has been refunded." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be refunded." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Refund Purchase</button>
 				    </div>
@@ -2582,12 +2600,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_feedback_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_feedback_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsFeedback" />
+							<input type="hidden" name="success_message" value="The marketplace purchase feedback has been submitted." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase feedback may or may not be submitted." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsFeedback" />
-						<input type="hidden" name="success_message" value="The marketplace purchase feedback has been submitted." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase feedback may or may not be submitted." />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Submit Feedback</button>
 				    </div>
@@ -2671,12 +2690,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="create_poll_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="create_poll_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="createPoll" />
+							<input type="hidden" name="success_message" value="The poll has been created!" />
+							<input type="hidden" name="error_message" value="An unknown error occured! Poll may or may not be created." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="createPoll" />
-						<input type="hidden" name="success_message" value="The poll has been created!" />
-						<input type="hidden" name="error_message" value="An unknown error occured! Poll may or may not be created." />
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						&nbsp;&nbsp;
 						<button type="button" class="btn btn-primary" data-loading-text="Submitting...">Create Poll</button>
@@ -2729,12 +2749,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="cast_vote_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="castVote" />
+							<input type="hidden" name="success_message" value="Your vote has been cast!" />
+							<input type="hidden" name="error_message" value="An unknown error occured! Vote may or may not be cast." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="castVote" />
-						<input type="hidden" name="success_message" value="Your vote has been cast!" />
-						<input type="hidden" name="error_message" value="An unknown error occured! Vote may or may not be cast." />
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						&nbsp;&nbsp;
 						<button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cast Vote</button>
@@ -2786,13 +2807,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="send_money_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="failure_message" value="An unknown error occured! NXT may or may not be sent." />
+			      			<input type="hidden" name="request_type" value="sendMoney" />
+			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
-		      			<input type="hidden" name="failure_message" value="An unknown error occured! NXT may or may not be sent." />
-		      			<input type="hidden" name="request_type" value="sendMoney" />
-		      			<input type="hidden" name="converted_account_id" value="" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send NXT</button>
 		      		</div>
@@ -2842,13 +2864,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="send_message_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="request_type" value="sendMessage" />
+				       		<input type="hidden" name="error_message" value="An unknown error occured! Message may or may not be sent." />
+				       		<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
-			       		<input type="hidden" name="request_type" value="sendMessage" />
-			       		<input type="hidden" name="error_message" value="An unknown error occured! Message may or may not be sent." />
-			       		<input type="hidden" name="converted_account_id" value="" />
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send Message</button>
 			      	</div>
@@ -2892,11 +2915,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="account_info_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="account_info_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="request_type" value="setAccountInfo" />
+				       		<input type="hidden" name="success_message" value="Your account info has been saved successfully." />
 						</form>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
-			       		<input type="hidden" name="request_type" value="setAccountInfo" />
-			       		<input type="hidden" name="success_message" value="Your account info has been saved successfully." />
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Update Account Info</button>
 			      	</div>
@@ -2950,13 +2974,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="register_alias_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="register_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
+				      		<input type="hidden" name="request_type" value="setAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
-			      		<input type="hidden" name="request_type" value="setAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="register_alias_button" data-loading-text="Submitting...">Register</button>
 			    	</div>
@@ -3001,12 +3026,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="buy_alias_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="buy_alias_password" class="form-control" placeholder="" tabindex="4">
 							</div>
+
+							<input type="hidden" name="request_type" value="buyAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias buy is in progress!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not have been bought." />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="buyAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias buy is in progress!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not have been bought." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Buy Alias</button>
 			    	</div>
@@ -3059,13 +3085,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
+							<input type="hidden" name="request_type" value="sellAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias transfer is in progress!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be transferred." />
+				      		<input type="hidden" name="converted_account_id" value="" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="sellAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias transfer is in progress!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be transferred." />
-			      		<input type="hidden" name="converted_account_id" value="" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Alias</button>
 			    	</div>
@@ -3127,13 +3154,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
+							<input type="hidden" name="success_message" value="Your alias has been put up for sale successfully!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be put up for sale." />
+				      		<input type="hidden" name="converted_account_id" value="" />
+			      			<input type="hidden" name="request_type" value="sellAlias" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="sellAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias has been put up for sale successfully!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be put up for sale." />
-			      		<input type="hidden" name="converted_account_id" value="" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Sell Alias</button>
 			    	</div>
@@ -3175,12 +3203,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="cancel_alias_sale_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="request_type" value="sellAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="sellAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cancel Sale</button>
 			    	</div>
@@ -3646,11 +3675,11 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="asset_exchange_change_group_name_new">NEW GROUP_NAME</label>
 								<input type="text" class="form-control" name="new_group_name" id="asset_exchange_change_group_name_new" placeholder="New group name" />
 							</div>
+							<input type="hidden" name="request_type" value="assetExchangeChangeGroupName" />
+			      			<input type="hidden" name="success_message" value="Group name has been changed successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="assetExchangeChangeGroupName" />
-			      		<input type="hidden" name="success_message" value="Group name has been changed successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="asset_exchange_change_group_name_submit" data-loading-text="Submitting...">Change Group Name</button>
 			      	</div>
@@ -3681,13 +3710,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group" id="asset_exchange_group_new_group_div" style="display:none">
 								<input type="text" class="form-control" name="asset_exchange_group_new_group" id="asset_exchange_group_new_group" placeholder="New group title" />
-
 							</div>
+
+							<input type="hidden" name="request_type" value="assetExchangeGroup" />
+			      			<input type="hidden" name="success_message" value="Asset has been added to group." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="assetExchangeGroup" />
-			      		<input type="hidden" name="success_message" value="Asset has been added to group." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="asset_exchange_group_submit" data-loading-text="Submitting...">Add to Group</button>
 			      	</div>
@@ -3714,12 +3743,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group" style="margin-bottom:0">
 								<input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember password for decryption</label>
 							</div>
+
+							<input type="hidden" name="request_type" value="decryptMessages" />
+							<input type="hidden" name="success_message" value="The message(s) have been decrypted!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
 						</form>
 		      		</div>
 		      		<div class="modal-footer" style="margin-top:0;">
-		      			<input type="hidden" name="request_type" value="decryptMessages" />
-						<input type="hidden" name="success_message" value="The message(s) have been decrypted!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Decrypting...">Decrypt</button>
 			      	</div>

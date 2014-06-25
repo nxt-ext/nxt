@@ -328,7 +328,7 @@ var NRS = (function(NRS, $, undefined) {
 			try {
 				var encrypted = NRS.encryptNote(message, {
 					"account": data.recipient
-				}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
+				}, data.secretPhrase);
 
 				requestType = "sendEncryptedNote";
 
@@ -400,7 +400,7 @@ var NRS = (function(NRS, $, undefined) {
 			try {
 				var encrypted = NRS.encryptNote(message, {
 					"account": data.recipient
-				}, NRS.rememberPassword ? NRS.password : data.secretPhrase);
+				}, data.secretPhrase);
 
 				requestType = "sendEncryptedNote";
 

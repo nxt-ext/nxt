@@ -3,7 +3,6 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.newlyCreatedAccount = false;
-	NRS.password = "";
 
 	NRS.allowLoginViaEnter = function() {
 		$("#login_password").keypress(function(e) {
@@ -186,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 					if ($("#remember_password").is(":checked")) {
 						NRS.rememberPassword = true;
 						$("#remember_password").prop("checked", false);
-						NRS.password = password;
+						NRS.setPassword(password);
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
 					}
@@ -322,10 +321,14 @@ var NRS = (function(NRS, $, undefined) {
 			$("#stop_forging_modal").modal("show");
 		} else {
 			NRS.setDecryptionPassword("");
-			NRS.password = "";
+			NRS.setPassword("");
 			window.location.reload();
 		}
 	}
 
+	NRS.setPassword = function(password) {
+		NRS.setEncryptionPassword(password);
+		NRS.setServerPassword(password);
+	}
 	return NRS;
 }(NRS || {}, jQuery));
