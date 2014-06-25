@@ -33,7 +33,7 @@
                     <ul class="nav navbar-nav">
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_money_modal">Send NXT</a></li>
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal">Send Message</a></li>
-	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#generate_token_modal">Generate Token</a></li>
+	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#token_modal">Generate Token</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -1619,7 +1619,7 @@
 							</div>
 							<div class="row">
 								<div class="col-xs-4 col-sm-4 col-md-4">
-									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last." data-container="body"></i></label>
+									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last. 1440 blocks is about 1 day." data-container="body"></i></label>
 									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="1440" value="1440" tabindex="2">
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
@@ -3188,32 +3188,55 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		  	</div>
 		</div>
 
-		<div class="modal fade modal-no-hide" id="generate_token_modal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal fade modal-no-hide" id="token_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Generate Website Token</h4>
+		        		<h4 class="modal-title">Nxt Token Generation / Validation</h4>
 		      		</div>
-			      	<div class="modal-body">			
-						<form role="form">
-							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
-							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="callout callout-info" id="generate_token_token" style="display:none;"></div>
-							<div class="form-group">
-								<label for="generate_token_website">WEBSITE</label>
-								<input type="text" class="form-control" name="website" id="generate_token_website" placeholder="Website URL" tabindex="1" value="http://" />
-							</div>
-							<div class="form-group secret_phrase">
-								<label for="generate_token_password">SECRET PHRASE</label>
-								<input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
-							</div>
-						</form>
+			      	<div class="modal-body">	
+						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+							<li class="active" id="generate_token_nav" data-tab="generate_token"><a href="#">Generate Token</a></li>
+							<li data-tab="validate_token"><a href="#">Validate Token</a></li>
+						</ul>
+
+						<div id="token_modal_generate_token" class="token_modal_content" style="display:none">
+				      		<form role="form" id="generate_token_form">
+								<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
+								<div class="form-group">
+									<label for="generate_token_website">WEBSITE (OR TEXT)</label>
+									<input type="text" class="form-control" name="website" id="generate_token_website" placeholder="Website Or Text" tabindex="1" value="http://" />
+								</div>
+								<input type="hidden" name="request_type" value="generateToken" />
+								<div class="form-group secret_phrase">
+									<label for="generate_token_password">SECRET PHRASE</label>
+									<input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
+								</div>
+							</form>
+						 </div>
+
+						<div id="token_modal_validate_token" class="token_modal_content" style="display:none">     
+							<form role="form" id="validate_token_form">
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
+								<div class="form-group">
+									<label for="decode_token_website">WEBSITE (OR TEXT)</label>
+									<input type="text" class="form-control" name="website" id="decode_token_website" placeholder="Website or Text" tabindex="1" value="" />
+								</div>
+								<input type="hidden" name="request_type" value="decodeToken" />
+								<div class="form-group">
+									<label for="decode_token_token">TOKEN</label>
+									<input type="text" class="form-control" name="token" id="decode_token_token" placeholder="Token" tabindex="2" value="" />
+								</div>
+							</form>
+						</div>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="generateToken" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				        <button type="button" class="btn btn-primary" id="register_alias_button" data-loading-text="Submitting...">Generate</button>
+				        <button type="button" class="btn btn-primary" id="token_modal_button">Generate</button>
 			    	</div>
 				</div>
 		  	</div>
@@ -3682,7 +3705,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		      		</div>
 		      		<div class="modal-body">
 						<form role="form">
-							<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this message.</div>
+							<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt these messages.</div>
 							<div class="form-group secret_phrase">
 								<label for="decrypt_note_form_password">SECRET PHRASE</label>
 								<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
@@ -3706,7 +3729,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 
 		<div id="decrypt_note_form_container" style="display:none;">
 			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;">
-				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this message.</div>
+				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this data.</div>
 				<div class="form-group secret_phrase">
 					<label for="decrypt_note_form_password">SECRET PHRASE</label>
 					<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
