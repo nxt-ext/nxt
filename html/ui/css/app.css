@@ -3417,3 +3417,14 @@ table.purchase td {
 .data-pagination {
   text-align:center;
 }
+
+.advanced_info {
+  float:left;
+  color:#737373;
+  font-style:italic;
+  line-height:34px;
+}
+
+.advanced {
+  display:none;
+}

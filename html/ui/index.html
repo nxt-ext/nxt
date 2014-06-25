@@ -1618,15 +1618,15 @@
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xs-4 col-sm-4 col-md-4">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="4">
 									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last. 9000 blocks is about 10 day." data-container="body"></i></label>
 									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="9000" value="9000" tabindex="2">
 								</div>
-								<div class="col-xs-4 col-sm-4 col-md-4">
+								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
 									<label for="lease_balance_fee">FEE</label>
 									<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
 								</div>
-								<div class="col-xs-4 col-sm-4 col-md-4">
+								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
 									<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
 									<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="4">
 								</div>
@@ -1646,6 +1646,7 @@
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
+			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Lease Balance</button>
 		      		</div>
@@ -1725,7 +1726,7 @@
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p>If you are sure you want to cancel your order, type your secret phrase to confirm.
 							<input type="hidden" name="order" id="cancel_order_order" value="" />
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_order_fee">FEE</label>
@@ -1751,6 +1752,8 @@
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Cancel</button>
 				        <button type="button" class="btn btn-primary" id="cancel_order_button" data-loading-text="Submitting...">Cancel My Order</button>
 			      	</div>
@@ -1834,19 +1837,19 @@
 								<textarea class="form-control" id="transfer_asset_comment" name="comment" rows="3" tabindex="2" placeholder="Optional"></textarea>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="transfer_asset_quantity">QUANTITY</label>
 						                <input type="number" name="quantity" id="transfer_asset_quantity" class="form-control" step="any" min="0" placeholder="Quantity" tabindex="3">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="transfer_asset_fee">FEE</label>
 										<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="transfer_asset_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="transfer_asset_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="5">
@@ -1866,6 +1869,8 @@
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				     	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Asset</button>
 					</div>
@@ -2050,14 +2055,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt" data-container="body" style="color:red"></i></label>
 																				
 										<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
 									</div>
 								</div>
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
 									<div class="form-group">
 										<label for="issue_asset_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
@@ -2075,6 +2080,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1'000 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Issue Asset</button>
 				    </div>
@@ -2118,7 +2125,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_listing_fee">FEE</label>
@@ -2143,6 +2150,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Put For Sale</button>
 				    </div>
@@ -2165,7 +2174,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="goods_info">Loading...</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delisting_fee">FEE</label>
@@ -2189,6 +2198,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delete</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Delete My Item</button>
 			      	</div>
@@ -2224,7 +2235,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_fee">FEE</label>
@@ -2248,6 +2259,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Price</button>
 			      	</div>
@@ -2283,7 +2296,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_quantity_change_fee">FEE</label>
@@ -2307,6 +2320,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
 			      	</div>
@@ -2352,7 +2367,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_purchase_note">NOTE</label>
 								<textarea class="form-control" id="dgs_purchase_note" name="note" rows="3" tabindex="4"></textarea>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_purchase_fee">FEE</label>
@@ -2377,6 +2392,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Purchase</button>
 				    </div>
@@ -2407,7 +2424,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_delivery_discount">DISCOUNT</label>
 				                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delivery_fee">FEE</label>
@@ -2432,6 +2449,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Deliver Purchase</button>
 				    </div>
@@ -2531,7 +2550,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_refund_refund">REFUND</label>
 				                <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_refund_fee">FEE</label>
@@ -2556,6 +2575,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Refund Purchase</button>
 				    </div>
@@ -2581,7 +2602,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_feedback_note">NOTE</label>
 								<textarea class="form-control" id="dgs_feedback_note" name="note" rows="3" tabindex="2"></textarea>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_feedback_fee">FEE</label>
@@ -2606,6 +2627,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Submit Feedback</button>
 				    </div>
@@ -2670,7 +2693,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_fee">FEE</label>
@@ -2696,6 +2719,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						&nbsp;&nbsp;
 						<button type="button" class="btn btn-primary" data-loading-text="Submitting...">Create Poll</button>
@@ -2789,13 +2814,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						                <input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" tabindex="2">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced_extend" data-normal="6" data-advanced="3">
 									<div class="form-group">
 										<label for="send_money_fee">FEE</label>
 										<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="send_money_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="send_money_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
@@ -2814,6 +2839,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
+		      			<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send NXT</button>
 		      		</div>
@@ -2840,12 +2867,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								    </span>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group" style="margin-bottom:10px">
 								<label for="send_message_message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
 								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_message_fee">FEE</label>
@@ -2871,6 +2898,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
+			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send Message</button>
 			      	</div>
@@ -2896,7 +2924,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="account_info_description">DESCRIPTION</label>
 								<textarea class="form-control" id="account_info_description" name="description" rows="4" tabindex="2"></textarea>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="account_info_fee">FEE</label>
@@ -2920,6 +2948,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
+			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Update Account Info</button>
 			      	</div>
@@ -2955,7 +2985,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<input type="text" class="form-control" name="aliasURI" id="register_alias_uri" placeholder="URI" tabindex="2" />
 								<p class="help-block" id="register_alias_help"></p>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="register_alias_fee">FEE</label>
@@ -2981,6 +3011,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="register_alias_button" data-loading-text="Submitting...">Register</button>
 			    	</div>
@@ -3007,7 +3039,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label>PRICE</label>
 						        <input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="1">
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="buy_alias_fee">FEE</label>
@@ -3032,6 +3064,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Buy Alias</button>
 			    	</div>
@@ -3065,7 +3099,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								    </span>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_alias_fee">FEE</label>
@@ -3092,6 +3126,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Alias</button>
 			    	</div>
@@ -3129,19 +3165,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="sell_alias_price">PRICE</label>
 						                <input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="sell_alias_fee">FEE</label>
 										<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="sell_alias_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="sell_alias_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
@@ -3161,6 +3197,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Sell Alias</button>
 			    	</div>
@@ -3184,7 +3222,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<input type="hidden" name="aliasName" value="" />
 								<input type="hidden" name="cancelSale" value="1" />
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_alias_sale_fee">FEE</label>
@@ -3209,6 +3247,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cancel Sale</button>
 			    	</div>
