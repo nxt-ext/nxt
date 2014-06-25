@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.polls = function() {
 		NRS.sendRequest("getPollIds+", function(response) {

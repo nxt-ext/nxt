@@ -1,3 +1,26 @@
+/**
+ * @depends {3rdparty/jquery-2.1.0.js}
+ * @depends {3rdparty/bootstrap.js}
+ * @depends {3rdparty/big.js}
+ * @depends {3rdparty/jsbn.js}
+ * @depends {3rdparty/jsbn2.js}
+ * @depends {3rdparty/pako.js}
+ * @depends {3rdparty/webdb.js}
+ * @depends {3rdparty/ajaxmultiqueue.js}
+ * @depends {3rdparty/growl.js}
+ * @depends {3rdparty/zeroclipboard.js}
+ * @depends {crypto/curve25519.js}
+ * @depends {crypto/curve25519_.js}
+ * @depends {crypto/passphrasegenerator.js}
+ * @depends {crypto/sha256worker.js}
+ * @depends {crypto/3rdparty/cryptojs/aes.js}
+ * @depends {crypto/3rdparty/cryptojs/sha256.js}
+ * @depends {crypto/3rdparty/jssha256.js}
+ * @depends {crypto/3rdparty/seedrandom.js}
+ * @depends {util/converters.js}
+ * @depends {util/extensions.js}
+ * @depends {util/nxtaddress.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	"use strict";
 
@@ -40,7 +63,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.assetTableKeys = [];
 
 	NRS.init = function() {
-		if (location.port && location.port != "6876") {
+		if (window.location.port && window.location.port != "6876") {
 			$(".testnet_only").hide();
 		} else {
 			NRS.isTestNet = true;

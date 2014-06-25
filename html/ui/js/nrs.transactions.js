@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.lastTransactionsTimestamp = 0;
 	NRS.lastTransactions = "";

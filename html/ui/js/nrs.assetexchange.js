@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.assets = [];
 	NRS.assetIds = [];
@@ -1058,6 +1061,8 @@ var NRS = (function(NRS, $, undefined) {
 			var selectedText = NRS.getSelectedText();
 
 			if (selectedText != $(this).val()) {
+				var errorMessage;
+
 				if (isQuantityField) {
 					errorMessage = "Only " + NRS.currentAsset.decimals + " digits after the decimal mark are allowed for this asset.";
 				} else {

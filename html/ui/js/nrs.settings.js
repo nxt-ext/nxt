@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.defaultSettings = {
 		"submit_on_enter": 0,
@@ -334,9 +337,7 @@ var NRS = (function(NRS, $, undefined) {
 			"row_separator_size": "1",
 			"row_separator": "#ADD0E4",
 			"header_bold": true
-		},
-
-
+		}
 	};
 
 	NRS.pages.settings = function() {

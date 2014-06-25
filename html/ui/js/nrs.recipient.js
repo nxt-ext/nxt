@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
 		$("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient").blur(function() {
@@ -148,8 +151,8 @@ var NRS = (function(NRS, $, undefined) {
 					callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, did you mean <span class='malformed_address' data-address='" + String(address.guess[0]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[0], account) + "</span> ?").show();
 				} else if (address.guess.length > 1) {
 					var html = "The recipient address is malformed, did you mean:<ul>";
-					for (var i = 0; i < adr.guess.length; i++) {
-						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + adddress.format_guess(address.guess[i], account) + "</span></li>";
+					for (var i = 0; i < address.guess.length; i++) {
+						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";
 					}
 
 					callout.removeClass(classes).addClass("callout-danger").html(html).show();

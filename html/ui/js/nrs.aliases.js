@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
 		NRS.sendRequest("getAliases+", {
@@ -252,6 +255,8 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.fetchingModalData = false;
 				} else {
+					var aliasURI;
+
 					if (/http:\/\//i.test(response.aliasURI)) {
 						NRS.forms.setAliasType("uri");
 					} else if ((aliasURI = /acct:(.*)@nxt/.exec(response.aliasURI)) || (aliasURI = /nacc:(.*)/.exec(response.aliasURI))) {

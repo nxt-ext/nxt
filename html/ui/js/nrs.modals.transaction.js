@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	$("#transactions_table, #dashboard_transactions_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
@@ -215,7 +219,7 @@ var NRS = (function(NRS, $, undefined) {
 							"message": {
 								"title": "",
 								"nonce": "nonce"
-							},
+							}
 						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
 							"noPadding": true,
 							"formEl": "#transaction_info_decryption_form",
@@ -544,7 +548,7 @@ var NRS = (function(NRS, $, undefined) {
 										"goodsData": {
 											"title": "Data",
 											"nonce": "goodsNonce"
-										},
+										}
 									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
 								} else {
 									data["Data"] = "Goods data is encrypted and cannot be read by you.";

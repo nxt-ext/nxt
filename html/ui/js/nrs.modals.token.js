@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	$("#generate_token_modal").on("show.bs.modal", function(e) {
 		$("#generate_token_website").val("http://");

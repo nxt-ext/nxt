@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	$("#account_details_modal").on("show.bs.modal", function(e) {
 		$("#account_details_modal_balance").show();

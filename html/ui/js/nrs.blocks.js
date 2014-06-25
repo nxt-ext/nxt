@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
@@ -7,7 +10,7 @@ var NRS = (function(NRS, $, undefined) {
 			"block": blockID
 		}, function(response) {
 			if (response.errorCode && response.errorCode == -1) {
-				NRS.getBlock(blockID, callback, async);
+				NRS.getBlock(blockID, callback, pageRequest);
 			} else {
 				if (callback) {
 					response.block = blockID;

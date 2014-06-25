@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	var LOCALE_DATE_FORMATS = {
 		"ar-SA": "dd/MM/yy",

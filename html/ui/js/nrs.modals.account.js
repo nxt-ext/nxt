@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.userInfoModal = {
 		"user": 0

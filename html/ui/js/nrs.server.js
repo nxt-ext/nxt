@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.multiQueue = null;
 
@@ -126,7 +129,8 @@ var NRS = (function(NRS, $, undefined) {
 			var extra = null;
 		}
 
-		var currentPage = currentSubPage = null;
+		var currentPage = null;
+		var currentSubPage = null;
 
 		//means it is a page request, not a global request.. Page requests can be aborted.
 		if (requestType.slice(-1) == "+") {
@@ -516,7 +520,7 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.votes = [];
 
 				for (var i = 0; i < voteLength; i++) {
-					transaction.votes.push(bytesArray[pos]);
+					transaction.votes.push(byteArray[pos]);
 
 					pos++;
 				}
