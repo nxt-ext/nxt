@@ -1619,21 +1619,20 @@
 							</div>
 							<div class="row">
 								<div class="col-xs-4 col-sm-4 col-md-4">
-									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last. 1440 blocks is about 1 day." data-container="body"></i></label>
-									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="1440" value="1440" tabindex="2">
+									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last. 9000 blocks is about 10 day." data-container="body"></i></label>
+									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="9000" value="9000" tabindex="2">
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
-									<div class="form-group">
-										<label for="lease_balance_fee">FEE</label>
-										<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
-									</div>
+									<label for="lease_balance_fee">FEE</label>
+									<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4">
-									<div class="form-group">
-										<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="4">
-									</div>
+									<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
+									<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="4">
 								</div>
+							</div>
+							<div class="form-group">
+								<p class="help-block" id="lease_balance_help">A lease of <strong>9000 blocks</strong> is about 10 days.</p>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="lease_balance_password">SECRET PHRASE</label>
@@ -2844,7 +2843,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="send_message_message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
+								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
 							</div>
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
