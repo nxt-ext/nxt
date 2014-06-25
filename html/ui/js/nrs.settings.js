@@ -900,7 +900,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (!NRS.inApp) {
+		if (!NRS.inApp && !NRS.downloadingBlockchain) {
 			if (!key || key == "console_log") {
 				if (NRS.settings["console_log"] == 0) {
 					$("#show_console").hide();

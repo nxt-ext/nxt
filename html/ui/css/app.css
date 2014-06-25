@@ -3139,6 +3139,7 @@ nrs_update_hashes {
 	position:fixed;
 	bottom:0px;
 	right:3px;
+  display:none;
 }
 
 .lockscreen #downloading_blockchain {

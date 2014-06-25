@@ -77,10 +77,16 @@ var NRS = (function(NRS, $, undefined) {
 		if (transaction.type == 1) {
 			switch (transaction.subtype) {
 				case 0:
+					var message;
+
 					try {
-						var message = converters.hexStringToString(transaction.attachment.message);
+						message = converters.hexStringToString(transaction.attachment.message);
 					} catch (err) {
-						var message = "Could not convert hex to string: " + String(transaction.attachment.message);
+						if (transaction.attachment.message.indexOf("feff") === 0) {
+							message = NRS.convertFromHex16(transaction.attachment.message);
+						} else {
+							message = NRS.convertFromHex8(transaction.attachment.message);
+						}
 					}
 
 					var sender_info = "";
