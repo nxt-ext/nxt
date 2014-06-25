@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 			var value = $(this).val();
 			var modal = $(this).closest(".modal");
 
-			if (value) {
+			if (value && value != "NXT-____-____-____-_____") {
 				NRS.checkRecipient(value, modal);
 			} else {
 				modal.find(".account_info").hide();
