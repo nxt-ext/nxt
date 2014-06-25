@@ -3210,12 +3210,12 @@ table.settings td {
 }
 
 dd.to_decrypt p {
-  background:yellow !important;
+  background:#ffcc00 !important;
   cursor:pointer;
 }
 
 dd.to_decrypt p::before {
-  border-right: 1.5em solid yellow !important;
+  border-right: 1.5em solid #ffcc00 !important;
 }
 
 dd.decryption_failed p {
