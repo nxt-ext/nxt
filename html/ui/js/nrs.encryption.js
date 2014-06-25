@@ -119,6 +119,11 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.decryptNote = function(message, options, secretPhrase) {
+		console.log("decrypt note");
+		console.log(message);
+		console.log(options);
+		console.log(secretPhrase);
+
 		try {
 			if (!options.sharedKey) {
 				if (!options.privateKey) {
@@ -153,6 +158,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			return decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
+			console.log(err);
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {
@@ -488,13 +494,16 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		try {
-			for (var otherUser in messages) {
-				for (var key in messages[otherUser]) {
-					var message = messages[otherUser][key];
+		var success = 0;
+		var error = 0;
 
-					if (message.type = 1 && message.subtype == 8) {
-						if (!_decryptedTransactions[message.transaction]) {
+		for (var otherUser in messages) {
+			for (var key in messages[otherUser]) {
+				var message = messages[otherUser][key];
+
+				if (message.type = 1 && message.subtype == 8) {
+					if (!_decryptedTransactions[message.transaction]) {
+						try {
 							var decoded = NRS.decryptNote(message.attachment.message, {
 								"nonce": message.attachment.nonce,
 								"account": otherUser
@@ -503,12 +512,20 @@ var NRS = (function(NRS, $, undefined) {
 							_decryptedTransactions[message.transaction] = {
 								"message": decoded
 							};
+
+							success++;
+						} catch (err) {
+							error++;
 						}
 					}
 				}
 			}
-		} catch (err) {
-			throw err;
+		}
+
+		if (success || !error) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 

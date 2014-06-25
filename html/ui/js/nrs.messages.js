@@ -512,8 +512,10 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.decryptMessages = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		var success = false;
+
 		try {
-			NRS.decryptAllMessages(_messages, data.secretPhrase);
+			success = NRS.decryptAllMessages(_messages, data.secretPhrase);
 		} catch (err) {
 			if (err.errorCode && err.errorCode <= 2) {
 				return {
@@ -532,9 +534,15 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#messages_sidebar a.active").trigger("click");
 
-		$.growl("Messages decrypted successfully.", {
-			"type": "success"
-		});
+		if (success) {
+			$.growl("Messages decrypted successfully.", {
+				"type": "success"
+			});
+		} else {
+			$.growl("Messages could not be decrypted.", {
+				"type": "danger"
+			});
+		}
 
 		return {
 			"stop": true
