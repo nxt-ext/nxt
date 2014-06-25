@@ -636,16 +636,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     transactionProcessor.applyUnconfirmed(unappliedUnconfirmed);
                 }
 
+                blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
+                transactionProcessor.apply(block);
+                blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
+                blockListeners.notify(block, Event.BLOCK_PUSHED);
+                transactionProcessor.updateUnconfirmedTransactions(block);
+
             } catch (RuntimeException e) {
                 Logger.logMessage("Error pushing block", e);
+                BlockDb.deleteBlocksFrom(block.getId());
+                scan();
                 throw new BlockNotAcceptedException(e.toString());
             }
-
-            blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
-            transactionProcessor.apply(block);
-            blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
-            blockListeners.notify(block, Event.BLOCK_PUSHED);
-            transactionProcessor.updateUnconfirmedTransactions(block);
 
         } // synchronized
 
