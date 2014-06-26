@@ -17,8 +17,10 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -282,13 +284,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void apply(BlockImpl block) {
         block.apply();
         for (TransactionImpl transaction : block.getTransactions()) {
-            if (! unconfirmedTransactions.containsKey(transaction.getId())) {
-                if (! transaction.applyUnconfirmed()) {
-                    throw new RuntimeException("Double spending transaction: " + transaction.getStringId());
-                }
-            }
-            //TODO: Phaser not yet implemented
-            //Phaser.processTransaction(transaction);
             transaction.apply();
         }
     }
@@ -306,6 +301,29 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
+    void applyUnconfirmed(Set<Long> unapplied) {
+        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
+        for (Long transactionId : unapplied) {
+            TransactionImpl transaction = unconfirmedTransactions.get(transactionId);
+            if (! transaction.applyUnconfirmed()) {
+                unconfirmedTransactions.remove(transactionId);
+                removedUnconfirmedTransactions.add(transaction);
+            }
+        }
+        if (removedUnconfirmedTransactions.size() > 0) {
+            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }
+    }
+
+    Set<Long> undoAllUnconfirmed() {
+        HashSet<Long> undone = new HashSet<>();
+        for (TransactionImpl transaction : unconfirmedTransactions.values()) {
+            transaction.undoUnconfirmed();
+            undone.add(transaction.getId());
+        }
+        return undone;
+    }
+
     void updateUnconfirmedTransactions(BlockImpl block) {
         List<Transaction> addedConfirmedTransactions = new ArrayList<>();
         List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
@@ -315,17 +333,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
                 removedUnconfirmedTransactions.add(removedTransaction);
-            }
-        }
-
-        Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
-        while (iterator.hasNext()) {
-            TransactionImpl transaction = iterator.next();
-            transaction.undoUnconfirmed();
-            if (! transaction.applyUnconfirmed()) {
-                iterator.remove();
-                removedUnconfirmedTransactions.add(transaction);
-                transactionListeners.notify(Collections.singletonList((Transaction)transaction), Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
             }
         }
 
