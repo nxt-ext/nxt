@@ -1624,7 +1624,10 @@
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
 									<label for="lease_balance_fee">FEE</label>
-									<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+									<div class="input-group">
+										<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+										<span class="input-group-addon">NXT</span>
+									</div>
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
 									<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
@@ -1730,7 +1733,10 @@
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_order_fee">FEE</label>
-										<input type="number" name="feeNXT" id="cancel_order_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="cancel_order_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -1846,7 +1852,10 @@
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="transfer_asset_fee">FEE</label>
-										<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
@@ -2058,8 +2067,11 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt" data-container="body" style="color:red"></i></label>
-																				
-										<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+											
+										<div class="input-group">									
+											<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
@@ -2115,7 +2127,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_listing_price">PRICE</label>
-						                <input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="4">
+										<div class="input-group">
+						               		<input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="4">
+						                	<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2129,7 +2144,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_listing_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_listing_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_listing_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2178,7 +2196,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delisting_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_delisting_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_delisting_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2231,7 +2252,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_price">NEW PRICE</label>
-										<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1">
+										<div class="input-group">
+											<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -2239,7 +2263,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_price_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_price_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2300,7 +2327,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_quantity_change_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_quantity_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_quantity_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2371,7 +2401,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_purchase_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_purchase_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="5">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_purchase_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="5">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2421,14 +2454,20 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<textarea class="form-control" id="dgs_delivery_data" name="data" rows="3" tabindex="2"></textarea>
 							</div>
 							<div class="form-group">
-								<label for="dgs_delivery_discount">DISCOUNT</label>
-				                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+								<label for="dgs_delivery_discount">DISCOUNT</label>	
+								<div class="input-group">
+					                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+				                	<span class="input-group-addon">NXT</span>
+								</div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delivery_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2548,13 +2587,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group">
 								<label for="dgs_refund_refund">REFUND</label>
-				                <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+				                <div class="input-group">
+				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+				                	<span class="input-group-addon">NXT</span>
+								</div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_refund_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2606,7 +2651,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_feedback_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_feedback_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_feedback_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2697,7 +2745,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_fee">FEE</label>
-										<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2803,7 +2854,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="input-group">
 								    <input type="text" class="form-control" name="recipient" id="send_money_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
 								    <span class="input-group-btn btn-group recipient_selector">
-								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>														<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>										<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
 								    </span>
 								</div>
 							</div>
@@ -2811,13 +2862,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_money_amount">AMOUNT</label>
-						                <input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" tabindex="2">
+										<div class="input-group">
+											<input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6 advanced_extend" data-normal="6" data-advanced="3">
 									<div class="form-group">
 										<label for="send_money_fee">FEE</label>
-										<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
@@ -2876,7 +2933,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_message_fee">FEE</label>
-										<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2928,7 +2988,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="account_info_fee">FEE</label>
-										<input type="number" name="feeNXT" id="account_info_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="account_info_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2989,7 +3052,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="register_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3037,13 +3103,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group">
 								<label>PRICE</label>
-						        <input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="1">
+								<div class="input-group">
+						        	<input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="1">
+						        	<span class="input-group-addon">NXT</span>
+								</div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="buy_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="buy_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="buy_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3103,7 +3175,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3168,13 +3243,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="sell_alias_price">PRICE</label>
-						                <input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
+										<div class="input-group">
+						                	<input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
+						                	<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="sell_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
@@ -3226,7 +3307,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_alias_sale_fee">FEE</label>
-										<input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="1">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="1">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
