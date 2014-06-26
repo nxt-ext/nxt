@@ -85,6 +85,10 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.hasLocalStorage = false;
 		}
 
+		if (NRS.getCookie("remember_passphrase")) {
+			$("#remember_password").prop("checked", true);
+		}
+
 		NRS.createDatabase(function() {
 			NRS.getSettings();
 		});

@@ -10,7 +10,8 @@ var NRS = (function(NRS, $, undefined) {
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
-		"24_hour_format": 1
+		"24_hour_format": 1,
+		"remember_passphrase": 0
 	};
 
 	NRS.defaultColors = {
@@ -917,6 +918,14 @@ var NRS = (function(NRS, $, undefined) {
 			$.each($dashboard_dates, function(key, value) {
 				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
 			});
+		}
+
+		if (!key || key == "remember_passphrase") {
+			if (NRS.settings["remember_passphrase"]) {
+				NRS.setCookie("remember_passphrase", 1, 1000);
+			} else {
+				NRS.deleteCookie("remember_passphrase");
+			}
 		}
 	}
 
