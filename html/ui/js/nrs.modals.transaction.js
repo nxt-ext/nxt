@@ -195,6 +195,26 @@ var NRS = (function(NRS, $, undefined) {
 
 					data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 
+					if (type == "Alias Sale") {
+						var message = "";
+
+						if (transaction.recipient == NRS.account) {
+							message = "You have been offered this alias for " + NRS.formatAmount(transaction.attachment.priceNQT) + " NXT. <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+						} else if (transaction.recipient == NRS.genesis) {
+							message = "This alias is offered for sale for " + NRS.formatAmount(transaction.attachment.priceNQT) + " NXT. <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+						} else if (transaction.senderRS == NRS.accountRS) {
+							if (transaction.attachment.priceNQT != "0") {
+								message = "You are offering this alias for sale. <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#cancel_alias_sale_modal'>Cancel sale?</a>";
+							}
+						} else {
+							message = "This alias is offered for sale to another account pending decision.";
+						}
+
+						if (message) {
+							$("#transaction_info_output_bottom").html("<div class='callout callout-info' style='margin-top:15px;margin-bottom:0;'>" + message + "</div>").show();
+						}
+					}
+
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
 
