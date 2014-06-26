@@ -365,7 +365,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!NRS.rememberPassword) {
 			if ($("#inline_message_password").val() == "") {
-				$.growl("Secret phrase is a required field.", {
+				$.growl("Passphrase is a required field.", {
 					"type": "danger"
 				});
 				return;
@@ -374,7 +374,7 @@ var NRS = (function(NRS, $, undefined) {
 			var accountId = NRS.getAccountId(data.secretPhrase);
 
 			if (accountId != NRS.account) {
-				$.growl("Incorrect secret phrase.", {
+				$.growl("Incorrect passphrase.", {
 					"type": "danger"
 				});
 				return;

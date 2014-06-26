@@ -329,7 +329,7 @@
 							           		<div class="row">
 							           			<div class="col-xs-10 col-sm-10 col-md-10">
 							           				<div class="form-group">
-							           					<input type="password" class="form-control secret_phrase" id="inline_message_password" name="inline_message_password" placeholder="Secret Phrase" style="display:inline;width:35%">
+							           					<input type="password" class="form-control secret_phrase" id="inline_message_password" name="inline_message_password" placeholder="Passphrase" style="display:inline;width:35%">
 							           					<label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="inline_message_encrypt" id="inline_message_encrypt" value="1" checked="checked" /> Encrypt Message</label>
 							           				</div>
 							           			</div>
@@ -1485,7 +1485,7 @@
 			            <div class="lockscreen-item">
 			                <div class="lockscreen-credentials">   
 			                    <div class="input-group">
-			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Secret Phrase" autofocus />
+			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" autofocus />
 			                        <div class="input-group-btn">
 			                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
 			                        </div>
@@ -1515,12 +1515,12 @@
 		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
 		                <div class="panel-body">
 							<form class="form-horizontal" role="form" method="post">
-		        				<div class="callout callout-info" style="max-width:500px;">Your secret phrase must be at least 35 characters long.</div>
+		        				<div class="callout callout-info" style="max-width:500px;">Your passphrase must be at least 35 characters long.</div>
 		        				
-		        				<div class="callout callout-danger"><strong>Attention</strong>: The secret phrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+		        				<div class="callout callout-danger"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
 
 			            		<div class="form-group">
-			            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
+			            		    <label for="registration_password" class="col-sm-3 control-label">Passphrase</label>
 			            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
 			            		</div>
 			                    <div class="form-group">
@@ -1561,19 +1561,19 @@
 		        				
 		        				<div class="step_2 account_phrase_generator_steps">
 		        					<div id="account_phrase_generator_start">
-		        						<p>Generating your secret phrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+		        						<p>Generating your passphrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
 		        						
 										<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 		        					</div>
 		        					
 		        					<div id="account_phrase_generator_stop" style="display:none">
-			        					<p>Your automatically generated secret phrase is:</p>
+			        					<p>Your automatically generated passphrase is:</p>
 			        					
 			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
 		        					
-			        					<p>Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This secret phrase is needed in order to access your Nxt account.</p>
+			        					<p>Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
 			        						        					
-			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
 			        				
 										<div style="text-align:right">
 											<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
@@ -1582,9 +1582,9 @@
 		        				</div>
 		        				
 		        				<div class="step_3 account_phrase_generator_steps">
-		        					<p>Your secret phrase is very important! In order to be sure that you have saved it, please write your secret phrase below:</p>
+		        					<p>Your passphrase is very important! In order to be sure that you have saved it, please write your passphrase below:</p>
 		        					
-		        					<div class="callout callout-danger" style="display:none">You have not typed the secret phrase correctly, please try again!</div>
+		        					<div class="callout callout-danger" style="display:none">You have not typed the passphrase correctly, please try again!</div>
 
 		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
 		        					
@@ -1597,7 +1597,7 @@
 		            </div>  
 	            
 		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
-			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own secret phrase? Click here.</a>
+			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own passphrase? Click here.</a>
 					</div>
 				</td>
 				</tr>
@@ -1645,7 +1645,7 @@
 								<p class="help-block" id="lease_balance_help">A lease of <strong>9000 blocks</strong> is about 10 days.</p>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="lease_balance_password">SECRET PHRASE</label>
+								<label for="lease_balance_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 
@@ -1673,12 +1673,12 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<p class="show_secret_phrase">If you are sure you want to stop forging, type your secret phrase to confirm.</p>
+							<p class="show_secret_phrase">If you are sure you want to stop forging, type your passphrase to confirm.</p>
 							<p class="hide_secret_phrase" style="display:none">If you are sure you want to stop forging, click the button below to confirm.</p>
-							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your passphrase will be sent to the server!</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group secret_phrase">
-								<label for="stop_forging_password">SECRET PHRASE</label>
+								<label for="stop_forging_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="stop_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
 
@@ -1703,12 +1703,12 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<p class="show_secret_phrase">If you want to start forging, type your secret phrase to confirm.</p>
+							<p class="show_secret_phrase">If you want to start forging, type your passphrase to confirm.</p>
 							<p class="hide_secret_phrase" style="display:none">If you you want to start forging, click the button below to confirm.</p>
-							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your passphrase will be sent to the server!</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group secret_phrase">
-								<label for="start_forging_password">SECRET PHRASE</label>
+								<label for="start_forging_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="start_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
 
@@ -1734,7 +1734,7 @@
 		      		<div class="modal-body">			
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<p>If you are sure you want to cancel your order, type your secret phrase to confirm.
+							<p>If you are sure you want to cancel your order, type your passphrase to confirm.
 							<input type="hidden" name="order" id="cancel_order_order" value="" />
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -1754,7 +1754,7 @@
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="cancel_order_password">SECRET PHRASE</label>
+								<label for="cancel_order_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
 
@@ -1802,7 +1802,7 @@
 								<p id="asset_order_fee_paid"></p>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="asset_order_password">SECRET PHRASE</label>
+								<label for="asset_order_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="asset_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
 
@@ -1873,7 +1873,7 @@
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="transfer_asset_password">SECRET PHRASE</label>
+								<label for="transfer_asset_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 
@@ -2089,7 +2089,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="issue_asset_password">SECRET PHRASE</label>
+								<label for="issue_asset_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2165,7 +2165,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_listing_password">SECRET PHRASE</label>
+								<label for="dgs_listing_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_listing_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2217,7 +2217,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_delisting_password">SECRET PHRASE</label>
+								<label for="dgs_delisting_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delisting_password" class="form-control" placeholder="" tabindex="1">
 							</div>
 
@@ -2284,7 +2284,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_price_change_password">SECRET PHRASE</label>
+								<label for="dgs_price_change_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_price_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
 
@@ -2348,7 +2348,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_quantity_change_password">SECRET PHRASE</label>
+								<label for="dgs_quantity_change_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_quantity_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
 
@@ -2422,7 +2422,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_purchase_password">SECRET PHRASE</label>
+								<label for="dgs_purchase_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_purchase_password" class="form-control" placeholder="" tabindex="7">
 							</div>
 
@@ -2485,7 +2485,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_delivery_password">SECRET PHRASE</label>
+								<label for="dgs_delivery_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2617,7 +2617,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_refund_password">SECRET PHRASE</label>
+								<label for="dgs_refund_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2672,7 +2672,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_feedback_password">SECRET PHRASE</label>
+								<label for="dgs_feedback_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_feedback_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2767,7 +2767,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 	
 							<div class="form-group secret_phrase">
-								<label for="create_poll_password">SECRET PHRASE</label>
+								<label for="create_poll_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="create_poll_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2828,7 +2828,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 	
 							<div class="form-group secret_phrase">
-								<label for="cast_vote_password">SECRET PHRASE</label>
+								<label for="cast_vote_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -2892,7 +2892,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="send_money_password">SECRET PHRASE</label>
+								<label for="send_money_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 
@@ -2954,7 +2954,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="send_message_password">SECRET PHRASE</label>
+								<label for="send_message_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 
@@ -3009,7 +3009,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="account_info_password">SECRET PHRASE</label>
+								<label for="account_info_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="account_info_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 
@@ -3073,7 +3073,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="register_alias_password">SECRET PHRASE</label>
+								<label for="register_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="register_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 
@@ -3133,7 +3133,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="buy_alias_password">SECRET PHRASE</label>
+								<label for="buy_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="buy_alias_password" class="form-control" placeholder="" tabindex="4">
 							</div>
 
@@ -3196,7 +3196,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="transfer_alias_password">SECRET PHRASE</label>
+								<label for="transfer_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -3273,7 +3273,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="sell_alias_password">SECRET PHRASE</label>
+								<label for="sell_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -3328,7 +3328,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="cancel_alias_sale_password">SECRET PHRASE</label>
+								<label for="cancel_alias_sale_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 
@@ -3362,7 +3362,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 
 						<div id="token_modal_generate_token" class="token_modal_content" style="display:none">
 				      		<form role="form" id="generate_token_form">
-								<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+								<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your pass phrase will be sent to the server!</div>
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
 								<div class="form-group">
@@ -3371,7 +3371,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 								<input type="hidden" name="request_type" value="generateToken" />
 								<div class="form-group secret_phrase">
-									<label for="generate_token_password">SECRET PHRASE</label>
+									<label for="generate_token_password">PASSPHRASE</label>
 									<input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
 								</div>
 							</form>
@@ -3866,7 +3866,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<form role="form">
 							<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt these messages.</div>
 							<div class="form-group secret_phrase">
-								<label for="decrypt_note_form_password">SECRET PHRASE</label>
+								<label for="decrypt_note_form_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
@@ -3891,11 +3891,11 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;">
 				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this data.</div>
 				<div class="form-group secret_phrase">
-					<label for="decrypt_note_form_password">SECRET PHRASE</label>
+					<label for="decrypt_note_form_password">PASSPHRASE</label>
 					<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
 				</div>
 
-				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember password for decryption</label></div>
+				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember passphrase for decryption</label></div>
 
 		        <button type="button" class="btn btn-primary">Decrypt</button>
 			</form>

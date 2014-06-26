@@ -54,7 +54,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $loaded = $("#account_phrase_generator_loaded");
 
 		if (window.crypto || window.msCrypto) {
-			$loading.find("span.loading_text").html("Generating your secret phrase. Please wait");
+			$loading.find("span.loading_text").html("Generating your passphrase. Please wait");
 		}
 
 		$loading.show();
@@ -88,7 +88,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.newlyCreatedAccount = true;
 			NRS.login(password, function() {
-				$.growl("Secret phrase confirmed successfully, you are now logged in.", {
+				$.growl("Passphrase confirmed successfully, you are now logged in.", {
 					"type": "success"
 				});
 			});
@@ -107,11 +107,11 @@ var NRS = (function(NRS, $, undefined) {
 		var error = "";
 
 		if (password.length < 35) {
-			error = "Secret phrase must be at least 35 characters long.";
+			error = "Passphrase must be at least 35 characters long.";
 		} else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-			error = "Since your secret phrase is less than 50 characters long, it must contain numbers and uppercase letters.";
+			error = "Since your passphrase is less than 50 characters long, it must contain numbers and uppercase letters.";
 		} else if (password != repeat) {
-			error = "Secret phrases do not match.";
+			error = "Passphrase do not match.";
 		}
 
 		if (error) {
@@ -119,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#registration_password, #registration_password_repeat").val("");
 			NRS.login(password, function() {
-				$.growl("Secret phrase confirmed successfully, you are now logged in.", {
+				$.growl("Passphrase confirmed successfully, you are now logged in.", {
 					"type": "success"
 				});
 			});
@@ -130,7 +130,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#login_password, #registration_password, #registration_password_repeat").val("");
 
 		if (!password.length) {
-			$.growl("You must enter your secret phrase. If you don't have one, click the registration button below.", {
+			$.growl("You must enter your passphrase. If you don't have one, click the registration button below.", {
 				"type": "danger",
 				"offset": 10
 			});
@@ -201,9 +201,9 @@ var NRS = (function(NRS, $, undefined) {
 					var passwordNotice = "";
 
 					if (password.length < 35) {
-						passwordNotice = "Your secret phrase is less than 35 characters long. This is not secure.";
+						passwordNotice = "Your passphrase is less than 35 characters long. This is not secure.";
 					} else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-						passwordNotice = "Your secret phrase does not contain numbers and uppercase letters. This is not secure.";
+						passwordNotice = "Your passphrase does not contain numbers and uppercase letters. This is not secure.";
 					}
 
 					if (passwordNotice) {

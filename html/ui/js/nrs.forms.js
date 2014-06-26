@@ -159,7 +159,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
-			$modal.find(".error_message").html("Secret phrase is a required field.").show();
+			$modal.find(".error_message").html("Passphrase is a required field.").show();
 			if (formErrorFunction) {
 				formErrorFunction();
 			}

@@ -395,14 +395,14 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (_decryptionPassword) {
 				password = _decryptionPassword;
 			} else {
-				$form.find(".callout").html("Secret phrase is a required field.").show();
+				$form.find(".callout").html("Passphrase is a required field.").show();
 				return;
 			}
 		}
 
 		var accountId = NRS.getAccountId(password);
 		if (accountId != NRS.account) {
-			$form.find(".callout").html("Incorrect secret phrase.").show();
+			$form.find(".callout").html("Incorrect passphrase.").show();
 			return;
 		}
 
@@ -475,14 +475,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.decryptAllMessages = function(messages, password) {
 		if (!password) {
 			throw {
-				"message": "Secret phrase is a required field.",
+				"message": "Passphrase is a required field.",
 				"errorCode": 1
 			};
 		} else {
 			var accountId = NRS.getAccountId(password);
 			if (accountId != NRS.account) {
 				throw {
-					"message": "Incorrect secret phrase.",
+					"message": "Incorrect passphrase.",
 					"errorCode": 2
 				};
 			}

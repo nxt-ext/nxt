@@ -91,7 +91,7 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		//gets account id from secret phrase client side, used only for login.
+		//gets account id from passphrase client side, used only for login.
 		if (requestType == "getAccountId") {
 			var accountId = NRS.getAccountId(data.secretPhrase);
 
@@ -110,7 +110,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (callback) {
 					callback({
 						"errorCode": 1,
-						"errorDescription": "Incorrect secret phrase."
+						"errorDescription": "Incorrect passphrase."
 					});
 				}
 				return;
