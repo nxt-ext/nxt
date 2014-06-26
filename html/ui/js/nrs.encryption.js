@@ -119,11 +119,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.decryptNote = function(message, options, secretPhrase) {
-		console.log("decrypt note");
-		console.log(message);
-		console.log(options);
-		console.log(secretPhrase);
-
 		try {
 			if (!options.sharedKey) {
 				if (!options.privateKey) {
@@ -158,7 +153,6 @@ var NRS = (function(NRS, $, undefined) {
 
 			return decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
-			console.log(err);
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {

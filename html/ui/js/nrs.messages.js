@@ -523,7 +523,7 @@ var NRS = (function(NRS, $, undefined) {
 				};
 			} else {
 				return {
-					"error": "Could not decrypt."
+					"error": "Message(s) could not be decrypted."
 				};
 			}
 		}
@@ -535,11 +535,11 @@ var NRS = (function(NRS, $, undefined) {
 		$("#messages_sidebar a.active").trigger("click");
 
 		if (success) {
-			$.growl("Messages decrypted successfully.", {
+			$.growl("Message(s) decrypted successfully.", {
 				"type": "success"
 			});
 		} else {
-			$.growl("Messages could not be decrypted.", {
+			$.growl("Message(s) could not be decrypted.", {
 				"type": "danger"
 			});
 		}

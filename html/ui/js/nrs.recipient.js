@@ -31,7 +31,11 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#send_money_amount").on("input", function(e) {
 		var amount = parseInt($(this).val(), 10);
-		$("#send_money_fee").val(isNaN(amount) ? "1" : (amount < 500 ? 1 : Math.round(amount / 1000)));
+		var fee = isNaN(amount) ? 1 : (amount < 500 ? 1 : Math.round(amount / 1000));
+
+		$("#send_money_fee").val(fee);
+
+		$(this).closest(".modal").find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(fee)) + " NXT");
 	});
 
 	//todo later: http://twitter.github.io/typeahead.js/

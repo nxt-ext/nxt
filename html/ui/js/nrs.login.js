@@ -158,6 +158,10 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (!NRS.account) {
+					$.growl("Could not find your account address.", {
+						"type": "danger",
+						"offset": 10
+					});
 					return;
 				}
 
@@ -166,9 +170,11 @@ var NRS = (function(NRS, $, undefined) {
 				if (nxtAddress.set(NRS.account)) {
 					NRS.accountRS = nxtAddress.toString();
 				} else {
-					$.growl("Could not generate Reed Solomon address.", {
-						"type": "danger"
+					$.growl("Could not generate your account address.", {
+						"type": "danger",
+						"offset": 10
 					});
+					return;
 				}
 
 				NRS.sendRequest("getAccountPublicKey", {
