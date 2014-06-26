@@ -4,7 +4,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
 		NRS.sendRequest("getAliases+", {
-			"account": NRS.accountRS,
+			"account": NRS.account,
 			"timestamp": 0
 		}, function(response) {
 			if (response.aliases && response.aliases.length) {
@@ -65,15 +65,15 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (unconfirmedTransaction) {
 						alias.tentative = true;
-						alias.buyerRS = unconfirmedTransaction.recipientRS;
+						alias.buyer = unconfirmedTransaction.recipient;
 						alias.priceNQT = unconfirmedTransaction.priceNQT;
 					}
 
 					var allowCancel = false;
 
-					if (alias.buyerRS) {
+					if (alias.buyer) {
 						if (alias.priceNQT == "0") {
-							if (alias.buyerRS == NRS.accountRS) {
+							if (alias.buyer == NRS.account) {
 								alias.status = "Cancelling Sale";
 							} else {
 								alias.status = "Transfer In Progress";
@@ -81,7 +81,7 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							allowCancel = true;
 
-							if (alias.buyerRS != NRS.genesisRS) {
+							if (alias.buyer != NRS.genesis) {
 								alias.status = "For Sale (direct)";
 							} else {
 								alias.status = "For Sale (indirect)";
@@ -156,9 +156,6 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		console.log(response);
-		console.log(data);
-
 		var $row = $("#aliases_table tr[data-alias=" + String(data.aliasName).toLowerCase().escapeHTML() + "]");
 
 		$row.addClass("tentative");
@@ -219,12 +216,12 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				if (!response.buyerRS) {
+				if (!response.buyer) {
 					e.preventDefault();
 					$.growl("This alias is no longer for sale.", {
 						"type": "danger"
 					});
-				} else if (response.buyerRS != NRS.genesisRS && response.buyerRS != NRS.accountRS) {
+				} else if (response.buyer != NRS.genesis && response.buyer != NRS.account) {
 					e.preventDefault();
 					$.growl("This alias is offered for sale to another account pending decision.", {
 						"type": "danger"
@@ -469,10 +466,10 @@ var NRS = (function(NRS, $, undefined) {
 					"DataFormattedHTML": String(response.aliasURI).autoLink()
 				}
 
-				if (response.buyerRS) {
-					if (response.buyerRS == NRS.accountRS) {
+				if (response.buyer) {
+					if (response.buyer == NRS.account) {
 						$("#alias_sale_callout").html("You have been offered this alias for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>").show();
-					} else if (response.buyerRS == NRS.genesisRS) {
+					} else if (response.buyer == NRS.genesis) {
 						$("#alias_sale_callout").html("This alias is offered for sale for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>").show();
 					} else {
 						$("#alias_sale_callout").html("This alias is offered for sale to another account pending decision.").show();
