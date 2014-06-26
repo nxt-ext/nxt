@@ -1029,6 +1029,13 @@
 							
 							<form role="form">
 							    <div class="box-body">
+							    	<div class="form-group">
+							            <label for="settings_24_hour_format">Use 24 Hour Format</label>
+							            <select name="24_hour_format" id="settings_24_hour_format" class="form-control" style="width:150px">
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							        </div>
 							        <div class="form-group">
 							            <label for="settings_submit_on_enter">Submit Forms on Enter</label>
 							            <select name="submit_on_enter" id="settings_submit_on_enter" class="form-control" style="width:150px">
@@ -1037,17 +1044,17 @@
 							            </select>
 							            <p class="help-block">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
 							        </div>
-									<div class="form-group">
-							            <label for="settings_animate_forging">Animate Forging Indicator</label>
-							            <select name="animate_forging" id="settings_animate_forging" class="form-control" style="width:150px">
-							                <option value="1">Yes</option>
-							                <option value="0">No</option>
-							            </select>
-							        </div>
 							        <div class="form-group">
 							            <label for="settings_news">Enable News Section</label>
 							            <select name="news" id="settings_news" class="form-control" style="width:150px">
 							            	<option value="-1" id="settings_news_initial">Choose</option>
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							        </div>
+									<div class="form-group">
+							            <label for="settings_animate_forging">Animate Forging Indicator</label>
+							            <select name="animate_forging" id="settings_animate_forging" class="form-control" style="width:150px">
 							                <option value="1">Yes</option>
 							                <option value="0">No</option>
 							            </select>

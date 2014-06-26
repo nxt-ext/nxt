@@ -9,7 +9,8 @@ var NRS = (function(NRS, $, undefined) {
 		"console_log": 0,
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
-		"asset_transfer_warning": "10000"
+		"asset_transfer_warning": "10000",
+		"24_hour_format": 1
 	};
 
 	NRS.defaultColors = {
@@ -908,6 +909,14 @@ var NRS = (function(NRS, $, undefined) {
 					$("#show_console").show();
 				}
 			}
+		}
+
+		if (key == "24_hour_format") {
+			var $dashboard_dates = $("#dashboard_transactions_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
+
+			$.each($dashboard_dates, function(key, value) {
+				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
+			});
 		}
 	}
 

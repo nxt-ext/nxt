@@ -608,9 +608,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (!date_only) {
 				var hours = date.getHours();
+				var originalHours = hours;
 				var minutes = date.getMinutes();
 				var seconds = date.getSeconds();
 
+				if (!NRS.settings["24_hour_format"]) {
+					hours = hours % 12;
+				}
 				if (hours < 10) {
 					hours = "0" + hours;
 				}
@@ -621,6 +625,10 @@ var NRS = (function(NRS, $, undefined) {
 					seconds = "0" + seconds;
 				}
 				res += " " + hours + ":" + minutes + ":" + seconds;
+
+				if (!NRS.settings["24_hour_format"]) {
+					res += " " + (originalHours > 12 ? "PM" : "AM");
+				}
 			}
 
 			return res;
