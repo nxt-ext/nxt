@@ -384,6 +384,8 @@ public final class DebugTrace {
             } else {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
+        } else {
+            return Collections.emptyMap();
         }
         return map;
     }
