@@ -229,11 +229,15 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					$modal.find("input[name=aliasName]").val(alias.escapeHTML());
 					$modal.find(".alias_name_display").html(alias.escapeHTML());
-					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT));
+					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT)).prop("readonly", true);
 				}
 			}
 		}, false);
 	});
+
+	NRS.forms.buyAliasError = function() {
+		$("#buy_alias_modal").find("input[name=priceNXT]").prop("readonly", false);
+	}
 
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
