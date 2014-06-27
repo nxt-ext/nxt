@@ -273,6 +273,8 @@ var NRS = (function(NRS, $, undefined) {
 			"account": NRS.userInfoModal.user,
 			"timestamp": 0
 		}, function(response) {
+			var rows = "";
+
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
 
@@ -285,8 +287,6 @@ var NRS = (function(NRS, $, undefined) {
 						return 0;
 					}
 				});
-
-				var rows = "";
 
 				var alias_account_count = 0,
 					alias_uri_count = 0,
@@ -305,13 +305,33 @@ var NRS = (function(NRS, $, undefined) {
 						alias_account_count++;
 					}
 				}
-
-				$("#user_info_modal_aliases_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#user_info_modal_aliases_table"));
-			} else {
-				$("#user_info_modal_aliases_table tbody").empty();
-				NRS.dataLoadFinished($("#user_info_modal_aliases_table"));
 			}
+
+			$("#user_info_modal_aliases_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#user_info_modal_aliases_table"));
+		});
+	}
+
+	NRS.userInfoModal.marketplace = function() {
+		NRS.sendRequest("getDGSGoods", {
+			"seller": NRS.userInfoModal.user,
+			"firstIndex": 0,
+			"lastIndex": 100
+		}, function(response) {
+			var rows = "";
+
+			if (response.goods && response.goods.length) {
+				for (var i = 0; i < response.goods.length; i++) {
+					var good = response.goods[i];
+					if (good.name.length > 150) {
+						good.name = good.name.substring(0, 150) + "...";
+					}
+					rows += "<tr><td><a href='#' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td>" + NRS.format(good.quantity) + "</td></tr>";
+				}
+			}
+
+			$("#user_info_modal_marketplace_table tbody").empty().append(rows);
+			NRS.dataLoadFinished($("#user_info_modal_marketplace_table"));
 		});
 	}
 

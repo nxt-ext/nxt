@@ -3539,6 +3539,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
+							<li id="user_info_marketplace" data-tab="marketplace"><a href="#">Marketplace</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
 							<li id="user_info_description" data-tab="description"><a href="#">Description</a></li>
 							<li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
@@ -3597,6 +3598,23 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="data-empty-container" style="padding-top:10px">This user has no assets.</div>
 						</div>
 						
+						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_marketplace" style="display:none;max-height:350px;overflow:auto;">
+							<table class="table table-striped" id="user_info_modal_marketplace_table">
+								<thead>
+							    <tr>
+							        <th>Item</th>
+							        <th>Price</th>
+							        <th>QTY</th>
+							    </tr>
+							    </thead>
+							    <tbody>
+							    
+							    </tbody>
+							</table>
+							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+							<div class="data-empty-container" style="padding-top:10px">This user has no marketplace listings.</div>
+						</div>
+
 						<div class="user_info_modal_content data-never-loading" id="user_info_modal_description" style="display:none;"></div>
 
 						<div class="user_info_modal_content data-never-loading" id="user_info_modal_actions" style="display:none;">

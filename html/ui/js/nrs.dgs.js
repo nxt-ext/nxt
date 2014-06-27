@@ -97,7 +97,7 @@ var NRS = (function(NRS, $, undefined) {
 		var seller = $(".dgs_search input[name=q]").val();
 
 		NRS.sendRequest("getDGSGoods+", {
-			"seller": seller,
+			"sellerRS": seller,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
