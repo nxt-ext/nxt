@@ -19,7 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	$(".modal button.btn-primary:not([data-dismiss=modal])").click(function() {
+	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true])").click(function() {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
 

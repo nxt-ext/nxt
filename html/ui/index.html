@@ -3880,7 +3880,6 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 
-
 		<div class="modal fade" id="messages_decrypt_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -3892,12 +3891,12 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<form role="form">
 							<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt these messages.</div>
 							<div class="form-group secret_phrase">
-								<label for="decrypt_note_form_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
+								<label for="messages_decrypt_password">PASSPHRASE</label>
+								<input type="password" name="secretPhrase" id="messages_decrypt_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 
 							<div class="form-group" style="margin-bottom:0">
-								<input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember passphrase for decryption</label>
+								<input type="checkbox" name="rememberPassword" id="messages_decrypt_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="messages_decrypt_remember_password" style="font-weight:normal;"> Remember passphrase for decryption</label>
 							</div>
 
 							<input type="hidden" name="request_type" value="decryptMessages" />
@@ -3923,7 +3922,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 
 				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember passphrase for decryption</label></div>
 
-		        <button type="button" class="btn btn-primary">Decrypt</button>
+		        <button type="button" class="btn btn-primary" data-ignore="true">Decrypt</button>
 			</form>
 		</div>
 

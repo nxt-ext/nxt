@@ -97,7 +97,7 @@ var NRS = (function(NRS, $, undefined) {
 		var seller = $(".dgs_search input[name=q]").val();
 
 		NRS.sendRequest("getDGSGoods+", {
-			"sellerRS": seller,
+			"seller": seller,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -166,6 +166,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.completed_orders_dgs = function() {
 		NRS.sendRequest("getDGSPurchases", {
 			"seller": NRS.account,
+			"completed": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -701,7 +702,7 @@ var NRS = (function(NRS, $, undefined) {
 								"outputEl": "#dgs_view_delivery_output"
 							});
 
-							var $btn = $modal.find("button.btn-primary");
+							var $btn = $modal.find("button.btn-primary:not([data-ignore=true])");
 
 							if (!response.feedbackNote) {
 								if (NRS.account == response.buyer) {
