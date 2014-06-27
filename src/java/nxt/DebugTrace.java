@@ -21,6 +21,7 @@ public final class DebugTrace {
 
     static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "");
     static final String SEPARATOR = Nxt.getStringProperty("nxt.debugTraceSeparator", "\t");
+    static final boolean LOG_UNCONFIRMED = Nxt.getBooleanProperty("nxt.debugLogUnconfirmed");
 
     static void init() {
         List<String> accountIds = Nxt.getStringListProperty("nxt.debugTraceAccounts");
@@ -49,27 +50,31 @@ public final class DebugTrace {
         Account.addListener(new Listener<Account>() {
             @Override
             public void notify(Account account) {
-                debugTrace.trace(account);
+                debugTrace.trace(account, false);
             }
         }, Account.Event.BALANCE);
-        Account.addListener(new Listener<Account>() {
-            @Override
-            public void notify(Account account) {
-                debugTrace.trace(account);
-            }
-        }, Account.Event.UNCONFIRMED_BALANCE);
+        if (LOG_UNCONFIRMED) {
+            Account.addListener(new Listener<Account>() {
+                @Override
+                public void notify(Account account) {
+                    debugTrace.trace(account, true);
+                }
+            }, Account.Event.UNCONFIRMED_BALANCE);
+        }
         Account.addAssetListener(new Listener<Account.AccountAsset>() {
             @Override
             public void notify(Account.AccountAsset accountAsset) {
                 debugTrace.trace(accountAsset, false);
             }
         }, Account.Event.ASSET_BALANCE);
-        Account.addAssetListener(new Listener<Account.AccountAsset>() {
-            @Override
-            public void notify(Account.AccountAsset accountAsset) {
-                debugTrace.trace(accountAsset, true);
-            }
-        }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
+        if (LOG_UNCONFIRMED) {
+            Account.addAssetListener(new Listener<Account.AccountAsset>() {
+                @Override
+                public void notify(Account.AccountAsset accountAsset) {
+                    debugTrace.trace(accountAsset, true);
+                }
+            }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
+        }
         Account.addLeaseListener(new Listener<Account.AccountLease>() {
             @Override
             public void notify(Account.AccountLease accountLease) {
@@ -156,9 +161,9 @@ public final class DebugTrace {
         }
     }
 
-    private void trace(Account account) {
+    private void trace(Account account, boolean unconfirmed) {
         if (include(account.getId())) {
-            log(getValues(account.getId()));
+            log(getValues(account.getId(), unconfirmed));
         }
     }
 
@@ -216,7 +221,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId) {
+    private Map<String,String> getValues(Long accountId, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
@@ -224,12 +229,12 @@ public final class DebugTrace {
         map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalanceNQT() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
-        map.put("event", "balance");
+        map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
         return map;
     }
 
     private Map<String,String> getValues(Long accountId, Trade trade, boolean isAsk) {
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantityQNT() : trade.getQuantityQNT()));
         map.put("trade price", String.valueOf(trade.getPriceNQT()));
@@ -257,7 +262,7 @@ public final class DebugTrace {
         if (fee == 0 && amount == 0) {
             return Collections.emptyMap();
         }
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         map.put("transaction amount", String.valueOf(amount));
         map.put("transaction fee", String.valueOf(fee));
         map.put("transaction", transaction.getStringId());
@@ -278,7 +283,7 @@ public final class DebugTrace {
         if (isUndo) {
             fee = - fee;
         }
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block" + (isUndo ? " undo" : ""));
@@ -307,7 +312,7 @@ public final class DebugTrace {
     }
 
     private Map<String,String> getValues(Long accountId, Transaction transaction, Attachment attachment, boolean isRecipient, boolean isUndo) {
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         if (attachment instanceof Attachment.ColoredCoinsOrderPlacement) {
             if (isRecipient) {
                 return Collections.emptyMap();
@@ -379,6 +384,8 @@ public final class DebugTrace {
             } else {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
+        } else {
+            return Collections.emptyMap();
         }
         return map;
     }
@@ -389,6 +396,9 @@ public final class DebugTrace {
         }
         StringBuilder buf = new StringBuilder();
         for (String column : columns) {
+            if (!LOG_UNCONFIRMED && column.startsWith("unconfirmed")) {
+                continue;
+            }
             String value = map.get(column);
             if (value != null) {
                 buf.append(QUOTE).append(value).append(QUOTE);

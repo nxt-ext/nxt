@@ -99,7 +99,7 @@ final class TransactionDb {
             if (attachmentBytes != null) {
                 ByteBuffer buffer = ByteBuffer.wrap(attachmentBytes);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                transactionType.doLoadAttachment(transaction, buffer); // this does not do validate
+                transactionType.loadAttachment(transaction, buffer); // this does not do validate
             }
             return transaction;
         } catch (SQLException e) {

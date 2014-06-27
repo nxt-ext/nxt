@@ -1,0 +1,11 @@
+Fixed logic bugs in unconfirmed transactions handling and detection of double
+spending transactions.
+
+Improved performance of getTransactions query.
+
+Added nxt.debugLogUnconfirmed parameter (default false) to control debug logging
+of unconfirmed account balances.
+
+Improved UI of the API test servlet, patch submitted by Holger Drewes.
+
+
