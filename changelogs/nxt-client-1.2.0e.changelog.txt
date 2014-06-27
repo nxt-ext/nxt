@@ -48,4 +48,20 @@ name, block JSON also shows generatorPublickKey.
 
 Updated jetty to version 9.2.1.
 
+Client Updates: 
 
+Digital Goods Store UI.
+
+Alias Trading UI.
+
+Encrypted Messages.
+
+Only RS account numbers are allowed. Exchanges and services should switch to RS format ASAP.
+
+Decode Token Functionality.
+
+Hide Fee / Deadline by default, show via advanced toggle.
+
+Show warning message if user is on a fork (if his account has generated at least the last 10 blocks).
+
+Several settings (remember passphrase by default, 12/24 hour format)
