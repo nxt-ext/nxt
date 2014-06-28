@@ -107,6 +107,8 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
+			console.log(err);
+
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {
@@ -561,7 +563,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	function aesEncrypt(plaintext, options) {
-		if (!window.crypto) {
+		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
 				"message": "Your browser is unsupported."
@@ -584,7 +586,12 @@ var NRS = (function(NRS, $, undefined) {
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 
 		var tmp = new Uint8Array(16);
-		window.crypto.getRandomValues(tmp);
+
+		if (window.crypto) {
+			window.crypto.getRandomValues(tmp);
+		} else {
+			window.msCrypto.getRandomValues(tmp);
+		}
 
 		var iv = converters.byteArrayToWordArray(tmp);
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
@@ -637,7 +644,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	function encryptData(plaintext, options) {
-		if (!window.crypto) {
+		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
 				"message": "Your browser is unsupported."
@@ -651,7 +658,12 @@ var NRS = (function(NRS, $, undefined) {
 		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
 
 		options.nonce = new Uint8Array(32);
-		window.crypto.getRandomValues(options.nonce);
+
+		if (window.crypto) {
+			window.crypto.getRandomValues(options.nonce);
+		} else {
+			window.msCrypto.getRandomValues(options.nonce);
+		}
 
 		var data = aesEncrypt(compressedPlaintext, options);
 
