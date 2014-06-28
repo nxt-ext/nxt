@@ -253,7 +253,9 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					}
 
-					NRS.checkIfOnAFork();
+					if (!NRS.downloadingBlockchain) {
+						NRS.checkIfOnAFork();
+					}
 
 					NRS.setupClipboardFunctionality();
 
