@@ -117,7 +117,7 @@
 					}
 
 					function checkVal(allow) {
-						input.val(input.val().replace(/^NXT\-NXT/i, "NXT-"));
+						input.val(input.val().replace(/^\s*NXT\-\s*NXT/i, "NXT-"));
 
 						var i, c, pos, test = input.val(),
 							lastMatch = -1;
@@ -155,8 +155,22 @@
 						}, 10);
 					}).bind("blur.mask", function() {
 						checkVal(), input.val() != focusText && input.change();
-					}).bind("keydown.mask", keydownEvent).bind("keypress.mask", keypressEvent).bind(pasteEventName, function() {
+					}).bind("keydown.mask", keydownEvent).bind("keypress.mask", keypressEvent).bind(pasteEventName, function(e) {
+						var oldInput = input.val();
+
 						setTimeout(function() {
+							var newInput = input.val();
+
+							var pasted = text_diff(oldInput, newInput);
+
+							if (pasted != newInput) {
+								if (/^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.test(pasted)) {
+									input.val(pasted);
+								} else if (/^NXT[A-Z0-9]{17}/i.test(pasted)) {
+									input.val(pasted);
+								}
+							}
+
 							var pos = checkVal(!0);
 							input.caret(pos), settings.completed && pos == input.val().length && settings.completed.call(input);
 						}, 0);
@@ -164,4 +178,17 @@
 				}));
 		}
 	});
+
+	function text_diff(first, second) {
+		var start = 0;
+		while (start < first.length && first[start] == second[start]) {
+			++start;
+		}
+		var end = 0;
+		while (first.length - end > start && first[first.length - end - 1] == second[second.length - end - 1]) {
+			++end;
+		}
+		end = second.length - end;
+		return second.substr(start, end - start);
+	}
 }(jQuery);
