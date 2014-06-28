@@ -86,7 +86,9 @@
 					function keydownEvent(e) {
 						if (e.keyCode == 8) {
 							var currentInput = input.val();
-							if (currentInput == "NXT-____-____-____-_____" && input.caret().begin == 4) {
+							var pos = input.caret();
+
+							if ((pos.begin == 0 && pos.end == 24) || (currentInput == "NXT-____-____-____-_____" && pos.begin == 4)) {
 								input.val("");
 								$(this).trigger("unmask");
 								return;
