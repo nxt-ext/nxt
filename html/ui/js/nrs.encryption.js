@@ -566,7 +566,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
-				"message": "Your browser is unsupported."
+				"message": "Your browser is does not support client-side encryption. Aborting."
 			};
 		}
 
@@ -647,7 +647,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
-				"message": "Your browser is unsupported."
+				"message": "Your browser does not support client-side encryption. Aborting."
 			};
 		}
 

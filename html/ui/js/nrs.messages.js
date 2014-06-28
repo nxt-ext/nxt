@@ -336,7 +336,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["encryptedNoteNonce"] = encrypted.nonce;
 			} catch (err) {
 				return {
-					"error": "Could not encrypt message."
+					"error": err.message
 				};
 			}
 		} else {
@@ -407,7 +407,7 @@ var NRS = (function(NRS, $, undefined) {
 				data["encryptedNote"] = encrypted.message;
 				data["encryptedNoteNonce"] = encrypted.nonce;
 			} catch (err) {
-				$.growl("Could not encrypt message.", {
+				$.growl(String(err.message).escapeHTMl(), {
 					"type": "danger"
 				});
 				return;
