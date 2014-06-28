@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.assets = [];
 	NRS.assetIds = [];
@@ -9,10 +12,10 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.pages.asset_exchange = function(callback) {
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
-		NRS.assets = [];
-		NRS.assetIds = [];
-
 		if (NRS.databaseSupport) {
+			NRS.assets = [];
+			NRS.assetIds = [];
+
 			NRS.database.select("assets", null, function(error, assets) {
 				//select already bookmarked assets
 				$.each(assets, function(index, asset) {
@@ -242,7 +245,14 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		} else {
 			NRS.closeModal();
-			$.growl((newAssets.length == 1 ? "Asset" : newAssets.length + " assets") + " added successfully.", {
+
+			var message = (newAssets.length == 1 ? "Asset" : newAssets.length + " assets") + " added successfully.";
+
+			if (!NRS.databaseSupport) {
+				message += "Note that the assets could not be saved in the database.";
+			}
+
+			$.growl(message, {
 				"type": "success"
 			});
 
@@ -281,10 +291,7 @@ var NRS = (function(NRS, $, undefined) {
 		var newAssets = [];
 
 		$.each(assets, function(key, asset) {
-			newAssetIds.push({
-				"asset": String(asset.asset)
-			});
-			newAssets.push({
+			var newAsset = {
 				"asset": String(asset.asset),
 				"name": String(asset.name),
 				"description": String(asset.description),
@@ -293,8 +300,26 @@ var NRS = (function(NRS, $, undefined) {
 				"quantityQNT": String(asset.quantityQNT),
 				"decimals": parseInt(asset.decimals, 10),
 				"groupName": ""
-			});
+			};
+
+			newAssets.push(newAsset);
+
+			if (NRS.databaseSupport) {
+				newAssetIds.push({
+					"asset": String(asset.asset)
+				});
+			} else {
+				NRS.assetIds.push(asset.asset);
+				NRS.assets.push(newAsset);
+			}
 		});
+
+		if (!NRS.databaseSupport) {
+			if (callback) {
+				callback(newAssets, assets);
+			}
+			return;
+		}
 
 		NRS.database.select("assets", newAssetIds, function(error, existingAssets) {
 			var existingIds = [];
@@ -344,7 +369,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.assets.length) {
 			NRS.pageLoaded();
 			$("#asset_exchange_sidebar_content").empty();
-			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results").hide();
+			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
 			$("#no_assets_available").show();
 			$("#asset_exchange_page").addClass("no_assets");
 			return;
@@ -1036,6 +1061,8 @@ var NRS = (function(NRS, $, undefined) {
 			var selectedText = NRS.getSelectedText();
 
 			if (selectedText != $(this).val()) {
+				var errorMessage;
+
 				if (isQuantityField) {
 					errorMessage = "Only " + NRS.currentAsset.decimals + " digits after the decimal mark are allowed for this asset.";
 				} else {

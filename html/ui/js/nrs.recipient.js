@@ -1,10 +1,13 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
 		$("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient").blur(function() {
 			var value = $(this).val();
 			var modal = $(this).closest(".modal");
 
-			if (value) {
+			if (value && value != "NXT-____-____-____-_____") {
 				NRS.checkRecipient(value, modal);
 			} else {
 				modal.find(".account_info").hide();
@@ -28,7 +31,11 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#send_money_amount").on("input", function(e) {
 		var amount = parseInt($(this).val(), 10);
-		$("#send_money_fee").val(isNaN(amount) ? "1" : (amount < 500 ? 1 : Math.round(amount / 1000)));
+		var fee = isNaN(amount) ? 1 : (amount < 500 ? 1 : Math.round(amount / 1000));
+
+		$("#send_money_fee").val(fee);
+
+		$(this).closest(".modal").find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(fee)) + " NXT");
 	});
 
 	//todo later: http://twitter.github.io/typeahead.js/
@@ -51,7 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("span.recipient_selector").on("click", "ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
-		$(this).closest("form").find("input[name=recipient],input[name=account_id]").val($(this).data("contact")).trigger("blur");
+		$(this).closest("form").find("input[name=recipient],input[name=account_id]").trigger("unmask").val($(this).data("contact")).trigger("blur");
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
@@ -84,7 +91,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.publicKey) {
 				callback({
 					"type": "info",
-					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + "NXT.",
+					"message": "The recipient account has a public key and a balance of " + NRS.formatAmount(response.unconfirmedBalanceNQT, false, true) + " NXT.",
 					"account": response
 				});
 			} else {
@@ -104,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						callback({
 							"type": "danger",
-							"message": "There is a problem with the recipient account: " + response.errorDescription,
+							"message": "There is a problem with the recipient account: " + String(response.errorDescription).escapeHTML(),
 							"account": null
 						});
 					}
@@ -139,22 +146,17 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					if (response.account) {
-						var message = "The recipient address translates to account <strong>" + String(response.account.account).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which").escapeHTML();
-					} else {
-						var message = response.message.escapeHTML();
-					}
+					var message = response.message.escapeHTML();
 
 					callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
 				});
 			} else {
 				if (address.guess.length == 1) {
-
 					callout.removeClass(classes).addClass("callout-danger").html("The recipient address is malformed, did you mean <span class='malformed_address' data-address='" + String(address.guess[0]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[0], account) + "</span> ?").show();
 				} else if (address.guess.length > 1) {
 					var html = "The recipient address is malformed, did you mean:<ul>";
-					for (var i = 0; i < adr.guess.length; i++) {
-						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + adddress.format_guess(address.guess[i], account) + "</span></li>";
+					for (var i = 0; i < address.guess.length; i++) {
+						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";
 					}
 
 					callout.removeClass(classes).addClass("callout-danger").html(html).show();
@@ -169,15 +171,11 @@ var NRS = (function(NRS, $, undefined) {
 				}], function(error, contact) {
 					if (!error && contact.length) {
 						contact = contact[0];
-						NRS.getAccountError((NRS.settings["reed_solomon"] ? contact.accountRS : contact.account), function(response) {
+						NRS.getAccountError(contact.accountRS, function(response) {
 							callout.removeClass(classes).addClass("callout-" + response.type).html("The contact links to account <strong>" + NRS.getAccountFormatted(contact, "account") + "</strong>. " + response.message.escapeHTML()).show();
 
 							if (response.type == "info" || response.type == "warning") {
-								if (NRS.settings["reed_solomon"]) {
-									accountInputField.val(contact.accountRS);
-								} else {
-									accountInputField.val(contact.account);
-								}
+								accountInputField.val(contact.accountRS);
 							}
 						});
 					} else if (/^[a-z0-9]+$/i.test(account)) {
@@ -195,9 +193,7 @@ var NRS = (function(NRS, $, undefined) {
 				callout.removeClass(classes).addClass("callout-danger").html("The recipient account is malformed, please adjust.").show();
 			}
 		} else {
-			NRS.getAccountError(account, function(response) {
-				callout.removeClass(classes).addClass("callout-" + response.type).html(response.message.escapeHTML()).show();
-			});
+			callout.removeClass(classes).addClass("callout-danger").html("Numeric account IDs are no longer allowed.").show();
 		}
 	}
 
@@ -212,7 +208,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": account
 		}, function(response) {
 			if (response.errorCode) {
-				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
+				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + String(response.errorDescription).escapeHTML() : "The alias does not exist.").show();
 			} else {
 				if (response.aliasURI) {
 					var alias = String(response.aliasURI);
@@ -230,9 +226,20 @@ var NRS = (function(NRS, $, undefined) {
 					if (match && match[1]) {
 						match[1] = String(match[1]).toUpperCase();
 
+						if (/^\d+$/.test(match[1])) {
+							var address = new NxtAddress();
+
+							if (address.set(match[1])) {
+								match[1] = address.toString();
+							} else {
+								accountInputField.val("");
+								callout.html("Invalid account alias.");
+							}
+						}
+
 						NRS.getAccountError(match[1], function(response) {
 							accountInputField.val(match[1].escapeHTML());
-							callout.html("The alias links to account <strong>" + match[1].escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
+							callout.html("The alias links to account <strong>" + String(match[1]).escapeHTML() + "</strong>, " + response.message.replace("The recipient account", "which") + " The alias was last adjusted on " + NRS.formatTimestamp(timestamp) + ".").removeClass(classes).addClass("callout-" + response.type).show();
 						});
 					} else {
 						callout.removeClass(classes).addClass("callout-danger").html("The alias does not link to an account. " + (!alias ? "The URI is empty." : "The URI is '" + alias.escapeHTML() + "'")).show();
@@ -240,7 +247,7 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (response.aliasName) {
 					callout.removeClass(classes).addClass("callout-danger").html("The alias links to an empty URI.").show();
 				} else {
-					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + response.errorDescription.escapeHTML() : "The alias does not exist.").show();
+					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? "Error: " + String(response.errorDescription).escapeHTML() : "The alias does not exist.").show();
 				}
 			}
 		});

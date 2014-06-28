@@ -23,7 +23,7 @@
                 <img src="img/nxt_logo_small.png" style="opacity:0.95" />
             </a>
             <nav class="navbar navbar-static-top" role="navigation">
-                <a href="#" class="navbar-btn sidebar-toggle" data-toggle="offcanvas" role="button">
+                <a href="#" class="navbar-btn sidebar-toggle" id="offcanvas_toggle" role="button">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -33,7 +33,7 @@
                     <ul class="nav navbar-nav">
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_money_modal">Send NXT</a></li>
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal">Send Message</a></li>
-	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#generate_token_modal">Generate Token</a></li>
+	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#token_modal">Generate Token</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -68,10 +68,9 @@
                         	<div class="pull-left info">
                         		<div style="margin-bottom:5px;"><a href="#" id="account_name" data-toggle="modal" data-target="#account_info_modal">No Name Set</a></div>
 	                        	<div id="account_id_dropdown" class="dropdown" style="margin-bottom:10px">
-	                        		<span id="account_id_prefix">ID: </span><span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
+	                        		<span id="account_id" class="dropdown-toggle" data-toggle="dropdown" data-type="account_id" style="font-weight:bold"></span>
 									<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
 										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_rs">Copy Account ID</a></li>
-										<li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="account_id">Copy Numeric Account	ID</a></li>
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="message_link">Copy 'Send Message' Link</a></li>
 										<li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="send_link">Copy 'Send Nxt' Link</a></li>
 									</ul>
@@ -101,15 +100,15 @@
                         	</ul>
                         </li>
                         <li class="treeview" id="sidebar_dgs">
-                        	<a href="#" data-page="dgs"><i class="fa fa-shopping-cart"></i><span>Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+                        	<a href="#" data-page="newest_dgs"><i class="fa fa-shopping-cart"></i><span>Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
-                                 <li><a href="#" data-page="dgs"><i class="fa fa-angle-double-right"></i> Marketplace</a></li>
                             	 <li id="dgs_seller_page_link" style="display:none"><a href="#" data-page="dgs_seller"><i class="fa fa-angle-double-right"></i> Seller Products</a></li>
                             	 <li><a href="#" data-page="newest_dgs"><i class="fa fa-angle-double-right"></i> Newest Products</a></li>
                             	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> Purchased Products
                             	</a></li>
                                 <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> My Products For Sale</a></li>
-                                <li><a href="#" data-page="pending_purchases_dgs"><i class="fa fa-angle-double-right"></i> My Pending Orders</a></li>
+                                <li><a href="#" data-page="pending_orders_dgs"><i class="fa fa-angle-double-right"></i> My Pending Orders</a></li>
+                                <li><a href="#" data-page="completed_orders_dgs"><i class="fa fa-angle-double-right"></i> My Completed Orders</a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> List Product For Sale</a></li>
                         	</ul>
                         </li>
@@ -309,29 +308,29 @@
 					<section class="content content-stretch" style="position:fixed;margin-top:3px;padding:0; width:100%; height:100%;">
 						<div class="content-spliter">
 					      <div class="content-splitter-inner">
-					          <div class="content-splitter-sidebar" id="message_sidebar" style="width:200px;overflow-x:hidden;">
+					          <div class="content-splitter-sidebar" id="message_sidebar" style="width:245px;overflow-x:hidden;">
 					              <div class="content-splitter-sidebar-inner">
 					              	<div class="list-group unselectable sidebar_context" id="messages_sidebar">
 				                        <div style="text-align:center;padding-top:10px;">Loading, please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></div>
 					              	</div>
 						             </div>
 						         </div>
-						         <div class="content-splitter-right" id="message_content">
+						         <div class="content-splitter-right" id="message_content" style="left:245px">
 						         	<div class="content-splitter-right-inner">
 						         		<div id="no_message_selected" style="padding-top: 150px;text-align:center;">Please select a contact in the left sidebar.</div>
 						         		<div id="no_messages_available" style="padding-top: 150px;text-align:center;display:none;">No messages available, <a href="#" data-toggle="modal" data-target="#send_message_modal">send one</a>.</div>
 						         		
 						         		<div id="message_details">
 							           	</div>
-							           	<form role="form" id="inline_message_form" method="post" style="display:none;position:fixed;bottom:0;right:20px;left:440px;">
+							           	<form role="form" id="inline_message_form" method="post" style="display:none;position:fixed;bottom:0;right:20px;left:485px;">
 							           		<div class="form-group">
 							           			<textarea class="form-control" name="inline_message_text" id="inline_message_text" rows="3" placeholder="Message"></textarea>
 							           		</div>
 							           		<div class="row">
 							           			<div class="col-xs-10 col-sm-10 col-md-10">
 							           				<div class="form-group">
-							           					<input type="password" class="form-control secret_phrase" id="inline_message_password" name="inline_message_password" placeholder="Secret Phrase" style="display:inline;width:50%">
-							           					<span style="display:none"><label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="inline_message_encrypt" id="inline_message_encrypt" value="1" /> Encrypt</label></span>
+							           					<input type="password" class="form-control secret_phrase" id="inline_message_password" name="inline_message_password" placeholder="Passphrase" style="display:inline;width:35%">
+							           					<label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="inline_message_encrypt" id="inline_message_encrypt" value="1" checked="checked" /> Encrypt Message</label>
 							           				</div>
 							           			</div>
 							           			<div class="col-xs-2-col-sm-2 col-md-2">
@@ -842,28 +841,6 @@
 					</section>
                 </div>
                 
-                <div id="dgs_page" class="page">
-                    <section class="content-header">
-                    	<h1>Marketplace</h1>
-                    	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
-								<div class="input-group">
-									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
-									<span class="input-group-btn">
-										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
-									</span>
-								</div>
-							</form>             
-						</div>
-                    </section>
-
-                    <section class="content">
-                  		<div class="data-container">
-                  			<p>Description of the decentralized marketplace goes here.</p>
-                  		</div>
-                  	</section>
-                </div>
-
                 <div id="dgs_seller_page" class="paginated page">
                     <section class="content-header">
                     	<h1>Products By Seller</h1>
@@ -977,13 +954,13 @@
                 			    </tbody>
                 			</table>
                 			<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                			<div class="data-empty-container"><p>No marketplace Products yet, <a href="#" data-toggle="modal" data-target="#dgs_listing_modal">add one.</a></p></div>
+                			<div class="data-empty-container"><p>You haven't listed any products for sale yet, <a href="#" data-toggle="modal" data-target="#dgs_listing_modal">add one.</a></p></div>
                 		</div>
                 		<div class="data-pagination">
                     </section>
                 </div>
 
-                <div id="pending_purchases_dgs_page" class="paginated page">
+                <div id="pending_orders_dgs_page" class="paginated page">
                     <section class="content-header">
                     	<h1>My Pending Orders</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
@@ -1000,11 +977,38 @@
                 	
                     <section class="content">
                   		<div class="data-container data-loading">
-                  			<div id="pending_purchases_dgs_contents" class="dgs_page_contents">
+                  			<div id="pending_orders_dgs_contents" class="dgs_page_contents">
 
                   			</div>
 							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 							<div class="data-empty-container"><p>No pending orders found.</p></div>
+                  		</div>
+                  		<div class="data-pagination"></div>
+                  	</section>
+                </div>
+
+                <div id="completed_orders_dgs_page" class="paginated page">
+                    <section class="content-header">
+                    	<h1>My Completed Orders</h1>
+                    	<div style="position:absolute;top:9px;right:9px;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+								<div class="input-group">
+									<input type="text" name="q" class="form-control" placeholder="Search By Seller...">
+									<span class="input-group-btn">
+										<button type="submit" name="seach" class="btn btn-flat"><i class="fa fa-search"></i></button>
+									</span>
+								</div>
+							</form>             
+						</div>
+                    </section>
+                	
+                    <section class="content">
+                  		<div class="data-container data-loading">
+                  			<div id="completed_orders_dgs_contents" class="dgs_page_contents">
+
+                  			</div>
+							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+							<div class="data-empty-container"><p>No completed orders found.</p></div>
                   		</div>
                   		<div class="data-pagination"></div>
                   	</section>
@@ -1025,6 +1029,13 @@
 							
 							<form role="form">
 							    <div class="box-body">
+							    	<div class="form-group">
+							            <label for="settings_24_hour_format">Use 24 Hour Format</label>
+							            <select name="24_hour_format" id="settings_24_hour_format" class="form-control" style="width:150px">
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							        </div>
 							        <div class="form-group">
 							            <label for="settings_submit_on_enter">Submit Forms on Enter</label>
 							            <select name="submit_on_enter" id="settings_submit_on_enter" class="form-control" style="width:150px">
@@ -1033,21 +1044,13 @@
 							            </select>
 							            <p class="help-block">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
 							        </div>
-							        <div class="form-group">
-							        <!-- rs -->
-							            <label for="settings_reed_solomon">Use Reed Solomon Format</label>
-							            <select name="reed_solomon" id="settings_reed_solomon" class="form-control" style="width:150px">
+							     	<div class="form-group">
+							            <label for="settings_remember_passphrase">Remember Passphrase By Default</label>
+							            <select name="remember_passphrase" id="settings_remember_passphrase" class="form-control" style="width:150px">
 							                <option value="1">Yes</option>
 							                <option value="0">No</option>
 							            </select>
-							            <p class="help-block">The reed solomon format has built-in error detection.</p>
-							        </div>
-									<div class="form-group">
-							            <label for="settings_animate_forging">Animate Forging Indicator</label>
-							            <select name="animate_forging" id="settings_animate_forging" class="form-control" style="width:150px">
-							                <option value="1">Yes</option>
-							                <option value="0">No</option>
-							            </select>
+							            <p class="help-block">On the login screen.</p>
 							        </div>
 							        <div class="form-group">
 							            <label for="settings_news">Enable News Section</label>
@@ -1057,6 +1060,21 @@
 							                <option value="0">No</option>
 							            </select>
 							        </div>
+									<div class="form-group">
+							            <label for="settings_animate_forging">Animate Forging Indicator</label>
+							            <select name="animate_forging" id="settings_animate_forging" class="form-control" style="width:150px">
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							        </div>
+							        <div class="form-group" id="settings_console_log_div">
+							            <label for="settings_console_log">Show Console Log Button</label>
+							            <select name="console_log" id="settings_console_log" class="form-control" style="width:150px">
+							                <option value="1">Yes</option>
+							                <option value="0">No</option>
+							            </select>
+							        </div>
+
 							    </div>
 							</form>
 						</div>
@@ -1312,14 +1330,7 @@
 				                    <div class="box-body">
 				                		<div id="nxtcrypto_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 				                    </div>
-				                </div>
-
-				                <div class="box box-success">
-				                    <div class="box-header"><h3 class="box-title">NxtCoin.Blogspot.com</h3></div>
-				                    <div class="box-body">
-				                		<div id="nxtcoin_blogspot_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-				                    </div>
-				                </div>
+				                </div>				              
 		                	</div>
 		            	    <div class="col-md-6">
 		            	        <div class="box box-warning">
@@ -1335,13 +1346,13 @@
 				                		<div id="nxter_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 				                    </div>
 				                </div>
-				                
-					            <div class="box box-primary">
-					                <div class="box-header"><h3 class="box-title">NextCoin.org Forums</h3></div>
-					                <div class="box-body">
-					            		<div id="nextcoin_forums_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-					                </div>
-					            </div>
+				              
+				                <div class="box box-success">
+				                    <div class="box-header"><h3 class="box-title">NxtCoin.Blogspot.com</h3></div>
+				                    <div class="box-body">
+				                		<div id="nxtcoin_blogspot_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+				                    </div>
+				                </div>
 
 				            </div>
 						</div>
@@ -1453,7 +1464,7 @@
             </aside>
         </div>
 	
-		<div id="testnet_warning" style="display:none;position:fixed;bottom:0;left:0;padding:5px;background:red;color:white;border-top-right-radius:5px;"><strong>Warning</strong>: You are connected to the TestNet. Do not use your real password!</div>
+		<div id="testnet_warning" style="display:none;position:fixed;bottom:0;left:0;padding:5px;background:red;color:white;border-top-right-radius:5px;"><strong>Warning</strong>: You are connected to the TestNet. Do not use your real passphrase!</div>
 
 		<div id="lockscreen">
 			<div id="old_browser_warning" style="display:none;margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;">You are using an old browser which this application does not support.</div>
@@ -1482,7 +1493,7 @@
 			            <div class="lockscreen-item">
 			                <div class="lockscreen-credentials">   
 			                    <div class="input-group">
-			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Secret Phrase" autofocus />
+			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" autofocus />
 			                        <div class="input-group-btn">
 			                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
 			                        </div>
@@ -1491,7 +1502,7 @@
 			            </div>	
 			            
 			            <div id="remember_password_container">
-			            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember password during session</label>
+			            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password">Remember passphrase during session</label>
 			            </div>
 			            
 			            <div id="registration_link">
@@ -1512,12 +1523,12 @@
 		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> Create Your Account</div>
 		                <div class="panel-body">
 							<form class="form-horizontal" role="form" method="post">
-		        				<div class="callout callout-info" style="max-width:500px;">Your secret phrase must be at least 35 characters long.</div>
+		        				<div class="callout callout-info" style="max-width:500px;">Your passphrase must be at least 35 characters long.</div>
 		        				
-		        				<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+		        				<div class="callout callout-danger"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
 
 			            		<div class="form-group">
-			            		    <label for="registration_password" class="col-sm-3 control-label">Secret Phrase</label>
+			            		    <label for="registration_password" class="col-sm-3 control-label">Passphrase</label>
 			            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
 			            		</div>
 			                    <div class="form-group">
@@ -1558,19 +1569,19 @@
 		        				
 		        				<div class="step_2 account_phrase_generator_steps">
 		        					<div id="account_phrase_generator_start">
-		        						<p>Generating your secret phrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+		        						<p>Generating your passphrase. Please wait<span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
 		        						
 										<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 		        					</div>
 		        					
 		        					<div id="account_phrase_generator_stop" style="display:none">
-			        					<p>Your automatically generated secret phrase is:</p>
+			        					<p>Your automatically generated passphrase is:</p>
 			        					
 			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
 		        					
-			        					<p>Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This secret phrase is needed in order to access your Nxt account.</p>
+			        					<p>Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
 			        						        					
-			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your secret phrase. If you lose it you lose access to your account!</div>
+			        					<div class="callout callout-danger"><strong>Attention</strong>: Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
 			        				
 										<div style="text-align:right">
 											<input type="submit" class="btn btn-primary btn-sm" value="Next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;">Cancel</button>
@@ -1579,9 +1590,9 @@
 		        				</div>
 		        				
 		        				<div class="step_3 account_phrase_generator_steps">
-		        					<p>Your secret phrase is very important! In order to be sure that you have saved it, please write your secret phrase below:</p>
+		        					<p>Your passphrase is very important! In order to be sure that you have saved it, please write your passphrase below:</p>
 		        					
-		        					<div class="callout callout-danger" style="display:none">You have not typed the secret phrase correctly, please try again!</div>
+		        					<div class="callout callout-danger" style="display:none">You have not typed the passphrase correctly, please try again!</div>
 
 		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
 		        					
@@ -1594,7 +1605,7 @@
 		            </div>  
 	            
 		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
-			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own secret phrase? Click here.</a>
+			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();">Want to choose your own passphrase? Click here.</a>
 					</div>
 				</td>
 				</tr>
@@ -1622,34 +1633,38 @@
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xs-4 col-sm-4 col-md-4">
-									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last." data-container="body"></i></label>
-									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="1440" value="1440" tabindex="2">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="4">
+									<label for="lease_balance_period">PERIOD <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last. 9000 blocks is about 10 day." data-container="body"></i></label>
+									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-default="9000" value="9000" tabindex="2">
 								</div>
-								<div class="col-xs-4 col-sm-4 col-md-4">
-									<div class="form-group">
-										<label for="lease_balance_fee">FEE</label>
+								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
+									<label for="lease_balance_fee">FEE</label>
+									<div class="input-group">
 										<input type="number" name="feeNXT" id="lease_balance_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+										<span class="input-group-addon">NXT</span>
 									</div>
 								</div>
-								<div class="col-xs-4 col-sm-4 col-md-4">
-									<div class="form-group">
-										<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="4">
-									</div>
+								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
+									<label for="lease_balance_deadline">DEADLINE (HOURS)</label>
+									<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="4">
 								</div>
+							</div>
+							<div class="form-group">
+								<p class="help-block" id="lease_balance_help">A lease of <strong>9000 blocks</strong> is about 10 days.</p>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="lease_balance_password">SECRET PHRASE</label>
+								<label for="lease_balance_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="success_message" value="Your balance will be leased out in 1440 blocks." />
+			      			<input type="hidden" name="request_type" value="leaseBalance" />
+			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
-		      			<input type="hidden" name="success_message" value="Your balance will be leased out in 1440 blocks." />
-		      			<input type="hidden" name="request_type" value="leaseBalance" />
-		      			<input type="hidden" name="converted_account_id" value="" />
+			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Lease Balance</button>
 		      		</div>
@@ -1666,19 +1681,20 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<p class="show_secret_phrase">If you are sure you want to stop forging, type your secret phrase to confirm.</p>
+							<p class="show_secret_phrase">If you are sure you want to stop forging, type your passphrase to confirm.</p>
 							<p class="hide_secret_phrase" style="display:none">If you are sure you want to stop forging, click the button below to confirm.</p>
-							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your passphrase will be sent to the server!</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group secret_phrase">
-								<label for="stop_forging_password">SECRET PHRASE</label>
+								<label for="stop_forging_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="stop_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="request_type" value="stopForging" />
+			      			<input type="hidden" name="success_message" value="Forging has been stopped." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="stopForging" />
-			      		<input type="hidden" name="success_message" value="Forging has been stopped." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Continue Forging</button>
 				        <button type="button" class="btn btn-primary" id="stop_forging_button" data-loading-text="Submitting...">Stop Forging <span class="show_logout">and Logout</span></button>
 			      	</div>
@@ -1695,19 +1711,20 @@
 		      		</div>
 		      		<div class="modal-body">			
 						<form role="form">
-							<p class="show_secret_phrase">If you want to start forging, type your secret phrase to confirm.</p>
+							<p class="show_secret_phrase">If you want to start forging, type your passphrase to confirm.</p>
 							<p class="hide_secret_phrase" style="display:none">If you you want to start forging, click the button below to confirm.</p>
-							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
+							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your passphrase will be sent to the server!</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group secret_phrase">
-								<label for="start_forging_password">SECRET PHRASE</label>
+								<label for="start_forging_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="start_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="request_type" value="startForging" />
+			      			<input type="hidden" name="success_message" value="Forging has been started." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="startForging" />
-			      		<input type="hidden" name="success_message" value="Forging has been started." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="start_forging_button" data-loading-text="Submitting...">Start Forging</button>
 			      	</div>
@@ -1725,13 +1742,16 @@
 		      		<div class="modal-body">			
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<p>If you are sure you want to cancel your order, type your secret phrase to confirm.
+							<p>If you are sure you want to cancel your order, type your passphrase to confirm.
 							<input type="hidden" name="order" id="cancel_order_order" value="" />
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_order_fee">FEE</label>
-										<input type="number" name="feeNXT" id="cancel_order_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="cancel_order_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -1742,16 +1762,19 @@
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="cancel_order_password">SECRET PHRASE</label>
+								<label for="cancel_order_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="cancel_order_type"  id="cancel_order_type" />
+				      		<input type="hidden" name="request_type" value="cancelOrder" />
+				      		<input type="hidden" name="success_message" value="The __ order has been cancelled." />
+							<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have been cancelled." />			      		
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="cancel_order_type"  id="cancel_order_type" />
-			      		<input type="hidden" name="request_type" value="cancelOrder" />
-			      		<input type="hidden" name="success_message" value="The __ order has been cancelled." />
-						<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have been cancelled." />			      		
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Cancel</button>
 				        <button type="button" class="btn btn-primary" id="cancel_order_button" data-loading-text="Submitting...">Cancel My Order</button>
 			      	</div>
@@ -1787,16 +1810,17 @@
 								<p id="asset_order_fee_paid"></p>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="asset_order_password">SECRET PHRASE</label>
+								<label for="asset_order_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="asset_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="asset_order_type"  id="asset_order_type" />
+				      		<input type="hidden" name="request_type" value="orderAsset" />
+				      		<input type="hidden" name="success_message" value="The __ order has been submitted." />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have gone through." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="asset_order_type"  id="asset_order_type" />
-			      		<input type="hidden" name="request_type" value="orderAsset" />
-			      		<input type="hidden" name="success_message" value="The __ order has been submitted." />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! The order may or may not have gone through." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="asset_order_modal_button"></button>
 			      	</div>
@@ -1834,19 +1858,22 @@
 								<textarea class="form-control" id="transfer_asset_comment" name="comment" rows="3" tabindex="2" placeholder="Optional"></textarea>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="transfer_asset_quantity">QUANTITY</label>
 						                <input type="number" name="quantity" id="transfer_asset_quantity" class="form-control" step="any" min="0" placeholder="Quantity" tabindex="3">
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="transfer_asset_fee">FEE</label>
-										<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="4">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="transfer_asset_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="transfer_asset_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="1" tabindex="5">
@@ -1854,17 +1881,20 @@
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="transfer_asset_password">SECRET PHRASE</label>
+								<label for="transfer_asset_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="6">
 							</div>
+
+							<input type="hidden" name="request_type" value="transferAsset" />
+							<input type="hidden" name="success_message" value="The asset transfer is in progress!" />
+							<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be transferred." />
+							<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="transferAsset" />
-						<input type="hidden" name="success_message" value="The asset transfer is in progress!" />
-						<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be transferred." />
-						<input type="hidden" name="converted_account_id" value="" />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				     	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Asset</button>
 					</div>
@@ -1886,12 +1916,13 @@
 								<label for="add_asset_bookmark_id">ASSET OR ACCOUNT ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body"></i></label>
 								<input type="text" class="form-control" name="id" id="add_asset_bookmark_id" placeholder="ID" autofocus tabindex="1" />
 							</div>
+
+							<input type="hidden" name="request_type" value="addAssetBookmark" />
+							<input type="hidden" name="success_message" value="The asset has been added!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="addAssetBookmark" />
-						<input type="hidden" name="success_message" value="The asset has been added!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Add Asset</button>
 				    </div>
@@ -1926,14 +1957,15 @@
 								<label for="add_contact_description">DESCRIPTION</label>
 								<textarea class="form-control" id="add_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional"></textarea>
 							</div>
+
+							<input type="hidden" name="request_type" value="addContact" />
+							<input type="hidden" name="success_message" value="The contact has been created!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
+							<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="addContact" />
-						<input type="hidden" name="success_message" value="The contact has been created!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
-						<input type="hidden" name="converted_account_id" value="" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Add Contact</button>
 				    </div>
@@ -1968,15 +2000,16 @@
 								<label for="update_contact_description">DESCRIPTION</label>
 								<textarea class="form-control" id="update_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional"></textarea>
 							</div>
+
+							<input type="hidden" name="contact_id" id="update_contact_id" value="" />
+							<input type="hidden" name="request_type" value="updateContact" />
+							<input type="hidden" name="success_message" value="The contact has been updated successfully!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
+							<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="contact_id" id="update_contact_id" value="" />
-						<input type="hidden" name="request_type" value="updateContact" />
-						<input type="hidden" name="success_message" value="The contact has been updated successfully!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
-						<input type="hidden" name="converted_account_id" value="" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Update Contact</button>
 				    </div>
@@ -1995,14 +2028,15 @@
 						<form role="form">
 							<div class="callout callout-danger">Are you sure you want to delete this contact?</div>
 							<p><strong>Name</strong>: <span id="delete_contact_name"></span></p>
+
+							<input type="hidden" name="contact_id" id="delete_contact_id" value="" />
+							<input type="hidden" name="account_id" id="delete_contact_account_id" value="" />
+							<input type="hidden" name="request_type" value="deleteContact" />
+							<input type="hidden" name="success_message" value="The contact has been deleted successfully!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="contact_id" id="delete_contact_id" value="" />
-						<input type="hidden" name="account_id" id="delete_contact_account_id" value="" />
-						<input type="hidden" name="request_type" value="deleteContact" />
-						<input type="hidden" name="success_message" value="The contact has been deleted successfully!" />
-						<input type="hidden" name="error_message" value="An unknown error occured!" />
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delete</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Yes, Delete Contact</button>
 				    </div>
@@ -2045,14 +2079,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="issue_asset_fee">FEE <i class="fa fa-exclamation-circle show_popover" data-content="The minimum fee to issue an asset is 1,000 Nxt" data-container="body" style="color:red"></i></label>
-																				
-										<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+											
+										<div class="input-group">									
+											<input type="number" name="feeNXT" id="issue_asset_fee" class="form-control" placeholder="Fee" step="any" min="1000" data-default="1000" value="1000" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced">
 									<div class="form-group">
 										<label for="issue_asset_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="issue_asset_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
@@ -2060,15 +2097,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="issue_asset_password">SECRET PHRASE</label>
+								<label for="issue_asset_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="issueAsset" />
+							<input type="hidden" name="success_message" value="The asset has been created and will be available soon." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be created." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="issueAsset" />
-						<input type="hidden" name="success_message" value="The asset has been created and will be available soon." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be created." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1'000 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Issue Asset</button>
 				    </div>
@@ -2102,7 +2142,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_listing_price">PRICE</label>
-						                <input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="4">
+										<div class="input-group">
+						               		<input type="number" name="priceNXT" id="dgs_listing_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="4">
+						                	<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2112,11 +2155,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_listing_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_listing_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_listing_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2127,15 +2173,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_listing_password">SECRET PHRASE</label>
+								<label for="dgs_listing_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_listing_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsListing" />
+							<input type="hidden" name="success_message" value="The marketplace listing has been created and will be available soon." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace listing may or may not be created." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsListing" />
-						<input type="hidden" name="success_message" value="The marketplace listing has been created and will be available soon." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace listing may or may not be created." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Put For Sale</button>
 				    </div>
@@ -2158,11 +2207,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="goods_info">Loading...</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delisting_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_delisting_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_delisting_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2173,14 +2225,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_delisting_password">SECRET PHRASE</label>
+								<label for="dgs_delisting_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delisting_password" class="form-control" placeholder="" tabindex="1">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsDelisting" />
+				      		<input type="hidden" name="success_message" value="The item has been removed from the marketplace successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="dgsDelisting" />
-			      		<input type="hidden" name="success_message" value="The item has been removed from the marketplace successfully." />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">No, Do Not Delete</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Delete My Item</button>
 			      	</div>
@@ -2212,15 +2267,21 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_price">NEW PRICE</label>
-										<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1">
+										<div class="input-group">
+											<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_price_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_price_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2231,14 +2292,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_price_change_password">SECRET PHRASE</label>
+								<label for="dgs_price_change_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_price_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsPriceChange" />
+				      		<input type="hidden" name="success_message" value="The marketplace item's price has been changed successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="dgsPriceChange" />
-			      		<input type="hidden" name="success_message" value="The marketplace item's price has been changed successfully." />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Price</button>
 			      	</div>
@@ -2274,11 +2338,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_quantity_change_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_quantity_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_quantity_change_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2289,14 +2356,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_quantity_change_password">SECRET PHRASE</label>
+								<label for="dgs_quantity_change_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_quantity_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsQuantityChange" />
+				      		<input type="hidden" name="success_message" value="The marketplace item's quantity has been changed successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="dgsQuantityChange" />
-			      		<input type="hidden" name="success_message" value="The marketplace item's quantity has been changed successfully." />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
 			      	</div>
@@ -2318,34 +2388,38 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="goods_info">Loading...</div>
 							</div>
 							<input type="hidden" name="goods" id="dgs_purchase_goods" value="" />
+							<input type="hidden" name="priceNQT" id="dgs_purchase_price" value="" />
+
+							<div class="form-group">
+								<label for="dgs_total_purchase_price">PRICE</label>
+								<p id="dgs_total_purchase_price"></p>
+							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
-									<div class="form-group">
-										<label for="dgs_purchase_price">PRICE</label>
-						                <input type="number" name="priceNXT" id="dgs_purchase_price" class="form-control" min="0" placeholder="Price" step="any" data-default="" value="" tabindex="1">
-									</div>
-								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_purchase_quantity">QUANTITY</label>
 						                <input type="number" name="quantity" id="dgs_purchase_quantity" class="form-control" min="1" data-default="1" value="1" placeholder="Quantity" tabindex="2">
 									</div>
 								</div>
+								<div class="col-xs-6 col-sm-6 col-md-6">
+									<div class="form-group">
+										<label for="dgs_purchase_delivery_deadline_timestamp">DELIVERY DEADLINE (HOURS)</label>
+										<input type="number" name="deliveryDeadlineTimestamp" id="dgs_purchase_delivery_deadline_timestamp" class="form-control" placeholder="Deadline" min="1" data-default="48" value="48" tabindex="3">
+									</div>
+								</div>
 							</div>
-							<div class="form-group">
-								<label for="dgs_purchase_delivery_deadline_timestamp">DELIVERY DEADLINE (HOURS)</label>
-								<input type="number" name="deliveryDeadlineTimestamp" id="dgs_purchase_delivery_deadline_timestamp" class="form-control" placeholder="Deadline" min="1" data-default="48" value="48" tabindex="3">
-							</div>
-
 							<div class="form-group">
 								<label for="dgs_purchase_note">NOTE</label>
 								<textarea class="form-control" id="dgs_purchase_note" name="note" rows="3" tabindex="4"></textarea>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_purchase_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_purchase_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="5">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_purchase_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="5">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2356,15 +2430,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_purchase_password">SECRET PHRASE</label>
+								<label for="dgs_purchase_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_purchase_password" class="form-control" placeholder="" tabindex="7">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsPurchase" />
+							<input type="hidden" name="success_message" value="The marketplace item has been purchased." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsPurchase" />
-						<input type="hidden" name="success_message" value="The marketplace item has been purchased." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Purchase</button>
 				    </div>
@@ -2385,20 +2462,27 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="purchase_info">Loading...</div>
 							</div>
+							<div id="dgs_delivery_note_form"></div>
 							<input type="hidden" name="purchase" id="dgs_delivery_purchase" value="" />
 							<div class="form-group">
 								<label for="dgs_delivery_data">DATA</label>
 								<textarea class="form-control" id="dgs_delivery_data" name="data" rows="3" tabindex="2"></textarea>
 							</div>
 							<div class="form-group">
-								<label for="dgs_delivery_discount">DISCOUNT</label>
-				                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+								<label for="dgs_delivery_discount">DISCOUNT</label>	
+								<div class="input-group">
+					                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+				                	<span class="input-group-addon">NXT</span>
+								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delivery_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2409,15 +2493,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_delivery_password">SECRET PHRASE</label>
+								<label for="dgs_delivery_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsDelivery" />
+							<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be delivered." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsDelivery" />
-						<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be delivered." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Deliver Purchase</button>
 				    </div>
@@ -2438,8 +2525,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="purchase_info">Loading...</div>
 							</div>
+							<div id="dgs_view_delivery_output"></div>
 						</form>
 			    	</div>
+			    	<div class="modal-footer" style="margin-top:0;">
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				        <button type="button" class="btn btn-primary" data-toggle="modal" data-dismiss="modal" data-target=""></button>
+				    </div>
 				</div>
 			</div>
 		</div>
@@ -2454,11 +2546,38 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			      	<div class="modal-body">			
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="row">
-								<div class="purchase_info">Loading...</div>
+							<div class="row" style="margin-bottom:none">
+								<div class="purchase_info" style="margin-bottom:0;">Loading...</div>
 							</div>
 						</form>
 			    	</div>
+			    	<div class="modal-footer" style="margin-top:0;">
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				        <button type="button" class="btn btn-primary" data-toggle="modal" data-dismiss="modal" data-target="#dgs_delivery_modal">Deliver Goods</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_view_refund_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Marketplace Refund</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="row">
+								<div class="purchase_info">Loading...</div>
+							</div>
+							<div id="dgs_view_refund_output"></div>
+						</form>
+			    	</div>
+			    	<div class="modal-footer" style="margin-top:0;">
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				    </div>
 				</div>
 			</div>
 		</div>
@@ -2483,13 +2602,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group">
 								<label for="dgs_refund_refund">REFUND</label>
-				                <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+				                <div class="input-group">
+				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+				                	<span class="input-group-addon">NXT</span>
+								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_refund_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2500,15 +2625,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_refund_password">SECRET PHRASE</label>
+								<label for="dgs_refund_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsRefund" />
+							<input type="hidden" name="success_message" value="The marketplace purchase has been refunded." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be refunded." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsRefund" />
-						<input type="hidden" name="success_message" value="The marketplace purchase has been refunded." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be refunded." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Refund Purchase</button>
 				    </div>
@@ -2527,15 +2655,21 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<input type="hidden" name="purchase" id="dgs_feedback_purchase" value="" />
+							<div class="row">
+								<div class="purchase_info">Loading...</div>
+							</div>
 							<div class="form-group">
 								<label for="dgs_feedback_note">NOTE</label>
 								<textarea class="form-control" id="dgs_feedback_note" name="note" rows="3" tabindex="2"></textarea>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_feedback_fee">FEE</label>
-										<input type="number" name="feeNXT" id="dgs_feedback_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="dgs_feedback_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2546,15 +2680,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="dgs_feedback_password">SECRET PHRASE</label>
+								<label for="dgs_feedback_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_feedback_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="dgsFeedback" />
+							<input type="hidden" name="success_message" value="The marketplace purchase feedback has been submitted." />
+							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase feedback may or may not be submitted." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="dgsFeedback" />
-						<input type="hidden" name="success_message" value="The marketplace purchase feedback has been submitted." />
-						<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase feedback may or may not be submitted." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Submit Feedback</button>
 				    </div>
@@ -2619,11 +2756,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="create_poll_fee">FEE</label>
-										<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="create_poll_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2635,15 +2775,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 	
 							<div class="form-group secret_phrase">
-								<label for="create_poll_password">SECRET PHRASE</label>
+								<label for="create_poll_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="create_poll_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="createPoll" />
+							<input type="hidden" name="success_message" value="The poll has been created!" />
+							<input type="hidden" name="error_message" value="An unknown error occured! Poll may or may not be created." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="createPoll" />
-						<input type="hidden" name="success_message" value="The poll has been created!" />
-						<input type="hidden" name="error_message" value="An unknown error occured! Poll may or may not be created." />
+						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						&nbsp;&nbsp;
 						<button type="button" class="btn btn-primary" data-loading-text="Submitting...">Create Poll</button>
@@ -2693,15 +2836,16 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 	
 							<div class="form-group secret_phrase">
-								<label for="cast_vote_password">SECRET PHRASE</label>
+								<label for="cast_vote_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
 							</div>
+
+							<input type="hidden" name="request_type" value="castVote" />
+							<input type="hidden" name="success_message" value="Your vote has been cast!" />
+							<input type="hidden" name="error_message" value="An unknown error occured! Vote may or may not be cast." />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
-						<input type="hidden" name="request_type" value="castVote" />
-						<input type="hidden" name="success_message" value="Your vote has been cast!" />
-						<input type="hidden" name="error_message" value="An unknown error occured! Vote may or may not be cast." />
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						&nbsp;&nbsp;
 						<button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cast Vote</button>
@@ -2725,7 +2869,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="input-group">
 								    <input type="text" class="form-control" name="recipient" id="send_money_recipient" placeholder="Recipient Account" autofocus tabindex="1" />
 								    <span class="input-group-btn btn-group recipient_selector">
-								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>														<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
+								    	<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span></button>										<ul class="dropdown-menu scrollable-menu" role="menu" style="right:0;left:auto;"></ul>
 								    </span>
 								</div>
 							</div>
@@ -2733,16 +2877,22 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_money_amount">AMOUNT</label>
-						                <input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" tabindex="2">
+										<div class="input-group">
+											<input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-6 col-sm-6 col-md-6 advanced_extend" data-normal="6" data-advanced="3">
 									<div class="form-group">
 										<label for="send_money_fee">FEE</label>
-										<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="send_money_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="send_money_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
@@ -2750,16 +2900,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="send_money_password">SECRET PHRASE</label>
+								<label for="send_money_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="failure_message" value="An unknown error occured! NXT may or may not be sent." />
+			      			<input type="hidden" name="request_type" value="sendMoney" />
+			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
-		      			<input type="hidden" name="failure_message" value="An unknown error occured! NXT may or may not be sent." />
-		      			<input type="hidden" name="request_type" value="sendMoney" />
-		      			<input type="hidden" name="converted_account_id" value="" />
+		      			<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send NXT</button>
 		      		</div>
@@ -2786,16 +2939,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								    </span>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group" style="margin-bottom:10px">
 								<label for="send_message_message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" style="margin-top:5px;vertical-align:top;" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
+								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_message_fee">FEE</label>
-										<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2806,16 +2962,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="send_message_password">SECRET PHRASE</label>
+								<label for="send_message_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="request_type" value="sendMessage" />
+				       		<input type="hidden" name="error_message" value="An unknown error occured! Message may or may not be sent." />
+				       		<input type="hidden" name="converted_account_id" value="" />
 						</form>
 						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
-			       		<input type="hidden" name="request_type" value="sendMessage" />
-			       		<input type="hidden" name="error_message" value="An unknown error occured! Message may or may not be sent." />
-			       		<input type="hidden" name="converted_account_id" value="" />
+			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Send Message</button>
 			      	</div>
@@ -2841,11 +2999,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="account_info_description">DESCRIPTION</label>
 								<textarea class="form-control" id="account_info_description" name="description" rows="4" tabindex="2"></textarea>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="account_info_fee">FEE</label>
-										<input type="number" name="feeNXT" id="account_info_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="account_info_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2856,14 +3017,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="account_info_password">SECRET PHRASE</label>
+								<label for="account_info_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="account_info_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="request_type" value="setAccountInfo" />
+				       		<input type="hidden" name="success_message" value="Your account info has been saved successfully." />
 						</form>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
-			       		<input type="hidden" name="request_type" value="setAccountInfo" />
-			       		<input type="hidden" name="success_message" value="Your account info has been saved successfully." />
+			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 			     	    <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Update Account Info</button>
 			      	</div>
@@ -2899,11 +3063,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<input type="text" class="form-control" name="aliasURI" id="register_alias_uri" placeholder="URI" tabindex="2" />
 								<p class="help-block" id="register_alias_help"></p>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="register_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="register_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2914,16 +3081,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="register_alias_password">SECRET PHRASE</label>
+								<label for="register_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="register_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
+				      		<input type="hidden" name="request_type" value="setAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
-			      		<input type="hidden" name="request_type" value="setAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="register_alias_button" data-loading-text="Submitting...">Register</button>
 			    	</div>
@@ -2948,13 +3118,19 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group">
 								<label>PRICE</label>
-						        <input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="1">
+								<div class="input-group">
+						        	<input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="1">
+						        	<span class="input-group-addon">NXT</span>
+								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="buy_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="buy_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="buy_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="2">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2965,15 +3141,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="buy_alias_password">SECRET PHRASE</label>
+								<label for="buy_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="buy_alias_password" class="form-control" placeholder="" tabindex="4">
 							</div>
+
+							<input type="hidden" name="request_type" value="buyAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias buy is in progress!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not have been bought." />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="buyAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias buy is in progress!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not have been bought." />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Buy Alias</button>
 			    	</div>
@@ -3007,11 +3186,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								    </span>
 								</div>
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3022,17 +3204,20 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="transfer_alias_password">SECRET PHRASE</label>
+								<label for="transfer_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
+							<input type="hidden" name="request_type" value="sellAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias transfer is in progress!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be transferred." />
+				      		<input type="hidden" name="converted_account_id" value="" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="sellAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias transfer is in progress!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be transferred." />
-			      		<input type="hidden" name="converted_account_id" value="" />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Transfer Alias</button>
 			    	</div>
@@ -3070,19 +3255,25 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="row">
-								<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="sell_alias_price">PRICE</label>
-						                <input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
+										<div class="input-group">
+						                	<input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
+						                	<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="sell_alias_fee">FEE</label>
-										<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="3">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
-								<div class="col-xs-3 col-sm-3 col-md-3">
+								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="sell_alias_deadline">DEADLINE (HOURS)</label>
 										<input type="number" name="deadline" id="sell_alias_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="4">
@@ -3090,17 +3281,20 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="sell_alias_password">SECRET PHRASE</label>
+								<label for="sell_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
+							<input type="hidden" name="success_message" value="Your alias has been put up for sale successfully!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be put up for sale." />
+				      		<input type="hidden" name="converted_account_id" value="" />
+			      			<input type="hidden" name="request_type" value="sellAlias" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="sellAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias has been put up for sale successfully!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be put up for sale." />
-			      		<input type="hidden" name="converted_account_id" value="" />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Sell Alias</button>
 			    	</div>
@@ -3124,11 +3318,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<input type="hidden" name="aliasName" value="" />
 								<input type="hidden" name="cancelSale" value="1" />
 							</div>
-							<div class="row">
+							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="cancel_alias_sale_fee">FEE</label>
-										<input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="1">
+										<div class="input-group">
+											<input type="number" name="feeNXT" id="cancel_alias_sale_fee" class="form-control" step="any" min="1" placeholder="Fee" data-default="1" value="1" tabindex="1">
+											<span class="input-group-addon">NXT</span>
+										</div>
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3139,15 +3336,18 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
-								<label for="cancel_alias_sale_password">SECRET PHRASE</label>
+								<label for="cancel_alias_sale_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+
+							<input type="hidden" name="request_type" value="sellAlias" />
+				      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
+				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="sellAlias" />
-			      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
-			      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
+			      		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
+
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Cancel Sale</button>
 			    	</div>
@@ -3155,32 +3355,55 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		  	</div>
 		</div>
 
-		<div class="modal fade modal-no-hide" id="generate_token_modal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal fade modal-no-hide" id="token_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		        		<h4 class="modal-title">Generate Website Token</h4>
+		        		<h4 class="modal-title">Nxt Token Generation / Validation</h4>
 		      		</div>
-			      	<div class="modal-body">			
-						<form role="form">
-							<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your secret phrase will be sent to the server!</div>
-							<div class="callout callout-danger error_message" style="display:none"></div>
-							<div class="callout callout-info" id="generate_token_token" style="display:none;"></div>
-							<div class="form-group">
-								<label for="generate_token_website">WEBSITE</label>
-								<input type="text" class="form-control" name="website" id="generate_token_website" placeholder="Website URL" tabindex="1" value="http://" />
-							</div>
-							<div class="form-group secret_phrase">
-								<label for="generate_token_password">SECRET PHRASE</label>
-								<input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
-							</div>
-						</form>
+			      	<div class="modal-body">	
+						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+							<li class="active" id="generate_token_nav" data-tab="generate_token"><a href="#">Generate Token</a></li>
+							<li data-tab="validate_token"><a href="#">Validate Token</a></li>
+						</ul>
+
+						<div id="token_modal_generate_token" class="token_modal_content" style="display:none">
+				      		<form role="form" id="generate_token_form">
+								<div class="callout callout-danger remote_warning" style="display:none"><strong>Warning</strong>: Your pass phrase will be sent to the server!</div>
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
+								<div class="form-group">
+									<label for="generate_token_website">WEBSITE (OR TEXT)</label>
+									<input type="text" class="form-control" name="website" id="generate_token_website" placeholder="Website Or Text" tabindex="1" value="http://" />
+								</div>
+								<input type="hidden" name="request_type" value="generateToken" />
+								<div class="form-group secret_phrase">
+									<label for="generate_token_password">PASSPHRASE</label>
+									<input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
+								</div>
+							</form>
+						 </div>
+
+						<div id="token_modal_validate_token" class="token_modal_content" style="display:none">     
+							<form role="form" id="validate_token_form">
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
+								<div class="form-group">
+									<label for="decode_token_website">WEBSITE (OR TEXT)</label>
+									<input type="text" class="form-control" name="website" id="decode_token_website" placeholder="Website or Text" tabindex="1" value="" />
+								</div>
+								<input type="hidden" name="request_type" value="decodeToken" />
+								<div class="form-group">
+									<label for="decode_token_token">TOKEN</label>
+									<input type="text" class="form-control" name="token" id="decode_token_token" placeholder="Token" tabindex="2" value="" />
+								</div>
+							</form>
+						</div>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="generateToken" />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				        <button type="button" class="btn btn-primary" id="register_alias_button" data-loading-text="Submitting...">Generate</button>
+				        <button type="button" class="btn btn-primary" id="token_modal_button">Generate</button>
 			    	</div>
 				</div>
 		  	</div>
@@ -3251,13 +3474,15 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							    <div class="tab-pane active" id="transaction_info_tab">
 							    	<div id="transaction_info_callout" class="callout callout-info" style="display:none;"></div>
 
-									<div id="transaction_info_output" style="display: none;"></div>	
+									<div id="transaction_info_output_top" style="display: none;"></div>	
 									
 						      		<table class="table table-striped" id="transaction_info_table" style="display:none;margin-bottom: 0;">
 						      		    <tbody>
 						      		    	
 						      		    </tbody>
 						      		</table>
+
+						      		<div id="transaction_info_output_bottom" style="display: none;"></div>
 							    </div>
 							    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
 									<table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">
@@ -3314,6 +3539,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 							<li class="active" id="user_info_transactions" data-tab="transactions"><a href="#">Transactions</a></li>
 							<li id="user_info_assets" data-tab="assets"><a href="#">Assets</a></li>
+							<li id="user_info_marketplace" data-tab="marketplace"><a href="#">Marketplace</a></li>
 							<li id="user_info_aliases" data-tab="aliases"><a href="#">Aliases</a></li>
 							<li id="user_info_description" data-tab="description"><a href="#">Description</a></li>
 							<li id="user_info_actions" data-tab="actions"><a href="#">Actions</a></li>
@@ -3372,6 +3598,23 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="data-empty-container" style="padding-top:10px">This user has no assets.</div>
 						</div>
 						
+						<div class="data-container data-loading user_info_modal_content" id="user_info_modal_marketplace" style="display:none;max-height:350px;overflow:auto;">
+							<table class="table table-striped" id="user_info_modal_marketplace_table">
+								<thead>
+							    <tr>
+							        <th>Item</th>
+							        <th>Price</th>
+							        <th>QTY</th>
+							    </tr>
+							    </thead>
+							    <tbody>
+							    
+							    </tbody>
+							</table>
+							<div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+							<div class="data-empty-container" style="padding-top:10px">This user has no marketplace listings.</div>
+						</div>
+
 						<div class="user_info_modal_content data-never-loading" id="user_info_modal_description" style="display:none;"></div>
 
 						<div class="user_info_modal_content data-never-loading" id="user_info_modal_actions" style="display:none;">
@@ -3588,11 +3831,11 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="asset_exchange_change_group_name_new">NEW GROUP_NAME</label>
 								<input type="text" class="form-control" name="new_group_name" id="asset_exchange_change_group_name_new" placeholder="New group name" />
 							</div>
+							<input type="hidden" name="request_type" value="assetExchangeChangeGroupName" />
+			      			<input type="hidden" name="success_message" value="Group name has been changed successfully." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="assetExchangeChangeGroupName" />
-			      		<input type="hidden" name="success_message" value="Group name has been changed successfully." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="asset_exchange_change_group_name_submit" data-loading-text="Submitting...">Change Group Name</button>
 			      	</div>
@@ -3623,13 +3866,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							</div>
 							<div class="form-group" id="asset_exchange_group_new_group_div" style="display:none">
 								<input type="text" class="form-control" name="asset_exchange_group_new_group" id="asset_exchange_group_new_group" placeholder="New group title" />
-
 							</div>
+
+							<input type="hidden" name="request_type" value="assetExchangeGroup" />
+			      			<input type="hidden" name="success_message" value="Asset has been added to group." />
 						</form>
 		      		</div>
 			      	<div class="modal-footer" style="margin-top:0;">
-			      		<input type="hidden" name="request_type" value="assetExchangeGroup" />
-			      		<input type="hidden" name="success_message" value="Asset has been added to group." />
 				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				        <button type="button" class="btn btn-primary" id="asset_exchange_group_submit" data-loading-text="Submitting...">Add to Group</button>
 			      	</div>
@@ -3637,20 +3880,49 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 
+		<div class="modal fade" id="messages_decrypt_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Decrypt Messages</h4>
+		      		</div>
+		      		<div class="modal-body">
+						<form role="form">
+							<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt these messages.</div>
+							<div class="form-group secret_phrase">
+								<label for="messages_decrypt_password">PASSPHRASE</label>
+								<input type="password" name="secretPhrase" id="messages_decrypt_password" class="form-control" placeholder="" tabindex="8">
+							</div>
+
+							<div class="form-group" style="margin-bottom:0">
+								<input type="checkbox" name="rememberPassword" id="messages_decrypt_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="messages_decrypt_remember_password" style="font-weight:normal;"> Remember passphrase for decryption</label>
+							</div>
+
+							<input type="hidden" name="request_type" value="decryptMessages" />
+							<input type="hidden" name="success_message" value="The message(s) have been decrypted!" />
+							<input type="hidden" name="error_message" value="An unknown error occured!" />
+						</form>
+		      		</div>
+		      		<div class="modal-footer" style="margin-top:0;">
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" data-loading-text="Decrypting...">Decrypt</button>
+			      	</div>
+		      	</div>
+		    </div>
+		</div>
+
 		<div id="decrypt_note_form_container" style="display:none;">
 			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;">
-				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your password is required to decrypt this message.</div>
+				<div class="callout callout-danger error_message" style="background:#fbe7e7">Your passphrase is required to decrypt this data.</div>
 				<div class="form-group secret_phrase">
-					<label for="decrypt_note_form_password">SECRET PHRASE</label>
+					<label for="decrypt_note_form_password">PASSPHRASE</label>
 					<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
 				</div>
 
-				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember password for decryption</label></div>
+				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;"> Remember passphrase for decryption</label></div>
 
-				<input type="hidden" name="otherAccount" value="" />
-				<input type="hidden" name="encryptedNote" value="" />
-				<input type="hidden" name="encryptedNoteNonce" value="" />
-		        <button type="button" class="btn btn-primary">Decrypt</button>
+		        <button type="button" class="btn btn-primary" data-ignore="true">Decrypt</button>
 			</form>
 		</div>
 
@@ -3702,6 +3974,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 	    	document.getElementById("old_browser_warning").style.display = "block";
 		</script>
 		<![endif]-->		
+
         <script src="js/3rdparty/jquery-2.1.0.js"></script>
         <script src="js/3rdparty/bootstrap.js" type="text/javascript"></script>
 		<script src="js/3rdparty/ajaxretry.js"></script>
@@ -3715,7 +3988,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
         <script src="js/3rdparty/jsbn2.js" type="text/javascript"></script>
         <script src="js/3rdparty/big.js" type="text/javascript"></script>
         <script src="js/3rdparty/pako.js" type="text/javascript"></script>
-     	<!--   <script src="js/3rdparty/addclear.js" type="text/javascript"></script> -->
+        <script src="js/3rdparty/maskedinput.js" type="text/javascript"></script>
 
         <script src="js/util/extensions.js" type="text/javascript"></script>
         <script src="js/util/converters.js" type="text/javascript"></script>
@@ -3724,11 +3997,9 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 		<script src="js/crypto/3rdparty/jssha256.js" type="text/javascript"></script>
         <script src="js/crypto/curve25519.js" type="text/javascript"></script>
         <script src="js/crypto/curve25519_.js" type="text/javascript"></script>
-        <script src="js/crypto/crypto.js" type="text/javascript"></script>
         <script src="js/crypto/3rdparty/cryptojs/aes.js" type="text/javascript"></script>
         <script src="js/crypto/3rdparty/cryptojs/sha256.js" type="text/javascript"></script>
 
-        <script src="js/app.js" type="text/javascript"></script>
         <script src="js/nrs.js" type="text/javascript"></script>
         <script src="js/nrs.server.js" type="text/javascript"></script>
         <script src="js/nrs.forms.js" type="text/javascript"></script>
@@ -3747,6 +4018,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
         <script src="js/nrs.news.js" type="text/javascript"></script>
         <script src="js/nrs.settings.js" type="text/javascript"></script>
         <script src="js/nrs.sidebar.js" type="text/javascript"></script>
+        <script src="js/nrs.encryption.js" type="text/javascript"></script>
         <script src="js/nrs.modals.js" type="text/javascript"></script>
         <script src="js/nrs.modals.account.js" type="text/javascript"></script>
         <script src="js/nrs.modals.accountdetails.js" type="text/javascript"></script>

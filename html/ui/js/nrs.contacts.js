@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.loadContacts = function() {
 		NRS.contacts = {};
@@ -201,11 +204,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#update_contact_id").val(contact.id);
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				if (NRS.settings["reed_solomon"]) {
-					$("#update_contact_account_id").val(contact.accountRS);
-				} else {
-					$("#update_contact_account_id").val(contact.account);
-				}
+				$("#update_contact_account_id").val(contact.accountRS);
 				$("#update_contact_description").val(contact.description);
 			});
 		} else {
@@ -218,11 +217,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				if (NRS.settings["reed_solomon"]) {
-					$("#update_contact_account_id").val(contact.accountRS);
-				} else {
-					$("#update_contact_account_id").val(contact.account);
-				}
+				$("#update_contact_account_id").val(contact.accountRS);
 				$("#update_contact_description").val(contact.description);
 			});
 		}

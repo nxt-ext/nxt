@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	var LOCALE_DATE_FORMATS = {
 		"ar-SA": "dd/MM/yy",
@@ -534,7 +537,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatAmount = function(amount, round, no_escaping) {
-
 		if (typeof amount == "undefined") {
 			return "0";
 		} else if (typeof amount == "string") {
@@ -606,9 +608,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (!date_only) {
 				var hours = date.getHours();
+				var originalHours = hours;
 				var minutes = date.getMinutes();
 				var seconds = date.getSeconds();
 
+				if (!NRS.settings["24_hour_format"]) {
+					hours = hours % 12;
+				}
 				if (hours < 10) {
 					hours = "0" + hours;
 				}
@@ -619,6 +625,10 @@ var NRS = (function(NRS, $, undefined) {
 					seconds = "0" + seconds;
 				}
 				res += " " + hours + ":" + minutes + ":" + seconds;
+
+				if (!NRS.settings["24_hour_format"]) {
+					res += " " + (originalHours > 12 ? "PM" : "AM");
+				}
 			}
 
 			return res;
@@ -703,14 +713,6 @@ var NRS = (function(NRS, $, undefined) {
 		return hex;
 	}
 
-	NRS.generatePublicKey = function(secretPhrase) {
-		return nxtCrypto.getPublicKey(converters.stringToHexString(secretPhrase));
-	}
-
-	NRS.generateAccountId = function(secretPhrase) {
-		return nxtCrypto.getAccountId(secretPhrase);
-	}
-
 	NRS.getFormData = function($form) {
 		var serialized = $form.serializeArray();
 		var data = {};
@@ -735,7 +737,7 @@ var NRS = (function(NRS, $, undefined) {
 			formattedAcc = object;
 			object = null;
 		} else {
-			formattedAcc = (NRS.settings["reed_solomon"] ? String(object[acc + "RS"]).escapeHTML() : String(object[acc]).escapeHTML());
+			formattedAcc = String(object[acc + "RS"]).escapeHTML();
 		}
 
 		if (formattedAcc in NRS.contacts) {
@@ -752,10 +754,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (type == "string" || type == "number") {
 			return String(object).escapeHTML();
-		} else if (NRS.settings["reed_solomon"]) {
-			return String(object[acc + "RS"]).escapeHTML();
 		} else {
-			return String(object[acc]).escapeHTML();
+			return String(object[acc + "RS"]).escapeHTML();
 		}
 	}
 
@@ -817,9 +817,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getClipboardText = function(type) {
 		switch (type) {
-			case "account_id":
-				return NRS.account;
-				break;
 			case "account_rs":
 				return NRS.accountRS;
 				break;
@@ -898,6 +895,8 @@ var NRS = (function(NRS, $, undefined) {
 			if (extra) {
 				$(extra).hide();
 			}
+		} else {
+			$parent.removeClass("data-empty");
 		}
 
 		if (fadeIn) {
@@ -1119,6 +1118,81 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.showFullDescription();
 		}
 	});
+
+	$("#offcanvas_toggle").on("click", function(e) {
+		e.preventDefault();
+
+		//If window is small enough, enable sidebar push menu
+		if ($(window).width() <= 992) {
+			$('.row-offcanvas').toggleClass('active');
+			$('.left-side').removeClass("collapse-left");
+			$(".right-side").removeClass("strech");
+			$('.row-offcanvas').toggleClass("relative");
+		} else {
+			//Else, enable content streching
+			$('.left-side').toggleClass("collapse-left");
+			$(".right-side").toggleClass("strech");
+		}
+	});
+
+	$.fn.tree = function() {
+		return this.each(function() {
+			var btn = $(this).children("a").first();
+			var menu = $(this).children(".treeview-menu").first();
+			var isActive = $(this).hasClass('active');
+
+			//initialize already active menus
+			if (isActive) {
+				menu.show();
+				btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
+			}
+			//Slide open or close the menu on link click
+			btn.click(function(e) {
+				e.preventDefault();
+				if (isActive) {
+					//Slide up to close menu
+					menu.slideUp();
+					isActive = false;
+					btn.children(".fa-angle-down").first().removeClass("fa-angle-down").addClass("fa-angle-right");
+					btn.parent("li").removeClass("active");
+				} else {
+					//Slide down to open menu
+					menu.slideDown();
+					isActive = true;
+					btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
+					btn.parent("li").addClass("active");
+				}
+			});
+		});
+	};
+
+	NRS.setCookie = function(name, value, days) {
+		var expires;
+
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toGMTString();
+		} else {
+			expires = "";
+		}
+		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+	}
+
+	NRS.getCookie = function(name) {
+		var nameEQ = escape(name) + "=";
+		var ca = document.cookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
+		}
+		return null;
+	}
+
+	NRS.deleteCookie = function(name) {
+		NRS.setCookie(name, "", -1);
+	}
 
 	return NRS;
 }(NRS || {}, jQuery));

@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.forms.errorMessages.startForging = {
 		"5": "You cannot forge. Either your balance is 0 or your account is too new (you must wait a day or so)."
@@ -62,7 +66,7 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				$.growl("Your effective balance is zero, you cannot forge.", {
+				$.growl("Your effective balance is zero, you cannot forge. (Effective balance is your balance after 1440 block confirmations).", {
 					"type": "danger"
 				});
 			}

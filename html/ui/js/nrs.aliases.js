@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
 		NRS.sendRequest("getAliases+", {
@@ -11,7 +14,7 @@ var NRS = (function(NRS, $, undefined) {
 					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
-						if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subtype == 1) {
+						if (unconfirmedTransaction.type == 1 && (unconfirmedTransaction.subtype == 1 || unconfirmedTransaction.subtype == 7)) {
 							var found = false;
 
 							for (var j = 0; j < aliases.length; j++) {
@@ -26,13 +29,14 @@ var NRS = (function(NRS, $, undefined) {
 							if (!found) {
 								aliases.push({
 									"aliasName": unconfirmedTransaction.attachment.alias,
-									"aliasURI": unconfirmedTransaction.attachment.uri,
+									"aliasURI": (unconfirmedTransaction.attachment.uri ? unconfirmedTransaction.attachment.uri : ""),
 									"tentative": true
 								});
 							}
 						}
 					}
 				}
+
 
 				aliases.sort(function(a, b) {
 					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
@@ -66,6 +70,10 @@ var NRS = (function(NRS, $, undefined) {
 						alias.priceNQT = unconfirmedTransaction.priceNQT;
 					}
 
+					if (!alias.aliasURI) {
+						alias.aliasURI = "";
+					}
+
 					var allowCancel = false;
 
 					if (alias.buyer) {
@@ -76,7 +84,9 @@ var NRS = (function(NRS, $, undefined) {
 								alias.status = "Transfer In Progress";
 							}
 						} else {
-							allowCancel = true;
+							if (!alias.tentative) {
+								allowCancel = true;
+							}
 
 							if (alias.buyer != NRS.genesis) {
 								alias.status = "For Sale (direct)";
@@ -139,7 +149,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (data.cancelSale) {
 			data.priceNQT = "0";
-			data.recipient = NRS.account;
+			data.recipient = NRS.accountRS;
 			delete data.cancelSale;
 		}
 
@@ -159,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//transfer
 		if (data.priceNQT == "0") {
-			if (data.recipient == NRS.account) {
+			if (data.recipient == NRS.accountRS) {
 				$row.find("td.status").html("<span class='label label-info'>Cancelling Sale</span>");
 			} else {
 				$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
@@ -182,7 +192,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $modal = $(this).closest(".modal");
 
 		if ($(this).attr("id") == "sell_alias_to_anyone") {
-			$modal.find("input[name=recipient]").val("0");
+			$modal.find("input[name=recipient]").val(NRS.genesisRS);
 			$("#sell_alias_recipient_div").hide();
 		} else {
 			$modal.find("input[name=recipient]").val("");
@@ -226,11 +236,34 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					$modal.find("input[name=aliasName]").val(alias.escapeHTML());
 					$modal.find(".alias_name_display").html(alias.escapeHTML());
-					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT));
+					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT)).prop("readonly", true);
 				}
 			}
 		}, false);
 	});
+
+	NRS.forms.buyAliasError = function() {
+		$("#buy_alias_modal").find("input[name=priceNXT]").prop("readonly", false);
+	}
+
+	NRS.forms.buyAliasComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		if (NRS.currentPage != "aliases") {
+			return;
+		}
+
+		data.aliasName = String(data.aliasName).escapeHTML();
+		data.aliasURI = "";
+
+		$("#aliases_table tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>");
+
+		if ($("#aliases_table").parent().hasClass("data-empty")) {
+			$("#aliases_table").parent().removeClass("data-empty");
+		}
+	}
 
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
@@ -252,6 +285,8 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.fetchingModalData = false;
 				} else {
+					var aliasURI;
+
 					if (/http:\/\//i.test(response.aliasURI)) {
 						NRS.forms.setAliasType("uri");
 					} else if ((aliasURI = /acct:(.*)@nxt/.exec(response.aliasURI)) || (aliasURI = /nacc:(.*)/.exec(response.aliasURI))) {
@@ -292,10 +327,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (data.type == "account") {
 			if (!(/acct:(.*)@nxt/.test(data.aliasURI)) && !(/nacc:(.*)/.test(data.aliasURI))) {
-				if (/^\d+$/.test(data.aliasURI)) {
+				if (/^(NXT\-)/i.test(data.aliasURI)) {
 					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
-				} else if (/^(NXT\-)/i.test(data.aliasURI)) {
-					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
+				} else if (/^\d+$/.test(data.aliasURI)) {
+					return {
+						"error": "Numeric account ID's are no longer allowed."
+					};
 				} else {
 					return {
 						"error": "Invalid account ID."
@@ -366,9 +403,8 @@ var NRS = (function(NRS, $, undefined) {
 					$("#register_alias_uri").val(uri);
 				}
 			}
+			$("#register_alias_help").html("The alias can contain any data you want.").show();
 		}
-
-		$("#register_alias_help").html("The alias can contain any data you want.").show();
 	}
 
 	$("#register_alias_type").on("change", function() {
@@ -401,7 +437,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var $rows = $table.find("tr");
 
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a> <a class='btn btn-xs btn-default' href='#'>Cancel Sale</a></td></tr>";
+				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>";
 
 				var rowAdded = false;
 

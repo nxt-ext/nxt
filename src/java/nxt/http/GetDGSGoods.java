@@ -39,15 +39,15 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
             goods = DigitalGoodsStore.getSellerGoods(sellerId, inStockOnly);
         }
 
-        int i = 0;
+        int count = 0;
         for (DigitalGoodsStore.Goods good : goods) {
-            if (i > lastIndex) {
+            if (count > lastIndex) {
                 break;
             }
-            if (i >= firstIndex) {
+            if (count >= firstIndex) {
                 goodsJSON.add(JSONData.goods(good));
             }
-            i++;
+            count++;
         }
         return response;
     }

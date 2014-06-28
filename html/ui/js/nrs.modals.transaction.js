@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	$("#transactions_table, #dashboard_transactions_table").on("click", "a[data-transaction]", function(e) {
 		e.preventDefault();
@@ -14,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.fetchingModalData = true;
 
-		$("#transaction_info_output").html("").hide();
+		$("#transaction_info_output_top, #transaction_info_output_bottom").html("").hide();
 		$("#transaction_info_callout").hide();
 		$("#transaction_info_table").hide();
 		$("#transaction_info_table tbody").empty();
@@ -73,10 +77,16 @@ var NRS = (function(NRS, $, undefined) {
 		if (transaction.type == 1) {
 			switch (transaction.subtype) {
 				case 0:
+					var message;
+
 					try {
-						var message = converters.hexStringToString(transaction.attachment.message);
+						message = converters.hexStringToString(transaction.attachment.message);
 					} catch (err) {
-						var message = "Could not convert hex to string: " + String(transaction.attachment.message);
+						if (transaction.attachment.message.indexOf("feff") === 0) {
+							message = NRS.convertFromHex16(transaction.attachment.message);
+						} else {
+							message = NRS.convertFromHex8(transaction.attachment.message);
+						}
 					}
 
 					var sender_info = "";
@@ -93,7 +103,7 @@ var NRS = (function(NRS, $, undefined) {
 						sender_info += "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 					}
 
-					$("#transaction_info_output").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> Public Message</div><div style='padding-bottom:10px'>" + message.escapeHTML().nl2br() + "</div>" + sender_info).show();
+					$("#transaction_info_output_top").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> Public Message</div><div style='padding-bottom:10px'>" + message.escapeHTML().nl2br() + "</div>" + sender_info).show();
 
 					break;
 				case 1:
@@ -185,6 +195,38 @@ var NRS = (function(NRS, $, undefined) {
 
 					data["Sender"] = NRS.getAccountTitle(transaction, "sender");
 
+					if (type == "Alias Sale") {
+						var message = "";
+						var messageStyle = "info";
+
+						NRS.sendRequest("getAlias", {
+							"aliasName": transaction.attachment.alias
+						}, function(response) {
+							NRS.fetchingModalData = false;
+
+							if (!response.errorCode) {
+								if (transaction.recipient != response.buyer || transaction.attachment.priceNQT != response.priceNQT) {
+									message = "This sale info is outdated.";
+									messageStyle = "danger";
+								} else if (transaction.recipient == NRS.account) {
+									message = "You have been offered this alias for " + NRS.formatAmount(transaction.attachment.priceNQT) + " NXT. <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+								} else if (transaction.recipient == NRS.genesis) {
+									message = "This alias is offered for sale for " + NRS.formatAmount(transaction.attachment.priceNQT) + " NXT. <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+								} else if (transaction.senderRS == NRS.accountRS) {
+									if (transaction.attachment.priceNQT != "0") {
+										message = "You are offering this alias for sale. <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#cancel_alias_sale_modal'>Cancel sale?</a>";
+									}
+								} else {
+									message = "This alias is offered for sale to another account pending decision.";
+								}
+							}
+						}, false);
+
+						if (message) {
+							$("#transaction_info_output_bottom").html("<div class='callout callout-" + messageStyle + "' style='margin-top:15px;margin-bottom:0;'>" + message + "</div>").show();
+						}
+					}
+
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
 
@@ -206,55 +248,34 @@ var NRS = (function(NRS, $, undefined) {
 						"Type": "Encrypted Message"
 					}
 
-					var showDecryptionForm = false;
+					$("#transaction_info_output_top").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-lock'></i> Encrypted Message</div><div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='display:none;padding-bottom:10px;'></div>");
 
-					if (transaction.recipient == NRS.account || transaction.sender == NRS.account) {
-						try {
-							var message = NRS.decryptNote(transaction.attachment.message, {
-								"nonce": transaction.attachment.nonce,
-								"account": (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient)
-							});
-						} catch (err) {
-							var message = String(err.message ? err.message : err);
-							if (err.errorCode && err.errorCode == 1) {
-								showDecryptionForm = true;
+					var output = "";
+
+					if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+						NRS.tryToDecrypt(transaction, {
+							"message": {
+								"title": "",
+								"nonce": "nonce"
 							}
-						}
+						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
+							"noPadding": true,
+							"formEl": "#transaction_info_decryption_form",
+							"outputEl": "#transaction_info_decrypted_note"
+						});
 
 						if (transaction.sender == NRS.account) {
-							sender_info = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient");
+							output = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient");
 						} else {
-							sender_info = "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
+							output = "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 						}
 					} else {
-						var message = "This is an encrypted message not addressed to you. You cannot read it's contents.";
-
-						sender_info = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient") + "<br />";
-						sender_info += "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
+						output = "<div style='padding-bottom:10px'>This is an encrypted message not addressed to you. You cannot read it's contents.</div>";
+						output = "<strong>To</strong>: " + NRS.getAccountLink(transaction, "recipient") + "<br />";
+						output = "<strong>From</strong>: " + NRS.getAccountLink(transaction, "sender");
 					}
 
-					var output = "<div style='color:#999999;padding-bottom:10px'><i class='fa fa-lock'></i> Encrypted Message</div>";
-
-					if (showDecryptionForm) {
-						output += "<div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='padding-bottom:10px;display:none'></div>";
-					} else {
-						output += "<div style='padding-bottom:10px'>" + message.escapeHTML().nl2br() + "</div>"
-					}
-
-					output += sender_info;
-
-					$("#transaction_info_output").html(output);
-
-
-					if (showDecryptionForm) {
-						$("#decrypt_note_form_container input[name=otherAccount]").val(transaction.recipient == NRS.account ? transaction.sender : transaction.recipient);
-						$("#decrypt_note_form_container input[name=encryptedNote]").val(transaction.attachment.message);
-						$("#decrypt_note_form_container input[name=encryptedNoteNonce]").val(transaction.attachment.nonce);
-						$("#decrypt_note_form_container").detach().appendTo("#transaction_info_decryption_form");
-						$("#decrypt_note_form_container").show();
-					}
-
-					$("#transaction_info_output").show();
+					$("#transaction_info_output_top").append(output).show();
 
 					break;
 				default:
@@ -523,6 +544,16 @@ var NRS = (function(NRS, $, undefined) {
 							"Seller": NRS.getAccountFormatted(goods, "seller")
 						};
 
+						if (transaction.attachment.note) {
+							if (NRS.account == goods.seller || NRS.account == transaction.sender) {
+								NRS.tryToDecrypt(transaction, {
+									"note": "Note"
+								}, (transaction.sender == NRS.account ? goods.seller : transaction.sender));
+							} else {
+								data["Note"] = "Note is encrypted and cannot be read by you.";
+							}
+						}
+
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
@@ -549,6 +580,19 @@ var NRS = (function(NRS, $, undefined) {
 								"Seller": NRS.getAccountFormatted(purchase, "seller")
 							};
 
+							if (transaction.attachment.goodsData) {
+								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
+									NRS.tryToDecrypt(transaction, {
+										"goodsData": {
+											"title": "Data",
+											"nonce": "goodsNonce"
+										}
+									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
+								} else {
+									data["Data"] = "Goods data is encrypted and cannot be read by you.";
+								}
+							}
+
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
@@ -559,9 +603,41 @@ var NRS = (function(NRS, $, undefined) {
 
 					break;
 				case 6:
-					var data = {
-						"Type": "Marketplace Feedback"
-					};
+					async = true;
+
+					NRS.sendRequest("getDGSPurchase", {
+						"purchase": transaction.attachment.purchase
+					}, function(purchase) {
+						NRS.sendRequest("getDGSGood", {
+							"goods": purchase.goods
+						}, function(goods) {
+							var data = {
+								"Type": "Marketplace Feedback",
+								"Item Name": goods.name,
+								"Buyer": NRS.getAccountFormatted(purchase, "buyer"),
+								"Seller": NRS.getAccountFormatted(purchase, "seller")
+							};
+
+							if (transaction.attachment.note) {
+								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
+									NRS.tryToDecrypt(transaction, {
+										"note": "Feedback"
+									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
+								} else {
+									data["Feedback"] = "Feedback is encrypted and cannot be read by you.";
+								}
+							}
+
+							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+
+							$("#transaction_info_table").show();
+
+							$("#transaction_info_modal").modal("show");
+
+							NRS.fetchingModalData = false;
+						});
+					});
+
 					break;
 				case 7:
 					async = true;
@@ -580,17 +656,16 @@ var NRS = (function(NRS, $, undefined) {
 								"Seller": NRS.getAccountFormatted(purchase, "seller")
 							};
 
-							if (transaction.attachment.note && purchase.buyer == NRS.account) {
-								try {
-									data["Note"] = NRS.decryptNote(transaction.attachment.note, {
-										"nonce": transaction.attachment.noteNonce,
-										"account": purchase.seller
-									});
-								} catch (err) {
-									console.log(err);
-									data["Note"] = "Could not decrypt note.";
+							if (transaction.attachment.note) {
+								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
+									NRS.tryToDecrypt(transaction, {
+										"note": "Note"
+									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
+								} else {
+									data["Note"] = "Note is encrypted and cannot be read by you.";
 								}
 							}
+
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
@@ -599,10 +674,6 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					});
 
-
-					var data = {
-						"Type": "Marketplace Refund"
-					};
 					break;
 				default:
 					incorrect = true;
@@ -643,37 +714,8 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
-		if ($("#decrypt_note_form_container").length) {
-			$("#decrypt_note_form_container input").val("");
-			$("#decrypt_note_form_container").hide().detach().appendTo("body");
-			$("#transaction_info_decrypted_note").html("").hide();
-		}
-	});
-
-	$("#decrypt_note_form_container").on("submit", function(e) {
-		e.preventDefault();
-
-		var message = $(this).find("input[name=encryptedNote]").val();
-		var nonce = $(this).find("input[name=encryptedNoteNonce]").val();
-		var otherAccount = $(this).find("input[name=otherAccount]").val();
-		var password = $(this).find("input[name=secretPhrase]").val();
-		var rememberPassword = $(this).find("input[name=rememberPassword]").is(":checked");
-
-		try {
-			var message = NRS.decryptNote(message, {
-				"nonce": nonce,
-				"account": otherAccount
-			}, password);
-			$(this).hide();
-			$("#transaction_info_decrypted_note").html(message.escapeHTML().nl2br()).show();
-		} catch (err) {
-			var message = String(err.message ? err.message : err);
-			$(this).find(".callout").html(message.escapeHTML());
-		}
-
-		if (rememberPassword) {
-			NRS.decryptionPassword = password;
-		}
+		NRS.removeDecryptionForm($(this));
+		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
 	});
 
 	return NRS;

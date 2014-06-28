@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.confirmedFormWarning = false;
 
@@ -16,7 +19,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	$(".modal button.btn-primary:not([data-dismiss=modal])").click(function() {
+	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true])").click(function() {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
 
@@ -31,23 +34,42 @@ var NRS = (function(NRS, $, undefined) {
 		$modal.find("button").prop("disabled", true);
 		$btn.button("loading");
 
-		var requestType = $modal.find("input[name=request_type]").val();
-		var successMessage = $modal.find("input[name=success_message]").val();
-		var errorMessage = $modal.find("input[name=error_message]").val();
+		if ($btn.data("form")) {
+			var $form = $modal.find("form#" + $btn.data("form"));
+			if (!$form.length) {
+				$form = $modal.find("form:first");
+			}
+		} else {
+			var $form = $modal.find("form:first");
+		}
+
+
+		var requestType = $form.find("input[name=request_type]").val();
+		var successMessage = $form.find("input[name=success_message]").val();
+		var errorMessage = $form.find("input[name=error_message]").val();
 		var data = null;
 
 		var formFunction = NRS["forms"][requestType];
+		var formErrorFunction = NRS["forms"][requestType + "Error"];
+
+		if (typeof formErrorFunction != "function") {
+			formErrorFunction = false;
+		}
 
 		var originalRequestType = requestType;
 
-		var $form = $modal.find("form:first");
-
 		if (NRS.downloadingBlockchain) {
 			$modal.find(".error_message").html("Please wait until the blockchain has finished downloading.").show();
+			if (formErrorFunction) {
+				formErrorFunction();
+			}
 			NRS.unlockForm($modal, $btn);
 			return;
 		} else if (NRS.state.isScanning) {
 			$modal.find(".error_message").html("The blockchain is currently being rescanned. Please wait a minute and then try submitting again.").show();
+			if (formErrorFunction) {
+				formErrorFunction();
+			}
 			NRS.unlockForm($modal, $btn);
 			return;
 		}
@@ -81,6 +103,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				$modal.find(".error_message").html(error).show();
+
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+
 				NRS.unlockForm($modal, $btn);
 				invalidElement = true;
 				return false;
@@ -91,13 +118,16 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		if (typeof formFunction == 'function') {
+		if (typeof formFunction == "function") {
 			var output = formFunction($modal);
 
 			if (!output) {
 				return;
 			} else if (output.error) {
 				$modal.find(".error_message").html(output.error.escapeHTML()).show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
 				NRS.unlockForm($modal, $btn);
 				return;
 			} else {
@@ -121,19 +151,38 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (!data) {
-			data = NRS.getFormData($modal.find("form:first"));
+			data = NRS.getFormData($form);
 		}
 
 		if (data.deadline) {
 			data.deadline = String(data.deadline * 60); //hours to minutes
 		}
 
+		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+			$modal.find(".error_message").html("Passphrase is a required field.").show();
+			if (formErrorFunction) {
+				formErrorFunction();
+			}
+			NRS.unlockForm($modal, $btn);
+			return;
+		}
+
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
-			if (!/^\d+$/.test(data.recipient) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
+			if (/^\d+$/.test(data.recipient)) {
+				$modal.find(".error_message").html("Numeric account IDs are no longer allowed.").show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+				NRS.unlockForm($modal, $btn);
+				return;
+			} else if (!/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
 				var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
 				if (!convertedAccountId || (!/^\d+$/.test(convertedAccountId) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(convertedAccountId))) {
 					$modal.find(".error_message").html("Invalid account ID.").show();
+					if (formErrorFunction) {
+						formErrorFunction();
+					}
 					NRS.unlockForm($modal, $btn);
 					return;
 				} else {
@@ -145,17 +194,14 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
-			$modal.find(".error_message").html("Secret phrase is a required field.").show();
-			NRS.unlockForm($modal, $btn);
-			return;
-		}
-
 		if (!NRS.showedFormWarning) {
 			if ("amountNXT" in data && NRS.settings["amount_warning"] && NRS.settings["amount_warning"] != "0") {
 				if (new BigInteger(NRS.convertToNQT(data.amountNXT)).compareTo(new BigInteger(NRS.settings["amount_warning"])) > 0) {
 					NRS.showedFormWarning = true;
 					$modal.find(".error_message").html("You amount is higher than " + NRS.formatAmount(NRS.settings["amount_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
+					if (formErrorFunction) {
+						formErrorFunction();
+					}
 					NRS.unlockForm($modal, $btn);
 					return;
 				}
@@ -165,6 +211,9 @@ var NRS = (function(NRS, $, undefined) {
 				if (new BigInteger(NRS.convertToNQT(data.feeNXT)).compareTo(new BigInteger(NRS.settings["fee_warning"])) > 0) {
 					NRS.showedFormWarning = true;
 					$modal.find(".error_message").html("You fee is higher than " + NRS.formatAmount(NRS.settings["fee_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
+					if (formErrorFunction) {
+						formErrorFunction();
+					}
 					NRS.unlockForm($modal, $btn);
 					return;
 				}
@@ -172,7 +221,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {
-			if (response.fullHash) {
+			if (response.fullHash && (!response.error || response.error != "Double spending transaction")) {
 				NRS.unlockForm($modal, $btn);
 
 				if (!$modal.hasClass("modal-no-hide")) {
@@ -214,9 +263,19 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					$modal.find(".error_message").html(response.errorDescription ? String(response.errorDescription).escapeHTML() : "Unknown error occured.").show();
 				}
+
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+
 				NRS.unlockForm($modal, $btn);
 			} else if (response.error) {
 				$modal.find(".error_message").html(String(response.error).escapeHTML()).show();
+
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+
 				NRS.unlockForm($modal, $btn);
 			} else {
 				var sentToFunction = false;
