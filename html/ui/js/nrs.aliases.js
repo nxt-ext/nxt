@@ -185,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $modal = $(this).closest(".modal");
 
 		if ($(this).attr("id") == "sell_alias_to_anyone") {
-			$modal.find("input[name=recipient]").val("0");
+			$modal.find("input[name=recipient]").val(NRS.genesisRS);
 			$("#sell_alias_recipient_div").hide();
 		} else {
 			$modal.find("input[name=recipient]").val("");
