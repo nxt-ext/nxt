@@ -58,7 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("span.recipient_selector").on("click", "ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
-		$(this).closest("form").find("input[name=recipient],input[name=account_id]").val($(this).data("contact")).trigger("blur");
+		$(this).closest("form").find("input[name=recipient],input[name=account_id]").trigger("unmask").val($(this).data("contact")).trigger("blur");
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {

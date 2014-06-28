@@ -84,6 +84,15 @@
 					}
 
 					function keydownEvent(e) {
+						if (e.keyCode == 8) {
+							var currentInput = input.val();
+							if (currentInput == "NXT-____-____-____-_____" && input.caret().begin == 4) {
+								input.val("");
+								$(this).trigger("unmask");
+								return;
+							}
+						}
+
 						var pos, begin, end, k = e.which;
 						8 === k || 46 === k || iPhone && 127 === k ? (pos = input.caret(), begin = pos.begin,
 							end = pos.end, 0 === end - begin && (begin = 46 !== k ? seekPrev(begin) : end = seekNext(begin - 1),
@@ -147,6 +156,20 @@
 						}).join("");
 					}), input.attr("readonly") || input.one("unmask", function() {
 						input.unbind(".mask").removeData($.mask.dataName);
+
+						input.bind("keyup.remask", function(e) {
+							if (input.val().toLowerCase() == "nxt-") {
+								input.mask("NXT-****-****-****-*****").trigger("focus").unbind(".remask");
+							}
+						}).bind("paste.remask", function(e) {
+							setTimeout(function() {
+								var newInput = input.val();
+
+								if (/^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.test(newInput) || /^NXT[A-Z0-9]{17}/i.test(newInput)) {
+									input.mask("NXT-****-****-****-*****").trigger("focus").unbind(".remask");
+								}
+							}, 0);
+						});
 					}).bind("focus.mask", function() {
 						clearTimeout(caretTimeoutId);
 						var pos;

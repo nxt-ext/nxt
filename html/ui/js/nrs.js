@@ -147,9 +147,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".sidebar .treeview").tree();
 
-		$("input[name=recipient], input[name=account_id]").mask("NXT-****-****-****-*****");
-
-
 		/*
 		$("#asset_exchange_search input[name=q]").addClear({
 			right: 0,
