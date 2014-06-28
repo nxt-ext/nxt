@@ -537,11 +537,14 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					css += ".header .navbar .nav a { color: " + colors.link_txt + (colors.link_bg ? "; background:" + colors.link_bg : "") + " }";
-					css += ".header .navbar .nav > li > a:hover { color: " + colors.link_txt_hover + (colors.link_bg_hover ? "; background:" + colors.link_bg_hover : "") + " }";
+					css += ".header .navbar .nav > li > a:hover, .header .navbar .nav > li > a:focus, .header .navbar .nav > li > a:focus { color: " + colors.link_txt_hover + (colors.link_bg_hover ? "; background:" + colors.link_bg_hover : "") + " }";
 
 					if (colors.link_bg_hover) {
 						css += ".header .navbar .nav > li > a:hover { " + NRS.cssGradient(colors.link_bg_hover, colors.link_bg_hover_gradient) + " }";
 					}
+
+					css += ".header .navbar .nav > li > ul a { color: #444444; }";
+					css += ".header .navbar .nav > li > ul a:hover {  color: " + colors.link_txt_hover + (colors.link_bg_hover ? "; background:" + colors.link_bg_hover : "") + " }";
 
 					css += ".header .navbar .sidebar-toggle .icon-bar { background: " + colors.toggle_icon + " }";
 					css += ".header .navbar .sidebar-toggle:hover .icon-bar { background: " + colors.toggle_icon_hover + " }";
