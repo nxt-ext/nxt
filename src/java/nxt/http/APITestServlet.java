@@ -19,7 +19,10 @@ public class APITestServlet extends HttpServlet {
             "<html>\n" +
             "<head>\n" +
             "    <meta charset=\"UTF-8\"/>\n" +
-            "    <title>NRS</title>\n" +
+            "    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">" +
+            "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" + 
+            "    <title>Nxt http API</title>\n" +
+            "    <link href=\"css/bootstrap.min.css\" rel=\"stylesheet\" type=\"text/css\" />" +
             "    <style type=\"text/css\">\n" +
             "        table {border-collapse: collapse;}\n" +
             "        td {padding: 10px;}\n" +
@@ -51,9 +54,31 @@ public class APITestServlet extends HttpServlet {
             "    </script>\n" +
             "</head>\n" +
             "<body>\n" +
-            "<h3>Nxt http API</h3>\n";
+            "<div class=\"navbar navbar-default\" role=\"navigation\">" +
+            "   <div class=\"container\">" + 
+            "       <div class=\"navbar-header\">" +
+            "           <a class=\"navbar-brand\" href=\"#\">Nxt http API</a>" + 
+            "       </div>" +
+            "       <div class=\"navbar-collapse collapse\">" +
+            "           <ul class=\"nav navbar-nav navbar-right\">" +
+            "               <li><a href=\"https://wiki.nxtcrypto.org/wiki/Nxt_API\" target=\"_blank\">Docs</a></li>" +
+            "           </ul>" +
+            "       </div>" +
+            "   </div>" + 
+            "</div>" +
+            "<div class=\"container\">" +
+            "<div class=\"row\">" +
+            "<div class=\"col-xs-12\">" +
+            "<div class=\"panel-group\" id=\"accordion\">";
 
     private static final String footer =
+            "</div> <!-- panel-group -->" +
+            "<br/><br/>" +
+            "</div> <!-- col -->" +
+            "</div> <!-- row -->" +
+            "</div> <!-- container -->" +
+            "<script src=\"js/3rdparty/jquery-2.1.0.js\"></script>" +
+            "<script src=\"js/3rdparty/bootstrap.js\" type=\"text/javascript\"></script>" +
             "</body>\n" +
             "</html>\n";
 
@@ -87,25 +112,37 @@ public class APITestServlet extends HttpServlet {
 
     private static String form(String requestType, List<String> parameters) {
         StringBuilder buf = new StringBuilder();
-        buf.append("<b>").append(requestType).append(":</b><br/>");
+        buf.append("<div class=\"panel panel-default\">");
+        buf.append("<div class=\"panel-heading\">");
+        buf.append("<h4 class=\"panel-title\">");
+        buf.append("<a data-toggle=\"collapse\" data-parent=\"#accordion\" href=\"#collapse");
+        buf.append(requestType).append("\">");
+        buf.append(requestType);
+        buf.append("</a>");
+        buf.append("</h4>");
+        buf.append("</div> <!-- panel-heading -->");
+        buf.append("<div id=\"collapse").append(requestType).append("\" class=\"panel-collapse collapse\">");
+        buf.append("<div class=\"panel-body\">");
         buf.append("<form action=\"/nxt\" method=\"POST\" onsubmit=\"return submitForm(this);\">");
+        buf.append("<pre class=\"result\" style=\"float:right;width:50%;\">JSON response</pre>");
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
-        buf.append("<table>");
+        buf.append("<table class=\"table\" style=\"width:46%;\">");
         for (String parameter : parameters) {
             buf.append("<tr>");
             buf.append("<td>").append(parameter).append(":</td>");
             buf.append("<td><input type=\"");
             buf.append("secretPhrase".equals(parameter) ? "password" : "text");
-            buf.append("\" name=\"").append(parameter).append("\"/></td>");
+            buf.append("\" name=\"").append(parameter).append("\" style=\"width:200px;\"/></td>");
             buf.append("</tr>");
         }
         buf.append("<tr>");
-        buf.append("<td colspan=\"2\"><input type=\"submit\" value=\"submit\"/></td>");
+        buf.append("<td colspan=\"2\"><input type=\"submit\" class=\"btn btn-default\" value=\"submit\"/></td>");
         buf.append("</tr>");
         buf.append("</table>");
-        buf.append("<div class=\"result\"></div>");
         buf.append("</form>");
-        buf.append("<hr>");
+        buf.append("</div> <!-- panel-body -->");
+        buf.append("</div> <!-- panel-collapse -->");
+        buf.append("</div> <!-- panel -->");
         return buf.toString();
     }
 
