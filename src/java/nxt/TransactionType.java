@@ -1284,8 +1284,7 @@ public abstract class TransactionType {
             if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
                 throw new NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
             }
-            if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                    || transaction.getAmountNQT() != 0) {
+            if (transaction.getAmountNQT() != 0) {
                 throw new NxtException.ValidationException("Invalid digital goods transaction");
             }
             doValidateAttachment(transaction);
@@ -1336,7 +1335,8 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing) transaction.getAttachment();
-                if (attachment.getName().length() == 0
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || attachment.getName().length() == 0
                         || attachment.getName().length() > Constants.MAX_DGS_LISTING_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH
                         || attachment.getTags().length() > Constants.MAX_DGS_LISTING_TAGS_LENGTH
@@ -1382,8 +1382,9 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting) transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (goods == null || goods.isDelisted()
-                        || !transaction.getSenderId().equals(goods.getSellerId())) {
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || goods == null || goods.isDelisted()
+                        || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delisting: " + attachment.getJSONObject());
                 }
             }
@@ -1426,9 +1427,10 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange) transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
+                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || goods == null || goods.isDelisted()
-                        || !transaction.getSenderId().equals(goods.getSellerId())) {
+                        || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods price change: " + attachment.getJSONObject());
                 }
             }
@@ -1471,7 +1473,8 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange) transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (goods == null || goods.isDelisted()
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || goods == null || goods.isDelisted()
                         || attachment.getDeltaQuantity() < -Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getDeltaQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || ! transaction.getSenderId().equals(goods.getSellerId())) {
@@ -1550,6 +1553,7 @@ public abstract class TransactionType {
                         || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != (attachment.getNote().getData().length == 0 ? 0 : 32)
                         || goods == null || goods.isDelisted()
+                        || ! goods.getSellerId().equals(transaction.getRecipientId())
                         || attachment.getQuantity() > goods.getQuantity()
                         || attachment.getPriceNQT() != goods.getPriceNQT()
                         || attachment.getDeliveryDeadlineTimestamp() <= Nxt.getBlockchain().getLastBlock().getTimestamp()) {
@@ -1605,8 +1609,9 @@ public abstract class TransactionType {
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null
+                        || ! purchase.getBuyerId().equals(transaction.getRecipientId())
                         || attachment.getDiscountNQT() > purchase.getPriceNQT()
-                        || !transaction.getSenderId().equals(purchase.getSellerId())) {
+                        || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSONObject());
                 }
             }
@@ -1655,6 +1660,7 @@ public abstract class TransactionType {
                 if (attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != (attachment.getNote().getData().length == 0 ? 0 : 32)
                         || purchase == null
+                        || ! purchase.getSellerId().equals(transaction.getRecipientId())
                         || purchase.getEncryptedGoods() == null
                         || purchase.getFeedbackNote() != null
                         || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
@@ -1725,6 +1731,7 @@ public abstract class TransactionType {
                         || attachment.getNote().getData().length > Constants.MAX_DGS_NOTE_LENGTH
                         || attachment.getNote().getNonce().length != (attachment.getNote().getData().length == 0 ? 0 : 32)
                         || purchase == null
+                        || ! purchase.getBuyerId().equals(transaction.getRecipientId())
                         || purchase.getEncryptedGoods() == null
                         || purchase.getRefundNote() != null
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {

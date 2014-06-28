@@ -41,7 +41,7 @@ public final class DGSFeedback extends CreateTransaction {
         EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, sellerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsFeedback(purchase.getId(), encryptedNote);
-        return createTransaction(req, buyerAccount, attachment);
+        return createTransaction(req, buyerAccount, sellerAccount.getId(), 0, attachment);
     }
 
 }

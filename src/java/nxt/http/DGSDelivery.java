@@ -72,7 +72,7 @@ public final class DGSDelivery extends CreateTransaction {
         }
 
         Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, discountNQT);
-        return createTransaction(req, sellerAccount, attachment);
+        return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }
 
