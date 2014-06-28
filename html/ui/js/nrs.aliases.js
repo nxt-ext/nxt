@@ -14,7 +14,7 @@ var NRS = (function(NRS, $, undefined) {
 					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
-						if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subtype == 1) {
+						if (unconfirmedTransaction.type == 1 && (unconfirmedTransaction.subtype == 1 || unconfirmedTransaction.subtype == 7)) {
 							var found = false;
 
 							for (var j = 0; j < aliases.length; j++) {
@@ -29,13 +29,14 @@ var NRS = (function(NRS, $, undefined) {
 							if (!found) {
 								aliases.push({
 									"aliasName": unconfirmedTransaction.attachment.alias,
-									"aliasURI": unconfirmedTransaction.attachment.uri,
+									"aliasURI": (unconfirmedTransaction.attachment.uri ? unconfirmedTransaction.attachment.uri : ""),
 									"tentative": true
 								});
 							}
 						}
 					}
 				}
+
 
 				aliases.sort(function(a, b) {
 					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
@@ -69,6 +70,10 @@ var NRS = (function(NRS, $, undefined) {
 						alias.priceNQT = unconfirmedTransaction.priceNQT;
 					}
 
+					if (!alias.aliasURI) {
+						alias.aliasURI = "";
+					}
+
 					var allowCancel = false;
 
 					if (alias.buyer) {
@@ -79,7 +84,9 @@ var NRS = (function(NRS, $, undefined) {
 								alias.status = "Transfer In Progress";
 							}
 						} else {
-							allowCancel = true;
+							if (!alias.tentative) {
+								allowCancel = true;
+							}
 
 							if (alias.buyer != NRS.genesis) {
 								alias.status = "For Sale (direct)";
@@ -237,6 +244,25 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.buyAliasError = function() {
 		$("#buy_alias_modal").find("input[name=priceNXT]").prop("readonly", false);
+	}
+
+	NRS.forms.buyAliasComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		if (NRS.currentPage != "aliases") {
+			return;
+		}
+
+		data.aliasName = String(data.aliasName).escapeHTML();
+		data.aliasURI = "";
+
+		$("#aliases_table tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>");
+
+		if ($("#aliases_table").parent().hasClass("data-empty")) {
+			$("#aliases_table").parent().removeClass("data-empty");
+		}
 	}
 
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
