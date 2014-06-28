@@ -62,6 +62,9 @@ public final class DGSDelivery extends CreateTransaction {
                 } else {
                     goodsData = Convert.toBytes(Convert.nullToEmpty(req.getParameter("goodsText")));
                 }
+                if (goodsData.length == 0) {
+                    return INCORRECT_DGS_GOODS;
+                }
             } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
@@ -69,7 +72,7 @@ public final class DGSDelivery extends CreateTransaction {
         }
 
         Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, discountNQT);
-        return createTransaction(req, sellerAccount, attachment);
+        return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }
 

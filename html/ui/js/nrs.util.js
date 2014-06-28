@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	var LOCALE_DATE_FORMATS = {
 		"ar-SA": "dd/MM/yy",
@@ -534,7 +537,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.formatAmount = function(amount, round, no_escaping) {
-
 		if (typeof amount == "undefined") {
 			return "0";
 		} else if (typeof amount == "string") {
@@ -606,9 +608,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (!date_only) {
 				var hours = date.getHours();
+				var originalHours = hours;
 				var minutes = date.getMinutes();
 				var seconds = date.getSeconds();
 
+				if (!NRS.settings["24_hour_format"]) {
+					hours = hours % 12;
+				}
 				if (hours < 10) {
 					hours = "0" + hours;
 				}
@@ -619,6 +625,10 @@ var NRS = (function(NRS, $, undefined) {
 					seconds = "0" + seconds;
 				}
 				res += " " + hours + ":" + minutes + ":" + seconds;
+
+				if (!NRS.settings["24_hour_format"]) {
+					res += " " + (originalHours > 12 ? "PM" : "AM");
+				}
 			}
 
 			return res;
@@ -703,14 +713,6 @@ var NRS = (function(NRS, $, undefined) {
 		return hex;
 	}
 
-	NRS.generatePublicKey = function(secretPhrase) {
-		return nxtCrypto.getPublicKey(converters.stringToHexString(secretPhrase));
-	}
-
-	NRS.generateAccountId = function(secretPhrase) {
-		return nxtCrypto.getAccountId(secretPhrase);
-	}
-
 	NRS.getFormData = function($form) {
 		var serialized = $form.serializeArray();
 		var data = {};
@@ -722,22 +724,28 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	}
 
+	NRS.getAccountLink = function(object, acc) {
+		return "<a href='#' data-user='" + String(object[acc]).escapeHTML() + "'>" + NRS.getAccountTitle(object, acc) + "</a>";
+	}
+
 	NRS.getAccountTitle = function(object, acc) {
 		var type = typeof object;
 
+		var formattedAcc = "";
+
 		if (type == "string" || type == "number") {
-			acc = object;
+			formattedAcc = object;
 			object = null;
+		} else {
+			formattedAcc = String(object[acc + "RS"]).escapeHTML();
 		}
 
-		if (acc in NRS.contacts) {
-			return NRS.contacts[acc].name.escapeHTML();
-		} else if (acc == NRS.account || acc == NRS.accountRS) {
+		if (formattedAcc in NRS.contacts) {
+			return NRS.contacts[formattedAcc].name.escapeHTML();
+		} else if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
 			return "You";
-		} else if (!object) {
-			return String(acc).escapeHTML();
 		} else {
-			return NRS.getAccountFormatted(object, acc);
+			return String(formattedAcc).escapeHTML();
 		}
 	}
 
@@ -746,10 +754,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (type == "string" || type == "number") {
 			return String(object).escapeHTML();
-		} else if (NRS.settings["reed_solomon"]) {
-			return String(object[acc + "RS"]).escapeHTML();
 		} else {
-			return String(object[acc]).escapeHTML();
+			return String(object[acc + "RS"]).escapeHTML();
 		}
 	}
 
@@ -811,9 +817,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getClipboardText = function(type) {
 		switch (type) {
-			case "account_id":
-				return NRS.account;
-				break;
 			case "account_rs":
 				return NRS.accountRS;
 				break;
@@ -835,8 +838,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.dataLoadFinished = function($table, fadeIn) {
-		var $parent = $table.parent();
+	NRS.dataLoaded = function(data, noPageLoad) {
+		var $el = $("#" + NRS.currentPage + "_contents");
+
+		if ($el.length) {
+			$el.empty().append(data);
+		} else {
+			$el = $("#" + NRS.currentPage + "_table");
+			$el.find("tbody").empty().append(data);
+		}
+
+		NRS.dataLoadFinished($el);
+
+		if (!noPageLoad) {
+			NRS.pageLoaded();
+		}
+	}
+
+	NRS.dataLoadFinished = function($el, fadeIn) {
+		var $parent = $el.parent();
 
 		if (fadeIn) {
 			$parent.hide();
@@ -846,16 +866,28 @@ var NRS = (function(NRS, $, undefined) {
 
 		var extra = $parent.data("extra");
 
-		if ($table.find("tbody tr").length > 0) {
-			$parent.removeClass("data-empty");
-			if ($parent.data("no-padding")) {
-				$parent.parent().addClass("no-padding");
-			}
+		var empty = false;
 
-			if (extra) {
-				$(extra).show();
+		if ($el.is("table")) {
+			if ($el.find("tbody tr").length > 0) {
+				$parent.removeClass("data-empty");
+				if ($parent.data("no-padding")) {
+					$parent.parent().addClass("no-padding");
+				}
+
+				if (extra) {
+					$(extra).show();
+				}
+			} else {
+				empty = true;
 			}
 		} else {
+			if ($.trim($el.html()).length == 0) {
+				empty = true;
+			}
+		}
+
+		if (empty) {
 			$parent.addClass("data-empty");
 			if ($parent.data("no-padding")) {
 				$parent.parent().removeClass("no-padding");
@@ -863,6 +895,8 @@ var NRS = (function(NRS, $, undefined) {
 			if (extra) {
 				$(extra).hide();
 			}
+		} else {
+			$parent.removeClass("data-empty");
 		}
 
 		if (fadeIn) {
@@ -916,7 +950,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
 				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
-			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller") {
+			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller" || key == "Buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {
 				value = String(value).escapeHTML().nl2br();
@@ -953,7 +987,11 @@ var NRS = (function(NRS, $, undefined) {
 		return amount;
 	}
 
-	NRS.getUnconfirmedTransaction = function(type, subtype, fields) {
+	NRS.getUnconfirmedTransactionFromCache = function(type, subtype, fields) {
+		return NRS.getUnconfirmedTransactionsFromCache(type, subtype, fields, true);
+	}
+
+	NRS.getUnconfirmedTransactionsFromCache = function(type, subtype, fields, single) {
 		if (!NRS.unconfirmedTransactions.length) {
 			return false;
 		}
@@ -966,6 +1004,8 @@ var NRS = (function(NRS, $, undefined) {
 			subtype = [subtype];
 		}
 
+		var unconfirmedTransactions = [];
+
 		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
@@ -976,19 +1016,182 @@ var NRS = (function(NRS, $, undefined) {
 			if (fields) {
 				for (var key in fields) {
 					if (unconfirmedTransaction[key] == fields[key]) {
-						return unconfirmedTransaction;
+						if (single) {
+							return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+						} else {
+							unconfirmedTransactions.push(unconfirmedTransaction);
+						}
 					}
 				}
 			} else {
-				return unconfirmedTransaction;
+				if (single) {
+					return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+				} else {
+					unconfirmedTransactions.push(unconfirmedTransaction);
+				}
 			}
 		}
 
-		return false;
+		if (single || unconfirmedTransactions.length == 0) {
+			return false;
+		} else {
+			$.each(unconfirmedTransactions, function(key, val) {
+				unconfirmedTransactions[key] = NRS.completeUnconfirmedTransactionDetails(val);
+			});
+
+			return unconfirmedTransactions;
+		}
+	}
+
+	NRS.completeUnconfirmedTransactionDetails = function(unconfirmedTransaction) {
+		if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 4 && !unconfirmedTransaction.name) {
+			NRS.sendRequest("getDGSGood", {
+				"goods": unconfirmedTransaction.attachment.goods
+			}, function(response) {
+				unconfirmedTransaction.name = response.name;
+				unconfirmedTransaction.buyer = unconfirmedTransaction.sender;
+				unconfirmedTransaction.buyerRS = unconfirmedTransaction.senderRS;
+				unconfirmedTransaction.seller = response.seller;
+				unconfirmedTransaction.sellerRS = response.sellerRS;
+			}, false);
+		} else if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 0) {
+			unconfirmedTransaction.goods = unconfirmedTransaction.transaction;
+		}
+
+		return unconfirmedTransaction;
 	}
 
 	NRS.hasTransactionUpdates = function(transactions) {
 		return (transactions && transactions.length || NRS.unconfirmedTransactionsChange || NRS.state.isScanning);
+	}
+
+	NRS.showMore = function($el) {
+		if (!$el) {
+			$el = $("#" + NRS.currentPage + "_contents");
+			if (!$el.length) {
+				$el = $("#" + NRS.currentPage + "_table");
+			}
+		}
+		var adjustheight = 40;
+		var moreText = "Show more...";
+		var lessText = "Show less...";
+
+		$el.find(".showmore > .moreblock").each(function() {
+			if ($(this).height() > adjustheight) {
+				$(this).css("height", adjustheight).css("overflow", "hidden");
+				$(this).parent(".showmore").append(' <a href="#" class="adjust"></a>');
+				$(this).parent(".showmore").find("a.adjust").text(moreText).click(function() {
+					if ($(this).text() == moreText) {
+						$(this).parents("div:first").find(".moreblock").css('height', 'auto').css('overflow', 'visible');
+						$(this).parents("div:first").find("p.continued").css('display', 'none');
+						$(this).text(lessText);
+					} else {
+						$(this).parents("div:first").find(".moreblock").css('height', adjustheight).css('overflow', 'hidden');
+						$(this).parents("div:first").find("p.continued").css('display', 'block');
+						$(this).text(moreText);
+					}
+				});
+			}
+		});
+	}
+
+	NRS.showFullDescription = function($el) {
+		$el.addClass("open").removeClass("closed");
+		$el.find(".description_toggle").text("Less...");
+	}
+
+	NRS.showPartialDescription = function($el) {
+		if ($el.hasClass("open") || $el.height() > 40) {
+			$el.addClass("closed").removeClass("open");
+			$el.find(".description_toggle").text("More...");
+		} else {
+			$el.find(".description_toggle").text("");
+		}
+	}
+
+	$("body").on(".description_toggle", "click", function(e) {
+		e.preventDefault();
+
+		if ($(this).closest(".description").hasClass("open")) {
+			NRS.showPartialDescription();
+		} else {
+			NRS.showFullDescription();
+		}
+	});
+
+	$("#offcanvas_toggle").on("click", function(e) {
+		e.preventDefault();
+
+		//If window is small enough, enable sidebar push menu
+		if ($(window).width() <= 992) {
+			$('.row-offcanvas').toggleClass('active');
+			$('.left-side').removeClass("collapse-left");
+			$(".right-side").removeClass("strech");
+			$('.row-offcanvas').toggleClass("relative");
+		} else {
+			//Else, enable content streching
+			$('.left-side').toggleClass("collapse-left");
+			$(".right-side").toggleClass("strech");
+		}
+	});
+
+	$.fn.tree = function() {
+		return this.each(function() {
+			var btn = $(this).children("a").first();
+			var menu = $(this).children(".treeview-menu").first();
+			var isActive = $(this).hasClass('active');
+
+			//initialize already active menus
+			if (isActive) {
+				menu.show();
+				btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
+			}
+			//Slide open or close the menu on link click
+			btn.click(function(e) {
+				e.preventDefault();
+				if (isActive) {
+					//Slide up to close menu
+					menu.slideUp();
+					isActive = false;
+					btn.children(".fa-angle-down").first().removeClass("fa-angle-down").addClass("fa-angle-right");
+					btn.parent("li").removeClass("active");
+				} else {
+					//Slide down to open menu
+					menu.slideDown();
+					isActive = true;
+					btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
+					btn.parent("li").addClass("active");
+				}
+			});
+		});
+	};
+
+	NRS.setCookie = function(name, value, days) {
+		var expires;
+
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toGMTString();
+		} else {
+			expires = "";
+		}
+		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+	}
+
+	NRS.getCookie = function(name) {
+		var nameEQ = escape(name) + "=";
+		var ca = document.cookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
+		}
+		return null;
+	}
+
+	NRS.deleteCookie = function(name) {
+		NRS.setCookie(name, "", -1);
 	}
 
 	return NRS;

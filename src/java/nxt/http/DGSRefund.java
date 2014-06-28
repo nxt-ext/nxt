@@ -12,6 +12,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.DUPLICATE_REFUND;
+import static nxt.http.JSONResponses.GOODS_NOT_DELIVERED;
 import static nxt.http.JSONResponses.INCORRECT_DGS_REFUND;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 
@@ -34,6 +35,9 @@ public final class DGSRefund extends CreateTransaction {
         if (purchase.getRefundNote() != null) {
             return DUPLICATE_REFUND;
         }
+        if (purchase.getEncryptedGoods() == null) {
+            return GOODS_NOT_DELIVERED;
+        }
 
         String refundValueNQT = Convert.emptyToNull(req.getParameter("refundNQT"));
         long refundNQT = 0;
@@ -52,7 +56,7 @@ public final class DGSRefund extends CreateTransaction {
         EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, buyerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, encryptedNote);
-        return createTransaction(req, sellerAccount, attachment);
+        return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }
 

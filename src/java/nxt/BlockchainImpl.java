@@ -228,20 +228,7 @@ final class BlockchainImpl implements Blockchain {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
-            if (orderAscending != null) {
-                buf.append("SELECT * FROM (");
-            }
-            buf.append("SELECT * FROM transaction WHERE recipient_id = ? ");
-            if (timestamp > 0) {
-                buf.append("AND timestamp >= ? ");
-            }
-            if (type >= 0) {
-                buf.append("AND type = ? ");
-                if (subtype >= 0) {
-                    buf.append("AND subtype = ? ");
-                }
-            }
-            buf.append("UNION SELECT * FROM transaction WHERE sender_id = ? ");
+            buf.append("SELECT * FROM transaction WHERE (recipient_id = ? OR sender_id = ?) ");
             if (timestamp > 0) {
                 buf.append("AND timestamp >= ? ");
             }
@@ -252,24 +239,15 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             if (Boolean.TRUE.equals(orderAscending)) {
-                buf.append(") ORDER BY timestamp ASC");
+                buf.append("ORDER BY timestamp ASC");
             } else if (Boolean.FALSE.equals(orderAscending)) {
-                buf.append(") ORDER BY timestamp DESC");
+                buf.append("ORDER BY timestamp DESC");
             }
             con = Db.getConnection();
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());
             pstmt.setLong(++i, account.getId());
-            if (timestamp > 0) {
-                pstmt.setInt(++i, timestamp);
-            }
-            if (type >= 0) {
-                pstmt.setByte(++i, type);
-                if (subtype >= 0) {
-                    pstmt.setByte(++i, subtype);
-                }
-            }
             pstmt.setLong(++i, account.getId());
             if (timestamp > 0) {
                 pstmt.setInt(++i, timestamp);

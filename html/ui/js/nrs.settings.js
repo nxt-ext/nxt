@@ -1,12 +1,17 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.defaultSettings = {
 		"submit_on_enter": 0,
-		"reed_solomon": 1,
 		"animate_forging": 1,
 		"news": -1,
+		"console_log": 0,
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
-		"asset_transfer_warning": "10000"
+		"asset_transfer_warning": "10000",
+		"24_hour_format": 1,
+		"remember_passphrase": 0
 	};
 
 	NRS.defaultColors = {
@@ -334,9 +339,7 @@ var NRS = (function(NRS, $, undefined) {
 			"row_separator_size": "1",
 			"row_separator": "#ADD0E4",
 			"header_bold": true
-		},
-
-
+		}
 	};
 
 	NRS.pages.settings = function() {
@@ -393,6 +396,12 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.settings["news"] != -1) {
 			$("#settings_news_initial").remove();
 		}
+
+		if (NRS.inApp) {
+			$("#settings_console_log_div").hide();
+		}
+
+		NRS.pageLoaded();
 	}
 
 	NRS.cssGradient = function(start, stop) {
@@ -528,11 +537,14 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					css += ".header .navbar .nav a { color: " + colors.link_txt + (colors.link_bg ? "; background:" + colors.link_bg : "") + " }";
-					css += ".header .navbar .nav > li > a:hover { color: " + colors.link_txt_hover + (colors.link_bg_hover ? "; background:" + colors.link_bg_hover : "") + " }";
+					css += ".header .navbar .nav > li > a:hover, .header .navbar .nav > li > a:focus, .header .navbar .nav > li > a:focus { color: " + colors.link_txt_hover + (colors.link_bg_hover ? "; background:" + colors.link_bg_hover : "") + " }";
 
 					if (colors.link_bg_hover) {
 						css += ".header .navbar .nav > li > a:hover { " + NRS.cssGradient(colors.link_bg_hover, colors.link_bg_hover_gradient) + " }";
 					}
+
+					css += ".header .navbar .nav > li > ul a { color: #444444; }";
+					css += ".header .navbar .nav > li > ul a:hover {  color: " + colors.link_txt_hover + (colors.link_bg_hover ? "; background:" + colors.link_bg_hover : "") + " }";
 
 					css += ".header .navbar .sidebar-toggle .icon-bar { background: " + colors.toggle_icon + " }";
 					css += ".header .navbar .sidebar-toggle:hover .icon-bar { background: " + colors.toggle_icon_hover + " }";
@@ -844,7 +856,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.database.select("data", [{
 				"id": "settings"
 			}], function(error, result) {
-				if (result.length) {
+				if (result && result.length) {
 					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
 				} else {
 					NRS.database.insert("data", {
@@ -893,37 +905,30 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (!key || key == "reed_solomon") {
-			if (NRS.settings["reed_solomon"]) {
-				$("#account_id_prefix").hide();
-				$("#account_id").html(NRS.getAccountFormatted(NRS.accountRS)).css("font-size", "12px");
-				$("body").addClass("reed_solomon");
-				$("#message_sidebar").css("width", "245px");
-				$("#message_content").css("left", "245px");
-				$("#inline_message_form").css("left", "485px");
-			} else {
-				$("#account_id_prefix").show();
-				$("#account_id").html(NRS.getAccountFormatted(NRS.account)).css("font-size", "14px");
-				$("body").removeClass("reed_solomon");
-				$("#message_sidebar").css("width", "200px");
-				$("#message_content").css("left", "200px");
-				$("#inline_message_form").css("left", "440px");
-			}
-
-			var $dashboard_account_links = $("#dashboard_transactions_table a.user_info");
-
-			$.each($dashboard_account_links, function(key, value) {
-				if (NRS.settings["reed_solomon"]) {
-					var account = $(this).data("user-rs");
+		if (!NRS.inApp && !NRS.downloadingBlockchain) {
+			if (!key || key == "console_log") {
+				if (NRS.settings["console_log"] == 0) {
+					$("#show_console").hide();
 				} else {
-					var account = $(this).data("user-id");
+					$("#show_console").show();
 				}
+			}
+		}
 
-				$(this).data("user", account);
-				$(this).html(String(account).escapeHTML());
+		if (key == "24_hour_format") {
+			var $dashboard_dates = $("#dashboard_transactions_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
+
+			$.each($dashboard_dates, function(key, value) {
+				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
 			});
+		}
 
-			//todo: wider message sidebar
+		if (!key || key == "remember_passphrase") {
+			if (NRS.settings["remember_passphrase"]) {
+				NRS.setCookie("remember_passphrase", 1, 1000);
+			} else {
+				NRS.deleteCookie("remember_passphrase");
+			}
 		}
 	}
 

@@ -3,9 +3,9 @@ var converters = function() {
 	var nibbleToChar = [];
 	var i;
 	for (i = 0; i <= 9; ++i) {
-		var char = i.toString();
-		charToNibble[char] = i;
-		nibbleToChar.push(char)
+		var character = i.toString();
+		charToNibble[character] = i;
+		nibbleToChar.push(character);
 	}
 
 	for (i = 10; i <= 15; ++i) {
@@ -70,7 +70,7 @@ var converters = function() {
 		},
 		byteArrayToSignedShort: function(bytes, opt_startIndex) {
 			var index = this.checkBytesToIntInput(bytes, 2, opt_startIndex);
-			value = bytes[index];
+			var value = bytes[index];
 			value += bytes[index + 1] << 8;
 			return value;
 		},
@@ -169,7 +169,7 @@ var converters = function() {
 			return decodeURIComponent(escape(String.fromCharCode.apply(null, bytes)));
 		},
 		byteArrayToShortArray: function(byteArray) {
-			shortArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+			var shortArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 			var i;
 			for (i = 0; i < 16; i++) {
 				shortArray[i] = byteArray[i * 2] | byteArray[i * 2 + 1] << 8;
@@ -177,7 +177,7 @@ var converters = function() {
 			return shortArray;
 		},
 		shortArrayToByteArray: function(shortArray) {
-			byteArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+			var byteArray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 			var i;
 			for (i = 0; i < 16; i++) {
 				byteArray[2 * i] = shortArray[i] & 0xff;

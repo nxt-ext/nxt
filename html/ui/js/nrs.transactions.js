@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.lastTransactionsTimestamp = 0;
 	NRS.lastTransactions = "";
@@ -72,7 +75,7 @@ var NRS = (function(NRS, $, undefined) {
 					transaction.fee = new BigInteger(transaction.feeNQT);
 				}
 
-				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + (transaction[account] != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(transaction, account) + "' data-user-id='" + String(transaction[account]).escapeHTML() + "' data-user-rs='" + String(transaction[account + "RS"]).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(transaction, account) + "</a>" : "Genesis") + "</td><td class='confirmations' data-confirmations='" + String(transaction.confirmations).escapeHTML() + "' data-content='" + NRS.formatAmount(transaction.confirmations) + " confirmations' data-container='body' data-initial='true'>" + (transaction.confirmations > 10 ? "10+" : String(transaction.confirmations).escapeHTML()) + "</td></tr>";
+				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + (transaction[account] != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(transaction, account) + "' data-user-id='" + String(transaction[account]).escapeHTML() + "' data-user-rs='" + String(transaction[account + "RS"]).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(transaction, account) + "</a>" : "Genesis") + "</td><td class='confirmations' data-confirmations='" + String(transaction.confirmations).escapeHTML() + "' data-content='" + NRS.formatAmount(transaction.confirmations) + " confirmations' data-container='body' data-initial='true'>" + (transaction.confirmations > 10 ? "10+" : String(transaction.confirmations).escapeHTML()) + "</td></tr>";
 			}
 
 			$("#dashboard_transactions_table tbody").empty().append(rows);
@@ -227,8 +230,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		//always refresh peers and unconfirmed transactions..
-		if (NRS.currentPage == "peers" || (NRS.currentPage == "transactions" && NRS.transactionsPageType == "unconfirmed")) {
-			NRS.incoming.unconfirmed_transactions();
+		if (NRS.currentPage == "peers") {
+			NRS.incoming.peers();
+		} else if (NRS.currentPage == "transactions" && NRS.transactionsPageType == "unconfirmed") {
+			NRS.incoming.transactions();
 		} else {
 			if (!oldBlock || NRS.unconfirmedTransactionsChange || NRS.state.isScanning) {
 				if (NRS.incoming[NRS.currentPage]) {
@@ -265,7 +270,7 @@ var NRS = (function(NRS, $, undefined) {
 					transaction.fee = new BigInteger(transaction.feeNQT);
 				}
 
-				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + (transaction[account] != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(transaction, account) + "' data-user-id='" + String(transaction[account]).escapeHTML() + "' data-user-rs='" + String(transaction[account + "RS"]).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(transaction, account) + "</a>" : "Genesis") + "</td><td class='confirmations' data-confirmations='" + String(transaction.confirmations).escapeHTML() + "' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " confirmations" : "Unconfirmed transaction") + "' data-container='body' data-initial='true'>" + (transaction.confirmations > 10 ? "10+" : String(transaction.confirmations).escapeHTML()) + "</td></tr>";
+				rows += "<tr class='" + (!transaction.confirmed ? "tentative" : "confirmed") + "'><td><a href='#' data-transaction='" + String(transaction.transaction).escapeHTML() + "' data-timestamp='" + String(transaction.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td><span" + (transaction.type == 0 && receiving ? " style='color:#006400'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</span> <span" + ((!receiving && transaction.type == 0) ? " style='color:red'" : "") + ">+</span> <span" + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</span></td><td>" + (transaction[account] != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(transaction, account) + "' data-user-id='" + String(transaction[account]).escapeHTML() + "' data-user-rs='" + String(transaction[account + "RS"]).escapeHTML() + "' class='user_info'>" + NRS.getAccountTitle(transaction, account) + "</a>" : "Genesis") + "</td><td class='confirmations' data-confirmations='" + String(transaction.confirmations).escapeHTML() + "' data-content='" + (transaction.confirmed ? NRS.formatAmount(transaction.confirmations) + " confirmations" : "Unconfirmed transaction") + "' data-container='body' data-initial='true'>" + (transaction.confirmations > 10 ? "10+" : String(transaction.confirmations).escapeHTML()) + "</td></tr>";
 			}
 
 			if (onlyUnconfirmed) {
@@ -343,11 +348,11 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.pages.transactions = function() {
 		if (NRS.transactionsPageType == "unconfirmed") {
-			NRS.pages.unconfirmed_transactions();
+			NRS.displayUnconfirmedTransactions();
 			return;
 		}
 
-		NRS.pageLoading();
+		var rows = "";
 
 		var params = {
 			"account": NRS.account,
@@ -357,28 +362,21 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.transactionsPageType) {
 			params.type = NRS.transactionsPageType.type;
 			params.subtype = NRS.transactionsPageType.subtype;
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(params.type, params.subtype);
+		} else {
+			var unconfirmedTransactions = NRS.unconfirmedTransactions;
 		}
 
-		var rows = "";
-
-		if (NRS.unconfirmedTransactions.length) {
-			for (var j = 0; j < NRS.unconfirmedTransactions.length; j++) {
-				var unconfirmedTransaction = NRS.unconfirmedTransactions[j];
-
-				if (NRS.transactionsPageType) {
-					if (unconfirmedTransaction.type != params.type || unconfirmedTransaction.subtype != params.subtype) {
-						continue;
-					}
-				}
-
-				rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
+		if (unconfirmedTransactions) {
+			for (var i = 0; i < unconfirmedTransactions.length; i++) {
+				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
 			}
 		}
 
 		NRS.sendRequest("getAccountTransactionIds+", params, function(response) {
 			if (response.transactionIds && response.transactionIds.length) {
 				var transactions = {};
-				var nr_transactions = 0;
+				var nrTransactions = 0;
 
 				var transactionIds = response.transactionIds.reverse().slice(0, 100);
 
@@ -395,70 +393,41 @@ var NRS = (function(NRS, $, undefined) {
 						transaction.confirmed = true;
 
 						transactions[input.transaction] = transaction;
-						nr_transactions++;
+						nrTransactions++;
 
-						if (nr_transactions == transactionIds.length) {
-							for (var i = 0; i < nr_transactions; i++) {
+						if (nrTransactions == transactionIds.length) {
+							for (var i = 0; i < nrTransactions; i++) {
 								var transaction = transactions[transactionIds[i]];
 
 								rows += NRS.getTransactionRowHTML(transaction);
-
 							}
 
-							$("#transactions_table tbody").empty().append(rows);
-							NRS.dataLoadFinished($("#transactions_table"));
-
-							NRS.pageLoaded();
+							NRS.dataLoaded(rows);
 						}
 					});
-
-					if (NRS.currentPage != "transactions") {
-						transactions = {};
-						return;
-					}
 				}
 			} else {
-
-				$("#transactions_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#transactions_table"));
-
-				NRS.pageLoaded();
+				NRS.dataLoaded(rows);
 			}
 		});
 	}
 
 	NRS.incoming.transactions = function(transactions) {
-		NRS.pages.transactions();
+		NRS.loadPage("transactions");
 	}
 
-	NRS.pages.unconfirmed_transactions = function() {
-		NRS.pageLoading();
-
+	NRS.displayUnconfirmedTransactions = function() {
 		NRS.sendRequest("getUnconfirmedTransactions", function(response) {
+			var rows = "";
+
 			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
-				rows = "";
-
 				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
-					var unconfirmedTransaction = response.unconfirmedTransactions[i];
-
-					rows += NRS.getTransactionRowHTML(unconfirmedTransaction);
+					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
 				}
-
-				$("#transactions_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#transactions_table"));
-
-				NRS.pageLoaded();
-			} else {
-				$("#transactions_table tbody").empty();
-				NRS.dataLoadFinished($("#transactions_table"));
-
-				NRS.pageLoaded();
 			}
-		});
-	}
 
-	NRS.incoming.unconfirmed_transactions = function() {
-		NRS.pages.unconfirmed_transactions();
+			NRS.dataLoaded(rows);
+		});
 	}
 
 	NRS.getTransactionRowHTML = function(transaction) {
@@ -592,7 +561,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(".popover").remove();
 
-		NRS.pages.transactions();
+		NRS.loadPage("transactions");
 	});
 
 	return NRS;

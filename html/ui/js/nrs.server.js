@@ -1,5 +1,14 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
+	var _password;
+
 	NRS.multiQueue = null;
+
+	NRS.setServerPassword = function(password) {
+		_password = password;
+	}
 
 	NRS.sendOutsideRequest = function(url, data, callback, async) {
 		if ($.isFunction(data)) {
@@ -60,7 +69,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//convert NXT to NQT...
 		try {
-			var nxtFields = ["feeNXT", "amountNXT", "priceNXT"];
+			var nxtFields = ["feeNXT", "amountNXT", "priceNXT", "refundNXT", "discountNXT"];
 
 			for (var i = 0; i < nxtFields.length; i++) {
 				var nxtField = nxtFields[i];
@@ -82,9 +91,9 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		//gets account id from secret phrase client side, used only for login.
+		//gets account id from passphrase client side, used only for login.
 		if (requestType == "getAccountId") {
-			var accountId = NRS.generateAccountId(data.secretPhrase, true);
+			var accountId = NRS.getAccountId(data.secretPhrase);
 
 			if (callback) {
 				callback({
@@ -96,12 +105,12 @@ var NRS = (function(NRS, $, undefined) {
 
 		//check to see if secretPhrase supplied matches logged in account, if not - show error.
 		if ("secretPhrase" in data) {
-			var accountId = NRS.generateAccountId(NRS.rememberPassword ? sessionStorage.getItem("secret") : data.secretPhrase);
+			var accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
 			if (accountId != NRS.account) {
 				if (callback) {
 					callback({
 						"errorCode": 1,
-						"errorDescription": "Incorrect secret phrase."
+						"errorDescription": "Incorrect passphrase."
 					});
 				}
 				return;
@@ -126,7 +135,8 @@ var NRS = (function(NRS, $, undefined) {
 			var extra = null;
 		}
 
-		var currentPage = currentSubPage = null;
+		var currentPage = null;
+		var currentSubPage = null;
 
 		//means it is a page request, not a global request.. Page requests can be aborted.
 		if (requestType.slice(-1) == "+") {
@@ -160,9 +170,24 @@ var NRS = (function(NRS, $, undefined) {
 
 		var secretPhrase = "";
 
+		//unknown account..
+		if (type == "POST" && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
+			if (callback) {
+				callback({
+					"errorCode": 2,
+					"errorDescription": "You have a brand new account, fund it with some coins first."
+				}, data);
+			} else {
+				$.growl("You have a brand new account, fund it with some coins first.", {
+					"type": "danger"
+				});
+			}
+			return;
+		}
+
 		if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
 			if (NRS.rememberPassword) {
-				secretPhrase = sessionStorage.getItem("secret");
+				secretPhrase = _password;
 			} else {
 				secretPhrase = data.secretPhrase;
 			}
@@ -176,7 +201,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.accountInfo.publicKey = data.publicKey;
 			}
 		} else if (type == "POST" && NRS.rememberPassword) {
-			data.secretPhrase = sessionStorage.getItem("secret");
+			data.secretPhrase = _password;
 		}
 
 		$.support.cors = true;
@@ -227,11 +252,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode) {
+			if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode && !response.error) {
 				var publicKey = NRS.generatePublicKey(secretPhrase);
-				var signature = nxtCrypto.sign(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
+				var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
-				if (!nxtCrypto.verify(signature, response.unsignedTransactionBytes, publicKey)) {
+				if (!NRS.verifyBytes(signature, response.unsignedTransactionBytes, publicKey)) {
 					if (callback) {
 						callback({
 							"errorCode": 1,
@@ -273,6 +298,11 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				if (response.errorCode && !response.errorDescription) {
 					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
+				} else if (response.error && !response.errorDescription) {
+					response.errorDescription = (typeof response.error == "string" ? response.error : "Unknown error occured.");
+					if (!response.errorCode) {
+						response.errorCode = 1;
+					}
 				}
 
 				if (callback) {
@@ -496,7 +526,7 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.votes = [];
 
 				for (var i = 0; i < voteLength; i++) {
-					transaction.votes.push(bytesArray[pos]);
+					transaction.votes.push(byteArray[pos]);
 
 					pos++;
 				}

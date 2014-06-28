@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.assets = [];
 	NRS.assetIds = [];
@@ -7,14 +10,12 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.viewingAsset = false; //viewing non-bookmarked asset
 
 	NRS.pages.asset_exchange = function(callback) {
-		NRS.pageLoading();
-
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
-		NRS.assets = [];
-		NRS.assetIds = [];
-
 		if (NRS.databaseSupport) {
+			NRS.assets = [];
+			NRS.assetIds = [];
+
 			NRS.database.select("assets", null, function(error, assets) {
 				//select already bookmarked assets
 				$.each(assets, function(index, asset) {
@@ -244,7 +245,14 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		} else {
 			NRS.closeModal();
-			$.growl((newAssets.length == 1 ? "Asset" : newAssets.length + " assets") + " added successfully.", {
+
+			var message = (newAssets.length == 1 ? "Asset" : newAssets.length + " assets") + " added successfully.";
+
+			if (!NRS.databaseSupport) {
+				message += "Note that the assets could not be saved in the database.";
+			}
+
+			$.growl(message, {
 				"type": "success"
 			});
 
@@ -283,10 +291,7 @@ var NRS = (function(NRS, $, undefined) {
 		var newAssets = [];
 
 		$.each(assets, function(key, asset) {
-			newAssetIds.push({
-				"asset": String(asset.asset)
-			});
-			newAssets.push({
+			var newAsset = {
 				"asset": String(asset.asset),
 				"name": String(asset.name),
 				"description": String(asset.description),
@@ -295,8 +300,26 @@ var NRS = (function(NRS, $, undefined) {
 				"quantityQNT": String(asset.quantityQNT),
 				"decimals": parseInt(asset.decimals, 10),
 				"groupName": ""
-			});
+			};
+
+			newAssets.push(newAsset);
+
+			if (NRS.databaseSupport) {
+				newAssetIds.push({
+					"asset": String(asset.asset)
+				});
+			} else {
+				NRS.assetIds.push(asset.asset);
+				NRS.assets.push(newAsset);
+			}
 		});
+
+		if (!NRS.databaseSupport) {
+			if (callback) {
+				callback(newAssets, assets);
+			}
+			return;
+		}
 
 		NRS.database.select("assets", newAssetIds, function(error, existingAssets) {
 			var existingIds = [];
@@ -346,7 +369,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.assets.length) {
 			NRS.pageLoaded();
 			$("#asset_exchange_sidebar_content").empty();
-			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results").hide();
+			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
 			$("#no_assets_available").show();
 			$("#asset_exchange_page").addClass("no_assets");
 			return;
@@ -572,7 +595,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.database.select("assets", [{
 				"asset": assetId
 			}], function(error, asset) {
-				if (!error) {
+				if (asset && asset.length) {
 					NRS.loadAsset(asset[0], refresh);
 				}
 			});
@@ -654,7 +677,7 @@ var NRS = (function(NRS, $, undefined) {
 								"asset": asset.asset
 							}], function() {
 								setTimeout(function() {
-									NRS.pages.asset_exchange();
+									NRS.loadPage("asset_exchange");
 									$.growl("Invalid asset.", {
 										"type": "danger"
 									});
@@ -1038,6 +1061,8 @@ var NRS = (function(NRS, $, undefined) {
 			var selectedText = NRS.getSelectedText();
 
 			if (selectedText != $(this).val()) {
+				var errorMessage;
+
 				if (isQuantityField) {
 					errorMessage = "Only " + NRS.currentAsset.decimals + " digits after the decimal mark are allowed for this asset.";
 				} else {
@@ -1271,7 +1296,7 @@ var NRS = (function(NRS, $, undefined) {
 			"groupName": oldGroupName
 		}], function() {
 			setTimeout(function() {
-				NRS.pages.asset_exchange();
+				NRS.loadPage("asset_exchange");
 				$.growl("Group name updated successfully.", {
 					"type": "success"
 				});
@@ -1344,7 +1369,7 @@ var NRS = (function(NRS, $, undefined) {
 				"asset": assetId
 			}], function() {
 				setTimeout(function() {
-					NRS.pages.asset_exchange();
+					NRS.loadPage("asset_exchange");
 					$.growl("Asset removed from group successfully.", {
 						"type": "success"
 					});
@@ -1387,7 +1412,7 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					*/
 					setTimeout(function() {
-						NRS.pages.asset_exchange();
+						NRS.loadPage("asset_exchange");
 						$.growl("Asset removed from bookmarks successfully.", {
 							"type": "success"
 						});
@@ -1423,7 +1448,7 @@ var NRS = (function(NRS, $, undefined) {
 			"asset": assetId
 		}], function() {
 			setTimeout(function() {
-				NRS.pages.asset_exchange();
+				NRS.loadPage("asset_exchange");
 				if (!groupName) {
 					$.growl("Asset removed from group successfully.", {
 						"type": "success"
@@ -1447,8 +1472,6 @@ var NRS = (function(NRS, $, undefined) {
 
 	/* MY ASSETS PAGE */
 	NRS.pages.my_assets = function() {
-		NRS.pageLoading();
-
 		if (NRS.accountInfo.assetBalances && NRS.accountInfo.assetBalances.length) {
 			var result = {
 				"assets": [],
@@ -1567,15 +1590,9 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.myAssetsPageLoaded(result);
 					}
 				});
-
-				if (NRS.currentPage != "my_assets") {
-					return;
-				}
 			}
 		} else {
-			$("#my_assets_table tbody").empty();
-			NRS.dataLoadFinished($("#my_assets_table"));
-			NRS.pageLoaded();
+			NRS.dataLoaded();
 		}
 	}
 
@@ -1652,14 +1669,11 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<tr" + (tentative != -1 ? " class='tentative tentative-allow-links'" : "") + " data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + (tentative != -1 ? " " + sign + " <span class='added_quantity'>" + NRS.formatQuantity(tentative, asset.decimals) + "</span>" : "") + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(totalNQT) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>Transfer</a></td></tr>";
 		}
 
-		$("#my_assets_table tbody").empty().append(rows);
-		NRS.dataLoadFinished($("#my_assets_table"));
-
-		NRS.pageLoaded();
+		NRS.dataLoaded(rows);
 	}
 
 	NRS.incoming.my_assets = function() {
-		NRS.pages.my_assets();
+		NRS.loadPage("my_assets");
 	}
 
 	$("#transfer_asset_modal").on("show.bs.modal", function(e) {
@@ -1737,7 +1751,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.forms.transferAssetComplete = function(response, data) {
-		NRS.pages.my_assets();
+		NRS.loadPage("my_assets");
 	}
 
 	$("body").on("click", "a[data-goto-asset]", function(e) {
@@ -1791,8 +1805,6 @@ var NRS = (function(NRS, $, undefined) {
 	/* OPEN ORDERS PAGE */
 	NRS.pages.open_orders = function() {
 		var loaded = 0;
-
-		NRS.pageLoading();
 
 		NRS.getOpenOrders("ask", function() {
 			loaded++;
@@ -1997,7 +2009,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.incoming.open_orders = function(transactions) {
 		if (NRS.hasTransactionUpdates(transactions)) {
-			NRS.pages.open_orders();
+			NRS.loadPage("open_orders");
 		}
 	}
 

@@ -1,3 +1,6 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.fetchingModalData = false;
 
@@ -40,6 +43,8 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
+		$(this).find("input[name=recipient], input[name=account_id]").mask("NXT-****-****-****-*****");
+
 		var $visible_modal = $(".modal.in");
 
 		if ($visible_modal.length) {
@@ -48,13 +53,15 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
-		$(this).find("input[type=text]:first, input[type=password]:first").first().focus();
+		$(this).find("input[type=text]:first, textarea:first, input[type=password]:first").not("[readonly]").first().focus();
 		$(this).find("input[name=converted_account_id]").val("");
 		NRS.showedFormWarning = false; //maybe not the best place... we assume forms are only in modals?
 	});
 
 	//Reset form to initial state when modal is closed
 	$(".modal").on("hidden.bs.modal", function(e) {
+		$(this).find("input[name=recipient], input[name=account_id]").trigger("unmask");
+
 		$(this).find(":input:not([type=hidden],button)").each(function(index) {
 			var default_value = $(this).data("default");
 			var type = $(this).attr("type");
@@ -79,6 +86,25 @@ var NRS = (function(NRS, $, undefined) {
 
 		//Hide/Reset any possible error messages
 		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
+
+		$(this).find(".advanced").hide();
+
+		$(this).find(".advanced_extend").each(function(index, obj) {
+			var normalSize = $(obj).data("normal");
+			var advancedSize = $(obj).data("advanced");
+			$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+		});
+
+		var $feeInput = $(this).find("input[name=feeNXT]");
+
+		if ($feeInput.length) {
+			var defaultFee = $feeInput.data("default");
+			if (!defaultFee) {
+				defaultFee = 1;
+			}
+
+			$(this).find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(defaultFee)) + " NXT");
+		}
 
 		NRS.showedFormWarning = false;
 	});
@@ -105,8 +131,31 @@ var NRS = (function(NRS, $, undefined) {
 		$btn.button("reset");
 		$modal.modal("unlock");
 		$modal.modal("hide");
-
 	}
+
+	$("input[name=feeNXT]").on("change", function() {
+		var $modal = $(this).closest(".modal");
+
+		var $feeInfo = $modal.find(".advanced_fee");
+
+		if ($feeInfo.length) {
+			$feeInfo.html(NRS.formatAmount(NRS.convertToNQT($(this).val())) + " NXT");
+		}
+	});
+
+	$(".advanced_info a").on("click", function(e) {
+		e.preventDefault();
+
+		var $modal = $(this).closest(".modal");
+
+		$modal.find(".advanced").fadeIn();
+
+		$modal.find(".advanced_extend").each(function(index, obj) {
+			var normalSize = $(obj).data("normal");
+			var advancedSize = $(obj).data("advanced");
+			$(obj).addClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).removeClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+		});
+	});
 
 	return NRS;
 }(NRS || {}, jQuery));

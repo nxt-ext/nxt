@@ -1,7 +1,8 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.pages.aliases = function() {
-		NRS.pageLoading();
-
 		NRS.sendRequest("getAliases+", {
 			"account": NRS.account,
 			"timestamp": 0
@@ -13,7 +14,7 @@ var NRS = (function(NRS, $, undefined) {
 					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
-						if (unconfirmedTransaction.type == 1 && unconfirmedTransaction.subtype == 1) {
+						if (unconfirmedTransaction.type == 1 && (unconfirmedTransaction.subtype == 1 || unconfirmedTransaction.subtype == 7)) {
 							var found = false;
 
 							for (var j = 0; j < aliases.length; j++) {
@@ -28,13 +29,14 @@ var NRS = (function(NRS, $, undefined) {
 							if (!found) {
 								aliases.push({
 									"aliasName": unconfirmedTransaction.attachment.alias,
-									"aliasURI": unconfirmedTransaction.attachment.uri,
+									"aliasURI": (unconfirmedTransaction.attachment.uri ? unconfirmedTransaction.attachment.uri : ""),
 									"tentative": true
 								});
 							}
 						}
 					}
 				}
+
 
 				aliases.sort(function(a, b) {
 					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
@@ -58,7 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					alias.status = "/";
 
-					var unconfirmedTransaction = NRS.getUnconfirmedTransaction(1, 6, {
+					var unconfirmedTransaction = NRS.getUnconfirmedTransactionFromCache(1, 6, {
 						"alias": alias.aliasName
 					});
 
@@ -66,6 +68,10 @@ var NRS = (function(NRS, $, undefined) {
 						alias.tentative = true;
 						alias.buyer = unconfirmedTransaction.recipient;
 						alias.priceNQT = unconfirmedTransaction.priceNQT;
+					}
+
+					if (!alias.aliasURI) {
+						alias.aliasURI = "";
 					}
 
 					var allowCancel = false;
@@ -78,7 +84,9 @@ var NRS = (function(NRS, $, undefined) {
 								alias.status = "Transfer In Progress";
 							}
 						} else {
-							allowCancel = true;
+							if (!alias.tentative) {
+								allowCancel = true;
+							}
 
 							if (alias.buyer != NRS.genesis) {
 								alias.status = "For Sale (direct)";
@@ -92,7 +100,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -141,7 +149,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (data.cancelSale) {
 			data.priceNQT = "0";
-			data.recipient = NRS.account;
+			data.recipient = NRS.accountRS;
 			delete data.cancelSale;
 		}
 
@@ -161,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		//transfer
 		if (data.priceNQT == "0") {
-			if (data.recipient == NRS.account) {
+			if (data.recipient == NRS.accountRS) {
 				$row.find("td.status").html("<span class='label label-info'>Cancelling Sale</span>");
 			} else {
 				$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
@@ -184,7 +192,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $modal = $(this).closest(".modal");
 
 		if ($(this).attr("id") == "sell_alias_to_anyone") {
-			$modal.find("input[name=recipient]").val("0");
+			$modal.find("input[name=recipient]").val(NRS.genesisRS);
 			$("#sell_alias_recipient_div").hide();
 		} else {
 			$modal.find("input[name=recipient]").val("");
@@ -228,11 +236,34 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					$modal.find("input[name=aliasName]").val(alias.escapeHTML());
 					$modal.find(".alias_name_display").html(alias.escapeHTML());
-					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT));
+					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT)).prop("readonly", true);
 				}
 			}
 		}, false);
 	});
+
+	NRS.forms.buyAliasError = function() {
+		$("#buy_alias_modal").find("input[name=priceNXT]").prop("readonly", false);
+	}
+
+	NRS.forms.buyAliasComplete = function(response, data) {
+		if (response.alreadyProcessed) {
+			return;
+		}
+
+		if (NRS.currentPage != "aliases") {
+			return;
+		}
+
+		data.aliasName = String(data.aliasName).escapeHTML();
+		data.aliasURI = "";
+
+		$("#aliases_table tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>");
+
+		if ($("#aliases_table").parent().hasClass("data-empty")) {
+			$("#aliases_table").parent().removeClass("data-empty");
+		}
+	}
 
 	$("#register_alias_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
@@ -254,10 +285,13 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.fetchingModalData = false;
 				} else {
+					var aliasURI;
+
 					if (/http:\/\//i.test(response.aliasURI)) {
 						NRS.forms.setAliasType("uri");
-					} else if (/acct:(\d+)@nxt/.test(response.aliasURI) || /nacc:(\d+)/.test(response.aliasURI)) {
+					} else if ((aliasURI = /acct:(.*)@nxt/.exec(response.aliasURI)) || (aliasURI = /nacc:(.*)/.exec(response.aliasURI))) {
 						NRS.forms.setAliasType("account");
+						response.aliasURI = String(aliasURI[1]).toUpperCase();
 					} else {
 						NRS.forms.setAliasType("general");
 					}
@@ -282,27 +316,31 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.incoming.aliases = function(transactions) {
 		if (NRS.hasTransactionUpdates(transactions)) {
-			NRS.pages.aliases();
+			NRS.loadPage("aliases");
 		}
 	}
 
 	NRS.forms.setAlias = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
-		data.uri = $.trim(data.uri);
+		data.aliasURI = $.trim(data.aliasURI).toLowerCase();
 
 		if (data.type == "account") {
-			if (!(/acct:(\d+)@nxt/.test(data.uri)) && !(/nacc:(\d+)/.test(data.uri))) {
-				if (/^\d+$/.test(data.uri)) {
-					data.uri = "acct:" + data.uri + "@nxt";
+			if (!(/acct:(.*)@nxt/.test(data.aliasURI)) && !(/nacc:(.*)/.test(data.aliasURI))) {
+				if (/^(NXT\-)/i.test(data.aliasURI)) {
+					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
+				} else if (/^\d+$/.test(data.aliasURI)) {
+					return {
+						"error": "Numeric account ID's are no longer allowed."
+					};
 				} else {
 					return {
 						"error": "Invalid account ID."
 					};
 				}
 			}
-
 		}
+
 		delete data["type"];
 
 		if ($("#register_alias_alias_update").val() == 1) {
@@ -324,7 +362,9 @@ var NRS = (function(NRS, $, undefined) {
 			$("#register_alias_uri_label").html("URI");
 			$("#register_alias_uri").prop("placeholder", "URI");
 			if (uri) {
-				if (!/https?:\/\//i.test(uri)) {
+				if (uri == NRS.accountRS) {
+					$("#register_alias_uri").val("http://");
+				} else if (!/https?:\/\//i.test(uri)) {
 					$("#register_alias_uri").val("http://" + uri);
 				} else {
 					$("#register_alias_uri").val(uri);
@@ -338,26 +378,30 @@ var NRS = (function(NRS, $, undefined) {
 			$("#register_alias_uri").prop("placeholder", "Account ID");
 			$("#register_alias_uri").val("");
 			if (uri) {
-				if (!(/acct:(\d+)@nxt/.test(uri)) && !(/nacc:(\d+)/.test(uri))) {
+				if (!(/acct:(.*)@nxt/.test(uri)) && !(/nacc:(.*)/.test(uri))) {
 					if (/^\d+$/.test(uri)) {
-						$("#register_alias_uri").val("acct:" + uri + "@nxt");
+						$("#register_alias_uri").val(uri);
 					} else {
-						$("#register_alias_uri").val("");
+						$("#register_alias_uri").val(NRS.accountRS);
 					}
 				} else {
-					$("#register_alias_uri").val("");
+					$("#register_alias_uri").val(uri);
 				}
 			} else {
-				$("#register_alias_uri").val("");
+				$("#register_alias_uri").val(NRS.accountRS);
 			}
 			$("#register_alias_help").html("The alias will reference the account number entered and can be used to send Nxt to, messages, etc..").show();
 		} else {
 			$("#register_alias_uri_label").html("Data");
 			$("#register_alias_uri").prop("placeholder", "Data");
 			if (uri) {
-				$("#register_alias_uri").val(uri);
-			} else {
-				$("#register_alias_uri").val("");
+				if (uri == NRS.accountRS) {
+					$("#register_alias_uri").val("");
+				} else if (uri == "http://") {
+					$("#register_alias_uri").val("");
+				} else {
+					$("#register_alias_uri").val(uri);
+				}
 			}
 			$("#register_alias_help").html("The alias can contain any data you want.").show();
 		}
@@ -393,7 +437,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var $rows = $table.find("tr");
 
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a> <a class='btn btn-xs btn-default' href='#'>Cancel Sale</a></td></tr>";
+				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>";
 
 				var rowAdded = false;
 

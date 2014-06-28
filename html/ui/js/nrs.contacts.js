@@ -1,9 +1,12 @@
+/**
+ * @depends {nrs.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	NRS.loadContacts = function() {
 		NRS.contacts = {};
 
 		NRS.database.select("contacts", null, function(error, contacts) {
-			if (contacts.length) {
+			if (contacts && contacts.length) {
 				$.each(contacts, function(index, contact) {
 					NRS.contacts[contact.account] = contact;
 				});
@@ -12,8 +15,6 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.contacts = function() {
-		NRS.pageLoading();
-
 		if (!NRS.databaseSupport) {
 			$("#contact_page_database_error").show();
 			$("#contacts_table_container").hide();
@@ -26,9 +27,9 @@ var NRS = (function(NRS, $, undefined) {
 		$("#contact_page_database_error").hide();
 
 		NRS.database.select("contacts", null, function(error, contacts) {
-			if (contacts.length) {
-				var rows = "";
+			var rows = "";
 
+			if (contacts && contacts.length) {
 				contacts.sort(function(a, b) {
 					if (a.name.toLowerCase() > b.name.toLowerCase()) {
 						return 1;
@@ -50,17 +51,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + NRS.getAccountFormatted(contact, "account") + "' class='user_info'>" + NRS.getAccountFormatted(contact, "account") + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
 				});
-
-				$("#contacts_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#contacts_table"));
-
-				NRS.pageLoaded();
-			} else {
-				$("#contacts_table tbody").empty();
-				NRS.dataLoadFinished($("#contacts_table"));
-
-				NRS.pageLoaded();
 			}
+
+			NRS.dataLoaded(rows);
 		});
 	}
 
@@ -145,7 +138,7 @@ var NRS = (function(NRS, $, undefined) {
 		}, {
 			"name": data.name
 		}], function(error, contacts) {
-			if (contacts.length) {
+			if (contacts && contacts.length) {
 				if (contacts[0].name == data.name) {
 					$modal.find(".error_message").html("A contact with this name already exists.").show();
 				} else {
@@ -178,7 +171,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 
 						if (NRS.currentPage == "contacts") {
-							NRS.pages.contacts();
+							NRS.loadPage("contacts");
 						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
 							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
 							if (heading.length) {
@@ -211,11 +204,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#update_contact_id").val(contact.id);
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				if (NRS.settings["reed_solomon"]) {
-					$("#update_contact_account_id").val(contact.accountRS);
-				} else {
-					$("#update_contact_account_id").val(contact.account);
-				}
+				$("#update_contact_account_id").val(contact.accountRS);
 				$("#update_contact_description").val(contact.description);
 			});
 		} else {
@@ -228,11 +217,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#update_contact_name").val(contact.name);
 				$("#update_contact_email").val(contact.email);
-				if (NRS.settings["reed_solomon"]) {
-					$("#update_contact_account_id").val(contact.accountRS);
-				} else {
-					$("#update_contact_account_id").val(contact.account);
-				}
+				$("#update_contact_account_id").val(contact.accountRS);
 				$("#update_contact_description").val(contact.description);
 			});
 		}
@@ -313,7 +298,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.database.select("contacts", [{
 			"account": data.account_id
 		}], function(error, contacts) {
-			if (contacts.length && contacts[0].id != contactId) {
+			if (contacts && contacts.length && contacts[0].id != contactId) {
 				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
 				$btn.button("reset");
 				$modal.modal("unlock");
@@ -348,7 +333,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 
 						if (NRS.currentPage == "contacts") {
-							NRS.pages.contacts();
+							NRS.loadPage("contacts");
 						} else if (NRS.currentPage == "messages" && NRS.selectedContext) {
 							var heading = NRS.selectedContext.find("h4.list-group-item-heading");
 							if (heading.length) {
@@ -361,7 +346,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#delete_contact_modal").on('show.bs.modal', function(e) {
+	$("#delete_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var contactId = $invoker.data("contact");
@@ -374,7 +359,7 @@ var NRS = (function(NRS, $, undefined) {
 			contact = contact[0];
 
 			$("#delete_contact_name").html(contact.name.escapeHTML());
-			$("#delete_contact_account_id").val(contact.accountId);
+			$("#delete_contact_account_id").val(NRS.getAccountFormatted(contact, "account"));
 		});
 	});
 
@@ -392,7 +377,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 
 				if (NRS.currentPage == "contacts") {
-					NRS.pages.contacts();
+					NRS.loadPage("contacts");
 				}
 			}, 50);
 		});

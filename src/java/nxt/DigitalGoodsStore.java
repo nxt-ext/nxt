@@ -220,6 +220,10 @@ public final class DigitalGoodsStore {
             return timestamp;
         }
 
+        public String getName() {
+            return getGoods(goodsId).getName();
+        }
+
         public EncryptedData getEncryptedGoods() {
             return encryptedGoods;
         }
