@@ -56,7 +56,7 @@ public final class DGSRefund extends CreateTransaction {
         EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, buyerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, encryptedNote);
-        return createTransaction(req, sellerAccount, attachment);
+        return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }
 
