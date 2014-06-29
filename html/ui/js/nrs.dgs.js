@@ -434,7 +434,7 @@ var NRS = (function(NRS, $, undefined) {
 			delete data.note;
 		}
 
-		data.deliveryDeadlineTimestamp = Math.floor(new Date().getTime() / 1000) + 60 * 60 * data.deliveryDeadlineTimestamp;
+		data.deliveryDeadlineTimestamp = String(Math.floor(new Date().getTime() / 1000) + 60 * 60 * data.deliveryDeadlineTimestamp);
 
 		delete data.seller;
 
@@ -632,6 +632,14 @@ var NRS = (function(NRS, $, undefined) {
 						output += "<tr><th><strong>Price</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 						output += "<tr><th><strong>Quantity</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 
+						if (type == "dgs_refund_modal" || type == "dgs_delivery_modal" || type == "dgs_feedback_modal") {
+							if (response.seller == NRS.account) {
+								$modal.find("input[name=recipient]").val(response.buyerRS);
+							} else {
+								$modal.find("input[name=recipient]").val(response.sellerRS);
+							}
+						}
+
 						if (response.seller == NRS.account) {
 							output += "<tr><th><strong>Buyer</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(response, "buyer") + "</a></td></tr>";
 						} else {
@@ -752,7 +760,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	$("#dgs_product_modal, dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
+	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 
@@ -795,6 +803,8 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (type == "dgs_price_change_modal") {
 				$("#dgs_price_change_current_price, #dgs_price_change_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
 			} else if (type == "dgs_purchase_modal") {
+				$modal.find("input[name=recipient]").val(response.sellerRS);
+
 				$("#dgs_purchase_price").val(String(response.priceNQT).escapeHTML());
 				$("#dgs_total_purchase_price").html(NRS.formatAmount(response.priceNQT) + " NXT");
 
