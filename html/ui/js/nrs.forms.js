@@ -154,6 +154,11 @@ var NRS = (function(NRS, $, undefined) {
 			data = NRS.getFormData($form);
 		}
 
+		delete data.request_type;
+		delete data.success_message;
+		delete data.error_message;
+		delete data.converted_account_id;
+
 		if (data.deadline) {
 			data.deadline = String(data.deadline * 60); //hours to minutes
 		}
