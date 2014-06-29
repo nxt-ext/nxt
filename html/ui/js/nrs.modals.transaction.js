@@ -557,8 +557,38 @@ var NRS = (function(NRS, $, undefined) {
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
-						$("#transaction_info_modal").modal("show");
-						NRS.fetchingModalData = false;
+						if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+							NRS.sendRequest("getDGSPurchase", {
+								"purchase": transaction.transaction
+							}, function(purchase) {
+								var callout = "";
+
+								if (purchase.pending) {
+									if (NRS.account == transaction.recipient) {
+										callout = "<a href='#' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(transaction.transaction).escapeHTML() + "'>Deliver Goods?</a>";
+									} else {
+										callout = "Waiting on seller to deliver goods.";
+									}
+								} else {
+									if (purchase.refundNQT) {
+										callout = "This purchase has been refunded.";
+									} else {
+										callout = "This purchase has been delivered.";
+									}
+								}
+
+								if (callout) {
+									$("#transaction_info_output_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>");
+								}
+
+								$("#transaction_info_modal").modal("show");
+								NRS.fetchingModalData = false;
+
+							});
+						} else {
+							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
+						}
 					});
 
 					break;
@@ -601,6 +631,22 @@ var NRS = (function(NRS, $, undefined) {
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
+							var callout;
+
+							if (NRS.account == purchase.buyer) {
+								if (purchase.refundNQT) {
+									callout = "This purchase has been refunded.";
+								} else if (!purchase.feedbackNote) {
+									callout = "Goods received. <a href='#' data-toggle='modal' data-target='#dgs_feedback_modal' data-purchase='" + String(transaction.attachment.purchase).escapeHTML() + "'>Give feedback?</a>";
+								}
+							} else if (NRS.account == purchase.seller && purchase.refundNQT) {
+								callout = "This purchase has been refunded.";
+							}
+
+							if (callout) {
+								$("#transaction_info_output_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>");
+							}
+
 							$("#transaction_info_modal").modal("show");
 							NRS.fetchingModalData = false;
 						});
@@ -634,12 +680,38 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-
 							$("#transaction_info_table").show();
 
-							$("#transaction_info_modal").modal("show");
+							if (purchase.seller == NRS.account || purchase.buyer == NRS.account) {
+								NRS.sendRequest("getDGSPurchase", {
+									"purchase": transaction.attachment.purchase
+								}, function(purchase) {
+									var callout;
 
-							NRS.fetchingModalData = false;
+									if (purchase.buyer == NRS.account) {
+										if (purchase.refundNQT) {
+											callout = "This purchase has been refunded.";
+										}
+									} else {
+										if (!purchase.refundNQT) {
+											callout = "<a href='#' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(transaction.attachment.purchase).escapeHTML() + "'>Refund this purchase?</a>";
+										} else {
+											callout = "This purchase has been refunded.";
+										}
+									}
+
+									if (callout) {
+										$("#transaction_info_output_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>");
+									}
+
+									$("#transaction_info_modal").modal("show");
+									NRS.fetchingModalData = false;
+								});
+
+							} else {
+								$("#transaction_info_modal").modal("show");
+								NRS.fetchingModalData = false;
+							}
 						});
 					});
 
