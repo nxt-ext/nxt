@@ -316,6 +316,12 @@ var NRS = (function(NRS, $, undefined) {
 			"secretPhrase": $.trim($("#send_message_password").val())
 		};
 
+		var converted = $modal.find("input[name=converted_account_id]").val();
+
+		if (converted) {
+			data.recipient = converted;
+		}
+
 		var message = $.trim($("#send_message_message").val());
 
 		if (!message) {
