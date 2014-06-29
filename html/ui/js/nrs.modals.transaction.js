@@ -574,11 +574,16 @@ var NRS = (function(NRS, $, undefined) {
 							var data = {
 								"Type": "Marketplace Delivery",
 								"Item Name": goods.name,
-								"Price": purchase.priceNQT,
-								"quantityFormattedHTML": NRS.format(purchase.quantity),
-								"Buyer": NRS.getAccountFormatted(purchase, "buyer"),
-								"Seller": NRS.getAccountFormatted(purchase, "seller")
+								"Price": purchase.priceNQT
 							};
+
+							if (transaction.attachment.discountNQT) {
+								data["Discount"] = transaction.attachment.discountNQT;
+							}
+
+							data["quantityFormattedHTML"] = NRS.format(purchase.quantity);
+							data["Buyer"] = NRS.getAccountFormatted(purchase, "buyer");
+							data["Seller"] = NRS.getAccountFormatted(purchase, "seller");
 
 							if (transaction.attachment.goodsData) {
 								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
