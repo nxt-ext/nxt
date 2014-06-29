@@ -294,6 +294,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		var identifier = (options.identifier ? transaction[options.identifier] : transaction.transaction);
 
+		var first = true;
+
 		//check in cache first..
 		if (_decryptedTransactions && _decryptedTransactions[identifier]) {
 			var decryptedTransaction = _decryptedTransactions[identifier];
@@ -304,10 +306,12 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (first && title ? "padding-top:10px;" : "") + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					first = false;
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
+					first = true;
 					delete _decryptedTransactions[identifier];
 					return false;
 				}
@@ -345,7 +349,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (first && title ? "padding-top:10px;" : "") + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					first = false;
 				}
 			});
 		}
@@ -438,7 +443,8 @@ var NRS = (function(NRS, $, undefined) {
 
 				decryptedFields[key] = note;
 
-				output += "<div" + (!_encryptedNote.options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
+				output += "<div style='" + (first && title ? "padding-top:10px;" : "") + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
+				first = false;
 			} catch (err) {
 				decryptionError = true;
 				var message = String(err.message ? err.message : err);
