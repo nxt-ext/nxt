@@ -2374,6 +2374,28 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 
+		<div class="modal fade" id="dgs_product_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Product Info</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="row">
+								<div class="goods_info" style="margin-bottom:0;">Loading...</div>
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				    </div>
+				</div>
+			</div>
+		</div>
+
 		<div class="modal fade" id="dgs_purchase_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -3483,6 +3505,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						      		</table>
 
 						      		<div id="transaction_info_output_bottom" style="display: none;"></div>
+						      		<div id="transaction_info_bottom" style="display: none;"></div>
 							    </div>
 							    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
 									<table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">

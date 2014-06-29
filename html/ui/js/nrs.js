@@ -222,13 +222,13 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#logo, .sidebar-menu a").click(function(event, data) {
+	$("#logo, .sidebar-menu a").click(function(e, data) {
 		if ($(this).hasClass("ignore")) {
 			$(this).removeClass("ignore");
 			return;
 		}
 
-		event.preventDefault();
+		e.preventDefault();
 
 		if ($(this).data("toggle") == "modal") {
 			return;
@@ -303,11 +303,25 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.pages[page](callback);
 	}
 
-	NRS.goToPage = function(page) {
+	NRS.goToPage = function(page, callback) {
 		var $link = $("ul.sidebar-menu a[data-page=" + page + "]");
 
-		if ($link.length) {
-			$link.trigger("click");
+		if ($link.length > 1) {
+			if ($link.last().is(":visible")) {
+				$link = $link.last();
+			} else {
+				$link = $link.first();
+			}
+		}
+
+		if ($link.length == 1) {
+			if (callback) {
+				$link.trigger("click", [{
+					"callback": callback
+				}]);
+			} else {
+				$link.trigger("click");
+			}
 		} else {
 			NRS.currentPage = page;
 			NRS.currentSubPage = "";
@@ -319,8 +333,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#" + page + "_page").show();
 			if (NRS.pages[page]) {
 				NRS.pageLoading();
-
-				NRS.pages[page]();
+				NRS.pages[page](callback);
 			}
 		}
 	}

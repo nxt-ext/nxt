@@ -18,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.fetchingModalData = true;
 
-		$("#transaction_info_output_top, #transaction_info_output_bottom").html("").hide();
+		$("#transaction_info_output_top, #transaction_info_output_bottom, #transaction_info_bottom").html("").hide();
 		$("#transaction_info_callout").hide();
 		$("#transaction_info_table").hide();
 		$("#transaction_info_table tbody").empty();
@@ -223,7 +223,7 @@ var NRS = (function(NRS, $, undefined) {
 						}, false);
 
 						if (message) {
-							$("#transaction_info_output_bottom").html("<div class='callout callout-" + messageStyle + "' style='margin-top:15px;margin-bottom:0;'>" + message + "</div>").show();
+							$("#transaction_info_bottom").html("<div class='callout callout-bottom callout-" + messageStyle + "'>" + message + "</div>").show();
 						}
 					}
 
@@ -578,7 +578,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 
 								if (callout) {
-									$("#transaction_info_output_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>");
+									$("#transaction_info_bottom").html("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
 								}
 
 								$("#transaction_info_modal").modal("show");
@@ -644,7 +644,7 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							if (callout) {
-								$("#transaction_info_output_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>");
+								$("#transaction_info_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
 							}
 
 							$("#transaction_info_modal").modal("show");
@@ -701,7 +701,7 @@ var NRS = (function(NRS, $, undefined) {
 									}
 
 									if (callout) {
-										$("#transaction_info_output_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>");
+										$("#transaction_info_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
 									}
 
 									$("#transaction_info_modal").modal("show");
@@ -792,7 +792,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));
-		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
+		$("#transaction_info_output_bottom, #transaction_info_output_top, #transaction_info_bottom").html("").hide();
 	});
 
 	return NRS;

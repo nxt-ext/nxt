@@ -107,8 +107,6 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
-			console.log(err);
-
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {
@@ -424,6 +422,8 @@ var NRS = (function(NRS, $, undefined) {
 		var inAttachment = ("attachment" in _encryptedNote.transaction);
 
 		var nrFields = Object.keys(_encryptedNote.fields).length;
+
+		var first = true;
 
 		$.each(_encryptedNote.fields, function(key, title) {
 			var note = (inAttachment ? _encryptedNote.transaction.attachment[key] : _encryptedNote.transaction[key]);
