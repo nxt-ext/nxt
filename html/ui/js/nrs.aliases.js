@@ -413,6 +413,34 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.forms.setAliasType(type, $("#register_alias_uri").val());
 	});
 
+	NRS.forms.setAliasError = function(data, response) {
+		if (response && response.errorCode && response.errorCode == 8) {
+			var errorDescription = String(response.errorDescription).escapeHTML();
+
+			NRS.sendRequest("getAlias", {
+				"aliasName": data.aliasName
+			}, function(response) {
+				var message;
+
+				if (!response.errorCode) {
+					if (response.buyer) {
+						if (response.buyer == NRS.account) {
+							message = "You have been offered this alias for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+						} else if (response.buyer == NRS.genesis) {
+							message = "This alias is offered for sale for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+						} else {
+							message = "This alias is offered for sale to another account pending decision.";
+						}
+					} else {
+						message = "<a href='#' data-user='" + NRS.getAccountFormatted(response, "account") + "'>View owner info?</a>";
+					}
+
+					$("#register_alias_modal").find(".error_message").html(errorDescription + ". " + message);
+				}
+			}, false);
+		}
+	}
+
 	NRS.forms.setAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
@@ -435,6 +463,10 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					$row.find("td.uri").html(data.aliasURI);
 				}
+
+				$.growl("Your alias has been updated successfully.", {
+					"type": "success"
+				});
 			} else {
 				var $rows = $table.find("tr");
 
@@ -463,6 +495,10 @@ var NRS = (function(NRS, $, undefined) {
 				if ($("#aliases_table").parent().hasClass("data-empty")) {
 					$("#aliases_table").parent().removeClass("data-empty");
 				}
+
+				$.growl("Your alias has been registered successfully.", {
+					"type": "success"
+				});
 			}
 		}
 	}

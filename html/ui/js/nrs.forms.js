@@ -166,7 +166,7 @@ var NRS = (function(NRS, $, undefined) {
 		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
 			$modal.find(".error_message").html("Passphrase is a required field.").show();
 			if (formErrorFunction) {
-				formErrorFunction();
+				formErrorFunction(data);
 			}
 			NRS.unlockForm($modal, $btn);
 			return;
@@ -177,7 +177,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (/^\d+$/.test(data.recipient)) {
 				$modal.find(".error_message").html("Numeric account IDs are no longer allowed.").show();
 				if (formErrorFunction) {
-					formErrorFunction();
+					formErrorFunction(data);
 				}
 				NRS.unlockForm($modal, $btn);
 				return;
@@ -186,7 +186,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (!convertedAccountId || (!/^\d+$/.test(convertedAccountId) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(convertedAccountId))) {
 					$modal.find(".error_message").html("Invalid account ID.").show();
 					if (formErrorFunction) {
-						formErrorFunction();
+						formErrorFunction(data);
 					}
 					NRS.unlockForm($modal, $btn);
 					return;
@@ -205,7 +205,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.showedFormWarning = true;
 					$modal.find(".error_message").html("You amount is higher than " + NRS.formatAmount(NRS.settings["amount_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
 					if (formErrorFunction) {
-						formErrorFunction();
+						formErrorFunction(data);
 					}
 					NRS.unlockForm($modal, $btn);
 					return;
@@ -217,7 +217,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.showedFormWarning = true;
 					$modal.find(".error_message").html("You fee is higher than " + NRS.formatAmount(NRS.settings["fee_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
 					if (formErrorFunction) {
-						formErrorFunction();
+						formErrorFunction(data);
 					}
 					NRS.unlockForm($modal, $btn);
 					return;
@@ -270,7 +270,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (formErrorFunction) {
-					formErrorFunction();
+					formErrorFunction(data, response);
 				}
 
 				NRS.unlockForm($modal, $btn);
@@ -278,7 +278,7 @@ var NRS = (function(NRS, $, undefined) {
 				$modal.find(".error_message").html(String(response.error).escapeHTML()).show();
 
 				if (formErrorFunction) {
-					formErrorFunction();
+					formErrorFunction(data, response);
 				}
 
 				NRS.unlockForm($modal, $btn);
