@@ -225,6 +225,11 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		if (data.doNotBroadcast) {
+			data.broadcast = "false";
+			delete data.doNotBroadcast;
+		}
+
 		NRS.sendRequest(requestType, data, function(response) {
 			if (response.fullHash && (!response.error || response.error != "Double spending transaction")) {
 				NRS.unlockForm($modal, $btn);

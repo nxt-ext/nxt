@@ -284,14 +284,19 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						return;
 					} else {
-						if (callback) {
-							if (extra) {
-								data["_extra"] = extra;
-							}
-
-							NRS.broadcastTransactionBytes(payload, callback, response, data);
+						if (data.broadcast == "false") {
+							response.transactionBytes = payload;
+							NRS.showRawTransactionModal(response);
 						} else {
-							NRS.broadcastTransactionBytes(payload);
+							if (callback) {
+								if (extra) {
+									data["_extra"] = extra;
+								}
+
+								NRS.broadcastTransactionBytes(payload, callback, response, data);
+							} else {
+								NRS.broadcastTransactionBytes(payload);
+							}
 						}
 					}
 				}
@@ -305,11 +310,15 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 
-				if (callback) {
-					if (extra) {
-						data["_extra"] = extra;
+				if (response.broadcasted == false) {
+					NRS.showRawTransactionModal(response);
+				} else {
+					if (callback) {
+						if (extra) {
+							data["_extra"] = extra;
+						}
+						callback(response, data);
 					}
-					callback(response, data);
 				}
 			}
 		}).fail(function(xhr, textStatus, error) {
