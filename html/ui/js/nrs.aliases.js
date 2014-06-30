@@ -308,7 +308,14 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#register_alias_modal h4.modal-title").html("Register Alias");
 			$("#register_alias_modal .btn-primary").html("Register");
-			$("#register_alias_alias").val("").show();
+
+			var prefill = $invoker.data("prefill-alias");
+
+			if (prefill) {
+				$("#register_alias_alias").val(prefill).show();
+			} else {
+				$("#register_alias_alias").val("").show();
+			}
 			$("#register_alias_alias_noneditable").html("").hide();
 			$("#register_alias_alias_update").val(0);
 			NRS.forms.setAliasType("uri");
@@ -520,7 +527,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": alias
 		}, function(response, input) {
 			if (response.errorCode) {
-				$.growl("Could not find alias.", {
+				$.growl("Could not find alias. <a href='#' data-toggle='modal' data-target='#register_alias_modal' data-prefill-alias='" + String(alias).escapeHTML() + "'>Register?</a>", {
 					"type": "danger"
 				});
 				NRS.fetchingModalData = false;
