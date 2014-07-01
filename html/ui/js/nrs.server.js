@@ -301,6 +301,12 @@ var NRS = (function(NRS, $, undefined) {
 							} else {
 								NRS.broadcastTransactionBytes(payload);
 							}
+
+							if (data.referencedTransactionFullHash) {
+								$.growl("Due to you using a referenced transaction hash, 50 NXT is held in custody until the transaction is confirmed or expired.", {
+									"type": "info"
+								});
+							}
 						}
 					}
 				}
@@ -322,6 +328,11 @@ var NRS = (function(NRS, $, undefined) {
 							data["_extra"] = extra;
 						}
 						callback(response, data);
+					}
+					if (data.referencedTransactionFullHash) {
+						$.growl("Due to you using a referenced transaction hash, 50 NXT is held in custody until the transaction is confirmed or expired.", {
+							"type": "info"
+						});
 					}
 				}
 			}
