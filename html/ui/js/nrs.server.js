@@ -218,6 +218,10 @@ var NRS = (function(NRS, $, undefined) {
 			type = "POST";
 		}
 
+		if (requestType == "broadcastTransaction") {
+			type = "POST";
+		}
+
 		ajaxCall({
 			url: url,
 			crossDomain: true,

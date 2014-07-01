@@ -49,7 +49,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#transaction_info_tab_link").tab("show");
 
-		$("#transaction_info_details_table tbody").empty().append(NRS.createInfoTable(transactionDetails, true))
+		$("#transaction_info_details_table tbody").empty().append(NRS.createInfoTable(transactionDetails, true));
 		$("#transaction_info_table tbody").empty();
 
 		var incorrect = false;

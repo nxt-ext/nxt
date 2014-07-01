@@ -713,12 +713,19 @@ var NRS = (function(NRS, $, undefined) {
 		return hex;
 	}
 
-	NRS.getFormData = function($form) {
+	NRS.getFormData = function($form, unmodified) {
 		var serialized = $form.serializeArray();
 		var data = {};
 
 		for (var s in serialized) {
 			data[serialized[s]['name']] = serialized[s]['value']
+		}
+
+		if (!unmodified) {
+			delete data.request_type;
+			delete data.success_message;
+			delete data.error_message;
+			delete data.converted_account_id;
 		}
 
 		return data;

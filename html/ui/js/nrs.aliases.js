@@ -420,7 +420,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.forms.setAliasType(type, $("#register_alias_uri").val());
 	});
 
-	NRS.forms.setAliasError = function(data, response) {
+	NRS.forms.setAliasError = function(response, data) {
 		if (response && response.errorCode && response.errorCode == 8) {
 			var errorDescription = String(response.errorDescription).escapeHTML();
 

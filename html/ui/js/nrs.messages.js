@@ -309,12 +309,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.sendMessage = function($modal) {
 		var requestType = "sendMessage";
 
-		var data = {
-			"recipient": $.trim($("#send_message_recipient").val()),
-			"feeNXT": $.trim($("#send_message_fee").val()),
-			"deadline": $.trim($("#send_message_deadline").val()),
-			"secretPhrase": $.trim($("#send_message_password").val())
-		};
+		var data = NRS.getFormData($modal.find("form:first"));
 
 		var converted = $modal.find("input[name=converted_account_id]").val();
 
@@ -322,7 +317,7 @@ var NRS = (function(NRS, $, undefined) {
 			data.recipient = converted;
 		}
 
-		var message = $.trim($("#send_message_message").val());
+		var message = $.trim(data.message);
 
 		if (!message) {
 			return {
@@ -330,7 +325,9 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		if ($("#send_message_encrypt").is(":checked")) {
+		delete data.message;
+
+		if (data.encrypt) {
 			try {
 				var encrypted = NRS.encryptNote(message, {
 					"account": data.recipient
@@ -338,15 +335,17 @@ var NRS = (function(NRS, $, undefined) {
 
 				requestType = "sendEncryptedNote";
 
-				data["encryptedNote"] = encrypted.message;
-				data["encryptedNoteNonce"] = encrypted.nonce;
+				data.encryptedNote = encrypted.message;
+				data.encryptedNoteNonce = encrypted.nonce;
 			} catch (err) {
 				return {
 					"error": err.message
 				};
 			}
+
+			delete data.encrypt;
 		} else {
-			data["message"] = converters.stringToHexString(message);
+			data.message = converters.stringToHexString(message);
 		}
 
 		data["_extra"] = {
