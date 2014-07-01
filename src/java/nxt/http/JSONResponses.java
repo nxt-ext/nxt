@@ -123,6 +123,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
     public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
+    public static final JSONStreamAware MISSING_NOTE = missing("note");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
