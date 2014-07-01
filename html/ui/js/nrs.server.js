@@ -299,13 +299,7 @@ var NRS = (function(NRS, $, undefined) {
 
 								NRS.broadcastTransactionBytes(payload, callback, response, data);
 							} else {
-								NRS.broadcastTransactionBytes(payload);
-							}
-
-							if (data.referencedTransactionFullHash) {
-								$.growl("Due to you using a referenced transaction hash, 50 NXT is held in custody until the transaction is confirmed or expired.", {
-									"type": "info"
-								});
+								NRS.broadcastTransactionBytes(payload, null, response, data);
 							}
 						}
 					}
@@ -381,11 +375,9 @@ var NRS = (function(NRS, $, undefined) {
 		var refHash = byteArray.slice(64, 96);
 		transaction.referencedTransactionFullHash = converters.byteArrayToHexString(refHash);
 		if (transaction.referencedTransactionFullHash == "0000000000000000000000000000000000000000000000000000000000000000") {
-			transaction.referencedTransactionFullHash = null;
-			transaction.referencedTransactionId = null;
-		} else {
-			transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
+			transaction.referencedTransactionFullHash = "";
 		}
+		//transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
 
 		if (!("amountNQT" in data)) {
 			data.amountNQT = "0";
@@ -398,7 +390,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (transaction.publicKey != NRS.accountInfo.publicKey) {
-			alert("KK");
 			return false;
 		}
 
@@ -408,27 +399,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
-			alert("cc");
 			return false;
 		}
 
 		if ("referencedTransactionFullHash" in data) {
 			if (transaction.referencedTransactionFullHash !== data.referencedTransactionFullHash) {
-				alert("dd");
 				return false;
 			}
-		} else if (transaction.referencedTransactionFullHash !== null) {
-			alert("ff");
-			return false;
-		}
-
-		if ("referencedTransactionId" in data) {
-			if (transaction.referencedTransactionId !== data.referencedTransactionId) {
-				alert("gg");
-				return false;
-			}
-		} else if (transaction.referencedTransactionId !== null) {
-			alert("oo");
+		} else if (transaction.referencedTransactionFullHash !== "") {
 			return false;
 		}
 
@@ -852,7 +830,6 @@ var NRS = (function(NRS, $, undefined) {
 				break;
 			case "dgsPurchase":
 				if (transaction.type !== 3 && transaction.subtype !== 4) {
-					alert("there");
 					return false;
 				}
 
@@ -986,7 +963,7 @@ var NRS = (function(NRS, $, undefined) {
 		return true;
 	}
 
-	NRS.broadcastTransactionBytes = function(transactionData, callback, original_response, original_data) {
+	NRS.broadcastTransactionBytes = function(transactionData, callback, originalResponse, originalData) {
 		$.ajax({
 			url: NRS.server + "/nxt?requestType=broadcastTransaction",
 			crossDomain: true,
@@ -1005,19 +982,24 @@ var NRS = (function(NRS, $, undefined) {
 			if (callback) {
 				if (response.errorCode && !response.errorDescription) {
 					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
-					callback(response, original_data);
+					callback(response, originalData);
 				} else if (response.error) {
 					response.errorCode = 1;
 					response.errorDescription = response.error;
-					callback(response, original_data);
+					callback(response, originalData);
 				} else {
-					if ("transactionBytes" in original_response) {
-						delete original_response.transactionBytes;
+					if ("transactionBytes" in originalResponse) {
+						delete originalResponse.transactionBytes;
 					}
-					original_response.broadcasted = true;
-					original_response.transaction = response.transaction;
-					original_response.fullHash = response.fullHash;
-					callback(original_response, original_data);
+					originalResponse.broadcasted = true;
+					originalResponse.transaction = response.transaction;
+					originalResponse.fullHash = response.fullHash;
+					callback(originalResponse, originalData);
+					if (originalData.referencedTransactionFullHash) {
+						$.growl("Due to you using a referenced transaction hash, 50 NXT is held in custody until the transaction is confirmed or expired.", {
+							"type": "info"
+						});
+					}
 				}
 			}
 		}).fail(function(xhr, textStatus, error) {
