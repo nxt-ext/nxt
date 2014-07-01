@@ -95,6 +95,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".advanced").hide();
 
+		$(this).find(".advanced_info a").text("advanced");
+
 		$(this).find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
 			var advancedSize = $(obj).data("advanced");
@@ -154,13 +156,30 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $modal = $(this).closest(".modal");
 
-		$modal.find(".advanced").fadeIn();
+		var text = $(this).text().toLowerCase();
+
+		if (text == "advanced") {
+			$modal.find(".advanced").fadeIn();
+		} else {
+			$modal.find(".advanced").hide();
+		}
 
 		$modal.find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
 			var advancedSize = $(obj).data("advanced");
-			$(obj).addClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).removeClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+
+			if (text == "advanced") {
+				$(obj).addClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).removeClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+			} else {
+				$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+			}
 		});
+
+		if (text == "advanced") {
+			$(this).text("basic");
+		} else {
+			$(this).text("advanced");
+		}
 	});
 
 	return NRS;
