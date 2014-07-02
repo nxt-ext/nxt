@@ -339,7 +339,7 @@ var NRS = (function(NRS, $, undefined) {
 							showDecryptionForm = true;
 							return false;
 						} else {
-							data = "Could not decrypt " + String(title).escapeHTML().toLowerCase() + ".";
+							data = "Could not decrypt" + (title ? " " + String(title).escapeHTML().toLowerCase() : "") + ".";
 						}
 					}
 

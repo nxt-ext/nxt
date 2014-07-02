@@ -21,7 +21,7 @@
 			a: "[A-Za-z]",
 			"*": "[A-Za-z0-9]"
 		},
-		autoclear: !0,
+		autoclear: 0,
 		dataName: "rawMaskFn",
 		placeholder: "_"
 	}, $.fn.extend({
@@ -152,16 +152,19 @@
 						}),
 						defaultBuffer = buffer.join(""),
 						focusText = input.val();
+
+					input.addClass("masked");
 					input.data($.mask.dataName, function() {
 						return $.map(buffer, function(c, i) {
 							return tests[i] && c != settings.placeholder ? c : null;
 						}).join("");
 					}), input.attr("readonly") || input.one("unmask", function() {
 						input.unbind(".mask").removeData($.mask.dataName);
+						input.removeClass("masked");
 
 						input.bind("keyup.remask", function(e) {
 							if (input.val().toLowerCase() == "nxt-") {
-								input.mask("NXT-****-****-****-*****").trigger("focus").unbind(".remask");
+								input.val("").mask("NXT-****-****-****-*****").trigger("focus").unbind(".remask");
 							}
 						}).bind("paste.remask", function(e) {
 							setTimeout(function() {
