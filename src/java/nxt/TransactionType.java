@@ -208,6 +208,15 @@ public abstract class TransactionType {
         return false;
     }
 
+    final boolean isDuplicate(TransactionType transactionType, Map<TransactionType, Set<String>> duplicates, String key) {
+        Set<String> myDuplicates = duplicates.get(transactionType);
+        if (myDuplicates == null) {
+            myDuplicates = new HashSet<>();
+            duplicates.put(this, myDuplicates);
+        }
+        return !myDuplicates.add(key);
+    }
+
     /*
     Collection<TransactionType> getPhasingTransactionTypes() {
         return Collections.emptyList();
@@ -449,13 +458,8 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(this, duplicates, attachment.getAliasName().toLowerCase());
             }
 
             @Override
@@ -523,13 +527,8 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(this, duplicates, attachment.getAliasName().toLowerCase());
             }
 
             @Override
@@ -597,13 +596,8 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(this, duplicates, attachment.getAliasName().toLowerCase());
             }
 
             @Override
@@ -1648,10 +1642,17 @@ public abstract class TransactionType {
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null
                         || ! purchase.getBuyerId().equals(transaction.getRecipientId())
+                        || purchase.getEncryptedGoods() != null
                         || attachment.getDiscountNQT() > Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity())
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
+                return isDuplicate(this, duplicates, Convert.toUnsignedLong(attachment.getPurchaseId()));
             }
 
         };
@@ -1704,6 +1705,12 @@ public abstract class TransactionType {
                         || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
+                return isDuplicate(this, duplicates, Convert.toUnsignedLong(attachment.getPurchaseId()));
             }
 
         };
@@ -1775,6 +1782,12 @@ public abstract class TransactionType {
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
+                return isDuplicate(this, duplicates, Convert.toUnsignedLong(attachment.getPurchaseId()));
             }
 
         };

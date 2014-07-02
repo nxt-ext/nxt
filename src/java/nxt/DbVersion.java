@@ -205,6 +205,9 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
+                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                apply(null);
+            case 53:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
