@@ -1302,8 +1302,9 @@ public interface Attachment {
         private final long minReservePerUnitNQT;
         private final byte minDifficulty;
         private final byte maxDifficulty;
+        private final byte ruleset;
 
-        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty) {
+        public MonetarySystemCurrencyIssuance(String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset) {
             this.name = name;
             this.code = code;
             this.description = description;
@@ -1313,11 +1314,12 @@ public interface Attachment {
             this.minReservePerUnitNQT = minReservePerUnitNQT;
             this.minDifficulty = minDifficulty;
             this.maxDifficulty = maxDifficulty;
+            this.ruleset = ruleset;
         }
 
         @Override
         public int getSize() {
-            return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 1 + 1;
+            return 1 + Convert.toBytes(name).length + Constants.CURRENCY_CODE_LENGTH + 2 + Convert.toBytes(description).length + 1 + 8 + 4 + 8 + 1 + 1 + 1;
         }
 
         @Override
@@ -1339,6 +1341,7 @@ public interface Attachment {
                 buffer.putLong(minReservePerUnitNQT);
                 buffer.put(minDifficulty);
                 buffer.put(maxDifficulty);
+                buffer.put(ruleset);
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1358,6 +1361,7 @@ public interface Attachment {
             attachment.put("minReservePerUnitNQT", minReservePerUnitNQT);
             attachment.put("minDifficulty", minDifficulty & 0xFF);
             attachment.put("maxDifficulty", maxDifficulty & 0xFF);
+            attachment.put("ruleset", ruleset & 0xFF);
             return attachment;
         }
 
@@ -1400,6 +1404,10 @@ public interface Attachment {
 
         public byte getMaxDifficulty() {
             return maxDifficulty;
+        }
+
+        public byte getRuleset() {
+            return ruleset;
         }
 
     }

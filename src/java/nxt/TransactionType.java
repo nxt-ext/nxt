@@ -1922,7 +1922,8 @@ public abstract class TransactionType {
                 long minReservePerUnitNQT = buffer.getLong();
                 byte minDifficulty = buffer.get();
                 byte maxDifficulty = buffer.get();
-                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
+                byte ruleset = buffer.get();
+                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset));
             }
 
             @Override
@@ -1936,7 +1937,8 @@ public abstract class TransactionType {
                 long minReservePerUnitNQT = (Long)attachmentData.get("minReservePerUnitNQT");
                 byte minDifficulty = ((Long)attachmentData.get("minDifficulty")).byteValue();
                 byte maxDifficulty = ((Long)attachmentData.get("maxDifficulty")).byteValue();
-                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty));
+                byte ruleset = ((Long)attachmentData.get("ruleset")).byteValue();
+                transaction.setAttachment(new Attachment.MonetarySystemCurrencyIssuance(name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset));
             }
 
             @Override

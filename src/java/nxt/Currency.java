@@ -29,11 +29,11 @@ public final class Currency {
     }
 
     static void addNXTCurrency() {
-        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0);
+        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0);
     }
 
-    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty) {
-        Currency currency = new Currency(currencyId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty);
+    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset) {
+        Currency currency = new Currency(currencyId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset);
         if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }
@@ -64,8 +64,9 @@ public final class Currency {
     private final long minReservePerUnitNQT;
     private final byte minDifficulty;
     private final byte maxDifficulty;
+    private final byte ruleset;
 
-    private Currency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty) {
+    private Currency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset) {
         this.currencyId = currencyId;
         this.name = name;
         this.code = code;
@@ -76,6 +77,7 @@ public final class Currency {
         this.minReservePerUnitNQT = minReservePerUnitNQT;
         this.minDifficulty = minDifficulty;
         this.maxDifficulty = maxDifficulty;
+        this.ruleset = ruleset;
     }
 
     public Long getCurrencyId() {
@@ -116,6 +118,10 @@ public final class Currency {
 
     public byte getMaxDifficulty() {
         return maxDifficulty;
+    }
+
+    public byte getRuleset() {
+        return ruleset;
     }
 
     public static boolean isIssued(Long currencyId) {
