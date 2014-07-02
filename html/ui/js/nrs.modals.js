@@ -68,7 +68,7 @@ var NRS = (function(NRS, $, undefined) {
 	$(".modal").on("hidden.bs.modal", function(e) {
 		$(this).find("input[name=recipient], input[name=account_id]").trigger("unmask");
 
-		$(this).find(":input:not([type=hidden],button)").each(function(index) {
+		$(this).find(":input:not(button)").each(function(index) {
 			var default_value = $(this).data("default");
 			var type = $(this).attr("type");
 
@@ -77,6 +77,10 @@ var NRS = (function(NRS, $, undefined) {
 					$(this).prop("checked", true);
 				} else {
 					$(this).prop("checked", false);
+				}
+			} else if (type == "hidden") {
+				if (default_value) {
+					$(this).val(default_value);
 				}
 			} else {
 				if (default_value) {

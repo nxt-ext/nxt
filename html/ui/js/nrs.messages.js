@@ -306,9 +306,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
-	NRS.forms.sendMessage = function($modal) {
-		var requestType = "sendMessage";
-
+	NRS.forms.sendEncryptedNote = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
 		var converted = $modal.find("input[name=converted_account_id]").val();
@@ -327,33 +325,58 @@ var NRS = (function(NRS, $, undefined) {
 
 		delete data.message;
 
-		if (data.encrypt) {
-			try {
-				var encrypted = NRS.encryptNote(message, {
-					"account": data.recipient
-				}, data.secretPhrase);
+		try {
+			var encrypted = NRS.encryptNote(message, {
+				"account": data.recipient
+			}, data.secretPhrase);
 
-				requestType = "sendEncryptedNote";
+			requestType = "sendEncryptedNote";
 
-				data.encryptedNote = encrypted.message;
-				data.encryptedNoteNonce = encrypted.nonce;
-			} catch (err) {
-				return {
-					"error": err.message
-				};
-			}
-
-			delete data.encrypt;
-		} else {
-			data.message = converters.stringToHexString(message);
+			data.encryptedNote = encrypted.message;
+			data.encryptedNoteNonce = encrypted.nonce;
+		} catch (err) {
+			return {
+				"error": err.message
+			};
 		}
 
 		data["_extra"] = {
 			"message": message
 		};
 
+		delete data.encrypt;
+
 		return {
-			"requestType": requestType,
+			"data": data
+		};
+	}
+
+	NRS.forms.sendMessage = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		var converted = $modal.find("input[name=converted_account_id]").val();
+
+		if (converted) {
+			data.recipient = converted;
+		}
+
+		var message = $.trim(data.message);
+
+		if (!message) {
+			return {
+				"error": "Message is a required field."
+			};
+		}
+
+		data.message = converters.stringToHexString(message);
+
+		data["_extra"] = {
+			"message": message
+		};
+
+		delete data.encrypt;
+
+		return {
 			"data": data
 		};
 	}
@@ -456,6 +479,18 @@ var NRS = (function(NRS, $, undefined) {
 			$btn.button("reset");
 		});
 	});
+
+	$("#send_message_encrypt").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find("input[name=request_type]").val("sendEncryptedNote");
+		} else {
+			$(this).closest("form").find("input[name=request_type]").val("sendMessage");
+		}
+	});
+
+	NRS.forms.sendEncryptedNoteComplete = function(response, data) {
+		NRS.forms.sendMessageComplete(response, data);
+	}
 
 	NRS.forms.sendMessageComplete = function(response, data) {
 		data.message = data._extra.message;
