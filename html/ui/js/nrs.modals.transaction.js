@@ -69,6 +69,29 @@ var NRS = (function(NRS, $, undefined) {
 					$("#transaction_info_table").show();
 
 					break;
+				case 1:
+					var data = {
+						"Type": "Payment With Message",
+						"Amount": transaction.amountNQT,
+						"Fee": transaction.feeNQT,
+						"Recipient": NRS.getAccountTitle(transaction, "recipient"),
+						"Sender": NRS.getAccountTitle(transaction, "sender")
+					};
+
+					if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+						NRS.tryToDecrypt(transaction, {
+							"message": {
+								"title": "Note",
+								"nonce": "nonce"
+							}
+						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient));
+					} else {
+						$("#transaction_info_bottom").html("<div class='callout callout-bottom callout-warning'>Message is encrypted and cannot be ready by you.</div>").show();
+					}
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
+					break;
 				default:
 					incorrect = true;
 					break;

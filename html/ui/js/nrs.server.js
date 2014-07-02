@@ -418,6 +418,26 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 				break;
+			case "sendMoneyWithMessage":
+				if (transaction.type !== 0 || transaction.subtype !== 1) {
+					return false;
+				}
+
+				var encryptedNoteLength = converters.byteArrayToSignedShort(byteArray, pos);
+
+				pos += 2;
+
+				transaction.encryptedNote = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedNoteLength));
+
+				pos += encryptedNoteLength;
+
+				transaction.encryptedNoteNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+				if (transaction.encryptedNote !== data.encryptedNote || transaction.encryptedNoteNonce !== data.encryptedNoteNonce) {
+					return false;
+				}
+
+				break;
 			case "sendMessage":
 				if (transaction.type !== 1 || transaction.subtype !== 0) {
 					return false;
@@ -640,15 +660,17 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 
-				var messageLength = converters.byteArrayToSignedShort(byteArray, pos);
+				var encryptedNoteLength = converters.byteArrayToSignedShort(byteArray, pos);
 
 				pos += 2;
 
-				var slice = byteArray.slice(pos, pos + messageLength);
+				transaction.encryptedNote = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedNoteLength));
 
-				transaction.message = converters.byteArrayToHexString(slice);
+				pos += encryptedNoteLength;
 
-				if (transaction.message != data.message) {
+				transaction.encryptedNoteNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+				if (transaction.encryptedNote !== data.encryptedNote || transaction.encryptedNoteNonce !== data.encryptedNoteNonce) {
 					return false;
 				}
 

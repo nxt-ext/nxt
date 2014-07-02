@@ -3010,16 +3010,23 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
+							<div class="form-group">
+								<input type="checkbox" name="add_message" id="send_money_add_message" style="margin-top:5px;vertical-align:top;" tabindex="5" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> Add a Message?</label>
+							</div>
+							<div class="form-group" id="send_money_message_container">
+								<label for="send_money_message">MESSAGE</label>
+								<textarea class="form-control" id="send_money_message" name="message" rows="4" tabindex="6"></textarea>
+							</div>
 							<div class="form-group secret_phrase">
 								<label for="send_money_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="7">
 							</div>
 							<div class="form-group advanced">
 								<label for="send_money_referenced_transaction">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="8" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px">
-								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="9"> Do Not Broadcast</label>
 							</div>
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -3648,7 +3655,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						      		    </tbody>
 						      		</table>
 
-						      		<div id="transaction_info_output_bottom" style="display: none;"></div>
+						      		<div id="transaction_info_output_bottom" style="display: none;margin-top:10px;"></div>
 						      		<div id="transaction_info_bottom" style="display: none;"></div>
 							    </div>
 							    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
