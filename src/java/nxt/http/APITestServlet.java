@@ -26,7 +26,7 @@ public class APITestServlet extends HttpServlet {
             "    <style type=\"text/css\">\n" +
             "        table {border-collapse: collapse;}\n" +
             "        td {padding: 10px;}\n" +
-            "        .result {white-space: pre; font-family: monospace;}\n" +
+            "        .result {white-space: pre; font-family: monospace; overflow: auto;}\n" +
             "    </style>\n" +
             "    <script type=\"text/javascript\">\n" +
             "        function submitForm(form) {\n" +
@@ -55,7 +55,7 @@ public class APITestServlet extends HttpServlet {
             "</head>\n" +
             "<body>\n" +
             "<div class=\"navbar navbar-default\" role=\"navigation\">" +
-            "   <div class=\"container\">" + 
+            "   <div class=\"container\" style=\"width: 90%;\">" +
             "       <div class=\"navbar-header\">" +
             "           <a class=\"navbar-brand\" href=\"#\">Nxt http API</a>" + 
             "       </div>" +
@@ -66,7 +66,7 @@ public class APITestServlet extends HttpServlet {
             "       </div>" +
             "   </div>" + 
             "</div>" +
-            "<div class=\"container\">" +
+            "<div class=\"container\" style=\"width: 90%;\">" +
             "<div class=\"row\">" +
             "<div class=\"col-xs-12\">" +
             "<div class=\"panel-group\" id=\"accordion\">";
