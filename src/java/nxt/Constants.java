@@ -4,6 +4,10 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 public final class Constants {
+    //kushti: according to http://wiki.nxtcrypto.org/wiki/Whitepaper:Nxt -> Transaction Confirmations
+    public static final int CONFIRMATIONS_RELIABLE_TX = 10;
+    public static final int CONFIRMATIONS_IRREVERSIBLE_TX = 721;
+    public static final int CONFIRMATIONS_PERMANENT_TX = 1440;
 
     public static final int BLOCK_HEADER_LENGTH = 232;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
@@ -30,6 +34,7 @@ public final class Constants {
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_ASSET_TRANSFER_COMMENT_LENGTH = 1000;
 
+    public static final long POLL_FEE_NQT = 10 * ONE_NXT;
     public static final int MAX_POLL_NAME_LENGTH = 100;
     public static final int MAX_POLL_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_POLL_OPTION_LENGTH = 100;
@@ -65,6 +70,7 @@ public final class Constants {
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int ALIAS_TRANSFER_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
     public static final int ENCRYPTED_MESSAGES_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
+
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

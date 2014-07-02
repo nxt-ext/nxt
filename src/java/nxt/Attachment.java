@@ -5,7 +5,6 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
@@ -182,7 +181,6 @@ public interface Attachment {
         }
 
         @Override
-        //todo: fix ???
         public byte[] getBytes() {
             byte[] aliasBytes = Convert.toBytes(aliasName);
 
@@ -230,7 +228,6 @@ public interface Attachment {
         }
 
         @Override
-        //todo: fix ???
         public byte[] getBytes() {
             byte[] aliasBytes = Convert.toBytes(aliasName);
 
@@ -253,44 +250,102 @@ public interface Attachment {
         }
     }
 
+
     public final static class MessagingPollCreation implements Attachment {
+
+        public final static class PollBuilder {
+            private final String pollName;
+            private final String pollDescription;
+            private final String[] pollOptions;
+
+            private final int finishBlockHeight;
+
+            private final byte optionModel;
+            private final byte votingModel;
+
+            private long minBalance = Poll.DEFAULT_MIN_BALANCE;
+            private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
+            private long assetId;
+
+            public PollBuilder(String pollName, String pollDescription, String[] pollOptions,
+                               int finishBlockHeight, byte optionModel, byte votingModel){
+                this.pollName = pollName;
+                this.pollDescription = pollDescription;
+                this.pollOptions = pollOptions;
+
+                this.finishBlockHeight = finishBlockHeight;
+                this.optionModel = optionModel;
+                this.votingModel = votingModel;
+            }
+
+            public PollBuilder minBalance(long minBalance){
+                this.minBalance = minBalance;
+                return this;
+            }
+
+            public PollBuilder optionsNumRange(byte minNumberOfOptions, byte maxNumberOfOptions){
+                this.minNumberOfOptions = minNumberOfOptions;
+                this.maxNumberOfOptions = maxNumberOfOptions;
+                return this;
+            }
+
+            public PollBuilder assetId(long assetId){
+                this.assetId = assetId;
+                return this;
+            }
+
+            public MessagingPollCreation buildAttachment(){
+                return new MessagingPollCreation(this);
+            }
+        }
 
         private final String pollName;
         private final String pollDescription;
-        private final int finishBlockHeight;
         private final String[] pollOptions;
-        private final byte minNumberOfOptions, maxNumberOfOptions;
+
+        private final int finishBlockHeight;
 
         private final byte optionModel;
         private final byte votingModel;
-        private final byte countingModel;
-        private final long assetId;
 
+        private final long minBalance; //for all kinds of voting
+        private final byte minNumberOfOptions, maxNumberOfOptions; //only for choice voting
+        private final long assetId; // only for asset voting
 
-        public MessagingPollCreation(String pollName, String pollDescription, int finishBlockHeight,
-                                     String[] pollOptions, byte minNumberOfOptions, byte maxNumberOfOptions,
-                                     byte optionModel, byte votingModel, byte countingModel, long assetId) {
+        public MessagingPollCreation(PollBuilder builder) {
+            this.pollName = builder.pollName;
+            this.pollDescription = builder.pollDescription;
+            this.pollOptions = builder.pollOptions;
+            this.finishBlockHeight = builder.finishBlockHeight;
 
-            this.pollName = pollName;
-            this.pollDescription = pollDescription;
-            this.finishBlockHeight = finishBlockHeight;
-            this.pollOptions = pollOptions;
-            this.minNumberOfOptions = minNumberOfOptions;
-            this.maxNumberOfOptions = maxNumberOfOptions;
+            this.optionModel = builder.optionModel;
+            this.votingModel = builder.votingModel;
 
-            this.optionModel = optionModel;
-            this.votingModel = votingModel;
-            this.countingModel = countingModel;
-            this.assetId = assetId;
+            this.minNumberOfOptions = builder.minNumberOfOptions;
+            this.maxNumberOfOptions = builder.maxNumberOfOptions;
+            this.minBalance = builder.minBalance;
+            this.assetId = builder.assetId;
         }
 
         @Override
         public int getSize() {
-            int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 4 + 1;
+            int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 1;
             for (String pollOption : pollOptions) {
                 size += 2 + Convert.toBytes(pollOption).length;
             }
-            size +=  1 + 1 + 1 + 1 + 1 + 8;
+
+            size += 4 + 1 + 1;
+
+            if(optionModel==Poll.OPTION_MODEL_CHOICE){
+                size += 1 + 1;
+            }
+
+            if(votingModel==Poll.VOTING_MODEL_ASSET){
+                size += 8;
+            }
+
+            size += 8;
+
             return size;
         }
 
@@ -309,18 +364,24 @@ public interface Attachment {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
-            buffer.putInt(finishBlockHeight);
             buffer.put((byte)options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
             }
-            buffer.put(this.minNumberOfOptions);
-            buffer.put(this.maxNumberOfOptions);
+            buffer.putInt(finishBlockHeight);
             buffer.put(this.optionModel);
             buffer.put(this.votingModel);
-            buffer.put(this.countingModel);
-            buffer.putLong(this.assetId);
+            buffer.putLong(minBalance);
+
+            if(optionModel==Poll.OPTION_MODEL_CHOICE){
+                buffer.put(this.minNumberOfOptions);
+                buffer.put(this.maxNumberOfOptions);
+            }
+
+            if(votingModel==Poll.VOTING_MODEL_ASSET){
+                buffer.putLong(this.assetId);
+            }
 
             return buffer.array();
         }
@@ -337,12 +398,22 @@ public interface Attachment {
                 Collections.addAll(options, this.pollOptions);
             }
             attachment.put("options", options);
-            attachment.put("minNumberOfOptions", this.minNumberOfOptions);
-            attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
+
             attachment.put("optionModel", this.optionModel);
+
+            if(optionModel==Poll.OPTION_MODEL_CHOICE){
+                attachment.put("minNumberOfOptions", this.minNumberOfOptions);
+                attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
+            }
+
             attachment.put("votingModel", this.votingModel);
-            attachment.put("countingModel", this.countingModel);
-            attachment.put("assetId", this.assetId);
+
+            if(votingModel==Poll.VOTING_MODEL_ASSET){
+                attachment.put("assetId", this.assetId);
+            }
+
+            attachment.put("minBalance", this.minBalance);
+
             return attachment;
         }
 
@@ -367,7 +438,7 @@ public interface Attachment {
 
         public byte getVotingModel(){ return votingModel; }
 
-        public byte getCountingModel(){ return countingModel; }
+        public long getMinBalance() { return minBalance; }
 
         public long getAssetId(){ return assetId; }
     }
@@ -397,7 +468,6 @@ public interface Attachment {
             buffer.put(this.pollVote);
 
             return buffer.array();
-
         }
 
         @Override

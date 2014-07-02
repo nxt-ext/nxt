@@ -1,24 +1,22 @@
 package nxt;
 
-import nxt.util.Convert;
-import nxt.util.Listener;
-import nxt.util.Logger;
+import nxt.util.*;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 //todo: Blind signatures??? https://en.wikipedia.org/wiki/Blind_signature
 public final class Poll {
-
     public static final byte VOTING_MODEL_BALANCE = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
     public static final byte VOTING_MODEL_ASSET = 2;
 
-    public static final byte COUNTING_AT_THE_END = 0;
-    public static final byte COUNTING_EVERY_BLOCK = 1;
-
     public static final byte OPTION_MODEL_CHOICE = 0;
     public static final byte OPTION_MODEL_BINARY = 1;
+
+    public static final byte DEFAULT_MIN_BALANCE = 0;
+    public static final byte DEFAULT_MIN_NUMBER_OF_CHOICES = 1;
 
     private static final ConcurrentMap<Long, Poll> polls = new ConcurrentHashMap<>();
     private static final Collection<Poll> allPolls = Collections.unmodifiableCollection(polls.values());
@@ -26,11 +24,29 @@ public final class Poll {
     private static final ConcurrentMap<Long, Poll> activePolls = new ConcurrentHashMap<>();
     private static final Collection<Poll> allActivePolls = Collections.unmodifiableCollection(activePolls.values());
 
+    private static final ConcurrentMap<Long, Poll> finishedPolls = new ConcurrentHashMap<>();
+    private static final Collection<Poll> allFinishedPolls = Collections.unmodifiableCollection(finishedPolls.values());
+
     private static final ConcurrentMap<Long, PollResults> pollResults = new ConcurrentHashMap<>();
     private static final Collection<PollResults> allPollResults = Collections.unmodifiableCollection(pollResults.values());
 
+    private final Long id;
+    private final String name;
+    private final String description;
+    private final String[] options;
 
-    static{
+    private final int finishBlockHeight;
+    private final byte votingModel;
+    private final byte optionModel;
+
+    private long minBalance = DEFAULT_MIN_BALANCE;
+
+    private final byte minNumberOfOptions, maxNumberOfOptions;
+    private final long assetId;
+
+    private final ConcurrentMap<Long, Long> voters;
+
+    static {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -40,62 +56,38 @@ public final class Poll {
     }
 
 
-    private final Long id;
-    private final String name;
-    private final String description;
-    private final String[] options;
-    private final byte minNumberOfOptions, maxNumberOfOptions;
-    private final byte votingModel;
-    private final byte countingModel;
-    private final byte optionModel;
-
-    private final int finishBlockHeight;
-
-    //kushti: assetId here if votingModel==VOTING_MODEL_ASSET, could be used for other data for other voting models
-    private final long parameter1;
-
-
-    private final ConcurrentMap<Long, Long> voters;
-
-
-    static void checkPolls(int height){
-        for(Poll poll: getActivePolls()){
-            if(poll.finishBlockHeight <= height){
+    static void checkPolls(int height) {
+        for (Poll poll : getActivePolls()) {
+            if (poll.finishBlockHeight <= height) {
                 poll.calculateAndSavePollResults();
-                removeActivePoll(poll.getId());
-                System.out.println("Poll "+poll.getId()+" has been finished");
+                markPollAsFinished(poll);
+                System.out.println("Poll " + poll.getId() + " has been finished");
             }
         }
     }
 
-
-    public PollResults calculateAndSavePollResults(){
+    void calculateAndSavePollResults() {
         try {
-            PollResults results = countTotal();
-            pollResults.put(getId(), results);
-            return results;
-        }catch(NxtException.IllegalStateException e){
+            pollResults.put(getId(), countResults());
+        } catch (NxtException.IllegalStateException e) {
             Logger.logDebugMessage("Error while calculating poll results", e);
-            return null;
         }
     }
 
     //todo: prevent doublevoting
-    private PollResults countTotal() throws NxtException.IllegalStateException {
+    private PollResults countResults() throws NxtException.IllegalStateException {
         final long[][] results = new long[options.length][2];
 
-        switch (countingModel) {
-            case COUNTING_EVERY_BLOCK:
-                throw new NxtException.IllegalStateException("COUNTING_EVERY_BLOCK in countTotal");
-            case COUNTING_AT_THE_END:
-                for (Long voteId : voters.values()) {
-                    Vote vote = Vote.getVote(voteId);
-                    long[][] partialResult = countVote(vote);
-                    for (int idx = 0; idx < partialResult.length; idx++) {
-                        results[idx][0] += partialResult[idx][0];
-                        results[idx][1] += partialResult[idx][1];
-                    }
+        for (Long voteId : voters.values()) {
+            Vote vote = Vote.getVote(voteId);
+            long[][] partialResult = countVote(vote);
+
+            if (partialResult != null) {
+                for (int idx = 0; idx < partialResult.length; idx++) {
+                    results[idx][0] += partialResult[idx][0];
+                    results[idx][1] += partialResult[idx][1];
                 }
+            }
         }
 
         final PollResults pollResults;
@@ -125,31 +117,37 @@ public final class Poll {
     }
 
     //todo: exception?
-    public long[][] countVote(Vote vote) throws NxtException.IllegalStateException {
+    private long[][] countVote(Vote vote) throws NxtException.IllegalStateException {
         final long[][] partialResult = new long[options.length][2];
 
         final Long voter = vote.getVoterId();
-            final byte[] optVals = vote.getVote();
 
+        long weight = 0;
+
+        switch (votingModel) {
+            case VOTING_MODEL_ASSET:
+                long qntBalance = Account.getAccount(voter).getAssetBalanceQNT(assetId);
+                if (qntBalance > minBalance) {
+                    weight = qntBalance;
+                }
+                break;
+            case VOTING_MODEL_ACCOUNT:
+            case VOTING_MODEL_BALANCE:
+                long nqtBalance = Account.getAccount(voter).getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX);
+                if (nqtBalance > minBalance) {
+                    long nxtBalance = nqtBalance / Constants.ONE_NXT;
+                    weight = votingModel == VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
+                }
+                break;
+            default:
+                throw new NxtException.IllegalStateException("Wrong voting model");
+        }
+
+        final byte[] optVals = vote.getVote();
+
+        if (weight > 0) {
             for (int idx = 0; idx < optVals.length; idx++) {
                 byte option = optVals[idx];
-
-                long weight;
-
-                switch (votingModel) {
-                    case VOTING_MODEL_ACCOUNT:
-                        weight = 1;
-                        break;
-                    case VOTING_MODEL_ASSET:
-                        weight = Account.getAccount(voter).getAssetBalanceQNT(parameter1);
-                        break;
-                    case VOTING_MODEL_BALANCE:
-                        //todo: 10???
-                        weight = Account.getAccount(voter).getGuaranteedBalanceNQT(10) / Constants.ONE_NXT;
-                        break;
-                    default:
-                        throw new NxtException.IllegalStateException("Wrong voting model");
-                }
 
                 switch (option) {
                     case 0:
@@ -160,37 +158,43 @@ public final class Poll {
                         throw new NxtException.IllegalStateException("Wrong option value");
                 }
             }
-        return partialResult;
+            return partialResult;
+        } else {
+            return null;
+        }
     }
 
-    private Poll(Long id, String name, String description, int finishBlockHeight, String[] options,
-                 byte minNumberOfOptions, byte maxNumberOfOptions, byte optionModel,
-                 byte votingModel, byte countingModel, long parameter1) {
+    private Poll(Long id, String name, String description, String[] options, int finishBlockHeight,
+                 byte optionModel, byte votingModel, long minBalance,
+                 long assetId, byte minNumberOfOptions, byte maxNumberOfOptions) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.options = options;
 
         this.finishBlockHeight = finishBlockHeight;
 
-        this.options = options;
+        this.optionModel = optionModel;
+        this.votingModel = votingModel;
+
+        this.minBalance = minBalance;
+        this.assetId = assetId;
+
         this.minNumberOfOptions = minNumberOfOptions;
         this.maxNumberOfOptions = maxNumberOfOptions;
 
         this.voters = new ConcurrentHashMap<>();
-
-        this.optionModel = optionModel;
-        this.votingModel = votingModel;
-        this.countingModel = countingModel;
-        this.parameter1 = parameter1;
     }
 
-    static void addPoll(Long id, String name, String description, int finishBlockHeight, String[] options, byte minNumberOfOptions,
-                        byte maxNumberOfOptions, byte optionModel, byte votingModel,
-                        byte countingModel, long parameter1) {
+    static void addPoll(Long id, String name, String description, String[] options,
+                        int finishBlockHeight, byte optionModel, byte votingModel,
+                        long minBalance,
+                        long assetId,
+                        byte minNumberOfOptions,
+                        byte maxNumberOfOptions) {
 
-
-        Poll poll = new Poll(id, name, description, finishBlockHeight, options, minNumberOfOptions, maxNumberOfOptions,
-                optionModel, votingModel, countingModel, parameter1);
+        Poll poll = new Poll(id, name, description, options, finishBlockHeight, optionModel, votingModel,
+                minBalance, assetId, minNumberOfOptions, maxNumberOfOptions);
         if (polls.putIfAbsent(id, poll) != null) {
             throw new IllegalStateException("Poll with id " + Convert.toUnsignedLong(id) + " already exists");
         }
@@ -205,6 +209,14 @@ public final class Poll {
         return allActivePolls;
     }
 
+    public static Collection<Poll> getFinishedPolls() {
+        return allFinishedPolls;
+    }
+
+    public static PollResults getPollResults(long pollId) {
+        return pollResults.get(pollId);
+    }
+
     static void clear() {
         polls.clear();
     }
@@ -217,12 +229,9 @@ public final class Poll {
         return allPollResults;
     }
 
-    public static PollResults getPollResults(long pollId){
-        return pollResults.get(pollId);
-    }
-
-    public static void removeActivePoll(long pollId){
-        activePolls.remove(pollId);
+    public static void markPollAsFinished(Poll poll){
+        activePolls.remove(poll.getId());
+        finishedPolls.putIfAbsent(poll.getId(), poll);
     }
 
     public Long getId() {
@@ -249,6 +258,25 @@ public final class Poll {
         return maxNumberOfOptions;
     }
 
+    public byte getOptionModel() {
+        return optionModel;
+    }
+
+    public byte getVotingModel() {
+        return votingModel;
+    }
+
+    public int getFinishBlockHeight() {
+        return finishBlockHeight;
+    }
+
+    public long getMinBalance() {
+        return minBalance;
+    }
+
+    public long getAssetId() {
+        return assetId;
+    }
 
     public Map<Long, Long> getVoters() {
         return Collections.unmodifiableMap(voters);
@@ -277,10 +305,14 @@ public final class Poll {
     }
 
     public class ChoicePollResults extends PollResults<String, Long> {
-        ChoicePollResults(long pollId, Map<String, Long> results) { super(pollId, results); }
+        ChoicePollResults(long pollId, Map<String, Long> results) {
+            super(pollId, results);
+        }
     }
 
     public class BinaryPollResults extends PollResults<String, long[]> {
-        BinaryPollResults(long pollId, Map<String, long[]> results) { super(pollId, results); }
+        BinaryPollResults(long pollId, Map<String, long[]> results) {
+            super(pollId, results);
+        }
     }
 }

@@ -20,6 +20,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Collections;
+import java.util.Map;
 
 final class JSONData {
 
@@ -191,13 +192,51 @@ final class JSONData {
         JSONArray options = new JSONArray();
         Collections.addAll(options, poll.getOptions());
         json.put("options", options);
-        json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
-        json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
+        json.put("finishBlockHeight", poll.getFinishBlockHeight());
+
+        json.put("optionModel", poll.getOptionModel());
+        json.put("votingModel", poll.getVotingModel());
+
+        if(poll.getOptionModel()==Poll.OPTION_MODEL_CHOICE){
+            json.put("minNumberOfOptions", poll.getMinNumberOfOptions());
+            json.put("maxNumberOfOptions", poll.getMaxNumberOfOptions());
+        }
+
+        json.put("minBalance", poll.getMinBalance());
+
+        if(poll.getVotingModel() == Poll.VOTING_MODEL_ASSET){
+            json.put("assetId", Convert.toUnsignedLong(poll.getAssetId()));
+        }
+
         JSONArray voters = new JSONArray();
         for (Long voterId : poll.getVoters().keySet()) {
             voters.add(Convert.toUnsignedLong(voterId));
         }
         json.put("voters", voters);
+        return json;
+    }
+
+    static JSONObject pollResults(Poll.PollResults pollResults) {
+        JSONObject json = new JSONObject();
+        json.put("pollId", Convert.toUnsignedLong(pollResults.getPollId()));
+
+        JSONObject choices = new JSONObject();
+        if(pollResults instanceof Poll.ChoicePollResults){
+            json.put("resultsType","choice");
+            for(Map.Entry<String,Long> entry : ((Poll.ChoicePollResults) pollResults).getResults().entrySet()){
+                choices.put(entry.getKey(), entry.getValue());
+            }
+        }else if(pollResults instanceof Poll.BinaryPollResults){
+            json.put("resultsType","binary");
+            for(Map.Entry<String,long[]> entry : ((Poll.BinaryPollResults) pollResults).getResults().entrySet()){
+                JSONObject yesNo = new JSONObject();
+                yesNo.put("yes", entry.getValue()[1]);
+                yesNo.put("no", entry.getValue()[0]);
+                choices.put(entry.getKey(), yesNo);
+            }
+        }
+
+        json.put("results", choices);
         return json;
     }
 

@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.Attachment.MessagingPollCreation.PollBuilder;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
@@ -643,52 +644,80 @@ public abstract class TransactionType {
                 for (int i = 0; i < numberOfOptions; i++) {
                     pollOptions[i] = readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
                 }
-                byte minNumberOfOptions = buffer.get();
-                byte maxNumberOfOptions = buffer.get();
 
                 byte optionModel = buffer.get();
-                byte votingModel = buffer.get();
-                byte countingModel = buffer.get();
-                long assetId = buffer.getLong();
 
-                Attachment a = new Attachment.MessagingPollCreation(pollName, pollDescription, finishBlockHeight,
-                                                                    pollOptions, minNumberOfOptions, maxNumberOfOptions,
-                                                                    optionModel, votingModel, countingModel, assetId);
-                transaction.setAttachment(a);
+                byte votingModel = buffer.get();
+
+                PollBuilder builder = new PollBuilder(pollName, pollDescription, pollOptions,
+                        finishBlockHeight, optionModel, votingModel);
+
+                long minBalance = buffer.getLong();
+
+                builder.minBalance(minBalance);
+
+                if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                    byte minNumberOfOptions = buffer.get();
+                    byte maxNumberOfOptions = buffer.get();
+                    builder.optionsNumRange(minNumberOfOptions, maxNumberOfOptions);
+                }
+
+
+                if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                    long assetId = buffer.getLong();
+                    builder.assetId(assetId);
+                }
+
+                transaction.setAttachment(builder.buildAttachment());
             }
 
             @Override
             void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-
                 String pollName = ((String) attachmentData.get("name")).trim();
                 String pollDescription = ((String) attachmentData.get("description")).trim();
-                int duration = ((Long) attachmentData.get("finishBlockHeight")).intValue();
+                int finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
 
                 JSONArray options = (JSONArray) attachmentData.get("options");
                 String[] pollOptions = new String[options.size()];
                 for (int i = 0; i < pollOptions.length; i++) {
                     pollOptions[i] = ((String) options.get(i)).trim();
                 }
-                byte minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
-                byte maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+
+                long minBalance = (Long) attachmentData.get("minBalance");
 
                 byte optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
                 byte votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
-                byte countingModel = ((Long) attachmentData.get("countingModel")).byteValue();
-                long assetId = (Long) attachmentData.get("assetId");
 
+                PollBuilder builder = new PollBuilder(pollName, pollDescription, pollOptions,
+                        finishBlockHeight, optionModel, votingModel);
 
-                transaction.setAttachment(new Attachment.MessagingPollCreation(pollName, pollDescription, duration, pollOptions,
-                        minNumberOfOptions, maxNumberOfOptions, optionModel, votingModel, countingModel, assetId));
+                builder.minBalance(minBalance);
+
+                if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                    byte minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
+                    byte maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+                    builder.optionsNumRange(minNumberOfOptions, maxNumberOfOptions);
+                }
+
+                if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                    long assetId = (Long) attachmentData.get("assetId");
+                    builder.assetId(assetId);
+                }
+
+                transaction.setAttachment(builder.buildAttachment());
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
                 Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(),
-                        attachment.getFinishBlockHeight(), attachment.getPollOptions(),
-                        attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions(), attachment.getOptionModel(),
-                        attachment.getVotingModel(), attachment.getCountingModel(), attachment.getAssetId());
+                        attachment.getPollOptions(),
+                        attachment.getFinishBlockHeight(),
+                        attachment.getOptionModel(),
+                        attachment.getVotingModel(),
+                        attachment.getMinBalance(),
+                        attachment.getAssetId(),
+                        attachment.getMinNumberOfOptions(), attachment.getMaxNumberOfOptions());
             }
 
             @Override
@@ -697,6 +726,7 @@ public abstract class TransactionType {
             }
 
             @Override
+            //todo: check validation
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
                     throw new NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
@@ -707,12 +737,32 @@ public abstract class TransactionType {
                         throw new NxtException.ValidationException("Invalid poll options length: " + attachment.getJSONObject());
                     }
                 }
+
+                if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
+                    throw new NxtException.ValidationException("Invalid asset id for voting: " + attachment.getJSONObject());
+                }
+
+                if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE && attachment.getMinNumberOfOptions() < 1) {
+                    throw new NxtException.ValidationException("Invalid min number of options: " + attachment.getJSONObject());
+                }
+
+                if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE &&
+                        (attachment.getMinNumberOfOptions() < 1 ||
+                                attachment.getMinNumberOfOptions() > attachment.getPollOptions().length)) {
+                    throw new NxtException.ValidationException("Invalid max number of options: " + attachment.getJSONObject());
+                }
+
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
                         || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
                         || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT
+                        || attachment.getMinBalance() < 0
                         || transaction.getAmountNQT() != 0
-                        || !Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
+                        ) {
                     throw new NxtException.ValidationException("Invalid poll attachment: " + attachment.getJSONObject());
+                }
+                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
+                        || transaction.getFeeNQT() < Constants.POLL_FEE_NQT) {
+                    throw new NxtException.ValidationException("Invalid tx params for poll: " + attachment.getJSONObject());
                 }
             }
         };
@@ -772,9 +822,28 @@ public abstract class TransactionType {
                         || attachment.getPollVote().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.ValidationException("Invalid vote casting attachment: " + attachment.getJSONObject());
                 }
-                if (Poll.getPoll(attachment.getPollId()) == null) {
+
+                Poll poll = Poll.getPoll(attachment.getPollId());
+                if (poll == null) {
                     throw new NxtException.ValidationException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
                 }
+
+                byte[] votes = attachment.getPollVote();
+                int positiveCount = 0;
+                for (byte vote : votes) {
+                    if (vote < 0 || vote > 1) {
+                        throw new NxtException.ValidationException("Invalid vote: " + attachment.getJSONObject());
+                    }
+                    if (vote == 1) {
+                        positiveCount++;
+                    }
+                }
+
+                if (poll.getOptionModel() == Poll.OPTION_MODEL_CHOICE
+                        && (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions())) {
+                    throw new NxtException.ValidationException("Invalid num of choices: " + attachment.getJSONObject());
+                }
+
                 if (transaction.getAmountNQT() != 0 || !Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Invalid vote casting amount or recipient");
                 }

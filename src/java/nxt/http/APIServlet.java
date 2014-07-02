@@ -77,6 +77,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountId", GetAccountId.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
+        map.put("getActivePollIds", GetActivePollIds.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -96,6 +97,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchases", GetDGSPurchases.instance);
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
+        map.put("getFinishedPollIds", GetFinishedPollIds.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         if (Constants.isTestnet) {
@@ -105,6 +107,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getPeers", GetPeers.instance);
         map.put("getPoll", GetPoll.instance);
         map.put("getPollIds", GetPollIds.instance);
+        map.put("getPollResults", GetPollResults.instance);
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
