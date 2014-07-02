@@ -208,8 +208,8 @@ public abstract class TransactionType {
         return false;
     }
 
-    final boolean isDuplicate(TransactionType transactionType, Map<TransactionType, Set<String>> duplicates, String key) {
-        Set<String> myDuplicates = duplicates.get(transactionType);
+    final boolean isDuplicate(String key, Map<TransactionType, Set<String>> duplicates) {
+        Set<String> myDuplicates = duplicates.get(this);
         if (myDuplicates == null) {
             myDuplicates = new HashSet<>();
             duplicates.put(this, myDuplicates);
@@ -459,7 +459,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return isDuplicate(this, duplicates, attachment.getAliasName().toLowerCase());
+                return isDuplicate(attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -528,7 +528,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
-                return isDuplicate(this, duplicates, attachment.getAliasName().toLowerCase());
+                return isDuplicate(attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -597,7 +597,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
-                return isDuplicate(this, duplicates, attachment.getAliasName().toLowerCase());
+                return isDuplicate(attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -1652,7 +1652,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
-                return isDuplicate(this, duplicates, Convert.toUnsignedLong(attachment.getPurchaseId()));
+                return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
         };
@@ -1710,7 +1710,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
-                return isDuplicate(this, duplicates, Convert.toUnsignedLong(attachment.getPurchaseId()));
+                return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
         };
@@ -1787,7 +1787,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                return isDuplicate(this, duplicates, Convert.toUnsignedLong(attachment.getPurchaseId()));
+                return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
         };
