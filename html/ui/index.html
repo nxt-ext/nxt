@@ -2303,14 +2303,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_current_price">CURRENT PRICE</label>
-										<input type="number" id="dgs_price_change_current_price" class="form-control" data-default="0" value="0" disabled="disabled" />
+										<input type="number" id="dgs_price_change_current_price" class="form-control" data-default="0" value="0" disabled="disabled" step="any" />
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_price">NEW PRICE</label>
 										<div class="input-group">
-											<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1">
+											<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1" step="any">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2555,7 +2555,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="dgs_delivery_discount">DISCOUNT</label>	
 								<div class="input-group">
-					                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+					                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" step="any" data-default="0" value="0" tabindex="3">
 				                	<span class="input-group-addon">NXT</span>
 								</div>
 							</div>
@@ -2564,7 +2564,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									<div class="form-group">
 										<label for="dgs_delivery_fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2572,20 +2572,20 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delivery_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="dgs_delivery_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+										<input type="number" name="deadline" id="dgs_delivery_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="dgs_delivery_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="8">
+								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_delivery_referenced_transaction">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delivery_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delivery_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="7" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
-								<input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="8"> Do Not Broadcast</label>
 							</div>
 							<input type="hidden" name="request_type" value="dgsDelivery" />
 							<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
@@ -2694,7 +2694,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="dgs_refund_refund">REFUND</label>
 				                <div class="input-group">
-				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" step="any" data-default="0" value="0" tabindex="3">
 				                	<span class="input-group-addon">NXT</span>
 								</div>
 							</div>
@@ -2703,7 +2703,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									<div class="form-group">
 										<label for="dgs_refund_fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2711,13 +2711,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_refund_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="dgs_refund_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+										<input type="number" name="deadline" id="dgs_refund_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="dgs_refund_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="8">
+								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_refund_referenced_transaction">REFERENCED TRANSACTION HASH</label>

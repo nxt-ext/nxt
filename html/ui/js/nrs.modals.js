@@ -69,22 +69,22 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find("input[name=recipient], input[name=account_id]").trigger("unmask");
 
 		$(this).find(":input:not(button)").each(function(index) {
-			var default_value = $(this).data("default");
+			var defaultValue = $(this).data("default");
 			var type = $(this).attr("type");
 
 			if (type == "checkbox") {
-				if (default_value == "checked") {
+				if (defaultValue == "checked") {
 					$(this).prop("checked", true);
 				} else {
 					$(this).prop("checked", false);
 				}
 			} else if (type == "hidden") {
-				if (default_value) {
-					$(this).val(default_value);
+				if (defaultValue !== undefined) {
+					$(this).val(defaultValue);
 				}
 			} else {
-				if (default_value) {
-					$(this).val(default_value);
+				if (defaultValue !== undefined) {
+					$(this).val(defaultValue);
 				} else {
 					$(this).val("");
 				}

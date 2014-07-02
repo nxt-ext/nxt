@@ -30,14 +30,14 @@ var NRS = (function(NRS, $, undefined) {
 			status = "Complete";
 		}
 
-		return "<div" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			"<strong>Seller</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>" +
 			"<strong>Product Id</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='" + (modal ? modal : "#dgs_view_delivery_modal") + "'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
 			"<table>" +
 			"<tr><td style='width:150px'><strong>Order Date</strong>:</td><td>" + NRS.formatTimestamp(purchase.timestamp) + "</td></tr>" +
-			"<tr><td><strong>Order Status</strong>:</td><td>" + (statusHTML ? statusHTML : status) + "</td></tr>" +
+			"<tr><td><strong>Order Status</strong>:</td><td><span class='order_status'>" + (statusHTML ? statusHTML : status) + "</span></td></tr>" +
 			(purchase.pending ? "<tr><td><strong>Delivery Deadline</strong>:</td><td>" + NRS.formatTimestamp(new Date(purchase.deliveryDeadlineTimestamp * 1000)) + "</td></tr>" : "") +
 			"<tr><td><strong>Price</strong>:</td><td>" + NRS.formatAmount(purchase.priceNQT) + " NXT</td></tr>" +
 			"<tr><td><strong>Quantity</strong>:</td><td>" + NRS.format(purchase.quantity) + "</td></tr>" +
@@ -224,6 +224,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("pending_orders_dgs");
 	}
 
+	//todo: pagination
 	NRS.pages.my_dgs_listings = function() {
 		var rows = "";
 
@@ -236,11 +237,11 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		//inStockOnly doesn't work here, need to get all but delisted.
 		NRS.sendRequest("getDGSGoods+", {
 			"seller": NRS.account,
 			"firstIndex": 0,
-			"lastIndex": 0
+			"lastIndex": 100,
+			"inStockOnly": "false"
 		}, function(response) {
 			if (response.goods && response.goods.length) {
 				for (var i = 0; i < response.goods.length; i++) {
@@ -588,7 +589,13 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#pending_orders_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").fadeOut();
+		if (NRS.currentPage == "completed_orders_dgs") {
+			var $row = $("#completed_orders_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]");
+			if ($row.length) {
+				$row.addClass("tentative");
+				$row.find("span.order_status").html("Refunded");
+			}
+		}
 	}
 
 	NRS.forms.dgsDeliveryComplete = function(response, data) {
@@ -596,7 +603,9 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		$("#pending_orders_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").addClass("tentative").find("span.delivery").html("Delivered");
+		if (NRS.currentPage == "pending_orders_dgs") {
+			$("#pending_orders_dgs_contents div[data-purchase=" + String(data.purchase).escapeHTML() + "]").addClass("tentative").find("span.delivery").html("Delivered");
+		}
 	}
 
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
