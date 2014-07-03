@@ -1960,37 +1960,11 @@ public abstract class TransactionType {
                         || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
                         || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH
+                        || !CurrencyType.getCurrencyType(attachment.getType()).validateCurrencyIssuanceAttachment(transaction)
                         || attachment.getTotalSupply() <= 0 || attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                         || attachment.getIssuanceHeight() < 0
                         || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
-                }
-                switch (attachment.getType()) {
-                    case 1: { // This currency is issued by a single entity immediately, all the money belongs to this entity
-                        if (attachment.getIssuanceHeight() != 0
-                                || attachment.getMinDifficulty() != 0
-                                || attachment.getMaxDifficulty() != 0) {
-                            throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
-                        }
-                    } break;
-
-                    case 2: { // This currency is issued at some height if min required amount of NXT is collected, the money is split proportionally to reserved NXT
-                        if (attachment.getIssuanceHeight() == 0
-                                || attachment.getMinDifficulty() != 0
-                                || attachment.getMaxDifficulty() != 0) {
-                            throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
-                        }
-                    } break;
-
-                    case 3: { // This currency is issued at some height, the money is minted over time in a PoW manner
-                        if (attachment.getIssuanceHeight() == 0) {
-                            throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
-                        }
-                    } break;
-
-                    default: {
-                        throw new NxtException.ValidationException("Invalid currency issuance: " + attachment.getJSONObject());
-                    }
                 }
 
                 String normalizedName = attachment.getName().toLowerCase();
