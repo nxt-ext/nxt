@@ -436,12 +436,8 @@ public final class Peers {
         if (announcedAddress == null) {
             return null;
         }
-        announcedAddress = announcedAddress.trim();
-        if (announcedAddress.indexOf(':') >= 0 && ! announcedAddress.startsWith("[")) {
-            announcedAddress = '[' + announcedAddress + ']';
-        }
         try {
-            URI uri = new URI("http://" + announcedAddress);
+            URI uri = new URI("http://" + announcedAddress.trim());
             String host = uri.getHost();
             InetAddress inetAddress = InetAddress.getByName(host);
             return addPeer(inetAddress.getHostAddress(), announcedAddress);
