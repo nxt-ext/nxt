@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-//todo: Blind signatures??? https://en.wikipedia.org/wiki/Blind_signature
 public final class Poll {
     public static final byte VOTING_MODEL_BALANCE = 0;
     public static final byte VOTING_MODEL_ACCOUNT = 1;
@@ -74,7 +73,6 @@ public final class Poll {
         }
     }
 
-    //todo: prevent doublevoting
     private PollResults countResults() throws NxtException.IllegalStateException {
         final long[][] results = new long[options.length][2];
 
@@ -116,7 +114,6 @@ public final class Poll {
         return pollResults;
     }
 
-    //todo: exception?
     private long[][] countVote(Vote vote) throws NxtException.IllegalStateException {
         final long[][] partialResult = new long[options.length][2];
 
@@ -286,6 +283,7 @@ public final class Poll {
         return Collections.unmodifiableMap(voters);
     }
 
+    //kushti: it should replace old vote with new one. now done by Map structure
     void addVoter(Long voterId, Long voteId) {
         voters.put(voterId, voteId);
     }
