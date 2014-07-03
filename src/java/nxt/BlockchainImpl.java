@@ -228,7 +228,17 @@ final class BlockchainImpl implements Blockchain {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT * FROM transaction WHERE (recipient_id = ? OR sender_id = ?) ");
+            buf.append("SELECT * FROM transaction WHERE recipient_id = ? ");
+            if (timestamp > 0) {
+                buf.append("AND timestamp >= ? ");
+            }
+            if (type >= 0) {
+                buf.append("AND type = ? ");
+                if (subtype >= 0) {
+                    buf.append("AND subtype = ? ");
+                }
+            }
+            buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? AND recipient_id <> ? ");
             if (timestamp > 0) {
                 buf.append("AND timestamp >= ? ");
             }
@@ -247,6 +257,16 @@ final class BlockchainImpl implements Blockchain {
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
+            if (type >= 0) {
+                pstmt.setByte(++i, type);
+                if (subtype >= 0) {
+                    pstmt.setByte(++i, subtype);
+                }
+            }
             pstmt.setLong(++i, account.getId());
             pstmt.setLong(++i, account.getId());
             if (timestamp > 0) {
