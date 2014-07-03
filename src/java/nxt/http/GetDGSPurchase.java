@@ -10,7 +10,7 @@ public final class GetDGSPurchase extends APIServlet.APIRequestHandler {
     static final GetDGSPurchase instance = new GetDGSPurchase();
 
     private GetDGSPurchase() {
-        super("purchase");
+        super(new APITag[] {APITag.DGS}, "purchase");
     }
 
     @Override

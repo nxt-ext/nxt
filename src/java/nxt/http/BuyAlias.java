@@ -16,7 +16,7 @@ public final class BuyAlias extends CreateTransaction {
     static final BuyAlias instance = new BuyAlias();
 
     private BuyAlias() {
-        super("alias", "aliasName", "priceNQT");
+        super(new APITag[] {APITag.ALIASES, APITag.CREATE_TRANSACTION}, "alias", "aliasName", "priceNQT");
     }
 
     @Override

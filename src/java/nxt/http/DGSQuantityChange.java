@@ -19,7 +19,8 @@ public final class DGSQuantityChange extends CreateTransaction {
     static final DGSQuantityChange instance = new DGSQuantityChange();
 
     private DGSQuantityChange() {
-        super("goods", "deltaQuantity");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "goods", "deltaQuantity");
     }
 
     @Override

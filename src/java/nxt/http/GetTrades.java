@@ -14,7 +14,7 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
     static final GetTrades instance = new GetTrades();
 
     private GetTrades() {
-        super("asset", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex");
     }
 
     @Override

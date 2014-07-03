@@ -19,7 +19,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     static final SignTransaction instance = new SignTransaction();
 
     private SignTransaction() {
-        super("unsignedTransactionBytes", "secretPhrase");
+        super(new APITag[] {APITag.TRANSACTIONS}, "unsignedTransactionBytes", "secretPhrase");
     }
 
     @Override

@@ -16,7 +16,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 
     private GetAccountTransactionIds() {
-        super("account", "timestamp", "type", "subtype");
+        super(new APITag[] {APITag.ACCOUNTS}, "account", "timestamp", "type", "subtype");
     }
 
     @Override

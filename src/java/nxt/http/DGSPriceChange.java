@@ -15,7 +15,8 @@ public final class DGSPriceChange extends CreateTransaction {
     static final DGSPriceChange instance = new DGSPriceChange();
 
     private DGSPriceChange() {
-        super("goods", "priceNQT");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "goods", "priceNQT");
     }
 
     @Override

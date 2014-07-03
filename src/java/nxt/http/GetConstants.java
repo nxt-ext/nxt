@@ -181,7 +181,9 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
 
     }
 
-    private GetConstants() {}
+    private GetConstants() {
+        super(new APITag[] {APITag.INFO});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

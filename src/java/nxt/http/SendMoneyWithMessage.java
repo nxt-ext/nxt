@@ -16,7 +16,8 @@ public final class SendMoneyWithMessage extends CreateTransaction {
     static final SendMoneyWithMessage instance = new SendMoneyWithMessage();
 
     private SendMoneyWithMessage() {
-        super("recipient", "amountNQT", "note", "encryptedNote", "encryptedNoteNonce");
+        super(new APITag[] {APITag.MESSAGES, APITag.CREATE_TRANSACTION, APITag.ACCOUNTS},
+                "recipient", "amountNQT", "note", "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override

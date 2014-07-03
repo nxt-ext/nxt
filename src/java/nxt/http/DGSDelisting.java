@@ -15,7 +15,7 @@ public final class DGSDelisting extends CreateTransaction {
     static final DGSDelisting instance = new DGSDelisting();
 
     private DGSDelisting() {
-        super("goods");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION}, "goods");
     }
 
     @Override

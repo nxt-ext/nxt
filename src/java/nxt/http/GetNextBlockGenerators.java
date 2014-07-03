@@ -16,7 +16,9 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
     static final GetNextBlockGenerators instance = new GetNextBlockGenerators();
 
-    private GetNextBlockGenerators() {}
+    private GetNextBlockGenerators() {
+        super(new APITag[] {APITag.FORGING});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

@@ -21,7 +21,8 @@ public final class DGSDelivery extends CreateTransaction {
     static final DGSDelivery instance = new DGSDelivery();
 
     private DGSDelivery() {
-        super("purchase", "discountNQT", "goodsData", "goodsText", "encryptedGoodsData", "encryptedGoodsNonce");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "purchase", "discountNQT", "goodsData", "goodsText", "encryptedGoodsData", "encryptedGoodsNonce");
     }
 
     @Override

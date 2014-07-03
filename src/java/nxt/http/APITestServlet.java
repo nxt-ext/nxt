@@ -11,6 +11,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class APITestServlet extends HttpServlet {
 
@@ -82,9 +88,25 @@ public class APITestServlet extends HttpServlet {
             "</body>\n" +
             "</html>\n";
 
-    private static final List<String> requestTypes = new ArrayList<>(APIServlet.apiRequestHandlers.keySet());
+    private static final List<String> allRequestTypes = new ArrayList<>(APIServlet.apiRequestHandlers.keySet());
     static {
-        Collections.sort(requestTypes);
+        Collections.sort(allRequestTypes);
+    }
+
+    private static final SortedMap<String, SortedSet<String>> requestTags = new TreeMap<>();
+    static {
+        for (Map.Entry<String, APIServlet.APIRequestHandler> entry : APIServlet.apiRequestHandlers.entrySet()) {
+            String requestType = entry.getKey();
+            Set<APITag> apiTags = entry.getValue().getAPITags();
+            for (APITag apiTag : apiTags) {
+                SortedSet<String> set = requestTags.get(apiTag.name());
+                if (set == null) {
+                    set = new TreeSet<>();
+                    requestTags.put(apiTag.name(), set);
+                }
+                set.add(requestType);
+            }
+        }
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -99,10 +121,13 @@ public class APITestServlet extends HttpServlet {
             String requestType = Convert.nullToEmpty(req.getParameter("requestType"));
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             if (requestHandler != null) {
-                writer.print(form(requestType, requestHandler.getParameters()));
+                writer.print(form(requestType, requestHandler.getClass().getName(), requestHandler.getParameters()));
             } else {
-                for (String type : requestTypes) {
-                    writer.print(form(type, APIServlet.apiRequestHandlers.get(type).getParameters()));
+                String requestTag = Convert.nullToEmpty(req.getParameter("requestTag"));
+                Set<String> taggedTypes = requestTags.get(requestTag);
+                for (String type : (taggedTypes != null ? taggedTypes : allRequestTypes)) {
+                    requestHandler = APIServlet.apiRequestHandlers.get(type);
+                    writer.print(form(type, requestHandler.getClass().getName(), APIServlet.apiRequestHandlers.get(type).getParameters()));
                 }
             }
             writer.print(footer);
@@ -110,7 +135,7 @@ public class APITestServlet extends HttpServlet {
 
     }
 
-    private static String form(String requestType, List<String> parameters) {
+    private static String form(String requestType, String className, List<String> parameters) {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"panel panel-default\">");
         buf.append("<div class=\"panel-heading\">");
@@ -119,6 +144,7 @@ public class APITestServlet extends HttpServlet {
         buf.append(requestType).append("\">");
         buf.append(requestType);
         buf.append("</a>");
+        buf.append("<a style=\"float:right;\" href=\"/doc/").append(className.replace('.','/')).append(".html\" target=\"_blank\">Docs</a>");
         buf.append("</h4>");
         buf.append("</div> <!-- panel-heading -->");
         buf.append("<div id=\"collapse").append(requestType).append("\" class=\"panel-collapse collapse\">");

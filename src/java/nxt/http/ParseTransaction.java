@@ -17,7 +17,7 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
     static final ParseTransaction instance = new ParseTransaction();
 
     private ParseTransaction() {
-        super("transactionBytes");
+        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes");
     }
 
     @Override

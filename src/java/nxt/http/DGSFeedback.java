@@ -18,7 +18,8 @@ public final class DGSFeedback extends CreateTransaction {
     static final DGSFeedback instance = new DGSFeedback();
 
     private DGSFeedback() {
-        super("purchase", "note", "encryptedNote", "encryptedNoteNonce");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "purchase", "note", "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override

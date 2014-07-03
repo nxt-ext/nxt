@@ -16,8 +16,10 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
@@ -28,13 +30,19 @@ public final class APIServlet extends HttpServlet {
     abstract static class APIRequestHandler {
 
         private final List<String> parameters;
+        private final Set<APITag> apiTags;
 
-        APIRequestHandler(String... parameters) {
+        APIRequestHandler(APITag[] apiTags, String... parameters) {
             this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+            this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 
         final List<String> getParameters() {
             return parameters;
+        }
+
+        final Set<APITag> getAPITags() {
+            return apiTags;
         }
 
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
