@@ -747,8 +747,8 @@ public abstract class TransactionType {
                 }
 
                 if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE &&
-                        (attachment.getMinNumberOfOptions() < 1 ||
-                                attachment.getMinNumberOfOptions() > attachment.getPollOptions().length)) {
+                        (attachment.getMaxNumberOfOptions() < 1 ||
+                                attachment.getMaxNumberOfOptions() > attachment.getPollOptions().length)) {
                     throw new NxtException.ValidationException("Invalid max number of options: " + attachment.getJSONObject());
                 }
 

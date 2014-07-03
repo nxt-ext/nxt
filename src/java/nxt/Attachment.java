@@ -267,8 +267,8 @@ public interface Attachment {
             private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions;
             private long assetId;
 
-            public PollBuilder(String pollName, String pollDescription, String[] pollOptions,
-                               int finishBlockHeight, byte optionModel, byte votingModel){
+            public PollBuilder(final String pollName, final String pollDescription, final String[] pollOptions,
+                               final int finishBlockHeight, final byte optionModel, final byte votingModel) {
                 this.pollName = pollName;
                 this.pollDescription = pollDescription;
                 this.pollOptions = pollOptions;
@@ -278,23 +278,23 @@ public interface Attachment {
                 this.votingModel = votingModel;
             }
 
-            public PollBuilder minBalance(long minBalance){
+            public PollBuilder minBalance(long minBalance) {
                 this.minBalance = minBalance;
                 return this;
             }
 
-            public PollBuilder optionsNumRange(byte minNumberOfOptions, byte maxNumberOfOptions){
+            public PollBuilder optionsNumRange(byte minNumberOfOptions, byte maxNumberOfOptions) {
                 this.minNumberOfOptions = minNumberOfOptions;
                 this.maxNumberOfOptions = maxNumberOfOptions;
                 return this;
             }
 
-            public PollBuilder assetId(long assetId){
+            public PollBuilder assetId(long assetId) {
                 this.assetId = assetId;
                 return this;
             }
 
-            public MessagingPollCreation buildAttachment(){
+            public MessagingPollCreation buildAttachment() {
                 return new MessagingPollCreation(this);
             }
         }
@@ -336,11 +336,11 @@ public interface Attachment {
 
             size += 4 + 1 + 1;
 
-            if(optionModel==Poll.OPTION_MODEL_CHOICE){
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
                 size += 1 + 1;
             }
 
-            if(votingModel==Poll.VOTING_MODEL_ASSET){
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
                 size += 8;
             }
 
@@ -364,7 +364,7 @@ public interface Attachment {
             buffer.put(name);
             buffer.putShort((short) description.length);
             buffer.put(description);
-            buffer.put((byte)options.length);
+            buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
@@ -374,12 +374,12 @@ public interface Attachment {
             buffer.put(this.votingModel);
             buffer.putLong(minBalance);
 
-            if(optionModel==Poll.OPTION_MODEL_CHOICE){
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
                 buffer.put(this.minNumberOfOptions);
                 buffer.put(this.maxNumberOfOptions);
             }
 
-            if(votingModel==Poll.VOTING_MODEL_ASSET){
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
                 buffer.putLong(this.assetId);
             }
 
@@ -401,14 +401,14 @@ public interface Attachment {
 
             attachment.put("optionModel", this.optionModel);
 
-            if(optionModel==Poll.OPTION_MODEL_CHOICE){
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
                 attachment.put("minNumberOfOptions", this.minNumberOfOptions);
                 attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
             }
 
             attachment.put("votingModel", this.votingModel);
 
-            if(votingModel==Poll.VOTING_MODEL_ASSET){
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
                 attachment.put("assetId", this.assetId);
             }
 
@@ -422,25 +422,45 @@ public interface Attachment {
             return TransactionType.Messaging.POLL_CREATION;
         }
 
-        public String getPollName() { return pollName; }
+        public String getPollName() {
+            return pollName;
+        }
 
-        public String getPollDescription() { return pollDescription; }
+        public String getPollDescription() {
+            return pollDescription;
+        }
 
-        public int getFinishBlockHeight() { return finishBlockHeight; }
+        public int getFinishBlockHeight() {
+            return finishBlockHeight;
+        }
 
-        public String[] getPollOptions() { return pollOptions; }
+        public String[] getPollOptions() {
+            return pollOptions;
+        }
 
-        public byte getMinNumberOfOptions() { return minNumberOfOptions; }
+        public byte getMinNumberOfOptions() {
+            return minNumberOfOptions;
+        }
 
-        public byte getMaxNumberOfOptions() { return maxNumberOfOptions; }
+        public byte getMaxNumberOfOptions() {
+            return maxNumberOfOptions;
+        }
 
-        public byte getOptionModel(){ return optionModel; }
+        public byte getOptionModel() {
+            return optionModel;
+        }
 
-        public byte getVotingModel(){ return votingModel; }
+        public byte getVotingModel() {
+            return votingModel;
+        }
 
-        public long getMinBalance() { return minBalance; }
+        public long getMinBalance() {
+            return minBalance;
+        }
 
-        public long getAssetId(){ return assetId; }
+        public long getAssetId() {
+            return assetId;
+        }
     }
 
     public final static class MessagingVoteCasting implements Attachment {
@@ -460,11 +480,10 @@ public interface Attachment {
 
         @Override
         public byte[] getBytes() {
-
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(this.pollId);
-            buffer.put((byte)this.pollVote.length);
+            buffer.put((byte) this.pollVote.length);
             buffer.put(this.pollVote);
 
             return buffer.array();
@@ -491,10 +510,13 @@ public interface Attachment {
             return TransactionType.Messaging.VOTE_CASTING;
         }
 
-        public Long getPollId() { return pollId; }
+        public Long getPollId() {
+            return pollId;
+        }
 
-        public byte[] getPollVote() { return pollVote; }
-
+        public byte[] getPollVote() {
+            return pollVote;
+        }
     }
 
     public final static class MessagingHubAnnouncement implements Attachment {

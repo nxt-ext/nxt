@@ -127,14 +127,14 @@ public final class Poll {
         switch (votingModel) {
             case VOTING_MODEL_ASSET:
                 long qntBalance = Account.getAccount(voter).getAssetBalanceQNT(assetId);
-                if (qntBalance > minBalance) {
+                if (qntBalance >= minBalance) {
                     weight = qntBalance;
                 }
                 break;
             case VOTING_MODEL_ACCOUNT:
             case VOTING_MODEL_BALANCE:
                 long nqtBalance = Account.getAccount(voter).getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX);
-                if (nqtBalance > minBalance) {
+                if (nqtBalance >= minBalance) {
                     long nxtBalance = nqtBalance / Constants.ONE_NXT;
                     weight = votingModel == VOTING_MODEL_ACCOUNT ? 1 : nxtBalance;
                 }
@@ -215,6 +215,10 @@ public final class Poll {
 
     public static PollResults getPollResults(long pollId) {
         return pollResults.get(pollId);
+    }
+
+    public static boolean isPollActive(long pollId) {
+        return activePolls.containsKey(pollId);
     }
 
     static void clear() {

@@ -6,19 +6,18 @@ import nxt.NxtException;
 import nxt.Poll;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
-
 import javax.servlet.http.HttpServletRequest;
-
 import static nxt.http.JSONResponses.INCORRECT_POLL;
 import static nxt.http.JSONResponses.INCORRECT_VOTE;
 import static nxt.http.JSONResponses.MISSING_POLL;
+
 
 public final class CastVote extends CreateTransaction {
 
     static final CastVote instance = new CastVote();
 
     private CastVote() {
-        super("poll", "vote1", "vote2", "vote3"); // hardcoded to 3 votes for testing
+        super("poll", "vote1", "vote2", "vote3"); // hardcoded to 3 votes for testing  todo: fix ??
     }
 
     @Override
@@ -30,19 +29,18 @@ public final class CastVote extends CreateTransaction {
             return MISSING_POLL;
         }
 
-        Poll pollData;
-        int numberOfOptions = 0;
+        Poll poll;
         try {
-            pollData = Poll.getPoll(Convert.parseUnsignedLong(pollValue));
-            if (pollData != null) {
-                numberOfOptions = pollData.getOptions().length;
-            } else {
+            long pollId = Convert.parseUnsignedLong(pollValue);
+            poll = Poll.getPoll(pollId);
+            if (poll == null || !Poll.isPollActive(pollId)) {
                 return INCORRECT_POLL;
             }
         } catch (RuntimeException e) {
             return INCORRECT_POLL;
         }
 
+        int numberOfOptions = poll.getOptions().length;
         byte[] vote = new byte[numberOfOptions];
         try {
             for (int i = 0; i < numberOfOptions; i++) {
@@ -57,7 +55,7 @@ public final class CastVote extends CreateTransaction {
 
         Account account = ParameterParser.getSenderAccount(req);
 
-        Attachment attachment = new Attachment.MessagingVoteCasting(pollData.getId(), vote);
+        Attachment attachment = new Attachment.MessagingVoteCasting(poll.getId(), vote);
         return createTransaction(req, account, attachment);
     }
 }

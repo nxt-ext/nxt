@@ -16,7 +16,7 @@ public final class GetAssets extends APIServlet.APIRequestHandler {
     static final GetAssets instance = new GetAssets();
 
     private GetAssets() {
-        super("assets", "assets", "assets"); // limit to 3 for testing
+        super("assets", "assets", "assets"); // limit to 3 for testing todo: fix???
     }
 
     @Override
