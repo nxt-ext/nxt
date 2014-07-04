@@ -14,7 +14,7 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
     static final GetDGSGoods instance = new GetDGSGoods();
 
     private GetDGSGoods() {
-        super("seller", "firstIndex", "lastIndex", "inStockOnly");
+        super(new APITag[] {APITag.DGS}, "seller", "firstIndex", "lastIndex", "inStockOnly");
     }
 
     @Override

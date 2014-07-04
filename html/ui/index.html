@@ -34,6 +34,7 @@
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_money_modal">Send NXT</a></li>
                     	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal">Send Message</a></li>
 	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#token_modal">Generate Token</a></li>
+	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#transaction_operations_modal">Transaction Operations</a></li>
 						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings">Settings</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -1656,12 +1657,20 @@
 								<label for="lease_balance_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+							<div class="form-group advanced">
+								<label for="lease_balance_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="lease_balance_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:5px;">
+								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
+
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
 							<input type="hidden" name="success_message" value="Your balance will be leased out in 1440 blocks." />
 			      			<input type="hidden" name="request_type" value="leaseBalance" />
 			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
-						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
 			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
@@ -1765,7 +1774,13 @@
 								<label for="cancel_order_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="cancel_order_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_order_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="cancel_order_do_not_broadcast" value="1" /> <label for="cancel_order_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="cancel_order_type"  id="cancel_order_type" />
 				      		<input type="hidden" name="request_type" value="cancelOrder" />
 				      		<input type="hidden" name="success_message" value="The __ order has been cancelled." />
@@ -1813,7 +1828,6 @@
 								<label for="asset_order_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="asset_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
-
 							<input type="hidden" name="asset_order_type"  id="asset_order_type" />
 				      		<input type="hidden" name="request_type" value="orderAsset" />
 				      		<input type="hidden" name="success_message" value="The __ order has been submitted." />
@@ -1884,13 +1898,21 @@
 								<label for="transfer_asset_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="6">
 							</div>
+							<div class="form-group advanced">
+								<label for="transfer_asset_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:5px;">
+								<input type="checkbox" name="doNotBroadcast" id="transfer_asset_do_not_broadcast" value="1" /> <label for="transfer_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
+
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
 							<input type="hidden" name="request_type" value="transferAsset" />
 							<input type="hidden" name="success_message" value="The asset transfer is in progress!" />
 							<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be transferred." />
 							<input type="hidden" name="converted_account_id" value="" />
 						</form>
-						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
 						<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
@@ -1958,12 +1980,13 @@
 								<textarea class="form-control" id="add_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional"></textarea>
 							</div>
 
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
 							<input type="hidden" name="request_type" value="addContact" />
 							<input type="hidden" name="success_message" value="The contact has been created!" />
 							<input type="hidden" name="error_message" value="An unknown error occured!" />
 							<input type="hidden" name="converted_account_id" value="" />
 						</form>
-						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -2001,13 +2024,14 @@
 								<textarea class="form-control" id="update_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional"></textarea>
 							</div>
 
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
 							<input type="hidden" name="contact_id" id="update_contact_id" value="" />
 							<input type="hidden" name="request_type" value="updateContact" />
 							<input type="hidden" name="success_message" value="The contact has been updated successfully!" />
 							<input type="hidden" name="error_message" value="An unknown error occured!" />
 							<input type="hidden" name="converted_account_id" value="" />
 						</form>
-						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
 				    	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -2100,7 +2124,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="issue_asset_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="issue_asset_password" class="form-control" placeholder="" tabindex="8">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="issue_asset_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="issue_asset_do_not_broadcast" value="1" /> <label for="issue_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="issueAsset" />
 							<input type="hidden" name="success_message" value="The asset has been created and will be available soon." />
 							<input type="hidden" name="error_message" value="An unknown error occured! Asset may or may not be created." />
@@ -2176,7 +2206,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_listing_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_listing_password" class="form-control" placeholder="" tabindex="8">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_listing_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_listing_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_listing_do_not_broadcast" value="1" /> <label for="dgs_listing_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsListing" />
 							<input type="hidden" name="success_message" value="The marketplace listing has been created and will be available soon." />
 							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace listing may or may not be created." />
@@ -2228,7 +2264,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_delisting_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_delisting_password" class="form-control" placeholder="" tabindex="1">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_delisting_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delisting_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_delisting_do_not_broadcast" value="1" /> <label for="dgs_delisting_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsDelisting" />
 				      		<input type="hidden" name="success_message" value="The item has been removed from the marketplace successfully." />
 						</form>
@@ -2261,14 +2303,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_current_price">CURRENT PRICE</label>
-										<input type="number" id="dgs_price_change_current_price" class="form-control" data-default="0" value="0" disabled="disabled" />
+										<input type="number" id="dgs_price_change_current_price" class="form-control" data-default="0" value="0" disabled="disabled" step="any" />
 									</div>
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_price_change_price">NEW PRICE</label>
 										<div class="input-group">
-											<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1">
+											<input type="number" name="priceNXT" id="dgs_price_change_price" class="form-control" placeholder="New Price" min="1" data-default="1" value="1" tabindex="1" step="any">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2295,7 +2337,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_price_change_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_price_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_price_change_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_price_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_price_change_do_not_broadcast" value="1" /> <label for="dgs_price_change_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsPriceChange" />
 				      		<input type="hidden" name="success_message" value="The marketplace item's price has been changed successfully." />
 						</form>
@@ -2359,7 +2407,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_quantity_change_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_quantity_change_password" class="form-control" placeholder="" tabindex="4">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_quantity_change_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_quantity_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_quantity_change_do_not_broadcast" value="1" /> <label for="dgs_quantity_change_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsQuantityChange" />
 				      		<input type="hidden" name="success_message" value="The marketplace item's quantity has been changed successfully." />
 						</form>
@@ -2371,6 +2425,28 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 				        <button type="button" class="btn btn-primary" data-loading-text="Submitting...">Change Quantity</button>
 			      	</div>
 		    	</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="dgs_product_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		      			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Product Info</h4>
+		      		</div>
+			      	<div class="modal-body">			
+						<form role="form">
+							<div class="callout callout-danger error_message" style="display:none"></div>
+							<div class="row">
+								<div class="goods_info" style="margin-bottom:0;">Loading...</div>
+							</div>
+						</form>
+			    	</div>
+					<div class="modal-footer" style="margin-top:0;">
+				    	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				    </div>
+				</div>
 			</div>
 		</div>
 
@@ -2387,6 +2463,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="goods_info">Loading...</div>
 							</div>
+							<input type="hidden" name="recipient" id="dgs_purchase_recipient" value="" />
 							<input type="hidden" name="goods" id="dgs_purchase_goods" value="" />
 							<input type="hidden" name="priceNQT" id="dgs_purchase_price" value="" />
 
@@ -2433,7 +2510,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_purchase_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_purchase_password" class="form-control" placeholder="" tabindex="7">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_purchase_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_purchase_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_purchase_do_not_broadcast" value="1" /> <label for="dgs_purchase_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsPurchase" />
 							<input type="hidden" name="success_message" value="The marketplace item has been purchased." />
 							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace item may or may not have been purchased." />
@@ -2463,6 +2546,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="purchase_info">Loading...</div>
 							</div>
 							<div id="dgs_delivery_note_form"></div>
+							<input type="hidden" name="recipient" id="dgs_delivery_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_delivery_purchase" value="" />
 							<div class="form-group">
 								<label for="dgs_delivery_data">DATA</label>
@@ -2471,7 +2555,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="dgs_delivery_discount">DISCOUNT</label>	
 								<div class="input-group">
-					                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-default="0" value="0" tabindex="5">
+					                <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" step="any" data-default="0" value="0" tabindex="3">
 				                	<span class="input-group-addon">NXT</span>
 								</div>
 							</div>
@@ -2480,7 +2564,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									<div class="form-group">
 										<label for="dgs_delivery_fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<input type="number" name="feeNXT" id="dgs_delivery_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2488,15 +2572,21 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_delivery_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="dgs_delivery_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+										<input type="number" name="deadline" id="dgs_delivery_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="dgs_delivery_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="8">
+								<input type="password" name="secretPhrase" id="dgs_delivery_password" class="form-control" placeholder="" tabindex="6">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_delivery_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delivery_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="7" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="8"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsDelivery" />
 							<input type="hidden" name="success_message" value="The marketplace purchase has been delivered." />
 							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be delivered." />
@@ -2595,6 +2685,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="row">
 								<div class="purchase_info">Loading...</div>
 							</div>
+							<input type="hidden" name="recipient" id="dgs_refund_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_refund_purchase" value="" />
 							<div class="form-group">
 								<label for="dgs_refund_note">NOTE</label>
@@ -2603,7 +2694,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 							<div class="form-group">
 								<label for="dgs_refund_refund">REFUND</label>
 				                <div class="input-group">
-				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-default="0" value="0" tabindex="5">
+				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" step="any" data-default="0" value="0" tabindex="3">
 				                	<span class="input-group-addon">NXT</span>
 								</div>
 							</div>
@@ -2612,7 +2703,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									<div class="form-group">
 										<label for="dgs_refund_fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="6">
+											<input type="number" name="feeNXT" id="dgs_refund_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2620,15 +2711,21 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="dgs_refund_deadline">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="dgs_refund_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="7">
+										<input type="number" name="deadline" id="dgs_refund_deadline" class="form-control" placeholder="Deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="dgs_refund_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="8">
+								<input type="password" name="secretPhrase" id="dgs_refund_password" class="form-control" placeholder="" tabindex="6">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_refund_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_refund_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_refund_do_not_broadcast" value="1" /> <label for="dgs_refund_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsRefund" />
 							<input type="hidden" name="success_message" value="The marketplace purchase has been refunded." />
 							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase may or may not be refunded." />
@@ -2654,6 +2751,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			      	<div class="modal-body">			
 						<form role="form">
 							<div class="callout callout-danger error_message" style="display:none"></div>
+							<input type="hidden" name="recipient" id="dgs_feedback_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_feedback_purchase" value="" />
 							<div class="row">
 								<div class="purchase_info">Loading...</div>
@@ -2683,7 +2781,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="dgs_feedback_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="dgs_feedback_password" class="form-control" placeholder="" tabindex="8">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="dgs_feedback_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_feedback_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="dgs_feedback_do_not_broadcast" value="1" /> <label for="dgs_feedback_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="dgsFeedback" />
 							<input type="hidden" name="success_message" value="The marketplace purchase feedback has been submitted." />
 							<input type="hidden" name="error_message" value="An unknown error occured! Marketplace purchase feedback may or may not be submitted." />
@@ -2736,11 +2840,9 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							
 							<div class="form-group">
 								<a href="#" class="btn btn-primary" id="create_poll_answers_add"><i class="fa fa-plus"></i> Add answer</a>
 							</div>
-																	
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2755,7 +2857,6 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-							
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2773,12 +2874,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-	
 							<div class="form-group secret_phrase">
 								<label for="create_poll_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="create_poll_password" class="form-control" placeholder="" tabindex="8">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="create_poll_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="create_poll_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="create_poll_do_not_broadcast" value="1" /> <label for="create_poll_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="createPoll" />
 							<input type="hidden" name="success_message" value="The poll has been created!" />
 							<input type="hidden" name="error_message" value="An unknown error occured! Poll may or may not be created." />
@@ -2834,12 +2940,17 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
-	
 							<div class="form-group secret_phrase">
 								<label for="cast_vote_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cast_vote_password" class="form-control" placeholder="" tabindex="8">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="cast_vote_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cast_vote_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="cast_vote_do_not_broadcast" value="1" /> <label for="cast_vote_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="castVote" />
 							<input type="hidden" name="success_message" value="Your vote has been cast!" />
 							<input type="hidden" name="error_message" value="An unknown error occured! Vote may or may not be cast." />
@@ -2899,16 +3010,31 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 									</div>
 								</div>
 							</div>
+							<div class="form-group">
+								<input type="checkbox" name="add_message" id="send_money_add_message" style="margin-top:5px;vertical-align:top;" tabindex="5" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> Add a Message?</label>
+							</div>
+							<div class="form-group" id="send_money_message_container">
+								<label for="send_money_message">MESSAGE</label>
+								<textarea class="form-control" id="send_money_message" name="message" rows="4" tabindex="6"></textarea>
+							</div>
 							<div class="form-group secret_phrase">
 								<label for="send_money_password">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="7">
+							</div>
+							<div class="form-group advanced">
+								<label for="send_money_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="8" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:5px">
+								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="9"> Do Not Broadcast</label>
 							</div>
 
-							<input type="hidden" name="failure_message" value="An unknown error occured! NXT may or may not be sent." />
-			      			<input type="hidden" name="request_type" value="sendMoney" />
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
+							<input type="hidden" name="error_message" value="An unknown error occured! NXT may or may not be sent." />
+			      			<input type="hidden" name="request_type" value="sendMoney" data-default="sendMoney" />
 			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
-						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
 		      			<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
@@ -2939,10 +3065,10 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								    </span>
 								</div>
 							</div>
-							<div class="form-group" style="margin-bottom:10px">
+							<div class="form-group">
 								<label for="send_message_message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;"> Encrypt Message</label></div>
+								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;margin-bottom:0;"> Encrypt Message</label></div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2965,12 +3091,20 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="send_message_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+							<div class="form-group advanced">
+								<label for="send_message_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_message_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:5px;">
+								<input type="checkbox" name="doNotBroadcast" id="send_message_do_not_broadcast" value="1" /> <label for="send_message_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 
-							<input type="hidden" name="request_type" value="sendMessage" />
+							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
+
+							<input type="hidden" name="request_type" value="sendEncryptedNote" data-default="sendEncryptedNote" />
 				       		<input type="hidden" name="error_message" value="An unknown error occured! Message may or may not be sent." />
 				       		<input type="hidden" name="converted_account_id" value="" />
 						</form>
-						<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
 			       		<div class="advanced_info"><strong>Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#">advanced</a></div>
@@ -3020,7 +3154,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="account_info_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="account_info_password" class="form-control" placeholder="" tabindex="5">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="account_info_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="account_info_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="account_info_do_not_broadcast" value="1" /> <label for="account_info_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="setAccountInfo" />
 				       		<input type="hidden" name="success_message" value="Your account info has been saved successfully." />
 						</form>
@@ -3084,10 +3224,15 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="register_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="register_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="register_alias_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="register_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="register_alias_do_not_broadcast" value="1" /> <label for="register_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
 				      		<input type="hidden" name="request_type" value="setAlias" />
-				      		<input type="hidden" name="success_message" value="Your alias has been registered!" />
 				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not be registered." />
 						</form>
 					</div>
@@ -3144,7 +3289,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="buy_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="buy_alias_password" class="form-control" placeholder="" tabindex="4">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="buy_alias_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="buy_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="buy_alias_do_not_broadcast" value="1" /> <label for="buy_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="buyAlias" />
 				      		<input type="hidden" name="success_message" value="Your alias buy is in progress!" />
 				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias may or may not have been bought." />
@@ -3207,6 +3358,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="transfer_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+							<div class="form-group advanced">
+								<label for="transfer_alias_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:5px;">
+								<input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
+
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
 							<input type="hidden" name="request_type" value="sellAlias" />
@@ -3284,6 +3443,14 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="sell_alias_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="5">
 							</div>
+							<div class="form-group advanced">
+								<label for="sell_alias_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="sell_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:5px;">
+								<input type="checkbox" name="doNotBroadcast" id="sell_alias_do_not_broadcast" value="1" /> <label for="sell_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
+
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
 							<input type="hidden" name="success_message" value="Your alias has been put up for sale successfully!" />
@@ -3339,7 +3506,13 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<label for="cancel_alias_sale_password">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
 							</div>
-
+							<div class="form-group advanced">
+								<label for="cancel_alias_sale_referenced_transaction">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_alias_sale_referenced_transaction" placeholder="Referenced Transaction Full Hash" tabindex="6" />
+							</div>
+							<div class="form-group advanced" style="margin-bottom:0;">
+								<input type="checkbox" name="doNotBroadcast" id="cancel_alias_sale_do_not_broadcast" value="1" /> <label for="cancel_alias_sale_do_not_broadcast" style="font-weight:normal;" tabindex="7"> Do Not Broadcast</label>
+							</div>
 							<input type="hidden" name="request_type" value="sellAlias" />
 				      		<input type="hidden" name="success_message" value="Your alias sale has been cancelled successfully!" />
 				      		<input type="hidden" name="error_message" value="An unknown error occured! Alias sale may or may not have been cancelled." />
@@ -3374,8 +3547,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
 								<div class="form-group">
-									<label for="generate_token_website">WEBSITE (OR TEXT)</label>
-									<input type="text" class="form-control" name="website" id="generate_token_website" placeholder="Website Or Text" tabindex="1" value="http://" />
+									<label for="generate_token_data">Data</label>
+									<textarea class="form-control" name="website" id="generate_token_data" placeholder="Website Or Text" tabindex="1" rows="3"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="generateToken" />
 								<div class="form-group secret_phrase">
@@ -3390,8 +3563,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
 								<div class="form-group">
-									<label for="decode_token_website">WEBSITE (OR TEXT)</label>
-									<input type="text" class="form-control" name="website" id="decode_token_website" placeholder="Website or Text" tabindex="1" value="" />
+									<label for="decode_token_data">DATA</label>
+									<textarea type="text" class="form-control" name="website" id="decode_token_data" placeholder="Website or Text" tabindex="1" rows="3"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="decodeToken" />
 								<div class="form-group">
@@ -3482,7 +3655,8 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 						      		    </tbody>
 						      		</table>
 
-						      		<div id="transaction_info_output_bottom" style="display: none;"></div>
+						      		<div id="transaction_info_output_bottom" style="display: none;margin-top:10px;"></div>
+						      		<div id="transaction_info_bottom" style="display: none;"></div>
 							    </div>
 							    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
 									<table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">
@@ -3811,6 +3985,114 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
 			</div>
 		</div>
 	
+		<div class="modal fade" id="raw_transaction_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+			    <div class="modal-content">
+			     	<div class="modal-header">
+			        	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			        	<h4 class="modal-title">Raw Transaction Details</h4>
+			      	</div>
+			      	<div class="modal-body">	
+			      		<label>UNSIGNED TRANSACTION BYTES</label>
+			      		<div class="form-group">
+				      		<textarea class="form-control" id="raw_transaction_modal_unsigned_transaction_bytes" rows="4"></textarea>
+						</div>
+			      		<label>SIGNED TRANSACTION BYTES</label>
+			      		<div class="form-group">
+			      			<textarea class="form-control" id="raw_transaction_modal_transaction_bytes" rows="4"></textarea>
+			      		</div>
+			      		<div id="raw_transaction_modal_full_hash_container">
+				      		<label>FULL TRANSACTION HASH</label>
+				      		<div class="form-group">
+					      		<textarea class="form-control" id="raw_transaction_modal_full_hash" rows="1"></textarea>
+							</div>
+						</div>
+						<div id="raw_transaction_modal_signature_hash_container">
+				      		<label>SIGNATURE HASH</label>
+				      		<div class="form-group">
+				      			<textarea class="form-control" id="raw_transaction_modal_signature_hash" rows="1"></textarea>
+				      		</div>
+				      	</div>
+					</div>
+					<div class="modal-footer" style="margin-top:0;">
+			        	<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+			      	</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade modal-no-hide" id="transaction_operations_modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+		    	<div class="modal-content">
+		      		<div class="modal-header">
+		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        		<h4 class="modal-title">Advanced Transaction Operations</h4>
+		      		</div>
+			      	<div class="modal-body">	
+						<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+							<li class="active" id="broadcast_transaction_nav" data-tab="broadcast_transaction"><a href="#">Broadcast Transaction</a></li>
+							<li data-tab="parse_transaction"><a href="#">Parse Transaction</a></li>
+							<li data-tab="calculate_full_hash"><a href="#">Calculate Full Hash</a></li>
+						</ul>
+
+						<div id="transaction_operations_modal_broadcast_transaction" class="tab_content" style="display:none">
+							<form role="form" id="broadcast_transaction_form">
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="form-group">
+									<label for="broadcast_transaction_transaction_bytes">TRANSACTION BYTES</label>
+									<textarea class="form-control" name="transactionBytes" id="broadcast_transaction_transaction_bytes" rows="4" placeholder="Signed Transaction Bytes"></textarea>
+								</div>
+								<input type="hidden" name="request_type" value="broadcastTransaction" />
+				      			<input type="hidden" name="success_message" value="The transaction has been broadcasted successfully." />
+				      			<input type="hidden" name="error_message" value="An unknown error occured! The transaction may or may not have been broadcasted." />			      		
+							</form>
+						 </div>
+
+						<div id="transaction_operations_modal_parse_transaction" class="tab_content" style="display:none">   
+							<form role="form" id="parse_transaction_form">
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="form-group">
+									<label for="parse_transaction_transaction_bytes">TRANSACTION BYTES</label>
+									<textarea class="form-control" name="transactionBytes" id="parse_transaction_transaction_bytes" rows="4" placeholder="Transaction Bytes"></textarea>
+								</div>
+								<input type="hidden" name="request_type" value="parseTransaction" />
+								<div id="parse_transaction_output" class="output" style="max-height:350px;overflow:auto">
+									<table class="table table-striped output_table" id="parse_transaction_output_table" style="margin-bottom:0;table-layout:fixed">
+										<tbody></tbody>
+									</table>
+								</div>
+							</form>
+						</div>
+
+						<div id="transaction_operations_modal_calculate_full_hash" class="tab_content" style="display:none">
+  							<form role="form" id="calculate_full_hash_form">
+								<div class="callout callout-danger error_message" style="display:none"></div>
+								<div class="form-group">
+									<label for="calculate_full_hash_unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
+									<textarea class="form-control" name="unsignedTransactionBytes" id="calculate_full_hash-unsigned_transaction_bytes" rows="4" placeholder="Unsigned Transaction Bytes"></textarea>
+								</div>
+								<div class="form-group">
+									<label for="calculate_full_hash_signature_hash">SIGNATURE HASH</label>
+									<textarea class="form-control" name="signatureHash" id="calculate_full_hash-unsigned_transaction_bytes" rows="1" placeholder="Signature Hash"></textarea>
+								</div>
+								<input type="hidden" name="request_type" value="calculateFullHash" />
+								<div id="calculate_full_hash_output" class="output" style="max-height:350px;overflow:auto">
+									<table class="table table-striped output_table" id="calculate_full_hash_output_table" style="margin-bottom:0;table-layout:fixed">
+										<tbody></tbody>
+									</table>
+								</div>
+							</form>
+						</div>
+
+					</div>
+			      	<div class="modal-footer" style="margin-top:0;">
+				        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				        <button type="button" class="btn btn-primary" id="transaction_operations_modal_button" data-loading-text="Submitting...">Submit</button>
+			    	</div>
+				</div>
+		  	</div>
+		</div>
+	
 		<div class="modal fade" id="asset_exchange_change_group_name_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -4029,6 +4311,7 @@ quantity decimal point." data-container="body" style="color:#4CAA6E" ></i></labe
         <script src="js/nrs.modals.transaction.js" type="text/javascript"></script>
         <script src="js/nrs.modals.accountinfo.js" type="text/javascript"></script>
         <script src="js/nrs.modals.balanceleasing.js" type="text/javascript"></script>
+        <script src="js/nrs.modals.advanced.js" type="text/javascript"></script>
         <script src="js/nrs.console.js" type="text/javascript"></script>
         <script src="js/nrs.util.js" type="text/javascript"></script>
     </body>

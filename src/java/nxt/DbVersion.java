@@ -319,6 +319,9 @@ final class DbVersion {
             case 90:
                 apply("CREATE INDEX IF NOT EXISTS purchase_deadline_idx ON purchase (deadline DESC, height DESC)");
             case 91:
+                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                apply(null);
+            case 92:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

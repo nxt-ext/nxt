@@ -22,7 +22,7 @@ public final class ReadEncryptedNote extends APIServlet.APIRequestHandler {
     static final ReadEncryptedNote instance = new ReadEncryptedNote();
 
     private ReadEncryptedNote() {
-        super("transaction", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
     }
 
     @Override

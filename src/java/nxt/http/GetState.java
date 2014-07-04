@@ -21,7 +21,9 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
     static final GetState instance = new GetState();
 
-    private GetState() {}
+    private GetState() {
+        super(new APITag[] {APITag.INFO});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

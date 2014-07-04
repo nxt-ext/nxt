@@ -15,7 +15,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
     static final GetAccount instance = new GetAccount();
 
     private GetAccount() {
-        super("account");
+        super(new APITag[] {APITag.ACCOUNTS}, "account");
     }
 
     @Override

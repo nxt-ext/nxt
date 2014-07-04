@@ -16,7 +16,7 @@ public final class GetDGSPendingPurchases extends APIServlet.APIRequestHandler {
     static final GetDGSPendingPurchases instance = new GetDGSPendingPurchases();
 
     private GetDGSPendingPurchases() {
-        super("seller", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.DGS}, "seller", "firstIndex", "lastIndex");
     }
 
     @Override

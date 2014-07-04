@@ -611,33 +611,29 @@ public final class DigitalGoodsStore {
 
     static void deliver(Transaction transaction, Attachment.DigitalGoodsDelivery attachment) {
         Purchase purchase = getPendingPurchase(attachment.getPurchaseId());
-        if (purchase != null) {
-            purchase.setPending(false);
-            long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
-            Account buyer = Account.getAccount(purchase.getBuyerId());
-            buyer.addToBalanceNQT(Convert.safeSubtract(attachment.getDiscountNQT(), totalWithoutDiscount));
-            buyer.addToUnconfirmedBalanceNQT(attachment.getDiscountNQT());
-            Account seller = Account.getAccount(transaction.getSenderId());
-            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, attachment.getDiscountNQT()));
-            purchase.setEncryptedGoods(attachment.getGoods());
-            purchase.setDiscountNQT(attachment.getDiscountNQT());
-            purchaseListeners.notify(purchase, Event.DELIVERY);
-        }
+        purchase.setPending(false);
+        long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+        Account buyer = Account.getAccount(purchase.getBuyerId());
+        buyer.addToBalanceNQT(Convert.safeSubtract(attachment.getDiscountNQT(), totalWithoutDiscount));
+        buyer.addToUnconfirmedBalanceNQT(attachment.getDiscountNQT());
+        Account seller = Account.getAccount(transaction.getSenderId());
+        seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, attachment.getDiscountNQT()));
+        purchase.setEncryptedGoods(attachment.getGoods());
+        purchase.setDiscountNQT(attachment.getDiscountNQT());
+        purchaseListeners.notify(purchase, Event.DELIVERY);
     }
 
     static void undoDeliver(Long sellerId, Long purchaseId, long discountNQT) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        if (purchase != null) {
-            purchase.setPending(true);
-            long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
-            Account buyer = Account.getAccount(purchase.getBuyerId());
-            buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
-            buyer.addToUnconfirmedBalanceNQT(- discountNQT);
-            Account seller = Account.getAccount(sellerId);
-            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
-            purchase.setEncryptedGoods(null);
-            purchase.setDiscountNQT(0);
-        }
+        purchase.setPending(true);
+        long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+        Account buyer = Account.getAccount(purchase.getBuyerId());
+        buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
+        buyer.addToUnconfirmedBalanceNQT(- discountNQT);
+        Account seller = Account.getAccount(sellerId);
+        seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
+        purchase.setEncryptedGoods(null);
+        purchase.setDiscountNQT(0);
     }
 
     static void refund(Long sellerId, Long purchaseId, long refundNQT, EncryptedData encryptedNote) {

@@ -20,14 +20,15 @@ var NRS = (function(NRS, $, undefined) {
 		// locks the dialog so that it cannot be hidden
 		lock: function() {
 			this.options.locked = true;
+			this.$element.addClass("locked");
 		}
 		// unlocks the dialog so that it can be hidden by 'esc' or clicking on the backdrop (if not static)
 		,
 		unlock: function() {
 			this.options.locked = false;
-		}
+			this.$element.removeClass("locked");
+		},
 		// override the original hide so that the original is only called if the modal is unlocked
-		,
 		hide: function() {
 			if (this.options.locked) return;
 
@@ -48,7 +49,12 @@ var NRS = (function(NRS, $, undefined) {
 		var $visible_modal = $(".modal.in");
 
 		if ($visible_modal.length) {
-			$visible_modal.modal("hide");
+			if ($visible_modal.hasClass("locked")) {
+				var $btn = $visible_modal.find("button.btn-primary:not([data-dismiss=modal])");
+				NRS.unlockForm($visible_modal, $btn, true);
+			} else {
+				$visible_modal.modal("hide");
+			}
 		}
 	});
 
@@ -62,19 +68,23 @@ var NRS = (function(NRS, $, undefined) {
 	$(".modal").on("hidden.bs.modal", function(e) {
 		$(this).find("input[name=recipient], input[name=account_id]").trigger("unmask");
 
-		$(this).find(":input:not([type=hidden],button)").each(function(index) {
-			var default_value = $(this).data("default");
+		$(this).find(":input:not(button)").each(function(index) {
+			var defaultValue = $(this).data("default");
 			var type = $(this).attr("type");
 
 			if (type == "checkbox") {
-				if (default_value == "checked") {
+				if (defaultValue == "checked") {
 					$(this).prop("checked", true);
 				} else {
 					$(this).prop("checked", false);
 				}
+			} else if (type == "hidden") {
+				if (defaultValue !== undefined) {
+					$(this).val(defaultValue);
+				}
 			} else {
-				if (default_value) {
-					$(this).val(default_value);
+				if (defaultValue !== undefined) {
+					$(this).val(defaultValue);
 				} else {
 					$(this).val("");
 				}
@@ -88,6 +98,8 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
 
 		$(this).find(".advanced").hide();
+
+		$(this).find(".advanced_info a").text("advanced");
 
 		$(this).find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
@@ -148,13 +160,30 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $modal = $(this).closest(".modal");
 
-		$modal.find(".advanced").fadeIn();
+		var text = $(this).text().toLowerCase();
+
+		if (text == "advanced") {
+			$modal.find(".advanced").fadeIn();
+		} else {
+			$modal.find(".advanced").hide();
+		}
 
 		$modal.find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
 			var advancedSize = $(obj).data("advanced");
-			$(obj).addClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).removeClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+
+			if (text == "advanced") {
+				$(obj).addClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).removeClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+			} else {
+				$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
+			}
 		});
+
+		if (text == "advanced") {
+			$(this).text("basic");
+		} else {
+			$(this).text("advanced");
+		}
 	});
 
 	return NRS;

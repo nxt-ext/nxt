@@ -21,6 +21,7 @@ public abstract class TransactionType {
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
+    private static final byte SUBTYPE_PAYMENT_WITH_MESSAGE = 1;
 
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
@@ -56,6 +57,8 @@ public abstract class TransactionType {
                 switch (subtype) {
                     case SUBTYPE_PAYMENT_ORDINARY_PAYMENT:
                         return Payment.ORDINARY;
+                    case SUBTYPE_PAYMENT_WITH_MESSAGE:
+                        return Payment.WITH_MESSAGE;
                     default:
                         return null;
                 }
@@ -205,6 +208,15 @@ public abstract class TransactionType {
         return false;
     }
 
+    final boolean isDuplicate(String key, Map<TransactionType, Set<String>> duplicates) {
+        Set<String> myDuplicates = duplicates.get(this);
+        if (myDuplicates == null) {
+            myDuplicates = new HashSet<>();
+            duplicates.put(this, myDuplicates);
+        }
+        return !myDuplicates.add(key);
+    }
+
     /*
     Collection<TransactionType> getPhasingTransactionTypes() {
         return Collections.emptyList();
@@ -225,6 +237,23 @@ public abstract class TransactionType {
             return TransactionType.TYPE_PAYMENT;
         }
 
+        @Override
+        final boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            return true;
+        }
+
+        @Override
+        final void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        }
+
+        @Override
+        final void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        }
+
+        @Override
+        final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
         public static final TransactionType ORDINARY = new Payment() {
 
             @Override
@@ -239,23 +268,6 @@ public abstract class TransactionType {
             void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) {}
 
             @Override
-            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                return true;
-            }
-
-            @Override
-            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            }
-
-            @Override
-            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            }
-
-            @Override
-            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            }
-
-            @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid ordinary payment");
@@ -263,6 +275,41 @@ public abstract class TransactionType {
             }
 
         };
+
+        public static final TransactionType WITH_MESSAGE = new Payment() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_PAYMENT_WITH_MESSAGE;
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
+                EncryptedData encryptedMessage = readEncryptedData(buffer, buffer.getShort(), Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+                transaction.setAttachment(new Attachment.PaymentMessage(encryptedMessage));
+            }
+
+            @Override
+            void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
+                EncryptedData encryptedMessage = new EncryptedData(Convert.parseHexString((String)attachmentData.get("message")),
+                        Convert.parseHexString((String)attachmentData.get("nonce")));
+                transaction.setAttachment(new Attachment.PaymentMessage(encryptedMessage));
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ENCRYPTED_MESSAGES_BLOCK) {
+                    throw new NotYetEnabledException("Payment messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+                Attachment.PaymentMessage attachment = (Attachment.PaymentMessage) transaction.getAttachment();
+                if (transaction.getAmountNQT() <= 0 || transaction.getAmountNQT() >= Constants.MAX_BALANCE_NQT
+                        || attachment.getEncryptedMessage().getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH
+                        || attachment.getEncryptedMessage().getNonce().length != (attachment.getEncryptedMessage().getData().length == 0 ? 0 : 32)) {
+                    throw new NxtException.ValidationException("Invalid encrypted message: " + attachment.getJSONObject());
+                }
+            }
+        };
+
     }
 
     public static abstract class Messaging extends TransactionType {
@@ -405,13 +452,8 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -475,13 +517,8 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -552,13 +589,8 @@ public abstract class TransactionType {
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -1591,10 +1623,17 @@ public abstract class TransactionType {
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || purchase == null
                         || ! purchase.getBuyerId().equals(transaction.getRecipientId())
-                        || attachment.getDiscountNQT() > purchase.getPriceNQT()
+                        || purchase.getEncryptedGoods() != null
+                        || attachment.getDiscountNQT() > Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity())
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delivery: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
+                return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
         };
@@ -1647,6 +1686,12 @@ public abstract class TransactionType {
                         || ! transaction.getSenderId().equals(purchase.getBuyerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods feedback: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
+                return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
         };
@@ -1718,6 +1763,12 @@ public abstract class TransactionType {
                         || ! transaction.getSenderId().equals(purchase.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods refund: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
+                Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
+                return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
         };

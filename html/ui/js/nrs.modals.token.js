@@ -4,7 +4,6 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	$("#token_modal").on("show.bs.modal", function(e) {
-		$("#generate_token_website").val("http://");
 		$("#generate_token_output, #decode_token_output").html("").hide();
 
 		$("#token_modal_generate_token").show();
@@ -12,11 +11,11 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.generateToken = function($modal) {
-		var url = $.trim($("#generate_token_website").val());
+		var data = $.trim($("#generate_token_data").val());
 
-		if (!url || url == "http://") {
+		if (!data) {
 			return {
-				"error": "Website is a required field."
+				"error": "Data is a required field."
 			};
 			$("#generate_token_output").html("").hide();
 		} else {
@@ -28,7 +27,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#token_modal").find(".error_message").hide();
 
 		if (response.token) {
-			$("#generate_token_output").html("The generated token for <strong>" + String(data.website).escapeHTML() + "</strong> is: <br /><br /><textarea style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
+			$("#generate_token_output").html("The generated token is: <br /><br /><textarea style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
 		} else {
 			$.growl("Could not generate token.", {
 				"type": "danger"

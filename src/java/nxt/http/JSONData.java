@@ -301,6 +301,14 @@ final class JSONData {
         if (priceNQT != null) {
             json.put("priceNQT", String.valueOf(priceNQT));
         }
+        Long discountNQT = (Long) json.remove("discountNQT");
+        if (discountNQT != null) {
+            json.put("discountNQT", String.valueOf(discountNQT));
+        }
+        Long refundNQT = (Long) json.remove("refundNQT");
+        if (refundNQT != null) {
+            json.put("refundNQT", String.valueOf(refundNQT));
+        }
         return json;
     }
 

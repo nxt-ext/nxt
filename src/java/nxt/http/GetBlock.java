@@ -16,7 +16,7 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
     static final GetBlock instance = new GetBlock();
 
     private GetBlock() {
-        super("block");
+        super(new APITag[] {APITag.BLOCKS}, "block");
     }
 
     @Override

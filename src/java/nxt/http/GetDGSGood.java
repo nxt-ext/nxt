@@ -10,7 +10,7 @@ public final class GetDGSGood extends APIServlet.APIRequestHandler {
     static final GetDGSGood instance = new GetDGSGood();
 
     private GetDGSGood() {
-        super("goods");
+        super(new APITag[] {APITag.DGS}, "goods");
     }
 
     @Override

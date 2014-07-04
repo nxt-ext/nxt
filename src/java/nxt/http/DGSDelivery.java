@@ -21,7 +21,8 @@ public final class DGSDelivery extends CreateTransaction {
     static final DGSDelivery instance = new DGSDelivery();
 
     private DGSDelivery() {
-        super("purchase", "discountNQT", "goodsData", "goodsText", "encryptedGoodsData", "encryptedGoodsNonce");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "purchase", "discountNQT", "goodsData", "goodsText", "encryptedGoodsData", "encryptedGoodsNonce");
     }
 
     @Override
@@ -45,7 +46,9 @@ public final class DGSDelivery extends CreateTransaction {
         } catch (RuntimeException e) {
             return INCORRECT_DGS_DISCOUNT;
         }
-        if (discountNQT < 0 || discountNQT > Constants.MAX_BALANCE_NQT || discountNQT > purchase.getPriceNQT()) {
+        if (discountNQT < 0
+                || discountNQT > Constants.MAX_BALANCE_NQT
+                || discountNQT > Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity())) {
             return INCORRECT_DGS_DISCOUNT;
         }
 

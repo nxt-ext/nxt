@@ -14,7 +14,7 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
     static final GetAllTrades instance = new GetAllTrades();
 
     private GetAllTrades() {
-        super("timestamp");
+        super(new APITag[] {APITag.AE}, "timestamp");
     }
     
     @Override

@@ -21,7 +21,8 @@ public final class DGSRefund extends CreateTransaction {
     static final DGSRefund instance = new DGSRefund();
 
     private DGSRefund() {
-        super("purchase", "refundNQT", "note", "encryptedNote", "encryptedNoteNonce");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "purchase", "refundNQT", "note", "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override

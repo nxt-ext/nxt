@@ -21,7 +21,8 @@ public final class DGSPurchase extends CreateTransaction {
     static final DGSPurchase instance = new DGSPurchase();
 
     private DGSPurchase() {
-        super("goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp", "note",
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp", "note",
                 "encryptedNote", "encryptedNoteNonce");
     }
 

@@ -100,7 +100,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -169,13 +169,14 @@ var NRS = (function(NRS, $, undefined) {
 
 		//transfer
 		if (data.priceNQT == "0") {
-			if (data.recipient == NRS.accountRS) {
+			if (data.recipient == NRS.account) {
 				$row.find("td.status").html("<span class='label label-info'>Cancelling Sale</span>");
+				$row.find("a.cancel_alias_sale").remove();
 			} else {
 				$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
 			}
 		} else {
-			if (data.recipient != "0") {
+			if (data.recipient != NRS.genesis) {
 				$row.find("td.status").html("<span class='label label-info'>For Sale (direct)</span>");
 			} else {
 				$row.find("td.status").html("<span class='label label-info'>For Sale (indirect)</span>");
@@ -307,7 +308,14 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#register_alias_modal h4.modal-title").html("Register Alias");
 			$("#register_alias_modal .btn-primary").html("Register");
-			$("#register_alias_alias").val("").show();
+
+			var prefill = $invoker.data("prefill-alias");
+
+			if (prefill) {
+				$("#register_alias_alias").val(prefill).show();
+			} else {
+				$("#register_alias_alias").val("").show();
+			}
 			$("#register_alias_alias_noneditable").html("").hide();
 			$("#register_alias_alias_update").val(0);
 			NRS.forms.setAliasType("uri");
@@ -412,6 +420,34 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.forms.setAliasType(type, $("#register_alias_uri").val());
 	});
 
+	NRS.forms.setAliasError = function(response, data) {
+		if (response && response.errorCode && response.errorCode == 8) {
+			var errorDescription = String(response.errorDescription).escapeHTML();
+
+			NRS.sendRequest("getAlias", {
+				"aliasName": data.aliasName
+			}, function(response) {
+				var message;
+
+				if (!response.errorCode) {
+					if (response.buyer) {
+						if (response.buyer == NRS.account) {
+							message = "You have been offered this alias for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+						} else if (response.buyer == NRS.genesis) {
+							message = "This alias is offered for sale for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+						} else {
+							message = "This alias is offered for sale to another account pending decision.";
+						}
+					} else {
+						message = "<a href='#' data-user='" + NRS.getAccountFormatted(response, "account") + "'>View owner info?</a>";
+					}
+
+					$("#register_alias_modal").find(".error_message").html(errorDescription + ". " + message);
+				}
+			}, false);
+		}
+	}
+
 	NRS.forms.setAliasComplete = function(response, data) {
 		if (response.alreadyProcessed) {
 			return;
@@ -434,6 +470,10 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					$row.find("td.uri").html(data.aliasURI);
 				}
+
+				$.growl("Your alias has been updated successfully.", {
+					"type": "success"
+				});
 			} else {
 				var $rows = $table.find("tr");
 
@@ -462,6 +502,10 @@ var NRS = (function(NRS, $, undefined) {
 				if ($("#aliases_table").parent().hasClass("data-empty")) {
 					$("#aliases_table").parent().removeClass("data-empty");
 				}
+
+				$.growl("Your alias has been registered successfully.", {
+					"type": "success"
+				});
 			}
 		}
 	}
@@ -483,7 +527,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": alias
 		}, function(response, input) {
 			if (response.errorCode) {
-				$.growl("Could not find alias.", {
+				$.growl("Could not find alias. <a href='#' data-toggle='modal' data-target='#register_alias_modal' data-prefill-alias='" + String(alias).escapeHTML() + "'>Register?</a>", {
 					"type": "danger"
 				});
 				NRS.fetchingModalData = false;

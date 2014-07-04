@@ -18,7 +18,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.fetchingModalData = true;
 
-		$("#transaction_info_output_top, #transaction_info_output_bottom").html("").hide();
+		$("#transaction_info_output_top, #transaction_info_output_bottom, #transaction_info_bottom").html("").hide();
 		$("#transaction_info_callout").hide();
 		$("#transaction_info_table").hide();
 		$("#transaction_info_table tbody").empty();
@@ -49,7 +49,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#transaction_info_tab_link").tab("show");
 
-		$("#transaction_info_details_table tbody").empty().append(NRS.createInfoTable(transactionDetails, true))
+		$("#transaction_info_details_table tbody").empty().append(NRS.createInfoTable(transactionDetails, true));
 		$("#transaction_info_table tbody").empty();
 
 		var incorrect = false;
@@ -68,6 +68,29 @@ var NRS = (function(NRS, $, undefined) {
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
 
+					break;
+				case 1:
+					var data = {
+						"Type": "Payment With Message",
+						"Amount": transaction.amountNQT,
+						"Fee": transaction.feeNQT,
+						"Recipient": NRS.getAccountTitle(transaction, "recipient"),
+						"Sender": NRS.getAccountTitle(transaction, "sender")
+					};
+
+					if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+						NRS.tryToDecrypt(transaction, {
+							"message": {
+								"title": "Note",
+								"nonce": "nonce"
+							}
+						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient));
+					} else {
+						$("#transaction_info_bottom").html("<div class='callout callout-bottom callout-warning'>Message is encrypted and cannot be ready by you.</div>").show();
+					}
+
+					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
+					$("#transaction_info_table").show();
 					break;
 				default:
 					incorrect = true;
@@ -223,7 +246,7 @@ var NRS = (function(NRS, $, undefined) {
 						}, false);
 
 						if (message) {
-							$("#transaction_info_output_bottom").html("<div class='callout callout-" + messageStyle + "' style='margin-top:15px;margin-bottom:0;'>" + message + "</div>").show();
+							$("#transaction_info_bottom").html("<div class='callout callout-bottom callout-" + messageStyle + "'>" + message + "</div>").show();
 						}
 					}
 
@@ -557,8 +580,38 @@ var NRS = (function(NRS, $, undefined) {
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
-						$("#transaction_info_modal").modal("show");
-						NRS.fetchingModalData = false;
+						if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+							NRS.sendRequest("getDGSPurchase", {
+								"purchase": transaction.transaction
+							}, function(purchase) {
+								var callout = "";
+
+								if (purchase.pending) {
+									if (NRS.account == transaction.recipient) {
+										callout = "<a href='#' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(transaction.transaction).escapeHTML() + "'>Deliver Goods?</a>";
+									} else {
+										callout = "Waiting on seller to deliver goods.";
+									}
+								} else {
+									if (purchase.refundNQT) {
+										callout = "This purchase has been refunded.";
+									} else {
+										callout = "This purchase has been delivered.";
+									}
+								}
+
+								if (callout) {
+									$("#transaction_info_bottom").html("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
+								}
+
+								$("#transaction_info_modal").modal("show");
+								NRS.fetchingModalData = false;
+
+							});
+						} else {
+							$("#transaction_info_modal").modal("show");
+							NRS.fetchingModalData = false;
+						}
 					});
 
 					break;
@@ -574,11 +627,16 @@ var NRS = (function(NRS, $, undefined) {
 							var data = {
 								"Type": "Marketplace Delivery",
 								"Item Name": goods.name,
-								"Price": purchase.priceNQT,
-								"quantityFormattedHTML": NRS.format(purchase.quantity),
-								"Buyer": NRS.getAccountFormatted(purchase, "buyer"),
-								"Seller": NRS.getAccountFormatted(purchase, "seller")
+								"Price": purchase.priceNQT
 							};
+
+							if (transaction.attachment.discountNQT) {
+								data["Discount"] = transaction.attachment.discountNQT;
+							}
+
+							data["quantityFormattedHTML"] = NRS.format(purchase.quantity);
+							data["Buyer"] = NRS.getAccountFormatted(purchase, "buyer");
+							data["Seller"] = NRS.getAccountFormatted(purchase, "seller");
 
 							if (transaction.attachment.goodsData) {
 								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
@@ -595,6 +653,22 @@ var NRS = (function(NRS, $, undefined) {
 
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
+
+							var callout;
+
+							if (NRS.account == purchase.buyer) {
+								if (purchase.refundNQT) {
+									callout = "This purchase has been refunded.";
+								} else if (!purchase.feedbackNote) {
+									callout = "Goods received. <a href='#' data-toggle='modal' data-target='#dgs_feedback_modal' data-purchase='" + String(transaction.attachment.purchase).escapeHTML() + "'>Give feedback?</a>";
+								}
+							} else if (NRS.account == purchase.seller && purchase.refundNQT) {
+								callout = "This purchase has been refunded.";
+							}
+
+							if (callout) {
+								$("#transaction_info_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
+							}
 
 							$("#transaction_info_modal").modal("show");
 							NRS.fetchingModalData = false;
@@ -629,12 +703,38 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-
 							$("#transaction_info_table").show();
 
-							$("#transaction_info_modal").modal("show");
+							if (purchase.seller == NRS.account || purchase.buyer == NRS.account) {
+								NRS.sendRequest("getDGSPurchase", {
+									"purchase": transaction.attachment.purchase
+								}, function(purchase) {
+									var callout;
 
-							NRS.fetchingModalData = false;
+									if (purchase.buyer == NRS.account) {
+										if (purchase.refundNQT) {
+											callout = "This purchase has been refunded.";
+										}
+									} else {
+										if (!purchase.refundNQT) {
+											callout = "<a href='#' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(transaction.attachment.purchase).escapeHTML() + "'>Refund this purchase?</a>";
+										} else {
+											callout = "This purchase has been refunded.";
+										}
+									}
+
+									if (callout) {
+										$("#transaction_info_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
+									}
+
+									$("#transaction_info_modal").modal("show");
+									NRS.fetchingModalData = false;
+								});
+
+							} else {
+								$("#transaction_info_modal").modal("show");
+								NRS.fetchingModalData = false;
+							}
 						});
 					});
 
@@ -715,7 +815,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#transaction_info_modal").on("hide.bs.modal", function(e) {
 		NRS.removeDecryptionForm($(this));
-		$("#transaction_info_output_bottom, #transaction_info_output_top").html("").hide();
+		$("#transaction_info_output_bottom, #transaction_info_output_top, #transaction_info_bottom").html("").hide();
 	});
 
 	return NRS;

@@ -14,7 +14,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
     static final GetDGSPurchases instance = new GetDGSPurchases();
 
     private GetDGSPurchases() {
-        super("seller", "buyer", "firstIndex", "lastIndex", "completed");
+        super(new APITag[] {APITag.DGS}, "seller", "buyer", "firstIndex", "lastIndex", "completed");
     }
 
     @Override

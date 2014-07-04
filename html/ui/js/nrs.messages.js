@@ -22,14 +22,21 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.getAccountMessages("private", function() {
 			NRS.getAccountMessagesComplete(callback);
 		});
+
+		NRS.getAccountMessages("payment", function() {
+			NRS.getAccountMessagesComplete(callback);
+		})
 	}
 
 	NRS.getAccountMessages = function(type, callback) {
+		var transactionType = (type == "payment" ? 0 : 1);
+		var transactionSubtype = (type == "payment" ? 1 : (type == "private" ? 0 : 8));
+
 		NRS.sendRequest("getAccountTransactionIds+", {
 			"account": NRS.account,
 			"timestamp": 0,
-			"type": 1,
-			"subtype": (type == "public" ? 0 : 8)
+			"type": transactionType,
+			"subtype": transactionSubtype
 		}, function(response) {
 			_messageTypesChecked++;
 
@@ -66,7 +73,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getAccountMessagesComplete = function(callback) {
-		if (_totalMessages == _totalMessagesLoaded && _messageTypesChecked == 2) {
+		if (_totalMessages == _totalMessagesLoaded && _messageTypesChecked == 3) {
 			if (NRS._totalMessages == 0) {
 				$("#no_message_selected").hide();
 				$("#no_messages_available").show();
@@ -178,8 +185,16 @@ var NRS = (function(NRS, $, undefined) {
 			for (var i = 0; i < messages.length; i++) {
 				var decoded = "";
 				var extra = "";
+				var type = "";
 
-				if (messages[i].subtype == 8) {
+				if (messages[i].type == 0 && messages[i].subtype == 1) {
+					type = "payment";
+				} else if (messages[i].type == 1 && messages[i].subtype == 8) {
+					type = "private";
+				} else {
+					type = "public";
+				}
+				if (type == "private" || type == "payment") {
 					try {
 						decoded = NRS.tryToDecryptMessage(messages[i]);
 						extra = "decrypted";
@@ -206,6 +221,11 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (decoded) {
 					decoded = String(decoded).escapeHTML().nl2br();
+
+					if (type == "payment") {
+						decoded = "<strong>+" + NRS.formatAmount(messages[i].amountNQT) + " NXT</strong><br />" + decoded;
+					}
+
 					if (extra == "to_decrypt") {
 						decoded = "<i class='fa fa-warning'></i> " + decoded;
 					} else if (extra == "decrypted") {
@@ -306,17 +326,16 @@ var NRS = (function(NRS, $, undefined) {
 
 	});
 
-	NRS.forms.sendMessage = function($modal) {
-		var requestType = "sendMessage";
+	NRS.forms.sendEncryptedNote = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
 
-		var data = {
-			"recipient": $.trim($("#send_message_recipient").val()),
-			"feeNXT": $.trim($("#send_message_fee").val()),
-			"deadline": $.trim($("#send_message_deadline").val()),
-			"secretPhrase": $.trim($("#send_message_password").val())
-		};
+		var converted = $modal.find("input[name=converted_account_id]").val();
 
-		var message = $.trim($("#send_message_message").val());
+		if (converted) {
+			data.recipient = converted;
+		}
+
+		var message = $.trim(data.message);
 
 		if (!message) {
 			return {
@@ -324,31 +343,60 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		if ($("#send_message_encrypt").is(":checked")) {
-			try {
-				var encrypted = NRS.encryptNote(message, {
-					"account": data.recipient
-				}, data.secretPhrase);
+		delete data.message;
 
-				requestType = "sendEncryptedNote";
+		try {
+			var encrypted = NRS.encryptNote(message, {
+				"account": data.recipient
+			}, data.secretPhrase);
 
-				data["encryptedNote"] = encrypted.message;
-				data["encryptedNoteNonce"] = encrypted.nonce;
-			} catch (err) {
-				return {
-					"error": err.message
-				};
-			}
-		} else {
-			data["message"] = converters.stringToHexString(message);
+			requestType = "sendEncryptedNote";
+
+			data.encryptedNote = encrypted.message;
+			data.encryptedNoteNonce = encrypted.nonce;
+		} catch (err) {
+			return {
+				"error": err.message
+			};
 		}
 
 		data["_extra"] = {
 			"message": message
 		};
 
+		delete data.encrypt;
+
 		return {
-			"requestType": requestType,
+			"data": data
+		};
+	}
+
+	NRS.forms.sendMessage = function($modal) {
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		var converted = $modal.find("input[name=converted_account_id]").val();
+
+		if (converted) {
+			data.recipient = converted;
+		}
+
+		var message = $.trim(data.message);
+
+		if (!message) {
+			return {
+				"error": "Message is a required field."
+			};
+		}
+
+		data.message = converters.stringToHexString(message);
+
+		data["_extra"] = {
+			"message": message
+		};
+
+		delete data.encrypt;
+
+		return {
 			"data": data
 		};
 	}
@@ -451,6 +499,18 @@ var NRS = (function(NRS, $, undefined) {
 			$btn.button("reset");
 		});
 	});
+
+	$("#send_message_encrypt").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find("input[name=request_type]").val("sendEncryptedNote");
+		} else {
+			$(this).closest("form").find("input[name=request_type]").val("sendMessage");
+		}
+	});
+
+	NRS.forms.sendEncryptedNoteComplete = function(response, data) {
+		NRS.forms.sendMessageComplete(response, data);
+	}
 
 	NRS.forms.sendMessageComplete = function(response, data) {
 		data.message = data._extra.message;

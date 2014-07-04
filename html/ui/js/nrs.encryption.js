@@ -107,8 +107,6 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
-			console.log(err);
-
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {
@@ -304,7 +302,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -341,11 +339,11 @@ var NRS = (function(NRS, $, undefined) {
 							showDecryptionForm = true;
 							return false;
 						} else {
-							data = "Could not decrypt " + String(title).escapeHTML().toLowerCase() + ".";
+							data = "Could not decrypt" + (title ? " " + String(title).escapeHTML().toLowerCase() : "") + ".";
 						}
 					}
 
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
 				}
 			});
 		}
@@ -438,7 +436,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				decryptedFields[key] = note;
 
-				output += "<div" + (!_encryptedNote.options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
+				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
 			} catch (err) {
 				decryptionError = true;
 				var message = String(err.message ? err.message : err);

@@ -34,6 +34,10 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         subtype.put("value", TransactionType.Payment.ORDINARY.getSubtype());
         subtype.put("description", "Ordinary payment");
         subtypes.add(subtype);
+        subtype = new JSONObject();
+        subtype.put("value", TransactionType.Payment.WITH_MESSAGE.getSubtype());
+        subtype.put("description", "Payment with message");
+        subtypes.add(subtype);
         transactionType.put("subtypes", subtypes);
         transactionTypes.add(transactionType);
         transactionType = new JSONObject();
@@ -177,7 +181,9 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
 
     }
 
-    private GetConstants() {}
+    private GetConstants() {
+        super(new APITag[] {APITag.INFO});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

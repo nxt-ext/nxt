@@ -713,12 +713,19 @@ var NRS = (function(NRS, $, undefined) {
 		return hex;
 	}
 
-	NRS.getFormData = function($form) {
+	NRS.getFormData = function($form, unmodified) {
 		var serialized = $form.serializeArray();
 		var data = {};
 
 		for (var s in serialized) {
 			data[serialized[s]['name']] = serialized[s]['value']
+		}
+
+		if (!unmodified) {
+			delete data.request_type;
+			delete data.success_message;
+			delete data.error_message;
+			delete data.converted_account_id;
 		}
 
 		return data;
@@ -740,10 +747,10 @@ var NRS = (function(NRS, $, undefined) {
 			formattedAcc = String(object[acc + "RS"]).escapeHTML();
 		}
 
-		if (formattedAcc in NRS.contacts) {
-			return NRS.contacts[formattedAcc].name.escapeHTML();
-		} else if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
+		if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
 			return "You";
+		} else if (formattedAcc in NRS.contacts) {
+			return NRS.contacts[formattedAcc].name.escapeHTML();
 		} else {
 			return String(formattedAcc).escapeHTML();
 		}
@@ -948,8 +955,8 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					value = NRS.formatQuantity(value, 0);
 				}
-			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee") {
-				value = NRS.formatAmount(new BigInteger(value)) + " NXT";
+			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee" || key == "Refund" || key == "Discount") {
+				value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
 			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller" || key == "Buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {

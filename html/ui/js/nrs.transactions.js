@@ -434,20 +434,27 @@ var NRS = (function(NRS, $, undefined) {
 		var transactionType = "Unknown";
 
 		if (transaction.type == 0) {
-			transactionType = "Ordinary payment";
+			switch (transaction.subtype) {
+				case 0:
+					transactionType = "Ordinary Payment";
+					break;
+				case 1:
+					transactionType = "Payment With Message";
+					break;
+			}
 		} else if (transaction.type == 1) {
 			switch (transaction.subtype) {
 				case 0:
-					transactionType = "Arbitrary message";
+					transactionType = "Arbitrary Message";
 					break;
 				case 1:
-					transactionType = "Alias assignment";
+					transactionType = "Alias Assignment";
 					break;
 				case 2:
-					transactionType = "Poll creation";
+					transactionType = "Poll Creation";
 					break;
 				case 3:
-					transactionType = "Vote casting";
+					transactionType = "Vote Casting";
 					break;
 				case 4:
 					transactionType = "Hub Announcement";
@@ -476,22 +483,22 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (transaction.type == 2) {
 			switch (transaction.subtype) {
 				case 0:
-					transactionType = "Asset issuance";
+					transactionType = "Asset Issuance";
 					break;
 				case 1:
-					transactionType = "Asset transfer";
+					transactionType = "Asset Transfer";
 					break;
 				case 2:
-					transactionType = "Ask order placement";
+					transactionType = "Ask Order Placement";
 					break;
 				case 3:
-					transactionType = "Bid order placement";
+					transactionType = "Bid Order Placement";
 					break;
 				case 4:
-					transactionType = "Ask order cancellation";
+					transactionType = "Ask Order Cancellation";
 					break;
 				case 5:
-					transactionType = "Bid order cancellation";
+					transactionType = "Bid Order Cancellation";
 					break;
 			}
 		} else if (transaction.type == 3) {
