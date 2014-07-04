@@ -2,10 +2,9 @@ package nxt.http;
 
 public enum APITag {
 
-    AE("Asset Exchange"), DGS("Digital Goods Store"), ALIASES("Aliases"), VS("Voting System"), ACCOUNTS("Accounts"),
-    BLOCKS("Blockchain queries"), TRANSACTIONS("Transaction handling"), CREATE_TRANSACTION("Create new transactions"),
-    INFO("Server status and info"), TOKENS("Hallmarks and tokens"), MESSAGES("Plain and encrypted messages"),
-    FORGING("Control forging");
+    ACCOUNTS("Accounts"), ALIASES("Aliases"), AE("Asset Exchange"), CREATE_TRANSACTION("Create Transaction"),
+    BLOCKS("Blocks"), DGS("Digital Goods Store"), FORGING("Forging"), INFO("Server Info"), MESSAGES("Messages"),
+    TRANSACTIONS("Transactions"), TOKENS("Tokens"), VS("Voting System");
 
     private final String displayName;
 

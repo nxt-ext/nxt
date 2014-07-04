@@ -20,6 +20,16 @@ import java.util.TreeSet;
 
 public class APITestServlet extends HttpServlet {
 
+    private static final String links;
+    static {
+        StringBuilder buf = new StringBuilder();
+        for (APITag apiTag : APITag.values()) {
+            buf.append("<a class=\"navbar-brand\" href=\"/test?requestTag=").append(apiTag.name()).append("\">");
+            buf.append(apiTag.getDisplayName()).append("</a>").append(" ");
+        }
+        links = buf.toString();
+    }
+
     private static final String header =
             "<!DOCTYPE html>\n" +
             "<html>\n" +
@@ -63,11 +73,11 @@ public class APITestServlet extends HttpServlet {
             "<div class=\"navbar navbar-default\" role=\"navigation\">" +
             "   <div class=\"container\" style=\"width: 90%;\">" +
             "       <div class=\"navbar-header\">" +
-            "           <a class=\"navbar-brand\" href=\"#\">Nxt http API</a>" + 
+            "           <a class=\"navbar-brand\" href=\"/test\">All</a> " + links +
             "       </div>" +
             "       <div class=\"navbar-collapse collapse\">" +
             "           <ul class=\"nav navbar-nav navbar-right\">" +
-            "               <li><a href=\"https://wiki.nxtcrypto.org/wiki/Nxt_API\" target=\"_blank\">Docs</a></li>" +
+            "               <li><a href=\"https://wiki.nxtcrypto.org/wiki/Nxt_API\" target=\"_blank\">wiki docs</a></li>" +
             "           </ul>" +
             "       </div>" +
             "   </div>" + 
@@ -144,7 +154,7 @@ public class APITestServlet extends HttpServlet {
         buf.append(requestType).append("\">");
         buf.append(requestType);
         buf.append("</a>");
-        buf.append("<a style=\"float:right;\" href=\"/doc/").append(className.replace('.','/')).append(".html\" target=\"_blank\">Docs</a>");
+        buf.append("<a style=\"float:right;\" href=\"/doc/").append(className.replace('.','/')).append(".html\" target=\"_blank\">javadoc</a>");
         buf.append("</h4>");
         buf.append("</div> <!-- panel-heading -->");
         buf.append("<div id=\"collapse").append(requestType).append("\" class=\"panel-collapse collapse\">");
