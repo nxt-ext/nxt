@@ -453,7 +453,13 @@ public final class Peers {
 
     static PeerImpl addPeer(final String address, final String announcedAddress) {
 
-        String peerAddress = normalizeHostAndPort(address);
+        //re-add the [] to ipv6 addresses lost in getHostAddress() above
+        String clean_address = address;
+        if (clean_address.split(":").length > 2) {
+            clean_address = "[" + clean_address + "]";
+        }
+
+        String peerAddress = normalizeHostAndPort(clean_address);
         if (peerAddress == null) {
             return null;
         }
