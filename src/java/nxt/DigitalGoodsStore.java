@@ -445,7 +445,7 @@ public final class DigitalGoodsStore {
                                 int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
-                && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getHeight()) {
+                && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
             goods.changeQuantity(-quantity);
             addPurchase(purchaseId, buyerId, goodsId, goods.getSellerId(), quantity, priceNQT,
                     deliveryDeadlineTimestamp, note, timestamp);
