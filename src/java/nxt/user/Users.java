@@ -155,7 +155,7 @@ public final class Users {
                         throw new RuntimeException(e.toString(), e);
                     }
                 }
-            });
+            }, true);
 
         } else {
             userServer = null;
