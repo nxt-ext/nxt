@@ -1626,7 +1626,7 @@ public interface Attachment {
 
     }
 
-    public final static class MonetarySystemExchangeSetting implements Attachment {
+    public final static class MonetarySystemExchangeOfferPublication implements Attachment {
 
         private final Long currencyId;
         private final long buyingRateNQT;
@@ -1637,7 +1637,7 @@ public interface Attachment {
         private final long initialCurrencySupply;
         private final int expirationHeight;
 
-        public MonetarySystemExchangeSetting(Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimitNQT, long totalSellingLimit, long initialNXTSupplyNQT, long initialCurrencySupply, int expirationHeight) {
+        public MonetarySystemExchangeOfferPublication(Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimitNQT, long totalSellingLimit, long initialNXTSupplyNQT, long initialCurrencySupply, int expirationHeight) {
             this.currencyId = currencyId;
             this.buyingRateNQT = buyingRateNQT;
             this.sellingRateNQT = sellingRateNQT;
@@ -1689,7 +1689,7 @@ public interface Attachment {
 
         @Override
         public TransactionType getTransactionType() {
-            return TransactionType.MonetarySystem.EXCHANGE_SETTING;
+            return TransactionType.MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
         }
 
         public Long getCurrencyId() {

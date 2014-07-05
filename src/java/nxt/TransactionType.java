@@ -52,7 +52,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_INCREASE = 1;
     private static final byte SUBTYPE_MONETARY_SYSTEM_RESERVE_CLAIM = 2;
     private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER = 3;
-    private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING = 4;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION = 4;
     private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE = 5;
     private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING = 6;
 
@@ -145,8 +145,8 @@ public abstract class TransactionType {
                         return MonetarySystem.RESERVE_CLAIM;
                     case SUBTYPE_MONETARY_SYSTEM_MONEY_TRANSFER:
                         return MonetarySystem.MONEY_TRANSFER;
-                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING:
-                        return MonetarySystem.EXCHANGE_SETTING;
+                    case SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION:
+                        return MonetarySystem.EXCHANGE_OFFER_PUBLICATION;
                     case SUBTYPE_MONETARY_SYSTEM_EXCHANGE:
                         return MonetarySystem.EXCHANGE;
                     case SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING:
@@ -2243,11 +2243,11 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType EXCHANGE_SETTING = new MonetarySystem() {
+        public static final TransactionType EXCHANGE_OFFER_PUBLICATION = new MonetarySystem() {
 
             @Override
             public byte getSubtype() {
-                return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_SETTING;
+                return TransactionType.SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION;
             }
 
             @Override
@@ -2260,7 +2260,7 @@ public abstract class TransactionType {
                 long initialNXTSupplyNQT = buffer.getLong();
                 long initialCurrencySupply = buffer.getLong();
                 int expirationHeight = buffer.getInt();
-                transaction.setAttachment(new Attachment.MonetarySystemExchangeSetting(currencyId, buyingRateNQT, sellingRateNQT, totalBuyingLimitNQT, totalSellingLimit, initialNXTSupplyNQT, initialCurrencySupply, expirationHeight));
+                transaction.setAttachment(new Attachment.MonetarySystemExchangeOfferPublication(currencyId, buyingRateNQT, sellingRateNQT, totalBuyingLimitNQT, totalSellingLimit, initialNXTSupplyNQT, initialCurrencySupply, expirationHeight));
             }
 
             @Override
@@ -2273,7 +2273,7 @@ public abstract class TransactionType {
                 long initialNXTSupplyNQT = (Long)attachmentData.get("initialNXTSupplyNQT");
                 long initialCurrencySupply = (Long)attachmentData.get("initialCurrencySupply");
                 int expirationHeight = ((Long)attachmentData.get("expirationHeight")).intValue();
-                transaction.setAttachment(new Attachment.MonetarySystemExchangeSetting(currencyId, buyingRateNQT, sellingRateNQT, totalBuyingLimitNQT, totalSellingLimit, initialNXTSupplyNQT, initialCurrencySupply, expirationHeight));
+                transaction.setAttachment(new Attachment.MonetarySystemExchangeOfferPublication(currencyId, buyingRateNQT, sellingRateNQT, totalBuyingLimitNQT, totalSellingLimit, initialNXTSupplyNQT, initialCurrencySupply, expirationHeight));
             }
 
             @Override
@@ -2282,7 +2282,7 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
 
-                Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
+                Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
@@ -2294,13 +2294,13 @@ public abstract class TransactionType {
                         || attachment.getInitialNXTSupplyNQT() < 0
                         || attachment.getInitialCurrencySupply() < 0
                         || attachment.getExpirationHeight() < 0) {
-                    throw new NxtException.ValidationException("Invalid exchange setting: " + attachment.getJSONObject());
+                    throw new NxtException.ValidationException("Invalid exchange offer publication: " + attachment.getJSONObject());
                 }
             }
 
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
+                Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= attachment.getInitialNXTSupplyNQT() && senderAccount.getUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId()) >= attachment.getInitialCurrencySupply()) {
                     senderAccount.addToUnconfirmedBalanceNQT(-attachment.getInitialNXTSupplyNQT());
                     senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), -attachment.getInitialCurrencySupply());
@@ -2312,7 +2312,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                Attachment.MonetarySystemExchangeSetting attachment = (Attachment.MonetarySystemExchangeSetting)transaction.getAttachment();
+                Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
                 senderAccount.addToUnconfirmedBalanceNQT(attachment.getInitialNXTSupplyNQT());
                 senderAccount.addToUnconfirmedCurrencyBalanceQNT(attachment.getCurrencyId(), attachment.getInitialCurrencySupply());
             }
@@ -2324,7 +2324,7 @@ public abstract class TransactionType {
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException("Reversal of exchange setting not supported");
+                throw new UndoNotSupportedException("Reversal of exchange offer publication not supported");
             }
 
             @Override
