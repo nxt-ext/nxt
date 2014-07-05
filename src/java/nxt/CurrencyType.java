@@ -13,7 +13,7 @@ public class CurrencyType {
         types.put((byte)1, new CurrencyType() {
 
             @Override
-            public boolean validateCurrencyIssuanceAttachment(Transaction transaction) {
+            public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
 
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
@@ -29,7 +29,7 @@ public class CurrencyType {
         types.put((byte)2, new CurrencyType() {
 
             @Override
-            public boolean validateCurrencyIssuanceAttachment(Transaction transaction) {
+            public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
 
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
@@ -45,7 +45,7 @@ public class CurrencyType {
         types.put((byte)3, new CurrencyType() {
 
             @Override
-            public boolean validateCurrencyIssuanceAttachment(Transaction transaction) {
+            public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
 
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
@@ -63,7 +63,7 @@ public class CurrencyType {
         return types.get(type) == null ? instance : types.get(type);
     }
 
-    public boolean validateCurrencyIssuanceAttachment(Transaction transaction) {
+    public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
         return false;
     }
 

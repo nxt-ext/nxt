@@ -1960,7 +1960,7 @@ public abstract class TransactionType {
                         || attachment.getName().length() < Constants.MIN_CURRENCY_NAME_LENGTH || attachment.getName().length() > Constants.MAX_CURRENCY_NAME_LENGTH
                         || attachment.getCode().length() != Constants.CURRENCY_CODE_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH
-                        || !CurrencyType.getCurrencyType(attachment.getType()).validateCurrencyIssuanceAttachment(transaction)
+                        || !CurrencyType.getCurrencyType(attachment.getType()).isCurrencyIssuanceAttachmentValid(transaction)
                         || attachment.getTotalSupply() <= 0 || attachment.getTotalSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
                         || attachment.getIssuanceHeight() < 0
                         || attachment.getMinReservePerUnitNQT() < 0 || attachment.getMinReservePerUnitNQT() > Constants.MAX_BALANCE_NQT) {
