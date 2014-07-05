@@ -3,11 +3,11 @@ package nxt;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CurrencyType {
+public abstract class CurrencyType {
 
-    static final CurrencyType instance = new CurrencyType();
+    private static final Map<Byte, CurrencyType> types = new HashMap<>();
 
-    private CurrencyType() {
+    static {
 
         // This currency is issued by a single entity immediately, all the money belongs to this entity
         types.put((byte)1, new CurrencyType() {
@@ -20,6 +20,21 @@ public class CurrencyType {
                 return attachment.getIssuanceHeight() == 0
                         && attachment.getMinDifficulty() == 0
                         && attachment.getMaxDifficulty() == 0;
+
+            }
+
+            @Override
+            public boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return false;
+            }
+
+            @Override
+            public void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
 
             }
 
@@ -39,6 +54,21 @@ public class CurrencyType {
 
             }
 
+            @Override
+            public boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return false;
+            }
+
+            @Override
+            public void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
         });
 
         // This currency is issued at some height, the money is minted over time in a PoW manner
@@ -53,18 +83,39 @@ public class CurrencyType {
 
             }
 
+            @Override
+            public boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                return false;
+            }
+
+            @Override
+            public void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
         });
 
     }
 
-    private static final Map<Byte, CurrencyType> types = new HashMap<>();
-
     public static CurrencyType getCurrencyType(byte type) {
-        return types.get(type) == null ? instance : types.get(type);
+        return types.get(type);
     }
 
-    public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
-        return false;
+    public abstract boolean isCurrencyIssuanceAttachmentValid(Transaction transaction);
+
+    public abstract boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
+
+    public abstract void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
+
+    public abstract void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount);
+
+    public void undoCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException {
+        throw new TransactionType.UndoNotSupportedException("Reversal of currency issuance not supported");
     }
 
 }

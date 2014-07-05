@@ -1988,21 +1988,22 @@ public abstract class TransactionType {
 
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                return true;
+                return CurrencyType.getCurrencyType(((Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment()).getType()).applyCurrencyIssuanceAttachmentUnconfirmed(transaction, senderAccount);
             }
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                CurrencyType.getCurrencyType(((Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment()).getType()).undoCurrencyIssuanceAttachmentUnconfirmed(transaction, senderAccount);
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                CurrencyType.getCurrencyType(((Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment()).getType()).applyCurrencyIssuanceAttachment(transaction, senderAccount, recipientAccount);
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException("Reversal of currency issuance not supported");
+                CurrencyType.getCurrencyType(((Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment()).getType()).undoCurrencyIssuanceAttachment(transaction, senderAccount, recipientAccount);
             }
 
             @Override
