@@ -2067,7 +2067,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease)transaction.getAttachment();
+                Currency.increaseReserve(senderAccount, attachment.getCurrencyId(), attachment.getAmountNQT());
             }
 
             @Override
@@ -2136,7 +2137,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                Attachment.MonetarySystemReserveClaim attachment = (Attachment.MonetarySystemReserveClaim)transaction.getAttachment();
+                Currency.claimReserve(senderAccount, attachment.getCurrencyId(), attachment.getUnits());
             }
 
             @Override
@@ -2226,7 +2228,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                Attachment.MonetarySystemMoneyTransfer attachment = (Attachment.MonetarySystemMoneyTransfer)transaction.getAttachment();
+                Currency.transferMoney(senderAccount, attachment.getEntries());
             }
 
             @Override

@@ -14,28 +14,30 @@ public abstract class CurrencyType {
 
             @Override
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
-
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
                 return attachment.getIssuanceHeight() == 0
+                        && attachment.getMinReservePerUnitNQT() == 0
                         && attachment.getMinDifficulty() == 0
                         && attachment.getMaxDifficulty() == 0;
-
             }
 
             @Override
             public boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                return false;
+                return true;
             }
 
             @Override
             public void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-
             }
 
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
+                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0);
+
+                senderAccount.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(transaction.getId(), attachment.getTotalSupply());
             }
 
         });
@@ -45,28 +47,27 @@ public abstract class CurrencyType {
 
             @Override
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
-
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
                 return attachment.getIssuanceHeight() != 0
                         && attachment.getMinDifficulty() == 0
                         && attachment.getMaxDifficulty() == 0;
-
             }
 
             @Override
             public boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                return false;
+                return true;
             }
 
             @Override
             public void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-
             }
 
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
+                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0);
             }
 
         });
@@ -76,26 +77,26 @@ public abstract class CurrencyType {
 
             @Override
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
-
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                return attachment.getIssuanceHeight() != 0;
-
+                return attachment.getIssuanceHeight() != 0
+                        && attachment.getMinReservePerUnitNQT() == 0;
             }
 
             @Override
             public boolean applyCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-                return false;
+                return true;
             }
 
             @Override
             public void undoCurrencyIssuanceAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-
             }
 
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
+                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0);
             }
 
         });

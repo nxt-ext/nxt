@@ -5,6 +5,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,11 +30,11 @@ public final class Currency {
     }
 
     static void addNXTCurrency() {
-        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0);
+        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0, 0);
     }
 
-    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset) {
-        Currency currency = new Currency(currencyId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset);
+    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentReservePerUnitNQT) {
+        Currency currency = new Currency(currencyId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentReservePerUnitNQT);
         if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }
@@ -59,14 +60,16 @@ public final class Currency {
     private final String code;
     private final String description;
     private final byte type;
-    private final long totalSupply;
+    private long totalSupply;
     private final int issuanceHeight;
     private final long minReservePerUnitNQT;
     private final byte minDifficulty;
     private final byte maxDifficulty;
     private final byte ruleset;
 
-    private Currency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset) {
+    private long currentReservePerUnitNQT;
+
+    private Currency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentReservePerUnitNQT) {
         this.currencyId = currencyId;
         this.name = name;
         this.code = code;
@@ -78,6 +81,8 @@ public final class Currency {
         this.minDifficulty = minDifficulty;
         this.maxDifficulty = maxDifficulty;
         this.ruleset = ruleset;
+
+        this.currentReservePerUnitNQT = currentReservePerUnitNQT;
     }
 
     public Long getCurrencyId() {
@@ -127,6 +132,26 @@ public final class Currency {
     public static boolean isIssued(Long currencyId) {
         Currency currency = currencies.get(currencyId);
         return currency != null && currency.getIssuanceHeight() < BlockchainImpl.getInstance().getLastBlock().getHeight();
+    }
+
+    public static void increaseReserve(Account account, Long currencyId, long amountNQT) {
+        Currency currency = Currency.getCurrency(currencyId);
+        account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
+        currency.currentReservePerUnitNQT += amountNQT;
+    }
+
+    public static void claimReserve(Account account, Long currencyId, long units) {
+        account.addToCurrencyBalanceQNT(currencyId, -units);
+        Currency currency = Currency.getCurrency(currencyId);
+        currency.totalSupply -= units;
+        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.currentReservePerUnitNQT));
+    }
+
+    public static void transferMoney(Account account, List<Attachment.MonetarySystemMoneyTransfer.Entry> entries) {
+        for (Attachment.MonetarySystemMoneyTransfer.Entry entry : entries) {
+            account.addToCurrencyBalanceQNT(entry.getCurrencyId(), -entry.getUnits());
+            Account.addOrGetAccount(entry.getRecipientId()).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(entry.getCurrencyId(), entry.getUnits());
+        }
     }
 
 }

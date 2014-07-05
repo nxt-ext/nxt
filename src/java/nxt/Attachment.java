@@ -1600,6 +1600,10 @@ public interface Attachment {
             return TransactionType.MonetarySystem.MONEY_TRANSFER;
         }
 
+        public List<Entry> getEntries() {
+            return entries;
+        }
+
         public int getNumberOfEntries() {
             return entries.size();
         }
