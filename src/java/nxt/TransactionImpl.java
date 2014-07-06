@@ -373,6 +373,9 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
+        if (! type.hasRecipient() && (! Genesis.CREATOR_ID.equals(recipientId) || getAmountNQT() != 0)) {
+            throw new NxtException.ValidationException("Transactions of this type must have recipient == Genesis and amount == 0");
+        }
         type.validateAttachment(this);
     }
 
