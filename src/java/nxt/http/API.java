@@ -122,7 +122,7 @@ public final class API {
                     }
 
                 }
-            });
+            }, true);
 
         } else {
             apiServer = null;

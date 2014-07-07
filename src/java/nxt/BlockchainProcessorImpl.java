@@ -359,7 +359,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 addGenesisBlock();
                 scan();
             }
-        });
+        }, false);
 
         ThreadPool.scheduleThread(getMoreBlocksThread, 1);
 

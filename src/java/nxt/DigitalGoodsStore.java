@@ -588,7 +588,7 @@ public final class DigitalGoodsStore {
     static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
         Goods goods = Goods.goodsTable.get(attachment.getGoodsId());
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
-                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getHeight()) {
+                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
             goods.changeQuantity(-attachment.getQuantity());
             addPurchase(transaction, attachment, goods.getSellerId());
         } else {

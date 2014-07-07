@@ -217,6 +217,8 @@ public abstract class TransactionType {
         return !myDuplicates.add(key);
     }
 
+    abstract boolean hasRecipient();
+
     /*
     Collection<TransactionType> getPhasingTransactionTypes() {
         return Collections.emptyList();
@@ -252,6 +254,11 @@ public abstract class TransactionType {
 
         @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+        }
+
+        @Override
+        final boolean hasRecipient() {
+            return true;
         }
 
         public static final TransactionType ORDINARY = new Payment() {
@@ -371,6 +378,11 @@ public abstract class TransactionType {
                 }
             }
 
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public final static TransactionType ENCRYPTED_MESSAGE = new Messaging() {
@@ -412,6 +424,11 @@ public abstract class TransactionType {
                         || attachment.getEncryptedMessage().getNonce().length != (attachment.getEncryptedMessage().getData().length == 0 ? 0 : 32)) {
                     throw new NxtException.ValidationException("Invalid encrypted message: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return true;
             }
 
         };
@@ -459,8 +476,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
-                        || attachment.getAliasName().length() == 0
+                if (attachment.getAliasName().length() == 0
                         || attachment.getAliasName().length() > Constants.MAX_ALIAS_LENGTH
                         || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
                     throw new NxtException.ValidationException("Invalid alias assignment: " + attachment.getJSONObject());
@@ -475,6 +491,11 @@ public abstract class TransactionType {
                 if (alias != null && ! alias.getAccountId().equals(transaction.getSenderId())) {
                     throw new NxtException.ValidationException("Alias already owned by another account: " + normalizedAlias);
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -550,6 +571,12 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Transferring aliases to Genesis account not allowed");
                 }
             }
+
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public static final TransactionType ALIAS_BUY = new Messaging() {
@@ -623,6 +650,12 @@ public abstract class TransactionType {
                             + Convert.toUnsignedLong(offer.getBuyerId()));
                 }
             }
+
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public final static TransactionType POLL_CREATION = new Messaging() {
@@ -692,11 +725,14 @@ public abstract class TransactionType {
                 }
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
                         || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT
-                        || transaction.getAmountNQT() != 0
-                        || !Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
+                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.ValidationException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -758,9 +794,11 @@ public abstract class TransactionType {
                 if (Poll.getPoll(attachment.getPollId()) == null) {
                     throw new NxtException.ValidationException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
                 }
-                if (transaction.getAmountNQT() != 0 || !Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
-                    throw new NxtException.ValidationException("Invalid vote casting amount or recipient");
-                }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -820,9 +858,7 @@ public abstract class TransactionType {
                     throw new NotYetEnabledException("Hub terminal announcement not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.MessagingHubAnnouncement attachment = (Attachment.MessagingHubAnnouncement) transaction.getAttachment();
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getAmountNQT() != 0
-                        || attachment.getMinFeePerByteNQT() < 0 || attachment.getMinFeePerByteNQT() > Constants.MAX_BALANCE_NQT
+                if (attachment.getMinFeePerByteNQT() < 0 || attachment.getMinFeePerByteNQT() > Constants.MAX_BALANCE_NQT
                         || attachment.getUris().length > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
                     // cfb: "0" is allowed to show that another way to determine the min fee should be used
                     throw new NxtException.ValidationException("Invalid hub terminal announcement: " + attachment.getJSONObject());
@@ -833,6 +869,11 @@ public abstract class TransactionType {
                     }
                     //TODO: also check URI validity here?
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -861,8 +902,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
-                        || attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
+                if (attachment.getName().length() > Constants.MAX_ACCOUNT_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH
                         ) {
                     throw new NxtException.ValidationException("Invalid account info issuance: " + attachment.getJSONObject());
@@ -878,6 +918,11 @@ public abstract class TransactionType {
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 throw new UndoNotSupportedException("Undoing account info not supported");
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -948,8 +993,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
-                        || transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
+                if (transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
                         || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH
                         || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
@@ -965,6 +1009,11 @@ public abstract class TransactionType {
                         throw new NxtException.ValidationException("Invalid asset name: " + normalizedName);
                     }
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -1037,6 +1086,11 @@ public abstract class TransactionType {
                 }
             }
 
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         abstract static class ColoredCoinsOrderPlacement extends ColoredCoins {
@@ -1062,8 +1116,7 @@ public abstract class TransactionType {
             @Override
             final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
-                        || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
+                if (attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset order placement: " + attachment.getJSONObject());
                 }
@@ -1071,6 +1124,11 @@ public abstract class TransactionType {
                 if (asset == null || attachment.getQuantityQNT() <= 0 || attachment.getQuantityQNT() > asset.getQuantityQNT()) {
                     throw new NxtException.ValidationException("Invalid asset order placement asset or quantity: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            final boolean hasRecipient() {
+                return false;
             }
 
         }
@@ -1170,9 +1228,6 @@ public abstract class TransactionType {
 
             @Override
             final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0) {
-                    throw new NxtException.ValidationException("Invalid asset order cancellation amount or recipient");
-                }
                 Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation) transaction.getAttachment();
                 if (attachment.getOrderId() == null) {
                     throw new NxtException.ValidationException("Invalid order cancellation attachment: " + attachment.getJSONObject());
@@ -1194,6 +1249,11 @@ public abstract class TransactionType {
 
             @Override
             final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         }
@@ -1351,8 +1411,7 @@ public abstract class TransactionType {
             @Override
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing) transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || attachment.getName().length() == 0
+                if (attachment.getName().length() == 0
                         || attachment.getName().length() > Constants.MAX_DGS_LISTING_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH
                         || attachment.getTags().length() > Constants.MAX_DGS_LISTING_TAGS_LENGTH
@@ -1360,6 +1419,11 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -1398,11 +1462,15 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting) transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || goods == null || goods.isDelisted()
+                if (goods == null || goods.isDelisted()
                         || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods delisting: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -1443,12 +1511,16 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange) transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
+                if (attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT
                         || goods == null || goods.isDelisted()
                         || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods price change: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -1489,13 +1561,17 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange) transaction.getAttachment();
                 DigitalGoodsStore.Goods goods = DigitalGoodsStore.getGoods(attachment.getGoodsId());
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || goods == null || goods.isDelisted()
+                if (goods == null || goods.isDelisted()
                         || attachment.getDeltaQuantity() < -Constants.MAX_DGS_LISTING_QUANTITY
                         || attachment.getDeltaQuantity() > Constants.MAX_DGS_LISTING_QUANTITY
                         || ! transaction.getSenderId().equals(goods.getSellerId())) {
                     throw new NxtException.ValidationException("Invalid digital goods quantity change: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return false;
             }
 
         };
@@ -1575,6 +1651,11 @@ public abstract class TransactionType {
                 }
             }
 
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
@@ -1636,6 +1717,11 @@ public abstract class TransactionType {
                 return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public static final TransactionType FEEDBACK = new DigitalGoods() {
@@ -1692,6 +1778,11 @@ public abstract class TransactionType {
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
                 Attachment.DigitalGoodsFeedback attachment = (Attachment.DigitalGoodsFeedback) transaction.getAttachment();
                 return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return true;
             }
 
         };
@@ -1771,6 +1862,11 @@ public abstract class TransactionType {
                 return isDuplicate(Convert.toUnsignedLong(attachment.getPurchaseId()), duplicates);
             }
 
+            @Override
+            boolean hasRecipient() {
+                return true;
+            }
+
         };
 
     }
@@ -1836,6 +1932,11 @@ public abstract class TransactionType {
                     throw new NxtException.ValidationException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
+            }
+
+            @Override
+            boolean hasRecipient() {
+                return true;
             }
 
         };
