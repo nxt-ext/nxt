@@ -44,6 +44,8 @@ public final class Currency {
 
     static void clear() {
         currencies.clear();
+        currencyNames.clear();
+        currencyCodes.clear();
         addNXTCurrency();
     }
 

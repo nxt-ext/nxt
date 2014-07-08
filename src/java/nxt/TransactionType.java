@@ -2319,7 +2319,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                Attachment.MonetarySystemExchangeOfferPublication attachment = (Attachment.MonetarySystemExchangeOfferPublication)transaction.getAttachment();
+                CurrencyExchange.publicateExchangeOffer(senderAccount, attachment.getCurrencyId(), attachment.getBuyingRateNQT(), attachment.getSellingRateNQT(), attachment.getTotalBuyingLimitNQT(), attachment.getTotalSellingLimit(), attachment.getInitialNXTSupplyNQT(), attachment.getInitialCurrencySupply(), attachment.getExpirationHeight());
             }
 
             @Override
@@ -2401,7 +2402,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
+                CurrencyExchange.exchange(senderAccount, attachment.getCurrencyId(), attachment.getAmountNQT(), attachment.getUnits());
             }
 
             @Override
@@ -2467,7 +2469,8 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-
+                Attachment.MonetarySystemMoneyMinting attachment = (Attachment.MonetarySystemMoneyMinting)transaction.getAttachment();
+                CurrencyMint.mintMoney(senderAccount, attachment.getNonce(), attachment.getCurrencyId(), attachment.getUnits(), attachment.getCounter());
             }
 
             @Override
