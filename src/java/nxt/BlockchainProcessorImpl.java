@@ -468,9 +468,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         int curTime = Convert.getEpochTime();
 
         synchronized (blockchain) {
+            BlockImpl previousLastBlock = null;
             try {
                 Db.beginTransaction();
-                BlockImpl previousLastBlock = blockchain.getLastBlock();
+                previousLastBlock = blockchain.getLastBlock();
 
                 if (!previousLastBlock.getId().equals(block.getPreviousBlockId())) {
                     throw new BlockOutOfOrderException("Previous block id doesn't match");
@@ -619,6 +620,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (Exception e) {
                 Logger.logMessage("Error pushing block, will rollback", e);
                 Db.rollbackTransaction();
+                blockchain.setLastBlock(previousLastBlock);
                 throw new BlockNotAcceptedException(e.toString());
             } finally {
                 Db.endTransaction();
