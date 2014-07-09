@@ -413,18 +413,6 @@ final class TransactionImpl implements Transaction {
         type.undo(this, senderAccount, recipientAccount);
     }
 
-    /*
-    void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
-        Long senderId = getSenderId();
-        Long accumulatedAmount = accumulatedAmounts.get(senderId);
-        if (accumulatedAmount == null) {
-            accumulatedAmount = 0L;
-        }
-        accumulatedAmounts.put(senderId, Convert.safeAdd(accumulatedAmount, Convert.safeAdd(amountNQT, feeNQT)));
-        type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
-    }
-    */
-
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }
