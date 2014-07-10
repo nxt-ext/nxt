@@ -12,30 +12,25 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.transactionsPageType = null;
 
 	NRS.getInitialTransactions = function() {
-		NRS.sendRequest("getAccountTransactionIds", {
+		NRS.sendRequest("getAccountTransactions", {
 			"account": NRS.account,
-			"timestamp": 0
+			"firstIndex": 0,
+			"lastIndex": 10
 		}, function(response) {
-			if (response.transactionIds && response.transactionIds.length) {
-				var transactionIds = response.transactionIds.reverse().slice(0, 10);
-				var nrTransactions = 0;
+			if (response.transactions && response.transactions.length) {
 				var transactions = [];
+				var transactionIds = [];
 
-				for (var i = 0; i < transactionIds.length; i++) {
-					NRS.sendRequest("getTransaction", {
-						"transaction": transactionIds[i]
-					}, function(transaction, input) {
-						nrTransactions++;
+				for (var i = 0; i < response.transactions.length; i++) {
+					var transaction = response.transactions[i];
 
-						transaction.transaction = input.transaction;
-						transaction.confirmed = true;
-						transactions.push(transaction);
+					transaction.confirmed = true;
+					transactions.push(transaction);
 
-						if (nrTransactions == transactionIds.length) {
-							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-								NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
-							});
-						}
+					transactionIds.push(transaction.transaction);
+
+					NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+						NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
 					});
 				}
 			} else {
@@ -90,7 +85,7 @@ var NRS = (function(NRS, $, undefined) {
 			"timestamp": NRS.lastTransactionsTimestamp
 		}, function(response) {
 			if (response.transactionIds && response.transactionIds.length) {
-				var transactionIds = response.transactionIds.reverse().slice(0, 10);
+				var transactionIds = response.transactionIds.slice(0, 10);
 
 				if (transactionIds.toString() == NRS.lastTransactions) {
 					NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
@@ -107,7 +102,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				//if we have a new transaction, we just get them all.. (10 max)
 				for (var i = 0; i < transactionIds.length; i++) {
-					NRS.sendRequest('getTransaction', {
+					NRS.sendRequest("getTransaction", {
 						"transaction": transactionIds[i]
 					}, function(transaction, input) {
 						nrTransactions++;
@@ -132,58 +127,47 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getUnconfirmedTransactions = function(callback) {
-		NRS.sendRequest("getUnconfirmedTransactionIds", {
+		NRS.sendRequest("getUnconfirmedTransactions", {
 			"account": NRS.account
 		}, function(response) {
-			if (response.unconfirmedTransactionIds && response.unconfirmedTransactionIds.length) {
-				var unconfirmedTransactionIds = response.unconfirmedTransactionIds.reverse();
-
-				var nr_transactions = 0;
-
+			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
 				var unconfirmedTransactions = [];
-				var unconfirmedTransactionIdArray = [];
+				var unconfirmedTransactionIds = [];
 
-				for (var i = 0; i < unconfirmedTransactionIds.length; i++) {
-					NRS.sendRequest('getTransaction', {
-						"transaction": unconfirmedTransactionIds[i]
-					}, function(transaction, input) {
-						nr_transactions++;
+				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
+					var unconfirmedTransaction = response.unconfirmedTransactions[i];
 
-						transaction.transaction = input.transaction;
-						transaction.confirmed = false;
-						transaction.unconfirmed = true;
-						transaction.confirmations = "/";
+					unconfirmedTransaction.confirmed = false;
+					unconfirmedTransaction.unconfirmed = true;
+					unconfirmedTransaction.confirmations = "/";
 
-						if (transaction.attachment) {
-							for (var key in transaction.attachment) {
-								if (!transaction.hasOwnProperty(key)) {
-									transaction[key] = transaction.attachment[key];
-								}
+					if (unconfirmedTransaction.attachment) {
+						for (var key in unconfirmedTransaction.attachment) {
+							if (!unconfirmedTransaction.hasOwnProperty(key)) {
+								unconfirmedTransaction[key] = unconfirmedTransaction.attachment[key];
 							}
 						}
+					}
 
-						unconfirmedTransactions.push(transaction);
-						unconfirmedTransactionIdArray.push(transaction.transaction);
+					unconfirmedTransactions.push(unconfirmedTransaction);
+					unconfirmedTransactionIds.push(unconfirmedTransaction.transaction);
+				}
 
-						if (nr_transactions == unconfirmedTransactionIds.length) {
-							NRS.unconfirmedTransactions = unconfirmedTransactions;
+				NRS.unconfirmedTransactions = unconfirmedTransactions;
 
-							var unconfirmedTransactionIdString = unconfirmedTransactionIdArray.toString();
+				var unconfirmedTransactionIdString = unconfirmedTransactionIds.toString();
 
-							if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
-								NRS.unconfirmedTransactionsChange = true;
-								NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
-							} else {
-								NRS.unconfirmedTransactionsChange = false;
-							}
+				if (unconfirmedTransactionIdString != NRS.unconfirmedTransactionIds) {
+					NRS.unconfirmedTransactionsChange = true;
+					NRS.unconfirmedTransactionIds = unconfirmedTransactionIdString;
+				} else {
+					NRS.unconfirmedTransactionsChange = false;
+				}
 
-							if (callback) {
-								callback(unconfirmedTransactions);
-							} else if (NRS.unconfirmedTransactionsChange) {
-								NRS.incoming.updateDashboardTransactions(unconfirmedTransactions, true);
-							}
-						}
-					});
+				if (callback) {
+					callback(unconfirmedTransactions);
+				} else if (NRS.unconfirmedTransactionsChange) {
+					NRS.incoming.updateDashboardTransactions(unconfirmedTransactions, true);
 				}
 			} else {
 				NRS.unconfirmedTransactions = [];
@@ -356,7 +340,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		var params = {
 			"account": NRS.account,
-			"timestamp": 0
+			"firstIndex": 0,
+			"lastIndex": 100
 		};
 
 		if (NRS.transactionsPageType) {
@@ -373,39 +358,17 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		NRS.sendRequest("getAccountTransactionIds+", params, function(response) {
-			if (response.transactionIds && response.transactionIds.length) {
-				var transactions = {};
-				var nrTransactions = 0;
+		NRS.sendRequest("getAccountTransactions+", params, function(response) {
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					var transaction = response.transactions[i];
 
-				var transactionIds = response.transactionIds.reverse().slice(0, 100);
+					transaction.confirmed = true;
 
-				for (var i = 0; i < transactionIds.length; i++) {
-					NRS.sendRequest("getTransaction+", {
-						"transaction": transactionIds[i]
-					}, function(transaction, input) {
-						if (NRS.currentPage != "transactions") {
-							transactions = {};
-							return;
-						}
-
-						transaction.transaction = input.transaction;
-						transaction.confirmed = true;
-
-						transactions[input.transaction] = transaction;
-						nrTransactions++;
-
-						if (nrTransactions == transactionIds.length) {
-							for (var i = 0; i < nrTransactions; i++) {
-								var transaction = transactions[transactionIds[i]];
-
-								rows += NRS.getTransactionRowHTML(transaction);
-							}
-
-							NRS.dataLoaded(rows);
-						}
-					});
+					rows += NRS.getTransactionRowHTML(transaction);
 				}
+
+				NRS.dataLoaded(rows);
 			} else {
 				NRS.dataLoaded(rows);
 			}

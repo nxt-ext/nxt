@@ -3,14 +3,10 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	var _messages = {};
-	var _totalMessages = 0;
-	var _totalMessagesLoaded = 0;
 	var _messageTypesChecked = 0;
 
 	NRS.pages.messages = function(callback) {
 		_messages = {};
-		_totalMessages = 0;
-		_totalMessagesLoaded = 0;
 		_messageTypesChecked = 0;
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
@@ -32,48 +28,33 @@ var NRS = (function(NRS, $, undefined) {
 		var transactionType = (type == "payment" ? 0 : 1);
 		var transactionSubtype = (type == "payment" ? 1 : (type == "private" ? 0 : 8));
 
-		NRS.sendRequest("getAccountTransactionIds+", {
+		NRS.sendRequest("getAccountTransactions+", {
 			"account": NRS.account,
-			"timestamp": 0,
+			"firstIndex": 0,
+			"lastIndex": 75,
 			"type": transactionType,
 			"subtype": transactionSubtype
 		}, function(response) {
 			_messageTypesChecked++;
 
-			if (response.transactionIds && response.transactionIds.length) {
-				var transactionIds = response.transactionIds.reverse().slice(0, 75);
-				var nrTransactions = 0;
+			if (response.transactions && response.transactions.length) {
+				for (var i = 0; i < response.transactions.length; i++) {
+					var otherUser = (response.transactions[i].recipient == NRS.account ? response.transactions[i].sender : response.transactions[i].recipient);
 
-				_totalMessages += transactionIds.length;
+					if (!(otherUser in _messages)) {
+						_messages[otherUser] = [];
+					}
 
-				for (var i = 0; i < transactionIds.length; i++) {
-					NRS.sendRequest("getTransaction+", {
-						"transaction": transactionIds[i]
-					}, function(response) {
-						nrTransactions++;
-						_totalMessagesLoaded++;
-
-						var otherUser = (response.recipient == NRS.account ? response.sender : response.recipient);
-
-						if (!(otherUser in _messages)) {
-							_messages[otherUser] = [];
-						}
-
-						_messages[otherUser].push(response);
-
-						if (nrTransactions == transactionIds.length) {
-							callback();
-						}
-					});
+					_messages[otherUser].push(response.transactions[i]);
 				}
-			} else {
-				callback();
 			}
+
+			callback();
 		});
 	}
 
 	NRS.getAccountMessagesComplete = function(callback) {
-		if (_totalMessages == _totalMessagesLoaded && _messageTypesChecked == 3) {
+		if (_messageTypesChecked == 3) {
 			if (NRS._totalMessages == 0) {
 				$("#no_message_selected").hide();
 				$("#no_messages_available").show();
