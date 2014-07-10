@@ -29,7 +29,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".output").hide();
 
 		$(this).find(".tab_content:first").show();
-		$(this).find("transaction_operations_button").text("Broadcast").data("broadcast_transaction_form");
+		$(this).find("transaction_operations_button").text($.t("broadcast")).data("broadcast_transaction_form");
 	});
 
 	$("#transaction_operations_modal").on("hidden.bs.modal", function(e) {
@@ -52,11 +52,11 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).closest(".modal").find(".tab_content").hide();
 
 		if (tab == "broadcast_transaction") {
-			$("#transaction_operations_modal_button").text("Broadcast").data("form", "broadcast_transaction_form");
+			$("#transaction_operations_modal_button").text($.t("broadcast")).data("form", "broadcast_transaction_form");
 		} else if (tab == "parse_transaction") {
-			$("#transaction_operations_modal_button").text("Parse Transaction Bytes").data("form", "parse_transaction_form");
+			$("#transaction_operations_modal_button").text($.t("parse_transaction_bytes")).data("form", "parse_transaction_form");
 		} else {
-			$("#transaction_operations_modal_button").text("Calculate Full Hash").data("form", "calculate_full_hash_form");
+			$("#transaction_operations_modal_button").text($.t("calculate_full_hash")).data("form", "calculate_full_hash_form");
 		}
 
 		$("#transaction_operations_modal_" + tab).show();

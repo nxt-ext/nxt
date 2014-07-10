@@ -98,6 +98,19 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.checkAliasVersions();
 		});
 
+		$.i18n.init({
+			lng: "nl",
+			fallbackLng: "en",
+			lowerCaseLng: true,
+			resGetPath: "locales/__lng__.json",
+			debug: true
+		}, function() {
+			console.log("here");
+			$("[data-i18n]").i18n();
+			console.log($.t("toggle_navigation"));
+			console.log("done");
+		});
+
 		NRS.showLockscreen();
 
 		if (window.parent && window.location.href.indexOf("?app") != -1) {
@@ -364,13 +377,13 @@ var NRS = (function(NRS, $, undefined) {
 		var output = "";
 
 		if (NRS.pageNumber == 2) {
-			output += "<a href='#' data-page='1'>&laquo; Previous Page</a>";
+			output += "<a href='#' data-page='1'>&laquo; " + $.t("prevous_page") + "</a>";
 		} else if (NRS.pageNumber > 2) {
 			//output += "<a href='#' data-page='1'>&laquo; First Page</a>";
-			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; Previous Page</a>";
+			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous_page") + "</a>";
 		}
 		if (NRS.hasMorePages) {
-			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>Next Page &raquo;</a>";
+			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next_page") + " &raquo;</a>";
 		}
 
 		var $paginationContainer = $("#" + NRS.currentPage + "_page .data-pagination");
@@ -501,14 +514,18 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.accountRS).escapeHTML() + "</strong>" : "")).show();
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading") + (NRS.newlyCreatedAccount ? " " + $.t("status_account_id", {
+							"account_id": String(NRS.accountRS).escapeHTML()
+						}) : "")).show();
 					} else if (NRS.state && NRS.state.isScanning) {
-						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("The blockchain is currently rescanning. Please wait until that has completed.").show();
+						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("Welcome to your brand new account. You should fund it with some coins. Your account ID is: <strong>" + String(NRS.accountRS).escapeHTML() + "</strong>").show();
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+							"account_id": String(NRS.accountRS).escapeHTML()
+						})).show();
 					}
 				} else {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : "An unknown error occured.").show();
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : $.t("error_unknown")).show();
 				}
 			} else {
 				if (NRS.accountRS && NRS.accountInfo.accountRS != NRS.accountRS) {
@@ -519,11 +536,13 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (NRS.downloadingBlockchain) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html("The blockchain is currently downloading. Please wait until it is up to date." + (NRS.newlyCreatedAccount ? " Your account ID is: <strong>" + String(NRS.accountRS).escapeHTML() + "</strong>" : "")).show();
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading") + (NRS.newlyCreatedAccount ? " " + $.t("status_account_id", {
+						"account_id": String(NRS.accountRS).escapeHTML()
+					}) : "")).show();
 				} else if (NRS.state && NRS.state.isScanning) {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("The blockchain is currently rescanning. Please wait until that has completed.").show();
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 				} else if (!NRS.accountInfo.publicKey) {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html("<b>Warning!</b>: Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue. (<a href='#' data-toggle='modal' data-target='#send_message_modal'>send a message</a>, <a href='#' data-toggle='modal' data-target='#register_alias_modal'>buy an alias</a>, <a href='#' data-toggle='modal' data-target='#send_money_modal'>send Nxt</a>, ...)").show();
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("no_public_key_warning") + " " + $.t("public_key_actions")).show();
 				} else {
 					$("#dashboard_message").hide();
 				}
@@ -628,22 +647,29 @@ var NRS = (function(NRS, $, undefined) {
 		var accountLeasingStatus = "";
 
 		if (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom) {
-			accountLeasingLabel = "Leased Out";
-			accountLeasingStatus = "Your account effective balance is leased out starting from block " + String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML() + " until block " + String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(NRS.accountInfo.currentLessee).escapeHTML() + "' class='user_info'>" + String(NRS.accountInfo.currentLessee).escapeHTML() + "</a>";
-			$("#lease_balance_message").html("<strong>Remember</strong>: This lease will take effect after the current lease has ended.");
-
+			accountLeasingLabel = $.t("leased_out");
+			accountLeasingStatus = $.t("balance_is_leased_out", {
+				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
+				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
+				"account": String(NRS.accountInfo.currentLessee).escapeHTML()
+			});
+			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else if (NRS.lastBlockHeight < NRS.accountInfo.currentLeasingHeightTo) {
-			accountLeasingLabel = "Leased Soon";
-			accountLeasingStatus = "Your account effective balance will be leased out starting from block " + String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML() + " until block " + String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML() + " to account <a href='#' data-user='" + String(NRS.accountInfo.currentLessee).escapeHTML() + "' class='user_info'>" + String(NRS.accountInfo.currentLessee).escapeHTML() + "</a>";
-			$("#lease_balance_message").html("<strong>Remember</strong>: This lease will take effect after the current lease has ended.");
+			accountLeasingLabel = $.t("leased_soon");
+			accountLeasingStatus = $.t("balance_will_be_leased_out", {
+				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
+				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
+				"account": String(NRS.accountInfo.currentLessee).escapeHTML()
+			});
+			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else {
-			accountLeasingStatus = "Your account effective balance is not leased out.";
-			$("#lease_balance_message").html("<strong>Remember</strong>: Once submitted the lease cannot be cancelled.");
+			accountLeasingStatus = $.t("balance_not_leased_out");
+			$("#lease_balance_message").html($.t("balance_leasing_help"));
 		}
 
 		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
 			$("#forging_indicator").removeClass("forging");
-			$("#forging_indicator span").html("Not Forging");
+			$("#forging_indicator span").html($.t("not_forging"));
 			$("#forging_indicator").show();
 			NRS.isForging = false;
 		}
@@ -654,8 +680,13 @@ var NRS = (function(NRS, $, undefined) {
 				accountLeasingLabel += ", ";
 				accountLeasingStatus += "<br /><br />";
 			}
-			accountLeasingLabel += NRS.accountInfo.lessors.length + (NRS.accountInfo.lessors.length == 1 ? " lessor" : "lessors");
-			accountLeasingStatus += NRS.accountInfo.lessors.length + " " + (NRS.accountInfo.lessors.length == 1 ? "lessor has" : "lessors have") + " leased their effective balance to your account.";
+
+			accountLeasingLabel += $.t("x_lessor", {
+				"x": NRS.accountInfo.lessors.length
+			});
+			accountLeasingStatus += $.t("x_lessor_lease", {
+				"x": NRS.accountInfo.lessors.length
+			});
 
 			var rows = "";
 
@@ -740,6 +771,8 @@ var NRS = (function(NRS, $, undefined) {
 					if (asset.difference.charAt(0) != "-") {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
+						//TODO
+
 						$.growl("You received <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
 							"type": "success"
 						});
@@ -755,7 +788,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		} else {
-			$.growl("Multiple different assets have been sold and/or bought.", {
+			$.growl($.t("multiple_asset_differences"), {
 				"type": "success"
 			});
 		}
@@ -807,7 +840,9 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#downloading_blockchain .progress").show();
 			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
-			$("#downloading_blockchain .sr-only").html(percentage + "% Complete");
+			$("#downloading_blockchain .sr-only").html($.t("percent_complete", {
+				"percent": percentage
+			}));
 		}
 	}
 
@@ -825,7 +860,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (onAFork) {
-				$.growl("<strong>Warning</strong>: You are most likely on a fork (you have forged the last 10 blocks).", {
+				$.growl($.t("fork_warning"), {
 					"type": "danger"
 				});
 			}
@@ -845,14 +880,14 @@ var NRS = (function(NRS, $, undefined) {
 					response.account = input.account;
 					NRS.showAccountModal(response);
 				} else {
-					$.growl("Nothing found, please try another query.", {
+					$.growl($.t("error_search_no_results"), {
 						"type": "danger"
 					});
 				}
 			});
 		} else {
 			if (!/^\d+$/.test(id)) {
-				$.growl("Invalid input. Search by ID or reed solomon account number.", {
+				$.growl($.t("error_search_invalid"), {
 					"type": "danger"
 				});
 				return;
@@ -878,7 +913,7 @@ var NRS = (function(NRS, $, undefined) {
 									response.block = input.block;
 									NRS.showBlockModal(response);
 								} else {
-									$.growl("Nothing found, please try another query.", {
+									$.growl($.t("error_search_no_results"), {
 										"type": "danger"
 									});
 								}

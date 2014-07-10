@@ -200,10 +200,10 @@ var NRS = (function(NRS, $, undefined) {
 						extra = "decrypted";
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
-							decoded = "Your password is needed to decrypt this message.";
+							decoded = $.t("error_decryption_passphrase_required");
 							extra = "to_decrypt";
 						} else {
-							decoded = "An unknown error occured during decryption.";
+							decoded = $.t("error_decryption_unknown");
 						}
 					}
 				} else {
@@ -232,7 +232,9 @@ var NRS = (function(NRS, $, undefined) {
 						decoded = "<i class='fa fa-lock'></i> " + decoded;
 					}
 				} else {
-					decoded = "<i class='fa fa-warning'></i> Could not decrypt message.";
+					decoded = "<i class='fa fa-warning'></i> " + $.t("could_not_decrypt_var", {
+						"var": "message"
+					});
 					extra = "decryption_failed";
 				}
 
@@ -261,10 +263,10 @@ var NRS = (function(NRS, $, undefined) {
 							extra = "decrypted";
 						} catch (err) {
 							if (err.errorCode && err.errorCode == 1) {
-								decoded = "Your password is needed to decrypt this message.";
+								decoded = $.t("error_decryption_passphrase_required");
 								extra = "to_decrypt";
 							} else {
-								decoded = "An unknown error occured during decryption.";
+								decoded = $.t("error_decryption_unknown");
 							}
 						}
 					} else {
@@ -384,7 +386,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!message) {
 			return {
-				"error": "Message is a required field."
+				"error": $.t("error_message_required")
 			};
 		}
 
@@ -413,7 +415,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!NRS.rememberPassword) {
 			if ($("#inline_message_password").val() == "") {
-				$.growl("Passphrase is a required field.", {
+				$.growl($.t("error_passphrase_required"), {
 					"type": "danger"
 				});
 				return;
@@ -422,7 +424,7 @@ var NRS = (function(NRS, $, undefined) {
 			var accountId = NRS.getAccountId(data.secretPhrase);
 
 			if (accountId != NRS.account) {
-				$.growl("Incorrect passphrase.", {
+				$.growl($.t("passphrase_incorrect"), {
 					"type": "danger"
 				});
 				return;
@@ -432,7 +434,7 @@ var NRS = (function(NRS, $, undefined) {
 		var message = $.trim($("#inline_message_text").val());
 
 		if (!message) {
-			$.growl("Message is a required field.", {
+			$.growl($.t("error_message_required"), {
 				"type": "danger"
 			});
 			return;
@@ -470,11 +472,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.sendRequest(requestType, data, function(response, input) {
 			if (response.errorCode) {
-				$.growl(response.errorDescription ? response.errorDescription.escapeHTML() : "Unknown error occured.", {
+				$.growl(NRS.translateServerError(response).escapeHTML(), {
 					type: "danger"
 				});
 			} else if (response.fullHash) {
-				$.growl("Message sent.", {
+				$.growl($.t("success_message_sent"), {
 					type: "success"
 				});
 
@@ -492,6 +494,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				//leave password alone until user moves to another page.
 			} else {
+				//TODO
 				$.growl("An unknown error occured. Your message may or may not have been sent.", {
 					type: "danger"
 				});
@@ -516,11 +519,11 @@ var NRS = (function(NRS, $, undefined) {
 		data.message = data._extra.message;
 
 		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
-			$.growl("Your message has been sent! <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>Add recipient to contacts?</a>", {
+			$.growl($.t("success_message_sent") + " <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>" + $.t("add_recipient_to_contacts_q") + "</a>", {
 				"type": "success"
 			});
 		} else {
-			$.growl("Your message has been sent!", {
+			$.growl($.t("success_message_sent"), {
 				"type": "success"
 			});
 		}
@@ -583,7 +586,7 @@ var NRS = (function(NRS, $, undefined) {
 				};
 			} else {
 				return {
-					"error": "Message(s) could not be decrypted."
+					"error": $.t("error_messages_decrypt")
 				};
 			}
 		}
@@ -595,11 +598,11 @@ var NRS = (function(NRS, $, undefined) {
 		$("#messages_sidebar a.active").trigger("click");
 
 		if (success) {
-			$.growl("Message(s) decrypted successfully.", {
+			$.growl($.t("success_messages_decrypt"), {
 				"type": "success"
 			});
 		} else {
-			$.growl("Message(s) could not be decrypted.", {
+			$.growl($.t("error_messages_decrypt"), {
 				"type": "danger"
 			});
 		}

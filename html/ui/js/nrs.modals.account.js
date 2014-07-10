@@ -139,97 +139,104 @@ var NRS = (function(NRS, $, undefined) {
 								var transactionType = "Unknown";
 
 								if (transaction.type == 0) {
-									transactionType = "Ordinary payment";
+									switch (transaction.subtype) {
+										case 0:
+											transactionType = $.t("ordinary_payment");
+											break;
+										case 1:
+											transactionType = $.t("payment_with_message");
+											break;
+									}
 								} else if (transaction.type == 1) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Arbitrary message";
+											transactionType = $.t("arbitrary_message");
 											break;
 										case 1:
-											transactionType = "Alias assignment";
+											transactionType = $.t("alias_assignment");
 											break;
 										case 2:
-											transactionType = "Poll creation";
+											transactionType = $.t("poll_creation");
 											break;
 										case 3:
-											transactionType = "Vote casting";
+											transactionType = $.t("vote_casting");
 											break;
 										case 4:
-											transactionType = "Hub Announcement";
+											transactionType = $.t("hub_announcement");
 											break;
 										case 5:
-											transactionType = "Account Info";
+											transactionType = $.t("account_info");
 											break;
 										case 6:
 											if (transaction.attachment.priceNQT == "0") {
 												if (transaction.sender == transaction.recipient) {
-													transactionType = "Alias Sale Cancellation";
+													transactionType = $.t("alias_sale_cancellation");
 												} else {
-													transactionType = "Alias Transfer";
+													transactionType = $.t("alias_transfer");
 												}
 											} else {
-												transactionType = "Alias Sale";
+												transactionType = $.t("alias_sale");
 											}
 											break;
 										case 7:
-											transactionType = "Alias Buy";
+											transactionType = $.t("alias_buy");
 											break;
 										case 8:
-											transactionType = "Encrypted Message";
+											transactionType = $.t("encrypted_message");
 											break;
 									}
 								} else if (transaction.type == 2) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Asset issuance";
+											transactionType = $.t("asset_issuance");
 											break;
 										case 1:
-											transactionType = "Asset transfer";
+											transactionType = $.t("asset_transfer");
 											break;
 										case 2:
-											transactionType = "Ask order placement";
+											transactionType = $.t("ask_order_placement");
 											break;
 										case 3:
-											transactionType = "Bid order placement";
+											transactionType = $.t("bid_order_placement");
 											break;
 										case 4:
-											transactionType = "Ask order cancellation";
+											transactionType = $.t("ask_order_cancellation");
 											break;
 										case 5:
-											transactionType = "Bid order cancellation";
+											transactionType = $.t("bid_order_cancellation");
 											break;
 									}
 								} else if (transaction.type == 3) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Market Listing";
+											transactionType = $.t("market_listing");
 											break;
 										case 1:
-											transactionType = "Market Removal";
+											transactionType = $.t("market_removal");
 											break;
 										case 2:
-											transactionType = "Market Price Change";
+											transactionType = $.t("market_price_change");
 											break;
 										case 3:
-											transactionType = "Market QTY Change";
+											transactionType = $.t("market_quantity_change");
 											break;
 										case 4:
-											transactionType = "Market Purchase";
+											transactionType = $.t("market_purchase");
 											break;
 										case 5:
-											transactionType = "Market Delivery";
+											transactionType = $.t("market_delivery");
 											break;
 										case 6:
-											transactionType = "Market Feedback";
+											transactionType = $.t("market_feedback");
 											break;
 										case 7:
-											transactionType = "Market Refund";
+											transactionType = $.t("market_refund");
 											break;
 									}
 								} else if (transaction.type == 4) {
 									switch (transaction.subtype) {
 										case 0:
-											transactionType = "Balance Leasing";
+											transactionType = $.t("balance_leasing");
 											break;
 									}
 								}

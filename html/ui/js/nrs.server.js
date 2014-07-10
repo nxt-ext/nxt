@@ -30,8 +30,9 @@ var NRS = (function(NRS, $, undefined) {
 			async: (async === undefined ? true : async),
 			data: data
 		}).done(function(json) {
+			//why is this necessary??..
 			if (json.errorCode && !json.errorDescription) {
-				json.errorDescription = (json.errorMessage ? json.errorMessage : "Unknown error occured.");
+				json.errorDescription = (json.errorMessage ? json.errorMessage : $.t("server_error_unknown"));
 			}
 			if (callback) {
 				callback(json, data);
@@ -110,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (callback) {
 					callback({
 						"errorCode": 1,
-						"errorDescription": "Incorrect passphrase."
+						"errorDescription": $.t("error_passphrase_incorrect")
 					});
 				}
 				return;
@@ -175,10 +176,10 @@ var NRS = (function(NRS, $, undefined) {
 			if (callback) {
 				callback({
 					"errorCode": 2,
-					"errorDescription": "You have a brand new account, fund it with some coins first."
+					"errorDescription": $.t("error_new_account")
 				}, data);
 			} else {
-				$.growl("You have a brand new account, fund it with some coins first.", {
+				$.growl($.t("error_new_account"), {
 					"type": "danger"
 				});
 			}
@@ -264,10 +265,10 @@ var NRS = (function(NRS, $, undefined) {
 					if (callback) {
 						callback({
 							"errorCode": 1,
-							"errorDescription": "Could not verify signature (client side)."
+							"errorDescription": $.t("error_signature_verification_client")
 						}, data);
 					} else {
-						$.growl("Could not verify signature.", {
+						$.growl($.t("error_signature_verification_client"), {
 							"type": "danger"
 						});
 					}
@@ -279,10 +280,10 @@ var NRS = (function(NRS, $, undefined) {
 						if (callback) {
 							callback({
 								"errorCode": 1,
-								"errorDescription": "Could not verify transaction bytes (server side)."
+								"errorDescription": $.t("error_signature_verification_server")
 							}, data);
 						} else {
-							$.growl("Could not verify transaction bytes.", {
+							$.growl($.t("error_signature_verification_server"), {
 								"type": "danger"
 							});
 						}
@@ -305,14 +306,23 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				}
 			} else {
+				if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
+					response.errorDescription = NRS.translateServerError(response);
+					if (!response.errorCode) {
+						response.errorCode = -1;
+					}
+				}
+
+				/*
 				if (response.errorCode && !response.errorDescription) {
-					response.errorDescription = (response.errorMessage ? response.errorMessage : "Unknown error occured.");
+					response.errorDescription = (response.errorMessage ? response.errorMessage : $.t("error_unknown"));
 				} else if (response.error && !response.errorDescription) {
-					response.errorDescription = (typeof response.error == "string" ? response.error : "Unknown error occured.");
+					response.errorDescription = (typeof response.error == "string" ? response.error : $.t("error_unknown"));
 					if (!response.errorCode) {
 						response.errorCode = 1;
 					}
 				}
+				*/
 
 				if (response.broadcasted == false) {
 					NRS.showRawTransactionModal(response);
@@ -337,7 +347,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
 				if (type == "POST") {
-					$.growl("Could not connect.", {
+					$.growl($.t("error_server_connect"), {
 						"type": "danger",
 						"offset": 10
 					});
@@ -348,7 +358,7 @@ var NRS = (function(NRS, $, undefined) {
 				return;
 			} else if (callback) {
 				if (error == "timeout") {
-					error = "The request timed out. Warning: This does not mean the request did not go through. You should wait a couple of blocks and see if your request has been processed.";
+					error = $.t("error_request_timeout");
 				}
 				callback({
 					"errorCode": -1,
@@ -1018,7 +1028,7 @@ var NRS = (function(NRS, $, undefined) {
 					originalResponse.fullHash = response.fullHash;
 					callback(originalResponse, originalData);
 					if (originalData.referencedTransactionFullHash) {
-						$.growl("Due to you using a referenced transaction hash, 50 NXT is held in custody until the transaction is confirmed or expired.", {
+						$.growl($.t("info_referenced_transaction_hash"), {
 							"type": "info"
 						});
 					}
@@ -1031,7 +1041,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (callback) {
 				if (error == "timeout") {
-					error = "The request timed out. Warning: This does not mean the request did not go through. You should a few blocks and see if your request has been processed before trying to submit it again.";
+					error = $.t("error_request_timeout");
 				}
 				callback({
 					"errorCode": -1,

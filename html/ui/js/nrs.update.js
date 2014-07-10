@@ -192,9 +192,9 @@ var NRS = (function(NRS, $, undefined) {
 				$("#nrs_update_drop_zone").hide();
 
 				if (e.data.sha256 == NRS.downloadedVersion.hash) {
-					$("#nrs_update_result").html("The downloaded version has been verified, the hash is correct. You may proceed with the installation.").attr("class", " ");
+					$("#nrs_update_result").html($.t("success_hash_verification")).attr("class", " ");
 				} else {
-					$("#nrs_update_result").html("The downloaded version hash does not compare to the specified hash in the blockchain. DO NOT PROCEED.").attr("class", "incorrect");
+					$("#nrs_update_result").html($.t("error_hash_verification")).attr("class", "incorrect");
 				}
 
 				$("#nrs_update_hash_version").html(NRS.downloadedVersion.versionNr);

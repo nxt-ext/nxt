@@ -28,7 +28,7 @@ var NRS = (function(NRS, $, undefined) {
 				"account": accountNumber
 			}, function(response) {
 				if (!response.publicKey) {
-					throw "Account does not have a public key.";
+					throw $.t("error_no_public_key");
 				} else {
 					publicKey = response.publicKey;
 				}
@@ -80,7 +80,7 @@ var NRS = (function(NRS, $, undefined) {
 							secretPhrase = _password;
 						} else {
 							throw {
-								"message": "Your password is required to encrypt this message.",
+								"message": $.t("error_encryption_passphrase_required"),
 								"errorCode": 1
 							};
 						}
@@ -92,7 +92,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (!options.publicKey) {
 					if (!options.account) {
 						throw {
-							"message": "Account ID not specified.",
+							"message": $.t("error_account_id_not_specified"),
 							"errorCode": 2
 						};
 					}
@@ -111,7 +111,7 @@ var NRS = (function(NRS, $, undefined) {
 				throw err;
 			} else {
 				throw {
-					"message": "The message could not be encrypted.",
+					"message": $.t("error_message_encryption"),
 					"errorCode": 3
 				};
 			}
@@ -129,7 +129,7 @@ var NRS = (function(NRS, $, undefined) {
 							secretPhrase = _decryptionPassword;
 						} else {
 							throw {
-								"message": "Your password is required to decrypt this message.",
+								"message": $.t("error_decryption_passphrase_required"),
 								"errorCode": 1
 							};
 						}
@@ -141,7 +141,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (!options.publicKey) {
 					if (!options.account) {
 						throw {
-							"message": "Account ID not specified.",
+							"message": $.t("error_account_id_not_specified"),
 							"errorCode": 2
 						};
 					}
@@ -157,7 +157,7 @@ var NRS = (function(NRS, $, undefined) {
 				throw err;
 			} else {
 				throw {
-					"message": "The message could not be decrypted.",
+					"message": $.t("error_message_decryption"),
 					"errorCode": 3
 				};
 			}
@@ -178,7 +178,7 @@ var NRS = (function(NRS, $, undefined) {
 				secretPhrase = _decryptionPassword;
 			} else {
 				throw {
-					"message": "Your password is required.",
+					"message": $.t("error_passphrase_required"),
 					"errorCode": 3
 				};
 			}
@@ -339,7 +339,18 @@ var NRS = (function(NRS, $, undefined) {
 							showDecryptionForm = true;
 							return false;
 						} else {
-							data = "Could not decrypt" + (title ? " " + String(title).escapeHTML().toLowerCase() : "") + ".";
+							if (title) {
+								var translatedTitle = NRS.getTranslatedFieldName(title);
+								if (!translatedTitle) {
+									translatedTitle = String(title).escapeHTML().toLowerCase();
+								}
+
+								data = $.t("error_could_not_decrypt_var", {
+									"var": translatedTitle
+								});
+							} else {
+								data = $.t("error_could_not_decrypt");
+							}
 						}
 					}
 
@@ -383,7 +394,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $form = $(this);
 
 		if (!_encryptedNote) {
-			$form.find(".callout").html("Encrypted note not found.").show();
+			$form.find(".callout").html($.t("error_encrypted_note_not_found")).show();
 			return;
 		}
 
@@ -395,14 +406,14 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (_decryptionPassword) {
 				password = _decryptionPassword;
 			} else {
-				$form.find(".callout").html("Passphrase is a required field.").show();
+				$form.find(".callout").html($.t("error_passphrase_required")).show();
 				return;
 			}
 		}
 
 		var accountId = NRS.getAccountId(password);
 		if (accountId != NRS.account) {
-			$form.find(".callout").html("Incorrect passphrase.").show();
+			$form.find(".callout").html($.t("error_incorrect_passphrase")).show();
 			return;
 		}
 
@@ -475,14 +486,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.decryptAllMessages = function(messages, password) {
 		if (!password) {
 			throw {
-				"message": "Passphrase is a required field.",
+				"message": $.t("error_passphrase_required"),
 				"errorCode": 1
 			};
 		} else {
 			var accountId = NRS.getAccountId(password);
 			if (accountId != NRS.account) {
 				throw {
-					"message": "Incorrect passphrase.",
+					"message": $.t("error_incorrect_passphrase"),
 					"errorCode": 2
 				};
 			}
@@ -645,7 +656,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
-				"message": "Your browser does not support client-side encryption. Aborting."
+				"message": $.t("error_encryption_browser_support")
 			};
 		}
 
