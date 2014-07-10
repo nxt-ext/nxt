@@ -203,19 +203,17 @@ var NRS = (function(NRS, $, undefined) {
 				if (decoded) {
 					decoded = String(decoded).escapeHTML().nl2br();
 
-					if (type == "payment") {
-						decoded = "<strong>+" + NRS.formatAmount(messages[i].amountNQT) + " NXT</strong><br />" + decoded;
-					}
-
 					if (extra == "to_decrypt") {
 						decoded = "<i class='fa fa-warning'></i> " + decoded;
 					} else if (extra == "decrypted") {
+						if (type == "payment") {
+							decoded = "<strong>+" + NRS.formatAmount(messages[i].amountNQT) + " NXT</strong><br />" + decoded;
+						}
+
 						decoded = "<i class='fa fa-lock'></i> " + decoded;
 					}
 				} else {
-					decoded = "<i class='fa fa-warning'></i> " + $.t("could_not_decrypt_var", {
-						"var": "message"
-					});
+					decoded = "<i class='fa fa-warning'></i> " + $.t("error_could_not_decrypt_message");
 					extra = "decryption_failed";
 				}
 

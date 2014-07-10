@@ -506,7 +506,7 @@ var NRS = (function(NRS, $, undefined) {
 			for (var key in messages[otherUser]) {
 				var message = messages[otherUser][key];
 
-				if (message.type = 1 && message.subtype == 8) {
+				if ((message.type = 1 && message.subtype == 8) || (message.type == 0 && message.subtype == 1)) {
 					if (!_decryptedTransactions[message.transaction]) {
 						try {
 							var decoded = NRS.decryptNote(message.attachment.message, {
@@ -520,6 +520,9 @@ var NRS = (function(NRS, $, undefined) {
 
 							success++;
 						} catch (err) {
+							_decryptedTransactions[message.transaction] = {
+								"message": $.t("error_decryption_unknown")
+							};
 							error++;
 						}
 					}
