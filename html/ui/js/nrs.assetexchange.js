@@ -62,58 +62,6 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.loadAssetExchangeSidebar(callback);
 				}
 			});
-
-			/*
-			//find new assets from contacts and asset issuers, check once every 30 minutes..
-			if (!NRS.lastIssuerCheck || (new Date().getTime() - NRS.lastIssuerCheck.getTime()) / 1000 > 60 * 30) {
-				NRS.lastIssuerCheck = new Date();
-
-				NRS.database.select("assetIssuers", null, function(error, issuers) {
-					var accounts = [];
-
-					$.each(issuers, function(index, issuer) {
-						accounts.push(issuer.account);
-					});
-
-					$.each(NRS.contacts, function(index, contact) {
-						if (accounts.indexOf(contact.accountRS) == -1) {
-							accounts.push(contact.accountRS);
-						}
-					});
-
-					if (accounts.length) {
-						var qs = [];
-
-						for (var i = 0; i < accounts.length; i++) {
-							qs.push("account=" + encodeURIComponent(accounts[i]));
-						}
-
-						qs = qs.join("&");
-
-						NRS.sendRequest("getAssetsByIssuer+", {
-							"querystring": qs
-						}, function(response) {
-							if (response.assets && response.assets.length) {
-								var newAssets = [];
-
-								$.each(response.assets, function(key, issuer) {
-									$.each(issuer, function(key, asset) {
-										newAssets.push(asset);
-									});
-								});
-
-								if (newAssets.length) {
-									NRS.saveAssetBookmarks(newAssets, function(newAssets) {
-										if (newAssets.length) {
-											NRS.pages.asset_exchange();
-										}
-									});
-								}
-							}
-						});
-					}
-				});
-			}*/
 		} else {
 			//for users without db support, we only need to fetch owned assets
 			if (NRS.accountInfo.unconfirmedAssetBalances) {
@@ -266,29 +214,6 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		}
 	}
-
-	/*
-	NRS.saveAssetIssuer = function(issuer) {
-		if (!/^NXT\-/i.test(issuer)) {
-			var address = new NxtAddress();
-
-			if (address.set(issuer)) {
-				issuer = address.toString();
-			} else {
-				return;
-			}
-		}
-
-		NRS.database.select("assetIssuers", [{
-			"account": issuer
-		}], function(error, exists) {
-			if (!error && !exists.length) {
-				NRS.database.insert("assetIssuers", [{
-					"account": issuer
-				}]);
-			}
-		});
-	}*/
 
 	NRS.saveAssetBookmarks = function(assets, callback) {
 		var newAssetIds = [];
@@ -878,18 +803,10 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				});
 			}
-			/*
-			if (!NRS.assetSearch.length) {
-				if ($(".bootstrap-growl-top-right.alert-danger").length == 0) {
-					$.growl("Nothing found, please try another query.", {
-						"type": "danger"
-					});
-				}
-			} else {*/
+
 			NRS.loadAssetExchangeSidebar();
 			$("#asset_exchange_clear_search").show();
 			$("#asset_exchange_show_type").hide();
-			//	}
 		}
 	});
 
@@ -1419,21 +1336,6 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.database.delete("assets", [{
 					"asset": assetId
 				}], function(error, affected) {
-					/*
-					$.each(NRS.assets, function(key, asset) {
-						if (asset.asset == assetId) {
-							NRS.database.select("assets", [{
-								"accountRS": asset.accountRS
-							}], function(error, exists) {
-								if (!error && !exists.length) {
-									NRS.database.delete("assetIssuers", [{
-										"account": asset.accountRS
-									}]);
-								}
-							});
-						}
-					});
-					*/
 					setTimeout(function() {
 						NRS.loadPage("asset_exchange");
 						$.growl($.t("success_asset_bookmark_removal"), {
