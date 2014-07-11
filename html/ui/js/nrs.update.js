@@ -48,7 +48,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (NRS.inApp && NRS.appVersion) {
 			NRS.sendRequest("getAlias", {
-				"aliasName": "nrswalletversion"
+				"aliasName": "nxtwalletversion"
 			}, function(response) {
 				var newestVersion = response.aliasURI;
 

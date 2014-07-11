@@ -115,11 +115,13 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showLockscreen();
 
 		if (window.parent) {
-			var match = window.location.href.match(/\?app=([\d\.]+)/i);
+			var match = window.location.href.match(/\?app=?([\d\.]+)?/i);
 
 			if (match) {
 				NRS.inApp = true;
-				NRS.appVersion = match[1];
+				if (match[1]) {
+					NRS.appVersion = match[1];
+				}
 
 				$("#show_console").hide();
 
