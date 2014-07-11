@@ -61,6 +61,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.hasLocalStorage = true;
 	NRS.inApp = false;
+	NRS.appVersion = "";
 	NRS.assetTableKeys = [];
 
 	NRS.init = function() {
@@ -113,14 +114,19 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.showLockscreen();
 
-		if (window.parent && window.location.href.indexOf("?app") != -1) {
-			NRS.inApp = true;
+		if (window.parent) {
+			var match = window.location.href.match(/\?app=([\d\.]+)/i);
 
-			$("#show_console").hide();
+			if (match) {
+				NRS.inApp = true;
+				NRS.appVersion = match[1];
 
-			parent.postMessage("loaded", "*");
+				$("#show_console").hide();
 
-			window.addEventListener("message", receiveMessage, false);
+				parent.postMessage("loaded", "*");
+
+				window.addEventListener("message", receiveMessage, false);
+			}
 		}
 
 		//every 30 seconds check for new block..

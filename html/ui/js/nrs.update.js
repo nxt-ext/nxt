@@ -45,6 +45,24 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		});
+
+		if (NRS.inApp && NRS.appVersion) {
+			NRS.sendRequest("getAlias", {
+				"aliasName": "nrswalletversion"
+			}, function(response) {
+				var newestVersion = response.aliasURI;
+
+				if (newestVersion && newestVersion != NRS.appVersion) {
+					var newerVersionAvailable = NRS.versionCompare(NRS.appVersion, newestVersion);
+					if (newerVersionAvailable) {
+						parent.postMessage({
+							"type": "appUpdate",
+							"version": newestVersion
+						}, "*");
+					}
+				}
+			});
+		}
 	}
 
 	NRS.checkForNewVersion = function() {
