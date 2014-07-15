@@ -49,6 +49,7 @@ final class PeerImpl implements Peer {
     private volatile State state;
     private volatile long downloadedVolume;
     private volatile long uploadedVolume;
+    private volatile int lastUpdated;
 
     PeerImpl(String peerAddress, String announcedAddress) {
         this.peerAddress = peerAddress;
@@ -242,6 +243,15 @@ final class PeerImpl implements Peer {
     }
 
     @Override
+    public int getLastUpdated() {
+        return lastUpdated;
+    }
+
+    void setLastUpdated(int lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    @Override
     public JSONObject send(final JSONStreamAware request) {
 
         JSONObject response;
@@ -368,6 +378,7 @@ final class PeerImpl implements Peer {
             } else {
                 blacklist();
             }
+            lastUpdated = Convert.getEpochTime();
         } else {
             setState(State.NON_CONNECTED);
         }

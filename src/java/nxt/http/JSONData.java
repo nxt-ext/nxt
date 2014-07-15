@@ -181,6 +181,7 @@ final class JSONData {
         json.put("version", peer.getVersion());
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
+        json.put("lastUpdated", peer.getLastUpdated());
         return json;
     }
 
