@@ -216,6 +216,7 @@ public final class Peers {
                 final String host = Nxt.getStringProperty("nxt.peerServerHost");
                 connector.setHost(host);
                 connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
+                connector.setReuseAddress(true);
                 peerServer.addConnector(connector);
 
                 ServletHandler peerHandler = new ServletHandler();
