@@ -482,7 +482,9 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (parts.length == 2) {
 			var fraction = parts[1];
 			if (fraction.length > decimals) {
-				throw "Fraction can only have " + decimals + " decimals max.";
+				throw $.t("error_fraction_decimals", {
+					"decimals": decimals
+				});
 			} else if (fraction.length < decimals) {
 				for (var i = fraction.length; i < decimals; i++) {
 					fraction += "0";
@@ -746,7 +748,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
-			return "You";
+			return $.t("you");
 		} else if (formattedAcc in NRS.contacts) {
 			return NRS.contacts[formattedAcc].name.escapeHTML();
 		} else {
@@ -1227,6 +1229,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+
 		switch (response.errorCode) {
 			case 1:
 				switch (response.errorDescription) {
@@ -1248,8 +1251,8 @@ var NRS = (function(NRS, $, undefined) {
 				var match = response.errorDescription.match(/"([^"]+)" not specified/i);
 				if (match && match[1]) {
 					return $.t("error_not_specified", {
-						"name": NRS.getTranslatedFieldName(match[1])
-					});
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
 				}
 
 				var match = response.errorDescription.match(/At least one of (.*) must be specified/i);
@@ -1258,24 +1261,25 @@ var NRS = (function(NRS, $, undefined) {
 					var translatedFieldNames = [];
 
 					$.each(fieldNames, function(fieldName) {
-						translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName));
+						translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName).toLowerCase());
 					});
 					translatedFieldNames = translatedFieldNames.join(", ");
 
 					return $.t("error_not_specified", {
 						"names": translatedFieldNames,
 						"plural": "yes"
-					});
+					}).capitalize();
 				} else {
 					return response.errorDescription;
 				}
 				break;
 			case 4:
-				var match = response.errorDescription.match(/Incorrect "([^"]+)" .*/i);
+				var match = response.errorDescription.match(/Incorrect "([^"]+)"/i);
+
 				if (match && match[1]) {
 					return $.t("error_incorrect_name", {
-						"name": NRS.getTranslatedFieldName(match[1])
-					});
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
 				} else {
 					return response.errorDescription;
 				}
@@ -1284,8 +1288,8 @@ var NRS = (function(NRS, $, undefined) {
 				var match = response.errorDescription.match(/Unknown (.*)/i);
 				if (match && match[1]) {
 					return $.t("error_unknown_name", {
-						"name": NRS.getTranslatedFieldName(match[1])
-					});
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
 				}
 
 				if (response.errorDescription == "Account is not forging") {

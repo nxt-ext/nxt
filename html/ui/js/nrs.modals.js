@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".advanced").hide();
 
-		$(this).find(".advanced_info a").text("advanced");
+		$(this).find(".advanced_info a").text($.t("advanced"));
 
 		$(this).find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
@@ -162,7 +162,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var text = $(this).text().toLowerCase();
 
-		if (text == "advanced") {
+		if (text == $.t("advanced")) {
 			$modal.find(".advanced").fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
@@ -179,10 +179,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		if (text == "advanced") {
-			$(this).text("basic");
+		if (text == $.t("advanced")) {
+			$(this).text($.t("basic"));
 		} else {
-			$(this).text("advanced");
+			$(this).text($.t("advanced"));
 		}
 	});
 

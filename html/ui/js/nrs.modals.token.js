@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#generate_token_output, #decode_token_output").html("").hide();
 
 		$("#token_modal_generate_token").show();
-		$("#token_modal_button").text("Generate").data("form", "generate_token_form");
+		$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
 	});
 
 	NRS.forms.generateToken = function($modal) {
@@ -73,9 +73,9 @@ var NRS = (function(NRS, $, undefined) {
 		var content = $("#token_modal_" + tab);
 
 		if (tab == "generate_token") {
-			$("#token_modal_button").text("Generate").data("form", "generate_token_form");
+			$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
 		} else {
-			$("#token_modal_button").text("Validate").data("form", "validate_token_form");
+			$("#token_modal_button").text($.t("validate")).data("form", "validate_token_form");
 		}
 
 		$("#token_modal .error_message").hide();

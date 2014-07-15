@@ -1610,7 +1610,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#transfer_asset_asset").val(assetId);
 		$("#transfer_asset_decimals").val(decimals);
-		$("#transfer_asset_name").html(String(assetName).escapeHTML());
+		$("#transfer_asset_name, #transfer_asset_quantity_name").html(String(assetName).escapeHTML());
 		$("#transer_asset_available").html("");
 
 		var confirmedBalance = 0;
@@ -1652,6 +1652,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.transferAsset = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 
+		if (!data.quantity) {
+			return {
+				"error": $.t("error_not_specified", {
+					"name": NRS.getTranslatedFieldName("quantity").toLowerCase()
+				}).capitalize()
+			};
+		}
+
 		if (!NRS.showedFormWarning) {
 			if (NRS.settings["asset_transfer_warning"] && NRS.settings["asset_transfer_warning"] != 0) {
 				if (new Big(data.quantity).cmp(new Big(NRS.settings["asset_transfer_warning"])) > 0) {
@@ -1669,7 +1677,7 @@ var NRS = (function(NRS, $, undefined) {
 			data.quantityQNT = NRS.convertToQNT(data.quantity, data.decimals);
 		} catch (e) {
 			return {
-				"error": $.t("incorrect_quantity_plus", {
+				"error": $.t("error_incorrect_quantity_plus", {
 					"err": e.escapeHTML()
 				})
 			};

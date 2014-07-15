@@ -129,7 +129,7 @@
 	"send_message": "Send Message",
 	"send_message_button": "Send Message",
 	"generate_token": "Generate Token",
-	"transaction_operations_modal": "Transaction Operations",
+	"transaction_operations": "Transaction Operations",
 	"logout_stop_forging": "Logout and Stop Forging",
 	"copy_account_id": "Copy Account ID",
 	"copy_send_message_link": "Copy 'Send Message' Link",
@@ -799,5 +799,11 @@
 	"deliver_goods_q": "Deliver goods?",
 	"error_max_value": "__field__: Maximum value is __max__.",
 	"error_min_value": "__field__: Minimum value is __min__.",
-	"error_invalid_field": "__field__ is invalid."
+	"error_invalid_field": "__field__ is invalid.",
+	"language": "Language",
+	"generate": "Generate",
+	"validate": "Validate",
+	"you": "You",
+	"seller": "Seller",
+	"error_fraction_decimals": "Fraction can only have __decimals__ decimals max."
 }

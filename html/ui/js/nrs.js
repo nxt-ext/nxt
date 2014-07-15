@@ -99,19 +99,6 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.checkAliasVersions();
 		});
 
-		$.i18n.init({
-			lng: "nl",
-			fallbackLng: "en",
-			lowerCaseLng: true,
-			resGetPath: "locales/__lng__.json",
-			debug: true
-		}, function() {
-			console.log("here");
-			$("[data-i18n]").i18n();
-			console.log($.t("toggle_navigation"));
-			console.log("done");
-		});
-
 		NRS.showLockscreen();
 
 		if (window.parent) {

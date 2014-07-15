@@ -340,14 +340,14 @@ var NRS = (function(NRS, $, undefined) {
 							return false;
 						} else {
 							if (title) {
-								var translatedTitle = NRS.getTranslatedFieldName(title);
+								var translatedTitle = NRS.getTranslatedFieldName(title).toLowerCase();
 								if (!translatedTitle) {
 									translatedTitle = String(title).escapeHTML().toLowerCase();
 								}
 
 								data = $.t("error_could_not_decrypt_var", {
 									"var": translatedTitle
-								});
+								}).capitalize();
 							} else {
 								data = $.t("error_could_not_decrypt");
 							}

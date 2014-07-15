@@ -90,9 +90,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (value > max) {
 						error = $.t("error_max_value", {
-							"field": NRS.getTranslatedFieldName(name),
+							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
 							"max": max
-						});
+						}).capitalize();
 					}
 				}
 
@@ -101,16 +101,16 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (value < min) {
 						error = $.t("error_min_value", {
-							"field": NRS.getTranslatedFieldName(name),
+							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
 							"min": min
-						});
+						}).capitalize();
 					}
 				}
 
 				if (!error) {
 					error = $.t("error_invalid_field", {
-						"field": NRS.getTranslatedFieldName(name)
-					});
+						"field": NRS.getTranslatedFieldName(name).toLowerCase()
+					}).capitalize();
 				}
 
 				$form.find(".error_message").html(error).show();

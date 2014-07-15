@@ -331,6 +331,7 @@
 
 		function localize(ele, options) {
 			var key = ele.attr(o.selectorAttr);
+
 			if (!key && typeof key !== 'undefined' && key !== false) key = ele.text() || ele.val();
 			if (!key) return;
 
@@ -706,6 +707,10 @@
 			detectedLng = (navigator.language) ? navigator.language : navigator.userLanguage;
 		}
 
+		if (detectedLng.indexOf("en-") == 0) {
+			detectedLng = "en";
+		}
+
 		return detectedLng;
 	}
 	var sync = {
@@ -784,30 +789,6 @@
 	var pluralExtensions = {
 
 		rules: {
-			"ar": {
-				"name": "Arabic",
-				"numbers": [
-					0,
-					1,
-					2,
-					3,
-					11,
-					100
-				],
-				"plurals": function(n) {
-					return Number(n === 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n % 100 >= 3 && n % 100 <= 10 ? 3 : n % 100 >= 11 ? 4 : 5);
-				}
-			},
-			"bn": {
-				"name": "Bengali",
-				"numbers": [
-					1,
-					2
-				],
-				"plurals": function(n) {
-					return Number(n != 1);
-				}
-			},
 			"de": {
 				"name": "German",
 				"numbers": [
@@ -848,14 +829,15 @@
 					return Number(n > 1);
 				}
 			},
-			"hi": {
-				"name": "Hindi",
+			"hr": {
+				"name": "Croatian",
 				"numbers": [
 					1,
-					2
+					2,
+					5
 				],
 				"plurals": function(n) {
-					return Number(n != 1);
+					return Number(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2);
 				}
 			},
 			"ja": {
@@ -867,14 +849,37 @@
 					return 0;
 				}
 			},
-			"pt": {
-				"name": "Portuguese",
+			"lt": {
+				"name": "Lithuanian",
 				"numbers": [
 					1,
-					2
+					2,
+					10
 				],
 				"plurals": function(n) {
-					return Number(n != 1);
+					return Number(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2);
+				}
+			},
+			"sk": {
+				"name": "Slovak",
+				"numbers": [
+					1,
+					2,
+					5
+				],
+				"plurals": function(n) {
+					return Number((n == 1) ? 0 : (n >= 2 && n <= 4) ? 1 : 2);
+				}
+			},
+			"sr": {
+				"name": "Serbian",
+				"numbers": [
+					1,
+					2,
+					5
+				],
+				"plurals": function(n) {
+					return Number(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2);
 				}
 			},
 			"ru": {
@@ -886,16 +891,6 @@
 				],
 				"plurals": function(n) {
 					return Number(n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2);
-				}
-			},
-			"ur": {
-				"name": "Urdu",
-				"numbers": [
-					1,
-					2
-				],
-				"plurals": function(n) {
-					return Number(n != 1);
 				}
 			},
 			"zh": {
@@ -939,7 +934,7 @@
 						} else if (number === 1) {
 							number = 1; // singular
 						}
-					} //console.log(count + '-' + number);
+					}
 					return number;
 				} else {
 					return c === 1 ? '1' : '-1';
