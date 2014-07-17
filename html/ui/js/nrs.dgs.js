@@ -26,6 +26,13 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (purchase.refundNQT) {
 			status = $.t("refunded");
 			modal = "#dgs_view_refund_modal";
+		} else if (!purchase.goodsData) {
+			var currentTime = (new Date() - Date.UTC(2013, 10, 24, 12, 0, 0, 0)) / 1000;
+			if (purchase.deliveryDeadlineTimestamp < currentTime) {
+				status = $.t("not_delivered_in_time");
+			} else {
+				status = $.t("failed");
+			}
 		} else {
 			status = $.t("complete");
 		}
@@ -436,6 +443,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		data.deliveryDeadlineTimestamp = String(Math.floor((new Date() - Date.UTC(2013, 10, 24, 12, 0, 0, 0)) / 1000) + (60 * 60 * data.deliveryDeadlineTimestamp));
 
+		//data.deliveryDeadlineTimestamp = String(Math.floor((new Date() - Date.UTC(2013, 10, 24, 12, 0, 0, 0)) / 1000) + (60 * 5));
+
 		delete data.seller;
 
 		return {
@@ -723,6 +732,17 @@ var NRS = (function(NRS, $, undefined) {
 								"formEl": "#dgs_view_delivery_output",
 								"outputEl": "#dgs_view_delivery_output"
 							});
+
+							if (type == "dgs_view_delivery_modal") {
+								if (!response.pending && !response.goodsData) {
+									var currentTime = (new Date() - Date.UTC(2013, 10, 24, 12, 0, 0, 0)) / 1000;
+									if (response.deliveryDeadlineTimestamp < currentTime) {
+										$("#dgs_view_delivery_output").append("<div class='callout callout-danger' style='margin-bottom:0'>" + $.t("purchase_not_delivered_in_time") + "</div>");
+									} else {
+										$("#dgs_view_delivery_output").append("<div class='callout callout-danger' style='margin-bottom:0'>" + $.t("purchase_failed") + "</div>");
+									}
+								}
+							}
 
 							var $btn = $modal.find("button.btn-primary:not([data-ignore=true])");
 

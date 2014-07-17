@@ -564,7 +564,12 @@ var NRS = (function(NRS, $, undefined) {
 			$(".asset_name").html(String(asset.name).escapeHTML());
 			$("#sell_asset_button").data("asset", assetId);
 			$("#buy_asset_button").data("asset", assetId);
-
+			$("#sell_asset_for_nxt").html($.t("sell_asset_for_nxt", {
+				"assetName": String(asset.name).escapeHTML()
+			}));
+			$("#buy_asset_with_nxt").html($.t("buy_asset_with_nxt", {
+				"assetName": String(asset.name).escapeHTML()
+			}));
 			$("#sell_asset_price, #buy_asset_price").val("");
 			$("#sell_asset_quantity, #sell_asset_total, #buy_asset_quantity, #buy_asset_total").val("0");
 
@@ -589,12 +594,9 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 
-			if (nrDuplicates >= 1) {
-				$("#asset_exchange_duplicates_warning span").html((nrDuplicates == 1 ? " is " : " are ") + nrDuplicates + " " + (nrDuplicates == 1 ? "other asset" : "other assets"));
-				$("#asset_exchange_duplicates_warning").show();
-			} else {
-				$("#asset_exchange_duplicates_warning").hide();
-			}
+			$("#asset_exchange_duplicates_warning").html($.t("asset_exchange_duplicates_warning", {
+				"count": nrDuplicates
+			}));
 
 			if (NRS.databaseSupport) {
 				NRS.sendRequest("getAsset", {
@@ -1937,7 +1939,7 @@ var NRS = (function(NRS, $, undefined) {
 			completeOrder.quantityQNT = new BigInteger(completeOrder.quantityQNT);
 			completeOrder.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(completeOrder.quantityQNT, completeOrder.priceNQT));
 
-			rows += "<tr data-order='" + String(completeOrder.order).escapeHTML() + "'" + (cancelled ? " class='tentative tentative-crossed'" : (completeOrder.tentative ? " class='tentative'" : "")) + "><td><a href='#' data-goto-asset='" + String(completeOrder.asset).escapeHTML() + "'>" + completeOrder.assetName.escapeHTML() + "</a></td><td>" + NRS.formatQuantity(completeOrder.quantityQNT, completeOrder.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(completeOrder.priceNQT, completeOrder.decimals) + "</td><td>" + NRS.formatAmount(completeOrder.totalNQT) + "</td><td class='cancel'>" + (cancelled || completeOrder.tentative ? "/" : "<a href='#' data-toggle='modal' data-target='#cancel_order_modal' data-order='" + String(completeOrder.order).escapeHTML() + "' data-type='" + type + "'>Cancel</a>") + "</td></tr>";
+			rows += "<tr data-order='" + String(completeOrder.order).escapeHTML() + "'" + (cancelled ? " class='tentative tentative-crossed'" : (completeOrder.tentative ? " class='tentative'" : "")) + "><td><a href='#' data-goto-asset='" + String(completeOrder.asset).escapeHTML() + "'>" + completeOrder.assetName.escapeHTML() + "</a></td><td>" + NRS.formatQuantity(completeOrder.quantityQNT, completeOrder.decimals) + "</td><td>" + NRS.formatOrderPricePerWholeQNT(completeOrder.priceNQT, completeOrder.decimals) + "</td><td>" + NRS.formatAmount(completeOrder.totalNQT) + "</td><td class='cancel'>" + (cancelled || completeOrder.tentative ? "/" : "<a href='#' data-toggle='modal' data-target='#cancel_order_modal' data-order='" + String(completeOrder.order).escapeHTML() + "' data-type='" + type + "'>" + $.t("cancel") + "</a>") + "</td></tr>";
 		}
 
 		$("#open_" + type + "_orders_table tbody").empty().append(rows);
