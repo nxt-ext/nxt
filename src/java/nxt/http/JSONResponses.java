@@ -111,19 +111,18 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DELIVERY_DEADLINE_TIMESTAMP = incorrect("deliveryDeadlineTimestamp");
     public static final JSONStreamAware INCORRECT_PURCHASE_QUANTITY = incorrect("quantity", "(quantity exceeds available goods quantity)");
     public static final JSONStreamAware INCORRECT_PURCHASE_PRICE = incorrect("priceNQT", "(purchase price doesn't match goods price)");
-    public static final JSONStreamAware INCORRECT_DGS_NOTE = incorrect("note");
     public static final JSONStreamAware INCORRECT_PURCHASE = incorrect("purchase");
     public static final JSONStreamAware MISSING_PURCHASE = missing("purchase");
-    public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("goodsData");
+    public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("plainGoods");
     public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
     public static final JSONStreamAware MISSING_SELLER = missing("seller");
-    public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_NOTE = incorrect("encryptedNote");
-    public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("encryptedGoods");
+    public static final JSONStreamAware INCORRECT_ENCRYPTED_MESSAGE = incorrect("encryptedMessageData");
+    public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("goodsData");
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
     public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
-    public static final JSONStreamAware MISSING_NOTE = missing("note");
+    public static final JSONStreamAware MISSING_PLAIN_MESSAGE = missing("plainMessage");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -203,14 +202,6 @@ public final class JSONResponses {
         response.put("errorCode", 8);
         response.put("errorDescription", "Refund already sent");
         DUPLICATE_REFUND = JSON.prepare(response);
-    }
-
-    public static final JSONStreamAware DUPLICATE_FEEDBACK;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 8);
-        response.put("errorDescription", "Feedback already sent");
-        DUPLICATE_FEEDBACK = JSON.prepare(response);
     }
 
     public static final JSONStreamAware GOODS_NOT_DELIVERED;

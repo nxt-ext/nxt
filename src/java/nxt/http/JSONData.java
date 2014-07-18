@@ -13,6 +13,7 @@ import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -129,6 +130,13 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject encryptedData(EncryptedData encryptedData) {
+        JSONObject json = new JSONObject();
+        json.put("data", Convert.toHexString(encryptedData.getData()));
+        json.put("nonce", Convert.toHexString(encryptedData.getNonce()));
+        return json;
+    }
+
     static JSONObject goods(DigitalGoodsStore.Goods goods) {
         JSONObject json = new JSONObject();
         json.put("goods", Convert.toUnsignedLong(goods.getId()));
@@ -216,20 +224,28 @@ final class JSONData {
         json.put("buyerRS", Convert.rsAccount(purchase.getBuyerId()));
         json.put("timestamp", purchase.getTimestamp());
         json.put("deliveryDeadlineTimestamp", purchase.getDeliveryDeadlineTimestamp());
-        json.put("note", Convert.toHexString(purchase.getNote().getData()));
-        json.put("noteNonce", Convert.toHexString(purchase.getNote().getNonce()));
+        json.put("note", encryptedData(purchase.getNote()));
         json.put("pending", purchase.isPending());
         if (purchase.getEncryptedGoods() != null) {
-            json.put("goodsData", Convert.toHexString(purchase.getEncryptedGoods().getData()));
-            json.put("goodsDataNonce", Convert.toHexString(purchase.getEncryptedGoods().getNonce()));
+            json.put("goodsData", encryptedData(purchase.getEncryptedGoods()));
+            json.put("goodsIsText", purchase.goodsIsText());
         }
-        if (purchase.getFeedbackNote() != null) {
-            json.put("feedbackNote", Convert.toHexString(purchase.getFeedbackNote().getData()));
-            json.put("feedbackNoteNonce", Convert.toHexString(purchase.getFeedbackNote().getNonce()));
+        if (purchase.getFeedbackNotes() != null) {
+            JSONArray feedbacks = new JSONArray();
+            for (EncryptedData encryptedData : purchase.getFeedbackNotes()) {
+                feedbacks.add(encryptedData(encryptedData));
+            }
+            json.put("feedbackNotes", feedbacks);
+        }
+        if (purchase.getPublicFeedback() != null) {
+            JSONArray publicFeedbacks = new JSONArray();
+            for (String publicFeedback : purchase.getPublicFeedback()) {
+                publicFeedbacks.add(publicFeedback);
+            }
+            json.put("publicFeedbacks", publicFeedbacks);
         }
         if (purchase.getRefundNote() != null) {
-            json.put("refundNote", Convert.toHexString(purchase.getRefundNote().getData()));
-            json.put("refundNoteNonce", Convert.toHexString(purchase.getRefundNote().getNonce()));
+            json.put("refundNote", encryptedData(purchase.getRefundNote()));
         }
         if (purchase.getDiscountNQT() > 0) {
             json.put("discountNQT", String.valueOf(purchase.getDiscountNQT()));
@@ -273,12 +289,19 @@ final class JSONData {
             json.put("fullHash", transaction.getFullHash());
             json.put("transaction", transaction.getStringId());
         }
-        if (transaction.getAttachment() != null) {
-            json.put("attachment", attachment(transaction.getAttachment()));
+        JSONObject attachmentJSON = attachment(transaction.getAttachment());
+        if (transaction.getMessage() != null) {
+            attachmentJSON.putAll(transaction.getMessage().getJSONObject());
         }
+        if (transaction.getEncryptedMessage() != null) {
+            attachmentJSON.putAll(transaction.getEncryptedMessage().getJSONObject());
+        }
+        json.put("attachment", attachmentJSON);
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
         json.put("height", transaction.getHeight());
+        json.put("version", transaction.getVersion());
+
         return json;
     }
 

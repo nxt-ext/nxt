@@ -95,16 +95,35 @@ final class TransactionDb {
             byte[] attachmentBytes = rs.getBytes("attachment_bytes");
             int blockTimestamp = rs.getInt("block_timestamp");
             byte[] fullHash = rs.getBytes("full_hash");
+            byte version = rs.getByte("version");
+
+            ByteBuffer buffer = null;
+            if (attachmentBytes != null) {
+                buffer = ByteBuffer.wrap(attachmentBytes);
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+            }
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                        referencedTransactionFullHash, signature, blockId, height, id, senderId, blockTimestamp, fullHash);
-            if (attachmentBytes != null) {
-                ByteBuffer buffer = ByteBuffer.wrap(attachmentBytes);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                transactionType.loadAttachment(transaction, buffer); // this does not do validate
+            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, recipientId,
+                    amountNQT, feeNQT, timestamp, deadline,
+                    transactionType.parseAttachment(buffer))
+                    .referencedTransactionFullHash(referencedTransactionFullHash)
+                    .signature(signature)
+                    .blockId(blockId)
+                    .height(height)
+                    .id(id)
+                    .senderId(senderId)
+                    .blockTimestamp(blockTimestamp)
+                    .fullHash(fullHash);
+            if (rs.getBoolean("has_message")) {
+                builder.message(new Appendix.Message(buffer));
             }
-            return transaction;
+            if (rs.getBoolean("has_encrypted_message")) {
+                builder.encryptedMessage(new Appendix.EncryptedMessage(buffer));
+            }
+
+            return builder.build();
+
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -134,8 +153,8 @@ final class TransactionDb {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
-                        + "block_timestamp, full_hash) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "block_timestamp, full_hash, version, has_message, has_encrypted_message) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -159,13 +178,34 @@ final class TransactionDb {
                     pstmt.setByte(++i, transaction.getType().getType());
                     pstmt.setByte(++i, transaction.getType().getSubtype());
                     pstmt.setLong(++i, transaction.getSenderId());
-                    if (transaction.getAttachment() != null) {
-                        pstmt.setBytes(++i, transaction.getAttachment().getBytes());
-                    } else {
+                    Appendix.Message message = transaction.getMessage();
+                    Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
+                    int bytesLength = transaction.getAttachment().getSize();
+                    if (message != null) {
+                        bytesLength += message.getSize();
+                    }
+                    if (encryptedMessage != null) {
+                        bytesLength += encryptedMessage.getSize();
+                    }
+                    if (bytesLength == 0) {
                         pstmt.setNull(++i, Types.VARBINARY);
+                    } else {
+                        ByteBuffer buffer = ByteBuffer.allocate(bytesLength);
+                        buffer.order(ByteOrder.LITTLE_ENDIAN);
+                        buffer.put(transaction.getAttachment().getBytes());
+                        if (message != null) {
+                            buffer.put(message.getBytes());
+                        }
+                        if (encryptedMessage != null) {
+                            buffer.put(encryptedMessage.getBytes());
+                        }
+                        pstmt.setBytes(++i, buffer.array());
                     }
                     pstmt.setInt(++i, transaction.getBlockTimestamp());
                     pstmt.setBytes(++i, Convert.parseHexString(transaction.getFullHash()));
+                    pstmt.setByte(++i, transaction.getVersion());
+                    pstmt.setBoolean(++i, transaction.getMessage() != null);
+                    pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.executeUpdate();
                 }
             }

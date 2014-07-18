@@ -5,7 +5,6 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -22,7 +21,7 @@ public final class DGSRefund extends CreateTransaction {
 
     private DGSRefund() {
         super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
-                "purchase", "refundNQT", "note", "encryptedNote", "encryptedNoteNonce");
+                "purchase", "refundNQT");
     }
 
     @Override
@@ -54,9 +53,8 @@ public final class DGSRefund extends CreateTransaction {
         }
 
         Account buyerAccount = Account.getAccount(purchase.getBuyerId());
-        EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, buyerAccount);
 
-        Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, encryptedNote);
+        Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT);
         return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }

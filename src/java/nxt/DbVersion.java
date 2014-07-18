@@ -246,6 +246,18 @@ final class DbVersion {
             case 58:
                 apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp DESC)");
             case 59:
+                apply("ALTER TABLE transaction ADD COLUMN version TINYINT");
+            case 60:
+                apply("UPDATE transaction SET version = 0");
+            case 61:
+                apply("ALTER TABLE transaction ALTER COLUMN version SET NOT NULL");
+            case 62:
+                apply("ALTER TABLE transaction ADD COLUMN has_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 63:
+                apply("ALTER TABLE transaction ADD COLUMN has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 64:
+                apply("UPDATE transaction SET has_message = TRUE WHERE type = 1 AND subtype = 0");
+            case 65:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

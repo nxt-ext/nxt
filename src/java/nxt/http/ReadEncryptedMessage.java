@@ -1,7 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Attachment;
+import nxt.Appendix;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.TransactionType;
@@ -17,11 +17,11 @@ import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class ReadEncryptedNote extends APIServlet.APIRequestHandler {
+public final class ReadEncryptedMessage extends APIServlet.APIRequestHandler {
 
-    static final ReadEncryptedNote instance = new ReadEncryptedNote();
+    static final ReadEncryptedMessage instance = new ReadEncryptedMessage();
 
-    private ReadEncryptedNote() {
+    private ReadEncryptedMessage() {
         super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
     }
 
@@ -48,11 +48,11 @@ public final class ReadEncryptedNote extends APIServlet.APIRequestHandler {
 
         String secretPhrase = ParameterParser.getSecretPhrase(req);
         Account senderAccount = Account.getAccount(transaction.getSenderId());
-        Attachment.MessagingEncryptedMessage attachment = (Attachment.MessagingEncryptedMessage)transaction.getAttachment();
+        Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
         try {
-            byte[] decrypted = senderAccount.decryptFrom(attachment.getEncryptedMessage(), secretPhrase);
+            byte[] decrypted = senderAccount.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
             JSONObject response = new JSONObject();
-            response.put("note", Convert.toString(decrypted));
+            response.put("plainMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
             return response;
         } catch (RuntimeException e) {
             Logger.logDebugMessage(e.toString(), e);

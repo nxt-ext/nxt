@@ -12,8 +12,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -180,24 +178,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash)
+    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, Long recipientId,
+                                      long amountNQT, long feeNQT, short deadline, Attachment attachment)
             throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
-                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
-        transaction.validateAttachment();
-        return transaction;
-    }
-
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash, Attachment attachment)
-            throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
-                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
-        transaction.setAttachment(attachment);
-        transaction.validateAttachment();
-        return transaction;
+        byte version = (byte) (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
+        return new TransactionImpl.BuilderImpl(version, senderPublicKey, recipientId, amountNQT, feeNQT, Convert.getEpochTime(),
+                deadline, attachment);
     }
 
     @Override
@@ -223,57 +209,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        byte type = buffer.get();
-        byte subtype = buffer.get();
-        int timestamp = buffer.getInt();
-        short deadline = buffer.getShort();
-        byte[] senderPublicKey = new byte[32];
-        buffer.get(senderPublicKey);
-        Long recipientId = buffer.getLong();
-        long amountNQT = buffer.getLong();
-        long feeNQT = buffer.getLong();
-        String referencedTransactionFullHash = null;
-        byte[] referencedTransactionFullHashBytes = new byte[32];
-        buffer.get(referencedTransactionFullHashBytes);
-        if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-            referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-        }
-        byte[] signature = new byte[64];
-        buffer.get(signature);
-        signature = Convert.emptyToNull(signature);
-
-        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-        TransactionImpl transaction;
-        transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, signature);
-        transactionType.loadAttachment(transaction, buffer);
-
-        return transaction;
+        return TransactionImpl.parseTransaction(bytes);
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
-        byte type = ((Long)transactionData.get("type")).byteValue();
-        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-        short deadline = ((Long)transactionData.get("deadline")).shortValue();
-        byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-        Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-        if (recipientId == null) recipientId = 0L; // ugly
-        long amountNQT = (Long) transactionData.get("amountNQT");
-        long feeNQT = (Long) transactionData.get("feeNQT");
-        String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-        byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
-
-        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-        TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, signature);
-
-        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-        transactionType.loadAttachment(transaction, attachmentData);
-        return transaction;
+        return TransactionImpl.parseTransaction(transactionData);
     }
 
     void clear() {

@@ -1,6 +1,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Appendix;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.Genesis;
@@ -9,6 +10,7 @@ import nxt.NxtException;
 import nxt.Transaction;
 import nxt.TransactionType;
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -17,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
+import static nxt.http.JSONResponses.INCORRECT_ARBITRARY_MESSAGE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
 import static nxt.http.JSONResponses.INCORRECT_FEE;
 import static nxt.http.JSONResponses.INCORRECT_REFERENCED_TRANSACTION;
@@ -27,7 +30,9 @@ import static nxt.http.JSONResponses.NOT_ENOUGH_FUNDS;
 abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
-            "deadline", "referencedTransactionFullHash", "broadcast"};
+            "deadline", "referencedTransactionFullHash", "broadcast",
+            "message", "messageIsText",
+            "plainMessage", "plainMessageIsText", "encryptedMessageData", "encryptedMessageNonce"};
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);
@@ -44,6 +49,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return createTransaction(req, senderAccount, Genesis.CREATOR_ID, 0, attachment);
     }
 
+    final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId, long amountNQT)
+            throws NxtException {
+        return createTransaction(req, senderAccount, recipientId, amountNQT, Attachment.ORDINARY_PAYMENT);
+    }
+
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId,
                                             long amountNQT, Attachment attachment)
             throws NxtException {
@@ -53,6 +63,20 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
+        boolean plainMessageIsText = !"false".equalsIgnoreCase(req.getParameter("plainMessageIsText"));
+        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
+        Appendix.Message message = null;
+        String messageValue = Convert.emptyToNull(req.getParameter("message"));
+        if (messageValue != null) {
+            boolean messageIsText = attachment == Attachment.ARBITRARY_MESSAGE
+                    ? "true".equalsIgnoreCase(req.getParameter("messageIsText"))
+                    : !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
+            try {
+                message = messageIsText ? new Appendix.Message(messageValue) : new Appendix.Message(Convert.parseHexString(messageValue));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+            }
+        }
 
         if (secretPhrase == null && publicKeyValue == null) {
             return MISSING_SECRET_PHRASE;
@@ -93,12 +117,16 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
         try {
-            Transaction transaction = attachment == null ?
-                    Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                            amountNQT, feeNQT, referencedTransactionFullHash)
-                    :
-                    Nxt.getTransactionProcessor().newTransaction(deadline, publicKey, recipientId,
-                            amountNQT, feeNQT, referencedTransactionFullHash, attachment);
+            Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, recipientId,
+                    amountNQT, feeNQT, deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
+            if (encryptedData != null) {
+                builder.encryptedMessage(new Appendix.EncryptedMessage(encryptedData, plainMessageIsText));
+            }
+            if (message != null) {
+                builder.message(message);
+            }
+            Transaction transaction = builder.build();
+            transaction.validateAttachment();
 
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);

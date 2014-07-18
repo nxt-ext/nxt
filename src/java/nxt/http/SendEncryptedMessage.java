@@ -3,19 +3,18 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
-import nxt.crypto.EncryptedData;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
 
-public final class SendEncryptedNote extends CreateTransaction {
+public final class SendEncryptedMessage extends CreateTransaction {
 
-    static final SendEncryptedNote instance = new SendEncryptedNote();
+    static final SendEncryptedMessage instance = new SendEncryptedMessage();
 
-    private SendEncryptedNote() {
-        super(new APITag[] {APITag.MESSAGES, APITag.CREATE_TRANSACTION}, "recipient", "note", "encryptedNote", "encryptedNoteNonce");
+    private SendEncryptedMessage() {
+        super(new APITag[] {APITag.MESSAGES, APITag.CREATE_TRANSACTION}, "recipient");
     }
 
     @Override
@@ -26,10 +25,8 @@ public final class SendEncryptedNote extends CreateTransaction {
         if (recipientAccount == null || recipientAccount.getPublicKey() == null) {
             return INCORRECT_RECIPIENT;
         }
-        EncryptedData encryptedMessage = ParameterParser.getEncryptedNote(req, recipientAccount);
         Account senderAccount = ParameterParser.getSenderAccount(req);
-        Attachment attachment = new Attachment.MessagingEncryptedMessage(encryptedMessage);
-        return createTransaction(req, senderAccount, recipientId, 0, attachment);
+        return createTransaction(req, senderAccount, recipientId, 0, Attachment.ENCRYPTED_MESSAGE);
 
     }
 

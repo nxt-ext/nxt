@@ -1,8 +1,11 @@
 package nxt.crypto;
 
+import nxt.NxtException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -35,6 +38,21 @@ public final class EncryptedData {
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength)
+            throws NxtException.ValidationException {
+        if (length == 0) {
+            return EMPTY_DATA;
+        }
+        if (length > maxLength) {
+            throw new NxtException.ValidationException("Max encrypted data length exceeded");
+        }
+        byte[] noteBytes = new byte[length];
+        buffer.get(noteBytes);
+        byte[] noteNonceBytes = new byte[32];
+        buffer.get(noteNonceBytes);
+        return new EncryptedData(noteBytes, noteNonceBytes);
     }
 
     private final byte[] data;
@@ -71,6 +89,10 @@ public final class EncryptedData {
 
     public byte[] getNonce() {
         return nonce;
+    }
+
+    public int getSize() {
+        return data.length + nonce.length;
     }
 
 }

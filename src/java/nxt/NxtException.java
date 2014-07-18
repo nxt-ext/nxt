@@ -20,11 +20,11 @@ public abstract class NxtException extends Exception {
 
     public static class ValidationException extends NxtException {
 
-        ValidationException(String message) {
+        public ValidationException(String message) {
             super(message);
         }
 
-        ValidationException(String message, Throwable cause) {
+        public ValidationException(String message, Throwable cause) {
             super(message, cause);
         }
 
