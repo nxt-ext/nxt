@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Appendix;
 import nxt.Nxt;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -15,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.DECRYPTION_FAILED;
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
+import static nxt.http.JSONResponses.NO_MESSAGE;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
 public final class ReadEncryptedMessage extends APIServlet.APIRequestHandler {
@@ -42,13 +42,13 @@ public final class ReadEncryptedMessage extends APIServlet.APIRequestHandler {
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
-        if (transaction.getType() != TransactionType.Messaging.ENCRYPTED_MESSAGE) {
-            return INCORRECT_TRANSACTION;
-        }
 
         String secretPhrase = ParameterParser.getSecretPhrase(req);
         Account senderAccount = Account.getAccount(transaction.getSenderId());
         Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
+        if (encryptedMessage == null) {
+            return NO_MESSAGE;
+        }
         try {
             byte[] decrypted = senderAccount.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
             JSONObject response = new JSONObject();

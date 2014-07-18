@@ -168,23 +168,6 @@ final class ParameterParser {
         }
     }
 
-    static byte[] getMessage(HttpServletRequest req) throws ParameterException {
-        String messageValue = Convert.emptyToNull(req.getParameter("message"));
-        if (messageValue == null) {
-            return null;
-        }
-        byte[] message;
-        try {
-            message = Convert.parseHexString(messageValue);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
-        }
-        if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-            throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
-        }
-        return message;
-    }
-
     static EncryptedData getEncryptedMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
         String data = Convert.emptyToNull(req.getParameter("encryptedMessageData"));
         String nonce = Convert.emptyToNull(req.getParameter("encryptedMessageNonce"));
@@ -199,10 +182,17 @@ final class ParameterParser {
         if (recipientAccount == null) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
+        String plainMessage = Convert.emptyToNull(req.getParameter("plainMessage"));
+        if (plainMessage == null) {
+            return null;
+        }
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("plainMessageIsText"));
-        String plainMessage = Convert.nullToEmpty(req.getParameter("plainMessage"));
-        byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-        return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+        try {
+            byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
+            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
+        }
     }
 
     static EncryptedData getEncryptedGoods(HttpServletRequest req) throws ParameterException {
