@@ -32,7 +32,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
-            "plainMessage", "plainMessageIsText", "encryptedMessageData", "encryptedMessageNonce"};
+            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce"};
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);

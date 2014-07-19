@@ -113,7 +113,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PURCHASE_PRICE = incorrect("priceNQT", "(purchase price doesn't match goods price)");
     public static final JSONStreamAware INCORRECT_PURCHASE = incorrect("purchase");
     public static final JSONStreamAware MISSING_PURCHASE = missing("purchase");
-    public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("plainGoods");
+    public static final JSONStreamAware INCORRECT_DGS_GOODS = incorrect("goodsToEncrypt");
     public static final JSONStreamAware INCORRECT_DGS_DISCOUNT = incorrect("discountNQT");
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
     public static final JSONStreamAware MISSING_SELLER = missing("seller");
@@ -122,7 +122,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
     public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
-    public static final JSONStreamAware INCORRECT_PLAIN_MESSAGE = incorrect("plainMessage");
+    public static final JSONStreamAware INCORRECT_PLAIN_MESSAGE = incorrect("messageToEncrypt");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

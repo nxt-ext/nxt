@@ -55,16 +55,6 @@ public interface Attachment extends Appendix {
 
     };
 
-    // the encrypted message payload is in the Appendix
-    public final static Attachment ENCRYPTED_MESSAGE = new EmptyAttachment() {
-
-        @Override
-        public TransactionType getTransactionType() {
-            return TransactionType.Messaging.ENCRYPTED_MESSAGE;
-        }
-
-    };
-
     public final static class MessagingAliasAssignment implements Attachment {
 
         private final String aliasName;

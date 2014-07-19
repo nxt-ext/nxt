@@ -22,7 +22,7 @@ public final class DGSDelivery extends CreateTransaction {
 
     private DGSDelivery() {
         super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
-                "purchase", "discountNQT", "plainGoods", "goodsIsText", "goodsData", "goodsNonce");
+                "purchase", "discountNQT", "goodsToEncrypt", "goodsIsText", "goodsData", "goodsNonce");
     }
 
     @Override
@@ -60,7 +60,7 @@ public final class DGSDelivery extends CreateTransaction {
             String secretPhrase = ParameterParser.getSecretPhrase(req);
             byte[] goodsBytes;
             try {
-                String plainGoods = Convert.nullToEmpty(req.getParameter("plainGoods"));
+                String plainGoods = Convert.nullToEmpty(req.getParameter("goodsToEncrypt"));
                 if (plainGoods.length() == 0) {
                     return INCORRECT_DGS_GOODS;
                 }

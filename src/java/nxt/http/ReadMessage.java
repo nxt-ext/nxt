@@ -17,11 +17,11 @@ import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.NO_MESSAGE;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class ReadEncryptedMessage extends APIServlet.APIRequestHandler {
+public final class ReadMessage extends APIServlet.APIRequestHandler {
 
-    static final ReadEncryptedMessage instance = new ReadEncryptedMessage();
+    static final ReadMessage instance = new ReadMessage();
 
-    private ReadEncryptedMessage() {
+    private ReadMessage() {
         super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
     }
 
@@ -43,22 +43,27 @@ public final class ReadEncryptedMessage extends APIServlet.APIRequestHandler {
             return INCORRECT_TRANSACTION;
         }
 
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        JSONObject response = new JSONObject();
         Account senderAccount = Account.getAccount(transaction.getSenderId());
+        Appendix.Message message = transaction.getMessage();
         Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
-        if (encryptedMessage == null) {
+        if (message == null && encryptedMessage == null) {
             return NO_MESSAGE;
         }
-        try {
-            byte[] decrypted = senderAccount.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
-            JSONObject response = new JSONObject();
-            response.put("plainMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
-            return response;
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage(e.toString(), e);
-            return DECRYPTION_FAILED;
+        if (encryptedMessage != null) {
+            String secretPhrase = ParameterParser.getSecretPhrase(req);
+            try {
+                byte[] decrypted = senderAccount.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
+                response.put("decryptedMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+            } catch (RuntimeException e) {
+                Logger.logDebugMessage(e.toString(), e);
+                return DECRYPTION_FAILED;
+            }
         }
-
+        if (message != null) {
+            response.put("message", message.isText() ? Convert.toString(message.getMessage()) : Convert.toHexString(message.getMessage()));
+        }
+        return response;
     }
 
 }

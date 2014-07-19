@@ -28,7 +28,6 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ACCOUNT_INFO = 5;
     private static final byte SUBTYPE_MESSAGING_ALIAS_SELL = 6;
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
-    private static final byte SUBTYPE_MESSAGING_ENCRYPTED_MESSAGE = 8;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -75,8 +74,6 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_SELL;
                     case SUBTYPE_MESSAGING_ALIAS_BUY:
                         return Messaging.ALIAS_BUY;
-                    case SUBTYPE_MESSAGING_ENCRYPTED_MESSAGE:
-                        return Messaging.ENCRYPTED_MESSAGE;
                     default:
                         return null;
                 }
@@ -338,56 +335,6 @@ public abstract class TransactionType {
                 Attachment attachment = transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0 || attachment != Attachment.ARBITRARY_MESSAGE) {
                     throw new NxtException.ValidationException("Invalid arbitrary message: " + attachment.getJSONObject());
-                }
-                if (transaction.getMessage() == null) {
-                    throw new NxtException.ValidationException("Missing message appendix");
-                }
-            }
-
-            @Override
-            public boolean hasRecipient() {
-                return true;
-            }
-
-        };
-
-        public final static TransactionType ENCRYPTED_MESSAGE = new Messaging() {
-
-            @Override
-            public final byte getSubtype() {
-                return TransactionType.SUBTYPE_MESSAGING_ENCRYPTED_MESSAGE;
-            }
-
-            @Override
-            Attachment parseAttachment(ByteBuffer buffer) throws NxtException.ValidationException {
-                return Attachment.ENCRYPTED_MESSAGE;
-            }
-
-            @Override
-            Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
-                return Attachment.ENCRYPTED_MESSAGE;
-            }
-
-            @Override
-            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            }
-
-            @Override
-            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            }
-
-            @Override
-            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NotYetEnabledException("Encrypted messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
-                Attachment attachment = transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0
-                        || attachment != Attachment.ENCRYPTED_MESSAGE) {
-                    throw new NxtException.ValidationException("Invalid encrypted message: " + attachment.getJSONObject());
-                }
-                if (transaction.getEncryptedMessage() == null) {
-                    throw new NxtException.ValidationException("Missing encrypted message appendix");
                 }
             }
 

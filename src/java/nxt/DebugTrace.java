@@ -450,7 +450,7 @@ public final class DebugTrace {
                 }
             }
             map.put("refund", String.valueOf(refundNQT));
-        } else if (attachment == Attachment.ARBITRARY_MESSAGE || attachment == Attachment.ENCRYPTED_MESSAGE) {
+        } else if (attachment == Attachment.ARBITRARY_MESSAGE) {
             map = new HashMap<>();
             map.put("account", Convert.toUnsignedLong(accountId));
             map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
