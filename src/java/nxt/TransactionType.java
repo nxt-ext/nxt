@@ -914,6 +914,10 @@ public abstract class TransactionType {
                         || attachment.getAssetId() == null) {
                     throw new NxtException.ValidationException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
+                if (transaction.getVersion() > 0 && attachment.getComment().length() > 0) {
+                    throw new NxtException.ValidationException("Asset transfer comments no longer allowed, use message " +
+                            "or encrypted message appendix instead");
+                }
                 Asset asset = Asset.getAsset(attachment.getAssetId());
                 if (asset == null || attachment.getQuantityQNT() <= 0 || attachment.getQuantityQNT() > asset.getQuantityQNT()) {
                     throw new NxtException.ValidationException("Invalid asset transfer asset or quantity: " + attachment.getJSONObject());
