@@ -4,9 +4,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.confirmedFormWarning = false;
 
-	NRS.forms = {
-		"errorMessages": {}
-	};
+	NRS.forms = {};
 
 	$(".modal form input").keydown(function(e) {
 		if (e.which == "13") {
@@ -43,10 +41,14 @@ var NRS = (function(NRS, $, undefined) {
 			var $form = $modal.find("form:first");
 		}
 
-
 		var requestType = $form.find("input[name=request_type]").val();
-		var successMessage = $form.find("input[name=success_message]").val();
-		var errorMessage = $form.find("input[name=error_message]").val();
+		var requestTypeKey = requestType.replace(/([A-Z])/g, function($1) {
+			return "_" + $1.toLowerCase();
+		});
+
+		var successMessage = $.t("success_" + requestTypeKey);
+		var errorMessage = $.t("error_" + requestTypeKey);
+
 		var data = null;
 
 		var formFunction = NRS["forms"][requestType];
@@ -59,14 +61,14 @@ var NRS = (function(NRS, $, undefined) {
 		var originalRequestType = requestType;
 
 		if (NRS.downloadingBlockchain) {
-			$form.find(".error_message").html("Please wait until the blockchain has finished downloading.").show();
+			$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
 			if (formErrorFunction) {
 				formErrorFunction();
 			}
 			NRS.unlockForm($modal, $btn);
 			return;
 		} else if (NRS.state.isScanning) {
-			$form.find(".error_message").html("The blockchain is currently being rescanned. Please wait a minute and then try submitting again.").show();
+			$form.find(".error_message").html($.t("error_form_blockchain_rescanning")).show();
 			if (formErrorFunction) {
 				formErrorFunction();
 			}
@@ -76,6 +78,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var invalidElement = false;
 
+		//TODO
 		$form.find(":input").each(function() {
 			if ($(this).is(":invalid")) {
 				var error = "";
@@ -86,7 +89,10 @@ var NRS = (function(NRS, $, undefined) {
 					var max = $(this).attr("max");
 
 					if (value > max) {
-						error = name.escapeHTML() + ": Maximum value is " + String(max).escapeHTML() + ".";
+						error = $.t("error_max_value", {
+							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
+							"max": max
+						}).capitalize();
 					}
 				}
 
@@ -94,12 +100,17 @@ var NRS = (function(NRS, $, undefined) {
 					var min = $(this).attr("min");
 
 					if (value < min) {
-						error = name.escapeHTML() + ": Minimum value is " + String(min).escapeHTML() + ".";
+						error = $.t("error_min_value", {
+							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
+							"min": min
+						}).capitalize();
 					}
 				}
 
 				if (!error) {
-					error = name.escapeHTML() + " is invalid.";
+					error = $.t("error_invalid_field", {
+						"field": NRS.getTranslatedFieldName(name).toLowerCase()
+					}).capitalize();
 				}
 
 				$form.find(".error_message").html(error).show();
@@ -159,7 +170,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
-			$form.find(".error_message").html("Passphrase is a required field.").show();
+			$form.find(".error_message").html($.t("error_passphrase_required")).show();
 			if (formErrorFunction) {
 				formErrorFunction(false, data);
 			}
@@ -170,7 +181,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
 			if (/^\d+$/.test(data.recipient)) {
-				$form.find(".error_message").html("Numeric account IDs are no longer allowed.").show();
+				$form.find(".error_message").html($.t("error_numeric_ids_not_allowed")).show();
 				if (formErrorFunction) {
 					formErrorFunction(false, data);
 				}
@@ -179,7 +190,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (!/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(data.recipient)) {
 				var convertedAccountId = $modal.find("input[name=converted_account_id]").val();
 				if (!convertedAccountId || (!/^\d+$/.test(convertedAccountId) && !/^NXT\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+\-[A-Z0-9]+/i.test(convertedAccountId))) {
-					$form.find(".error_message").html("Invalid account ID.").show();
+					$form.find(".error_message").html($.t("error_account_id")).show();
 					if (formErrorFunction) {
 						formErrorFunction(false, data);
 					}
@@ -198,7 +209,9 @@ var NRS = (function(NRS, $, undefined) {
 			if ("amountNXT" in data && NRS.settings["amount_warning"] && NRS.settings["amount_warning"] != "0") {
 				if (new BigInteger(NRS.convertToNQT(data.amountNXT)).compareTo(new BigInteger(NRS.settings["amount_warning"])) > 0) {
 					NRS.showedFormWarning = true;
-					$form.find(".error_message").html("You amount is higher than " + NRS.formatAmount(NRS.settings["amount_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
+					$form.find(".error_message").html($.t("error_max_amount_warning", {
+						"nxt": NRS.formatAmount(NRS.settings["amount_warning"])
+					})).show();
 					if (formErrorFunction) {
 						formErrorFunction(false, data);
 					}
@@ -210,7 +223,9 @@ var NRS = (function(NRS, $, undefined) {
 			if ("feeNXT" in data && NRS.settings["fee_warning"] && NRS.settings["fee_warning"] != "0") {
 				if (new BigInteger(NRS.convertToNQT(data.feeNXT)).compareTo(new BigInteger(NRS.settings["fee_warning"])) > 0) {
 					NRS.showedFormWarning = true;
-					$form.find(".error_message").html("You fee is higher than " + NRS.formatAmount(NRS.settings["fee_warning"]) + " NXT. Are you sure you want to continue? Click the submit button again to confirm.").show();
+					$form.find(".error_message").html($.t("error_max_fee_warning", {
+						"nxt": NRS.formatAmount(NRS.settings["fee_warning"])
+					})).show();
 					if (formErrorFunction) {
 						formErrorFunction(false, data);
 					}
@@ -226,6 +241,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {
+			//todo check again.. response.error
 			if (response.fullHash && (!response.error || response.error != "Double spending transaction")) {
 				NRS.unlockForm($modal, $btn);
 
@@ -268,21 +284,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("#dashboard_message").hide();
 				}
 			} else if (response.errorCode) {
-				if (NRS.forms.errorMessages[requestType] && NRS.forms.errorMessages[requestType][response.errorCode]) {
-					$form.find(".error_message").html(NRS.forms.errorMessages[requestType][response.errorCode].escapeHTML()).show();
-				} else if (NRS.forms.errorMessages[originalRequestType] && NRS.forms.errorMessages[originalRequestType][response.errorCode]) {
-					$form.find(".error_message").html(NRS.forms.errorMessages[originalRequestType][response.errorCode].escapeHTML()).show();
-				} else {
-					$form.find(".error_message").html(response.errorDescription ? String(response.errorDescription).escapeHTML() : "Unknown error occured.").show();
-				}
-
-				if (formErrorFunction) {
-					formErrorFunction(response, data);
-				}
-
-				NRS.unlockForm($modal, $btn);
-			} else if (response.error) {
-				$form.find(".error_message").html(String(response.error).escapeHTML()).show();
+				$form.find(".error_message").html(response.errorDescription.escapeHTML()).show();
 
 				if (formErrorFunction) {
 					formErrorFunction(response, data);
@@ -306,7 +308,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						formCompleteFunction(response, data);
 					} else {
-						errorMessage = "An unknown error occured.";
+						errorMessage = $.t("error_unknown");
 					}
 				}
 

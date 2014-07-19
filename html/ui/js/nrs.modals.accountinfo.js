@@ -13,7 +13,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (name) {
 			$("#account_name").html(name.escapeHTML());
 		} else {
-			$("#account_name").html("No name set");
+			$("#account_name").html($.t("no_name_set"));
 		}
 	}
 

@@ -107,160 +107,140 @@ var NRS = (function(NRS, $, undefined) {
 
 	/*some duplicate methods here...*/
 	NRS.userInfoModal.transactions = function(type) {
-		NRS.sendRequest("getAccountTransactionIds", {
+		NRS.sendRequest("getAccountTransactions", {
 			"account": NRS.userInfoModal.user,
-			"timestamp": 0
+			"firstIndex": 0,
+			"lastIndex": 100
 		}, function(response) {
-			if (response.transactionIds && response.transactionIds.length) {
-				var transactions = {};
-				var nr_transactions = 0;
+			if (response.transactions && response.transactions.length) {
+				var rows = "";
 
-				var transactionIds = response.transactionIds.reverse().slice(0, 100);
+				for (var i = 0; i < response.transactions.length; i++) {
+					var transaction = response.transactions[i];
 
-				for (var i = 0; i < transactionIds.length; i++) {
-					NRS.sendRequest("getTransaction", {
-						"transaction": transactionIds[i]
-					}, function(transaction, input) {
-						/*
-    					if (NRS.currentPage != "transactions") {
-    						transactions = {};
-    						return;
-    					}*/
+					var transactionType = "Unknown";
 
-						transactions[input.transaction] = transaction;
-						nr_transactions++;
-
-						if (nr_transactions == transactionIds.length) {
-							var rows = "";
-
-							for (var i = 0; i < nr_transactions; i++) {
-								var transaction = transactions[transactionIds[i]];
-
-								var transactionType = "Unknown";
-
-								if (transaction.type == 0) {
-									transactionType = "Ordinary payment";
-								} else if (transaction.type == 1) {
-									switch (transaction.subtype) {
-										case 0:
-											transactionType = "Arbitrary message";
-											break;
-										case 1:
-											transactionType = "Alias assignment";
-											break;
-										case 2:
-											transactionType = "Poll creation";
-											break;
-										case 3:
-											transactionType = "Vote casting";
-											break;
-										case 4:
-											transactionType = "Hub Announcement";
-											break;
-										case 5:
-											transactionType = "Account Info";
-											break;
-										case 6:
-											if (transaction.attachment.priceNQT == "0") {
-												if (transaction.sender == transaction.recipient) {
-													transactionType = "Alias Sale Cancellation";
-												} else {
-													transactionType = "Alias Transfer";
-												}
-											} else {
-												transactionType = "Alias Sale";
-											}
-											break;
-										case 7:
-											transactionType = "Alias Buy";
-											break;
-										case 8:
-											transactionType = "Encrypted Message";
-											break;
-									}
-								} else if (transaction.type == 2) {
-									switch (transaction.subtype) {
-										case 0:
-											transactionType = "Asset issuance";
-											break;
-										case 1:
-											transactionType = "Asset transfer";
-											break;
-										case 2:
-											transactionType = "Ask order placement";
-											break;
-										case 3:
-											transactionType = "Bid order placement";
-											break;
-										case 4:
-											transactionType = "Ask order cancellation";
-											break;
-										case 5:
-											transactionType = "Bid order cancellation";
-											break;
-									}
-								} else if (transaction.type == 3) {
-									switch (transaction.subtype) {
-										case 0:
-											transactionType = "Market Listing";
-											break;
-										case 1:
-											transactionType = "Market Removal";
-											break;
-										case 2:
-											transactionType = "Market Price Change";
-											break;
-										case 3:
-											transactionType = "Market QTY Change";
-											break;
-										case 4:
-											transactionType = "Market Purchase";
-											break;
-										case 5:
-											transactionType = "Market Delivery";
-											break;
-										case 6:
-											transactionType = "Market Feedback";
-											break;
-										case 7:
-											transactionType = "Market Refund";
-											break;
-									}
-								} else if (transaction.type == 4) {
-									switch (transaction.subtype) {
-										case 0:
-											transactionType = "Balance Leasing";
-											break;
-									}
-								}
-
-								if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
-									var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
-								} else {
-									var receiving = (transaction.recipient == NRS.userInfoModal.user);
-								}
-
-								if (transaction.amountNQT) {
-									transaction.amount = new BigInteger(transaction.amountNQT);
-									transaction.fee = new BigInteger(transaction.feeNQT);
-								}
-
-								var account = (receiving ? "sender" : "recipient");
-
-								rows += "<tr><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
-							}
-
-							$("#user_info_modal_transactions_table tbody").empty().append(rows);
-							NRS.dataLoadFinished($("#user_info_modal_transactions_table"));
+					if (transaction.type == 0) {
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("ordinary_payment");
+								break;
+							case 1:
+								transactionType = $.t("payment_with_message");
+								break;
 						}
-					});
+					} else if (transaction.type == 1) {
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("arbitrary_message");
+								break;
+							case 1:
+								transactionType = $.t("alias_assignment");
+								break;
+							case 2:
+								transactionType = $.t("poll_creation");
+								break;
+							case 3:
+								transactionType = $.t("vote_casting");
+								break;
+							case 4:
+								transactionType = $.t("hub_announcement");
+								break;
+							case 5:
+								transactionType = $.t("account_info");
+								break;
+							case 6:
+								if (transaction.attachment.priceNQT == "0") {
+									if (transaction.sender == transaction.recipient) {
+										transactionType = $.t("alias_sale_cancellation");
+									} else {
+										transactionType = $.t("alias_transfer");
+									}
+								} else {
+									transactionType = $.t("alias_sale");
+								}
+								break;
+							case 7:
+								transactionType = $.t("alias_buy");
+								break;
+							case 8:
+								transactionType = $.t("encrypted_message");
+								break;
+						}
+					} else if (transaction.type == 2) {
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("asset_issuance");
+								break;
+							case 1:
+								transactionType = $.t("asset_transfer");
+								break;
+							case 2:
+								transactionType = $.t("ask_order_placement");
+								break;
+							case 3:
+								transactionType = $.t("bid_order_placement");
+								break;
+							case 4:
+								transactionType = $.t("ask_order_cancellation");
+								break;
+							case 5:
+								transactionType = $.t("bid_order_cancellation");
+								break;
+						}
+					} else if (transaction.type == 3) {
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("market_listing");
+								break;
+							case 1:
+								transactionType = $.t("market_removal");
+								break;
+							case 2:
+								transactionType = $.t("market_price_change");
+								break;
+							case 3:
+								transactionType = $.t("market_quantity_change");
+								break;
+							case 4:
+								transactionType = $.t("market_purchase");
+								break;
+							case 5:
+								transactionType = $.t("market_delivery");
+								break;
+							case 6:
+								transactionType = $.t("market_feedback");
+								break;
+							case 7:
+								transactionType = $.t("market_refund");
+								break;
+						}
+					} else if (transaction.type == 4) {
+						switch (transaction.subtype) {
+							case 0:
+								transactionType = $.t("balance_leasing");
+								break;
+						}
+					}
 
-					/*
-    				if (NRS.currentPage != "transactions") {
-    					transactions = {};
-    					return;
-    				}*/
+					if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
+						var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
+					} else {
+						var receiving = (transaction.recipient == NRS.userInfoModal.user);
+					}
+
+					if (transaction.amountNQT) {
+						transaction.amount = new BigInteger(transaction.amountNQT);
+						transaction.fee = new BigInteger(transaction.feeNQT);
+					}
+
+					var account = (receiving ? "sender" : "recipient");
+
+					rows += "<tr><td>" + NRS.formatTimestamp(transaction.timestamp) + "</td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
 				}
+
+				$("#user_info_modal_transactions_table tbody").empty().append(rows);
+				NRS.dataLoadFinished($("#user_info_modal_transactions_table"));
 			} else {
 				$("#user_info_modal_transactions_table tbody").empty();
 				NRS.dataLoadFinished($("#user_info_modal_transactions_table"));

@@ -7,7 +7,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#generate_token_output, #decode_token_output").html("").hide();
 
 		$("#token_modal_generate_token").show();
-		$("#token_modal_button").text("Generate").data("form", "generate_token_form");
+		$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
 	});
 
 	NRS.forms.generateToken = function($modal) {
@@ -27,9 +27,9 @@ var NRS = (function(NRS, $, undefined) {
 		$("#token_modal").find(".error_message").hide();
 
 		if (response.token) {
-			$("#generate_token_output").html("The generated token is: <br /><br /><textarea style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
+			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
 		} else {
-			$.growl("Could not generate token.", {
+			$.growl($.t("error_generate_token"), {
 				"type": "danger"
 			});
 			$("#generate_token_modal").modal("hide");
@@ -44,9 +44,15 @@ var NRS = (function(NRS, $, undefined) {
 		$("#token_modal").find(".error_message").hide();
 
 		if (response.valid) {
-			$("#decode_token_output").html("The token is valid and belongs to account " + NRS.getAccountLink(response, "account") + ". It was generated on " + NRS.formatTimestamp(response.timestamp) + ".").addClass("callout-info").removeClass("callout-danger").show();
+			$("#decode_token_output").html($.t("success_valid_token", {
+				"account_link": NRS.getAccountLink(response, "account"),
+				"timestamp": NRS.formatTimestamp(response.timestamp)
+			})).addClass("callout-info").removeClass("callout-danger").show();
 		} else {
-			$("#decode_token_output").html("The token is <strong>NOT VALID</strong>. It appears to belong to account " + NRS.getAccountLink(response, "account") + ". It was generated on " + NRS.formatTimestamp(response.timestamp) + ".").addClass("callout-danger").removeClass("callout-info").show();
+			$("#decode_token_output").html($.t("error_invalid_token", {
+				"account_link": NRS.getAccountLink(response, "account"),
+				"timestamp": NRS.formatTimestamp(response.timestamp)
+			})).addClass("callout-danger").removeClass("callout-info").show();
 		}
 	}
 
@@ -67,9 +73,9 @@ var NRS = (function(NRS, $, undefined) {
 		var content = $("#token_modal_" + tab);
 
 		if (tab == "generate_token") {
-			$("#token_modal_button").text("Generate").data("form", "generate_token_form");
+			$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
 		} else {
-			$("#token_modal_button").text("Validate").data("form", "validate_token_form");
+			$("#token_modal_button").text($.t("validate")).data("form", "validate_token_form");
 		}
 
 		$("#token_modal .error_message").hide();

@@ -79,9 +79,9 @@ var NRS = (function(NRS, $, undefined) {
 					if (alias.buyer) {
 						if (alias.priceNQT == "0") {
 							if (alias.buyer == NRS.account) {
-								alias.status = "Cancelling Sale";
+								alias.status = $.t("cancelling_sale");
 							} else {
-								alias.status = "Transfer In Progress";
+								alias.status = $.t("transfer_in_progress");
 							}
 						} else {
 							if (!alias.tentative) {
@@ -89,9 +89,9 @@ var NRS = (function(NRS, $, undefined) {
 							}
 
 							if (alias.buyer != NRS.genesis) {
-								alias.status = "For Sale (direct)";
+								alias.status = $.t("for_sale_direct");
 							} else {
-								alias.status = "For Sale (indirect)";
+								alias.status = $.t("for_sale_indirect");
 							}
 						}
 					}
@@ -100,7 +100,7 @@ var NRS = (function(NRS, $, undefined) {
 						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
 					}
 
-					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Edit</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Transfer</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Sell</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>Cancel Sale</a>" : "") + "</td></tr>";
+					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") + "</td></tr>";
 
 					if (!alias.aliasURI) {
 						empty_alias_count++;
@@ -170,16 +170,16 @@ var NRS = (function(NRS, $, undefined) {
 		//transfer
 		if (data.priceNQT == "0") {
 			if (data.recipient == NRS.account) {
-				$row.find("td.status").html("<span class='label label-info'>Cancelling Sale</span>");
+				$row.find("td.status").html("<span class='label label-info'>" + $.t("cancelling_sale") + "</span>");
 				$row.find("a.cancel_alias_sale").remove();
 			} else {
-				$row.find("td.status").html("<span class='label label-info'>Transfer In Progress</span>");
+				$row.find("td.status").html("<span class='label label-info'>" + $.t("transfer_in_progress") + "</span>");
 			}
 		} else {
 			if (data.recipient != NRS.genesis) {
-				$row.find("td.status").html("<span class='label label-info'>For Sale (direct)</span>");
+				$row.find("td.status").html("<span class='label label-info'>" + $.t("for_sale_direct") + "</span>");
 			} else {
-				$row.find("td.status").html("<span class='label label-info'>For Sale (indirect)</span>");
+				$row.find("td.status").html("<span class='label label-info'>" + $.t("for_sale_indirect") + "</span>");
 			}
 		}
 	}
@@ -220,18 +220,18 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (response.errorCode) {
 				e.preventDefault();
-				$.growl("Could not find alias.", {
+				$.growl($.t("error_alias_not_found"), {
 					"type": "danger"
 				});
 			} else {
 				if (!response.buyer) {
 					e.preventDefault();
-					$.growl("This alias is no longer for sale.", {
+					$.growl($.t("error_alias_not_for_sale"), {
 						"type": "danger"
 					});
 				} else if (response.buyer != NRS.genesis && response.buyer != NRS.account) {
 					e.preventDefault();
-					$.growl("This alias is offered for sale to another account pending decision.", {
+					$.growl($.t("error_alias_sale_different_account"), {
 						"type": "danger"
 					});
 				} else {
@@ -259,7 +259,7 @@ var NRS = (function(NRS, $, undefined) {
 		data.aliasName = String(data.aliasName).escapeHTML();
 		data.aliasURI = "";
 
-		$("#aliases_table tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>");
+		$("#aliases_table tbody").prepend("<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("sell") + "</a></td></tr>");
 
 		if ($("#aliases_table").parent().hasClass("data-empty")) {
 			$("#aliases_table").parent().removeClass("data-empty");
@@ -281,7 +281,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response) {
 				if (response.errorCode) {
 					e.preventDefault();
-					$.growl("Could not find alias.", {
+					$.growl($.t("error_alias_not_found"), {
 						"type": "danger"
 					});
 					NRS.fetchingModalData = false;
@@ -297,8 +297,8 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.forms.setAliasType("general");
 					}
 
-					$("#register_alias_modal h4.modal-title").html("Update Alias");
-					$("#register_alias_modal .btn-primary").html("Update");
+					$("#register_alias_modal h4.modal-title").html($.t("update_alias"));
+					$("#register_alias_modal .btn-primary").html($.t("update"));
 					$("#register_alias_alias").val(alias.escapeHTML()).hide();
 					$("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
 					$("#register_alias_alias_update").val(1);
@@ -306,8 +306,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}, false);
 		} else {
-			$("#register_alias_modal h4.modal-title").html("Register Alias");
-			$("#register_alias_modal .btn-primary").html("Register");
+			$("#register_alias_modal h4.modal-title").html($.t("register_alias"));
+			$("#register_alias_modal .btn-primary").html($.t("register"));
 
 			var prefill = $invoker.data("prefill-alias");
 
@@ -339,11 +339,11 @@ var NRS = (function(NRS, $, undefined) {
 					data.aliasURI = "acct:" + data.aliasURI + "@nxt";
 				} else if (/^\d+$/.test(data.aliasURI)) {
 					return {
-						"error": "Numeric account ID's are no longer allowed."
+						"error": $.t("error_numeric_ids_not_allowed")
 					};
 				} else {
 					return {
-						"error": "Invalid account ID."
+						"error": $.t(".error_invalid_account_id")
 					};
 				}
 			}
@@ -354,7 +354,7 @@ var NRS = (function(NRS, $, undefined) {
 		if ($("#register_alias_alias_update").val() == 1) {
 			return {
 				"data": data,
-				"successMessage": "Alias updated successfully"
+				"successMessage": $.t("success_alias_update")
 			};
 		} else {
 			return {
@@ -367,8 +367,8 @@ var NRS = (function(NRS, $, undefined) {
 		$("#register_alias_type").val(type);
 
 		if (type == "uri") {
-			$("#register_alias_uri_label").html("URI");
-			$("#register_alias_uri").prop("placeholder", "URI");
+			$("#register_alias_uri_label").html($.t("uri"));
+			$("#register_alias_uri").prop("placeholder", $.t("uri"));
 			if (uri) {
 				if (uri == NRS.accountRS) {
 					$("#register_alias_uri").val("http://");
@@ -382,8 +382,8 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			$("#register_alias_help").hide();
 		} else if (type == "account") {
-			$("#register_alias_uri_label").html("Account ID");
-			$("#register_alias_uri").prop("placeholder", "Account ID");
+			$("#register_alias_uri_label").html($.t("account_id"));
+			$("#register_alias_uri").prop("placeholder", $.t("account_id"));
 			$("#register_alias_uri").val("");
 			if (uri) {
 				if (!(/acct:(.*)@nxt/.test(uri)) && !(/nacc:(.*)/.test(uri))) {
@@ -398,10 +398,10 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				$("#register_alias_uri").val(NRS.accountRS);
 			}
-			$("#register_alias_help").html("The alias will reference the account number entered and can be used to send Nxt to, messages, etc..").show();
+			$("#register_alias_help").html($.t("alias_account_help")).show();
 		} else {
-			$("#register_alias_uri_label").html("Data");
-			$("#register_alias_uri").prop("placeholder", "Data");
+			$("#register_alias_uri_label").html($.t("data"));
+			$("#register_alias_uri").prop("placeholder", $.t("data"));
 			if (uri) {
 				if (uri == NRS.accountRS) {
 					$("#register_alias_uri").val("");
@@ -411,7 +411,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("#register_alias_uri").val(uri);
 				}
 			}
-			$("#register_alias_help").html("The alias can contain any data you want.").show();
+			$("#register_alias_help").html($.t("alias_data_help")).show();
 		}
 	}
 
@@ -422,7 +422,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.setAliasError = function(response, data) {
 		if (response && response.errorCode && response.errorCode == 8) {
-			var errorDescription = String(response.errorDescription).escapeHTML();
+			var errorDescription = response.errorDescription.escapeHTML();
 
 			NRS.sendRequest("getAlias", {
 				"aliasName": data.aliasName
@@ -432,14 +432,18 @@ var NRS = (function(NRS, $, undefined) {
 				if (!response.errorCode) {
 					if (response.buyer) {
 						if (response.buyer == NRS.account) {
-							message = "You have been offered this alias for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+							message = $.t("alias_sale_direct_offer", {
+								"nxt": NRS.formatAmount(response.priceNQT)
+							}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
 						} else if (response.buyer == NRS.genesis) {
-							message = "This alias is offered for sale for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>";
+							message = $.t("alias_sale_indirect_offer", {
+								"nxt": NRS.formatAmount(response.priceNQT)
+							}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
 						} else {
-							message = "This alias is offered for sale to another account pending decision.";
+							message = $.t("error_alias_sale_different_account");
 						}
 					} else {
-						message = "<a href='#' data-user='" + NRS.getAccountFormatted(response, "account") + "'>View owner info?</a>";
+						message = "<a href='#' data-user='" + NRS.getAccountFormatted(response, "account") + "'>" + $.t("view_owner_info_q") + "</a>";
 					}
 
 					$("#register_alias_modal").find(".error_message").html(errorDescription + ". " + message);
@@ -471,13 +475,13 @@ var NRS = (function(NRS, $, undefined) {
 					$row.find("td.uri").html(data.aliasURI);
 				}
 
-				$.growl("Your alias has been updated successfully.", {
+				$.growl($.t("success_alias_update"), {
 					"type": "success"
 				});
 			} else {
 				var $rows = $table.find("tr");
 
-				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>Edit</a> <a class='btn btn-xs btn-default' href='#'>Transfer</a> <a class='btn btn-xs btn-default' href='#'>Sell</a></td></tr>";
+				var rowToAdd = "<tr class='tentative' data-alias='" + data.aliasName.toLowerCase() + "'><td class='alias'>" + data.aliasName + "</td><td class='uri'>" + (data.aliasURI && data.aliasURI.indexOf("http") === 0 ? "<a href='" + data.aliasURI + "' target='_blank'>" + data.aliasURI + "</a>" : data.aliasURI) + "</td><td>/</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#'>" + $.t("edit") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#'>" + $.t("sell") + "</a></td></tr>";
 
 				var rowAdded = false;
 
@@ -503,7 +507,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("#aliases_table").parent().removeClass("data-empty");
 				}
 
-				$.growl("Your alias has been registered successfully.", {
+				$.growl($.t("success_alias_register"), {
 					"type": "success"
 				});
 			}
@@ -527,7 +531,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": alias
 		}, function(response, input) {
 			if (response.errorCode) {
-				$.growl("Could not find alias. <a href='#' data-toggle='modal' data-target='#register_alias_modal' data-prefill-alias='" + String(alias).escapeHTML() + "'>Register?</a>", {
+				$.growl($.t("error_alias_not_found") + " <a href='#' data-toggle='modal' data-target='#register_alias_modal' data-prefill-alias='" + String(alias).escapeHTML() + "'>" + $.t("register_q") + "</a>", {
 					"type": "danger"
 				});
 				NRS.fetchingModalData = false;
@@ -535,18 +539,22 @@ var NRS = (function(NRS, $, undefined) {
 				$("#alias_info_modal_alias").html(String(response.aliasName).escapeHTML());
 
 				var data = {
-					"Account": NRS.getAccountTitle(response, "account"),
-					"Last Updated": NRS.formatTimestamp(response.timestamp),
-					"DataFormattedHTML": String(response.aliasURI).autoLink()
+					"account": NRS.getAccountTitle(response, "account"),
+					"last_updated": NRS.formatTimestamp(response.timestamp),
+					"data_formatted_html": String(response.aliasURI).autoLink()
 				}
 
 				if (response.buyer) {
 					if (response.buyer == NRS.account) {
-						$("#alias_sale_callout").html("You have been offered this alias for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>").show();
+						$("#alias_sale_callout").html($.t("alias_sale_direct_offer", {
+							"nxt": NRS.formatAmount(response.priceNQT)
+						}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>").show();
 					} else if (response.buyer == NRS.genesis) {
-						$("#alias_sale_callout").html("This alias is offered for sale for " + NRS.formatAmount(response.priceNQT) + " NXT. <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>Buy it?</a>").show();
+						$("#alias_sale_callout").html($.t("alias_sale_indirect_offer", {
+							"nxt": NRS.formatAmount(response.priceNQT)
+						}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>").show();
 					} else {
-						$("#alias_sale_callout").html("This alias is offered for sale to another account pending decision.").show();
+						$("#alias_sale_callout").html($.t("error_alias_sale_different_account")).show();
 					}
 				} else {
 					$("#alias_sale_callout").hide();

@@ -10,152 +10,68 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
 
-public interface Attachment {
-
-    public int getSize();
-    public byte[] getBytes();
-    public JSONObject getJSONObject();
+public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    public final static class PaymentMessage implements Attachment {
+    abstract static class EmptyAttachment implements Attachment {
 
-        private final EncryptedData encryptedMessage;
-
-        public PaymentMessage(EncryptedData encryptedMessage) {
-            this.encryptedMessage = encryptedMessage;
-        }
+        private final byte[] emptyBytes = new byte[0];
 
         @Override
         public int getSize() {
-            return 2 + encryptedMessage.getData().length + encryptedMessage.getNonce().length;
+            return 0;
         }
 
         @Override
         public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putShort((short)encryptedMessage.getData().length);
-            buffer.put(encryptedMessage.getData());
-            buffer.put(encryptedMessage.getNonce());
-            return buffer.array();
+            return emptyBytes;
         }
 
+        // callers may modify the json, so always return a new one
         @Override
         public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
-            attachment.put("message", Convert.toHexString(encryptedMessage.getData()));
-            attachment.put("nonce", Convert.toHexString(encryptedMessage.getNonce()));
-            return attachment;
-        }
-
-        @Override
-        public TransactionType getTransactionType() {
-            return TransactionType.Payment.WITH_MESSAGE;
-        }
-
-        public EncryptedData getEncryptedMessage() {
-            return encryptedMessage;
+            return new JSONObject();
         }
 
     }
 
-    public final static class MessagingArbitraryMessage implements Attachment {
-
-        private final byte[] message;
-
-        public MessagingArbitraryMessage(byte[] message) {
-            this.message = message;
-        }
+    public final static Attachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
-        public int getSize() {
-            return 4 + message.length;
+        public TransactionType getTransactionType() {
+            return TransactionType.Payment.ORDINARY;
         }
 
-        @Override
-        public byte[] getBytes() {
+    };
 
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putInt(message.length);
-            buffer.put(message);
-
-            return buffer.array();
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-
-            JSONObject attachment = new JSONObject();
-            attachment.put("message", message == null ? null : Convert.toHexString(message));
-
-            return attachment;
-
-        }
+    // the message payload is in the Appendix
+    public final static Attachment ARBITRARY_MESSAGE = new EmptyAttachment() {
 
         @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ARBITRARY_MESSAGE;
         }
 
-        public byte[] getMessage() {
-            return message;
-        }
-    }
-
-    public final static class MessagingEncryptedMessage implements Attachment {
-
-        private final EncryptedData encryptedMessage;
-
-        public MessagingEncryptedMessage(EncryptedData encryptedMessage) {
-            this.encryptedMessage = encryptedMessage;
-        }
-
-        @Override
-        public int getSize() {
-            return 2 + encryptedMessage.getData().length + encryptedMessage.getNonce().length;
-        }
-
-        @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putShort((short)encryptedMessage.getData().length);
-            buffer.put(encryptedMessage.getData());
-            buffer.put(encryptedMessage.getNonce());
-            return buffer.array();
-        }
-
-        @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
-            attachment.put("message", Convert.toHexString(encryptedMessage.getData()));
-            attachment.put("nonce", Convert.toHexString(encryptedMessage.getNonce()));
-            return attachment;
-        }
-
-        @Override
-        public TransactionType getTransactionType() {
-            return TransactionType.Messaging.ENCRYPTED_MESSAGE;
-        }
-
-        public EncryptedData getEncryptedMessage() {
-            return encryptedMessage;
-        }
-
-    }
+    };
 
     public final static class MessagingAliasAssignment implements Attachment {
 
         private final String aliasName;
         private final String aliasURI;
 
-        public MessagingAliasAssignment(String aliasName, String aliasURI) {
+        MessagingAliasAssignment(ByteBuffer buffer) throws NxtException.ValidationException {
+            this(Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH),
+                    Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH));
+        }
 
+        MessagingAliasAssignment(JSONObject attachmentData) {
+            this((String) attachmentData.get("alias"), (String) attachmentData.get("uri"));
+        }
+
+        public MessagingAliasAssignment(String aliasName, String aliasURI) {
             this.aliasName = aliasName.trim().intern();
             this.aliasURI = aliasURI.trim().intern();
-
         }
 
         @Override
@@ -167,7 +83,6 @@ public interface Attachment {
         public byte[] getBytes() {
             byte[] alias = Convert.toBytes(this.aliasName);
             byte[] uri = Convert.toBytes(this.aliasURI);
-
             ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)alias.length);
@@ -179,13 +94,10 @@ public interface Attachment {
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("alias", aliasName);
             attachment.put("uri", aliasURI);
-
             return attachment;
-
         }
 
         @Override
@@ -207,6 +119,14 @@ public interface Attachment {
         private final String aliasName;
         private final long priceNQT;
 
+        MessagingAliasSell(ByteBuffer buffer) throws NxtException.ValidationException {
+            this(Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH), buffer.getLong());
+        }
+
+        MessagingAliasSell(JSONObject attachmentData) {
+            this((String) attachmentData.get("alias"), (Long) attachmentData.get("priceNQT"));
+        }
+
         public MessagingAliasSell(String aliasName, long priceNQT) {
             this.aliasName = aliasName;
             this.priceNQT = priceNQT;
@@ -226,7 +146,6 @@ public interface Attachment {
         //todo: fix ???
         public byte[] getBytes() {
             byte[] aliasBytes = Convert.toBytes(aliasName);
-
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)aliasBytes.length);
@@ -255,6 +174,14 @@ public interface Attachment {
     public final static class MessagingAliasBuy implements Attachment {
 
         private final String aliasName;
+
+        MessagingAliasBuy(ByteBuffer buffer) throws NxtException.ValidationException {
+            this(Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH));
+        }
+
+        MessagingAliasBuy(JSONObject attachmentData) {
+            this((String) attachmentData.get("alias"));
+        }
 
         public MessagingAliasBuy(String aliasName) {
             this.aliasName = aliasName;
@@ -302,15 +229,43 @@ public interface Attachment {
         private final byte minNumberOfOptions, maxNumberOfOptions;
         private final boolean optionsAreBinary;
 
-        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions, byte maxNumberOfOptions, boolean optionsAreBinary) {
+        MessagingPollCreation(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
+            this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+            int numberOfOptions = buffer.get();
+            if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
+                throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
+            }
+            this.pollOptions = new String[numberOfOptions];
+            for (int i = 0; i < numberOfOptions; i++) {
+                pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
+            }
+            this.minNumberOfOptions = buffer.get();
+            this.maxNumberOfOptions = buffer.get();
+            this.optionsAreBinary = buffer.get() != 0;
+        }
 
+        MessagingPollCreation(JSONObject attachmentData) {
+            this.pollName = ((String) attachmentData.get("name")).trim();
+            this.pollDescription = ((String) attachmentData.get("description")).trim();
+            JSONArray options = (JSONArray) attachmentData.get("options");
+            this.pollOptions = new String[options.size()];
+            for (int i = 0; i < pollOptions.length; i++) {
+                pollOptions[i] = ((String) options.get(i)).trim();
+            }
+            this.minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
+            this.maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+            this.optionsAreBinary = (Boolean) attachmentData.get("optionsAreBinary");
+        }
+
+        public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions,
+                                     byte maxNumberOfOptions, boolean optionsAreBinary) {
             this.pollName = pollName;
             this.pollDescription = pollDescription;
             this.pollOptions = pollOptions;
             this.minNumberOfOptions = minNumberOfOptions;
             this.maxNumberOfOptions = maxNumberOfOptions;
             this.optionsAreBinary = optionsAreBinary;
-
         }
 
         @Override
@@ -352,7 +307,6 @@ public interface Attachment {
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
@@ -364,9 +318,7 @@ public interface Attachment {
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
             attachment.put("optionsAreBinary", this.optionsAreBinary);
-
             return attachment;
-
         }
 
         @Override
@@ -393,11 +345,28 @@ public interface Attachment {
         private final Long pollId;
         private final byte[] pollVote;
 
-        public MessagingVoteCasting(Long pollId, byte[] pollVote) {
+        MessagingVoteCasting(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.pollId = buffer.getLong();
+            int numberOfOptions = buffer.get();
+            if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
+                throw new NxtException.ValidationException("Error parsing vote casting parameters");
+            }
+            this.pollVote = new byte[numberOfOptions];
+            buffer.get(pollVote);
+        }
 
+        MessagingVoteCasting(JSONObject attachmentData) {
+            this.pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
+            JSONArray vote = (JSONArray)attachmentData.get("vote");
+            this.pollVote = new byte[vote.size()];
+            for (int i = 0; i < pollVote.length; i++) {
+                pollVote[i] = ((Long) vote.get(i)).byteValue();
+            }
+        }
+
+        public MessagingVoteCasting(Long pollId, byte[] pollVote) {
             this.pollId = pollId;
             this.pollVote = pollVote;
-
         }
 
         @Override
@@ -407,20 +376,16 @@ public interface Attachment {
 
         @Override
         public byte[] getBytes() {
-
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(this.pollId);
             buffer.put((byte)this.pollVote.length);
             buffer.put(this.pollVote);
-
             return buffer.array();
-
         }
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
@@ -431,7 +396,6 @@ public interface Attachment {
             }
             attachment.put("vote", vote);
             return attachment;
-
         }
 
         @Override
@@ -449,6 +413,31 @@ public interface Attachment {
 
         private final long minFeePerByteNQT;
         private final String[] uris;
+
+        MessagingHubAnnouncement(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.minFeePerByteNQT = buffer.getLong();
+            int numberOfUris = buffer.get();
+            if (numberOfUris > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
+                throw new NxtException.ValidationException("Invalid number of URIs: " + numberOfUris);
+            }
+            this.uris = new String[numberOfUris];
+            for (int i = 0; i < uris.length; i++) {
+                uris[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH);
+            }
+        }
+
+        MessagingHubAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
+            this.minFeePerByteNQT = (Long) attachmentData.get("minFeePerByte");
+            try {
+                JSONArray urisData = (JSONArray) attachmentData.get("uris");
+                this.uris = new String[urisData.size()];
+                for (int i = 0; i < uris.length; i++) {
+                    uris[i] = (String) urisData.get(i);
+                }
+            } catch (RuntimeException e) {
+                throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
+            }
+        }
 
         public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
             this.minFeePerByteNQT = minFeePerByteNQT;
@@ -480,14 +469,12 @@ public interface Attachment {
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("minFeePerByteNQT", minFeePerByteNQT);
             JSONArray uris = new JSONArray();
             Collections.addAll(uris, this.uris);
             attachment.put("uris", uris);
             return attachment;
-
         }
 
         @Override
@@ -509,6 +496,16 @@ public interface Attachment {
 
         private final String name;
         private final String description;
+
+        MessagingAccountInfo(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
+            this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
+        }
+
+        MessagingAccountInfo(JSONObject attachmentData) {
+            this.name = (String) attachmentData.get("name");
+            this.description = (String) attachmentData.get("description");
+        }
 
         public MessagingAccountInfo(String name, String description) {
             this.name = name;
@@ -564,13 +561,25 @@ public interface Attachment {
         private final long quantityQNT;
         private final byte decimals;
 
-        public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
+        ColoredCoinsAssetIssuance(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ASSET_NAME_LENGTH);
+            this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_DESCRIPTION_LENGTH);
+            this.quantityQNT = buffer.getLong();
+            this.decimals = buffer.get();
+        }
 
+        ColoredCoinsAssetIssuance(JSONObject attachmentData) {
+            this.name = (String) attachmentData.get("name");
+            this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
+            this.quantityQNT = (Long) attachmentData.get("quantityQNT");
+            this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
+        }
+
+        public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
             this.name = name;
             this.description = Convert.nullToEmpty(description);
             this.quantityQNT = quantityQNT;
             this.decimals = decimals;
-
         }
 
         @Override
@@ -582,7 +591,6 @@ public interface Attachment {
         public byte[] getBytes() {
             byte[] name = Convert.toBytes(this.name);
             byte[] description = Convert.toBytes(this.description);
-
             ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 8 + 1);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)name.length);
@@ -596,15 +604,12 @@ public interface Attachment {
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("name", name);
             attachment.put("description", description);
             attachment.put("quantityQNT", quantityQNT);
             attachment.put("decimals", decimals);
-
             return attachment;
-
         }
 
         @Override
@@ -635,6 +640,18 @@ public interface Attachment {
         private final long quantityQNT;
         private final String comment;
 
+        ColoredCoinsAssetTransfer(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.assetId = Convert.zeroToNull(buffer.getLong());
+            this.quantityQNT = buffer.getLong();
+            this.comment = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH);
+        }
+
+        ColoredCoinsAssetTransfer(JSONObject attachmentData) {
+            this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
+            this.quantityQNT = (Long) attachmentData.get("quantityQNT");
+            this.comment = Convert.nullToEmpty((String) attachmentData.get("comment"));
+        }
+
         public ColoredCoinsAssetTransfer(Long assetId, long quantityQNT, String comment) {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
@@ -660,14 +677,11 @@ public interface Attachment {
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantityQNT", quantityQNT);
             attachment.put("comment", comment);
-
             return attachment;
-
         }
 
         @Override
@@ -695,12 +709,22 @@ public interface Attachment {
         private final long quantityQNT;
         private final long priceNQT;
 
-        private ColoredCoinsOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
+        private ColoredCoinsOrderPlacement(ByteBuffer buffer) {
+            this.assetId = Convert.zeroToNull(buffer.getLong());
+            this.quantityQNT = buffer.getLong();
+            this.priceNQT = buffer.getLong();
+        }
 
+        private ColoredCoinsOrderPlacement(JSONObject attachmentData) {
+            this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
+            this.quantityQNT = (Long) attachmentData.get("quantityQNT");
+            this.priceNQT = (Long) attachmentData.get("priceNQT");
+        }
+
+        private ColoredCoinsOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.priceNQT = priceNQT;
-
         }
 
         @Override
@@ -710,27 +734,21 @@ public interface Attachment {
 
         @Override
         public byte[] getBytes() {
-
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putLong(quantityQNT);
             buffer.putLong(priceNQT);
-
             return buffer.array();
-
         }
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantityQNT", quantityQNT);
             attachment.put("priceNQT", priceNQT);
-
             return attachment;
-
         }
 
         public Long getAssetId() {
@@ -748,6 +766,14 @@ public interface Attachment {
 
     public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
+        ColoredCoinsAskOrderPlacement(ByteBuffer buffer) {
+            super(buffer);
+        }
+
+        ColoredCoinsAskOrderPlacement(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
         public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
         }
@@ -760,6 +786,14 @@ public interface Attachment {
     }
 
     public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
+
+        ColoredCoinsBidOrderPlacement(ByteBuffer buffer) {
+            super(buffer);
+        }
+
+        ColoredCoinsBidOrderPlacement(JSONObject attachmentData) {
+            super(attachmentData);
+        }
 
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
@@ -776,6 +810,14 @@ public interface Attachment {
 
         private final Long orderId;
 
+        private ColoredCoinsOrderCancellation(ByteBuffer buffer) {
+            this.orderId = Convert.zeroToNull(buffer.getLong());
+        }
+
+        private ColoredCoinsOrderCancellation(JSONObject attachmentData) {
+            this.orderId = Convert.parseUnsignedLong((String) attachmentData.get("order"));
+        }
+
         private ColoredCoinsOrderCancellation(Long orderId) {
             this.orderId = orderId;
         }
@@ -787,23 +829,17 @@ public interface Attachment {
 
         @Override
         public byte[] getBytes() {
-
             ByteBuffer buffer = ByteBuffer.allocate(getSize());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(Convert.nullToZero(orderId));
-
             return buffer.array();
-
         }
 
         @Override
         public JSONObject getJSONObject() {
-
             JSONObject attachment = new JSONObject();
             attachment.put("order", Convert.toUnsignedLong(orderId));
-
             return attachment;
-
         }
 
         public Long getOrderId() {
@@ -812,6 +848,14 @@ public interface Attachment {
     }
 
     public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
+
+        ColoredCoinsAskOrderCancellation(ByteBuffer buffer) {
+            super(buffer);
+        }
+
+        ColoredCoinsAskOrderCancellation(JSONObject attachmentData) {
+            super(attachmentData);
+        }
 
         public ColoredCoinsAskOrderCancellation(Long orderId) {
             super(orderId);
@@ -825,6 +869,14 @@ public interface Attachment {
     }
 
     public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
+
+        ColoredCoinsBidOrderCancellation(ByteBuffer buffer) {
+            super(buffer);
+        }
+
+        ColoredCoinsBidOrderCancellation(JSONObject attachmentData) {
+            super(attachmentData);
+        }
 
         public ColoredCoinsBidOrderCancellation(Long orderId) {
             super(orderId);
@@ -844,6 +896,22 @@ public interface Attachment {
         private final String tags;
         private final int quantity;
         private final long priceNQT;
+
+        DigitalGoodsListing(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.name = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_NAME_LENGTH);
+            this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH);
+            this.tags = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_TAGS_LENGTH);
+            this.quantity = buffer.getInt();
+            this.priceNQT = buffer.getLong();
+        }
+
+        DigitalGoodsListing(JSONObject attachmentData) {
+            this.name = (String) attachmentData.get("name");
+            this.description = (String) attachmentData.get("description");
+            this.tags = (String) attachmentData.get("tags");
+            this.quantity = ((Long) attachmentData.get("quantity")).intValue();
+            this.priceNQT = (Long) attachmentData.get("priceNQT");
+        }
 
         public DigitalGoodsListing(String name, String description, String tags, int quantity, long priceNQT) {
             this.name = name;
@@ -909,6 +977,14 @@ public interface Attachment {
 
         private final Long goodsId;
 
+        DigitalGoodsDelisting(ByteBuffer buffer) {
+            this.goodsId = buffer.getLong();
+        }
+
+        DigitalGoodsDelisting(JSONObject attachmentData) {
+            this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
+        }
+
         public DigitalGoodsDelisting(Long goodsId) {
             this.goodsId = goodsId;
         }
@@ -951,6 +1027,16 @@ public interface Attachment {
 
         private final Long goodsId;
         private final long priceNQT;
+
+        DigitalGoodsPriceChange(ByteBuffer buffer) {
+            this.goodsId = buffer.getLong();
+            this.priceNQT = buffer.getLong();
+        }
+
+        DigitalGoodsPriceChange(JSONObject attachmentData) {
+            this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
+            this.priceNQT = (Long)attachmentData.get("priceNQT");
+        }
 
         public DigitalGoodsPriceChange(Long goodsId, long priceNQT) {
             this.goodsId = goodsId;
@@ -999,6 +1085,16 @@ public interface Attachment {
 
         private final Long goodsId;
         private final int deltaQuantity;
+
+        DigitalGoodsQuantityChange(ByteBuffer buffer) {
+            this.goodsId = buffer.getLong();
+            this.deltaQuantity = buffer.getInt();
+        }
+
+        DigitalGoodsQuantityChange(JSONObject attachmentData) {
+            this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
+            this.deltaQuantity = ((Long)attachmentData.get("deltaQuantity")).intValue();
+        }
 
         public DigitalGoodsQuantityChange(Long goodsId, int deltaQuantity) {
             this.goodsId = goodsId;
@@ -1049,19 +1145,31 @@ public interface Attachment {
         private final int quantity;
         private final long priceNQT;
         private final int deliveryDeadlineTimestamp;
-        private final EncryptedData note;
 
-        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp, EncryptedData note) {
+        DigitalGoodsPurchase(ByteBuffer buffer) {
+            this.goodsId = buffer.getLong();
+            this.quantity = buffer.getInt();
+            this.priceNQT = buffer.getLong();
+            this.deliveryDeadlineTimestamp = buffer.getInt();
+        }
+
+        DigitalGoodsPurchase(JSONObject attachmentData) {
+            this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
+            this.quantity = ((Long)attachmentData.get("quantity")).intValue();
+            this.priceNQT = (Long)attachmentData.get("priceNQT");
+            this.deliveryDeadlineTimestamp = ((Long)attachmentData.get("deliveryDeadlineTimestamp")).intValue();
+        }
+
+        public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp) {
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
-            this.note = note;
         }
 
         @Override
         public int getSize() {
-            return 8 + 4 + 8 + 4 + 2 + note.getData().length + note.getNonce().length;
+            return 8 + 4 + 8 + 4;
         }
 
         @Override
@@ -1073,9 +1181,6 @@ public interface Attachment {
                 buffer.putInt(quantity);
                 buffer.putLong(priceNQT);
                 buffer.putInt(deliveryDeadlineTimestamp);
-                buffer.putShort((short)note.getData().length);
-                buffer.put(note.getData());
-                buffer.put(note.getNonce());
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1090,8 +1195,6 @@ public interface Attachment {
             attachment.put("quantity", quantity);
             attachment.put("priceNQT", priceNQT);
             attachment.put("deliveryDeadlineTimestamp", deliveryDeadlineTimestamp);
-            attachment.put("note", Convert.toHexString(note.getData()));
-            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
         }
 
@@ -1108,8 +1211,6 @@ public interface Attachment {
 
         public int getDeliveryDeadlineTimestamp() { return deliveryDeadlineTimestamp; }
 
-        public EncryptedData getNote() { return note; }
-
     }
 
     public final static class DigitalGoodsDelivery implements Attachment {
@@ -1117,16 +1218,37 @@ public interface Attachment {
         private final Long purchaseId;
         private final EncryptedData goods;
         private final long discountNQT;
+        private final boolean goodsIsText;
 
-        public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, long discountNQT) {
+        DigitalGoodsDelivery(ByteBuffer buffer) throws NxtException.ValidationException {
+            this.purchaseId = buffer.getLong();
+            int length = buffer.getInt();
+            goodsIsText = length < 0;
+            if (length < 0) {
+                length ^= Integer.MIN_VALUE;
+            }
+            this.goods = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_DGS_GOODS_LENGTH);
+            this.discountNQT = buffer.getLong();
+        }
+
+        DigitalGoodsDelivery(JSONObject attachmentData) {
+            this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
+            this.goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
+                    Convert.parseHexString((String)attachmentData.get("goodsNonce")));
+            this.discountNQT = (Long)attachmentData.get("discountNQT");
+            this.goodsIsText = Boolean.TRUE.equals((Boolean)attachmentData.get("goodsIsText"));
+        }
+
+        public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, boolean goodsIsText, long discountNQT) {
             this.purchaseId = purchaseId;
             this.goods = goods;
             this.discountNQT = discountNQT;
+            this.goodsIsText = goodsIsText;
         }
 
         @Override
         public int getSize() {
-            return 8 + 2 + goods.getData().length + goods.getNonce().length + 8;
+            return 8 + 4 + goods.getSize() + 8;
         }
 
         @Override
@@ -1135,7 +1257,7 @@ public interface Attachment {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(purchaseId);
-                buffer.putShort((short)goods.getData().length);
+                buffer.putInt(goodsIsText ? goods.getData().length | Integer.MIN_VALUE : goods.getData().length);
                 buffer.put(goods.getData());
                 buffer.put(goods.getNonce());
                 buffer.putLong(discountNQT);
@@ -1153,6 +1275,7 @@ public interface Attachment {
             attachment.put("goodsData", Convert.toHexString(goods.getData()));
             attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
             attachment.put("discountNQT", discountNQT);
+            attachment.put("goodsIsText", goodsIsText);
             return attachment;
         }
 
@@ -1167,22 +1290,32 @@ public interface Attachment {
 
         public long getDiscountNQT() { return discountNQT; }
 
+        public boolean goodsIsText() {
+            return goodsIsText;
+        }
+
     }
 
     public final static class DigitalGoodsFeedback implements Attachment {
 
         private final Long purchaseId;
-        private final EncryptedData note;
 
-        public DigitalGoodsFeedback(Long purchaseId, EncryptedData note) {
+        DigitalGoodsFeedback(ByteBuffer buffer) {
+            this.purchaseId = buffer.getLong();
+        }
+
+        DigitalGoodsFeedback(JSONObject attachmentData) {
+            this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
+        }
+
+        public DigitalGoodsFeedback(Long purchaseId) {
             this.purchaseId = purchaseId;
-            this.note = note;
         }
 
         @Override
         public int getSize() {
             try {
-                return 8 + 2 + note.getData().length + note.getNonce().length;
+                return 8;
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -1195,9 +1328,6 @@ public interface Attachment {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(purchaseId);
-                buffer.putShort((short)note.getData().length);
-                buffer.put(note.getData());
-                buffer.put(note.getNonce());
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1209,8 +1339,6 @@ public interface Attachment {
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            attachment.put("note", Convert.toHexString(note.getData()));
-            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
         }
 
@@ -1221,26 +1349,32 @@ public interface Attachment {
 
         public Long getPurchaseId() { return purchaseId; }
 
-        public EncryptedData getNote() { return note; }
-
     }
 
     public final static class DigitalGoodsRefund implements Attachment {
 
         private final Long purchaseId;
         private final long refundNQT;
-        private final EncryptedData note;
 
-        public DigitalGoodsRefund(Long purchaseId, long refundNQT, EncryptedData note) {
+        DigitalGoodsRefund(ByteBuffer buffer) {
+            this.purchaseId = buffer.getLong();
+            this.refundNQT = buffer.getLong();
+        }
+
+        DigitalGoodsRefund(JSONObject attachmentData) {
+            this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
+            this.refundNQT = (Long)attachmentData.get("refundNQT");
+        }
+
+        public DigitalGoodsRefund(Long purchaseId, long refundNQT) {
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
-            this.note = note;
         }
 
         @Override
         public int getSize() {
             try {
-                return 8 + 8 + 2 + note.getData().length + note.getNonce().length;
+                return 8 + 8;
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
                 return 0;
@@ -1254,9 +1388,6 @@ public interface Attachment {
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(purchaseId);
                 buffer.putLong(refundNQT);
-                buffer.putShort((short)note.getData().length);
-                buffer.put(note.getData());
-                buffer.put(note.getNonce());
                 return buffer.array();
             } catch (RuntimeException e) {
                 Logger.logMessage("Error in getBytes", e);
@@ -1269,8 +1400,6 @@ public interface Attachment {
             JSONObject attachment = new JSONObject();
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
             attachment.put("refundNQT", refundNQT);
-            attachment.put("note", Convert.toHexString(note.getData()));
-            attachment.put("noteNonce", Convert.toHexString(note.getNonce()));
             return attachment;
         }
 
@@ -1283,13 +1412,19 @@ public interface Attachment {
 
         public long getRefundNQT() { return refundNQT; }
 
-        public EncryptedData getNote() { return note; }
-
     }
 
     public final static class AccountControlEffectiveBalanceLeasing implements Attachment {
 
         private final short period;
+
+        AccountControlEffectiveBalanceLeasing(ByteBuffer buffer) {
+            this.period = buffer.getShort();
+        }
+
+        AccountControlEffectiveBalanceLeasing(JSONObject attachmentData) {
+            this.period = ((Long) attachmentData.get("period")).shortValue();
+        }
 
         public AccountControlEffectiveBalanceLeasing(short period) {
             this.period = period;

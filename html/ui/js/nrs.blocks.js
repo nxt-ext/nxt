@@ -109,7 +109,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#dashboard_message").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 				$("#show_console").show();
-				$.growl("The block chain is now up to date.", {
+				$.growl($.t("success_blockchain_up_to_date"), {
 					"type": "success"
 				});
 				NRS.checkAliasVersions();
@@ -150,14 +150,18 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
-				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
+				$(this).attr("data-content", $.t("x_confirmations", {
+					"x": NRS.formatAmount(nrConfirmations, false, true)
+				}));
 
 				if (nrConfirmations > 10) {
 					nrConfirmations = '10+';
 				}
 				$(this).html(nrConfirmations);
 			} else {
-				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
+				$(this).attr("data-content", $.t("x_confirmations", {
+					"x": NRS.formatAmount(nrConfirmations, false, true)
+				}));
 			}
 		});
 	}

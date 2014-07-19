@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 final class BlockImpl implements Block {
 
@@ -247,8 +249,31 @@ final class BlockImpl implements Block {
         return json;
     }
 
-    byte[] getBytes() {
+    static BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
+        int version = ((Long)blockData.get("version")).intValue();
+        int timestamp = ((Long)blockData.get("timestamp")).intValue();
+        Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
+        long totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
+        long totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
+        int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
+        byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
+        byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
+        byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
+        byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
+        byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
+        SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
+        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
+        for (Object transactionData : transactionsData) {
+            TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
+            if (blockTransactions.put(transaction.getId(), transaction) != null) {
+                throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
+            }
+        }
+        return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
+                generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
+    }
 
+    byte[] getBytes() {
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + 8 + 4 + (version < 3 ? (4 + 4) : (8 + 8)) + 4 + 32 + 32 + (32 + 32) + 64);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(version);

@@ -104,6 +104,7 @@ public final class Users {
             connector.setPort(port);
             connector.setHost(host);
             connector.setIdleTimeout(Nxt.getIntProperty("nxt.uiServerIdleTimeout"));
+            connector.setReuseAddress(true);
             userServer.addConnector(connector);
 
 

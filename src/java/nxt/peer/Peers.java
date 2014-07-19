@@ -6,6 +6,7 @@ import nxt.Constants;
 import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -216,6 +217,7 @@ public final class Peers {
                 final String host = Nxt.getStringProperty("nxt.peerServerHost");
                 connector.setHost(host);
                 connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
+                connector.setReuseAddress(true);
                 peerServer.addConnector(connector);
 
                 ServletHandler peerHandler = new ServletHandler();
@@ -292,6 +294,13 @@ public final class Peers {
                     if (getNumberOfConnectedPublicPeers() < Peers.maxNumberOfConnectedPublicPeers) {
                         PeerImpl peer = (PeerImpl)getAnyPeer(ThreadLocalRandom.current().nextInt(2) == 0 ? Peer.State.NON_CONNECTED : Peer.State.DISCONNECTED, false);
                         if (peer != null) {
+                            peer.connect();
+                        }
+                    }
+
+                    int now = Convert.getEpochTime();
+                    for (PeerImpl peer : peers.values()) {
+                        if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
                             peer.connect();
                         }
                     }

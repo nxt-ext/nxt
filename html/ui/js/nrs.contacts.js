@@ -49,7 +49,7 @@ var NRS = (function(NRS, $, undefined) {
 						contactDescription = "-";
 					}
 
-					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + NRS.getAccountFormatted(contact, "account") + "' class='user_info'>" + NRS.getAccountFormatted(contact, "account") + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Send Nxt</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>Message</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>Delete</a></td></tr>";
+					rows += "<tr><td><a href='#' data-toggle='modal' data-target='#update_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + contact.name.escapeHTML() + "</a></td><td><a href='#' data-user='" + NRS.getAccountFormatted(contact, "account") + "' class='user_info'>" + NRS.getAccountFormatted(contact, "account") + "</a></td><td>" + (contact.email ? contact.email.escapeHTML() : "-") + "</td><td>" + contactDescription.escapeHTML() + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_money_modal' data-contact='" + String(contact.name).escapeHTML() + "'>" + $.t("send_nxt") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#send_message_modal' data-contact='" + String(contact.name).escapeHTML() + "'>" + $.t("message") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#delete_contact_modal' data-contact='" + String(contact.id).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				});
 			}
 
@@ -64,23 +64,23 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!data.name) {
 			return {
-				"error": "Contact name is a required field."
+				"error": $.t("error_contact_name_required")
 			};
 		} else if (!data.account_id) {
 			return {
-				"error": "Account ID is a required field."
+				"error": $.t("error_account_id_required")
 			};
 		}
 
 		if (/^\d+$/.test(data.name) || /^NXT\-/i.test(data.name)) {
 			return {
-				"error": "Contact name must contain alphabetic characters."
+				"error": $.t("error_contact_name_alpha")
 			};
 		}
 
 		if (data.email && !/@/.test(data.email)) {
 			return {
-				"error": "Email address is incorrect."
+				"error": $.t("error_email_address")
 			};
 		}
 
@@ -90,7 +90,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.account_id = convertedAccountId;
 			} else {
 				return {
-					"error": "Invalid account ID."
+					"error": $.t("error_account_id")
 				};
 			}
 		}
@@ -104,7 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.account = address.account_id();
 			} else {
 				return {
-					"error": "Invalid account ID."
+					"error": $.t("error_account_id")
 				};
 			}
 		} else {
@@ -114,7 +114,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.account_rs = address.toString();
 			} else {
 				return {
-					"error": "Invalid account ID."
+					"error": $.t("error_account_id")
 				};
 			}
 		}
@@ -125,7 +125,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (!response.errorCode) {
 				if (response.account != data.account || response.accountRS != data.account_rs) {
 					return {
-						"error": "Invalid account ID."
+						"error": $.t("error_account_id")
 					};
 				}
 			}
@@ -140,9 +140,9 @@ var NRS = (function(NRS, $, undefined) {
 		}], function(error, contacts) {
 			if (contacts && contacts.length) {
 				if (contacts[0].name == data.name) {
-					$modal.find(".error_message").html("A contact with this name already exists.").show();
+					$modal.find(".error_message").html($.t("error_contact_name_exists")).show();
 				} else {
-					$modal.find(".error_message").html("A contact with this account ID already exists.").show();
+					$modal.find(".error_message").html($.t("error_contact_account_id_exists")).show();
 				}
 				$btn.button("reset");
 				$modal.modal("unlock");
@@ -166,7 +166,7 @@ var NRS = (function(NRS, $, undefined) {
 						$btn.button("reset");
 						$modal.modal("unlock");
 						$modal.modal("hide");
-						$.growl("Contact added successfully.", {
+						$.growl($.t("success_contact_add"), {
 							"type": "success"
 						});
 
@@ -185,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#update_contact_modal").on('show.bs.modal', function(e) {
+	$("#update_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var contactId = parseInt($invoker.data("contact"), 10);
@@ -230,11 +230,11 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!data.name) {
 			return {
-				"error": "Contact name is a required field."
+				"error": $.t("error_contact_name_required")
 			};
 		} else if (!data.account_id) {
 			return {
-				"error": "Account ID is a required field."
+				"error": $.t("error_account_id_required")
 			};
 		}
 
@@ -244,7 +244,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.account_id = convertedAccountId;
 			} else {
 				return {
-					"error": "Invalid account ID."
+					"error": $.t("error_account_id")
 				};
 			}
 		}
@@ -253,7 +253,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!contactId) {
 			return {
-				"error": "Invalid contact."
+				"error": $.t("error_contact")
 			};
 		}
 
@@ -266,7 +266,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.account_id = address.account_id();
 			} else {
 				return {
-					"error": "Invalid account ID."
+					"error": $.t("error_account_id")
 				};
 			}
 		} else {
@@ -276,7 +276,7 @@ var NRS = (function(NRS, $, undefined) {
 				data.account_rs = address.toString();
 			} else {
 				return {
-					"error": "Invalid account ID."
+					"error": $.t("error_account_id")
 				};
 			}
 		}
@@ -287,7 +287,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (!response.errorCode) {
 				if (response.account != data.account_id || response.accountRS != data.account_rs) {
 					return {
-						"error": "Invalid account ID."
+						"error": $.t("error_account_id")
 					};
 				}
 			}
@@ -299,7 +299,7 @@ var NRS = (function(NRS, $, undefined) {
 			"account": data.account_id
 		}], function(error, contacts) {
 			if (contacts && contacts.length && contacts[0].id != contactId) {
-				$modal.find(".error_message").html("A contact with this account ID already exists.").show();
+				$modal.find(".error_message").html($.t("error_contact_exists")).show();
 				$btn.button("reset");
 				$modal.modal("unlock");
 			} else {
@@ -328,7 +328,7 @@ var NRS = (function(NRS, $, undefined) {
 						$btn.button("reset");
 						$modal.modal("unlock");
 						$modal.modal("hide");
-						$.growl("Contact updated successfully.", {
+						$.growl($.t("success_contact_update"), {
 							"type": "success"
 						});
 
@@ -372,7 +372,7 @@ var NRS = (function(NRS, $, undefined) {
 			delete NRS.contacts[$("#delete_contact_account_id").val()];
 
 			setTimeout(function() {
-				$.growl("Contact deleted successfully.", {
+				$.growl($.t("success_contact_delete"), {
 					"type": "success"
 				});
 

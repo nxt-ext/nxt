@@ -450,12 +450,12 @@ public final class DebugTrace {
                 }
             }
             map.put("refund", String.valueOf(refundNQT));
-        } else if (attachment instanceof Attachment.MessagingArbitraryMessage) {
+        } else if (attachment == Attachment.ARBITRARY_MESSAGE) {
             map = new HashMap<>();
             map.put("account", Convert.toUnsignedLong(accountId));
             map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
             map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
-            map.put("event", "message");
+            map.put("event", attachment == Attachment.ARBITRARY_MESSAGE ? "message" : "encrypted message");
             if (isRecipient) {
                 map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
             } else {

@@ -482,7 +482,9 @@ var NRS = (function(NRS, $, undefined) {
 		} else if (parts.length == 2) {
 			var fraction = parts[1];
 			if (fraction.length > decimals) {
-				throw "Fraction can only have " + decimals + " decimals max.";
+				throw $.t("error_fraction_decimals", {
+					"decimals": decimals
+				});
 			} else if (fraction.length < decimals) {
 				for (var i = fraction.length; i < decimals; i++) {
 					fraction += "0";
@@ -490,12 +492,12 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			qnt += fraction;
 		} else {
-			throw "Incorrect input";
+			throw $.t("error_invalid_input");
 		}
 
 		//in case there's a comma or something else in there.. at this point there should only be numbers
 		if (!/^\d+$/.test(qnt)) {
-			throw "Invalid input. Only numbers and a dot are accepted.";
+			throw $.t("error_invalid_input_numbers");
 		}
 
 		//remove leading zeroes
@@ -723,8 +725,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!unmodified) {
 			delete data.request_type;
-			delete data.success_message;
-			delete data.error_message;
 			delete data.converted_account_id;
 		}
 
@@ -748,7 +748,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
-			return "You";
+			return $.t("you");
 		} else if (formattedAcc in NRS.contacts) {
 			return NRS.contacts[formattedAcc].name.escapeHTML();
 		} else {
@@ -782,7 +782,7 @@ var NRS = (function(NRS, $, undefined) {
 					"text": NRS.getClipboardText($(this).data("type"))
 				}, "*");
 
-				$.growl("Copied to the clipboard successfully.", {
+				$.growl($.t("success_clipboard_copy"), {
 					"type": "success"
 				});
 			});
@@ -801,7 +801,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			clipboard.on("complete", function(client, args) {
-				$.growl("Copied to the clipboard successfully.", {
+				$.growl($.t("success_clipboard_copy"), {
 					"type": "success"
 				});
 			});
@@ -809,7 +809,7 @@ var NRS = (function(NRS, $, undefined) {
 			clipboard.on("noflash", function(client, args) {
 				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
 				$("#account_id_dropdown, #asset_id").data("toggle", "");
-				$.growl("Your browser doesn't support flash, therefore copy to clipboard functionality will not work.", {
+				$.growl($.t("error_clipboard_copy_noflash"), {
 					"type": "danger"
 				});
 			});
@@ -817,7 +817,7 @@ var NRS = (function(NRS, $, undefined) {
 			clipboard.on("wrongflash", function(client, args) {
 				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
 				$("#account_id_dropdown, #asset_id").data("toggle", "");
-				$.growl("Your browser flash version is too old. The copy to clipboard functionality needs version 10 or newer.");
+				$.growl($.t("error_clipboard_copy_wrongflash"));
 			});
 		}
 	}
@@ -942,28 +942,40 @@ var NRS = (function(NRS, $, undefined) {
 		for (var key in data) {
 			var value = data[key];
 
+			var match = key.match(/(.*)(NQT|QNT|RS)$/);
+			var type = "";
+
+			if (match && match[1]) {
+				key = match[1];
+				type = match[2];
+			}
+
+			key = key.replace(/\s+/g, "").replace(/([A-Z])/g, function($1) {
+				return "_" + $1.toLowerCase();
+			});
+
 			//no need to mess with input, already done if Formatted is at end of key
-			if (/FormattedHTML$/i.test(key)) {
-				key = key.replace("FormattedHTML", "");
+			if (/formatted_html$/i.test(key)) {
+				key = key.replace("formatted_html", "");
 				value = String(value);
-			} else if (/Formatted$/i.test(key)) {
-				key = key.replace("Formatted", "");
+			} else if (/formatted$/i.test(key)) {
+				key = key.replace("formatted", "");
 				value = String(value).escapeHTML();
-			} else if (key == "Quantity" && $.isArray(value)) {
+			} else if (key == "quantity" && $.isArray(value)) {
 				if ($.isArray(value)) {
 					value = NRS.formatQuantity(value[0], value[1]);
 				} else {
 					value = NRS.formatQuantity(value, 0);
 				}
-			} else if (key == "Price" || key == "Total" || key == "Amount" || key == "Fee" || key == "Refund" || key == "Discount") {
+			} else if (key == "price" || key == "total" || key == "amount" || key == "fee" || key == "refund" || key == "discount") {
 				value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
-			} else if (key == "Sender" || key == "Recipient" || key == "Account" || key == "Seller" || key == "Buyer") {
+			} else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer") {
 				value = "<a href='#' data-user='" + String(value).escapeHTML() + "'>" + NRS.getAccountTitle(value) + "</a>";
 			} else {
 				value = String(value).escapeHTML().nl2br();
 			}
 
-			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + String(key.capitalize()).escapeHTML() + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
+			rows += "<tr><td style='font-weight:bold;white-space:nowrap" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
 		}
 
 		return rows;
@@ -1199,6 +1211,158 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.deleteCookie = function(name) {
 		NRS.setCookie(name, "", -1);
+	}
+
+	NRS.translateServerError = function(response) {
+		if (!response.errorDescription) {
+			if (response.errorMessage) {
+				response.errorDescription = response.errorMessage;
+			} else if (response.error) {
+				if (typeof response.error == "string") {
+					response.errorDescription = response.error;
+					response.errorCode = -1;
+				} else {
+					return $.t("error_unknown");
+				}
+			} else {
+				return $.t("error_unknown");
+			}
+		}
+
+
+		switch (response.errorCode) {
+			case 1:
+				switch (response.errorDescription) {
+					case "This request is only accepted using POST!":
+						return $.t("error_post_only");
+						break;
+					case "Incorrect request":
+						return $.t("error_incorrect_request");
+						break;
+					default:
+						return response.errorDescription;
+						break;
+				}
+				break;
+			case 2:
+				return response.errorDescription;
+				break;
+			case 3:
+				var match = response.errorDescription.match(/"([^"]+)" not specified/i);
+				if (match && match[1]) {
+					return $.t("error_not_specified", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
+				}
+
+				var match = response.errorDescription.match(/At least one of (.*) must be specified/i);
+				if (match && match[1]) {
+					var fieldNames = match[1].split(",");
+					var translatedFieldNames = [];
+
+					$.each(fieldNames, function(fieldName) {
+						translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName).toLowerCase());
+					});
+					translatedFieldNames = translatedFieldNames.join(", ");
+
+					return $.t("error_not_specified", {
+						"names": translatedFieldNames,
+						"plural": "yes"
+					}).capitalize();
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 4:
+				var match = response.errorDescription.match(/Incorrect "([^"]+)"/i);
+
+				if (match && match[1]) {
+					return $.t("error_incorrect_name", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 5:
+				var match = response.errorDescription.match(/Unknown (.*)/i);
+				if (match && match[1]) {
+					return $.t("error_unknown_name", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
+				}
+
+				if (response.errorDescription == "Account is not forging") {
+					return $.t("error_not_forging");
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 6:
+				switch (response.errorDescription) {
+					case "Not enough assets":
+						return $.t("error_not_enough_assets");
+						break;
+					case "Not enough funds":
+						return $.t("error_not_enough_funds");
+						break;
+					default:
+						return response.errorDescription;
+						break;
+				}
+				break;
+			case 7:
+				if (response.errorDescription == "Not allowed") {
+					return $.t("error_not_allowed");
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 8:
+				switch (response.errorDescription) {
+					case "Goods have not been delivered yet":
+						return $.t("error_goods_not_delivered_yet");
+						break;
+					case "Feedback already sent":
+						return $.t("error_feedback_already_sent");
+						break;
+					case "Refund already sent":
+						return $.t("error_refund_already_sent");
+						break;
+					case "Purchase already delivered":
+						return $.t("error_purchase_already_delivered");
+						break;
+					case "Decryption failed":
+						return $.t("error_decryption_failed");
+						break;
+					default:
+						return response.errorDescription;
+						break;
+				}
+				break;
+			case 9:
+				if (response.errorDescription == "Feature not available") {
+					return $.t("error_feature_not_available");
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			default:
+				return response.errorDescription;
+				break;
+		}
+	}
+
+	NRS.getTranslatedFieldName = function(name) {
+		var nameKey = String(name).replace(/NQT|QNT|RS$/, "").replace(/\s+/g, "").replace(/([A-Z])/g, function($1) {
+			return "_" + $1.toLowerCase();
+		});
+
+		if ($.i18n.exists(nameKey)) {
+			return $.t(nameKey).escapeHTML();
+		} else {
+			return String(name).escapeHTML();
+		}
 	}
 
 	return NRS;

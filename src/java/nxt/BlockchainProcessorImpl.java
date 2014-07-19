@@ -425,8 +425,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-                TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, 0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
-                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, (String)null, Genesis.GENESIS_SIGNATURES[i]);
+                TransactionImpl transaction = new TransactionImpl.BuilderImpl((byte) 0, Genesis.CREATOR_PUBLIC_KEY,
+                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, 0, (short) 0,
+                        Attachment.ORDINARY_PAYMENT)
+                        .signature(Genesis.GENESIS_SIGNATURES[i])
+                        .build();
                 transactionsMap.put(transaction.getId(), transaction);
             }
 
@@ -554,6 +557,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         + transaction.getReferencedTransactionFullHash()
                                         + " for transaction " + transaction.getStringId(), transaction);
                             }
+                        }
+                        if (! verifyVersion(transaction, previousLastBlock.getHeight())) {
+                            throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
+                                    + " at height " + previousLastBlock.getHeight(), transaction);
                         }
                         if (!transaction.verify()) {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
@@ -773,29 +780,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
-        int version = ((Long)blockData.get("version")).intValue();
-        int timestamp = ((Long)blockData.get("timestamp")).intValue();
-        Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-        long totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
-        long totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
-        int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-        byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
-        byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
-        byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
-        byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
-        byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
-
-        SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
-        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-        for (Object transactionData : transactionsData) {
-            TransactionImpl transaction = transactionProcessor.parseTransaction((JSONObject) transactionData);
-            if (blockTransactions.put(transaction.getId(), transaction) != null) {
-                throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
-            }
-        }
-
-        return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
-                generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
+        return BlockImpl.parseBlock(blockData);
     }
 
     private boolean verifyVersion(Block block, int currentHeight) {
@@ -803,6 +788,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 (currentHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
                         : currentHeight < Constants.NQT_BLOCK ? 2
                         : 3);
+    }
+
+    private boolean verifyVersion(Transaction transaction, int currentHeight) {
+        return transaction.getVersion() == (currentHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
     }
 
     private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
@@ -859,6 +848,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                 if (!transaction.verify()) {
                                     throw new NxtException.ValidationException("Invalid transaction signature");
+                                }
+                                if (! verifyVersion(transaction, blockchain.getHeight())) {
+                                    throw new NxtException.ValidationException("Invalid transaction version");
                                 }
                                 transaction.validateAttachment();
                             }

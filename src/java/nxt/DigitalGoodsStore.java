@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class DigitalGoodsStore {
@@ -231,7 +232,7 @@ public final class DigitalGoodsStore {
             protected void save(Connection con, Purchase purchase) throws SQLException {
                 try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO purchase (id, buyer_id, goods_id, seller_id, "
                         + "quantity, price, deadline, note, nonce, timestamp, pending, goods, goods_nonce, refund_note, "
-                        + "refund_nonce, feedback_note, feedback_nonce, discount, refund, height, latest) KEY (id, height) "
+                        + "refund_nonce, has_feedback_notes, has_public_feedbacks, discount, refund, height, latest) KEY (id, height) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                     int i = 0;
                     pstmt.setLong(++i, purchase.getId());
@@ -249,8 +250,8 @@ public final class DigitalGoodsStore {
                     ++i;
                     setEncryptedData(pstmt, purchase.getRefundNote(), ++i);
                     ++i;
-                    setEncryptedData(pstmt, purchase.getFeedbackNote(), ++i);
-                    ++i;
+                    pstmt.setBoolean(++i, purchase.getFeedbackNotes() != null && purchase.getFeedbackNotes().size() > 0);
+                    pstmt.setBoolean(++i, purchase.getPublicFeedback() != null && purchase.getPublicFeedback().size() > 0);
                     pstmt.setLong(++i, purchase.getDiscountNQT());
                     pstmt.setLong(++i, purchase.getRefundNQT());
                     pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -258,6 +259,8 @@ public final class DigitalGoodsStore {
                 }
             }
         };
+
+        //TODO: add another table to store the actual feedback and public feedback
 
         private final Long id;
         private final Long buyerId;
@@ -270,8 +273,10 @@ public final class DigitalGoodsStore {
         private final int timestamp;
         private boolean isPending;
         private EncryptedData encryptedGoods;
+		private boolean goodsIsText;
         private EncryptedData refundNote;
-        private EncryptedData feedbackNote;
+        private List<EncryptedData> feedbackNotes;
+        private List<String> publicFeedbacks;
         private long discountNQT;
         private long refundNQT;
 
@@ -283,7 +288,7 @@ public final class DigitalGoodsStore {
             this.quantity = attachment.getQuantity();
             this.priceNQT = attachment.getPriceNQT();
             this.deadline = attachment.getDeliveryDeadlineTimestamp();
-            this.note = attachment.getNote();
+            this.note = transaction.getEncryptedMessage() == null ? null : transaction.getEncryptedMessage().getEncryptedData();
             this.timestamp = transaction.getTimestamp();
             this.isPending = true;
         }
@@ -301,7 +306,12 @@ public final class DigitalGoodsStore {
             this.isPending = rs.getBoolean("pending");
             this.encryptedGoods = loadEncryptedData(rs, "goods", "goods_nonce");
             this.refundNote = loadEncryptedData(rs, "refund_note", "refund_nonce");
-            this.feedbackNote = loadEncryptedData(rs, "feedback_note", "feedback_nonce");
+            if (rs.getBoolean("has_feedback_notes")) {
+                this.feedbackNotes = new ArrayList<>();
+            }
+            if (rs.getBoolean("has_public_feedbacks")) {
+                this.publicFeedbacks = new ArrayList<>();
+            }
             this.discountNQT = rs.getLong("discount");
             this.refundNQT = rs.getLong("refund");
         }
@@ -357,8 +367,13 @@ public final class DigitalGoodsStore {
             return encryptedGoods;
         }
 
-        private void setEncryptedGoods(EncryptedData encryptedGoods) {
+        public boolean goodsIsText() {
+            return goodsIsText;
+        }
+
+        private void setEncryptedGoods(EncryptedData encryptedGoods, boolean goodsIsText) {
             this.encryptedGoods = encryptedGoods;
+            this.goodsIsText = goodsIsText;
             purchaseTable.insert(this);
         }
 
@@ -371,12 +386,27 @@ public final class DigitalGoodsStore {
             purchaseTable.insert(this);
         }
 
-        public EncryptedData getFeedbackNote() {
-            return feedbackNote;
+        public List<EncryptedData> getFeedbackNotes() {
+            return feedbackNotes;
         }
 
-        private void setFeedbackNote(EncryptedData feedbackNote) {
-            this.feedbackNote = feedbackNote;
+        private void addFeedbackNote(EncryptedData feedbackNote) {
+            if (feedbackNotes == null) {
+                feedbackNotes = new ArrayList<>();
+            }
+            feedbackNotes.add(feedbackNote);
+            purchaseTable.insert(this);
+		}
+
+        public List<String> getPublicFeedback() {
+            return publicFeedbacks;
+        }
+
+        private void addPublicFeedback(String publicFeedback) {
+            if (publicFeedbacks == null) {
+                publicFeedbacks = new ArrayList<>();
+            }
+            publicFeedbacks.add(publicFeedback);
             purchaseTable.insert(this);
         }
 
@@ -510,9 +540,9 @@ public final class DigitalGoodsStore {
             return Purchase.purchaseTable.getManyBy(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        }
-    }
-
+		}
+	}
+	
     private static List<Purchase> getPurchasesExpiredBetween(int previousTimestamp, int currentTimestamp) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM purchase WHERE deadline >= ? AND deadline < ? "
@@ -618,7 +648,7 @@ public final class DigitalGoodsStore {
         buyer.addToUnconfirmedBalanceNQT(attachment.getDiscountNQT());
         Account seller = Account.getAccount(transaction.getSenderId());
         seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, attachment.getDiscountNQT()));
-        purchase.setEncryptedGoods(attachment.getGoods());
+        purchase.setEncryptedGoods(attachment.getGoods(), attachment.goodsIsText());
         purchase.setDiscountNQT(attachment.getDiscountNQT());
         purchaseListeners.notify(purchase, Event.DELIVERY);
     }
@@ -632,17 +662,19 @@ public final class DigitalGoodsStore {
         buyer.addToUnconfirmedBalanceNQT(- discountNQT);
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
-        purchase.setEncryptedGoods(null);
+        purchase.setEncryptedGoods(null, false);
         purchase.setDiscountNQT(0);
     }
 
-    static void refund(Long sellerId, Long purchaseId, long refundNQT, EncryptedData encryptedNote) {
+    static void refund(Long sellerId, Long purchaseId, long refundNQT, Appendix.EncryptedMessage encryptedMessage) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceNQT(-refundNQT);
         Account buyer = Account.getAccount(purchase.getBuyerId());
         buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
-        purchase.setRefundNote(encryptedNote);
+        if (encryptedMessage != null) {
+            purchase.setRefundNote(encryptedMessage.getEncryptedData());
+        }
         purchase.setRefundNQT(refundNQT);
         purchaseListeners.notify(purchase, Event.REFUND);
     }
@@ -657,15 +689,28 @@ public final class DigitalGoodsStore {
         purchase.setRefundNQT(0);
     }
 
-    static void feedback(Long purchaseId, EncryptedData encryptedNote) {
+    static void feedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        purchase.setFeedbackNote(encryptedNote);
+        if (encryptedMessage != null) {
+            purchase.addFeedbackNote(encryptedMessage.getEncryptedData());
+        }
+        if (message != null) {
+            purchase.addPublicFeedback(Convert.toString(message.getMessage()));
+        }
         purchaseListeners.notify(purchase, Event.FEEDBACK);
     }
 
-    static void undoFeedback(Long purchaseId) {
+    static void undoFeedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        purchase.setFeedbackNote(null);
+        // TODO: thia may not be needed
+        /*
+        if (encryptedMessage != null) {
+            purchase.removeFeedbackNote();
+        }
+        if (message != null) {
+            purchase.removePublicFeedback();
+        }
+        */
     }
 
     private static EncryptedData loadEncryptedData(ResultSet rs, String dataColumn, String nonceColumn) throws SQLException {

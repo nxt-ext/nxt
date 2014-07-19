@@ -4,6 +4,18 @@ import org.json.simple.JSONObject;
 
 public interface Transaction extends Comparable<Transaction> {
 
+    public static interface Builder {
+
+        public Builder referencedTransactionFullHash(String referencedTransactionFullHash);
+
+        public Builder message(Appendix.Message message);
+
+        public Builder encryptedMessage(Appendix.EncryptedMessage encryptedData);
+
+        public Transaction build() throws NxtException.ValidationException;
+
+    }
+
     Long getId();
 
     String getStringId();
@@ -53,6 +65,12 @@ public interface Transaction extends Comparable<Transaction> {
     byte[] getUnsignedBytes();
 
     JSONObject getJSONObject();
+
+    byte getVersion();
+
+    Appendix.Message getMessage();
+
+    Appendix.EncryptedMessage getEncryptedMessage();
 
     /*
     Collection<TransactionType> getPhasingTransactionTypes();

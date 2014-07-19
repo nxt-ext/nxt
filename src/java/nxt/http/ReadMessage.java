@@ -1,10 +1,9 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Attachment;
+import nxt.Appendix;
 import nxt.Nxt;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -15,13 +14,14 @@ import javax.servlet.http.HttpServletRequest;
 import static nxt.http.JSONResponses.DECRYPTION_FAILED;
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
+import static nxt.http.JSONResponses.NO_MESSAGE;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-public final class ReadEncryptedNote extends APIServlet.APIRequestHandler {
+public final class ReadMessage extends APIServlet.APIRequestHandler {
 
-    static final ReadEncryptedNote instance = new ReadEncryptedNote();
+    static final ReadMessage instance = new ReadMessage();
 
-    private ReadEncryptedNote() {
+    private ReadMessage() {
         super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
     }
 
@@ -42,23 +42,28 @@ public final class ReadEncryptedNote extends APIServlet.APIRequestHandler {
         } catch (RuntimeException e) {
             return INCORRECT_TRANSACTION;
         }
-        if (transaction.getType() != TransactionType.Messaging.ENCRYPTED_MESSAGE) {
-            return INCORRECT_TRANSACTION;
-        }
 
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        JSONObject response = new JSONObject();
         Account senderAccount = Account.getAccount(transaction.getSenderId());
-        Attachment.MessagingEncryptedMessage attachment = (Attachment.MessagingEncryptedMessage)transaction.getAttachment();
-        try {
-            byte[] decrypted = senderAccount.decryptFrom(attachment.getEncryptedMessage(), secretPhrase);
-            JSONObject response = new JSONObject();
-            response.put("note", Convert.toString(decrypted));
-            return response;
-        } catch (RuntimeException e) {
-            Logger.logDebugMessage(e.toString(), e);
-            return DECRYPTION_FAILED;
+        Appendix.Message message = transaction.getMessage();
+        Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
+        if (message == null && encryptedMessage == null) {
+            return NO_MESSAGE;
         }
-
+        if (encryptedMessage != null) {
+            String secretPhrase = ParameterParser.getSecretPhrase(req);
+            try {
+                byte[] decrypted = senderAccount.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
+                response.put("decryptedMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+            } catch (RuntimeException e) {
+                Logger.logDebugMessage(e.toString(), e);
+                return DECRYPTION_FAILED;
+            }
+        }
+        if (message != null) {
+            response.put("message", message.isText() ? Convert.toString(message.getMessage()) : Convert.toHexString(message.getMessage()));
+        }
+        return response;
     }
 
 }

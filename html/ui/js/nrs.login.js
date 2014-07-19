@@ -54,7 +54,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $loaded = $("#account_phrase_generator_loaded");
 
 		if (window.crypto || window.msCrypto) {
-			$loading.find("span.loading_text").html("Generating your passphrase. Please wait");
+			$loading.find("span.loading_text").html($.t("generating_passphrase_wait"));
 		}
 
 		$loading.show();
@@ -70,7 +70,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				PassPhraseGenerator.generatePassPhrase("#account_phrase_generator_panel");
 			}).fail(function(jqxhr, settings, exception) {
-				alert("Could not load word list...");
+				alert($.t("error_word_list"));
 			});
 		} else {
 			$loading.hide();
@@ -88,7 +88,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.newlyCreatedAccount = true;
 			NRS.login(password, function() {
-				$.growl("Passphrase confirmed successfully, you are now logged in.", {
+				$.growl($.t("success_passphrase_confirmed"), {
 					"type": "success"
 				});
 			});
@@ -107,11 +107,11 @@ var NRS = (function(NRS, $, undefined) {
 		var error = "";
 
 		if (password.length < 35) {
-			error = "Passphrase must be at least 35 characters long.";
+			error = $.t("error_passphrase_length");
 		} else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-			error = "Since your passphrase is less than 50 characters long, it must contain numbers and uppercase letters.";
+			error = $.t("error_passphrase_strength");
 		} else if (password != repeat) {
-			error = "Passphrase do not match.";
+			error = $.t("error_passphrase_match");
 		}
 
 		if (error) {
@@ -119,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#registration_password, #registration_password_repeat").val("");
 			NRS.login(password, function() {
-				$.growl("Passphrase confirmed successfully, you are now logged in.", {
+				$.growl($.t("success_passphrase_confirmed"), {
 					"type": "success"
 				});
 			});
@@ -130,7 +130,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#login_password, #registration_password, #registration_password_repeat").val("");
 
 		if (!password.length) {
-			$.growl("You must enter your passphrase. If you don't have one, click the registration button below.", {
+			$.growl($.t("error_passphrase_required_login"), {
 				"type": "danger",
 				"offset": 10
 			});
@@ -139,7 +139,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
-				$.growl("Could not connect to server.", {
+				$.growl($.t("error_server_connect"), {
 					"type": "danger",
 					"offset": 10
 				});
@@ -158,7 +158,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (!NRS.account) {
-					$.growl("Could not find your account address.", {
+					$.growl($.t("error_find_account_id"), {
 						"type": "danger",
 						"offset": 10
 					});
@@ -170,7 +170,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (nxtAddress.set(NRS.account)) {
 					NRS.accountRS = nxtAddress.toString();
 				} else {
-					$.growl("Could not generate your account address.", {
+					$.growl($.t("error_generate_account_id"), {
 						"type": "danger",
 						"offset": 10
 					});
@@ -181,7 +181,7 @@ var NRS = (function(NRS, $, undefined) {
 					"account": NRS.account
 				}, function(response) {
 					if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password)) {
-						$.growl("This account is already taken. Please choose another pass phrase.", {
+						$.growl($.t("error_account_taken"), {
 							"type": "danger",
 							"offset": 10
 						});
@@ -201,13 +201,13 @@ var NRS = (function(NRS, $, undefined) {
 					var passwordNotice = "";
 
 					if (password.length < 35) {
-						passwordNotice = "Your passphrase is less than 35 characters long. This is not secure.";
+						passwordNotice = $.t("error_passphrase_length_secure");
 					} else if (password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
-						passwordNotice = "Your passphrase does not contain numbers and uppercase letters. This is not secure.";
+						passwordNotice = $.t("error_passphrase_strength_secure");
 					}
 
 					if (passwordNotice) {
-						$.growl("<strong>Warning</strong>: " + passwordNotice, {
+						$.growl("<strong>" + $.t("warning") + "</strong>: " + passwordNotice, {
 							"type": "danger"
 						});
 					}
@@ -222,7 +222,7 @@ var NRS = (function(NRS, $, undefined) {
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
 						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
 							$("#forging_indicator").removeClass("forging");
-							$("#forging_indicator span").html("Not Forging");
+							$("#forging_indicator span").html($.t("not_forging"));
 							$("#forging_indicator").show();
 							NRS.isForging = false;
 						} else if (NRS.isLocalHost) {
@@ -231,11 +231,11 @@ var NRS = (function(NRS, $, undefined) {
 							}, function(response) {
 								if ("deadline" in response) {
 									$("#forging_indicator").addClass("forging");
-									$("#forging_indicator span").html("Forging");
+									$("#forging_indicator span").html($.t("forging"));
 									NRS.isForging = true;
 								} else {
 									$("#forging_indicator").removeClass("forging");
-									$("#forging_indicator span").html("Not Forging");
+									$("#forging_indicator span").html($.t("not_forging"));
 									NRS.isForging = false;
 								}
 								$("#forging_indicator").show();
@@ -248,7 +248,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.unlock();
 
 					if (NRS.isOutdated) {
-						$.growl("A new NRS release is available. It is recommended that you update.", {
+						$.growl($.t("nrs_update_available"), {
 							"type": "danger"
 						});
 					}
