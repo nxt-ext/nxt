@@ -370,14 +370,11 @@ final class PeerImpl implements Peer {
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
             String newAnnouncedAddress = Convert.emptyToNull((String)response.get("announcedAddress"));
-            if (newAnnouncedAddress != null) {
-                if (! newAnnouncedAddress.equals(announcedAddress)) {
-                    // force verification of changed announced address
-                    setState(Peer.State.NON_CONNECTED);
-                    setAnnouncedAddress(newAnnouncedAddress);
-                    return;
-                }
+            if (newAnnouncedAddress != null && ! newAnnouncedAddress.equals(announcedAddress)) {
+                // force verification of changed announced address
+                setState(Peer.State.NON_CONNECTED);
                 setAnnouncedAddress(newAnnouncedAddress);
+                return;
             }
             if (announcedAddress == null) {
                 setAnnouncedAddress(peerAddress);
