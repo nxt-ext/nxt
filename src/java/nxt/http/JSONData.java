@@ -224,7 +224,9 @@ final class JSONData {
         json.put("buyerRS", Convert.rsAccount(purchase.getBuyerId()));
         json.put("timestamp", purchase.getTimestamp());
         json.put("deliveryDeadlineTimestamp", purchase.getDeliveryDeadlineTimestamp());
-        json.put("note", encryptedData(purchase.getNote()));
+        if (purchase.getNote() != null) {
+            json.put("note", encryptedData(purchase.getNote()));
+        }
         json.put("pending", purchase.isPending());
         if (purchase.getEncryptedGoods() != null) {
             json.put("goodsData", encryptedData(purchase.getEncryptedGoods()));

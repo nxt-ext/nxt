@@ -361,8 +361,8 @@ final class DbVersion {
                         + "goods_id BIGINT NOT NULL, seller_id BIGINT NOT NULL, quantity INT NOT NULL, price BIGINT NOT NULL, "
                         + "deadline INT NOT NULL, note VARBINARY, nonce BINARY(32), timestamp INT NOT NULL, pending BOOLEAN NOT NULL, "
                         + "goods VARBINARY, goods_nonce BINARY(32), refund_note VARBINARY, refund_nonce BINARY(32), "
-                        + "feedback_note VARBINARY, feedback_nonce BINARY(32), discount BIGINT NOT NULL, refund BIGINT NOT NULL, "
-                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                        + "has_feedback_notes BOOLEAN NOT NULL DEFAULT FALSE, has_public_feedbacks BOOLEAN NOT NULL DEFAULT FALSE, "
+                        + "discount BIGINT NOT NULL, refund BIGINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 100:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS purchase_id_height_idx ON purchase (id, height DESC)");
             case 101:
