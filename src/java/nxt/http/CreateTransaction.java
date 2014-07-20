@@ -63,8 +63,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
-        boolean plainMessageIsText = !"false".equalsIgnoreCase(req.getParameter("plainMessageIsText"));
+        Appendix.EncryptedMessage encryptedMessage = null;
         EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
+        if (encryptedData != null) {
+            encryptedMessage = new Appendix.EncryptedMessage(encryptedData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText")));
+        }
         Appendix.Message message = null;
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
         if (messageValue != null) {
@@ -119,8 +122,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         try {
             Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, recipientId,
                     amountNQT, feeNQT, deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
-            if (encryptedData != null) {
-                builder.encryptedMessage(new Appendix.EncryptedMessage(encryptedData, plainMessageIsText));
+            if (encryptedMessage != null) {
+                builder.encryptedMessage(encryptedMessage);
             }
             if (message != null) {
                 builder.message(message);
