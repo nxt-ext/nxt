@@ -1631,20 +1631,20 @@ public interface Attachment {
         private final Long currencyId;
         private final long buyingRateNQT;
         private final long sellingRateNQT;
-        private final long totalBuyingLimitNQT;
+        private final long totalBuyingLimit;
         private final long totalSellingLimit;
-        private final long initialNXTSupplyNQT;
-        private final long initialCurrencySupply;
+        private final long initialBuyingSupply;
+        private final long initialSellingSupply;
         private final int expirationHeight;
 
-        public MonetarySystemExchangeOfferPublication(Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimitNQT, long totalSellingLimit, long initialNXTSupplyNQT, long initialCurrencySupply, int expirationHeight) {
+        public MonetarySystemExchangeOfferPublication(Long currencyId, long buyingRateNQT, long sellingRateNQT, long totalBuyingLimit, long totalSellingLimit, long initialBuyingSupply, long initialSellingSupply, int expirationHeight) {
             this.currencyId = currencyId;
             this.buyingRateNQT = buyingRateNQT;
             this.sellingRateNQT = sellingRateNQT;
-            this.totalBuyingLimitNQT = totalBuyingLimitNQT;
+            this.totalBuyingLimit = totalBuyingLimit;
             this.totalSellingLimit = totalSellingLimit;
-            this.initialNXTSupplyNQT = initialNXTSupplyNQT;
-            this.initialCurrencySupply = initialCurrencySupply;
+            this.initialBuyingSupply = initialBuyingSupply;
+            this.initialSellingSupply = initialSellingSupply;
             this.expirationHeight = expirationHeight;
         }
 
@@ -1661,10 +1661,10 @@ public interface Attachment {
                 buffer.putLong(currencyId);
                 buffer.putLong(buyingRateNQT);
                 buffer.putLong(sellingRateNQT);
-                buffer.putLong(totalBuyingLimitNQT);
+                buffer.putLong(totalBuyingLimit);
                 buffer.putLong(totalSellingLimit);
-                buffer.putLong(initialNXTSupplyNQT);
-                buffer.putLong(initialCurrencySupply);
+                buffer.putLong(initialBuyingSupply);
+                buffer.putLong(initialSellingSupply);
                 buffer.putInt(expirationHeight);
                 return buffer.array();
             } catch (RuntimeException e) {
@@ -1679,10 +1679,10 @@ public interface Attachment {
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
             attachment.put("buyingRateNQT", buyingRateNQT);
             attachment.put("sellingRateNQT", sellingRateNQT);
-            attachment.put("totalBuyingLimitNQT", totalBuyingLimitNQT);
+            attachment.put("totalBuyingLimit", totalBuyingLimit);
             attachment.put("totalSellingLimit", totalSellingLimit);
-            attachment.put("initialNXTSupplyNQT", initialNXTSupplyNQT);
-            attachment.put("initialCurrencySupply", initialCurrencySupply);
+            attachment.put("initialBuyingSupply", initialBuyingSupply);
+            attachment.put("initialSellingSupply", initialSellingSupply);
             attachment.put("expirationHeight", expirationHeight);
             return attachment;
         }
@@ -1704,20 +1704,20 @@ public interface Attachment {
             return sellingRateNQT;
         }
 
-        public long getTotalBuyingLimitNQT() {
-            return totalBuyingLimitNQT;
+        public long getTotalBuyingLimit() {
+            return totalBuyingLimit;
         }
 
         public long getTotalSellingLimit() {
             return totalSellingLimit;
         }
 
-        public long getInitialNXTSupplyNQT() {
-            return initialNXTSupplyNQT;
+        public long getInitialBuyingSupply() {
+            return initialBuyingSupply;
         }
 
-        public long getInitialCurrencySupply() {
-            return initialCurrencySupply;
+        public long getInitialSellingSupply() {
+            return initialSellingSupply;
         }
 
         public int getExpirationHeight() {
@@ -1729,12 +1729,12 @@ public interface Attachment {
     public final static class MonetarySystemExchange implements Attachment {
 
         private final Long currencyId;
-        private final long amountNQT;
+        private final long rateNQT;
         private final long units;
 
-        public MonetarySystemExchange(Long currencyId, long amountNQT, long units) {
+        public MonetarySystemExchange(Long currencyId, long rateNQT, long units) {
             this.currencyId = currencyId;
-            this.amountNQT = amountNQT;
+            this.rateNQT = rateNQT;
             this.units = units;
         }
 
@@ -1749,7 +1749,7 @@ public interface Attachment {
                 ByteBuffer buffer = ByteBuffer.allocate(getSize());
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.putLong(currencyId);
-                buffer.putLong(amountNQT);
+                buffer.putLong(rateNQT);
                 buffer.putLong(units);
                 return buffer.array();
             } catch (RuntimeException e) {
@@ -1762,7 +1762,7 @@ public interface Attachment {
         public JSONObject getJSONObject() {
             JSONObject attachment = new JSONObject();
             attachment.put("currency", Convert.toUnsignedLong(currencyId));
-            attachment.put("amountNQT", amountNQT);
+            attachment.put("rateNQT", rateNQT);
             attachment.put("units", units);
             return attachment;
         }
@@ -1776,24 +1776,16 @@ public interface Attachment {
             return currencyId;
         }
 
-        public long getAmountNQT() {
-            return amountNQT;
+        public long getRateNQT() {
+            return rateNQT;
         }
 
         public long getUnits() {
             return units;
         }
 
-        public boolean isValid() {
-            return (amountNQT > 0 && units < 0) || (amountNQT < 0 && units > 0);
-        }
-
         public boolean isPurchase() {
-            return amountNQT > 0;
-        }
-
-        public boolean isSale() {
-            return amountNQT < 0;
+            return units > 0;
         }
 
     }
