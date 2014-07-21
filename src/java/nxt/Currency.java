@@ -1,24 +1,77 @@
 package nxt;
 
 import nxt.util.Convert;
+import nxt.util.Listener;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public final class Currency {
+
+    public static final class NonIssuedCurrency {
+
+        private final Currency currency;
+        private final Map<Long, Long> founders;
+
+        NonIssuedCurrency(Currency currency) {
+            this.currency = currency;
+            this.founders = new HashMap<>();
+        }
+
+        public Currency getCurrency() {
+            return currency;
+        }
+
+        public Map<Long, Long> getFounders() {
+            return founders;
+        }
+
+        public void addFounder(Long accountId, Long amount) {
+            Long initialAmount = founders.get(accountId);
+            if (initialAmount == null) {
+                founders.put(accountId, amount);
+            } else {
+                founders.put(accountId, initialAmount + amount);
+            }
+        }
+
+    }
 
     private static final ConcurrentMap<Long, Currency> currencies = new ConcurrentHashMap<>();
     private static final Collection<Currency> allCurrencies = Collections.unmodifiableCollection(currencies.values());
     private static final Set<String> currencyNames = new ConcurrentHashSet<>();
     private static final Set<String> currencyCodes = new ConcurrentHashSet<>();
 
+    private static final ConcurrentMap<Long, NonIssuedCurrency> nonIssuedCurrencies = new ConcurrentHashMap<>();
+
     static {
         addNXTCurrency();
+
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                for (Map.Entry<Long, NonIssuedCurrency> nonIssuedCurrencyEntry : nonIssuedCurrencies.entrySet()) {
+                    NonIssuedCurrency nonIssuedCurrency = nonIssuedCurrencyEntry.getValue();
+                    Currency currency = nonIssuedCurrency.getCurrency();
+                    if (currency.getIssuanceHeight() <= block.getHeight()) {
+                        if (currency.getCurrentReservePerUnitNQT() < currency.getMinReservePerUnitNQT()) {
+                            for (Map.Entry<Long, Long> founderEntry : nonIssuedCurrency.getFounders().entrySet()) {
+                                Account.getAccount(founderEntry.getKey()).addToBalanceAndUnconfirmedBalanceNQT(founderEntry.getValue());
+                            }
+
+                            currencies.remove(nonIssuedCurrencyEntry.getKey());
+                            currencyNames.remove(currency.getName());
+                            currencyCodes.remove(currency.getCode());
+                        }
+
+                        nonIssuedCurrencies.remove(nonIssuedCurrencyEntry.getKey());
+                    }
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+
     }
 
     public static Collection<Currency> getAllCurrencies() {
@@ -40,6 +93,10 @@ public final class Currency {
         }
         currencyNames.add(name.toLowerCase());
         currencyCodes.add(code);
+
+        if (currency.getIssuanceHeight() > 0) {
+            nonIssuedCurrencies.put(currencyId, new NonIssuedCurrency(currency));
+        }
     }
 
     static void clear() {
@@ -131,15 +188,21 @@ public final class Currency {
         return ruleset;
     }
 
+    public long getCurrentReservePerUnitNQT() {
+        return currentReservePerUnitNQT;
+    }
+
     public static boolean isIssued(Long currencyId) {
         Currency currency = currencies.get(currencyId);
-        return currency != null && currency.getIssuanceHeight() < BlockchainImpl.getInstance().getLastBlock().getHeight();
+        return currency != null && currency.getIssuanceHeight() <= BlockchainImpl.getInstance().getLastBlock().getHeight();
     }
 
     public static void increaseReserve(Account account, Long currencyId, long amountNQT) {
         Currency currency = Currency.getCurrency(currencyId);
         account.addToBalanceNQT(-Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
         currency.currentReservePerUnitNQT += amountNQT;
+
+        nonIssuedCurrencies.get(currencyId).addFounder(account.getId(), Convert.safeMultiply(currency.getTotalSupply(), amountNQT));
     }
 
     public static void claimReserve(Account account, Long currencyId, long units) {

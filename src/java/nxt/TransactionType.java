@@ -2044,7 +2044,6 @@ public abstract class TransactionType {
 
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
-                        || !Currency.isIssued(attachment.getCurrencyId())
                         || attachment.getAmountNQT() <= 0) {
                     throw new NxtException.ValidationException("Invalid reserve increase: " + attachment.getJSONObject());
                 }

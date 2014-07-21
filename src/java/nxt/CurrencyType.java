@@ -49,7 +49,7 @@ public abstract class CurrencyType {
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                return attachment.getIssuanceHeight() != 0
+                return attachment.getIssuanceHeight() > 0
                         && attachment.getMinDifficulty() == 0
                         && attachment.getMaxDifficulty() == 0;
             }
@@ -79,7 +79,7 @@ public abstract class CurrencyType {
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                return attachment.getIssuanceHeight() != 0
+                return attachment.getIssuanceHeight() > 0
                         && attachment.getMinReservePerUnitNQT() == 0;
             }
 
