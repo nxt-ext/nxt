@@ -101,7 +101,7 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
     public final void insert(T t) {
         try (Connection con = Db.getConnection();
         PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                + " SET latest = FALSE WHERE id = ? AND latest = TRUE limit 1")) {
+                + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
             pstmt.setLong(1, getId(t));
             pstmt.executeUpdate();
             save(con, t);
@@ -131,7 +131,7 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
     @Override
     protected final void delete(Connection con, T t) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                + " SET latest = FALSE WHERE id = ? AND latest = TRUE limit 1")) {
+                + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
             pstmt.setLong(1, getId(t));
             pstmt.executeUpdate();
         }

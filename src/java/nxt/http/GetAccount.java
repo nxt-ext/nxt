@@ -8,7 +8,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
+import java.util.List;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 
@@ -47,35 +47,30 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                     response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
                 }
             }
-            if (!account.getLessorIds().isEmpty()) {
+            List<Account> lessors = account.getLessors();
+            if (!lessors.isEmpty()) {
                 JSONArray lessorIds = new JSONArray();
-                for (Long lessorId : account.getLessorIds()) {
-                    lessorIds.add(Convert.toUnsignedLong(lessorId));
+                for (Account lessor : lessors) {
+                    lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
                 }
                 response.put("lessors", lessorIds);
             }
 
+            List<Account.AccountAsset> accountAssets = account.getAccountAssets();
             JSONArray assetBalances = new JSONArray();
-            for (Map.Entry<Long, Long> assetBalanceEntry : account.getAssetBalancesQNT().entrySet()) {
-
+            JSONArray unconfirmedAssetBalances = new JSONArray();
+            for (Account.AccountAsset accountAsset : accountAssets) {
                 JSONObject assetBalance = new JSONObject();
-                assetBalance.put("asset", Convert.toUnsignedLong(assetBalanceEntry.getKey()));
-                assetBalance.put("balanceQNT", String.valueOf(assetBalanceEntry.getValue()));
+                assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
+                assetBalance.put("balanceQNT", String.valueOf(accountAsset.quantityQNT));
                 assetBalances.add(assetBalance);
-
+                JSONObject unconfirmedAssetBalance = new JSONObject();
+                unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
+                unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.unconfirmedQuantityQNT));
+                unconfirmedAssetBalances.add(unconfirmedAssetBalance);
             }
             if (assetBalances.size() > 0) {
                 response.put("assetBalances", assetBalances);
-            }
-
-            JSONArray unconfirmedAssetBalances = new JSONArray();
-            for (Map.Entry<Long, Long> unconfirmedAssetBalanceEntry : account.getUnconfirmedAssetBalancesQNT().entrySet()) {
-
-                JSONObject unconfirmedAssetBalance = new JSONObject();
-                unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(unconfirmedAssetBalanceEntry.getKey()));
-                unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(unconfirmedAssetBalanceEntry.getValue()));
-                unconfirmedAssetBalances.add(unconfirmedAssetBalance);
-
             }
             if (unconfirmedAssetBalances.size() > 0) {
                 response.put("unconfirmedAssetBalances", unconfirmedAssetBalances);

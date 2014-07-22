@@ -204,8 +204,8 @@ public final class DebugTrace {
         for (Long accountId : accountIds) {
             Account account = Account.getAccount(accountId);
             if (account != null) {
-                for (Long lessorId : account.getLessorIds()) {
-                    log(lessorGuaranteedBalance(lessorId, accountId));
+                for (Account lessor : account.getLessors()){
+                    log(lessorGuaranteedBalance(lessor, accountId));
                 }
             }
         }
@@ -228,10 +228,9 @@ public final class DebugTrace {
         }
     }
 
-    private Map<String,String> lessorGuaranteedBalance(Long accountId, Long lesseeId) {
+    private Map<String,String> lessorGuaranteedBalance(Account account, Long lesseeId) {
         Map<String,String> map = new HashMap<>();
-        map.put("account", Convert.toUnsignedLong(accountId));
-        Account account = Account.getAccount(accountId);
+        map.put("account", Convert.toUnsignedLong(account.getId()));
         // use 1441 instead of 1440 as at this point the newly generated block has already been pushed
         map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1441)));
         map.put("lessee", Convert.toUnsignedLong(lesseeId));

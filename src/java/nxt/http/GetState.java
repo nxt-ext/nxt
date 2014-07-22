@@ -37,6 +37,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("cumulativeDifficulty", Nxt.getBlockchain().getLastBlock().getCumulativeDifficulty().toString());
 
         long totalEffectiveBalance = 0;
+        //TODO: rewrite
         for (Account account : Account.getAllAccounts()) {
             long effectiveBalanceNXT = account.getEffectiveBalanceNXT();
             if (effectiveBalanceNXT > 0) {
@@ -47,7 +48,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
-        response.put("numberOfAccounts", Account.getAllAccounts().size());
+        response.put("numberOfAccounts", Account.getCount());
         response.put("numberOfAssets", Asset.getCount());
         response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());

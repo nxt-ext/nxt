@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.VersioningDbTable;
+import nxt.util.VersioningValuesDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -258,9 +259,73 @@ public final class DigitalGoodsStore {
                     pstmt.executeUpdate();
                 }
             }
+
         };
 
-        //TODO: add another table to store the actual feedback and public feedback
+        private static final VersioningValuesDbTable<Purchase, EncryptedData> purchaseFeedbackNotesTable = new VersioningValuesDbTable<Purchase, EncryptedData>() {
+
+            @Override
+            protected Long getId(Purchase purchase) {
+                return purchase.getId();
+            }
+
+            @Override
+            protected String table() {
+                return "purchase_feedback";
+            }
+
+            @Override
+            protected EncryptedData load(Connection con, ResultSet rs) throws SQLException {
+                byte[] data = rs.getBytes("feedback_data");
+                byte[] nonce = rs.getBytes("feedback_nonce");
+                return new EncryptedData(data, nonce);
+            }
+
+            @Override
+            protected void save(Connection con, Purchase purchase, EncryptedData encryptedData) throws SQLException {
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO purchase_feedback (id, feedback_data, feedback_nonce, "
+                        + "height, latest) VALUES (?, ?, ?, ?, TRUE)")) {
+                    int i = 0;
+                    pstmt.setLong(++i, purchase.getId());
+                    setEncryptedData(pstmt, encryptedData, ++i);
+                    ++i;
+                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                    pstmt.executeUpdate();
+                }
+            }
+
+        };
+
+        private static final VersioningValuesDbTable<Purchase, String> purchasePublicFeedbackTable = new VersioningValuesDbTable<Purchase, String>() {
+
+            @Override
+            protected Long getId(Purchase purchase) {
+                return purchase.getId();
+            }
+
+            @Override
+            protected String table() {
+                return "purchase_public_feedback";
+            }
+
+            @Override
+            protected String load(Connection con, ResultSet rs) throws SQLException {
+                return rs.getString("public_feedback");
+            }
+
+            @Override
+            protected void save(Connection con, Purchase purchase, String publicFeedback) throws SQLException {
+                try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO purchase_public_feedback (id, public_feedback, "
+                        + "height, latest) VALUES (?, ?, ?, ?, TRUE)")) {
+                    int i = 0;
+                    pstmt.setLong(++i, purchase.getId());
+                    pstmt.setString(++i, publicFeedback);
+                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                    pstmt.executeUpdate();
+                }
+            }
+
+        };
 
         private final Long id;
         private final Long buyerId;
@@ -275,7 +340,9 @@ public final class DigitalGoodsStore {
         private EncryptedData encryptedGoods;
 		private boolean goodsIsText;
         private EncryptedData refundNote;
+        private boolean hasFeedbackNotes;
         private List<EncryptedData> feedbackNotes;
+        private boolean hasPublicFeedbacks;
         private List<String> publicFeedbacks;
         private long discountNQT;
         private long refundNQT;
@@ -306,12 +373,8 @@ public final class DigitalGoodsStore {
             this.isPending = rs.getBoolean("pending");
             this.encryptedGoods = loadEncryptedData(rs, "goods", "goods_nonce");
             this.refundNote = loadEncryptedData(rs, "refund_note", "refund_nonce");
-            if (rs.getBoolean("has_feedback_notes")) {
-                this.feedbackNotes = new ArrayList<>();
-            }
-            if (rs.getBoolean("has_public_feedbacks")) {
-                this.publicFeedbacks = new ArrayList<>();
-            }
+            this.hasFeedbackNotes = rs.getBoolean("has_feedback_notes");
+            this.hasPublicFeedbacks = rs.getBoolean("has_public_feedbacks");
             this.discountNQT = rs.getLong("discount");
             this.refundNQT = rs.getLong("refund");
         }
@@ -387,6 +450,10 @@ public final class DigitalGoodsStore {
         }
 
         public List<EncryptedData> getFeedbackNotes() {
+            if (!hasFeedbackNotes) {
+                return null;
+            }
+            feedbackNotes = purchaseFeedbackNotesTable.get(id);
             return feedbackNotes;
         }
 
@@ -395,10 +462,16 @@ public final class DigitalGoodsStore {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
+            this.hasFeedbackNotes = true;
             purchaseTable.insert(this);
+            purchaseFeedbackNotesTable.insert(this, feedbackNote);
 		}
 
         public List<String> getPublicFeedback() {
+            if (!hasPublicFeedbacks) {
+                return null;
+            }
+            publicFeedbacks = purchasePublicFeedbackTable.get(id);
             return publicFeedbacks;
         }
 
@@ -407,7 +480,9 @@ public final class DigitalGoodsStore {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
+            this.hasPublicFeedbacks = true;
             purchaseTable.insert(this);
+            purchasePublicFeedbackTable.insert(this, publicFeedback);
         }
 
         public long getDiscountNQT() {
@@ -702,7 +777,7 @@ public final class DigitalGoodsStore {
 
     static void undoFeedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        // TODO: thia may not be needed
+        // TODO: this may not be needed
         /*
         if (encryptedMessage != null) {
             purchase.removeFeedbackNote();
