@@ -63,7 +63,7 @@ public abstract class PollResults<K, V> {
 
                 pstmt.setByte(++i, resultsType);
 
-                pstmt.setString(++i, pr.encodeResultsAsJson(resultsType));
+                pstmt.setString(++i, pr.encodeResultsAsJson());
                 pstmt.executeUpdate();
             }catch(NxtException.ValidationException ve){
                 throw new SQLException(ve);
@@ -126,15 +126,8 @@ public abstract class PollResults<K, V> {
         pollResultsTable.truncate();
     }
 
-    protected String encodeResultsAsJson(byte resultsType) throws NxtException.ValidationException {
-        switch(resultsType){
-            case BINARY_RESULTS:
-                return JSONObject.toJSONString(results);
-            case CHOICE_RESULTS:
-                return JSONObject.toJSONString(results);
-            default:
-                throw new NxtException.ValidationException("Wrong kind of results");
-        }
+    protected String encodeResultsAsJson() throws NxtException.ValidationException {
+        return JSONObject.toJSONString(results);
     }
 
     protected Map<K,V> decodeResultsFromJson(String json) throws NxtException.ValidationException{

@@ -308,8 +308,7 @@ public final class Poll {
             case OPTION_MODEL_BINARY:
                 final Map<String, Pair.YesNoCounts> pr2 = new HashMap<>();
                 for (int idx = 0; idx < results.length; idx++) {
-                    Pair.YesNoCounts yn = new Pair.YesNoCounts(results[idx][1], results[idx][0]);
-                    pr2.put(options[idx], yn);
+                    pr2.put(options[idx], new Pair.YesNoCounts(results[idx][1], results[idx][0]));
                 }
                 pollResults = new PollResults.Binary(getId(), pr2);
                 break;
