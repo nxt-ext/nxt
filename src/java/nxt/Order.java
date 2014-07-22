@@ -34,10 +34,7 @@ public abstract class Order {
                     && askOrder.getId() < bidOrder.getId())
                     ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
 
-            Block lastBlock=Nxt.getBlockchain().getLastBlock();
-            int timestamp=lastBlock.getTimestamp();
-            
-            Trade.addTrade(assetId, timestamp, lastBlock.getHeight(), lastBlock.getId(), askOrder.getId(), bidOrder.getId(), quantityQNT, priceNQT);
+            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder.getId(), bidOrder.getId(), quantityQNT, priceNQT);
 
             askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), quantityQNT));
             Account askAccount = Account.getAccount(askOrder.getAccountId());

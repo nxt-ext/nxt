@@ -28,15 +28,7 @@ public final class Trade {
 
         @Override
         protected Trade load(Connection con, ResultSet rs) throws SQLException {
-            Long assetId = rs.getLong("asset_id");
-            Long blockId = rs.getLong("block_id");
-            Long askOrderId = rs.getLong("ask_order_id");
-            Long bidOrderId = rs.getLong("bid_order_id");
-            long quantityQNT = rs.getLong("quantity");
-            long priceNQT = rs.getLong("price");
-            int timestamp = rs.getInt("timestamp");
-            int height = rs.getInt("height");
-            return new Trade(blockId, timestamp, height, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
+            return new Trade(rs);
         }
 
         @Override
@@ -88,8 +80,8 @@ public final class Trade {
         return tradeTable.getManyBy("asset_id", assetId);
     }
 
-    static void addTrade(Long assetId, int timestamp, int height, Long blockId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
-        Trade trade = new Trade(blockId, timestamp, height, assetId, askOrderId, bidOrderId, quantityQNT, priceNQT);
+    static void addTrade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
+        Trade trade = new Trade(assetId, block, askOrderId, bidOrderId, quantityQNT, priceNQT);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
     }
@@ -106,17 +98,26 @@ public final class Trade {
     private final long quantityQNT;
     private final long priceNQT;
 
-    private Trade(Long blockId, int timestamp, int height, Long assetId, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
-
-        this.blockId = blockId;
-        this.height = height;
+    private Trade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
+        this.blockId = block.getId();
+        this.height = block.getHeight();
         this.assetId = assetId;
-        this.timestamp = timestamp;
+        this.timestamp = block.getTimestamp();
         this.askOrderId = askOrderId;
         this.bidOrderId = bidOrderId;
         this.quantityQNT = quantityQNT;
         this.priceNQT = priceNQT;
+    }
 
+    private Trade(ResultSet rs) throws SQLException {
+        this.assetId = rs.getLong("asset_id");
+        this.blockId = rs.getLong("block_id");
+        this.askOrderId = rs.getLong("ask_order_id");
+        this.bidOrderId = rs.getLong("bid_order_id");
+        this.quantityQNT = rs.getLong("quantity");
+        this.priceNQT = rs.getLong("price");
+        this.timestamp = rs.getInt("timestamp");
+        this.height = rs.getInt("height");
     }
 
     public Long getBlockId() { return blockId; }

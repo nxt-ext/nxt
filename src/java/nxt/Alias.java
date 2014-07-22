@@ -22,6 +22,12 @@ public final class Alias {
             this.aliasId = aliasId;
         }
 
+        private Offer(ResultSet rs) throws SQLException {
+            this.aliasId = rs.getLong("id");
+            this.priceNQT = rs.getLong("price");
+            this.buyerId  = rs.getLong("buyer_id");
+        }
+
         public Long getId() {
             return aliasId;
         }
@@ -85,10 +91,7 @@ public final class Alias {
 
         @Override
         protected Offer load(Connection con, ResultSet rs) throws SQLException {
-            Long aliasId = rs.getLong("id");
-            long priceNQT = rs.getLong("price");
-            Long buyerId  = rs.getLong("buyer_id");
-            return new Offer(aliasId, priceNQT, buyerId);
+            return new Offer(rs);
         }
 
         @Override
