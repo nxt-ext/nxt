@@ -16,13 +16,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetState extends APIServlet.APIRequestHandler {
 
     static final GetState instance = new GetState();
 
-    private GetState() {}
+    private GetState() {
+        super(new APITag[] {APITag.INFO});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
@@ -47,16 +48,12 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfBlocks", Nxt.getBlockchain().getHeight() + 1);
         response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
         response.put("numberOfAccounts", Account.getAllAccounts().size());
-        response.put("numberOfAssets", Asset.getAllAssets().size());
-        response.put("numberOfOrders", Order.Ask.getAllAskOrders().size() + Order.Bid.getAllBidOrders().size());
-        int numberOfTrades = 0;
-        for (List<Trade> assetTrades : Trade.getAllTrades()) {
-            numberOfTrades += assetTrades.size();
-        }
-        response.put("numberOfTrades", numberOfTrades);
-        response.put("numberOfAliases", Alias.getAllAliases().size());
+        response.put("numberOfAssets", Asset.getCount());
+        response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
+        response.put("numberOfTrades", Trade.getCount());
+        response.put("numberOfAliases", Alias.getCount());
         response.put("numberOfPolls", Poll.getAllPolls().size());
-        response.put("numberOfVotes", Vote.getVotes().size());
+        response.put("numberOfVotes", Vote.getCount());
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         Peer lastBlockchainFeeder = Nxt.getBlockchainProcessor().getLastBlockchainFeeder();

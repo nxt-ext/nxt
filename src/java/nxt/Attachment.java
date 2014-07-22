@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
@@ -17,6 +18,47 @@ public interface Attachment {
 
     TransactionType getTransactionType();
 
+    public final static class PaymentMessage implements Attachment {
+
+        private final EncryptedData encryptedMessage;
+
+        public PaymentMessage(EncryptedData encryptedMessage) {
+            this.encryptedMessage = encryptedMessage;
+        }
+
+        @Override
+        public int getSize() {
+            return 2 + encryptedMessage.getData().length + encryptedMessage.getNonce().length;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            ByteBuffer buffer = ByteBuffer.allocate(getSize());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            buffer.putShort((short)encryptedMessage.getData().length);
+            buffer.put(encryptedMessage.getData());
+            buffer.put(encryptedMessage.getNonce());
+            return buffer.array();
+        }
+
+        @Override
+        public JSONObject getJSONObject() {
+            JSONObject attachment = new JSONObject();
+            attachment.put("message", Convert.toHexString(encryptedMessage.getData()));
+            attachment.put("nonce", Convert.toHexString(encryptedMessage.getNonce()));
+            return attachment;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Payment.WITH_MESSAGE;
+        }
+
+        public EncryptedData getEncryptedMessage() {
+            return encryptedMessage;
+        }
+
+    }
 
     public final static class MessagingArbitraryMessage implements Attachment {
 
@@ -181,6 +223,7 @@ public interface Attachment {
         }
 
         @Override
+        //todo: fix ???
         public byte[] getBytes() {
             byte[] aliasBytes = Convert.toBytes(aliasName);
 
@@ -228,6 +271,7 @@ public interface Attachment {
         }
 
         @Override
+        //todo: fix ???
         public byte[] getBytes() {
             byte[] aliasBytes = Convert.toBytes(aliasName);
 
@@ -639,10 +683,12 @@ public interface Attachment {
         private final byte decimals;
 
         public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
+
             this.name = name;
             this.description = Convert.nullToEmpty(description);
             this.quantityQNT = quantityQNT;
             this.decimals = decimals;
+
         }
 
         @Override

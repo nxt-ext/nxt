@@ -220,17 +220,14 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp) {
-        return getTransactions(account, type, subtype, timestamp, Boolean.TRUE);
+        return getTransactions(account, type, subtype, timestamp, 0, -1);
     }
 
-    @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending) {
+        @Override
+    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp, int from, int to) {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
-            if (orderAscending != null) {
-                buf.append("SELECT * FROM (");
-            }
             buf.append("SELECT * FROM transaction WHERE recipient_id = ? ");
             if (timestamp > 0) {
                 buf.append("AND timestamp >= ? ");
@@ -241,7 +238,7 @@ final class BlockchainImpl implements Blockchain {
                     buf.append("AND subtype = ? ");
                 }
             }
-            buf.append("UNION SELECT * FROM transaction WHERE sender_id = ? ");
+            buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? AND recipient_id <> ? ");
             if (timestamp > 0) {
                 buf.append("AND timestamp >= ? ");
             }
@@ -251,10 +248,12 @@ final class BlockchainImpl implements Blockchain {
                     buf.append("AND subtype = ? ");
                 }
             }
-            if (Boolean.TRUE.equals(orderAscending)) {
-                buf.append(") ORDER BY timestamp ASC");
-            } else if (Boolean.FALSE.equals(orderAscending)) {
-                buf.append(") ORDER BY timestamp DESC");
+            buf.append("ORDER BY timestamp DESC");
+            if (to >= from && to < Integer.MAX_VALUE) {
+                buf.append(" LIMIT " + (to - from + 1));
+            }
+            if (from > 0) {
+                buf.append(" OFFSET " + from);
             }
             con = Db.getConnection();
             PreparedStatement pstmt;
@@ -270,6 +269,7 @@ final class BlockchainImpl implements Blockchain {
                     pstmt.setByte(++i, subtype);
                 }
             }
+            pstmt.setLong(++i, account.getId());
             pstmt.setLong(++i, account.getId());
             if (timestamp > 0) {
                 pstmt.setInt(++i, timestamp);

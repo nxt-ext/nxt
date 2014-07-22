@@ -8,14 +8,13 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
-import java.util.List;
 
 public final class GetAllTrades extends APIServlet.APIRequestHandler {
 
     static final GetAllTrades instance = new GetAllTrades();
 
     private GetAllTrades() {
-        super("timestamp");
+        super(new APITag[] {APITag.AE}, "timestamp");
     }
     
     @Override
@@ -23,12 +22,10 @@ public final class GetAllTrades extends APIServlet.APIRequestHandler {
         int timestamp = ParameterParser.getTimestamp(req);
         JSONObject response = new JSONObject();
         JSONArray tradesData = new JSONArray();
-        Collection<List<Trade>> trades = Trade.getAllTrades();
-        for (List<Trade> assetTrades : trades) {
-            for (Trade trade : assetTrades) {
-                if (trade.getTimestamp() >= timestamp) {
-                    tradesData.add(JSONData.trade(trade));
-                }
+        Collection<Trade> trades = Trade.getAllTrades();
+        for (Trade trade : trades) {
+            if (trade.getTimestamp() >= timestamp) {
+                tradesData.add(JSONData.trade(trade));
             }
         }
         response.put("trades", tradesData);

@@ -16,7 +16,7 @@ public final class BuyAlias extends CreateTransaction {
     static final BuyAlias instance = new BuyAlias();
 
     private BuyAlias() {
-        super("alias", "aliasName", "priceNQT");
+        super(new APITag[] {APITag.ALIASES, APITag.CREATE_TRANSACTION}, "alias", "aliasName", "priceNQT");
     }
 
     @Override
@@ -24,7 +24,7 @@ public final class BuyAlias extends CreateTransaction {
         Account buyer = ParameterParser.getSenderAccount(req);
         Alias alias = ParameterParser.getAlias(req);
         long priceNQT = ParameterParser.getPriceNQT(req);
-        if (Alias.getOffer(alias.getAliasName()) == null) {
+        if (Alias.getOffer(alias) == null) {
             return INCORRECT_ALIAS_NOTFORSALE;
         }
         Long sellerId = alias.getAccountId();

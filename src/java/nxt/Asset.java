@@ -1,58 +1,79 @@
 package nxt;
 
-import nxt.util.Convert;
+import nxt.util.DbTable;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class Asset {
 
-    private static final ConcurrentMap<Long, Asset> assets = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<Long, List<Asset>> accountAssets = new ConcurrentHashMap<>();
-    private static final Collection<Asset> allAssets = Collections.unmodifiableCollection(assets.values());
+    private static final DbTable<Asset> assetTable = new DbTable<Asset>() {
+
+        @Override
+        protected String table() {
+            return "asset";
+        }
+
+        @Override
+        protected Asset load(Connection con, ResultSet rs) throws SQLException {
+            return new Asset(rs);
+        }
+
+        @Override
+        protected void save(Connection con, Asset asset) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
+                    + "description, quantity, decimals) VALUES (?, ?, ?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, asset.getId());
+                pstmt.setLong(++i, asset.getAccountId());
+                pstmt.setString(++i, asset.getName());
+                pstmt.setString(++i, asset.getDescription());
+                pstmt.setLong(++i, asset.getQuantityQNT());
+                pstmt.setByte(++i, asset.getDecimals());
+                pstmt.executeUpdate();
+            }
+        }
+
+        @Override
+        protected void delete(Connection con, Asset asset) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM asset WHERE id = ?")) {
+                pstmt.setLong(1, asset.getId());
+                pstmt.executeUpdate();
+            }
+        }
+
+    };
 
     public static Collection<Asset> getAllAssets() {
-        return allAssets;
+        return assetTable.getAll();
+    }
+
+    public static int getCount() {
+        return assetTable.getCount();
     }
 
     public static Asset getAsset(Long id) {
-        return assets.get(id);
+        return assetTable.get(id);
     }
 
     public static List<Asset> getAssetsIssuedBy(Long accountId) {
-        List<Asset> assets = accountAssets.get(accountId);
-        if (assets == null) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(assets);
+        return assetTable.getManyBy("account_id", accountId);
     }
 
-    static void addAsset(Long assetId, Long senderAccountId, String name, String description, long quantityQNT, byte decimals) {
-        Asset asset = new Asset(assetId, senderAccountId, name, description, quantityQNT, decimals);
-        if (Asset.assets.putIfAbsent(assetId, asset) != null) {
-            throw new IllegalStateException("Asset with id " + Convert.toUnsignedLong(assetId) + " already exists");
-        }
-        List<Asset> accountAssetsList = accountAssets.get(senderAccountId);
-        if (accountAssetsList == null) {
-            accountAssetsList = new CopyOnWriteArrayList<>();
-            accountAssets.put(senderAccountId, accountAssetsList);
-        }
-        accountAssetsList.add(asset);
+    static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
+        assetTable.insert(new Asset(transaction, attachment));
     }
 
     static void removeAsset(Long assetId) {
-        Asset asset = Asset.assets.remove(assetId);
-        List<Asset> accountAssetList = accountAssets.get(asset.getAccountId());
-        accountAssetList.remove(asset);
+        assetTable.delete(getAsset(assetId));
     }
 
     static void clear() {
-        Asset.assets.clear();
-        Asset.accountAssets.clear();
+        assetTable.truncate();
     }
 
     private final Long assetId;
@@ -62,13 +83,22 @@ public final class Asset {
     private final long quantityQNT;
     private final byte decimals;
 
-    private Asset(Long assetId, Long accountId, String name, String description, long quantityQNT, byte decimals) {
-        this.assetId = assetId;
-        this.accountId = accountId;
-        this.name = name;
-        this.description = description;
-        this.quantityQNT = quantityQNT;
-        this.decimals = decimals;
+    private Asset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
+        this.assetId = transaction.getId();
+        this.accountId = transaction.getSenderId();
+        this.name = attachment.getName();
+        this.description = attachment.getDescription();
+        this.quantityQNT = attachment.getQuantityQNT();
+        this.decimals = attachment.getDecimals();
+    }
+
+    private Asset(ResultSet rs) throws SQLException {
+        this.assetId = rs.getLong("id");
+        this.accountId = rs.getLong("account_id");
+        this.name = rs.getString("name");
+        this.description = rs.getString("description");
+        this.quantityQNT = rs.getLong("quantity");
+        this.decimals = rs.getByte("decimals");
     }
 
     public Long getId() {

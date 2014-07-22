@@ -15,7 +15,7 @@ public final class SendEncryptedNote extends CreateTransaction {
     static final SendEncryptedNote instance = new SendEncryptedNote();
 
     private SendEncryptedNote() {
-        super("recipient", "note", "encryptedNote", "encryptedNoteNonce");
+        super(new APITag[] {APITag.MESSAGES, APITag.CREATE_TRANSACTION}, "recipient", "note", "encryptedNote", "encryptedNoteNonce");
     }
 
     @Override

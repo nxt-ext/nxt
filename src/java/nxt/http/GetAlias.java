@@ -10,7 +10,7 @@ public final class GetAlias extends APIServlet.APIRequestHandler {
     static final GetAlias instance = new GetAlias();
 
     private GetAlias() {
-        super("alias", "aliasName");
+        super(new APITag[] {APITag.ALIASES}, "alias", "aliasName");
     }
 
     @Override

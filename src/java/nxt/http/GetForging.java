@@ -20,7 +20,7 @@ public final class GetForging extends APIServlet.APIRequestHandler {
     static final GetForging instance = new GetForging();
 
     private GetForging() {
-        super("secretPhrase");
+        super(new APITag[] {APITag.FORGING}, "secretPhrase");
     }
 
     @Override

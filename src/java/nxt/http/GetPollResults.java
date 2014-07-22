@@ -1,7 +1,7 @@
 package nxt.http;
 
 
-import nxt.Poll;
+import nxt.PollResults;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -13,7 +13,7 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
     static final GetPollResults instance = new GetPollResults();
 
     private GetPollResults() {
-        super("poll");
+        super(new APITag[] {APITag.VS}, "poll");
     }
 
     @Override
@@ -24,9 +24,9 @@ public class GetPollResults extends APIServlet.APIRequestHandler {
             return MISSING_POLL;
         }
 
-        Poll.PollResults pollResults;
+        PollResults pollResults;
         try {
-            pollResults = Poll.getPollResults(Convert.parseUnsignedLong(pollId));
+            pollResults = PollResults.get(Convert.parseUnsignedLong(pollId));
 
             if (pollResults == null) {
                 return UNKNOWN_POLL_RESULTS;

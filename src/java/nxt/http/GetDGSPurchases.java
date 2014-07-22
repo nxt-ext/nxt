@@ -14,7 +14,7 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
     static final GetDGSPurchases instance = new GetDGSPurchases();
 
     private GetDGSPurchases() {
-        super("seller", "buyer", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.DGS}, "seller", "buyer", "firstIndex", "lastIndex", "completed");
     }
 
     @Override
@@ -24,6 +24,8 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         Long buyerId = ParameterParser.getBuyerId(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
+
 
         JSONObject response = new JSONObject();
         JSONArray purchasesJSON = new JSONArray();
@@ -31,8 +33,16 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
 
         if (sellerId == null && buyerId == null) {
             DigitalGoodsStore.Purchase[] purchases = DigitalGoodsStore.getAllPurchases().toArray(new DigitalGoodsStore.Purchase[0]);
-            for (int i = firstIndex; i <= lastIndex && i < purchases.length; i++) {
+            for (int i = 0, count = 0; count - 1 <= lastIndex && i < purchases.length; i++) {
+                if (completed && purchases[purchases.length - 1 - i].isPending()) {
+                    continue;
+                }
+                if (count < firstIndex) {
+                    count++;
+                    continue;
+                }
                 purchasesJSON.add(JSONData.purchase(purchases[purchases.length - 1 - i]));
+                count++;
             }
             return response;
         }
@@ -45,15 +55,18 @@ public final class GetDGSPurchases extends APIServlet.APIRequestHandler {
         } else {
             purchases = DigitalGoodsStore.getSellerBuyerPurchases(sellerId, buyerId);
         }
-        int i = 0;
+        int count = 0;
         for (DigitalGoodsStore.Purchase purchase : purchases) {
-            if (i > lastIndex) {
+            if (count > lastIndex) {
                 break;
             }
-            if (i >= firstIndex) {
+            if (count >= firstIndex) {
+                if (completed && purchase.isPending()) {
+                    continue;
+                }
                 purchasesJSON.add(JSONData.purchase(purchase));
             }
-            i++;
+            count++;
         }
         return response;
     }

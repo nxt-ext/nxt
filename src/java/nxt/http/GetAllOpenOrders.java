@@ -12,6 +12,10 @@ public final class GetAllOpenOrders extends APIServlet.APIRequestHandler {
 
     static final GetAllOpenOrders instance = new GetAllOpenOrders();
 
+    private GetAllOpenOrders() {
+        super(new APITag[] {APITag.AE});
+    }
+
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
 
@@ -19,8 +23,8 @@ public final class GetAllOpenOrders extends APIServlet.APIRequestHandler {
         JSONArray ordersData = new JSONArray();
 
         try {
-            Collection<Order.Ask> askOrders = Order.Ask.getAllAskOrders();
-            Collection<Order.Bid> bidOrders = Order.Bid.getAllBidOrders();
+            Collection<Order.Ask> askOrders = Order.Ask.getAll();
+            Collection<Order.Bid> bidOrders = Order.Bid.getAll();
 
             for (Order.Ask order : askOrders) {
                 ordersData.add(JSONData.askOrder(order));

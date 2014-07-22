@@ -15,7 +15,7 @@ public final class CancelAskOrder extends CreateTransaction {
     static final CancelAskOrder instance = new CancelAskOrder();
 
     private CancelAskOrder() {
-        super("order");
+        super(new APITag[] {APITag.AE, APITag.CREATE_TRANSACTION}, "order");
     }
 
     @Override
@@ -23,7 +23,7 @@ public final class CancelAskOrder extends CreateTransaction {
         Long orderId = ParameterParser.getOrderId(req);
         Account account = ParameterParser.getSenderAccount(req);
         Order.Ask orderData = Order.Ask.getAskOrder(orderId);
-        if (orderData == null || !orderData.getAccount().getId().equals(account.getId())) {
+        if (orderData == null || !orderData.getAccountId().equals(account.getId())) {
             return UNKNOWN_ORDER;
         }
         Attachment attachment = new Attachment.ColoredCoinsAskOrderCancellation(orderId);

@@ -34,7 +34,6 @@ final class PeerDb {
                 pstmt.setString(1, peer);
                 pstmt.executeUpdate();
             }
-            con.commit();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -47,7 +46,6 @@ final class PeerDb {
                 pstmt.setString(1, peer);
                 pstmt.executeUpdate();
             }
-            con.commit();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

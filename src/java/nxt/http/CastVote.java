@@ -17,7 +17,7 @@ public final class CastVote extends CreateTransaction {
     static final CastVote instance = new CastVote();
 
     private CastVote() {
-        super("poll", "vote1", "vote2", "vote3"); // hardcoded to 3 votes for testing  todo: fix ??
+        super(new APITag[] {APITag.VS, APITag.CREATE_TRANSACTION}, "poll", "vote1", "vote2", "vote3"); // hardcoded to 3 votes for testing  todo: fix ??
     }
 
     @Override
@@ -33,7 +33,7 @@ public final class CastVote extends CreateTransaction {
         try {
             long pollId = Convert.parseUnsignedLong(pollValue);
             poll = Poll.getPoll(pollId);
-            if (poll == null || !Poll.isPollActive(pollId)) {
+            if (poll == null || !Poll.isActive(pollId)) {
                 return INCORRECT_POLL;
             }
         } catch (RuntimeException e) {

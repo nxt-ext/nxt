@@ -7,13 +7,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHandler {
 
     static final GetAccountCurrentBidOrderIds instance = new GetAccountCurrentBidOrderIds();
 
     private GetAccountCurrentBidOrderIds() {
-        super("account", "asset");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.AE}, "account", "asset");
     }
 
     @Override
@@ -24,14 +25,18 @@ public final class GetAccountCurrentBidOrderIds extends APIServlet.APIRequestHan
         try {
             assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
         } catch (RuntimeException e) {
-            // ignored
+            // ignore
         }
 
+        List<Order.Bid> bidOrders;
+        if (assetId == null) {
+            bidOrders = Order.Bid.getBidOrdersByAccount(accountId);
+        } else {
+            bidOrders = Order.Bid.getBidOrdersByAccountAsset(accountId, assetId);
+        }
         JSONArray orderIds = new JSONArray();
-        for (Order.Bid bidOrder : Order.Bid.getAllBidOrders()) {
-            if ((assetId == null || bidOrder.getAssetId().equals(assetId)) && bidOrder.getAccount().getId().equals(accountId)) {
-                orderIds.add(Convert.toUnsignedLong(bidOrder.getId()));
-            }
+        for (Order.Bid bidOrder : bidOrders) {
+            orderIds.add(Convert.toUnsignedLong(bidOrder.getId()));
         }
 
         JSONObject response = new JSONObject();

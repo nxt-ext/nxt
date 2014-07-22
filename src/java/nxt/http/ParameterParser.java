@@ -320,7 +320,7 @@ final class ParameterParser {
     static Long getSellerId(HttpServletRequest req) throws ParameterException {
         String sellerIdValue = Convert.emptyToNull(req.getParameter("seller"));
         try {
-            return Convert.parseUnsignedLong(sellerIdValue);
+            return Convert.parseAccountId(sellerIdValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }
@@ -329,7 +329,7 @@ final class ParameterParser {
     static Long getBuyerId(HttpServletRequest req) throws ParameterException {
         String buyerIdValue = Convert.emptyToNull(req.getParameter("buyer"));
         try {
-            return Convert.parseUnsignedLong(buyerIdValue);
+            return Convert.parseAccountId(buyerIdValue);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_RECIPIENT);
         }

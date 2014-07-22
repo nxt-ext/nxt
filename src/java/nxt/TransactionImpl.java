@@ -373,6 +373,9 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
+        if (! type.hasRecipient() && (! Genesis.CREATOR_ID.equals(recipientId) || getAmountNQT() != 0)) {
+            throw new NxtException.ValidationException("Transactions of this type must have recipient == Genesis and amount == 0");
+        }
         type.validateAttachment(this);
     }
 
@@ -410,6 +413,7 @@ final class TransactionImpl implements Transaction {
         type.undo(this, senderAccount, recipientAccount);
     }
 
+    /*
     void updateTotals(Map<Long,Long> accumulatedAmounts, Map<Long,Map<Long,Long>> accumulatedAssetQuantities) {
         Long senderId = getSenderId();
         Long accumulatedAmount = accumulatedAmounts.get(senderId);
@@ -419,6 +423,7 @@ final class TransactionImpl implements Transaction {
         accumulatedAmounts.put(senderId, Convert.safeAdd(accumulatedAmount, Convert.safeAdd(amountNQT, feeNQT)));
         type.updateTotals(this, accumulatedAmounts, accumulatedAssetQuantities, accumulatedAmount);
     }
+    */
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
         return type.isDuplicate(this, duplicates);

@@ -129,6 +129,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
     public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
+    public static final JSONStreamAware MISSING_NOTE = missing("note");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -216,6 +217,14 @@ public final class JSONResponses {
         response.put("errorCode", 8);
         response.put("errorDescription", "Feedback already sent");
         DUPLICATE_FEEDBACK = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware GOODS_NOT_DELIVERED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Goods have not been delivered yet");
+        GOODS_NOT_DELIVERED = JSON.prepare(response);
     }
 
     private static JSONStreamAware missing(String... paramNames) {

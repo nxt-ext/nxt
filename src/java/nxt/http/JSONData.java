@@ -1,21 +1,11 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
-import nxt.Attachment;
-import nxt.Block;
-import nxt.DigitalGoodsStore;
-import nxt.Nxt;
-import nxt.Order;
-import nxt.Poll;
-import nxt.Token;
-import nxt.Trade;
-import nxt.Transaction;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
+import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -32,7 +22,7 @@ final class JSONData {
         json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
         json.put("alias", Convert.toUnsignedLong(alias.getId()));
-        Alias.Offer offer = Alias.getOffer(alias.getAliasName());
+        Alias.Offer offer = Alias.getOffer(alias);
         if (offer != null) {
             json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
             json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
@@ -89,8 +79,8 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("order", Convert.toUnsignedLong(order.getId()));
         json.put("asset", Convert.toUnsignedLong(order.getAssetId()));
-        json.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
-        json.put("accountRS", Convert.rsAccount(order.getAccount().getId()));
+        json.put("account", Convert.toUnsignedLong(order.getAccountId()));
+        json.put("accountRS", Convert.rsAccount(order.getAccountId()));
         json.put("quantityQNT", String.valueOf(order.getQuantityQNT()));
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
         json.put("height", order.getHeight());
@@ -209,29 +199,29 @@ final class JSONData {
         }
 
         JSONArray voters = new JSONArray();
-        for (Long voterId : poll.getVoters().keySet()) {
+        for (Long voterId : poll.getVoters()) {
             voters.add(Convert.toUnsignedLong(voterId));
         }
         json.put("voters", voters);
         return json;
     }
 
-    static JSONObject pollResults(Poll.PollResults pollResults) {
+    static JSONObject pollResults(PollResults pollResults) {
         JSONObject json = new JSONObject();
         json.put("pollId", Convert.toUnsignedLong(pollResults.getPollId()));
 
         JSONObject choices = new JSONObject();
-        if(pollResults instanceof Poll.ChoicePollResults){
+        if(pollResults instanceof PollResults.Choice){
             json.put("resultsType","choice");
-            for(Map.Entry<String,Long> entry : ((Poll.ChoicePollResults) pollResults).getResults().entrySet()){
+            for(Map.Entry<String,Long> entry : ((PollResults.Choice) pollResults).getResults().entrySet()){
                 choices.put(entry.getKey(), entry.getValue());
             }
-        }else if(pollResults instanceof Poll.BinaryPollResults){
+        }else if(pollResults instanceof PollResults.Binary){
             json.put("resultsType","binary");
-            for(Map.Entry<String,long[]> entry : ((Poll.BinaryPollResults) pollResults).getResults().entrySet()){
+            for(Map.Entry<String,Pair.YesNoCounts> entry : ((PollResults.Binary) pollResults).getResults().entrySet()){
                 JSONObject yesNo = new JSONObject();
-                yesNo.put("yes", entry.getValue()[1]);
-                yesNo.put("no", entry.getValue()[0]);
+                yesNo.put("yes", entry.getValue().getYes());
+                yesNo.put("no", entry.getValue().getNo());
                 choices.put(entry.getKey(), yesNo);
             }
         }
@@ -244,6 +234,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
         json.put("goods", Convert.toUnsignedLong(purchase.getGoodsId()));
+        json.put("name", purchase.getName());
         json.put("seller", Convert.toUnsignedLong(purchase.getSellerId()));
         json.put("sellerRS", Convert.rsAccount(purchase.getSellerId()));
         json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));
@@ -285,6 +276,7 @@ final class JSONData {
         json.put("askOrder", Convert.toUnsignedLong(trade.getAskOrderId()));
         json.put("bidOrder", Convert.toUnsignedLong(trade.getBidOrderId()));
         json.put("block", Convert.toUnsignedLong(trade.getBlockId()));
+        json.put("height", trade.getHeight());
         return json;
     }
 
@@ -336,6 +328,14 @@ final class JSONData {
         Long priceNQT = (Long) json.remove("priceNQT");
         if (priceNQT != null) {
             json.put("priceNQT", String.valueOf(priceNQT));
+        }
+        Long discountNQT = (Long) json.remove("discountNQT");
+        if (discountNQT != null) {
+            json.put("discountNQT", String.valueOf(discountNQT));
+        }
+        Long refundNQT = (Long) json.remove("refundNQT");
+        if (refundNQT != null) {
+            json.put("refundNQT", String.valueOf(refundNQT));
         }
         return json;
     }

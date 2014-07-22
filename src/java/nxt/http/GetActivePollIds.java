@@ -12,7 +12,9 @@ public class GetActivePollIds extends APIServlet.APIRequestHandler {
 
     static final GetActivePollIds instance = new GetActivePollIds();
 
-    private GetActivePollIds() {}
+    private GetActivePollIds() {
+        super(new APITag[] {APITag.VS});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

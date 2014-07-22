@@ -16,8 +16,10 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
@@ -28,13 +30,19 @@ public final class APIServlet extends HttpServlet {
     abstract static class APIRequestHandler {
 
         private final List<String> parameters;
+        private final Set<APITag> apiTags;
 
-        APIRequestHandler(String... parameters) {
+        APIRequestHandler(APITag[] apiTags, String... parameters) {
             this.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+            this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
         }
 
         final List<String> getParameters() {
             return parameters;
+        }
+
+        final Set<APITag> getAPITags() {
+            return apiTags;
         }
 
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
@@ -77,6 +85,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountId", GetAccountId.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
+        map.put("getAccountTransactions", GetAccountTransactions.instance);
         map.put("getActivePollIds", GetActivePollIds.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
@@ -136,6 +145,7 @@ public final class APIServlet extends HttpServlet {
         map.put("sendEncryptedNote", SendEncryptedNote.instance);
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
+        map.put("sendMoneyWithMessage", SendMoneyWithMessage.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
         map.put("setAlias", SetAlias.instance);
         map.put("signTransaction", SignTransaction.instance);

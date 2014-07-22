@@ -5,7 +5,6 @@ import nxt.Attachment;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.TransactionType;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -23,7 +22,7 @@ public final class ReadEncryptedNote extends APIServlet.APIRequestHandler {
     static final ReadEncryptedNote instance = new ReadEncryptedNote();
 
     private ReadEncryptedNote() {
-        super("transaction", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase");
     }
 
     @Override

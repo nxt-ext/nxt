@@ -301,6 +301,7 @@ final class BlockImpl implements Block {
 
     boolean verifyGenerationSignature() throws BlockchainProcessor.BlockOutOfOrderException {
 
+        //kushti: comment below to have fast block generation with any balance
         try {
 
             BlockImpl previousBlock = (BlockImpl)Nxt.getBlockchain().getBlock(this.previousBlockId);
@@ -343,9 +344,7 @@ final class BlockImpl implements Block {
 
             Logger.logMessage("Error verifying block generation signature", e);
             return false;
-
         }
-
     }
 
     void apply() {

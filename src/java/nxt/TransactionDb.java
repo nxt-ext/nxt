@@ -81,6 +81,9 @@ final class TransactionDb {
             short deadline = rs.getShort("deadline");
             byte[] senderPublicKey = rs.getBytes("sender_public_key");
             Long recipientId = rs.getLong("recipient_id");
+            if (rs.wasNull()) {
+                recipientId = Genesis.CREATOR_ID;
+            }
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
@@ -99,7 +102,7 @@ final class TransactionDb {
             if (attachmentBytes != null) {
                 ByteBuffer buffer = ByteBuffer.wrap(attachmentBytes);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                transactionType.doLoadAttachment(transaction, buffer); // this does not do validate
+                transactionType.loadAttachment(transaction, buffer); // this does not do validate
             }
             return transaction;
         } catch (SQLException e) {
@@ -137,7 +140,11 @@ final class TransactionDb {
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
                     pstmt.setBytes(++i, transaction.getSenderPublicKey());
-                    pstmt.setLong(++i, transaction.getRecipientId());
+                    if (transaction.getType().hasRecipient()) {
+                        pstmt.setLong(++i, transaction.getRecipientId());
+                    } else {
+                        pstmt.setNull(++i, Types.BIGINT);
+                    }
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
                     if (transaction.getReferencedTransactionFullHash() != null) {

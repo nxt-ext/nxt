@@ -167,6 +167,8 @@ public final class Generator {
         if (account == null) {
             return;
         }
+
+        //kushti: comment here to have fast block generation with any balance
         long effectiveBalance = account.getEffectiveBalanceNXT();
         if (effectiveBalance <= 0) {
             return;
@@ -200,7 +202,6 @@ public final class Generator {
                 BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
             }
         }
-
     }
 
 }

@@ -12,7 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 public class GetFinishedPollIds extends APIServlet.APIRequestHandler {
     static final GetFinishedPollIds instance = new GetFinishedPollIds();
 
-    private GetFinishedPollIds() {}
+    private GetFinishedPollIds() {
+        super(new APITag[] {APITag.AE});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
