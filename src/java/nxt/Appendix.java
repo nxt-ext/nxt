@@ -59,11 +59,11 @@ public interface Appendix {
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
             json.put("version", version);
-            putJSON(json);
+            putMyJSON(json);
             return json;
         }
 
-        abstract void putJSON(JSONObject json);
+        abstract void putMyJSON(JSONObject json);
 
         @Override
         public final byte getVersion() {
@@ -138,7 +138,7 @@ public interface Appendix {
         }
 
         @Override
-        void putJSON(JSONObject json) {
+        void putMyJSON(JSONObject json) {
             json.put("message", isText ? Convert.toString(message) : Convert.toHexString(message));
             json.put("messageIsText", isText);
         }
@@ -208,7 +208,7 @@ public interface Appendix {
         }
 
         @Override
-        void putJSON(JSONObject json) {
+        void putMyJSON(JSONObject json) {
             JSONObject encryptedMessageJSON = new JSONObject();
             encryptedMessageJSON.put("data", Convert.toHexString(encryptedData.getData()));
             encryptedMessageJSON.put("nonce", Convert.toHexString(encryptedData.getNonce()));
