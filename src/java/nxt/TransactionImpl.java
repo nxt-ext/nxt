@@ -444,16 +444,16 @@ final class TransactionImpl implements Transaction {
         }
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, recipientId, amountNQT, feeNQT, timestamp, deadline,
-                transactionType.parseAttachment(buffer))
+                transactionType.parseAttachment(buffer, version))
                 .referencedTransactionFullHash(referencedTransactionFullHash)
                 .signature(signature);
         int position = 1;
         if ((flags & position) != 0 || transactionType == TransactionType.Messaging.ARBITRARY_MESSAGE) {
-            builder.message(new Appendix.Message(buffer));
+            builder.message(new Appendix.Message(buffer, version));
         }
         position <<= 1;
         if ((flags & position) != 0) {
-            builder.encryptedMessage(new Appendix.EncryptedMessage(buffer));
+            builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
         }
         return builder.build();
     }
@@ -521,12 +521,12 @@ final class TransactionImpl implements Transaction {
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, recipientId,
                 amountNQT, feeNQT, timestamp, deadline,
-                transactionType.parseAttachment(attachmentData))
+                transactionType.parseAttachment(attachmentData, version))
                 .referencedTransactionFullHash(referencedTransactionFullHash)
                 .signature(signature);
         if (attachmentData != null) {
-            builder.message(Appendix.Message.parse(attachmentData));
-            builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
+            builder.message(Appendix.Message.parse(attachmentData, version));
+            builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData, version));
         }
         return builder.build();
     }

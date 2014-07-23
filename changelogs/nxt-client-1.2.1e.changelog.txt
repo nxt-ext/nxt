@@ -24,7 +24,7 @@ Refresh peer info for already connected peers every hour.
 Call setReuseAddress(true) for all jetty ServerConnectors.
 
 Refactoring of transaction attachment handling. Added support for transaction
-versions and global options.
+versions and global options. Transactions will switch to version 1 at DGS block.
 
 Added Message and EncryptedMessage attachments that can be attached to any
 transaction types, and can have either text or binary content. All APIs that
@@ -34,6 +34,11 @@ new transaction types for encrypted messages or payments with messages.
 
 After DGS milestone block, Asset Transfer transactions can no longer have a
 "comment" field. Switch to using a plain text "message" attachment instead.
+
+Added transaction attachment versioning. Transactions of version 1 and later
+will have a version field in the attachment too, which allows future optional
+changes to one attachment type only, e.g. adding expiration field to asset issue
+attachment without having to add a new transaction type.
 
 This release will cause a reset of testnet, deleting most recent blocks and
 transactions.

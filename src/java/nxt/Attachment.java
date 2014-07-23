@@ -2,36 +2,33 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Collections;
 
 public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class EmptyAttachment implements Attachment {
+    abstract static class EmptyAttachment extends AbstractAppendix implements Attachment {
 
-        private final byte[] emptyBytes = new byte[0];
+        EmptyAttachment() {
+            super(0);
+        }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 0;
         }
 
         @Override
-        public byte[] getBytes() {
-            return emptyBytes;
+        void putBytes(ByteBuffer buffer) {
         }
 
-        // callers may modify the json, so always return a new one
         @Override
-        public JSONObject getJSONObject() {
-            return new JSONObject();
+        void putJSON(JSONObject json) {
         }
 
     }
@@ -55,49 +52,48 @@ public interface Attachment extends Appendix {
 
     };
 
-    public final static class MessagingAliasAssignment implements Attachment {
+    public final static class MessagingAliasAssignment extends AbstractAppendix implements Attachment {
 
         private final String aliasName;
         private final String aliasURI;
 
-        MessagingAliasAssignment(ByteBuffer buffer) throws NxtException.ValidationException {
-            this(Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH),
-                    Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH));
+        MessagingAliasAssignment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+            aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH).trim().intern();
+            aliasURI = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH).trim().intern();
         }
 
-        MessagingAliasAssignment(JSONObject attachmentData) {
-            this((String) attachmentData.get("alias"), (String) attachmentData.get("uri"));
+        MessagingAliasAssignment(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
+            aliasName = (Convert.nullToEmpty((String) attachmentData.get("alias"))).trim().intern();
+            aliasURI = (Convert.nullToEmpty((String) attachmentData.get("uri"))).trim().intern();
         }
 
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
+            super(0);
             this.aliasName = aliasName.trim().intern();
             this.aliasURI = aliasURI.trim().intern();
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 1 + Convert.toBytes(aliasName).length + 2 + Convert.toBytes(aliasURI).length;
         }
 
         @Override
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] alias = Convert.toBytes(this.aliasName);
             byte[] uri = Convert.toBytes(this.aliasURI);
-            ByteBuffer buffer = ByteBuffer.allocate(1 + alias.length + 2 + uri.length);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)alias.length);
             buffer.put(alias);
             buffer.putShort((short)uri.length);
             buffer.put(uri);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("alias", aliasName);
             attachment.put("uri", aliasURI);
-            return attachment;
         }
 
         @Override
@@ -114,20 +110,25 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasSell implements Attachment {
+    public final static class MessagingAliasSell extends AbstractAppendix implements Attachment {
 
         private final String aliasName;
         private final long priceNQT;
 
-        MessagingAliasSell(ByteBuffer buffer) throws NxtException.ValidationException {
-            this(Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH), buffer.getLong());
+        MessagingAliasSell(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+            this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
+            this.priceNQT = buffer.getLong();
         }
 
-        MessagingAliasSell(JSONObject attachmentData) {
-            this((String) attachmentData.get("alias"), (Long) attachmentData.get("priceNQT"));
+        MessagingAliasSell(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
+            this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
+            this.priceNQT = Convert.nullToZero((Long) attachmentData.get("priceNQT"));
         }
 
         public MessagingAliasSell(String aliasName, long priceNQT) {
+            super(0);
             this.aliasName = aliasName;
             this.priceNQT = priceNQT;
         }
@@ -138,28 +139,22 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 1 + Convert.toBytes(aliasName).length + 8;
         }
 
         @Override
-        //todo: fix ???
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] aliasBytes = Convert.toBytes(aliasName);
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)aliasBytes.length);
             buffer.put(aliasBytes);
             buffer.putLong(priceNQT);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("alias", aliasName);
             attachment.put("priceNQT", priceNQT);
-            return attachment;
         }
 
         public String getAliasName(){
@@ -171,19 +166,22 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasBuy implements Attachment {
+    public final static class MessagingAliasBuy extends AbstractAppendix implements Attachment {
 
         private final String aliasName;
 
-        MessagingAliasBuy(ByteBuffer buffer) throws NxtException.ValidationException {
-            this(Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH));
+        MessagingAliasBuy(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+            this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
         }
 
-        MessagingAliasBuy(JSONObject attachmentData) {
-            this((String) attachmentData.get("alias"));
+        MessagingAliasBuy(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
+            this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
         }
 
         public MessagingAliasBuy(String aliasName) {
+            super(0);
             this.aliasName = aliasName;
         }
 
@@ -193,27 +191,20 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 1 + Convert.toBytes(aliasName).length;
         }
 
         @Override
-        //todo: fix ???
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] aliasBytes = Convert.toBytes(aliasName);
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)aliasBytes.length);
             buffer.put(aliasBytes);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("alias", aliasName);
-            return attachment;
         }
 
         public String getAliasName(){
@@ -221,7 +212,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingPollCreation implements Attachment {
+    public final static class MessagingPollCreation extends AbstractAppendix implements Attachment {
 
         private final String pollName;
         private final String pollDescription;
@@ -229,7 +220,8 @@ public interface Attachment extends Appendix {
         private final byte minNumberOfOptions, maxNumberOfOptions;
         private final boolean optionsAreBinary;
 
-        MessagingPollCreation(ByteBuffer buffer) throws NxtException.ValidationException {
+        MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
             int numberOfOptions = buffer.get();
@@ -245,7 +237,8 @@ public interface Attachment extends Appendix {
             this.optionsAreBinary = buffer.get() != 0;
         }
 
-        MessagingPollCreation(JSONObject attachmentData) {
+        MessagingPollCreation(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.pollName = ((String) attachmentData.get("name")).trim();
             this.pollDescription = ((String) attachmentData.get("description")).trim();
             JSONArray options = (JSONArray) attachmentData.get("options");
@@ -260,6 +253,7 @@ public interface Attachment extends Appendix {
 
         public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions,
                                      byte maxNumberOfOptions, boolean optionsAreBinary) {
+            super(0);
             this.pollName = pollName;
             this.pollDescription = pollDescription;
             this.pollOptions = pollOptions;
@@ -269,7 +263,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             int size = 2 + Convert.toBytes(pollName).length + 2 + Convert.toBytes(pollDescription).length + 1;
             for (String pollOption : pollOptions) {
                 size += 2 + Convert.toBytes(pollOption).length;
@@ -279,16 +273,13 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.pollName);
             byte[] description = Convert.toBytes(this.pollDescription);
             byte[][] options = new byte[this.pollOptions.length][];
             for (int i = 0; i < this.pollOptions.length; i++) {
                 options[i] = Convert.toBytes(this.pollOptions[i]);
             }
-
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putShort((short)name.length);
             buffer.put(name);
             buffer.putShort((short)description.length);
@@ -301,13 +292,10 @@ public interface Attachment extends Appendix {
             buffer.put(this.minNumberOfOptions);
             buffer.put(this.maxNumberOfOptions);
             buffer.put(this.optionsAreBinary ? (byte)1 : (byte)0);
-
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("name", this.pollName);
             attachment.put("description", this.pollDescription);
             JSONArray options = new JSONArray();
@@ -318,7 +306,6 @@ public interface Attachment extends Appendix {
             attachment.put("minNumberOfOptions", this.minNumberOfOptions);
             attachment.put("maxNumberOfOptions", this.maxNumberOfOptions);
             attachment.put("optionsAreBinary", this.optionsAreBinary);
-            return attachment;
         }
 
         @Override
@@ -340,12 +327,13 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingVoteCasting implements Attachment {
+    public final static class MessagingVoteCasting extends AbstractAppendix implements Attachment {
 
         private final Long pollId;
         private final byte[] pollVote;
 
-        MessagingVoteCasting(ByteBuffer buffer) throws NxtException.ValidationException {
+        MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
@@ -355,7 +343,8 @@ public interface Attachment extends Appendix {
             buffer.get(pollVote);
         }
 
-        MessagingVoteCasting(JSONObject attachmentData) {
+        MessagingVoteCasting(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
             JSONArray vote = (JSONArray)attachmentData.get("vote");
             this.pollVote = new byte[vote.size()];
@@ -365,28 +354,25 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingVoteCasting(Long pollId, byte[] pollVote) {
+            super(0);
             this.pollId = pollId;
             this.pollVote = pollVote;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8 + 1 + this.pollVote.length;
         }
 
         @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        void putBytes(ByteBuffer buffer) {
             buffer.putLong(this.pollId);
             buffer.put((byte)this.pollVote.length);
             buffer.put(this.pollVote);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("pollId", Convert.toUnsignedLong(this.pollId));
             JSONArray vote = new JSONArray();
             if (this.pollVote != null) {
@@ -395,7 +381,6 @@ public interface Attachment extends Appendix {
                 }
             }
             attachment.put("vote", vote);
-            return attachment;
         }
 
         @Override
@@ -409,12 +394,13 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingHubAnnouncement implements Attachment {
+    public final static class MessagingHubAnnouncement extends AbstractAppendix implements Attachment {
 
         private final long minFeePerByteNQT;
         private final String[] uris;
 
-        MessagingHubAnnouncement(ByteBuffer buffer) throws NxtException.ValidationException {
+        MessagingHubAnnouncement(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.minFeePerByteNQT = buffer.getLong();
             int numberOfUris = buffer.get();
             if (numberOfUris > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
@@ -426,7 +412,8 @@ public interface Attachment extends Appendix {
             }
         }
 
-        MessagingHubAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
+        MessagingHubAnnouncement(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
+            super(attachmentData, transactionVersion);
             this.minFeePerByteNQT = (Long) attachmentData.get("minFeePerByte");
             try {
                 JSONArray urisData = (JSONArray) attachmentData.get("uris");
@@ -440,12 +427,13 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
+            super(0);
             this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             int size = 8 + 1;
             for (String uri : uris) {
                 size += 2 + Convert.toBytes(uri).length;
@@ -454,9 +442,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        void putBytes(ByteBuffer buffer) {
             buffer.putLong(minFeePerByteNQT);
             buffer.put((byte) uris.length);
             for (String uri : uris) {
@@ -464,17 +450,14 @@ public interface Attachment extends Appendix {
                 buffer.putShort((short)uriBytes.length);
                 buffer.put(uriBytes);
             }
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("minFeePerByteNQT", minFeePerByteNQT);
             JSONArray uris = new JSONArray();
             Collections.addAll(uris, this.uris);
             attachment.put("uris", uris);
-            return attachment;
         }
 
         @Override
@@ -492,51 +475,48 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingAccountInfo implements Attachment {
+    public final static class MessagingAccountInfo extends AbstractAppendix implements Attachment {
 
         private final String name;
         private final String description;
 
-        MessagingAccountInfo(ByteBuffer buffer) throws NxtException.ValidationException {
+        MessagingAccountInfo(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
         }
 
-        MessagingAccountInfo(JSONObject attachmentData) {
-            this.name = (String) attachmentData.get("name");
-            this.description = (String) attachmentData.get("description");
+        MessagingAccountInfo(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
+            this.name = Convert.nullToEmpty((String) attachmentData.get("name"));
+            this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
         }
 
         public MessagingAccountInfo(String name, String description) {
+            super(0);
             this.name = name;
             this.description = description;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length;
         }
 
         @Override
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.name);
             byte[] description = Convert.toBytes(this.description);
-
-            ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)name.length);
             buffer.put(name);
             buffer.putShort((short)description.length);
             buffer.put(description);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("name", name);
             attachment.put("description", description);
-            return attachment;
         }
 
         @Override
@@ -554,21 +534,23 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class ColoredCoinsAssetIssuance implements Attachment {
+    public final static class ColoredCoinsAssetIssuance extends AbstractAppendix implements Attachment {
 
         private final String name;
         private final String description;
         private final long quantityQNT;
         private final byte decimals;
 
-        ColoredCoinsAssetIssuance(ByteBuffer buffer) throws NxtException.ValidationException {
+        ColoredCoinsAssetIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ASSET_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_DESCRIPTION_LENGTH);
             this.quantityQNT = buffer.getLong();
             this.decimals = buffer.get();
         }
 
-        ColoredCoinsAssetIssuance(JSONObject attachmentData) {
+        ColoredCoinsAssetIssuance(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.name = (String) attachmentData.get("name");
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
             this.quantityQNT = (Long) attachmentData.get("quantityQNT");
@@ -576,6 +558,7 @@ public interface Attachment extends Appendix {
         }
 
         public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
+            super(0);
             this.name = name;
             this.description = Convert.nullToEmpty(description);
             this.quantityQNT = quantityQNT;
@@ -583,33 +566,28 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 1 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 8 + 1;
         }
 
         @Override
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.name);
             byte[] description = Convert.toBytes(this.description);
-            ByteBuffer buffer = ByteBuffer.allocate(1 + name.length + 2 + description.length + 8 + 1);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.put((byte)name.length);
             buffer.put(name);
             buffer.putShort((short)description.length);
             buffer.put(description);
             buffer.putLong(quantityQNT);
             buffer.put(decimals);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("name", name);
             attachment.put("description", description);
             attachment.put("quantityQNT", quantityQNT);
             attachment.put("decimals", decimals);
-            return attachment;
         }
 
         @Override
@@ -634,54 +612,56 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class ColoredCoinsAssetTransfer implements Attachment {
+    public final static class ColoredCoinsAssetTransfer extends AbstractAppendix implements Attachment {
 
         private final Long assetId;
         private final long quantityQNT;
         private final String comment;
 
-        ColoredCoinsAssetTransfer(ByteBuffer buffer) throws NxtException.ValidationException {
+        ColoredCoinsAssetTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.assetId = Convert.zeroToNull(buffer.getLong());
             this.quantityQNT = buffer.getLong();
-            this.comment = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH);
+            this.comment = getVersion() == 0 ? Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) : null;
         }
 
-        ColoredCoinsAssetTransfer(JSONObject attachmentData) {
+        ColoredCoinsAssetTransfer(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
             this.quantityQNT = (Long) attachmentData.get("quantityQNT");
-            this.comment = Convert.nullToEmpty((String) attachmentData.get("comment"));
+            this.comment = getVersion() == 0 ? Convert.nullToEmpty((String) attachmentData.get("comment")) : null;
         }
 
         public ColoredCoinsAssetTransfer(Long assetId, long quantityQNT, String comment) {
+            super(Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
-            this.comment = Convert.nullToEmpty(comment);
+            this.comment = getVersion() == 0 ? Convert.nullToEmpty(comment) : null;
         }
 
         @Override
-        public int getSize() {
-            return 8 + 8 + 2 + Convert.toBytes(comment).length;
+        int getMySize() {
+            return 8 + 8 + (getVersion() == 0 ? (2 + Convert.toBytes(comment).length) : 0);
         }
 
         @Override
-        public byte[] getBytes() {
+        void putBytes(ByteBuffer buffer) {
             byte[] commentBytes = Convert.toBytes(this.comment);
-            ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 2 + commentBytes.length);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putLong(quantityQNT);
-            buffer.putShort((short) commentBytes.length);
-            buffer.put(commentBytes);
-            return buffer.array();
+            if (getVersion() == 0) {
+                buffer.putShort((short) commentBytes.length);
+                buffer.put(commentBytes);
+            }
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantityQNT", quantityQNT);
-            attachment.put("comment", comment);
-            return attachment;
+            if (getVersion() == 0) {
+                attachment.put("comment", comment);
+            }
         }
 
         @Override
@@ -703,52 +683,50 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class ColoredCoinsOrderPlacement implements Attachment {
+    abstract static class ColoredCoinsOrderPlacement extends AbstractAppendix implements Attachment {
 
         private final Long assetId;
         private final long quantityQNT;
         private final long priceNQT;
 
-        private ColoredCoinsOrderPlacement(ByteBuffer buffer) {
+        private ColoredCoinsOrderPlacement(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.assetId = Convert.zeroToNull(buffer.getLong());
             this.quantityQNT = buffer.getLong();
             this.priceNQT = buffer.getLong();
         }
 
-        private ColoredCoinsOrderPlacement(JSONObject attachmentData) {
+        private ColoredCoinsOrderPlacement(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
             this.quantityQNT = (Long) attachmentData.get("quantityQNT");
             this.priceNQT = (Long) attachmentData.get("priceNQT");
         }
 
         private ColoredCoinsOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
+            super(0);
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.priceNQT = priceNQT;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8 + 8 + 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        void putBytes(ByteBuffer buffer) {
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putLong(quantityQNT);
             buffer.putLong(priceNQT);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("asset", Convert.toUnsignedLong(assetId));
             attachment.put("quantityQNT", quantityQNT);
             attachment.put("priceNQT", priceNQT);
-            return attachment;
         }
 
         public Long getAssetId() {
@@ -766,12 +744,12 @@ public interface Attachment extends Appendix {
 
     public final static class ColoredCoinsAskOrderPlacement extends ColoredCoinsOrderPlacement {
 
-        ColoredCoinsAskOrderPlacement(ByteBuffer buffer) {
-            super(buffer);
+        ColoredCoinsAskOrderPlacement(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
         }
 
-        ColoredCoinsAskOrderPlacement(JSONObject attachmentData) {
-            super(attachmentData);
+        ColoredCoinsAskOrderPlacement(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
         }
 
         public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
@@ -787,12 +765,12 @@ public interface Attachment extends Appendix {
 
     public final static class ColoredCoinsBidOrderPlacement extends ColoredCoinsOrderPlacement {
 
-        ColoredCoinsBidOrderPlacement(ByteBuffer buffer) {
-            super(buffer);
+        ColoredCoinsBidOrderPlacement(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
         }
 
-        ColoredCoinsBidOrderPlacement(JSONObject attachmentData) {
-            super(attachmentData);
+        ColoredCoinsBidOrderPlacement(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
         }
 
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
@@ -806,40 +784,38 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class ColoredCoinsOrderCancellation implements Attachment {
+    abstract static class ColoredCoinsOrderCancellation extends AbstractAppendix implements Attachment {
 
         private final Long orderId;
 
-        private ColoredCoinsOrderCancellation(ByteBuffer buffer) {
+        private ColoredCoinsOrderCancellation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.orderId = Convert.zeroToNull(buffer.getLong());
         }
 
-        private ColoredCoinsOrderCancellation(JSONObject attachmentData) {
+        private ColoredCoinsOrderCancellation(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.orderId = Convert.parseUnsignedLong((String) attachmentData.get("order"));
         }
 
         private ColoredCoinsOrderCancellation(Long orderId) {
+            super(0);
             this.orderId = orderId;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        void putBytes(ByteBuffer buffer) {
             buffer.putLong(Convert.nullToZero(orderId));
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("order", Convert.toUnsignedLong(orderId));
-            return attachment;
         }
 
         public Long getOrderId() {
@@ -849,12 +825,12 @@ public interface Attachment extends Appendix {
 
     public final static class ColoredCoinsAskOrderCancellation extends ColoredCoinsOrderCancellation {
 
-        ColoredCoinsAskOrderCancellation(ByteBuffer buffer) {
-            super(buffer);
+        ColoredCoinsAskOrderCancellation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
         }
 
-        ColoredCoinsAskOrderCancellation(JSONObject attachmentData) {
-            super(attachmentData);
+        ColoredCoinsAskOrderCancellation(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
         }
 
         public ColoredCoinsAskOrderCancellation(Long orderId) {
@@ -870,12 +846,12 @@ public interface Attachment extends Appendix {
 
     public final static class ColoredCoinsBidOrderCancellation extends ColoredCoinsOrderCancellation {
 
-        ColoredCoinsBidOrderCancellation(ByteBuffer buffer) {
-            super(buffer);
+        ColoredCoinsBidOrderCancellation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
         }
 
-        ColoredCoinsBidOrderCancellation(JSONObject attachmentData) {
-            super(attachmentData);
+        ColoredCoinsBidOrderCancellation(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
         }
 
         public ColoredCoinsBidOrderCancellation(Long orderId) {
@@ -889,7 +865,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsListing implements Attachment {
+    public final static class DigitalGoodsListing extends AbstractAppendix implements Attachment {
 
         private final String name;
         private final String description;
@@ -897,7 +873,8 @@ public interface Attachment extends Appendix {
         private final int quantity;
         private final long priceNQT;
 
-        DigitalGoodsListing(ByteBuffer buffer) throws NxtException.ValidationException {
+        DigitalGoodsListing(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH);
             this.tags = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_TAGS_LENGTH);
@@ -905,7 +882,8 @@ public interface Attachment extends Appendix {
             this.priceNQT = buffer.getLong();
         }
 
-        DigitalGoodsListing(JSONObject attachmentData) {
+        DigitalGoodsListing(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.name = (String) attachmentData.get("name");
             this.description = (String) attachmentData.get("description");
             this.tags = (String) attachmentData.get("tags");
@@ -914,6 +892,7 @@ public interface Attachment extends Appendix {
         }
 
         public DigitalGoodsListing(String name, String description, String tags, int quantity, long priceNQT) {
+            super(0);
             this.name = name;
             this.description = description;
             this.tags = tags;
@@ -922,15 +901,13 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
                         + Convert.toBytes(tags).length + 4 + 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        void putBytes(ByteBuffer buffer) {
             byte[] nameBytes = Convert.toBytes(name);
             buffer.putShort((short)nameBytes.length);
             buffer.put(nameBytes);
@@ -942,18 +919,15 @@ public interface Attachment extends Appendix {
             buffer.put(tagsBytes);
             buffer.putInt(quantity);
             buffer.putLong(priceNQT);
-            return buffer.array();
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("name", name);
             attachment.put("description", description);
             attachment.put("tags", tags);
             attachment.put("quantity", quantity);
             attachment.put("priceNQT", priceNQT);
-            return attachment;
         }
 
         @Override
@@ -973,45 +947,38 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsDelisting implements Attachment {
+    public final static class DigitalGoodsDelisting extends AbstractAppendix implements Attachment {
 
         private final Long goodsId;
 
-        DigitalGoodsDelisting(ByteBuffer buffer) {
+        DigitalGoodsDelisting(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.goodsId = buffer.getLong();
         }
 
-        DigitalGoodsDelisting(JSONObject attachmentData) {
+        DigitalGoodsDelisting(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
         }
 
         public DigitalGoodsDelisting(Long goodsId) {
+            super(0);
             this.goodsId = goodsId;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(goodsId);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(goodsId);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
-            return attachment;
         }
 
         @Override
@@ -1023,51 +990,44 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsPriceChange implements Attachment {
+    public final static class DigitalGoodsPriceChange extends AbstractAppendix implements Attachment {
 
         private final Long goodsId;
         private final long priceNQT;
 
-        DigitalGoodsPriceChange(ByteBuffer buffer) {
+        DigitalGoodsPriceChange(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.goodsId = buffer.getLong();
             this.priceNQT = buffer.getLong();
         }
 
-        DigitalGoodsPriceChange(JSONObject attachmentData) {
+        DigitalGoodsPriceChange(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.priceNQT = (Long)attachmentData.get("priceNQT");
         }
 
         public DigitalGoodsPriceChange(Long goodsId, long priceNQT) {
+            super(0);
             this.goodsId = goodsId;
             this.priceNQT = priceNQT;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8 + 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(goodsId);
-                buffer.putLong(priceNQT);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(goodsId);
+            buffer.putLong(priceNQT);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("priceNQT", priceNQT);
-            return attachment;
         }
 
         @Override
@@ -1081,51 +1041,44 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsQuantityChange implements Attachment {
+    public final static class DigitalGoodsQuantityChange extends AbstractAppendix implements Attachment {
 
         private final Long goodsId;
         private final int deltaQuantity;
 
-        DigitalGoodsQuantityChange(ByteBuffer buffer) {
+        DigitalGoodsQuantityChange(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.goodsId = buffer.getLong();
             this.deltaQuantity = buffer.getInt();
         }
 
-        DigitalGoodsQuantityChange(JSONObject attachmentData) {
+        DigitalGoodsQuantityChange(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.deltaQuantity = ((Long)attachmentData.get("deltaQuantity")).intValue();
         }
 
         public DigitalGoodsQuantityChange(Long goodsId, int deltaQuantity) {
+            super(0);
             this.goodsId = goodsId;
             this.deltaQuantity = deltaQuantity;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8 + 4;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(goodsId);
-                buffer.putInt(deltaQuantity);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(goodsId);
+            buffer.putInt(deltaQuantity);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("deltaQuantity", deltaQuantity);
-            return attachment;
         }
 
         @Override
@@ -1139,21 +1092,23 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsPurchase implements Attachment {
+    public final static class DigitalGoodsPurchase extends AbstractAppendix implements Attachment {
 
         private final Long goodsId;
         private final int quantity;
         private final long priceNQT;
         private final int deliveryDeadlineTimestamp;
 
-        DigitalGoodsPurchase(ByteBuffer buffer) {
+        DigitalGoodsPurchase(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.goodsId = buffer.getLong();
             this.quantity = buffer.getInt();
             this.priceNQT = buffer.getLong();
             this.deliveryDeadlineTimestamp = buffer.getInt();
         }
 
-        DigitalGoodsPurchase(JSONObject attachmentData) {
+        DigitalGoodsPurchase(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.quantity = ((Long)attachmentData.get("quantity")).intValue();
             this.priceNQT = (Long)attachmentData.get("priceNQT");
@@ -1161,6 +1116,7 @@ public interface Attachment extends Appendix {
         }
 
         public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp) {
+            super(0);
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
@@ -1168,34 +1124,24 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8 + 4 + 8 + 4;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(goodsId);
-                buffer.putInt(quantity);
-                buffer.putLong(priceNQT);
-                buffer.putInt(deliveryDeadlineTimestamp);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(goodsId);
+            buffer.putInt(quantity);
+            buffer.putLong(priceNQT);
+            buffer.putInt(deliveryDeadlineTimestamp);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("goods", Convert.toUnsignedLong(goodsId));
             attachment.put("quantity", quantity);
             attachment.put("priceNQT", priceNQT);
             attachment.put("deliveryDeadlineTimestamp", deliveryDeadlineTimestamp);
-            return attachment;
         }
 
         @Override
@@ -1213,14 +1159,15 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsDelivery implements Attachment {
+    public final static class DigitalGoodsDelivery extends AbstractAppendix implements Attachment {
 
         private final Long purchaseId;
         private final EncryptedData goods;
         private final long discountNQT;
         private final boolean goodsIsText;
 
-        DigitalGoodsDelivery(ByteBuffer buffer) throws NxtException.ValidationException {
+        DigitalGoodsDelivery(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
             this.purchaseId = buffer.getLong();
             int length = buffer.getInt();
             goodsIsText = length < 0;
@@ -1231,7 +1178,8 @@ public interface Attachment extends Appendix {
             this.discountNQT = buffer.getLong();
         }
 
-        DigitalGoodsDelivery(JSONObject attachmentData) {
+        DigitalGoodsDelivery(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
             this.goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                     Convert.parseHexString((String)attachmentData.get("goodsNonce")));
@@ -1240,6 +1188,7 @@ public interface Attachment extends Appendix {
         }
 
         public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, boolean goodsIsText, long discountNQT) {
+            super(0);
             this.purchaseId = purchaseId;
             this.goods = goods;
             this.discountNQT = discountNQT;
@@ -1247,36 +1196,26 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 8 + 4 + goods.getSize() + 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(purchaseId);
-                buffer.putInt(goodsIsText ? goods.getData().length | Integer.MIN_VALUE : goods.getData().length);
-                buffer.put(goods.getData());
-                buffer.put(goods.getNonce());
-                buffer.putLong(discountNQT);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(purchaseId);
+            buffer.putInt(goodsIsText ? goods.getData().length | Integer.MIN_VALUE : goods.getData().length);
+            buffer.put(goods.getData());
+            buffer.put(goods.getNonce());
+            buffer.putLong(discountNQT);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
             attachment.put("goodsData", Convert.toHexString(goods.getData()));
             attachment.put("goodsNonce", Convert.toHexString(goods.getNonce()));
             attachment.put("discountNQT", discountNQT);
             attachment.put("goodsIsText", goodsIsText);
-            return attachment;
         }
 
         @Override
@@ -1296,50 +1235,38 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsFeedback implements Attachment {
+    public final static class DigitalGoodsFeedback extends AbstractAppendix implements Attachment {
 
         private final Long purchaseId;
 
-        DigitalGoodsFeedback(ByteBuffer buffer) {
+        DigitalGoodsFeedback(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.purchaseId = buffer.getLong();
         }
 
-        DigitalGoodsFeedback(JSONObject attachmentData) {
+        DigitalGoodsFeedback(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
         }
 
         public DigitalGoodsFeedback(Long purchaseId) {
+            super(0);
             this.purchaseId = purchaseId;
         }
 
         @Override
-        public int getSize() {
-            try {
-                return 8;
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+        int getMySize() {
+            return 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(purchaseId);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(purchaseId);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
-            return attachment;
         }
 
         @Override
@@ -1351,56 +1278,44 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsRefund implements Attachment {
+    public final static class DigitalGoodsRefund extends AbstractAppendix implements Attachment {
 
         private final Long purchaseId;
         private final long refundNQT;
 
-        DigitalGoodsRefund(ByteBuffer buffer) {
+        DigitalGoodsRefund(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.purchaseId = buffer.getLong();
             this.refundNQT = buffer.getLong();
         }
 
-        DigitalGoodsRefund(JSONObject attachmentData) {
+        DigitalGoodsRefund(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
             this.refundNQT = (Long)attachmentData.get("refundNQT");
         }
 
         public DigitalGoodsRefund(Long purchaseId, long refundNQT) {
+            super(0);
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
         }
 
         @Override
-        public int getSize() {
-            try {
-                return 8 + 8;
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return 0;
-            }
+        int getMySize() {
+            return 8 + 8;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(purchaseId);
-                buffer.putLong(refundNQT);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putLong(purchaseId);
+            buffer.putLong(refundNQT);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("purchase", Convert.toUnsignedLong(purchaseId));
             attachment.put("refundNQT", refundNQT);
-            return attachment;
         }
 
         @Override
@@ -1414,45 +1329,38 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class AccountControlEffectiveBalanceLeasing implements Attachment {
+    public final static class AccountControlEffectiveBalanceLeasing extends AbstractAppendix implements Attachment {
 
         private final short period;
 
-        AccountControlEffectiveBalanceLeasing(ByteBuffer buffer) {
+        AccountControlEffectiveBalanceLeasing(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
             this.period = buffer.getShort();
         }
 
-        AccountControlEffectiveBalanceLeasing(JSONObject attachmentData) {
+        AccountControlEffectiveBalanceLeasing(JSONObject attachmentData, byte transactionVersion) {
+            super(attachmentData, transactionVersion);
             this.period = ((Long) attachmentData.get("period")).shortValue();
         }
 
         public AccountControlEffectiveBalanceLeasing(short period) {
+            super(0);
             this.period = period;
         }
 
         @Override
-        public int getSize() {
+        int getMySize() {
             return 2;
         }
 
         @Override
-        public byte[] getBytes() {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(getSize());
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putShort(period);
-                return buffer.array();
-            } catch (RuntimeException e) {
-                Logger.logMessage("Error in getBytes", e);
-                return null;
-            }
+        void putBytes(ByteBuffer buffer) {
+            buffer.putShort(period);
         }
 
         @Override
-        public JSONObject getJSONObject() {
-            JSONObject attachment = new JSONObject();
+        void putJSON(JSONObject attachment) {
             attachment.put("period", period);
-            return attachment;
         }
 
         @Override

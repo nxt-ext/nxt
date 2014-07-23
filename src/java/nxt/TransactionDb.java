@@ -106,7 +106,7 @@ final class TransactionDb {
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
             TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, recipientId,
                     amountNQT, feeNQT, timestamp, deadline,
-                    transactionType.parseAttachment(buffer))
+                    transactionType.parseAttachment(buffer, version))
                     .referencedTransactionFullHash(referencedTransactionFullHash)
                     .signature(signature)
                     .blockId(blockId)
@@ -116,10 +116,10 @@ final class TransactionDb {
                     .blockTimestamp(blockTimestamp)
                     .fullHash(fullHash);
             if (rs.getBoolean("has_message")) {
-                builder.message(new Appendix.Message(buffer));
+                builder.message(new Appendix.Message(buffer, version));
             }
             if (rs.getBoolean("has_encrypted_message")) {
-                builder.encryptedMessage(new Appendix.EncryptedMessage(buffer));
+                builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
             }
 
             return builder.build();
