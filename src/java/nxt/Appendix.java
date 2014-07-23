@@ -5,12 +5,11 @@ import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public interface Appendix {
 
-    int getSize();
-    byte[] getBytes();
+    int getSize(byte transactionVersion);
+    void putBytes(ByteBuffer buffer, byte transactionVersion);
     JSONObject getJSONObject();
     byte getVersion();
 
@@ -39,35 +38,34 @@ public interface Appendix {
             this.version = (byte) version;
         }
 
-        public final int getSize() {
-            return getMySize() + (version > 0 ? 1 : 0);
+        @Override
+        public final int getSize(byte transactionVersion) {
+            return getMySize() + (transactionVersion > 0 ? 1 : 0);
         }
 
         abstract int getMySize();
 
-        public final byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            if (version > 0) {
+        @Override
+        public final void putBytes(ByteBuffer buffer, byte transactionVersion) {
+            if (transactionVersion > 0) {
                 buffer.put(version);
             }
-            putBytes(buffer);
-            return buffer.array();
+            putMyBytes(buffer);
         }
 
-        abstract void putBytes(ByteBuffer buffer);
+        abstract void putMyBytes(ByteBuffer buffer);
 
+        @Override
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
-            if (version > 0) {
-                json.put("version", version);
-            }
+            json.put("version", version);
             putJSON(json);
             return json;
         }
 
         abstract void putJSON(JSONObject json);
 
+        @Override
         public final byte getVersion() {
             return version;
         }
@@ -134,7 +132,7 @@ public interface Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putInt(isText ? (message.length | Integer.MIN_VALUE) : message.length);
             buffer.put(message);
         }
@@ -203,7 +201,7 @@ public interface Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putInt(isText ? encryptedData.getData().length | Integer.MIN_VALUE : encryptedData.getData().length);
             buffer.put(encryptedData.getData());
             buffer.put(encryptedData.getNonce());

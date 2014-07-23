@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Appendix;
 import nxt.Attachment;
 import nxt.Constants;
-import nxt.Genesis;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -46,7 +45,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)
         throws NxtException {
-        return createTransaction(req, senderAccount, Genesis.CREATOR_ID, 0, attachment);
+        return createTransaction(req, senderAccount, null, 0, attachment);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Long recipientId, long amountNQT)
@@ -64,9 +63,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
         Appendix.EncryptedMessage encryptedMessage = null;
-        EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
-        if (encryptedData != null) {
-            encryptedMessage = new Appendix.EncryptedMessage(encryptedData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText")));
+        if (attachment.getTransactionType().hasRecipient()) {
+            EncryptedData encryptedData = ParameterParser.getEncryptedMessage(req, Account.getAccount(recipientId));
+            if (encryptedData != null) {
+                encryptedMessage = new Appendix.EncryptedMessage(encryptedData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText")));
+            }
         }
         Appendix.Message message = null;
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
@@ -120,8 +121,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] publicKey = secretPhrase != null ? Crypto.getPublicKey(secretPhrase) : Convert.parseHexString(publicKeyValue);
 
         try {
-            Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, recipientId,
-                    amountNQT, feeNQT, deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
+            Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, amountNQT, feeNQT,
+                    deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
+            if (attachment.getTransactionType().hasRecipient()) {
+                builder.recipientId(recipientId);
+            }
             if (encryptedMessage != null) {
                 builder.encryptedMessage(encryptedMessage);
             }

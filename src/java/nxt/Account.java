@@ -163,7 +163,7 @@ public final class Account {
     }
 
     public static Account getAccount(Long id) {
-        return accounts.get(id);
+        return id == null ? null : accounts.get(id);
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -293,7 +293,7 @@ public final class Account {
             }
             long receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.getTransactions()) {
-                if (transaction.getRecipientId().equals(id)) {
+                if (id.equals(transaction.getRecipientId())) {
                     receivedInlastBlock += transaction.getAmountNQT();
                 }
             }

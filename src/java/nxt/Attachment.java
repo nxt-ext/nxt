@@ -24,7 +24,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
         }
 
         @Override
@@ -81,7 +81,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] alias = Convert.toBytes(this.aliasName);
             byte[] uri = Convert.toBytes(this.aliasURI);
             buffer.put((byte)alias.length);
@@ -144,7 +144,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] aliasBytes = Convert.toBytes(aliasName);
             buffer.put((byte)aliasBytes.length);
             buffer.put(aliasBytes);
@@ -196,7 +196,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] aliasBytes = Convert.toBytes(aliasName);
             buffer.put((byte)aliasBytes.length);
             buffer.put(aliasBytes);
@@ -273,7 +273,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.pollName);
             byte[] description = Convert.toBytes(this.pollDescription);
             byte[][] options = new byte[this.pollOptions.length][];
@@ -365,7 +365,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(this.pollId);
             buffer.put((byte)this.pollVote.length);
             buffer.put(this.pollVote);
@@ -442,7 +442,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(minFeePerByteNQT);
             buffer.put((byte) uris.length);
             for (String uri : uris) {
@@ -504,7 +504,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.name);
             byte[] description = Convert.toBytes(this.description);
             buffer.put((byte)name.length);
@@ -571,7 +571,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] name = Convert.toBytes(this.name);
             byte[] description = Convert.toBytes(this.description);
             buffer.put((byte)name.length);
@@ -645,7 +645,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] commentBytes = Convert.toBytes(this.comment);
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putLong(quantityQNT);
@@ -716,7 +716,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putLong(quantityQNT);
             buffer.putLong(priceNQT);
@@ -809,7 +809,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(Convert.nullToZero(orderId));
         }
 
@@ -907,7 +907,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             byte[] nameBytes = Convert.toBytes(name);
             buffer.putShort((short)nameBytes.length);
             buffer.put(nameBytes);
@@ -972,7 +972,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(goodsId);
         }
 
@@ -1019,7 +1019,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(goodsId);
             buffer.putLong(priceNQT);
         }
@@ -1070,7 +1070,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(goodsId);
             buffer.putInt(deltaQuantity);
         }
@@ -1129,7 +1129,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(goodsId);
             buffer.putInt(quantity);
             buffer.putLong(priceNQT);
@@ -1201,7 +1201,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(purchaseId);
             buffer.putInt(goodsIsText ? goods.getData().length | Integer.MIN_VALUE : goods.getData().length);
             buffer.put(goods.getData());
@@ -1260,7 +1260,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(purchaseId);
         }
 
@@ -1307,7 +1307,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(purchaseId);
             buffer.putLong(refundNQT);
         }
@@ -1354,7 +1354,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putShort(period);
         }
 

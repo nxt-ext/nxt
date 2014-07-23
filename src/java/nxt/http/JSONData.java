@@ -277,8 +277,10 @@ final class JSONData {
         json.put("timestamp", transaction.getTimestamp());
         json.put("deadline", transaction.getDeadline());
         json.put("senderPublicKey", Convert.toHexString(transaction.getSenderPublicKey()));
-        json.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-        json.put("recipientRS", Convert.rsAccount(transaction.getRecipientId()));
+        if (transaction.getRecipientId() != null) {
+            json.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+            json.put("recipientRS", Convert.rsAccount(transaction.getRecipientId()));
+        }
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
         if (transaction.getReferencedTransactionFullHash() != null) {

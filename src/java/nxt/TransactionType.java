@@ -167,7 +167,9 @@ public abstract class TransactionType {
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(transaction.getAmountNQT());
+        if (recipientAccount != null) {
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(transaction.getAmountNQT());
+        }
         applyAttachment(transaction, senderAccount, recipientAccount);
     }
 
@@ -213,7 +215,7 @@ public abstract class TransactionType {
 
     @Override
     public final String toString() {
-        return "type: " + getType() + "subtype: " + getSubtype();
+        return "type: " + getType() + ", subtype: " + getSubtype();
     }
 
     /*
@@ -482,7 +484,7 @@ public abstract class TransactionType {
                 if (priceNQT < 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.ValidationException("Invalid alias sell price: " + priceNQT);
                 }
-                if (priceNQT == 0 && transaction.getRecipientId().equals(Genesis.CREATOR_ID)) {
+                if (priceNQT == 0 && Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
                     throw new NxtException.ValidationException("Transferring aliases to Genesis account not allowed");
                 }
             }
@@ -1735,7 +1737,7 @@ public abstract class TransactionType {
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
                 Account recipientAccount = Account.getAccount(transaction.getRecipientId());
-                if (transaction.getRecipientId().equals(transaction.getSenderId())
+                if (transaction.getSenderId().equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
                         || attachment.getPeriod() < 1440
                         || recipientAccount == null

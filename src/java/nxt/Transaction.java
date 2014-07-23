@@ -6,13 +6,15 @@ public interface Transaction extends Comparable<Transaction> {
 
     public static interface Builder {
 
-        public Builder referencedTransactionFullHash(String referencedTransactionFullHash);
+        Builder recipientId(Long recipientId);
 
-        public Builder message(Appendix.Message message);
+        Builder referencedTransactionFullHash(String referencedTransactionFullHash);
 
-        public Builder encryptedMessage(Appendix.EncryptedMessage encryptedData);
+        Builder message(Appendix.Message message);
 
-        public Transaction build() throws NxtException.ValidationException;
+        Builder encryptedMessage(Appendix.EncryptedMessage encryptedData);
+
+        Transaction build() throws NxtException.ValidationException;
 
     }
 

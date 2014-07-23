@@ -80,10 +80,6 @@ final class TransactionDb {
             int timestamp = rs.getInt("timestamp");
             short deadline = rs.getShort("deadline");
             byte[] senderPublicKey = rs.getBytes("sender_public_key");
-            Long recipientId = rs.getLong("recipient_id");
-            if (rs.wasNull()) {
-                recipientId = Genesis.CREATOR_ID;
-            }
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
@@ -104,7 +100,7 @@ final class TransactionDb {
             }
 
             TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, recipientId,
+            TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
                     amountNQT, feeNQT, timestamp, deadline,
                     transactionType.parseAttachment(buffer, version))
                     .referencedTransactionFullHash(referencedTransactionFullHash)
@@ -115,6 +111,9 @@ final class TransactionDb {
                     .senderId(senderId)
                     .blockTimestamp(blockTimestamp)
                     .fullHash(fullHash);
+            if (transactionType.hasRecipient()) {
+                builder.recipientId(rs.getLong("recipient_id"));
+            }
             if (rs.getBoolean("has_message")) {
                 builder.message(new Appendix.Message(buffer, version));
             }
@@ -180,24 +179,24 @@ final class TransactionDb {
                     pstmt.setLong(++i, transaction.getSenderId());
                     Appendix.Message message = transaction.getMessage();
                     Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
-                    int bytesLength = transaction.getAttachment().getSize();
+                    int bytesLength = transaction.getAttachment().getSize(transaction.getVersion());
                     if (message != null) {
-                        bytesLength += message.getSize();
+                        bytesLength += message.getSize(transaction.getVersion());
                     }
                     if (encryptedMessage != null) {
-                        bytesLength += encryptedMessage.getSize();
+                        bytesLength += encryptedMessage.getSize(transaction.getVersion());
                     }
                     if (bytesLength == 0) {
                         pstmt.setNull(++i, Types.VARBINARY);
                     } else {
                         ByteBuffer buffer = ByteBuffer.allocate(bytesLength);
                         buffer.order(ByteOrder.LITTLE_ENDIAN);
-                        buffer.put(transaction.getAttachment().getBytes());
+                        transaction.getAttachment().putBytes(buffer, transaction.getVersion());
                         if (message != null) {
-                            buffer.put(message.getBytes());
+                            message.putBytes(buffer, transaction.getVersion());
                         }
                         if (encryptedMessage != null) {
-                            buffer.put(encryptedMessage.getBytes());
+                            encryptedMessage.putBytes(buffer, transaction.getVersion());
                         }
                         pstmt.setBytes(++i, buffer.array());
                     }
