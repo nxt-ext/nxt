@@ -202,6 +202,7 @@ public final class Account {
 
     private final SuperComplexNumber currencyBalances = new SuperComplexNumber();
     private final SuperComplexNumber unconfirmedCurrencyBalances = new SuperComplexNumber();
+    private final Map<Long, Integer> mintingCounters = new HashMap<>();
 
     private volatile String name;
     private volatile String description;
@@ -629,6 +630,15 @@ public final class Account {
             // should have been handled in the block popped off case
             throw new IllegalStateException("last guaranteed balance height exceeds blockchain height");
         }
+    }
+
+    int getMintingCounter(Long currencyId) {
+        Integer counter = mintingCounters.get(currencyId);
+        return counter == null ? 0 : counter;
+    }
+
+    void setMintingCounter(Long currencyId, int counter) {
+        mintingCounters.put(currencyId, counter);
     }
 
     private static class GuaranteedBalance implements Comparable<GuaranteedBalance> {

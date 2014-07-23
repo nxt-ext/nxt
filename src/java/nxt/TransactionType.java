@@ -2458,7 +2458,8 @@ public abstract class TransactionType {
                 if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
                         || transaction.getAmountNQT() != 0
                         || !Currency.isIssued(attachment.getCurrencyId())
-                        || attachment.getUnits() <= 0) {
+                        || !CurrencyType.getCurrencyType(Currency.getCurrency(attachment.getCurrencyId()).getType()).isMintable()
+                        || attachment.getUnits() <= 0 || attachment.getUnits() > Currency.getCurrency(attachment.getCurrencyId()).getTotalSupply() / Constants.MAX_MINTING_RATIO) {
                     throw new NxtException.ValidationException("Invalid money minting: " + attachment.getJSONObject());
                 }
             }

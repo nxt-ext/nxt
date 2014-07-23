@@ -35,7 +35,7 @@ public abstract class CurrencyType {
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0);
+                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getTotalSupply(), 0);
 
                 senderAccount.addToCurrencyAndUnconfirmedCurrencyBalanceQNT(transaction.getId(), attachment.getTotalSupply());
             }
@@ -67,7 +67,7 @@ public abstract class CurrencyType {
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0);
+                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getTotalSupply(), 0);
             }
 
         });
@@ -79,7 +79,8 @@ public abstract class CurrencyType {
             public boolean isCurrencyIssuanceAttachmentValid(Transaction transaction) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                return attachment.getIssuanceHeight() > 0
+                return attachment.getTotalSupply() >= Constants.MAX_MINTING_RATIO
+                        && attachment.getIssuanceHeight() > 0
                         && attachment.getMinReservePerUnitNQT() == 0;
             }
 
@@ -96,7 +97,12 @@ public abstract class CurrencyType {
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
 
-                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0);
+                Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), 0, 0);
+            }
+
+            @Override
+            public boolean isMintable() {
+                return true;
             }
 
         });
@@ -117,6 +123,10 @@ public abstract class CurrencyType {
 
     public void undoCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException {
         throw new TransactionType.UndoNotSupportedException("Reversal of currency issuance not supported");
+    }
+
+    public boolean isMintable() {
+        return false;
     }
 
 }

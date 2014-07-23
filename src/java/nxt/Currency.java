@@ -83,11 +83,11 @@ public final class Currency {
     }
 
     static void addNXTCurrency() {
-        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0, 0);
+        addCurrency(0L, "Nxt", "NXT", "", (byte)0, Constants.MAX_BALANCE_NQT, 0, 1, (byte)0, (byte)0, (byte)0, Constants.MAX_BALANCE_NQT, 0);
     }
 
-    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentReservePerUnitNQT) {
-        Currency currency = new Currency(currencyId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentReservePerUnitNQT);
+    static void addCurrency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
+        Currency currency = new Currency(currencyId, name, code, description, type, totalSupply, issuanceHeight, minReservePerUnitNQT, minDifficulty, maxDifficulty, ruleset, currentSupply, currentReservePerUnitNQT);
         if (Currency.currencies.putIfAbsent(currencyId, currency) != null) {
             throw new IllegalStateException("Currency with id " + Convert.toUnsignedLong(currencyId) + " already exists");
         }
@@ -126,9 +126,10 @@ public final class Currency {
     private final byte maxDifficulty;
     private final byte ruleset;
 
+    private long currentSupply;
     private long currentReservePerUnitNQT;
 
-    private Currency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentReservePerUnitNQT) {
+    private Currency(Long currencyId, String name, String code, String description, byte type, long totalSupply, int issuanceHeight, long minReservePerUnitNQT, byte minDifficulty, byte maxDifficulty, byte ruleset, long currentSupply, long currentReservePerUnitNQT) {
         this.currencyId = currencyId;
         this.name = name;
         this.code = code;
@@ -140,7 +141,8 @@ public final class Currency {
         this.minDifficulty = minDifficulty;
         this.maxDifficulty = maxDifficulty;
         this.ruleset = ruleset;
-
+        
+        this.currentSupply = currentSupply;
         this.currentReservePerUnitNQT = currentReservePerUnitNQT;
     }
 
@@ -188,6 +190,10 @@ public final class Currency {
         return ruleset;
     }
 
+    public long getCurrentSupply() {
+        return currentSupply;
+    }
+
     public long getCurrentReservePerUnitNQT() {
         return currentReservePerUnitNQT;
     }
@@ -217,6 +223,10 @@ public final class Currency {
             account.addToCurrencyBalanceQNT(entry.getCurrencyId(), -entry.getUnits());
             Account.addOrGetAccount(entry.getRecipientId()).addToCurrencyAndUnconfirmedCurrencyBalanceQNT(entry.getCurrencyId(), entry.getUnits());
         }
+    }
+
+    public void increaseSupply(int units) {
+        currentSupply += units;
     }
 
 }
