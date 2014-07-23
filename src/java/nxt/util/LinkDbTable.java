@@ -18,9 +18,7 @@ public abstract class LinkDbTable<R> {
 
     protected abstract void save(Connection con, Long idA, Long idB, R r) throws SQLException;
 
-    protected abstract void deleteA(Connection con, Long idA) throws SQLException;
-
-    protected abstract void deleteB(Connection con, Long idB) throws SQLException;
+    protected abstract void delete(Connection con, Long idA, Long idB) throws SQLException;
 
     protected abstract String idColumnA();
 
@@ -95,17 +93,9 @@ public abstract class LinkDbTable<R> {
         }
     }
 
-    public final void deleteA(Long idA) {
+    public final void delete(Long idA, Long idB) {
         try (Connection con = Db.getConnection()) {
-            deleteA(con, idA);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final void deleteB(Long idB) {
-        try (Connection con = Db.getConnection()) {
-            deleteB(con, idB);
+            delete(con, idA, idB);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

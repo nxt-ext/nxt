@@ -125,7 +125,7 @@ public final class SendMoney extends UserServlet.UserRequestHandler {
         } else {
 
             final Transaction transaction = Nxt.getTransactionProcessor().newTransactionBuilder(user.getPublicKey(),
-                    recipient, amountNQT, feeNQT, deadline, Attachment.ORDINARY_PAYMENT).build();
+                    amountNQT, feeNQT, deadline, Attachment.ORDINARY_PAYMENT).recipientId(recipient).build();
             transaction.validateAttachment();
             transaction.sign(user.getSecretPhrase());
 

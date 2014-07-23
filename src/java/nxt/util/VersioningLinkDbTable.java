@@ -96,20 +96,13 @@ public abstract class VersioningLinkDbTable<R> extends LinkDbTable<R> {
     }
 
     @Override
-    protected final void deleteA(Connection con, Long idA) throws SQLException {
+    protected final void delete(Connection con, Long idA, Long idB) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                + " SET latest = FALSE WHERE " + idColumnA() + " = ? AND latest = TRUE limit 1")) {
+                + " SET latest = FALSE WHERE " + idColumnA() + " = ? AND " + idColumnB() + " = ? AND latest = TRUE limit 1")) {
             pstmt.setLong(1, idA);
+            pstmt.setLong(2, idB);
             pstmt.executeUpdate();
         }
     }
 
-    @Override
-    protected final void deleteB(Connection con, Long idB) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                + " SET latest = FALSE WHERE " + idColumnB() + " = ? AND latest = TRUE limit 1")) {
-            pstmt.setLong(1, idB);
-            pstmt.executeUpdate();
-        }
-    }
 }
