@@ -13,7 +13,7 @@ in parallel.
 
 To improve database performance, transactions that do not have a recipient now
 have null instead of the genesis account id as recipient in the transactions
-table.
+table. Such transactions will also not have a recipient field in their JSON.
 
 Added support for pagination to the getAccountTransactionIds API.
 
