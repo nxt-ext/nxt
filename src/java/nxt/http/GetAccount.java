@@ -26,8 +26,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
 
         synchronized (account) {
             JSONObject response = JSONData.accountBalance(account);
-            response.put("account", Convert.toUnsignedLong(account.getId()));
-            response.put("accountRS", Convert.rsAccount(account.getId()));
+            JSONData.putAccount(response, "account", account.getId());
 
             if (account.getPublicKey() != null) {
                 response.put("publicKey", Convert.toHexString(account.getPublicKey()));
@@ -39,13 +38,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 response.put("description", account.getDescription());
             }
             if (account.getCurrentLesseeId() != null) {
-                response.put("currentLessee", Convert.toUnsignedLong(account.getCurrentLesseeId()));
-                response.put("currentLesseeRS", Convert.rsAccount(account.getCurrentLesseeId()));
+                JSONData.putAccount(response, "currentLessee", account.getCurrentLesseeId());
                 response.put("currentLeasingHeightFrom", account.getCurrentLeasingHeightFrom());
                 response.put("currentLeasingHeightTo", account.getCurrentLeasingHeightTo());
                 if (account.getNextLesseeId() != null) {
-                    response.put("nextLessee", Convert.toUnsignedLong(account.getNextLesseeId()));
-                    response.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
+                    JSONData.putAccount(response, "nextLessee", account.getNextLesseeId());
                     response.put("nextLeasingHeightFrom", account.getNextLeasingHeightFrom());
                     response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
                 }
