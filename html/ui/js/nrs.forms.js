@@ -21,6 +21,22 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
 
+	NRS.getSuccessMessage = function(requestType) {
+		var ignore = ["asset_exchange_change_group_name", "asset_exchange_group", "add_contact", "update_contact", "delete_contact",
+			"send_message", "decrypt_messages", "start_forging", "stop_forging", "generate_token", "send_money", "set_alias", "add_asset_bookmark"
+		];
+
+		if (ignore.indexOf(requestType) != -1) {
+			return "";
+		} else {
+			return $.t("success_" + requestType);
+		}
+	}
+
+	NRS.getErrorMessage = function(requestType) {
+		return $.t("error_" + requestType);
+	}
+
 	NRS.submitForm = function($modal, $btn) {
 		if (!$btn) {
 			$btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
@@ -46,8 +62,8 @@ var NRS = (function(NRS, $, undefined) {
 			return "_" + $1.toLowerCase();
 		});
 
-		var successMessage = $.t("success_" + requestTypeKey);
-		var errorMessage = $.t("error_" + requestTypeKey);
+		var successMessage = NRS.getSuccessMessage(requestTypeKey);
+		var errorMessage = NRS.getErrorMessage(requestTypeKey);
 
 		var data = null;
 
