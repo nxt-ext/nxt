@@ -222,7 +222,7 @@ public abstract class Order {
         }
 
         static void rollbackOrder(Long orderId) {
-            askOrderTable.deleteAfter(orderId, Nxt.getBlockchain().getHeight());
+            askOrderTable.rollbackTo(orderId, Nxt.getBlockchain().getHeight());
         }
 
         static void removeOrder(Long orderId) {
@@ -357,7 +357,7 @@ public abstract class Order {
         }
 
         static void rollbackOrder(Long orderId) {
-            bidOrderTable.deleteAfter(orderId, Nxt.getBlockchain().getHeight());
+            bidOrderTable.rollbackTo(orderId, Nxt.getBlockchain().getHeight());
         }
 
         static void removeOrder(Long orderId) {

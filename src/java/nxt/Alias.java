@@ -136,7 +136,7 @@ public final class Alias {
     }
 
     static void rollbackAlias(Long aliasId) {
-        aliasTable.deleteAfter(aliasId, Nxt.getBlockchain().getHeight());
+        aliasTable.rollbackTo(aliasId, Nxt.getBlockchain().getHeight());
     }
 
     static void sellAlias(Transaction transaction, Attachment.MessagingAliasSell attachment) {
@@ -153,7 +153,7 @@ public final class Alias {
     }
 
     static void rollbackOffer(Long aliasId) {
-        offerTable.deleteAfter(aliasId, Nxt.getBlockchain().getHeight());
+        offerTable.rollbackTo(aliasId, Nxt.getBlockchain().getHeight());
     }
 
     static void changeOwner(Long newOwnerId, String aliasName, int timestamp) {

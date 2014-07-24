@@ -648,7 +648,7 @@ public final class DigitalGoodsStore {
     }
 
     static void undoListGoods(Long goodsId) {
-        Goods.goodsTable.deleteAfter(goodsId, Nxt.getBlockchain().getHeight());
+        Goods.goodsTable.rollbackTo(goodsId, Nxt.getBlockchain().getHeight());
     }
 
     static void delistGoods(Long goodsId) {
@@ -705,9 +705,9 @@ public final class DigitalGoodsStore {
 
     static void undoPurchase(Long purchaseId, Long buyerId, int quantity, long priceNQT) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        Purchase.purchaseTable.deleteAfter(purchaseId, Nxt.getBlockchain().getHeight());
+        Purchase.purchaseTable.rollbackTo(purchaseId, Nxt.getBlockchain().getHeight());
         if (purchase != null) {
-            Goods.goodsTable.deleteAfter(purchase.getGoodsId(), Nxt.getBlockchain().getHeight());
+            Goods.goodsTable.rollbackTo(purchase.getGoodsId(), Nxt.getBlockchain().getHeight());
         } else {
             Account buyer = Account.getAccount(buyerId);
             buyer.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(quantity, priceNQT));

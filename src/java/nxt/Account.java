@@ -41,6 +41,12 @@ public final class Account {
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
         }
 
+        private AccountAsset(ResultSet rs) throws SQLException {
+            this.accountId = rs.getLong("account_id");
+            this.assetId = rs.getLong("asset_id");
+            this.quantityQNT = rs.getLong("quantity");
+            this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
+        }
     }
 
     public static class AccountLease {
@@ -110,7 +116,7 @@ public final class Account {
                 int height = block.getHeight();
                 for (Account account : getLeasingAccounts()) {
                     if (height == account.currentLeasingHeightFrom || height == account.currentLeasingHeightTo) {
-                        accountTable.deleteAfter(account.getId(), height - 1);
+                        accountTable.rollbackTo(account.getId(), height - 1);
                     }
                 }
             }
@@ -168,7 +174,6 @@ public final class Account {
 
     };
 
-    //TODO
     private static final VersioningLinkDbTable<AccountAsset> accountAssetTable = new VersioningLinkDbTable<AccountAsset>() {
 
         @Override
@@ -178,22 +183,32 @@ public final class Account {
 
         @Override
         protected AccountAsset load(Connection con, ResultSet rs) throws SQLException {
-            return null;
+            return new AccountAsset(rs);
         }
 
         @Override
         protected void save(Connection con, Long idA, Long idB, AccountAsset accountAsset) throws SQLException {
-
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
+                    + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
+                    + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, idA);
+                pstmt.setLong(++i, idB);
+                pstmt.setLong(++i, accountAsset.quantityQNT);
+                pstmt.setLong(++i, accountAsset.unconfirmedQuantityQNT);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
 
         @Override
         protected String idColumnA() {
-            return null;
+            return "account_id";
         }
 
         @Override
         protected String idColumnB() {
-            return null;
+            return "asset_id";
         }
 
     };
@@ -261,8 +276,8 @@ public final class Account {
     public static List<Account> getLeasingAccounts() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id IS NOT NULL "
-                     + "AND next_lessee_id IS NULL "
-                     + "UNION ALL SELECT * FROM account WHERE next_lessee_id IS NOT NULL")) {
+                     + "AND next_lessee_id IS NULL AND latest = TRUE"
+                     + "UNION ALL SELECT * FROM account WHERE next_lessee_id IS NOT NULL AND latest = TRUE")) {
             return accountTable.getManyBy(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -271,6 +286,7 @@ public final class Account {
 
     static void clear() {
         accountTable.truncate();
+        accountAssetTable.truncate();
     }
 
     private final Long id;
@@ -335,6 +351,7 @@ public final class Account {
     void setAccountInfo(String name, String description) {
         this.name = Convert.emptyToNull(name.trim());
         this.description = Convert.emptyToNull(description.trim());
+        accountTable.insert(this);
     }
 
     public synchronized byte[] getPublicKey() {
@@ -424,7 +441,7 @@ public final class Account {
     public List<Account> getLessors() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id = ? "
-                     + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? ")) {
+                     + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, Nxt.getBlockchain().getHeight());
             pstmt.setInt(3, Nxt.getBlockchain().getHeight());
@@ -499,13 +516,13 @@ public final class Account {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getPublicKey() != null) {
             Block lastBlock = Nxt.getBlockchain().getLastBlock();
-            //leasingAccounts.put(this.getId(), this);
             if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
 
                 currentLeasingHeightFrom = lastBlock.getHeight() + 1440;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
                 nextLeasingHeightFrom = Integer.MAX_VALUE;
+                accountTable.insert(this);
                 leaseListeners.notify(
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
                         Event.LEASE_SCHEDULED);
@@ -518,6 +535,7 @@ public final class Account {
                 }
                 nextLeasingHeightTo = nextLeasingHeightFrom + period;
                 nextLesseeId = lesseeId;
+                accountTable.insert(this);
                 leaseListeners.notify(
                         new AccountLease(this.getId(), lesseeId, nextLeasingHeightFrom, nextLeasingHeightTo),
                         Event.LEASE_SCHEDULED);
@@ -534,6 +552,7 @@ public final class Account {
         if (this.publicKey == null) {
             this.publicKey = key;
             this.keyHeight = -1;
+            accountTable.insert(this);
             return true;
         } else if (Arrays.equals(this.publicKey, key)) {
             return true;
@@ -548,6 +567,7 @@ public final class Account {
                     + ", was previously set to a different one at height " + keyHeight);
             this.publicKey = key;
             this.keyHeight = height;
+            accountTable.insert(this);
             return true;
         }
         Logger.logMessage("DUPLICATE KEY!!!");
@@ -566,15 +586,18 @@ public final class Account {
         }
         if (this.keyHeight == -1 || this.keyHeight > height) {
             this.keyHeight = height;
+            accountTable.insert(this);
         }
     }
 
+    //TODO
     synchronized void undo(int height) {
         if (this.keyHeight >= height) {
             Logger.logDebugMessage("Unsetting key for account " + Convert.toUnsignedLong(id) + " at height " + height
                     + ", was previously set at height " + keyHeight);
             this.publicKey = null;
             this.keyHeight = -1;
+            accountTable.insert(this);
         }
         if (this.creationHeight == height) {
             Logger.logDebugMessage("Removing account " + Convert.toUnsignedLong(id) + " which was created in the popped off block");
@@ -656,6 +679,7 @@ public final class Account {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
             checkBalance();
+            accountTable.insert(this);
         }
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
@@ -669,6 +693,7 @@ public final class Account {
         synchronized (this) {
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
             checkBalance();
+            accountTable.insert(this);
         }
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -679,6 +704,7 @@ public final class Account {
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
             checkBalance();
+            accountTable.insert(this);
         }
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
@@ -689,6 +715,7 @@ public final class Account {
     void addToForgedBalanceNQT(long amountNQT) {
         synchronized(this) {
             this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
+            accountTable.insert(this);
         }
     }
 

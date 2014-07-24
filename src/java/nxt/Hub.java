@@ -73,7 +73,7 @@ public class Hub {
     }
 
     static void rollbackHub(Long accountId) {
-        hubTable.deleteAfter(accountId, Nxt.getBlockchain().getHeight());
+        hubTable.rollbackTo(accountId, Nxt.getBlockchain().getHeight());
     }
 
     static void clear() {

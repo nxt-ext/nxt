@@ -69,15 +69,15 @@ public abstract class VersioningLinkDbTable<R> extends LinkDbTable<R> {
         }
     }
 
-    public final void deleteAfterA(Long idA, int height) {
-        deleteAfter(idColumnA(), idA, height);
+    public final void rollbackToA(Long idA, int height) {
+        rollbackTo(idColumnA(), idA, height);
     }
 
-    public final void deleteAfterB(Long idB, int height) {
-        deleteAfter(idColumnB(), idB, height);
+    public final void rollbackToB(Long idB, int height) {
+        rollbackTo(idColumnB(), idB, height);
     }
 
-    private final void deleteAfter(String columnName, Long id, int height) {
+    private final void rollbackTo(String columnName, Long id, int height) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
                      + " WHERE " + columnName + " = ? AND height > ?");

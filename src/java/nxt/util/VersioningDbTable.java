@@ -110,7 +110,7 @@ public abstract class VersioningDbTable<T> extends DbTable<T> {
         }
     }
 
-    public final void deleteAfter(Long id, int height) {
+    public final void rollbackTo(Long id, int height) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
                      + " WHERE id = ? AND height > ?");
