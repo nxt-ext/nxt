@@ -301,7 +301,9 @@ final class JSONData {
         if (transaction.getEncryptedMessage() != null) {
             attachmentJSON.putAll(transaction.getEncryptedMessage().getJSONObject());
         }
-        json.put("attachment", attachmentJSON);
+        if (! attachmentJSON.isEmpty()) {
+            json.put("attachment", attachmentJSON);
+        }
         json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
         json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
         json.put("height", transaction.getHeight());

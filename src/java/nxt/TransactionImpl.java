@@ -510,7 +510,9 @@ final class TransactionImpl implements Transaction {
         if (encryptedMessage != null) {
             attachmentJSON.putAll(encryptedMessage.getJSONObject());
         }
-        json.put("attachment", attachmentJSON);
+        if (! attachmentJSON.isEmpty()) {
+            json.put("attachment", attachmentJSON);
+        }
         json.put("version", version);
         return json;
     }
