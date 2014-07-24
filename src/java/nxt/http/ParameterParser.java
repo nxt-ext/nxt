@@ -178,14 +178,14 @@ final class ParameterParser {
                 throw new ParameterException(INCORRECT_ENCRYPTED_MESSAGE);
             }
         }
-        String secretPhrase = getSecretPhrase(req);
-        if (recipientAccount == null) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
         String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
         if (plainMessage == null) {
             return null;
         }
+        if (recipientAccount == null) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
+        String secretPhrase = getSecretPhrase(req);
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
