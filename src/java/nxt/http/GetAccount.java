@@ -9,6 +9,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
+import java.util.Set;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 
@@ -39,20 +40,27 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             }
             if (account.getCurrentLesseeId() != null) {
                 response.put("currentLessee", Convert.toUnsignedLong(account.getCurrentLesseeId()));
+                response.put("currentLesseeRS", Convert.rsAccount(account.getCurrentLesseeId()));
                 response.put("currentLeasingHeightFrom", account.getCurrentLeasingHeightFrom());
                 response.put("currentLeasingHeightTo", account.getCurrentLeasingHeightTo());
                 if (account.getNextLesseeId() != null) {
                     response.put("nextLessee", Convert.toUnsignedLong(account.getNextLesseeId()));
+                    response.put("nextLesseeRS", Convert.rsAccount(account.getNextLesseeId()));
                     response.put("nextLeasingHeightFrom", account.getNextLeasingHeightFrom());
                     response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
                 }
             }
-            if (!account.getLessorIds().isEmpty()) {
+            Set<Long> lessors = account.getLessorIds();
+            if (!lessors.isEmpty()) {
+
                 JSONArray lessorIds = new JSONArray();
-                for (Long lessorId : account.getLessorIds()) {
+                JSONArray lessorIdsRS = new JSONArray();
+                for (Long lessorId : lessors) {
                     lessorIds.add(Convert.toUnsignedLong(lessorId));
+                    lessorIdsRS.add(Convert.rsAccount(lessorId));
                 }
                 response.put("lessors", lessorIds);
+                response.put("lessorsRS", lessorIdsRS);
             }
 
             JSONArray assetBalances = new JSONArray();
