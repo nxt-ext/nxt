@@ -136,7 +136,7 @@ public abstract class TransactionType {
 
     abstract Attachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException;
 
-    abstract Attachment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException;
+    abstract Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException;
 
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
@@ -273,7 +273,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
+            Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
                 return Attachment.ORDINARY_PAYMENT;
             }
 
@@ -320,7 +320,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
+            Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
                 return Attachment.ARBITRARY_MESSAGE;
             }
 
@@ -360,8 +360,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.MessagingAliasAssignment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingAliasAssignment(attachmentData, transactionVersion);
+            Attachment.MessagingAliasAssignment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasAssignment(attachmentData);
             }
 
             @Override
@@ -429,8 +429,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.MessagingAliasSell parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingAliasSell(attachmentData, transactionVersion);
+            Attachment.MessagingAliasSell parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasSell(attachmentData);
             }
 
             @Override
@@ -509,8 +509,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.MessagingAliasBuy parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingAliasBuy(attachmentData, transactionVersion);
+            Attachment.MessagingAliasBuy parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasBuy(attachmentData);
             }
 
             @Override
@@ -583,8 +583,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.MessagingPollCreation parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingPollCreation(attachmentData, transactionVersion);
+            Attachment.MessagingPollCreation parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingPollCreation(attachmentData);
             }
 
             @Override
@@ -637,8 +637,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.MessagingVoteCasting parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingVoteCasting(attachmentData, transactionVersion);
+            Attachment.MessagingVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingVoteCasting(attachmentData);
             }
 
             @Override
@@ -692,8 +692,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingHubAnnouncement(attachmentData, transactionVersion);
+            Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingHubAnnouncement(attachmentData);
             }
 
             @Override
@@ -746,8 +746,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.MessagingAccountInfo parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.MessagingAccountInfo(attachmentData, transactionVersion);
+            Attachment.MessagingAccountInfo parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAccountInfo(attachmentData);
             }
 
             @Override
@@ -802,8 +802,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.ColoredCoinsAssetIssuance parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.ColoredCoinsAssetIssuance(attachmentData, transactionVersion);
+            Attachment.ColoredCoinsAssetIssuance parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.ColoredCoinsAssetIssuance(attachmentData);
             }
 
             @Override
@@ -873,8 +873,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.ColoredCoinsAssetTransfer parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.ColoredCoinsAssetTransfer(attachmentData, transactionVersion);
+            Attachment.ColoredCoinsAssetTransfer parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.ColoredCoinsAssetTransfer(attachmentData);
             }
 
             @Override
@@ -968,8 +968,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.ColoredCoinsAskOrderPlacement(attachmentData, transactionVersion);
+            Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.ColoredCoinsAskOrderPlacement(attachmentData);
             }
 
             @Override
@@ -1024,8 +1024,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.ColoredCoinsBidOrderPlacement(attachmentData, transactionVersion);
+            Attachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.ColoredCoinsBidOrderPlacement(attachmentData);
             }
 
             @Override
@@ -1113,8 +1113,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.ColoredCoinsAskOrderCancellation parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.ColoredCoinsAskOrderCancellation(attachmentData, transactionVersion);
+            Attachment.ColoredCoinsAskOrderCancellation parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.ColoredCoinsAskOrderCancellation(attachmentData);
             }
 
             @Override
@@ -1149,8 +1149,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.ColoredCoinsBidOrderCancellation parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.ColoredCoinsBidOrderCancellation(attachmentData, transactionVersion);
+            Attachment.ColoredCoinsBidOrderCancellation parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.ColoredCoinsBidOrderCancellation(attachmentData);
             }
 
             @Override
@@ -1219,8 +1219,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsListing parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsListing(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsListing parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsListing(attachmentData);
             }
 
             @Override
@@ -1268,8 +1268,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsDelisting parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsDelisting(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsDelisting parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsDelisting(attachmentData);
             }
 
             @Override
@@ -1319,8 +1319,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsPriceChange parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsPriceChange(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsPriceChange parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsPriceChange(attachmentData);
             }
 
             @Override
@@ -1372,8 +1372,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsQuantityChange parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsQuantityChange(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsQuantityChange parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsQuantityChange(attachmentData);
             }
 
             @Override
@@ -1426,8 +1426,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsPurchase parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsPurchase(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsPurchase parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsPurchase(attachmentData);
             }
 
             @Override
@@ -1499,8 +1499,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsDelivery parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsDelivery(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsDelivery parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsDelivery(attachmentData);
             }
 
             @Override
@@ -1559,8 +1559,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsFeedback parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsFeedback(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsFeedback parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsFeedback(attachmentData);
             }
 
             @Override
@@ -1621,8 +1621,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.DigitalGoodsRefund parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.DigitalGoodsRefund(attachmentData, transactionVersion);
+            Attachment.DigitalGoodsRefund parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsRefund(attachmentData);
             }
 
             @Override
@@ -1718,8 +1718,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Attachment.AccountControlEffectiveBalanceLeasing parseAttachment(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-                return new Attachment.AccountControlEffectiveBalanceLeasing(attachmentData, transactionVersion);
+            Attachment.AccountControlEffectiveBalanceLeasing parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.AccountControlEffectiveBalanceLeasing(attachmentData);
             }
 
             @Override

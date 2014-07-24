@@ -8,8 +8,8 @@ import java.nio.ByteBuffer;
 
 public interface Appendix {
 
-    int getSize(byte transactionVersion);
-    void putBytes(ByteBuffer buffer, byte transactionVersion);
+    int getSize();
+    void putBytes(ByteBuffer buffer);
     JSONObject getJSONObject();
     byte getVersion();
 
@@ -18,12 +18,8 @@ public interface Appendix {
 
         private final byte version;
 
-        AbstractAppendix(JSONObject attachmentData, byte transactionVersion) {
-            if (transactionVersion == 0) {
-                version = 0;
-            } else {
-                version = ((Long) attachmentData.get("version")).byteValue();
-            }
+        AbstractAppendix(JSONObject attachmentData) {
+            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version")));
         }
 
         AbstractAppendix(ByteBuffer buffer, byte transactionVersion) {
@@ -38,16 +34,21 @@ public interface Appendix {
             this.version = (byte) version;
         }
 
+        AbstractAppendix() {
+            //TODO: default to 1 after DGS
+            this.version = (byte)(Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
+        }
+
         @Override
-        public final int getSize(byte transactionVersion) {
-            return getMySize() + (transactionVersion > 0 ? 1 : 0);
+        public final int getSize() {
+            return getMySize() + (version > 0 ? 1 : 0);
         }
 
         abstract int getMySize();
 
         @Override
-        public final void putBytes(ByteBuffer buffer, byte transactionVersion) {
-            if (transactionVersion > 0) {
+        public final void putBytes(ByteBuffer buffer) {
+            if (version > 0) {
                 buffer.put(version);
             }
             putMyBytes(buffer);
@@ -58,7 +59,9 @@ public interface Appendix {
         @Override
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
-            json.put("version", version);
+            if (version > 0) {
+                json.put("version", version);
+            }
             putMyJSON(json);
             return json;
         }
@@ -78,7 +81,7 @@ public interface Appendix {
             if (attachmentData.get("message") == null) {
                 return null;
             }
-            return new Message(attachmentData, transactionVersion);
+            return new Message(attachmentData);
         }
 
         private final byte[] message;
@@ -101,8 +104,8 @@ public interface Appendix {
             buffer.get(this.message);
         }
 
-        Message(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-            super(attachmentData, transactionVersion);
+        Message(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
             String messageString = (String)attachmentData.get("message");
             this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("messageIsText"));
             if (this.isText && Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
@@ -115,13 +118,11 @@ public interface Appendix {
         }
 
         public Message(byte[] message) {
-            super(0);
             this.message = message;
             this.isText = false;
         }
 
         public Message(String string) {
-            super(0);
             this.message = Convert.toBytes(string);
             this.isText = true;
         }
@@ -159,7 +160,7 @@ public interface Appendix {
             if (encryptedMessageJSON == null ) {
                 return null;
             }
-            return new EncryptedMessage(encryptedMessageJSON, transactionVersion);
+            return new EncryptedMessage(encryptedMessageJSON);
         }
 
         private final EncryptedData encryptedData;
@@ -175,8 +176,8 @@ public interface Appendix {
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
 
-        EncryptedMessage(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-            super(attachmentData, transactionVersion);
+        EncryptedMessage(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
             byte[] data = Convert.parseHexString((String)attachmentData.get("data"));
             if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.ValidationException("Max encrypted message length exceeded");
@@ -190,7 +191,6 @@ public interface Appendix {
         }
 
         public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
-            super(0);
             this.encryptedData = encryptedData;
             this.isText = isText;
         }
