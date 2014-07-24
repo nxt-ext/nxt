@@ -63,14 +63,13 @@ public interface Attachment extends Appendix {
             aliasURI = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH).trim().intern();
         }
 
-        MessagingAliasAssignment(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        MessagingAliasAssignment(JSONObject attachmentData) {
+            super(attachmentData);
             aliasName = (Convert.nullToEmpty((String) attachmentData.get("alias"))).trim().intern();
             aliasURI = (Convert.nullToEmpty((String) attachmentData.get("uri"))).trim().intern();
         }
 
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
-            super(0);
             this.aliasName = aliasName.trim().intern();
             this.aliasURI = aliasURI.trim().intern();
         }
@@ -86,7 +85,7 @@ public interface Attachment extends Appendix {
             byte[] uri = Convert.toBytes(this.aliasURI);
             buffer.put((byte)alias.length);
             buffer.put(alias);
-            buffer.putShort((short)uri.length);
+            buffer.putShort((short) uri.length);
             buffer.put(uri);
         }
 
@@ -121,14 +120,13 @@ public interface Attachment extends Appendix {
             this.priceNQT = buffer.getLong();
         }
 
-        MessagingAliasSell(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        MessagingAliasSell(JSONObject attachmentData) {
+            super(attachmentData);
             this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
             this.priceNQT = Convert.nullToZero((Long) attachmentData.get("priceNQT"));
         }
 
         public MessagingAliasSell(String aliasName, long priceNQT) {
-            super(0);
             this.aliasName = aliasName;
             this.priceNQT = priceNQT;
         }
@@ -175,13 +173,12 @@ public interface Attachment extends Appendix {
             this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
         }
 
-        MessagingAliasBuy(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        MessagingAliasBuy(JSONObject attachmentData) {
+            super(attachmentData);
             this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
         }
 
         public MessagingAliasBuy(String aliasName) {
-            super(0);
             this.aliasName = aliasName;
         }
 
@@ -237,8 +234,8 @@ public interface Attachment extends Appendix {
             this.optionsAreBinary = buffer.get() != 0;
         }
 
-        MessagingPollCreation(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        MessagingPollCreation(JSONObject attachmentData) {
+            super(attachmentData);
             this.pollName = ((String) attachmentData.get("name")).trim();
             this.pollDescription = ((String) attachmentData.get("description")).trim();
             JSONArray options = (JSONArray) attachmentData.get("options");
@@ -253,7 +250,6 @@ public interface Attachment extends Appendix {
 
         public MessagingPollCreation(String pollName, String pollDescription, String[] pollOptions, byte minNumberOfOptions,
                                      byte maxNumberOfOptions, boolean optionsAreBinary) {
-            super(0);
             this.pollName = pollName;
             this.pollDescription = pollDescription;
             this.pollOptions = pollOptions;
@@ -284,7 +280,7 @@ public interface Attachment extends Appendix {
             buffer.put(name);
             buffer.putShort((short)description.length);
             buffer.put(description);
-            buffer.put((byte)options.length);
+            buffer.put((byte) options.length);
             for (byte[] option : options) {
                 buffer.putShort((short) option.length);
                 buffer.put(option);
@@ -343,8 +339,8 @@ public interface Attachment extends Appendix {
             buffer.get(pollVote);
         }
 
-        MessagingVoteCasting(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        MessagingVoteCasting(JSONObject attachmentData) {
+            super(attachmentData);
             this.pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
             JSONArray vote = (JSONArray)attachmentData.get("vote");
             this.pollVote = new byte[vote.size()];
@@ -354,7 +350,6 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingVoteCasting(Long pollId, byte[] pollVote) {
-            super(0);
             this.pollId = pollId;
             this.pollVote = pollVote;
         }
@@ -367,7 +362,7 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(this.pollId);
-            buffer.put((byte)this.pollVote.length);
+            buffer.put((byte) this.pollVote.length);
             buffer.put(this.pollVote);
         }
 
@@ -412,8 +407,8 @@ public interface Attachment extends Appendix {
             }
         }
 
-        MessagingHubAnnouncement(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
-            super(attachmentData, transactionVersion);
+        MessagingHubAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
             this.minFeePerByteNQT = (Long) attachmentData.get("minFeePerByte");
             try {
                 JSONArray urisData = (JSONArray) attachmentData.get("uris");
@@ -427,7 +422,6 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingHubAnnouncement(long minFeePerByteNQT, String[] uris) {
-            super(0);
             this.minFeePerByteNQT = minFeePerByteNQT;
             this.uris = uris;
         }
@@ -486,14 +480,13 @@ public interface Attachment extends Appendix {
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
         }
 
-        MessagingAccountInfo(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        MessagingAccountInfo(JSONObject attachmentData) {
+            super(attachmentData);
             this.name = Convert.nullToEmpty((String) attachmentData.get("name"));
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
         }
 
         public MessagingAccountInfo(String name, String description) {
-            super(0);
             this.name = name;
             this.description = description;
         }
@@ -509,7 +502,7 @@ public interface Attachment extends Appendix {
             byte[] description = Convert.toBytes(this.description);
             buffer.put((byte)name.length);
             buffer.put(name);
-            buffer.putShort((short)description.length);
+            buffer.putShort((short) description.length);
             buffer.put(description);
         }
 
@@ -549,8 +542,8 @@ public interface Attachment extends Appendix {
             this.decimals = buffer.get();
         }
 
-        ColoredCoinsAssetIssuance(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        ColoredCoinsAssetIssuance(JSONObject attachmentData) {
+            super(attachmentData);
             this.name = (String) attachmentData.get("name");
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
             this.quantityQNT = (Long) attachmentData.get("quantityQNT");
@@ -558,7 +551,6 @@ public interface Attachment extends Appendix {
         }
 
         public ColoredCoinsAssetIssuance(String name, String description, long quantityQNT, byte decimals) {
-            super(0);
             this.name = name;
             this.description = Convert.nullToEmpty(description);
             this.quantityQNT = quantityQNT;
@@ -576,7 +568,7 @@ public interface Attachment extends Appendix {
             byte[] description = Convert.toBytes(this.description);
             buffer.put((byte)name.length);
             buffer.put(name);
-            buffer.putShort((short)description.length);
+            buffer.putShort((short) description.length);
             buffer.put(description);
             buffer.putLong(quantityQNT);
             buffer.put(decimals);
@@ -625,15 +617,14 @@ public interface Attachment extends Appendix {
             this.comment = getVersion() == 0 ? Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH) : null;
         }
 
-        ColoredCoinsAssetTransfer(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        ColoredCoinsAssetTransfer(JSONObject attachmentData) {
+            super(attachmentData);
             this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
             this.quantityQNT = (Long) attachmentData.get("quantityQNT");
             this.comment = getVersion() == 0 ? Convert.nullToEmpty((String) attachmentData.get("comment")) : null;
         }
 
         public ColoredCoinsAssetTransfer(Long assetId, long quantityQNT, String comment) {
-            super(Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = getVersion() == 0 ? Convert.nullToEmpty(comment) : null;
@@ -696,15 +687,14 @@ public interface Attachment extends Appendix {
             this.priceNQT = buffer.getLong();
         }
 
-        private ColoredCoinsOrderPlacement(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        private ColoredCoinsOrderPlacement(JSONObject attachmentData) {
+            super(attachmentData);
             this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
             this.quantityQNT = (Long) attachmentData.get("quantityQNT");
             this.priceNQT = (Long) attachmentData.get("priceNQT");
         }
 
         private ColoredCoinsOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
-            super(0);
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.priceNQT = priceNQT;
@@ -748,8 +738,8 @@ public interface Attachment extends Appendix {
             super(buffer, transactionVersion);
         }
 
-        ColoredCoinsAskOrderPlacement(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        ColoredCoinsAskOrderPlacement(JSONObject attachmentData) {
+            super(attachmentData);
         }
 
         public ColoredCoinsAskOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
@@ -769,8 +759,8 @@ public interface Attachment extends Appendix {
             super(buffer, transactionVersion);
         }
 
-        ColoredCoinsBidOrderPlacement(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        ColoredCoinsBidOrderPlacement(JSONObject attachmentData) {
+            super(attachmentData);
         }
 
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
@@ -793,13 +783,12 @@ public interface Attachment extends Appendix {
             this.orderId = Convert.zeroToNull(buffer.getLong());
         }
 
-        private ColoredCoinsOrderCancellation(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        private ColoredCoinsOrderCancellation(JSONObject attachmentData) {
+            super(attachmentData);
             this.orderId = Convert.parseUnsignedLong((String) attachmentData.get("order"));
         }
 
         private ColoredCoinsOrderCancellation(Long orderId) {
-            super(0);
             this.orderId = orderId;
         }
 
@@ -829,8 +818,8 @@ public interface Attachment extends Appendix {
             super(buffer, transactionVersion);
         }
 
-        ColoredCoinsAskOrderCancellation(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        ColoredCoinsAskOrderCancellation(JSONObject attachmentData) {
+            super(attachmentData);
         }
 
         public ColoredCoinsAskOrderCancellation(Long orderId) {
@@ -850,8 +839,8 @@ public interface Attachment extends Appendix {
             super(buffer, transactionVersion);
         }
 
-        ColoredCoinsBidOrderCancellation(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        ColoredCoinsBidOrderCancellation(JSONObject attachmentData) {
+            super(attachmentData);
         }
 
         public ColoredCoinsBidOrderCancellation(Long orderId) {
@@ -882,8 +871,8 @@ public interface Attachment extends Appendix {
             this.priceNQT = buffer.getLong();
         }
 
-        DigitalGoodsListing(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsListing(JSONObject attachmentData) {
+            super(attachmentData);
             this.name = (String) attachmentData.get("name");
             this.description = (String) attachmentData.get("description");
             this.tags = (String) attachmentData.get("tags");
@@ -892,7 +881,6 @@ public interface Attachment extends Appendix {
         }
 
         public DigitalGoodsListing(String name, String description, String tags, int quantity, long priceNQT) {
-            super(0);
             this.name = name;
             this.description = description;
             this.tags = tags;
@@ -909,13 +897,13 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             byte[] nameBytes = Convert.toBytes(name);
-            buffer.putShort((short)nameBytes.length);
+            buffer.putShort((short) nameBytes.length);
             buffer.put(nameBytes);
             byte[] descriptionBytes = Convert.toBytes(description);
-            buffer.putShort((short)descriptionBytes.length);
+            buffer.putShort((short) descriptionBytes.length);
             buffer.put(descriptionBytes);
             byte[] tagsBytes = Convert.toBytes(tags);
-            buffer.putShort((short)tagsBytes.length);
+            buffer.putShort((short) tagsBytes.length);
             buffer.put(tagsBytes);
             buffer.putInt(quantity);
             buffer.putLong(priceNQT);
@@ -956,13 +944,12 @@ public interface Attachment extends Appendix {
             this.goodsId = buffer.getLong();
         }
 
-        DigitalGoodsDelisting(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsDelisting(JSONObject attachmentData) {
+            super(attachmentData);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
         }
 
         public DigitalGoodsDelisting(Long goodsId) {
-            super(0);
             this.goodsId = goodsId;
         }
 
@@ -1001,14 +988,13 @@ public interface Attachment extends Appendix {
             this.priceNQT = buffer.getLong();
         }
 
-        DigitalGoodsPriceChange(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsPriceChange(JSONObject attachmentData) {
+            super(attachmentData);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.priceNQT = (Long)attachmentData.get("priceNQT");
         }
 
         public DigitalGoodsPriceChange(Long goodsId, long priceNQT) {
-            super(0);
             this.goodsId = goodsId;
             this.priceNQT = priceNQT;
         }
@@ -1052,14 +1038,13 @@ public interface Attachment extends Appendix {
             this.deltaQuantity = buffer.getInt();
         }
 
-        DigitalGoodsQuantityChange(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsQuantityChange(JSONObject attachmentData) {
+            super(attachmentData);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.deltaQuantity = ((Long)attachmentData.get("deltaQuantity")).intValue();
         }
 
         public DigitalGoodsQuantityChange(Long goodsId, int deltaQuantity) {
-            super(0);
             this.goodsId = goodsId;
             this.deltaQuantity = deltaQuantity;
         }
@@ -1107,8 +1092,8 @@ public interface Attachment extends Appendix {
             this.deliveryDeadlineTimestamp = buffer.getInt();
         }
 
-        DigitalGoodsPurchase(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsPurchase(JSONObject attachmentData) {
+            super(attachmentData);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.quantity = ((Long)attachmentData.get("quantity")).intValue();
             this.priceNQT = (Long)attachmentData.get("priceNQT");
@@ -1116,7 +1101,6 @@ public interface Attachment extends Appendix {
         }
 
         public DigitalGoodsPurchase(Long goodsId, int quantity, long priceNQT, int deliveryDeadlineTimestamp) {
-            super(0);
             this.goodsId = goodsId;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
@@ -1178,8 +1162,8 @@ public interface Attachment extends Appendix {
             this.discountNQT = buffer.getLong();
         }
 
-        DigitalGoodsDelivery(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsDelivery(JSONObject attachmentData) {
+            super(attachmentData);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
             this.goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                     Convert.parseHexString((String)attachmentData.get("goodsNonce")));
@@ -1188,7 +1172,6 @@ public interface Attachment extends Appendix {
         }
 
         public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, boolean goodsIsText, long discountNQT) {
-            super(0);
             this.purchaseId = purchaseId;
             this.goods = goods;
             this.discountNQT = discountNQT;
@@ -1244,13 +1227,12 @@ public interface Attachment extends Appendix {
             this.purchaseId = buffer.getLong();
         }
 
-        DigitalGoodsFeedback(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsFeedback(JSONObject attachmentData) {
+            super(attachmentData);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
         }
 
         public DigitalGoodsFeedback(Long purchaseId) {
-            super(0);
             this.purchaseId = purchaseId;
         }
 
@@ -1289,14 +1271,13 @@ public interface Attachment extends Appendix {
             this.refundNQT = buffer.getLong();
         }
 
-        DigitalGoodsRefund(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        DigitalGoodsRefund(JSONObject attachmentData) {
+            super(attachmentData);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
             this.refundNQT = (Long)attachmentData.get("refundNQT");
         }
 
         public DigitalGoodsRefund(Long purchaseId, long refundNQT) {
-            super(0);
             this.purchaseId = purchaseId;
             this.refundNQT = refundNQT;
         }
@@ -1338,13 +1319,12 @@ public interface Attachment extends Appendix {
             this.period = buffer.getShort();
         }
 
-        AccountControlEffectiveBalanceLeasing(JSONObject attachmentData, byte transactionVersion) {
-            super(attachmentData, transactionVersion);
+        AccountControlEffectiveBalanceLeasing(JSONObject attachmentData) {
+            super(attachmentData);
             this.period = ((Long) attachmentData.get("period")).shortValue();
         }
 
         public AccountControlEffectiveBalanceLeasing(short period) {
-            super(0);
             this.period = period;
         }
 

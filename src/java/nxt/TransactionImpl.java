@@ -410,12 +410,12 @@ final class TransactionImpl implements Transaction {
         if (version > 0) {
             buffer.putInt(getFlags());
         }
-        attachment.putBytes(buffer, version);
+        attachment.putBytes(buffer);
         if (message != null) {
-            message.putBytes(buffer, version);
+            message.putBytes(buffer);
         }
         if (encryptedMessage != null) {
-            encryptedMessage.putBytes(buffer, version);
+            encryptedMessage.putBytes(buffer);
         }
         return buffer.array();
     }
@@ -530,9 +530,12 @@ final class TransactionImpl implements Transaction {
         JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+        if (transactionType == null) {
+            throw new NxtException.ValidationException("Invalid transaction type: " + type + ", " + subtype);
+        }
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
                 amountNQT, feeNQT, timestamp, deadline,
-                transactionType.parseAttachment(attachmentData, version))
+                transactionType.parseAttachment(attachmentData))
                 .referencedTransactionFullHash(referencedTransactionFullHash)
                 .signature(signature);
         if (transactionType.hasRecipient()) {
@@ -580,9 +583,9 @@ final class TransactionImpl implements Transaction {
     }
 
     int getSize() {
-        return signatureOffset() + 64  + (version > 0 ? 4 : 0) + attachment.getSize(version)
-                + (message != null ? message.getSize(version) : 0)
-                + (encryptedMessage != null ? encryptedMessage.getSize(version) : 0);
+        return signatureOffset() + 64  + (version > 0 ? 4 : 0) + attachment.getSize()
+                + (message != null ? message.getSize() : 0)
+                + (encryptedMessage != null ? encryptedMessage.getSize() : 0);
     }
 
     private int signatureOffset() {

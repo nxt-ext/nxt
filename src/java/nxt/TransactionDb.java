@@ -179,24 +179,24 @@ final class TransactionDb {
                     pstmt.setLong(++i, transaction.getSenderId());
                     Appendix.Message message = transaction.getMessage();
                     Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
-                    int bytesLength = transaction.getAttachment().getSize(transaction.getVersion());
+                    int bytesLength = transaction.getAttachment().getSize();
                     if (message != null) {
-                        bytesLength += message.getSize(transaction.getVersion());
+                        bytesLength += message.getSize();
                     }
                     if (encryptedMessage != null) {
-                        bytesLength += encryptedMessage.getSize(transaction.getVersion());
+                        bytesLength += encryptedMessage.getSize();
                     }
                     if (bytesLength == 0) {
                         pstmt.setNull(++i, Types.VARBINARY);
                     } else {
                         ByteBuffer buffer = ByteBuffer.allocate(bytesLength);
                         buffer.order(ByteOrder.LITTLE_ENDIAN);
-                        transaction.getAttachment().putBytes(buffer, transaction.getVersion());
+                        transaction.getAttachment().putBytes(buffer);
                         if (message != null) {
-                            message.putBytes(buffer, transaction.getVersion());
+                            message.putBytes(buffer);
                         }
                         if (encryptedMessage != null) {
-                            encryptedMessage.putBytes(buffer, transaction.getVersion());
+                            encryptedMessage.putBytes(buffer);
                         }
                         pstmt.setBytes(++i, buffer.array());
                     }
