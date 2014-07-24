@@ -530,6 +530,9 @@ final class TransactionImpl implements Transaction {
         JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+        if (transactionType == null) {
+            throw new NxtException.ValidationException("Invalid transaction type: " + type + ", " + subtype);
+        }
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
                 amountNQT, feeNQT, timestamp, deadline,
                 transactionType.parseAttachment(attachmentData))
