@@ -33,8 +33,7 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("account", Convert.toUnsignedLong(accountId));
-        response.put("accountRS", Convert.rsAccount(accountId));
+        JSONData.putAccount(response, "account", accountId);
 
         return response;
     }
