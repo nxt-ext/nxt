@@ -19,20 +19,20 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        int getMySize() {
+        final int getMySize() {
             return 0;
         }
 
         @Override
-        void putMyBytes(ByteBuffer buffer) {
+        final void putMyBytes(ByteBuffer buffer) {
         }
 
         @Override
-        void putMyJSON(JSONObject json) {
+        final void putMyJSON(JSONObject json) {
         }
 
         @Override
-        boolean verifyVersion(byte transactionVersion) {
+        final boolean verifyVersion(byte transactionVersion) {
             return true;
         }
 
