@@ -662,8 +662,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } // synchronized
 
         } catch (RuntimeException e) {
-            Logger.logDebugMessage("Error popping last block: " + e.getMessage());
-            throw new TransactionType.UndoNotSupportedException(e.getMessage());
+            Logger.logDebugMessage("Error popping last block: " + e.toString(), e);
+            throw new TransactionType.UndoNotSupportedException(e.toString());
         }
     }
 
