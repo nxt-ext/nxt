@@ -14,7 +14,7 @@ public interface Attachment extends Appendix {
 
     abstract static class EmptyAttachment extends AbstractAppendix implements Attachment {
 
-        EmptyAttachment() {
+        private EmptyAttachment() {
             super(0);
         }
 
@@ -29,6 +29,11 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject json) {
+        }
+
+        @Override
+        boolean verifyVersion(byte transactionVersion) {
+            return true;
         }
 
     }

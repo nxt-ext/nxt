@@ -72,9 +72,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         Appendix.Message message = null;
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
         if (messageValue != null) {
-            boolean messageIsText = attachment == Attachment.ARBITRARY_MESSAGE
-                    ? "true".equalsIgnoreCase(req.getParameter("messageIsText"))
-                    : !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
+            boolean messageIsText = Nxt.getBlockchain().getHeight() >= Constants.DIGITAL_GOODS_STORE_BLOCK
+                    && !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
             try {
                 message = messageIsText ? new Appendix.Message(messageValue) : new Appendix.Message(Convert.parseHexString(messageValue));
             } catch (RuntimeException e) {
