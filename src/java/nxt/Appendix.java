@@ -73,11 +73,14 @@ public interface Appendix {
             return version;
         }
 
+        boolean verifyVersion(byte transactionVersion) {
+            return transactionVersion == 0 ? version == 0 : version > 0;
+        }
     }
 
     public static class Message extends AbstractAppendix {
 
-        static Message parse(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
+        static Message parse(JSONObject attachmentData) throws NxtException.ValidationException {
             if (attachmentData.get("message") == null) {
                 return null;
             }
@@ -155,7 +158,7 @@ public interface Appendix {
 
     public static class EncryptedMessage extends AbstractAppendix {
 
-        static EncryptedMessage parse(JSONObject attachmentData, byte transactionVersion) throws NxtException.ValidationException {
+        static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
             JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
             if (encryptedMessageJSON == null ) {
                 return null;
