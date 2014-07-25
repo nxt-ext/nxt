@@ -1745,6 +1745,10 @@ public abstract class TransactionType {
             super(message);
         }
 
+        UndoNotSupportedException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
     }
 
     public static final class NotYetEnabledException extends NxtException.ValidationException {
