@@ -192,7 +192,9 @@ public abstract class TransactionType {
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(- Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(-transaction.getAmountNQT());
+        if (recipientAccount != null) {
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(-transaction.getAmountNQT());
+        }
         undoAttachment(transaction, senderAccount, recipientAccount);
     }
 
