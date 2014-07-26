@@ -96,12 +96,12 @@ public interface Appendix {
             this.isText = messageLength < 0; // ugly hack
             if (messageLength < 0) {
                 if (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new TransactionType.NotYetEnabledException("Text messages not yet enabled");
+                    throw new NxtException.NotYetEnabledException("Text messages not yet enabled");
                 }
-                messageLength ^= Integer.MIN_VALUE;
+                messageLength &= Integer.MAX_VALUE;
             }
             if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.ValidationException("Invalid arbitrary message length: " + messageLength);
+                throw new NxtException.NotValidException("Invalid arbitrary message length: " + messageLength);
             }
             this.message = new byte[messageLength];
             buffer.get(this.message);
@@ -112,11 +112,11 @@ public interface Appendix {
             String messageString = (String)attachmentData.get("message");
             this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("messageIsText"));
             if (this.isText && Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                throw new TransactionType.NotYetEnabledException("Text messages not yet enabled");
+                throw new NxtException.NotYetEnabledException("Text messages not yet enabled");
             }
             this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
             if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.ValidationException("Invalid arbitrary message length: " + message.length);
+                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
         }
 
@@ -174,7 +174,7 @@ public interface Appendix {
             int length = buffer.getInt();
             this.isText = length < 0;
             if (length < 0) {
-                length ^= Integer.MIN_VALUE;
+                length &= Integer.MAX_VALUE;
             }
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
@@ -183,11 +183,11 @@ public interface Appendix {
             super(attachmentData);
             byte[] data = Convert.parseHexString((String)attachmentData.get("data"));
             if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.ValidationException("Max encrypted message length exceeded");
+                throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             byte[] nonce = Convert.parseHexString((String)attachmentData.get("nonce"));
             if ((nonce.length != 32 && data.length > 0) || (nonce.length != 0 && data.length == 0)) {
-                throw new NxtException.ValidationException("Invalid nonce length " + nonce.length);
+                throw new NxtException.NotValidException("Invalid nonce length " + nonce.length);
             }
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("isText"));
@@ -205,7 +205,7 @@ public interface Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putInt(isText ? encryptedData.getData().length | Integer.MIN_VALUE : encryptedData.getData().length);
+            buffer.putInt(isText ? (encryptedData.getData().length | Integer.MIN_VALUE) : encryptedData.getData().length);
             buffer.put(encryptedData.getData());
             buffer.put(encryptedData.getNonce());
         }

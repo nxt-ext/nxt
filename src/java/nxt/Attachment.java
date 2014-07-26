@@ -19,20 +19,20 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        int getMySize() {
+        final int getMySize() {
             return 0;
         }
 
         @Override
-        void putMyBytes(ByteBuffer buffer) {
+        final void putMyBytes(ByteBuffer buffer) {
         }
 
         @Override
-        void putMyJSON(JSONObject json) {
+        final void putMyJSON(JSONObject json) {
         }
 
         @Override
-        boolean verifyVersion(byte transactionVersion) {
+        final boolean verifyVersion(byte transactionVersion) {
             return true;
         }
 
@@ -228,7 +228,7 @@ public interface Attachment extends Appendix {
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                throw new NxtException.ValidationException("Invalid number of poll options: " + numberOfOptions);
+                throw new NxtException.NotValidException("Invalid number of poll options: " + numberOfOptions);
             }
             this.pollOptions = new String[numberOfOptions];
             for (int i = 0; i < numberOfOptions; i++) {
@@ -338,7 +338,7 @@ public interface Attachment extends Appendix {
             this.pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
             if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
-                throw new NxtException.ValidationException("Error parsing vote casting parameters");
+                throw new NxtException.NotValidException("Error parsing vote casting parameters");
             }
             this.pollVote = new byte[numberOfOptions];
             buffer.get(pollVote);
@@ -404,7 +404,7 @@ public interface Attachment extends Appendix {
             this.minFeePerByteNQT = buffer.getLong();
             int numberOfUris = buffer.get();
             if (numberOfUris > Constants.MAX_HUB_ANNOUNCEMENT_URIS) {
-                throw new NxtException.ValidationException("Invalid number of URIs: " + numberOfUris);
+                throw new NxtException.NotValidException("Invalid number of URIs: " + numberOfUris);
             }
             this.uris = new String[numberOfUris];
             for (int i = 0; i < uris.length; i++) {
@@ -422,7 +422,7 @@ public interface Attachment extends Appendix {
                     uris[i] = (String) urisData.get(i);
                 }
             } catch (RuntimeException e) {
-                throw new NxtException.ValidationException("Error parsing hub terminal announcement parameters", e);
+                throw new NxtException.NotValidException("Error parsing hub terminal announcement parameters", e);
             }
         }
 

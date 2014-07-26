@@ -196,7 +196,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
         if (! transaction.verify()) {
-            throw new NxtException.ValidationException("Transaction signature verification failed");
+            throw new NxtException.NotValidException("Transaction signature verification failed");
         }
         List<Transaction> validTransactions = processTransactions(Collections.singletonList((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
@@ -204,12 +204,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
             Logger.logDebugMessage("Rejecting double spending transaction " + transaction.getStringId());
-            throw new NxtException.ValidationException("Double spending transaction");
+            throw new NxtException.NotValidException("Double spending transaction");
         }
     }
 
     @Override
-    public void processPeerTransactions(JSONObject request) {
+    public void processPeerTransactions(JSONObject request) throws NxtException.ValidationException {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
         processPeerTransactions(transactionsData, true);
     }
@@ -293,11 +293,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void removeUnconfirmedTransactions(Collection<TransactionImpl> transactions) {
-        List<Transaction> removedList = new ArrayList<>();
-        for (TransactionImpl transaction : transactions) {
-            if (unconfirmedTransactions.remove(transaction.getId()) != null) {
-                transaction.undoUnconfirmed();
-                removedList.add(transaction);
+        List<Transaction> removedList;
+        synchronized (BlockchainImpl.getInstance()) {
+            removedList = new ArrayList<>();
+            for (TransactionImpl transaction : transactions) {
+                if (unconfirmedTransactions.remove(transaction.getId()) != null) {
+                    transaction.undoUnconfirmed();
+                    removedList.add(transaction);
+                }
             }
         }
         transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
@@ -307,14 +310,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
     }
 
-    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) {
+    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
                 transaction.validateAttachment();
                 transactions.add(transaction);
-            } catch (NxtException.ValidationException e) {
+            } catch (NxtException.NotCurrentlyValidException e) {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}
