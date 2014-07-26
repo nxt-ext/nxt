@@ -190,8 +190,27 @@ final class TransactionImpl implements Transaction {
                     + " for transaction of type " + type);
         }
 
-        if (! type.hasRecipient() && (recipientId != null || getAmountNQT() != 0)) {
-            throw new NxtException.ValidationException("Transactions of this type must have recipient == Genesis and amount == 0");
+        if (! type.hasRecipient()) {
+            if (recipientId != null || getAmountNQT() != 0 || encryptedMessage != null) {
+                throw new NxtException.ValidationException("Transactions of this type must have recipient == Genesis, amount == 0, and no encrypted message");
+            }
+        }
+
+        if (version == 0 && ((message != null && attachment != Attachment.ARBITRARY_MESSAGE) || encryptedMessage != null)) {
+            throw new NxtException.ValidationException("Appendix attachments not enabled for version 0");
+        }
+
+        if (! ((Appendix.AbstractAppendix)attachment).verifyVersion(this.version)) {
+            throw new NxtException.ValidationException("Invalid attachment version " + attachment.getVersion()
+                    + " for transaction version " + this.version);
+        }
+        if (message != null && ! message.verifyVersion(this.version)) {
+            throw new NxtException.ValidationException("Invalid message version " + message.getVersion()
+                    + " for transaction version " + this.version);
+        }
+        if (encryptedMessage != null && ! encryptedMessage.verifyVersion(this.version)) {
+            throw new NxtException.ValidationException("Invalid encrypted message version " + encryptedMessage.getVersion()
+                    + " for transaction version " + this.version);
         }
 
     }
@@ -548,8 +567,8 @@ final class TransactionImpl implements Transaction {
             builder.recipientId(recipientId);
         }
         if (attachmentData != null) {
-            builder.message(Appendix.Message.parse(attachmentData, version));
-            builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData, version));
+            builder.message(Appendix.Message.parse(attachmentData));
+            builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
         }
         return builder.build();
     }
@@ -623,12 +642,6 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
-        if (version == 0 && ((message != null && attachment != Attachment.ARBITRARY_MESSAGE) || encryptedMessage != null)) {
-            throw new TransactionType.NotYetEnabledException("Appendix attachments not yet enabled");
-        }
-        if (! type.hasRecipient() && encryptedMessage != null) {
-            throw new NxtException.ValidationException("Transactions with no recipient cannot have encrypted messages attached");
-        }
         type.validateAttachment(this);
     }
 
