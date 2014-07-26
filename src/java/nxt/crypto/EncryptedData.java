@@ -46,7 +46,7 @@ public final class EncryptedData {
             return EMPTY_DATA;
         }
         if (length > maxLength) {
-            throw new NxtException.ValidationException("Max encrypted data length exceeded");
+            throw new NxtException.ValidationException("Max encrypted data length exceeded: " + length);
         }
         byte[] noteBytes = new byte[length];
         buffer.get(noteBytes);

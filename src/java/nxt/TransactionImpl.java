@@ -475,7 +475,7 @@ final class TransactionImpl implements Transaction {
             builder.recipientId(recipientId);
         }
         int position = 1;
-        if ((flags & position) != 0 || transactionType == TransactionType.Messaging.ARBITRARY_MESSAGE) {
+        if ((flags & position) != 0 || (version == 0 && transactionType == TransactionType.Messaging.ARBITRARY_MESSAGE)) {
             builder.message(new Appendix.Message(buffer, version));
         }
         position <<= 1;

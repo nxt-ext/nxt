@@ -98,7 +98,7 @@ public interface Appendix {
                 if (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
                     throw new TransactionType.NotYetEnabledException("Text messages not yet enabled");
                 }
-                messageLength ^= Integer.MIN_VALUE;
+                messageLength &= Integer.MAX_VALUE;
             }
             if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.ValidationException("Invalid arbitrary message length: " + messageLength);
@@ -174,7 +174,7 @@ public interface Appendix {
             int length = buffer.getInt();
             this.isText = length < 0;
             if (length < 0) {
-                length ^= Integer.MIN_VALUE;
+                length &= Integer.MAX_VALUE;
             }
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
@@ -205,7 +205,7 @@ public interface Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putInt(isText ? encryptedData.getData().length | Integer.MIN_VALUE : encryptedData.getData().length);
+            buffer.putInt(isText ? (encryptedData.getData().length | Integer.MIN_VALUE) : encryptedData.getData().length);
             buffer.put(encryptedData.getData());
             buffer.put(encryptedData.getNonce());
         }
