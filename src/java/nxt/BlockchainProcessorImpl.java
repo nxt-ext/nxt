@@ -131,12 +131,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 BlockImpl block;
                                 try {
                                     block = parseBlock(blockData);
-                                } catch (NxtException.ValidationException e) {
+                                } catch (NxtException.NotCurrentlyValidException e) {
                                     Logger.logDebugMessage("Cannot validate block: " + e.toString()
                                             + ", will try again later", e);
                                     processedAll = false;
                                     break outer;
-                                } catch (RuntimeException e) {
+                                } catch (RuntimeException|NxtException.ValidationException e) {
                                     Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
                                     peer.blacklist();
                                     return;
@@ -707,7 +707,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 try {
                     transaction.validateAttachment();
+                } catch (NxtException.NotCurrentlyValidException e) {
+                    continue;
                 } catch (NxtException.ValidationException e) {
+                    transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList(transaction));
                     continue;
                 }
 
@@ -834,21 +837,21 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     while (rs.next()) {
                         currentBlock = BlockDb.loadBlock(con, rs);
                         if (! currentBlock.getId().equals(currentBlockId)) {
-                            throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                            throw new NxtException.NotValidException("Database blocks in the wrong order!");
                         }
                         if (validateAtScan && ! currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
                             if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
-                                throw new NxtException.ValidationException("Invalid block signature");
+                                throw new NxtException.NotValidException("Invalid block signature");
                             }
                             if (! verifyVersion(currentBlock, blockchain.getHeight())) {
-                                throw new NxtException.ValidationException("Invalid block version");
+                                throw new NxtException.NotValidException("Invalid block version");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                 if (!transaction.verify()) {
-                                    throw new NxtException.ValidationException("Invalid transaction signature");
+                                    throw new NxtException.NotValidException("Invalid transaction signature");
                                 }
                                 if (! verifyVersion(transaction, blockchain.getHeight())) {
-                                    throw new NxtException.ValidationException("Invalid transaction version");
+                                    throw new NxtException.NotValidException("Invalid transaction version");
                                 }
                                 transaction.validateAttachment();
                             }

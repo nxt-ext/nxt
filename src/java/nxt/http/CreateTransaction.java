@@ -7,7 +7,6 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -151,7 +150,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
 
-        } catch (TransactionType.NotYetEnabledException e) {
+        } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
         } catch (NxtException.ValidationException e) {
             response.put("error", e.getMessage());

@@ -152,7 +152,7 @@ final class TransactionImpl implements Transaction {
     private volatile Long senderId;
     private volatile String fullHash;
 
-    private TransactionImpl(BuilderImpl builder) throws NxtException.ValidationException {
+    private TransactionImpl(BuilderImpl builder) throws NxtException.NotValidException {
 
         this.timestamp = builder.timestamp;
         this.deadline = builder.deadline;
@@ -181,35 +181,35 @@ final class TransactionImpl implements Transaction {
                 || amountNQT < 0
                 || amountNQT > Constants.MAX_BALANCE_NQT
                 || type == null) {
-            throw new NxtException.ValidationException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
+            throw new NxtException.NotValidException("Invalid transaction parameters:\n type: " + type + ", timestamp: " + timestamp
                     + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
         }
 
         if (type != attachment.getTransactionType()) {
-            throw new NxtException.ValidationException("Invalid attachment " + attachment.getJSONObject()
+            throw new NxtException.NotValidException("Invalid attachment " + attachment.getJSONObject()
                     + " for transaction of type " + type);
         }
 
         if (! type.hasRecipient()) {
             if (recipientId != null || getAmountNQT() != 0 || encryptedMessage != null) {
-                throw new NxtException.ValidationException("Transactions of this type must have recipient == Genesis, amount == 0, and no encrypted message");
+                throw new NxtException.NotValidException("Transactions of this type must have recipient == Genesis, amount == 0, and no encrypted message");
             }
         }
 
         if (version == 0 && ((message != null && attachment != Attachment.ARBITRARY_MESSAGE) || encryptedMessage != null)) {
-            throw new NxtException.ValidationException("Appendix attachments not enabled for version 0");
+            throw new NxtException.NotValidException("Appendix attachments not enabled for version 0");
         }
 
         if (! ((Appendix.AbstractAppendix)attachment).verifyVersion(this.version)) {
-            throw new NxtException.ValidationException("Invalid attachment version " + attachment.getVersion()
+            throw new NxtException.NotValidException("Invalid attachment version " + attachment.getVersion()
                     + " for transaction version " + this.version);
         }
         if (message != null && ! message.verifyVersion(this.version)) {
-            throw new NxtException.ValidationException("Invalid message version " + message.getVersion()
+            throw new NxtException.NotValidException("Invalid message version " + message.getVersion()
                     + " for transaction version " + this.version);
         }
         if (encryptedMessage != null && ! encryptedMessage.verifyVersion(this.version)) {
-            throw new NxtException.ValidationException("Invalid encrypted message version " + encryptedMessage.getVersion()
+            throw new NxtException.NotValidException("Invalid encrypted message version " + encryptedMessage.getVersion()
                     + " for transaction version " + this.version);
         }
 
@@ -552,7 +552,7 @@ final class TransactionImpl implements Transaction {
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         if (transactionType == null) {
-            throw new NxtException.ValidationException("Invalid transaction type: " + type + ", " + subtype);
+            throw new NxtException.NotValidException("Invalid transaction type: " + type + ", " + subtype);
         }
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey,
                 amountNQT, feeNQT, timestamp, deadline,

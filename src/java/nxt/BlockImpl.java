@@ -47,11 +47,11 @@ final class BlockImpl implements Block {
             throws NxtException.ValidationException {
 
         if (transactions.size() > Constants.MAX_NUMBER_OF_TRANSACTIONS) {
-            throw new NxtException.ValidationException("attempted to create a block with " + transactions.size() + " transactions");
+            throw new NxtException.NotValidException("attempted to create a block with " + transactions.size() + " transactions");
         }
 
         if (payloadLength > Constants.MAX_PAYLOAD_LENGTH || payloadLength < 0) {
-            throw new NxtException.ValidationException("attempted to create a block with payloadLength " + payloadLength);
+            throw new NxtException.NotValidException("attempted to create a block with payloadLength " + payloadLength);
         }
 
         this.version = version;
@@ -71,7 +71,7 @@ final class BlockImpl implements Block {
         Long previousId = Long.MIN_VALUE;
         for (Transaction transaction : this.blockTransactions) {
             if (transaction.getId() < previousId) {
-                throw new NxtException.ValidationException("Block transactions are not sorted!");
+                throw new NxtException.NotValidException("Block transactions are not sorted!");
             }
             transactionIds.add(transaction.getId());
             previousId = transaction.getId();
@@ -266,7 +266,7 @@ final class BlockImpl implements Block {
         for (Object transactionData : transactionsData) {
             TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
             if (blockTransactions.put(transaction.getId(), transaction) != null) {
-                throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
+                throw new NxtException.NotValidException("Block contains duplicate transactions: " + transaction.getStringId());
             }
         }
         return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,

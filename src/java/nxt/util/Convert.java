@@ -155,7 +155,7 @@ public final class Convert {
 
     public static String readString(ByteBuffer buffer, int numBytes, int maxLength) throws NxtException.ValidationException {
         if (numBytes > 3 * maxLength) {
-            throw new NxtException.ValidationException("Max parameter length exceeded");
+            throw new NxtException.NotValidException("Max parameter length exceeded");
         }
         byte[] bytes = new byte[numBytes];
         buffer.get(bytes);

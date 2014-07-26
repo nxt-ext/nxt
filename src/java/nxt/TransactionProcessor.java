@@ -21,7 +21,7 @@ public interface TransactionProcessor extends Observable<List<Transaction>,Trans
 
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 
-    void processPeerTransactions(JSONObject request);
+    void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;
 
     Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException;
 
