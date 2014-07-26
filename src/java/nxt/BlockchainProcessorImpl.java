@@ -138,7 +138,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     break outer;
                                 } catch (RuntimeException|NxtException.ValidationException e) {
                                     Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
-                                    peer.blacklist();
+                                    peer.blacklist(e);
                                     return;
                                 }
                                 currentBlockId = block.getId();
