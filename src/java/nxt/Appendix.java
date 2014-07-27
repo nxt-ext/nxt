@@ -12,6 +12,7 @@ public interface Appendix {
     void putBytes(ByteBuffer buffer);
     JSONObject getJSONObject();
     byte getVersion();
+    void validate(Transaction transaction) throws NxtException.ValidationException;
 
 
     static abstract class AbstractAppendix implements Appendix {
@@ -147,6 +148,9 @@ public interface Appendix {
             json.put("messageIsText", isText);
         }
 
+        @Override
+        public void validate(Transaction transaction) {}
+
         public byte[] getMessage() {
             return message;
         }
@@ -218,6 +222,9 @@ public interface Appendix {
             encryptedMessageJSON.put("isText", isText);
             json.put("encryptedMessage", encryptedMessageJSON);
         }
+
+        @Override
+        public void validate(Transaction transaction) {}
 
         public EncryptedData getEncryptedData() {
             return encryptedData;

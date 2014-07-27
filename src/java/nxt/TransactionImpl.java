@@ -642,7 +642,13 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
-        type.validateAttachment(this);
+        attachment.validate(this);
+        if (message != null) {
+            message.validate(this);
+        }
+        if (encryptedMessage != null) {
+            encryptedMessage.validate(this);
+        }
     }
 
     // returns false iff double spending

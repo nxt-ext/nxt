@@ -337,7 +337,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment attachment = transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0 || attachment != Attachment.ARBITRARY_MESSAGE) {
+                if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
             }
