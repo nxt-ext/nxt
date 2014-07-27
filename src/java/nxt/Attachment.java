@@ -12,7 +12,30 @@ public interface Attachment extends Appendix {
 
     TransactionType getTransactionType();
 
-    abstract static class EmptyAttachment extends AbstractAppendix implements Attachment {
+    abstract static class AbstractAttachment extends AbstractAppendix implements Attachment {
+
+        private AbstractAttachment(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        private AbstractAttachment(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        private AbstractAttachment(int version) {
+            super(version);
+        }
+
+        private AbstractAttachment() {}
+
+        @Override
+        public final void validate(Transaction transaction) throws NxtException.ValidationException {
+            getTransactionType().validateAttachment(transaction);
+        }
+
+    }
+
+    abstract static class EmptyAttachment extends AbstractAttachment {
 
         private EmptyAttachment() {
             super(0);
@@ -57,7 +80,7 @@ public interface Attachment extends Appendix {
 
     };
 
-    public final static class MessagingAliasAssignment extends AbstractAppendix implements Attachment {
+    public final static class MessagingAliasAssignment extends AbstractAttachment {
 
         private final String aliasName;
         private final String aliasURI;
@@ -114,7 +137,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasSell extends AbstractAppendix implements Attachment {
+    public final static class MessagingAliasSell extends AbstractAttachment {
 
         private final String aliasName;
         private final long priceNQT;
@@ -169,7 +192,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingAliasBuy extends AbstractAppendix implements Attachment {
+    public final static class MessagingAliasBuy extends AbstractAttachment {
 
         private final String aliasName;
 
@@ -214,7 +237,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MessagingPollCreation extends AbstractAppendix implements Attachment {
+    public final static class MessagingPollCreation extends AbstractAttachment {
 
         private final String pollName;
         private final String pollDescription;
@@ -328,7 +351,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingVoteCasting extends AbstractAppendix implements Attachment {
+    public final static class MessagingVoteCasting extends AbstractAttachment {
 
         private final Long pollId;
         private final byte[] pollVote;
@@ -394,7 +417,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingHubAnnouncement extends AbstractAppendix implements Attachment {
+    public final static class MessagingHubAnnouncement extends AbstractAttachment {
 
         private final long minFeePerByteNQT;
         private final String[] uris;
@@ -474,7 +497,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class MessagingAccountInfo extends AbstractAppendix implements Attachment {
+    public final static class MessagingAccountInfo extends AbstractAttachment {
 
         private final String name;
         private final String description;
@@ -532,7 +555,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class ColoredCoinsAssetIssuance extends AbstractAppendix implements Attachment {
+    public final static class ColoredCoinsAssetIssuance extends AbstractAttachment {
 
         private final String name;
         private final String description;
@@ -609,7 +632,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class ColoredCoinsAssetTransfer extends AbstractAppendix implements Attachment {
+    public final static class ColoredCoinsAssetTransfer extends AbstractAttachment {
 
         private final Long assetId;
         private final long quantityQNT;
@@ -679,7 +702,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class ColoredCoinsOrderPlacement extends AbstractAppendix implements Attachment {
+    abstract static class ColoredCoinsOrderPlacement extends AbstractAttachment {
 
         private final Long assetId;
         private final long quantityQNT;
@@ -779,7 +802,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    abstract static class ColoredCoinsOrderCancellation extends AbstractAppendix implements Attachment {
+    abstract static class ColoredCoinsOrderCancellation extends AbstractAttachment {
 
         private final Long orderId;
 
@@ -859,7 +882,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsListing extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsListing extends AbstractAttachment {
 
         private final String name;
         private final String description;
@@ -940,7 +963,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsDelisting extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsDelisting extends AbstractAttachment {
 
         private final Long goodsId;
 
@@ -982,7 +1005,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsPriceChange extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsPriceChange extends AbstractAttachment {
 
         private final Long goodsId;
         private final long priceNQT;
@@ -1032,7 +1055,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsQuantityChange extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsQuantityChange extends AbstractAttachment {
 
         private final Long goodsId;
         private final int deltaQuantity;
@@ -1082,7 +1105,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsPurchase extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsPurchase extends AbstractAttachment {
 
         private final Long goodsId;
         private final int quantity;
@@ -1148,7 +1171,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsDelivery extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsDelivery extends AbstractAttachment {
 
         private final Long purchaseId;
         private final EncryptedData goods;
@@ -1223,7 +1246,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsFeedback extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsFeedback extends AbstractAttachment {
 
         private final Long purchaseId;
 
@@ -1265,7 +1288,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class DigitalGoodsRefund extends AbstractAppendix implements Attachment {
+    public final static class DigitalGoodsRefund extends AbstractAttachment {
 
         private final Long purchaseId;
         private final long refundNQT;
@@ -1315,7 +1338,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static class AccountControlEffectiveBalanceLeasing extends AbstractAppendix implements Attachment {
+    public final static class AccountControlEffectiveBalanceLeasing extends AbstractAttachment {
 
         private final short period;
 
