@@ -40,6 +40,8 @@ will have a version field in the attachment too, which allows future optional
 changes to one attachment type only, e.g. adding expiration field to asset issue
 attachment without having to add a new transaction type.
 
+Updated jetty to version 9.2.2 and bouncycastle to version 1.51.
+
 This release will cause a reset of testnet, deleting most recent blocks and
 transactions.
 
