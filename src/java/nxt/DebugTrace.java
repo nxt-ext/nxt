@@ -147,7 +147,7 @@ public final class DebugTrace {
     }
 
     private boolean include(Long accountId) {
-        return accountIds.isEmpty() || accountIds.contains(accountId);
+        return accountId != null && (accountIds.isEmpty() || accountIds.contains(accountId));
     }
 
     private boolean include(Attachment attachment) {
