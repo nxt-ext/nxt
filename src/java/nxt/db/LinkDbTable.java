@@ -1,4 +1,4 @@
-package nxt.util;
+package nxt.db;
 
 import nxt.Db;
 
@@ -6,13 +6,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class LinkDbTable<R> {
-
-    protected abstract String table();
+public abstract class LinkDbTable<R> extends BasicDbTable {
 
     protected abstract R load(Connection con, ResultSet rs) throws SQLException;
 
@@ -96,17 +93,6 @@ public abstract class LinkDbTable<R> {
     public final void delete(Long idA, Long idB) {
         try (Connection con = Db.getConnection()) {
             delete(con, idA, idB);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final void truncate() {
-        try (Connection con = Db.getConnection();
-             Statement stmt = con.createStatement()) {
-            stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
-            stmt.executeUpdate("TRUNCATE TABLE " + table());
-            stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

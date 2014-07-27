@@ -1,4 +1,4 @@
-package nxt.util;
+package nxt.db;
 
 import nxt.Db;
 

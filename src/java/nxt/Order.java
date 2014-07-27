@@ -1,7 +1,7 @@
 package nxt;
 
+import nxt.db.VersioningDbTable;
 import nxt.util.Convert;
-import nxt.util.VersioningDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

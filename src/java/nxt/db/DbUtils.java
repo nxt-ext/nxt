@@ -1,4 +1,4 @@
-package nxt.util;
+package nxt.db;
 
 public final class DbUtils {
 

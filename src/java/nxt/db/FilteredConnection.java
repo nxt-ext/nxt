@@ -1,4 +1,4 @@
-package nxt.util;
+package nxt.db;
 
 import java.sql.Array;
 import java.sql.Blob;

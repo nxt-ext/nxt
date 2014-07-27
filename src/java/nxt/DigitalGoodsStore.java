@@ -1,11 +1,11 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.VersioningDbTable;
+import nxt.db.VersioningValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
-import nxt.util.VersioningDbTable;
-import nxt.util.VersioningValuesDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

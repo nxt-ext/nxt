@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.DbTable;
+import nxt.db.DbTable;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 

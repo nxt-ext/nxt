@@ -2,12 +2,13 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
+import nxt.db.BasicDbTable;
+import nxt.db.VersioningDbTable;
+import nxt.db.VersioningLinkDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
-import nxt.util.VersioningDbTable;
-import nxt.util.VersioningLinkDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -213,6 +214,13 @@ public final class Account {
 
     };
 
+    private static final BasicDbTable accountGuaranteedBalanceTable = new BasicDbTable() {
+        @Override
+        protected String table() {
+            return "account_guaranteed_balance";
+        }
+    };
+
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
     private static final Listeners<AccountAsset,Event> assetListeners = new Listeners<>();
@@ -287,6 +295,7 @@ public final class Account {
     static void clear() {
         accountTable.truncate();
         accountAssetTable.truncate();
+        accountGuaranteedBalanceTable.truncate();
     }
 
     private final Long id;
@@ -476,7 +485,30 @@ public final class Account {
             i--;
         }
         return result.ignore || result.balance < 0 ? 0 : result.balance;
+    }
 
+    public synchronized long getGuaranteedBalanceDbNQT(final int numberOfConfirmations) {
+        if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
+            return 0;
+        }
+        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations < 0) {
+            throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
+        }
+        int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT guaranteed_balance FROM account_guaranteed_balance "
+                     + "WHERE account_id = ? AND height <= ? AND latest = TRUE")) {
+            pstmt.setLong(1, this.id);
+            pstmt.setInt(2, height);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (!rs.next()) {
+                    return 0;
+                }
+                return rs.getLong("guaranteed_balance");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public List<AccountAsset> getAccountAssets() {
@@ -785,6 +817,10 @@ public final class Account {
             // should have been handled in the block popped off case
             throw new IllegalStateException("last guaranteed balance height exceeds blockchain height");
         }
+    }
+
+    private synchronized void addToGuaranteedBalanceDbNQT(long amountNQT) {
+
     }
 
     private static class GuaranteedBalance implements Comparable<GuaranteedBalance> {

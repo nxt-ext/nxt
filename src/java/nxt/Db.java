@@ -1,7 +1,7 @@
 package nxt;
 
-import nxt.util.DbUtils;
-import nxt.util.FilteredConnection;
+import nxt.db.DbUtils;
+import nxt.db.FilteredConnection;
 import nxt.util.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
 

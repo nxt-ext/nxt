@@ -1,10 +1,10 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
-import nxt.util.DbIterator;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
