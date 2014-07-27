@@ -33,6 +33,17 @@ public interface Attachment extends Appendix {
             getTransactionType().validateAttachment(transaction);
         }
 
+        @Override
+        public final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            getTransactionType().apply(transaction, senderAccount, recipientAccount);
+        }
+
+        @Override
+        public final void undo(Transaction transaction, Account senderAccount, Account recipientAccount)
+                throws TransactionType.UndoNotSupportedException {
+            getTransactionType().undo(transaction, senderAccount, recipientAccount);
+        }
+
     }
 
     abstract static class EmptyAttachment extends AbstractAttachment {
