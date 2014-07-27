@@ -154,6 +154,7 @@ final class TransactionImpl implements Transaction {
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
 
     private final List<Appendix> appendages;
+    private final int size;
 
     private int height = Integer.MAX_VALUE;
     private Long blockId;
@@ -197,6 +198,12 @@ final class TransactionImpl implements Transaction {
             list.add(this.publicKeyAnnouncement);
         }
         this.appendages = Collections.unmodifiableList(list);
+
+        int size = signatureOffset() + 64  + (version > 0 ? 4 : 0);
+        for (Appendix appendage : appendages) {
+            size += appendage.getSize();
+        }
+        this.size = size;
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
@@ -623,9 +630,7 @@ final class TransactionImpl implements Transaction {
     }
 
     int getSize() {
-        return signatureOffset() + 64  + (version > 0 ? 4 : 0) + attachment.getSize()
-                + (message != null ? message.getSize() : 0)
-                + (encryptedMessage != null ? encryptedMessage.getSize() : 0);
+        return size;
     }
 
     private int signatureOffset() {
