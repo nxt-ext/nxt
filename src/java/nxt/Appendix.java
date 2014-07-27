@@ -22,7 +22,7 @@ public interface Appendix {
         private final byte version;
 
         AbstractAppendix(JSONObject attachmentData) {
-            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getClass().getName())));
+            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getClass().getSimpleName())));
         }
 
         AbstractAppendix(ByteBuffer buffer, byte transactionVersion) {
@@ -63,7 +63,7 @@ public interface Appendix {
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
             if (version > 0) {
-                json.put("version." + getClass().getName(), version);
+                json.put("version." + getClass().getSimpleName(), version);
             }
             putMyJSON(json);
             return json;
