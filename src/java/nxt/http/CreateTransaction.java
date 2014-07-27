@@ -30,7 +30,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
-            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce"};
+            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
+            "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);
@@ -78,6 +79,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             } catch (RuntimeException e) {
                 throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
+        }
+        Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
+        String recipientPublicKey = Convert.emptyToNull(req.getParameter("recipientPublicKey"));
+        if (recipientPublicKey != null) {
+            publicKeyAnnouncement = new Appendix.PublicKeyAnnouncement(Convert.parseHexString(recipientPublicKey));
         }
 
         if (secretPhrase == null && publicKeyValue == null) {
@@ -129,6 +135,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             if (message != null) {
                 builder.message(message);
+            }
+            if (publicKeyAnnouncement != null) {
+                builder.publicKeyAnnouncement(publicKeyAnnouncement);
             }
             Transaction transaction = builder.build();
             transaction.validateAttachment();

@@ -13,6 +13,8 @@ public interface Appendix {
     JSONObject getJSONObject();
     byte getVersion();
     void validate(Transaction transaction) throws NxtException.ValidationException;
+    void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
+    void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException;
 
 
     static abstract class AbstractAppendix implements Appendix {
@@ -20,7 +22,7 @@ public interface Appendix {
         private final byte version;
 
         AbstractAppendix(JSONObject attachmentData) {
-            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version")));
+            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getClass().getName())));
         }
 
         AbstractAppendix(ByteBuffer buffer, byte transactionVersion) {
@@ -61,7 +63,7 @@ public interface Appendix {
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
             if (version > 0) {
-                json.put("version", version);
+                json.put("version." + getClass().getName(), version);
             }
             putMyJSON(json);
             return json;
@@ -96,9 +98,6 @@ public interface Appendix {
             int messageLength = buffer.getInt();
             this.isText = messageLength < 0; // ugly hack
             if (messageLength < 0) {
-                if (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Text messages not yet enabled");
-                }
                 messageLength &= Integer.MAX_VALUE;
             }
             if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
@@ -112,9 +111,6 @@ public interface Appendix {
             super(attachmentData);
             String messageString = (String)attachmentData.get("message");
             this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("messageIsText"));
-            if (this.isText && Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Text messages not yet enabled");
-            }
             this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
             if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
@@ -149,7 +145,20 @@ public interface Appendix {
         }
 
         @Override
-        public void validate(Transaction transaction) {}
+        public void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (this.isText && transaction.getVersion() == 0) {
+                throw new NxtException.NotValidException("Text messages not yet enabled");
+            }
+            if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
+                throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
+            }
+        }
+
+        @Override
+        public void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+        @Override
+        public void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public byte[] getMessage() {
             return message;
@@ -224,7 +233,20 @@ public interface Appendix {
         }
 
         @Override
-        public void validate(Transaction transaction) {}
+        public void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (! transaction.getType().hasRecipient()) {
+                throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
+            }
+            if (transaction.getVersion() == 0) {
+                throw new NxtException.NotValidException("Encrypted message attachments not enabled for version 0 transactions");
+            }
+        }
+
+        @Override
+        public void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+        @Override
+        public void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public EncryptedData getEncryptedData() {
             return encryptedData;
@@ -232,6 +254,85 @@ public interface Appendix {
 
         public boolean isText() {
             return isText;
+        }
+
+    }
+
+    public static class PublicKeyAnnouncement extends AbstractAppendix {
+
+        static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.ValidationException {
+            if (attachmentData.get("recipientPublicKey") == null) {
+                return null;
+            }
+            return new PublicKeyAnnouncement(attachmentData);
+        }
+
+        private final byte[] publicKey;
+
+        PublicKeyAnnouncement(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.publicKey = new byte[32];
+            buffer.get(this.publicKey);
+        }
+
+        PublicKeyAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
+            byte[] publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
+            if (publicKey.length != 32) {
+                throw new NxtException.NotValidException("Invalid recipient public key: " + attachmentData.get("recipientPublicKey"));
+            }
+            this.publicKey = publicKey;
+        }
+
+        public PublicKeyAnnouncement(byte[] publicKey) {
+            this.publicKey = publicKey;
+        }
+
+        @Override
+        int getMySize() {
+            return 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put(publicKey);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            json.put("recipientPublicKey", Convert.toHexString(publicKey));
+        }
+
+        @Override
+        public void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (! transaction.getType().hasRecipient()) {
+                throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
+            }
+            Long recipientId = transaction.getRecipientId();
+            if (! Account.getId(this.publicKey).equals(recipientId)) {
+                throw new NxtException.NotValidException("Announced public key does not match recipient accountId");
+            }
+            if (transaction.getVersion() == 0) {
+                throw new NxtException.NotValidException("Public key announcements not enabled for version 0 transactions");
+            }
+            Account recipientAccount = Account.getAccount(recipientId);
+            if (recipientAccount != null && recipientAccount.getPublicKey() != null) {
+                throw new NxtException.NotCurrentlyValidException("Public key for this account has already been announced");
+            }
+        }
+
+        @Override
+        public void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            recipientAccount.apply(this.publicKey, transaction.getHeight());
+        }
+
+        @Override
+        public void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            recipientAccount.undo(transaction.getHeight());
+        }
+
+        public byte[] getPublicKey() {
+            return publicKey;
         }
 
     }

@@ -2,8 +2,8 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Alias;
+import nxt.Appendix;
 import nxt.Asset;
-import nxt.Attachment;
 import nxt.Block;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
@@ -281,12 +281,9 @@ final class JSONData {
             json.put("fullHash", transaction.getFullHash());
             json.put("transaction", transaction.getStringId());
         }
-        JSONObject attachmentJSON = attachment(transaction.getAttachment());
-        if (transaction.getMessage() != null) {
-            attachmentJSON.putAll(transaction.getMessage().getJSONObject());
-        }
-        if (transaction.getEncryptedMessage() != null) {
-            attachmentJSON.putAll(transaction.getEncryptedMessage().getJSONObject());
+        JSONObject attachmentJSON = new JSONObject();
+        for (Appendix appendage : transaction.getAppendages()) {
+            attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
             json.put("attachment", attachmentJSON);
@@ -307,8 +304,7 @@ final class JSONData {
     }
 
     // ugly, hopefully temporary
-    static JSONObject attachment(Attachment attachment) {
-        JSONObject json = attachment.getJSONObject();
+    private static void modifyAttachmentJSON(JSONObject json) {
         Long quantityQNT = (Long) json.remove("quantityQNT");
         if (quantityQNT != null) {
             json.put("quantityQNT", String.valueOf(quantityQNT));
@@ -325,7 +321,6 @@ final class JSONData {
         if (refundNQT != null) {
             json.put("refundNQT", String.valueOf(refundNQT));
         }
-        return json;
     }
 
     static void putAccount(JSONObject json, String name, Long accountId) {
