@@ -178,10 +178,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment)
-            throws NxtException.ValidationException {
+    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
+                                                     Attachment attachment) throws NxtException.ValidationException {
         byte version = (byte) (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
-        return new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, Convert.getEpochTime(), deadline, attachment);
+        return new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, Convert.getEpochTime(),
+                deadline, (Attachment.AbstractAttachment)attachment);
     }
 
     @Override

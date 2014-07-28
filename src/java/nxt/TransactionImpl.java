@@ -26,7 +26,7 @@ final class TransactionImpl implements Transaction {
         private final TransactionType type;
         private final byte version;
         private final int timestamp;
-        private final Attachment attachment;
+        private final Attachment.AbstractAttachment attachment;
 
         private Long recipientId;
         private String referencedTransactionFullHash;
@@ -42,7 +42,7 @@ final class TransactionImpl implements Transaction {
         private String fullHash;
 
         BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
-                    Attachment attachment) {
+                    Attachment.AbstractAttachment attachment) {
             this.version = version;
             this.timestamp = timestamp;
             this.deadline = deadline;
@@ -148,12 +148,12 @@ final class TransactionImpl implements Transaction {
     private final TransactionType type;
     private final byte version;
     private final int timestamp;
-    private final Attachment attachment;
+    private final Attachment.AbstractAttachment attachment;
     private final Appendix.Message message;
     private final Appendix.EncryptedMessage encryptedMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
 
-    private final List<Appendix> appendages;
+    private final List<? extends Appendix.AbstractAppendix> appendages;
     private final int size;
 
     private int height = Integer.MAX_VALUE;
@@ -184,7 +184,7 @@ final class TransactionImpl implements Transaction {
         this.senderId = builder.senderId;
         this.blockTimestamp = builder.blockTimestamp;
         this.fullHash = builder.fullHash;
-        List<Appendix> list = new ArrayList<>();
+        List<Appendix.AbstractAppendix> list = new ArrayList<>();
         if ((this.attachment = builder.attachment) != null) {
             list.add(this.attachment);
         }
@@ -226,8 +226,8 @@ final class TransactionImpl implements Transaction {
             }
         }
 
-        for (Appendix appendage : appendages) {
-            if (! ((Appendix.AbstractAppendix)appendage).verifyVersion(this.version)) {
+        for (Appendix.AbstractAppendix appendage : appendages) {
+            if (! appendage.verifyVersion(this.version)) {
                 throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
                         + " for transaction version " + this.version);
             }
@@ -670,13 +670,13 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
-        if (version > 0 && type.hasRecipient()) {
+        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK && type.hasRecipient()) {
             Account recipientAccount = Account.getAccount(recipientId);
             if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
                 throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
             }
         }
-        for (Appendix appendage : appendages) {
+        for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
     }
@@ -699,7 +699,7 @@ final class TransactionImpl implements Transaction {
         if (recipientAccount == null && recipientId != null) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
-        for (Appendix appendage : appendages) {
+        for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.apply(this, senderAccount, recipientAccount);
         }
     }
@@ -714,7 +714,7 @@ final class TransactionImpl implements Transaction {
         Account senderAccount = Account.getAccount(senderId);
         senderAccount.undo(this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
-        for (Appendix appendage : appendages) {
+        for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.undo(this, senderAccount, recipientAccount);
         }
     }

@@ -1,3 +1,6 @@
+This release is still considered experimental, but is now enabled to run on main
+net too. The DGS milestone block is set to 205000 for main net.
+
 Multiple bugfixes in DGS and Alias Transfer transaction validation. Restricted
 some types of alias and DGS transactions to one per alias / DGS purchase per
 block.
@@ -40,7 +43,8 @@ will have a version field in the attachment too, which allows future optional
 changes to one attachment type only, e.g. adding expiration field to asset issue
 attachment without having to add a new transaction type.
 
-Added PublicKeyAnnouncement attachment. After DGS block, transactions with
+Added PublicKeyAnnouncement attachment. Those will be accepted after DGS block,
+but only enforced after block 210000. After that block, transactions with
 recipient account that does not have a public key will be required to have such
 an attachment in order to announce and set the public key of the reciepient.
 To add a PublicKeyAnnouncement, just add a "recipientPublicKey" parameter with
@@ -52,7 +56,7 @@ of the transaction.
 
 Updated jetty to version 9.2.2 and bouncycastle to version 1.51.
 
-This release will cause a reset of testnet, deleting most recent blocks and
-transactions.
+This release will cause a reset of testnet, deleting blocks and transactions
+after block 117907.
 
 
