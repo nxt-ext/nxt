@@ -29,17 +29,17 @@ public interface Attachment extends Appendix {
         private AbstractAttachment() {}
 
         @Override
-        public final void validate(Transaction transaction) throws NxtException.ValidationException {
+        final void validate(Transaction transaction) throws NxtException.ValidationException {
             getTransactionType().validateAttachment(transaction);
         }
 
         @Override
-        public final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             getTransactionType().apply(transaction, senderAccount, recipientAccount);
         }
 
         @Override
-        public final void undo(Transaction transaction, Account senderAccount, Account recipientAccount)
+        final void undo(Transaction transaction, Account senderAccount, Account recipientAccount)
                 throws TransactionType.UndoNotSupportedException {
             getTransactionType().undo(transaction, senderAccount, recipientAccount);
         }
@@ -72,7 +72,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public final static Attachment ORDINARY_PAYMENT = new EmptyAttachment() {
+    public final static EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
         public TransactionType getTransactionType() {
@@ -82,7 +82,7 @@ public interface Attachment extends Appendix {
     };
 
     // the message payload is in the Appendix
-    public final static Attachment ARBITRARY_MESSAGE = new EmptyAttachment() {
+    public final static EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
 
         @Override
         public TransactionType getTransactionType() {
