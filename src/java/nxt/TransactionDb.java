@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbUtils;
 import nxt.util.Convert;
 
 import java.nio.ByteBuffer;
@@ -161,18 +162,10 @@ final class TransactionDb {
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
                     pstmt.setBytes(++i, transaction.getSenderPublicKey());
-                    if (transaction.getType().hasRecipient()) {
-                        pstmt.setLong(++i, transaction.getRecipientId());
-                    } else {
-                        pstmt.setNull(++i, Types.BIGINT);
-                    }
+                    DbUtils.setLong(pstmt, ++i, transaction.getRecipientId());
                     pstmt.setLong(++i, transaction.getAmountNQT());
                     pstmt.setLong(++i, transaction.getFeeNQT());
-                    if (transaction.getReferencedTransactionFullHash() != null) {
-                        pstmt.setBytes(++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
-                    } else {
-                        pstmt.setNull(++i, Types.BINARY);
-                    }
+                    DbUtils.setBytes(pstmt, ++i, Convert.parseHexString(transaction.getReferencedTransactionFullHash()));
                     pstmt.setInt(++i, transaction.getHeight());
                     pstmt.setLong(++i, transaction.getBlockId());
                     pstmt.setBytes(++i, transaction.getSignature());

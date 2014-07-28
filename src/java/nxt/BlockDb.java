@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbUtils;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
@@ -8,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.List;
 
 final class BlockDb {
@@ -111,11 +111,7 @@ final class BlockDb {
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.getVersion());
                 pstmt.setInt(++i, block.getTimestamp());
-                if (block.getPreviousBlockId() != null) {
-                    pstmt.setLong(++i, block.getPreviousBlockId());
-                } else {
-                    pstmt.setNull(++i, Types.BIGINT);
-                }
+                DbUtils.setLong(pstmt, ++i, block.getPreviousBlockId());
                 pstmt.setLong(++i, block.getTotalAmountNQT());
                 pstmt.setLong(++i, block.getTotalFeeNQT());
                 pstmt.setInt(++i, block.getPayloadLength());
@@ -123,11 +119,7 @@ final class BlockDb {
                 pstmt.setBytes(++i, block.getPreviousBlockHash());
                 pstmt.setBytes(++i, block.getCumulativeDifficulty().toByteArray());
                 pstmt.setLong(++i, block.getBaseTarget());
-                if (block.getNextBlockId()!= null) {
-                    pstmt.setLong(++i, block.getNextBlockId());
-                } else {
-                    pstmt.setNull(++i, Types.BIGINT);
-                }
+                DbUtils.setLong(pstmt, ++i, block.getNextBlockId());
                 pstmt.setInt(++i, block.getHeight());
                 pstmt.setBytes(++i, block.getGenerationSignature());
                 pstmt.setBytes(++i, block.getBlockSignature());

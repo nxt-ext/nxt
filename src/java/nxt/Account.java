@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.BasicDbTable;
+import nxt.db.DbUtils;
 import nxt.db.VersioningDbTable;
 import nxt.db.VersioningLinkDbTable;
 import nxt.util.Convert;
@@ -14,7 +15,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -168,39 +168,19 @@ public final class Account {
                 int i = 0;
                 pstmt.setLong(++i, account.getId());
                 pstmt.setInt(++i, account.getCreationHeight());
-                if (account.getPublicKey() != null) {
-                    pstmt.setBytes(++i, account.getPublicKey());
-                } else {
-                    pstmt.setNull(++i, Types.BINARY);
-                }
+                DbUtils.setBytes(pstmt, ++i, account.getPublicKey());
                 pstmt.setInt(++i, account.getKeyHeight());
                 pstmt.setLong(++i, account.getBalanceNQT());
                 pstmt.setLong(++i, account.getUnconfirmedBalanceNQT());
                 pstmt.setLong(++i, account.getForgedBalanceNQT());
-                if (account.getName() != null) {
-                    pstmt.setString(++i, account.getName());
-                } else {
-                    pstmt.setNull(++i, Types.VARCHAR);
-                }
-                if (account.getDescription() != null) {
-                    pstmt.setString(++i, account.getDescription());
-                } else {
-                    pstmt.setNull(++i, Types.VARCHAR);
-                }
+                DbUtils.setString(pstmt, ++i, account.getName());
+                DbUtils.setString(pstmt, ++i, account.getDescription());
                 pstmt.setInt(++i, account.getCurrentLeasingHeightFrom());
                 pstmt.setInt(++i, account.getCurrentLeasingHeightTo());
-                if (account.getCurrentLesseeId() != null) {
-                    pstmt.setLong(++i, account.getCurrentLesseeId());
-                } else {
-                    pstmt.setNull(++i, Types.BIGINT);
-                }
+                DbUtils.setLong(pstmt, ++i, account.getCurrentLesseeId());
                 pstmt.setInt(++i, account.getNextLeasingHeightFrom());
                 pstmt.setInt(++i, account.getNextLeasingHeightTo());
-                if (account.getNextLesseeId() != null) {
-                    pstmt.setLong(++i, account.getNextLesseeId());
-                } else {
-                    pstmt.setNull(++i, Types.BIGINT);
-                }
+                DbUtils.setLong(pstmt, ++i, account.getNextLesseeId());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
