@@ -40,6 +40,16 @@ will have a version field in the attachment too, which allows future optional
 changes to one attachment type only, e.g. adding expiration field to asset issue
 attachment without having to add a new transaction type.
 
+Added PublicKeyAnnouncement attachment. After DGS block, transactions with
+recipient account that does not have a public key will be required to have such
+an attachment in order to announce and set the public key of the reciepient.
+To add a PublicKeyAnnouncement, just add a "recipientPublicKey" parameter with
+the hex-encoded public key string when sending the first transaction to that
+account. It is harmless (but useless) to keep adding the same recipientPublicKey
+for further transactions to the same account. But trying to set a different
+public key for an account that already has a public key will result in rejection
+of the transaction.
+
 Updated jetty to version 9.2.2 and bouncycastle to version 1.51.
 
 This release will cause a reset of testnet, deleting most recent blocks and

@@ -120,6 +120,9 @@ final class TransactionDb {
             if (rs.getBoolean("has_encrypted_message")) {
                 builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
             }
+            if (rs.getBoolean("has_public_key_announcement")) {
+                builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+            }
 
             return builder.build();
 
@@ -148,12 +151,12 @@ final class TransactionDb {
 
     static void saveTransactions(Connection con, List<TransactionImpl> transactions) {
         try {
-            for (Transaction transaction : transactions) {
+            for (TransactionImpl transaction : transactions) {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
-                        + "block_timestamp, full_hash, version, has_message, has_encrypted_message) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -177,26 +180,17 @@ final class TransactionDb {
                     pstmt.setByte(++i, transaction.getType().getType());
                     pstmt.setByte(++i, transaction.getType().getSubtype());
                     pstmt.setLong(++i, transaction.getSenderId());
-                    Appendix.Message message = transaction.getMessage();
-                    Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
-                    int bytesLength = transaction.getAttachment().getSize();
-                    if (message != null) {
-                        bytesLength += message.getSize();
-                    }
-                    if (encryptedMessage != null) {
-                        bytesLength += encryptedMessage.getSize();
+                    int bytesLength = 0;
+                    for (Appendix appendage : transaction.getAppendages()) {
+                        bytesLength += appendage.getSize();
                     }
                     if (bytesLength == 0) {
                         pstmt.setNull(++i, Types.VARBINARY);
                     } else {
                         ByteBuffer buffer = ByteBuffer.allocate(bytesLength);
                         buffer.order(ByteOrder.LITTLE_ENDIAN);
-                        transaction.getAttachment().putBytes(buffer);
-                        if (message != null) {
-                            message.putBytes(buffer);
-                        }
-                        if (encryptedMessage != null) {
-                            encryptedMessage.putBytes(buffer);
+                        for (Appendix appendage : transaction.getAppendages()) {
+                            appendage.putBytes(buffer);
                         }
                         pstmt.setBytes(++i, buffer.array());
                     }
@@ -205,6 +199,7 @@ final class TransactionDb {
                     pstmt.setByte(++i, transaction.getVersion());
                     pstmt.setBoolean(++i, transaction.getMessage() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
+                    pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.executeUpdate();
                 }
             }

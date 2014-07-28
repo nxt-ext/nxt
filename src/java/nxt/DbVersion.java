@@ -258,6 +258,8 @@ final class DbVersion {
             case 64:
                 apply("UPDATE transaction SET has_message = TRUE WHERE type = 1 AND subtype = 0");
             case 65:
+                apply("ALTER TABLE transaction ADD COLUMN has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
+            case 66:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

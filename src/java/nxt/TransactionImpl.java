@@ -8,7 +8,10 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +33,7 @@ final class TransactionImpl implements Transaction {
         private byte[] signature;
         private Appendix.Message message;
         private Appendix.EncryptedMessage encryptedMessage;
+        private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
         private Long blockId;
         private int height = Integer.MAX_VALUE;
         private Long id;
@@ -82,6 +86,12 @@ final class TransactionImpl implements Transaction {
         @Override
         public BuilderImpl encryptedMessage(Appendix.EncryptedMessage encryptedMessage) {
             this.encryptedMessage = encryptedMessage;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement) {
+            this.publicKeyAnnouncement = publicKeyAnnouncement;
             return this;
         }
 
@@ -141,6 +151,10 @@ final class TransactionImpl implements Transaction {
     private final Attachment attachment;
     private final Appendix.Message message;
     private final Appendix.EncryptedMessage encryptedMessage;
+    private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
+
+    private final List<Appendix> appendages;
+    private final int size;
 
     private int height = Integer.MAX_VALUE;
     private Long blockId;
@@ -170,9 +184,26 @@ final class TransactionImpl implements Transaction {
         this.senderId = builder.senderId;
         this.blockTimestamp = builder.blockTimestamp;
         this.fullHash = builder.fullHash;
-        this.attachment = builder.attachment;
-        this.message = builder.message;
-        this.encryptedMessage = builder.encryptedMessage;
+        List<Appendix> list = new ArrayList<>();
+        if ((this.attachment = builder.attachment) != null) {
+            list.add(this.attachment);
+        }
+        if ((this.message  = builder.message) != null) {
+            list.add(this.message);
+        }
+        if ((this.encryptedMessage = builder.encryptedMessage) != null) {
+            list.add(this.encryptedMessage);
+        }
+        if ((this.publicKeyAnnouncement = builder.publicKeyAnnouncement) != null) {
+            list.add(this.publicKeyAnnouncement);
+        }
+        this.appendages = Collections.unmodifiableList(list);
+
+        int size = signatureOffset() + 64  + (version > 0 ? 4 : 0);
+        for (Appendix appendage : appendages) {
+            size += appendage.getSize();
+        }
+        this.size = size;
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
@@ -185,32 +216,21 @@ final class TransactionImpl implements Transaction {
                     + ", deadline: " + deadline + ", fee: " + feeNQT + ", amount: " + amountNQT);
         }
 
-        if (type != attachment.getTransactionType()) {
-            throw new NxtException.NotValidException("Invalid attachment " + attachment.getJSONObject()
-                    + " for transaction of type " + type);
+        if (attachment == null || type != attachment.getTransactionType()) {
+            throw new NxtException.NotValidException("Invalid attachment " + attachment + " for transaction of type " + type);
         }
 
         if (! type.hasRecipient()) {
-            if (recipientId != null || getAmountNQT() != 0 || encryptedMessage != null) {
-                throw new NxtException.NotValidException("Transactions of this type must have recipient == Genesis, amount == 0, and no encrypted message");
+            if (recipientId != null || getAmountNQT() != 0) {
+                throw new NxtException.NotValidException("Transactions of this type must have recipient == Genesis, amount == 0");
             }
         }
 
-        if (version == 0 && ((message != null && attachment != Attachment.ARBITRARY_MESSAGE) || encryptedMessage != null)) {
-            throw new NxtException.NotValidException("Appendix attachments not enabled for version 0");
-        }
-
-        if (! ((Appendix.AbstractAppendix)attachment).verifyVersion(this.version)) {
-            throw new NxtException.NotValidException("Invalid attachment version " + attachment.getVersion()
-                    + " for transaction version " + this.version);
-        }
-        if (message != null && ! message.verifyVersion(this.version)) {
-            throw new NxtException.NotValidException("Invalid message version " + message.getVersion()
-                    + " for transaction version " + this.version);
-        }
-        if (encryptedMessage != null && ! encryptedMessage.verifyVersion(this.version)) {
-            throw new NxtException.NotValidException("Invalid encrypted message version " + encryptedMessage.getVersion()
-                    + " for transaction version " + this.version);
+        for (Appendix appendage : appendages) {
+            if (! ((Appendix.AbstractAppendix)appendage).verifyVersion(this.version)) {
+                throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
+                        + " for transaction version " + this.version);
+            }
         }
 
     }
@@ -306,6 +326,11 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public List<? extends Appendix> getAppendages() {
+        return appendages;
+    }
+
+    @Override
     public Long getId() {
         if (id == null) {
             if (signature == null) {
@@ -366,7 +391,10 @@ final class TransactionImpl implements Transaction {
         return encryptedMessage;
     }
 
-    @Override
+    Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
+        return publicKeyAnnouncement;
+    }
+
     public int compareTo(Transaction o) {
 
         if (height < o.getHeight()) {
@@ -429,12 +457,8 @@ final class TransactionImpl implements Transaction {
         if (version > 0) {
             buffer.putInt(getFlags());
         }
-        attachment.putBytes(buffer);
-        if (message != null) {
-            message.putBytes(buffer);
-        }
-        if (encryptedMessage != null) {
-            encryptedMessage.putBytes(buffer);
+        for (Appendix appendage : appendages) {
+            appendage.putBytes(buffer);
         }
         return buffer.array();
     }
@@ -482,6 +506,10 @@ final class TransactionImpl implements Transaction {
         if ((flags & position) != 0) {
             builder.encryptedMessage(new Appendix.EncryptedMessage(buffer, version));
         }
+        position <<= 1;
+        if ((flags & position) != 0) {
+            builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+        }
         return builder.build();
     }
 
@@ -522,12 +550,9 @@ final class TransactionImpl implements Transaction {
             json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
         json.put("signature", Convert.toHexString(signature));
-        JSONObject attachmentJSON = attachment.getJSONObject();
-        if (message != null) {
-            attachmentJSON.putAll(message.getJSONObject());
-        }
-        if (encryptedMessage != null) {
-            attachmentJSON.putAll(encryptedMessage.getJSONObject());
+        JSONObject attachmentJSON = new JSONObject();
+        for (Appendix appendage : appendages) {
+            attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
             json.put("attachment", attachmentJSON);
@@ -569,6 +594,7 @@ final class TransactionImpl implements Transaction {
         if (attachmentData != null) {
             builder.message(Appendix.Message.parse(attachmentData));
             builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
+            builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
         }
         return builder.build();
     }
@@ -604,9 +630,7 @@ final class TransactionImpl implements Transaction {
     }
 
     int getSize() {
-        return signatureOffset() + 64  + (version > 0 ? 4 : 0) + attachment.getSize()
-                + (message != null ? message.getSize() : 0)
-                + (encryptedMessage != null ? encryptedMessage.getSize() : 0);
+        return size;
     }
 
     private int signatureOffset() {
@@ -637,17 +661,23 @@ final class TransactionImpl implements Transaction {
         if (encryptedMessage != null) {
             flags |= position;
         }
+        position <<= 1;
+        if (publicKeyAnnouncement != null) {
+            flags |= position;
+        }
         return flags;
     }
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
-        attachment.validate(this);
-        if (message != null) {
-            message.validate(this);
+        if (version > 0 && type.hasRecipient()) {
+            Account recipientAccount = Account.getAccount(recipientId);
+            if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
+                throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
+            }
         }
-        if (encryptedMessage != null) {
-            encryptedMessage.validate(this);
+        for (Appendix appendage : appendages) {
+            appendage.validate(this);
         }
     }
 
@@ -669,7 +699,9 @@ final class TransactionImpl implements Transaction {
         if (recipientAccount == null && recipientId != null) {
             recipientAccount = Account.addOrGetAccount(recipientId);
         }
-        type.apply(this, senderAccount, recipientAccount);
+        for (Appendix appendage : appendages) {
+            appendage.apply(this, senderAccount, recipientAccount);
+        }
     }
 
     void undoUnconfirmed() {
@@ -682,7 +714,9 @@ final class TransactionImpl implements Transaction {
         Account senderAccount = Account.getAccount(senderId);
         senderAccount.undo(this.getHeight());
         Account recipientAccount = Account.getAccount(recipientId);
-        type.undo(this, senderAccount, recipientAccount);
+        for (Appendix appendage : appendages) {
+            appendage.undo(this, senderAccount, recipientAccount);
+        }
     }
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {

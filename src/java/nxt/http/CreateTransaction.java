@@ -30,7 +30,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     private static final String[] commonParameters = new String[] {"secretPhrase", "publicKey", "feeNQT",
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
-            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce"};
+            "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
+            "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);
@@ -78,6 +79,17 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             } catch (RuntimeException e) {
                 throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
+        } else if (attachment instanceof Attachment.ColoredCoinsAssetTransfer) {
+            // TODO: remove after DGS block
+            String commentValue = Convert.emptyToNull(req.getParameter("comment"));
+            if (commentValue != null) {
+                message = new Appendix.Message(commentValue);
+            }
+        }
+        Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
+        String recipientPublicKey = Convert.emptyToNull(req.getParameter("recipientPublicKey"));
+        if (recipientPublicKey != null && Nxt.getBlockchain().getHeight() >= Constants.DIGITAL_GOODS_STORE_BLOCK) {
+            publicKeyAnnouncement = new Appendix.PublicKeyAnnouncement(Convert.parseHexString(recipientPublicKey));
         }
 
         if (secretPhrase == null && publicKeyValue == null) {
@@ -129,6 +141,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             if (message != null) {
                 builder.message(message);
+            }
+            if (publicKeyAnnouncement != null) {
+                builder.publicKeyAnnouncement(publicKeyAnnouncement);
             }
             Transaction transaction = builder.build();
             transaction.validateAttachment();

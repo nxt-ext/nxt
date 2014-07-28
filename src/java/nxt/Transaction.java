@@ -2,6 +2,8 @@ package nxt;
 
 import org.json.simple.JSONObject;
 
+import java.util.List;
+
 public interface Transaction extends Comparable<Transaction> {
 
     public static interface Builder {
@@ -13,6 +15,8 @@ public interface Transaction extends Comparable<Transaction> {
         Builder message(Appendix.Message message);
 
         Builder encryptedMessage(Appendix.EncryptedMessage encryptedData);
+
+        Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
         Transaction build() throws NxtException.ValidationException;
 
@@ -73,6 +77,8 @@ public interface Transaction extends Comparable<Transaction> {
     Appendix.Message getMessage();
 
     Appendix.EncryptedMessage getEncryptedMessage();
+
+    List<? extends Appendix> getAppendages();
 
     /*
     Collection<TransactionType> getPhasingTransactionTypes();
