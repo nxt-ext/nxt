@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -123,6 +124,18 @@ public final class Account {
             }
         }, BlockchainProcessor.Event.BLOCK_POPPED);
 
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
+                try (Connection con = Db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_guaranteed_balance WHERE height < ? AND latest = FALSE")) {
+                    pstmt.setInt(1, Nxt.getBlockchain().getHeight() - 2881);
+                    pstmt.executeUpdate();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -155,19 +168,39 @@ public final class Account {
                 int i = 0;
                 pstmt.setLong(++i, account.getId());
                 pstmt.setInt(++i, account.getCreationHeight());
-                pstmt.setBytes(++i, account.getPublicKey());
+                if (account.getPublicKey() != null) {
+                    pstmt.setBytes(++i, account.getPublicKey());
+                } else {
+                    pstmt.setNull(++i, Types.BINARY);
+                }
                 pstmt.setInt(++i, account.getKeyHeight());
                 pstmt.setLong(++i, account.getBalanceNQT());
                 pstmt.setLong(++i, account.getUnconfirmedBalanceNQT());
                 pstmt.setLong(++i, account.getForgedBalanceNQT());
+                if (account.getName() != null) {
+                    pstmt.setString(++i, account.getName());
+                } else {
+                    pstmt.setNull(++i, Types.VARCHAR);
+                }
+                if (account.getDescription() != null) {
+                    pstmt.setString(++i, account.getDescription());
+                } else {
+                    pstmt.setNull(++i, Types.VARCHAR);
+                }
                 pstmt.setInt(++i, account.getCurrentLeasingHeightFrom());
                 pstmt.setInt(++i, account.getCurrentLeasingHeightTo());
-                pstmt.setLong(++i, account.getCurrentLesseeId());
+                if (account.getCurrentLesseeId() != null) {
+                    pstmt.setLong(++i, account.getCurrentLesseeId());
+                } else {
+                    pstmt.setNull(++i, Types.BIGINT);
+                }
                 pstmt.setInt(++i, account.getNextLeasingHeightFrom());
                 pstmt.setInt(++i, account.getNextLeasingHeightTo());
-                pstmt.setLong(++i, account.getNextLesseeId());
-                pstmt.setString(++i, account.getName());
-                pstmt.setString(++i, account.getDescription());
+                if (account.getNextLesseeId() != null) {
+                    pstmt.setLong(++i, account.getNextLesseeId());
+                } else {
+                    pstmt.setNull(++i, Types.BIGINT);
+                }
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -283,9 +316,8 @@ public final class Account {
 
     public static List<Account> getLeasingAccounts() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id IS NOT NULL "
-                     + "AND next_lessee_id IS NULL AND latest = TRUE"
-                     + "UNION ALL SELECT * FROM account WHERE next_lessee_id IS NOT NULL AND latest = TRUE")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE")) {
+            pstmt.setLong(1, Long.MIN_VALUE); // this forces H2 to use the index, unlike WHERE IS NOT NULL which does a table scan
             return accountTable.getManyBy(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -339,10 +371,12 @@ public final class Account {
         this.description = rs.getString("description");
         this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
         this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
-        this.currentLesseeId = rs.getLong("current_lessee_id");
+        long currentLesseeId = rs.getLong("current_lessee_id");
+        this.currentLesseeId = rs.wasNull() ? null : currentLesseeId;
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
-        this.nextLesseeId = rs.getLong("next_lessee_id");
+        long nextLesseeId = rs.getLong("next_lessee_id");
+        this.nextLesseeId = rs.wasNull() ? null : nextLesseeId;
     }
 
     public Long getId() {
@@ -461,6 +495,16 @@ public final class Account {
     }
 
     public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
+        long gbm = getGuaranteedBalanceMemoryNQT(numberOfConfirmations);
+        long gbd = getGuaranteedBalanceDbNQT(numberOfConfirmations);
+        if (gbm != gbd) {
+            Logger.logErrorMessage("Guaranteed balances differ for account " + Convert.toUnsignedLong(this.id));
+            Logger.logErrorMessage("at height " + Nxt.getBlockchain().getHeight() + " from memory: " + gbm + " from database: " + gbd);
+        }
+        return gbm;
+    }
+
+    public synchronized long getGuaranteedBalanceMemoryNQT(final int numberOfConfirmations) {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
             return 0;
         }
@@ -767,6 +811,7 @@ public final class Account {
     }
 
     private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
+        addToGuaranteedBalanceDbNQT(amountNQT);
         int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
         GuaranteedBalance last = null;
         if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
@@ -820,7 +865,29 @@ public final class Account {
     }
 
     private synchronized void addToGuaranteedBalanceDbNQT(long amountNQT) {
-
+        int blockchainHeight = Nxt.getBlockchain().getHeight();
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmtUpdate = con.prepareStatement("UPDATE account_guaranteed_balance "
+                     + "SET latest = FALSE WHERE account_id = ? AND latest = TRUE LIMIT 1");
+             PreparedStatement pstmtSubtract = con.prepareStatement("UPDATE account_guaranteed_balance "
+                     + "SET guaranteed_balance = guaranteed_balance - ? WHERE account_id = ?");
+             PreparedStatement pstmtMerge = con.prepareStatement("MERGE INTO account_guaranteed_balance (account_id, "
+                     + "guaranteed_balance, height, latest) KEY (account_id, height) VALUES (?, ?, ?, TRUE)")) {
+            pstmtUpdate.setLong(1, this.id);
+            pstmtUpdate.executeUpdate();
+            if (amountNQT < 0) {
+                pstmtSubtract.setLong(1, amountNQT);
+                pstmtSubtract.setLong(2, this.id);
+                pstmtSubtract.executeUpdate();
+            }
+            //TODO: undo
+            pstmtMerge.setLong(1, this.id);
+            pstmtMerge.setLong(2, this.getBalanceNQT());
+            pstmtMerge.setInt(3, blockchainHeight);
+            pstmtMerge.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     private static class GuaranteedBalance implements Comparable<GuaranteedBalance> {
