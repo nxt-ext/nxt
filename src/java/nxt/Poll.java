@@ -192,11 +192,6 @@ public final class Poll {
         return pollTable.get(id);
     }
 
-    //todo: should be removed
-    public static List<Poll> getAllPolls() {
-        return pollTable.getAll();
-    }
-
     public static Collection<Poll> getActivePolls() {
         return pollTable.getManyBy("active", true);
     }
