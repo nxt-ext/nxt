@@ -287,6 +287,7 @@ final class JSONData {
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
+            modifyAttachmentJSON(attachmentJSON);
             json.put("attachment", attachmentJSON);
         }
         putAccount(json, "sender", transaction.getSenderId());
