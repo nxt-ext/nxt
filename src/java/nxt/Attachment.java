@@ -223,7 +223,6 @@ public interface Attachment {
         }
 
         @Override
-        //todo: fix ???
         public byte[] getBytes() {
             byte[] aliasBytes = Convert.toBytes(aliasName);
 
