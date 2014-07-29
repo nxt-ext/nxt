@@ -62,7 +62,8 @@ public final class Constants {
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK = isTestnet ? 78000 : 140000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = isTestnet ? 13031352 : 15134204;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 117910 : Integer.MAX_VALUE;
+    public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 117910 : 205000;
+    public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 117910 : 210000;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

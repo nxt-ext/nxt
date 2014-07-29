@@ -12,10 +12,6 @@ public interface Appendix {
     void putBytes(ByteBuffer buffer);
     JSONObject getJSONObject();
     byte getVersion();
-    void validate(Transaction transaction) throws NxtException.ValidationException;
-    void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
-    void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException;
-
 
     static abstract class AbstractAppendix implements Appendix {
 
@@ -79,6 +75,13 @@ public interface Appendix {
         boolean verifyVersion(byte transactionVersion) {
             return transactionVersion == 0 ? version == 0 : version > 0;
         }
+
+        abstract void validate(Transaction transaction) throws NxtException.ValidationException;
+
+        abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
+
+        abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException;
+
     }
 
     public static class Message extends AbstractAppendix {
@@ -145,7 +148,7 @@ public interface Appendix {
         }
 
         @Override
-        public void validate(Transaction transaction) throws NxtException.ValidationException {
+        void validate(Transaction transaction) throws NxtException.ValidationException {
             if (this.isText && transaction.getVersion() == 0) {
                 throw new NxtException.NotValidException("Text messages not yet enabled");
             }
@@ -155,10 +158,10 @@ public interface Appendix {
         }
 
         @Override
-        public void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         @Override
-        public void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public byte[] getMessage() {
             return message;
@@ -233,7 +236,7 @@ public interface Appendix {
         }
 
         @Override
-        public void validate(Transaction transaction) throws NxtException.ValidationException {
+        void validate(Transaction transaction) throws NxtException.ValidationException {
             if (! transaction.getType().hasRecipient()) {
                 throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
             }
@@ -243,10 +246,10 @@ public interface Appendix {
         }
 
         @Override
-        public void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         @Override
-        public void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public EncryptedData getEncryptedData() {
             return encryptedData;
@@ -304,7 +307,7 @@ public interface Appendix {
         }
 
         @Override
-        public void validate(Transaction transaction) throws NxtException.ValidationException {
+        void validate(Transaction transaction) throws NxtException.ValidationException {
             if (! transaction.getType().hasRecipient()) {
                 throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
             }
@@ -322,12 +325,12 @@ public interface Appendix {
         }
 
         @Override
-        public void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             recipientAccount.apply(this.publicKey, transaction.getHeight());
         }
 
         @Override
-        public void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
             recipientAccount.undo(transaction.getHeight());
         }
 
