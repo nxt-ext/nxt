@@ -1,6 +1,7 @@
 package nxt.db;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -48,5 +49,16 @@ public final class DbUtils {
         }
     }
 
+    public static Long getLong(ResultSet rs, String columnName) throws SQLException {
+        long l = rs.getLong(columnName);
+        return rs.wasNull() ? null : l;
+    }
+
+    public static Integer getInt(ResultSet rs, String columnName) throws SQLException {
+        int n = rs.getInt(columnName);
+        return rs.wasNull() ? null : n;
+    }
+
     private DbUtils() {} // never
+
 }

@@ -20,6 +20,9 @@ public final class Convert {
     private Convert() {} //never
 
     public static byte[] parseHexString(String hex) {
+        if (hex == null) {
+            return null;
+        }
         byte[] bytes = new byte[hex.length() / 2];
         for (int i = 0; i < bytes.length; i++) {
             int char1 = hex.charAt(i * 2);
@@ -35,6 +38,9 @@ public final class Convert {
     }
 
     public static String toHexString(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
         char[] chars = new char[bytes.length * 2];
         for (int i = 0; i < bytes.length; i++) {
             chars[i * 2] = hexChars[((bytes[i] >> 4) & 0xF)];

@@ -63,10 +63,7 @@ final class BlockDb {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
-            Long previousBlockId = rs.getLong("previous_block_id");
-            if (rs.wasNull()) {
-                previousBlockId = null;
-            }
+            Long previousBlockId = DbUtils.getLong(rs, "previous_block_id");
             long totalAmountNQT = rs.getLong("total_amount");
             long totalFeeNQT = rs.getLong("total_fee");
             int payloadLength = rs.getInt("payload_length");
@@ -74,10 +71,7 @@ final class BlockDb {
             byte[] previousBlockHash = rs.getBytes("previous_block_hash");
             BigInteger cumulativeDifficulty = new BigInteger(rs.getBytes("cumulative_difficulty"));
             long baseTarget = rs.getLong("base_target");
-            Long nextBlockId = rs.getLong("next_block_id");
-            if (rs.wasNull()) {
-                nextBlockId = null;
-            }
+            Long nextBlockId = DbUtils.getLong(rs, "next_block_id");
             int height = rs.getInt("height");
             byte[] generationSignature = rs.getBytes("generation_signature");
             byte[] blockSignature = rs.getBytes("block_signature");

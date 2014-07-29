@@ -18,8 +18,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 public final class Account {
@@ -127,10 +125,23 @@ public final class Account {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
+                if (block.getHeight() % 1440 != 0) {
+                    return;
+                }
                 try (Connection con = Db.getConnection();
-                     PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_guaranteed_balance WHERE height < ? AND latest = FALSE")) {
-                    pstmt.setInt(1, Nxt.getBlockchain().getHeight() - 2881);
-                    pstmt.executeUpdate();
+                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT MAX(db_id) AS db_id, account_id FROM account_guaranteed_balance "
+                     + "WHERE height < ? GROUP BY account_id");
+                     PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
+                             + "WHERE account_id = ? AND db_id < ?")) {
+                    int limitHeight = Nxt.getBlockchain().getHeight() - 2881;
+                    pstmtSelect.setInt(1, limitHeight);
+                    try (ResultSet rs = pstmtSelect.executeQuery()) {
+                        while (rs.next()) {
+                            pstmtDelete.setLong(1, rs.getLong("account_id"));
+                            pstmtDelete.setLong(2, rs.getLong("db_id"));
+                            pstmtDelete.executeUpdate();
+                        }
+                    }
                 } catch (SQLException e) {
                     throw new RuntimeException(e.toString(), e);
                 }
@@ -351,12 +362,10 @@ public final class Account {
         this.description = rs.getString("description");
         this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
         this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
-        long currentLesseeId = rs.getLong("current_lessee_id");
-        this.currentLesseeId = rs.wasNull() ? null : currentLesseeId;
+        this.currentLesseeId = DbUtils.getLong(rs, "current_lessee_id");
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
-        long nextLesseeId = rs.getLong("next_lessee_id");
-        this.nextLesseeId = rs.wasNull() ? null : nextLesseeId;
+        this.nextLesseeId = DbUtils.getLong(rs, "next_lessee_id");
     }
 
     public Long getId() {
@@ -474,17 +483,8 @@ public final class Account {
         }
     }
 
+    /*
     public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        long gbm = getGuaranteedBalanceMemoryNQT(numberOfConfirmations);
-        long gbd = getGuaranteedBalanceDbNQT(numberOfConfirmations);
-        if (gbm != gbd) {
-            Logger.logErrorMessage("Guaranteed balances differ for account " + Convert.toUnsignedLong(this.id));
-            Logger.logErrorMessage("at height " + Nxt.getBlockchain().getHeight() + " from memory: " + gbm + " from database: " + gbd);
-        }
-        return gbm;
-    }
-
-    public synchronized long getGuaranteedBalanceMemoryNQT(final int numberOfConfirmations) {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
             return 0;
         }
@@ -510,8 +510,9 @@ public final class Account {
         }
         return result.ignore || result.balance < 0 ? 0 : result.balance;
     }
+    */
 
-    public synchronized long getGuaranteedBalanceDbNQT(final int numberOfConfirmations) {
+    public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
             return 0;
         }
@@ -521,7 +522,7 @@ public final class Account {
         int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT guaranteed_balance FROM account_guaranteed_balance "
-                     + "WHERE account_id = ? AND height <= ? AND latest = TRUE")) {
+                     + "WHERE account_id = ? AND height <= ? ORDER BY height DESC limit 1")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, height);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -790,8 +791,8 @@ public final class Account {
         }
     }
 
+    /*
     private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
-        addToGuaranteedBalanceDbNQT(amountNQT);
         int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
         GuaranteedBalance last = null;
         if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
@@ -843,18 +844,21 @@ public final class Account {
             throw new IllegalStateException("last guaranteed balance height exceeds blockchain height");
         }
     }
+    */
 
-    private synchronized void addToGuaranteedBalanceDbNQT(long amountNQT) {
+    private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
         int blockchainHeight = Nxt.getBlockchain().getHeight();
         try (Connection con = Db.getConnection();
+             /*
              PreparedStatement pstmtUpdate = con.prepareStatement("UPDATE account_guaranteed_balance "
                      + "SET latest = FALSE WHERE account_id = ? AND latest = TRUE LIMIT 1");
+             */
              PreparedStatement pstmtSubtract = con.prepareStatement("UPDATE account_guaranteed_balance "
-                     + "SET guaranteed_balance = guaranteed_balance - ? WHERE account_id = ?");
+                     + "SET guaranteed_balance = guaranteed_balance + ? WHERE account_id = ?");
              PreparedStatement pstmtMerge = con.prepareStatement("MERGE INTO account_guaranteed_balance (account_id, "
-                     + "guaranteed_balance, height, latest) KEY (account_id, height) VALUES (?, ?, ?, TRUE)")) {
-            pstmtUpdate.setLong(1, this.id);
-            pstmtUpdate.executeUpdate();
+                     + "guaranteed_balance, height) KEY (account_id, height) VALUES (?, ?, ?)")) {
+            //pstmtUpdate.setLong(1, this.id);
+            //pstmtUpdate.executeUpdate();
             if (amountNQT < 0) {
                 pstmtSubtract.setLong(1, amountNQT);
                 pstmtSubtract.setLong(2, this.id);

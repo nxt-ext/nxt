@@ -58,8 +58,9 @@ public final class Logger {
         System.setProperty("java.util.logging.manager", "nxt.util.NxtLogManager");
         if (!(LogManager.getLogManager() instanceof NxtLogManager)) {
             System.setProperty("java.util.logging.manager",
-                               (oldManager!=null ? oldManager : "java.util.logging.LogManager"));
-        } else {
+                    (oldManager != null ? oldManager : "java.util.logging.LogManager"));
+        }
+        if (! Boolean.getBoolean("nxt.doNotConfigureLogging")) {
             try {
                 boolean foundProperties = false;
                 Properties loggingProperties = new Properties();
