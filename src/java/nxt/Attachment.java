@@ -1195,7 +1195,7 @@ public interface Attachment extends Appendix {
             int length = buffer.getInt();
             goodsIsText = length < 0;
             if (length < 0) {
-                length ^= Integer.MIN_VALUE;
+                length &= Integer.MAX_VALUE;
             }
             this.goods = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_DGS_GOODS_LENGTH);
             this.discountNQT = buffer.getLong();
