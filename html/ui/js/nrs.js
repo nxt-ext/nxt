@@ -64,6 +64,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.appVersion = "";
 	NRS.assetTableKeys = [];
 
+	NRS.dgsBlockPassed = false;
+
 	NRS.init = function() {
 		if (window.location.port && window.location.port != "6876") {
 			$(".testnet_only").hide();
@@ -76,6 +78,8 @@ var NRS = (function(NRS, $, undefined) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 		}
+
+		NRS.isLocalHost = false;
 
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
@@ -190,6 +194,9 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.errorCode) {
 				//todo
 			} else {
+				if (!NRS.dgsBlockPassed && response.lastBlock > 117910) {
+					NRS.dgsBlockPassed = true;
+				}
 				if (!("lastBlock" in NRS.state)) {
 					//first time...
 					NRS.state = response;
@@ -783,7 +790,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 		} else {
-			$.growl($.t("multiple_asset_differences"), {
+			$.growl($.t("multiple_assets_differences"), {
 				"type": "success"
 			});
 		}
