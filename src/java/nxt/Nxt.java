@@ -144,7 +144,7 @@ public final class Nxt {
         TransactionProcessorImpl.getInstance().shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
-        Logger.logMessage("Nxt server " + VERSION + " stopped.");
+        Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
     }
 

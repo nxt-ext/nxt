@@ -169,6 +169,22 @@ public final class Logger {
         doLog(Level.ERROR, message, exc);
     }
 
+    public static void logShutdownMessage(String message) {
+        if (LogManager.getLogManager() instanceof NxtLogManager) {
+            logMessage(message);
+        } else {
+            System.out.println(message);
+        }
+    }
+
+    public static void logShutdownMessage(String message, Exception e) {
+        if (LogManager.getLogManager() instanceof NxtLogManager) {
+            logMessage(message, e);
+        } else {
+            System.out.println(message);
+            System.out.println(e.toString());
+        }
+    }
     /**
      * Log an ERROR message
      *

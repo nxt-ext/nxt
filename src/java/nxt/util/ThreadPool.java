@@ -56,10 +56,10 @@ public final class ThreadPool {
     }
 
     public static synchronized void shutdown() {
-        Logger.logDebugMessage("Stopping background jobs...");
+        Logger.logShutdownMessage("Stopping background jobs...");
         shutdownExecutor(scheduledThreadPool);
         scheduledThreadPool = null;
-        Logger.logDebugMessage("...Done");
+        Logger.logShutdownMessage("...Done");
     }
 
     public static void shutdownExecutor(ExecutorService executor) {
@@ -70,7 +70,7 @@ public final class ThreadPool {
             Thread.currentThread().interrupt();
         }
         if (! executor.isTerminated()) {
-            Logger.logMessage("some threads didn't terminate, forcing shutdown");
+            Logger.logShutdownMessage("some threads didn't terminate, forcing shutdown");
             executor.shutdownNow();
         }
     }

@@ -603,7 +603,7 @@ public final class Users {
             try {
                 userServer.stop();
             } catch (Exception e) {
-                Logger.logDebugMessage("Failed to stop user interface server", e);
+                Logger.logShutdownMessage("Failed to stop user interface server", e);
             }
         }
     }

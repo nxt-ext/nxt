@@ -139,7 +139,7 @@ public final class API {
             try {
                 apiServer.stop();
             } catch (Exception e) {
-                Logger.logDebugMessage("Failed to stop API server", e);
+                Logger.logShutdownMessage("Failed to stop API server", e);
             }
         }
     }

@@ -417,7 +417,7 @@ public final class Peers {
             try {
                 Init.peerServer.stop();
             } catch (Exception e) {
-                Logger.logDebugMessage("Failed to stop peer server", e);
+                Logger.logShutdownMessage("Failed to stop peer server", e);
             }
         }
         String dumpPeersVersion = Nxt.getStringProperty("nxt.dumpPeersVersion");
@@ -429,7 +429,7 @@ public final class Peers {
                     buf.append("('").append(peer.getAnnouncedAddress()).append("'), ");
                 }
             }
-            Logger.logDebugMessage(buf.toString());
+            Logger.logShutdownMessage(buf.toString());
         }
         ThreadPool.shutdownExecutor(sendToPeersService);
 
