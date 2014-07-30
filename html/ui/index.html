@@ -3004,6 +3004,9 @@
 							<div class="form-group" id="send_money_message_container">
 								<label for="send_money_message" data-i18n="message">MESSAGE</label>
 								<textarea class="form-control" id="send_money_message" name="message" rows="4" tabindex="6"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="send_money_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_money_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="send_money_password" data-i18n="passphrase">PASSPHRASE</label>
@@ -3055,7 +3058,9 @@
 							<div class="form-group">
 								<label for="send_message_message" data-i18n="message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;margin-bottom:0;" data-i18n="encrypt_message">Encrypt Message</label></div>
+                                <div style="margin-top:3px">
+                                    <label for="send_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_message_encrypt" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3088,7 +3093,7 @@
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
-							<input type="hidden" name="request_type" value="sendEncryptedNote" data-default="sendEncryptedNote" />
+							<input type="hidden" name="request_type" value="sendMessage" data-default="sendMessage" />
 				       		<input type="hidden" name="converted_account_id" value="" />
 						</form>
 					</div>
