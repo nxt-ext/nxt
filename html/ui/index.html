@@ -31,11 +31,11 @@
                 </a>
                 <div class="navbar-right">
                     <ul class="nav navbar-nav">
-                    	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
-                    	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
-	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#token_modal" data-i18n="generate_token">Generate Token</a></li>
-	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#transaction_operations_modal" data-i18n="transaction_operations">Transaction Operations</a></li>
-						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings" data-i18n="settings">Settings</a></li>
+                    	<li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
+                    	<li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
+	                    <li class="dropdown"><a href="#" data-toggle="modal" data-target="#token_modal" data-i18n="generate_token">Generate Token</a></li>
+	                    <li class="dropdown"><a href="#" data-toggle="modal" data-target="#transaction_operations_modal" data-i18n="transaction_operations">Transaction Operations</a></li>
+						<li class="dropdown"><a href="#" class="goto-page" data-page="settings" data-i18n="settings">Settings</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <i class="fa fa-question-circle"></i>
@@ -1511,8 +1511,8 @@
 			
 			<table id="center" style="display:none;width:100%;height:100%;">
 	        	<tr><td style="text-align:center;vertical-align:middle">
-		        	 <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="88" style="margin-bottom:40px;opacity: 0.5;;" /></center>
-		            	 
+                    <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="320" style="margin-bottom:40px;" /></center>
+
 		            <div id="login_panel">   
 		            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div>
 		                    	                    
@@ -1532,7 +1532,7 @@
 			            </div>
 			            
 			            <div id="registration_link">
-			            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
+			            	<a href="#" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
 			            </div> 
 		            </div>
 		            
@@ -1603,7 +1603,7 @@
 		        					<div id="account_phrase_generator_stop" style="display:none">
 			        					<p data-i18n="automatically_generated_passphrase_is">Your automatically generated passphrase is:</p>
 			        					
-			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+			        					<textarea style="width:100%;height:50px;margin-bottom:10px;padding:3px;" rows="2" readonly></textarea>
 		        					
 			        					<p data-i18n="memorize_passphrase_help">Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
 			        						        
@@ -1631,7 +1631,7 @@
 		            </div>  
 	            
 		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
-			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
+			    		<a href="#" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
 					</div>
 				</td>
 				</tr>
