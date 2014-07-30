@@ -101,6 +101,12 @@ public abstract class Order {
         return height;
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " id: " + Convert.toUnsignedLong(id) + " account: " + Convert.toUnsignedLong(accountId)
+                + " asset: " + Convert.toUnsignedLong(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
+    }
+
     private void setQuantityQNT(long quantityQNT) {
         this.quantityQNT = quantityQNT;
     }

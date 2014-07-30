@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.DbTable;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -80,10 +81,11 @@ public final class Trade {
         return tradeTable.getManyBy("asset_id", assetId);
     }
 
-    static void addTrade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
+    static Trade addTrade(Long assetId, Block block, Long askOrderId, Long bidOrderId, long quantityQNT, long priceNQT) {
         Trade trade = new Trade(assetId, block, askOrderId, bidOrderId, quantityQNT, priceNQT);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
+        return trade;
     }
 
     static void clear() {
@@ -136,6 +138,12 @@ public final class Trade {
 
     public int getHeight() {
         return height;
+    }
+
+    @Override
+    public String toString() {
+        return "Trade asset: " + Convert.toUnsignedLong(assetId) + " ask: " + Convert.toUnsignedLong(askOrderId)
+                + " bid: " + Convert.toUnsignedLong(bidOrderId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
     }
 
 }
