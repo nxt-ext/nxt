@@ -135,19 +135,10 @@ public final class Account {
                     return;
                 }
                 try (Connection con = Db.getConnection();
-                     PreparedStatement pstmtSelect = con.prepareStatement("SELECT MAX(db_id) AS db_id, account_id FROM account_guaranteed_balance "
-                     + "WHERE height < ? GROUP BY account_id");
                      PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
-                             + "WHERE account_id = ? AND db_id < ?")) {
-                    int limitHeight = Nxt.getBlockchain().getHeight() - 2881;
-                    pstmtSelect.setInt(1, limitHeight);
-                    try (ResultSet rs = pstmtSelect.executeQuery()) {
-                        while (rs.next()) {
-                            pstmtDelete.setLong(1, rs.getLong("account_id"));
-                            pstmtDelete.setLong(2, rs.getLong("db_id"));
-                            pstmtDelete.executeUpdate();
-                        }
-                    }
+                             + "WHERE height < ?")) {
+                    pstmtDelete.setInt(1, block.getHeight() - 2881);
+                    pstmtDelete.executeUpdate();
                 } catch (SQLException e) {
                     throw new RuntimeException(e.toString(), e);
                 }
@@ -335,9 +326,6 @@ public final class Account {
     private long unconfirmedBalanceNQT;
     private long forgedBalanceNQT;
 
-    //TODO: guaranteed balances
-    private final List<GuaranteedBalance> guaranteedBalances = new ArrayList<>();
-
     private int currentLeasingHeightFrom;
     private int currentLeasingHeightTo;
     private Long currentLesseeId;
@@ -461,7 +449,7 @@ public final class Account {
         }
 
         if (lastBlock.getHeight() < currentLeasingHeightFrom) {
-                return (getGuaranteedBalanceNQT(1440) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NXT;
+            return (getGuaranteedBalanceNQT(1440) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NXT;
         }
 
         return getLessorsGuaranteedBalanceNQT() / Constants.ONE_NXT;
@@ -527,15 +515,15 @@ public final class Account {
         }
         int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT guaranteed_balance FROM account_guaranteed_balance "
-                     + "WHERE account_id = ? AND height <= ? ORDER BY height DESC limit 1")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
+                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ?")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, height);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) {
-                    return 0;
+                    return balanceNQT;
                 }
-                return rs.getLong("guaranteed_balance");
+                return Convert.safeSubtract(balanceNQT, rs.getLong("additions"));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -852,59 +840,31 @@ public final class Account {
     }
     */
 
+    //TODO: undo
     private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
+        if (amountNQT <= 0) {
+            return;
+        }
         int blockchainHeight = Nxt.getBlockchain().getHeight();
         try (Connection con = Db.getConnection();
-             /*
-             PreparedStatement pstmtUpdate = con.prepareStatement("UPDATE account_guaranteed_balance "
-                     + "SET latest = FALSE WHERE account_id = ? AND latest = TRUE LIMIT 1");
-             */
-             PreparedStatement pstmtSubtract = con.prepareStatement("UPDATE account_guaranteed_balance "
-                     + "SET guaranteed_balance = guaranteed_balance + ? WHERE account_id = ?");
-             PreparedStatement pstmtMerge = con.prepareStatement("MERGE INTO account_guaranteed_balance (account_id, "
-                     + "guaranteed_balance, height) KEY (account_id, height) VALUES (?, ?, ?)")) {
-            //pstmtUpdate.setLong(1, this.id);
-            //pstmtUpdate.executeUpdate();
-            if (amountNQT < 0) {
-                pstmtSubtract.setLong(1, amountNQT);
-                pstmtSubtract.setLong(2, this.id);
-                pstmtSubtract.executeUpdate();
+             PreparedStatement pstmtSelect = con.prepareStatement("SELECT additions FROM account_guaranteed_balance "
+                     + "WHERE account_id = ? and height = ?");
+             PreparedStatement pstmtUpdate = con.prepareStatement("MERGE INTO account_guaranteed_balance (account_id, "
+                     + " additions, height) KEY (account_id, height) VALUES(?, ?, ?)")) {
+            pstmtSelect.setLong(1, this.id);
+            pstmtSelect.setInt(2, blockchainHeight);
+            try (ResultSet rs = pstmtSelect.executeQuery()) {
+                long additions = amountNQT;
+                if (rs.next()) {
+                    additions = Convert.safeAdd(additions, rs.getLong("additions"));
+                }
+                pstmtUpdate.setLong(1, this.id);
+                pstmtUpdate.setLong(2, additions);
+                pstmtUpdate.setInt(3, blockchainHeight);
+                pstmtUpdate.executeUpdate();
             }
-            //TODO: undo
-            pstmtMerge.setLong(1, this.id);
-            pstmtMerge.setLong(2, this.getBalanceNQT());
-            pstmtMerge.setInt(3, blockchainHeight);
-            pstmtMerge.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    private static class GuaranteedBalance implements Comparable<GuaranteedBalance> {
-
-        final int height;
-        long balance;
-        boolean ignore;
-
-        private GuaranteedBalance(int height, long balance) {
-            this.height = height;
-            this.balance = balance;
-            this.ignore = false;
-        }
-
-        @Override
-        public int compareTo(GuaranteedBalance o) {
-            if (this.height < o.height) {
-                return -1;
-            } else if (this.height > o.height) {
-                return 1;
-            }
-            return 0;
-        }
-
-        @Override
-        public String toString() {
-            return "height: " + height + ", guaranteed: " + balance;
         }
     }
 

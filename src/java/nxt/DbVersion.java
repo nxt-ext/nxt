@@ -392,7 +392,7 @@ final class DbVersion {
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_asset_id_height_idx ON account_asset (account_id, asset_id, height DESC)");
             case 108:
                 apply("CREATE TABLE IF NOT EXISTS account_guaranteed_balance (db_id INT IDENTITY, account_id BIGINT NOT NULL, "
-                        + "guaranteed_balance BIGINT NOT NULL, height INT NOT NULL)");
+                        + "additions BIGINT NOT NULL, height INT NOT NULL)");
             case 109:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_guaranteed_balance_id_height_idx ON account_guaranteed_balance "
                         + "(account_id, height DESC)");
