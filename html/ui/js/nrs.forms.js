@@ -37,7 +37,15 @@ var NRS = (function(NRS, $, undefined) {
 		return $.t("error_" + requestType);
 	}
 
-	function handleMessageData(data) {
+	function handleMessageData(data, requestType) {
+		if (!data.add_message && requestType != "sendMessage") {
+			delete data.message;
+			delete data.encrypt_message;
+			delete data.add_message;
+
+			return data;
+		}
+
 		if (data.message) {
 			if (data.encrypt_message) {
 				try {
@@ -45,8 +53,8 @@ var NRS = (function(NRS, $, undefined) {
 						"account": data.recipient
 					}, data.secretPhrase);
 
-					data.encryptedMessageNonce = encrypted.nonce;
 					data.encryptedMessageData = encrypted.message;
+					data.encryptedMessageNonce = encrypted.nonce;
 					data.messageToEncryptIsText = "true";
 					delete data.message;
 				} catch (err) {
@@ -207,17 +215,15 @@ var NRS = (function(NRS, $, undefined) {
 			data = NRS.getFormData($form);
 		}
 
-		if (data.add_message || requestType == "sendMessage") {
-			try {
-				data = handleMessageData(data);
-			} catch (err) {
-				$form.find(".error_message").html(String(err.message).escapeHTML()).show();
-				if (formErrorFunction) {
-					formErrorFunction();
-				}
-				NRS.unlockForm($modal, $btn);
-				return;
+		try {
+			data = handleMessageData(data, requestType);
+		} catch (err) {
+			$form.find(".error_message").html(String(err.message).escapeHTML()).show();
+			if (formErrorFunction) {
+				formErrorFunction();
 			}
+			NRS.unlockForm($modal, $btn);
+			return;
 		}
 
 		if (data.deadline) {
