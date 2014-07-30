@@ -100,7 +100,7 @@
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
                         	</ul>
                         </li>
-                        <li class="treeview" id="sidebar_dgs">
+                        <li class="treeview dgs_block" id="sidebar_dgs">
                         	<a href="#" data-page="newest_dgs"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                             	 <li id="dgs_seller_page_link" style="display:none"><a href="#" data-page="dgs_seller"><i class="fa fa-angle-double-right"></i> <span data-i18n="seller_products">Seller Products</span></a></li>
@@ -116,7 +116,7 @@
                         <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span data-i18n="contacts">Contacts</span></a></li>
                         <li><a href="#" data-page="messages"><i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span></a></li>
                         <li><a href="#" data-page="aliases"><i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span></a></li>
-                        <li class="testnet_only"><a href="#" data-page="polls"><i class="fa fa-thumbs-up"></i><span data-i18n="polls">Polls</span></a></li>
+                        <!-- <li class="testnet_only"><a href="#" data-page="polls"><i class="fa fa-thumbs-up"></i><span data-i18n="polls">Polls</span></a></li> -->
                         <li><a href="#" data-page="blocks"><i class="fa fa-bars"></i> <span data-i18n="blocks">Blocks</span></a></li>
                         <li><a href="#" data-page="peers"><i class="fa fa-cloud"></i> <span data-i18n="peers">Peers</span></a></li>
                         <li id="news_link"><a href="#" data-page="news"><i class="fa fa-book"></i> <span data-i18n="news">News</span></a></li>
@@ -337,7 +337,7 @@
 							           			<div class="col-xs-10 col-sm-10 col-md-10">
 							           				<div class="form-group">
 							           					<input type="password" class="form-control secret_phrase" id="inline_message_password" name="inline_message_password" placeholder="Passphrase" data-i18n="[placeholder]passphrase" style="display:inline;width:35%">
-							           					<label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="inline_message_encrypt" id="inline_message_encrypt" value="1" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+							           					<label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="inline_message_encrypt" value="1" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
 							           				</div>
 							           			</div>
 							           			<div class="col-xs-2-col-sm-2 col-md-2">
@@ -2486,8 +2486,8 @@
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="dgs_purchase_note" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_purchase_note" name="note" rows="3" tabindex="4"></textarea>
+								<label for="dgs_purchase_message" data-i18n="note">NOTE</label>
+								<textarea class="form-control" id="dgs_purchase_message" name="message" rows="3" tabindex="4"></textarea>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2684,8 +2684,8 @@
 							<input type="hidden" name="recipient" id="dgs_refund_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_refund_purchase" value="" />
 							<div class="form-group">
-								<label for="dgs_refund_note" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_refund_note" name="note" rows="3" tabindex="2"></textarea>
+								<label for="dgs_refund_message" data-i18n="note">NOTE</label>
+								<textarea class="form-control" id="dgs_refund_message" name="message" rows="3" tabindex="2"></textarea>
 							</div>
 							<div class="form-group">
 								<label for="dgs_refund_refund" data-i18n="refund">REFUND</label>
@@ -2751,8 +2751,8 @@
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
 							</div>
 							<div class="form-group">
-								<label for="dgs_feedback_note" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_feedback_note" name="note" rows="3" tabindex="2"></textarea>
+								<label for="dgs_feedback_message" data-i18n="note">NOTE</label>
+								<textarea class="form-control" id="dgs_feedback_message" name="message" rows="3" tabindex="2"></textarea>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -2998,10 +2998,10 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group dgs_block">
 								<input type="checkbox" name="add_message" id="send_money_add_message" style="margin-top:5px;vertical-align:top;" tabindex="5" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
 							</div>
-							<div class="form-group" id="send_money_message_container">
+							<div class="form-group dgs_block" id="send_money_message_container">
 								<label for="send_money_message" data-i18n="message">MESSAGE</label>
 								<textarea class="form-control" id="send_money_message" name="message" rows="4" tabindex="6"></textarea>
                                  <div style="margin-top:3px">
@@ -3058,7 +3058,7 @@
 							<div class="form-group">
 								<label for="send_message_message" data-i18n="message">MESSAGE</label>
 								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-                                <div style="margin-top:3px">
+                                <div style="margin-top:3px" class="dgs_block">
                                     <label for="send_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_message_encrypt" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
                                 </div>
 							</div>
@@ -4046,7 +4046,7 @@
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="form-group">
 									<label for="parse_transaction_transaction_bytes" data-i18n="transaction_bytes">TRANSACTION BYTES</label>
-									<textarea class="form-control" name="transactionBytes" id="parse_transaction_transaction_bytes" rows="4" placeholder="Transaction Bytes" data-i18n="transaction_bytes"></textarea>
+									<textarea class="form-control" name="transactionBytes" id="parse_transaction_transaction_bytes" rows="4" placeholder="Transaction Bytes" data-i18n="[placeholder]transaction_bytes"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="parseTransaction" />
 								<div id="parse_transaction_output" class="output" style="max-height:350px;overflow:auto">
@@ -4066,7 +4066,7 @@
 								</div>
 								<div class="form-group">
 									<label for="calculate_full_hash_signature_hash" data-i18n="signature_hash">SIGNATURE HASH</label>
-									<textarea class="form-control" name="signatureHash" id="calculate_full_hash-unsigned_transaction_bytes" rows="1" placeholder="Signature Hash" data-i18n="signature_hash"></textarea>
+									<textarea class="form-control" name="signatureHash" id="calculate_full_hash-unsigned_transaction_bytes" rows="1" placeholder="Signature Hash" data-i18n="[placeholder]signature_hash"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="calculateFullHash" />
 								<div id="calculate_full_hash_output" class="output" style="max-height:350px;overflow:auto">

@@ -3229,3 +3229,7 @@ input.masked {
 .navbar-right > .nav > .dropdown > a { 
   font-weight:bold;
 }
+
+.dgs_block {
+  display:none;
+}

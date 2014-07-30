@@ -31,7 +31,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
 		} else {
-			NRS.lastBlockHeight = NRS.blocks[0].height;
+			setLastBlockHeight(NRS.blocks[0].height);
 
 			//if no new blocks in 24 hours, show blockchain download progress..
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 24) {
@@ -84,13 +84,23 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.blocks = NRS.blocks.slice(0, 100);
 			}
 
-			//set new last block height
-			NRS.lastBlockHeight = NRS.blocks[0].height;
+			setLastBlockHeight(NRS.blocks[0].height);
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
 			NRS.tempBlocks.push(response);
 			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
+		}
+	}
+
+	function setLastBlockHeight(blockHeight) {
+		NRS.lastBlockHeight = blockHeight;
+
+		if (!NRS.dgsBlockPassed) {
+			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 205000) || NRS.isTestNet) {
+				NRS.dgsBlockPassed = true;
+				$(".dgs_block").show();
+			}
 		}
 	}
 

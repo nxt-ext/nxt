@@ -194,9 +194,6 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.errorCode) {
 				//todo
 			} else {
-				if (!NRS.dgsBlockPassed && response.lastBlock > 117910) {
-					NRS.dgsBlockPassed = true;
-				}
 				if (!("lastBlock" in NRS.state)) {
 					//first time...
 					NRS.state = response;
