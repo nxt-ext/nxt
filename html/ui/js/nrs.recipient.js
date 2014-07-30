@@ -36,10 +36,8 @@ var NRS = (function(NRS, $, undefined) {
 	$("#send_money_add_message").on("change", function(e) {
 		if ($(this).is(":checked")) {
 			$("#send_money_message_container").fadeIn();
-			$(this).closest("form").find("input[name=request_type]").val("sendMoneyWithMessage");
 		} else {
 			$("#send_money_message_container").hide();
-			$(this).closest("form").find("input[name=request_type]").val("sendMoney");
 		}
 	});
 
@@ -74,41 +72,6 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
 		$(this).closest("form").find("input[name=recipient],input[name=account_id]").trigger("unmask").val($(this).data("contact")).trigger("blur");
 	});
-
-	NRS.forms.sendMoney = function($modal) {
-		var data = NRS.getFormData($modal.find("form:first"));
-
-		delete data.add_message;
-		delete data.message;
-
-		return {
-			"data": data
-		};
-	}
-
-	NRS.forms.sendMoneyWithMessage = function($modal) {
-		var data = NRS.getFormData($modal.find("form:first"));
-
-		try {
-			var encrypted = NRS.encryptNote(data.message, {
-				"account": data.recipient
-			}, data.secretPhrase);
-
-			data.encryptedNoteNonce = encrypted.nonce;
-			data.encryptedNote = encrypted.message;
-		} catch (err) {
-			return {
-				"error": err.message
-			};
-		}
-
-		delete data.add_message;
-		delete data.message;
-
-		return {
-			"data": data
-		};
-	}
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
 		if (!(data["_extra"] && data["_extra"].convertedAccount) && !(data.recipient in NRS.contacts)) {
