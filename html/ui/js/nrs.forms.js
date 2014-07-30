@@ -21,7 +21,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
 
-	NRS.getSuccessMessage = function(requestType) {
+	function getSuccessMessage(requestType) {
 		var ignore = ["asset_exchange_change_group_name", "asset_exchange_group", "add_contact", "update_contact", "delete_contact",
 			"send_message", "decrypt_messages", "start_forging", "stop_forging", "generate_token", "send_money", "set_alias", "add_asset_bookmark"
 		];
@@ -33,8 +33,34 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	NRS.getErrorMessage = function(requestType) {
+	function getErrorMessage(requestType) {
 		return $.t("error_" + requestType);
+	}
+
+	function handleMessageData(data) {
+		if (data.message) {
+			if (data.encrypt_message) {
+				try {
+					var encrypted = NRS.encryptNote(data.message, {
+						"account": data.recipient
+					}, data.secretPhrase);
+
+					data.encryptedMessageNonce = encrypted.nonce;
+					data.encryptedMessageData = encrypted.message;
+					data.messageToEncryptIsText = "true";
+					delete data.message;
+				} catch (err) {
+					throw err;
+				}
+			} else {
+				data.messageIsText = "true";
+			}
+		}
+
+		delete data.add_message;
+		delete data.encrypt_message;
+
+		return data;
 	}
 
 	NRS.submitForm = function($modal, $btn) {
@@ -62,8 +88,8 @@ var NRS = (function(NRS, $, undefined) {
 			return "_" + $1.toLowerCase();
 		});
 
-		var successMessage = NRS.getSuccessMessage(requestTypeKey);
-		var errorMessage = NRS.getErrorMessage(requestTypeKey);
+		var successMessage = getSuccessMessage(requestTypeKey);
+		var errorMessage = getErrorMessage(requestTypeKey);
 
 		var data = null;
 
@@ -179,6 +205,19 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!data) {
 			data = NRS.getFormData($form);
+		}
+
+		if (data.add_message || requestType == "sendMessage") {
+			try {
+				data = handleMessageData(data);
+			} catch (err) {
+				$form.find(".error_message").html(String(err.message).escapeHTML()).show();
+				if (formErrorFunction) {
+					formErrorFunction();
+				}
+				NRS.unlockForm($modal, $btn);
+				return;
+			}
 		}
 
 		if (data.deadline) {
