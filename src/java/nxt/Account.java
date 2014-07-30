@@ -47,6 +47,12 @@ public final class Account {
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
         }
+
+        @Override
+        public String toString() {
+            return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
+                    + " quantity: " + quantityQNT + " unconfirmedQuantity: " + unconfirmedQuantityQNT;
+        }
     }
 
     public static class AccountLease {
@@ -676,9 +682,9 @@ public final class Account {
             accountAsset = new AccountAsset(this.id, assetId, assetBalance, accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT);
             if (assetBalance > 0) {
                 accountAssetTable.insert(this.id, assetId, accountAsset);
-            } else if (assetBalance == 0) {
+            } else if (assetBalance == 0 && accountAsset.unconfirmedQuantityQNT == 0) {
                 accountAssetTable.delete(this.id, assetId);
-            } else {
+            } else if (assetBalance < 0) {
                 throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(id));
             }
         }
@@ -695,9 +701,9 @@ public final class Account {
             accountAsset = new AccountAsset(this.id, assetId, accountAsset == null ? 0 : accountAsset.quantityQNT, unconfirmedAssetBalance);
             if (unconfirmedAssetBalance > 0) {
                 accountAssetTable.insert(this.id, assetId, accountAsset);
-            } else if (unconfirmedAssetBalance == 0) {
+            } else if (unconfirmedAssetBalance == 0 && accountAsset.quantityQNT == 0) {
                 accountAssetTable.delete(this.id, assetId);
-            } else {
+            } else if (unconfirmedAssetBalance < 0) {
                 throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
             }
         }
