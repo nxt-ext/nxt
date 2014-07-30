@@ -84,6 +84,9 @@
 					}
 
 					function keydownEvent(e) {
+						if (e.keyCode == 9) {
+							return true;
+						}
 						if (e.keyCode == 8) {
 							var currentInput = input.val();
 							var pos = input.caret();
@@ -104,6 +107,9 @@
 					}
 
 					function keypressEvent(e) {
+						if (e.keyCode == 9) {
+							return true;
+						}
 						var p, c, next, k = e.which,
 							pos = input.caret();
 						if (0 == k) {
