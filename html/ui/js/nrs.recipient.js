@@ -151,8 +151,10 @@ var NRS = (function(NRS, $, undefined) {
 
 		var callout = modal.find(".account_info").first();
 		var accountInputField = modal.find("input[name=converted_account_id]");
+		var recipientPublicKeyField = modal.find("input[name=recipientPublicKey]");
 
 		accountInputField.val("");
+		recipientPublicKeyField.val("");
 
 		account = $.trim(account);
 
@@ -185,7 +187,29 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		} else if (!(/^\d+$/.test(account))) {
-			if (NRS.databaseSupport && account.charAt(0) != '@') {
+			if (account.length == 64 && account.match(/^[a-f0-9]+$/)) {
+				recipientPublicKeyField.val(account);
+
+				var rsAccount = NRS.getAccountIdFromPublicKey(account, true);
+
+				accountInputField.val(rsAccount);
+
+				NRS.sendRequest("getAccount", {
+					"account": rsAccount
+				}, function(response) {
+					if (response.errorCode) {
+						if (response.errorCode == 5) {
+							callout.removeClass(classes).addClass("callout-info").html($.t("recipient_public_key_account", {
+								"account_id": String(rsAccount).escapeHTML()
+							})).show();
+						} else {
+							callout.removeClass(classes).addClass("callout-danger").html(String(response.errorDescription).escapeHTML()).show();
+						}
+					} else {
+						callout.removeClass(classes).addClass("callout-danger").html($.t("recipient_public_key_already_announced")).show();
+					}
+				});
+			} else if (NRS.databaseSupport && account.charAt(0) != '@') {
 				NRS.database.select("contacts", [{
 					"name": account
 				}], function(error, contact) {
@@ -230,7 +254,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": account
 		}, function(response) {
 			if (response.errorCode) {
-				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? $.t("error") + ": " + String(response.errorDescription).escapeHTML() : $.t("error_alias")).show();
+				callout.removeClass(classes).addClass("callout-danger").html($.t("error_invalid_account_id")).show();
 			} else {
 				if (response.aliasURI) {
 					var alias = String(response.aliasURI);

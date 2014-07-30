@@ -84,6 +84,7 @@
 					}
 
 					function keydownEvent(e) {
+						//ignore tab
 						if (e.keyCode == 9) {
 							return true;
 						}
@@ -91,6 +92,7 @@
 							var currentInput = input.val();
 							var pos = input.caret();
 
+							//backspace, remove
 							if ((pos.begin == 0 && pos.end == 24) || (currentInput == "NXT-____-____-____-_____" && pos.begin == 4)) {
 								input.val("");
 								$(this).trigger("unmask");
@@ -107,6 +109,7 @@
 					}
 
 					function keypressEvent(e) {
+						//ignore tab
 						if (e.keyCode == 9) {
 							return true;
 						}
@@ -197,16 +200,19 @@
 
 							var pasted = text_diff(oldInput, newInput);
 
-							if (pasted != newInput) {
+							if (pasted.length == 64 && pasted.match(/^[a-f0-9]+$/)) {
+								input.val(pasted);
+								input.trigger("unmask");
+							} else if (pasted != newInput) {
 								if (/^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.test(pasted)) {
 									input.val(pasted);
 								} else if (/^NXT[A-Z0-9]{17}/i.test(pasted)) {
 									input.val(pasted);
 								}
-							}
 
-							var pos = checkVal(!0);
-							input.caret(pos), settings.completed && pos == input.val().length && settings.completed.call(input);
+								var pos = checkVal(!0);
+								input.caret(pos), settings.completed && pos == input.val().length && settings.completed.call(input);
+							}
 						}, 0);
 					}), chrome && android && input.bind("keyup.mask", keypressEvent), checkVal();
 				}));

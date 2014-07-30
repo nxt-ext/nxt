@@ -1279,6 +1279,15 @@ var NRS = (function(NRS, $, undefined) {
 					case "Transaction already signed":
 						return $.t("error_transaction_already_signed");
 						break;
+					case "PublicKeyAnnouncement cannot be attached to transactions with no recipient":
+						return $.t("error_public_key_announcement_no_recipient");
+						break;
+					case "Announced public key does not match recipient accountId":
+						return $.t("error_public_key_different_account_id");
+						break;
+					case "Public key for this account has already been announced":
+						return $.t("error_public_key_already_announced");
+						break;
 					default:
 						if (response.errorDescription.indexOf("Alias already owned by another account") != -1) {
 							return $.t("error_alias_owned_by_other_account");

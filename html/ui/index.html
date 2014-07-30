@@ -1694,6 +1694,7 @@
 
 			      			<input type="hidden" name="request_type" value="leaseBalance" />
 			      			<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
@@ -1930,6 +1931,7 @@
 
 							<input type="hidden" name="request_type" value="transferAsset" />
 							<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
@@ -2000,6 +2002,7 @@
 
 							<input type="hidden" name="request_type" value="addContact" />
 							<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
@@ -2042,6 +2045,7 @@
 							<input type="hidden" name="contact_id" id="update_contact_id" value="" />
 							<input type="hidden" name="request_type" value="updateContact" />
 							<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 			    	</div>
 					<div class="modal-footer" style="margin-top:0;">
@@ -3024,6 +3028,7 @@
 
 			      			<input type="hidden" name="request_type" value="sendMoney" data-default="sendMoney" />
 			      			<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 					</div>
 		      		<div class="modal-footer" style="margin-top:0;">
@@ -3095,6 +3100,7 @@
 
 							<input type="hidden" name="request_type" value="sendMessage" data-default="sendMessage" />
 				       		<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 					</div>
 			       	<div class="modal-footer" style="margin-top:0;">
@@ -3357,6 +3363,7 @@
 
 							<input type="hidden" name="request_type" value="sellAlias" />
 				      		<input type="hidden" name="converted_account_id" value="" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
@@ -3438,8 +3445,9 @@
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
+                            <input type="hidden" name="request_type" value="sellAlias" />
 				      		<input type="hidden" name="converted_account_id" value="" />
-			      			<input type="hidden" name="request_type" value="sellAlias" />
+                            <input type="hidden" name="recipientPublicKey" value="" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
@@ -3932,10 +3940,7 @@
 							<table class="table table-striped" id="account_balance_table" style="margin-bottom:0;table-layout:fixed;">
 							    <tbody>
 							    	<tr>
-							    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_id"></span></td>
-							    	</tr>
-							    	<tr>
-							    		<td style="font-weight: bold"><span data-i18n="new_address_format">New Address Format</span>:</td><td><span id="account_balance_account_rs"></span></td>
+							    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_rs"></span></td>
 							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold"><span data-i18n="balance">Balance</span>:</td><td><span id="account_balance_balance"></span></td>

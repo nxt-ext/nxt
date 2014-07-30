@@ -32,6 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.account = "";
 	NRS.accountRS = ""
+	NRS.publicKey = "";
 	NRS.accountInfo = {};
 
 	NRS.database = null;
@@ -513,14 +514,20 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading") + (NRS.newlyCreatedAccount ? " " + $.t("status_account_id", {
-							"account_id": String(NRS.accountRS).escapeHTML()
-						}) : "")).show();
+						if (NRS.newlyCreatedAccount) {
+							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+								"account_id": String(NRS.accountRS).escapeHTML(),
+								"public_key": String(NRS.publicKey).escapeHTML()
+							}) + "<br /><br />" + $.t("status_blockchain_downloading")).show();
+						} else {
+							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading")).show();
+						}
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
 						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-							"account_id": String(NRS.accountRS).escapeHTML()
+							"account_id": String(NRS.accountRS).escapeHTML(),
+							"public_key": String(NRS.publicKey).escapeHTML()
 						})).show();
 					}
 				} else {
@@ -535,9 +542,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (NRS.downloadingBlockchain) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading") + (NRS.newlyCreatedAccount ? " " + $.t("status_account_id", {
-						"account_id": String(NRS.accountRS).escapeHTML()
-					}) : "")).show();
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading")).show();
 				} else if (NRS.state && NRS.state.isScanning) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 				} else if (!NRS.accountInfo.publicKey) {

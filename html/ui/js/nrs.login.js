@@ -87,11 +87,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_generator_panel .step_3 .callout").show();
 		} else {
 			NRS.newlyCreatedAccount = true;
-			NRS.login(password, function() {
-				$.growl($.t("success_passphrase_confirmed"), {
-					"type": "success"
-				});
-			});
+			NRS.login(password);
 			PassPhraseGenerator.reset();
 			$("#account_phrase_generator_panel textarea").val("");
 			$("#account_phrase_generator_panel .step_3 .callout").hide();
@@ -118,11 +114,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_custom_panel .callout").first().removeClass("callout-info").addClass("callout-danger").html(error);
 		} else {
 			$("#registration_password, #registration_password_repeat").val("");
-			NRS.login(password, function() {
-				$.growl($.t("success_passphrase_confirmed"), {
-					"type": "success"
-				});
-			});
+			NRS.login(password);
 		}
 	});
 
@@ -155,6 +147,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response) {
 				if (!response.errorCode) {
 					NRS.account = String(response.accountId).escapeHTML();
+					NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
 				}
 
 				if (!NRS.account) {

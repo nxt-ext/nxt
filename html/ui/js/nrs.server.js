@@ -1060,6 +1060,8 @@ var NRS = (function(NRS, $, undefined) {
 					transaction.message = converters.byteArrayToHexString(slice);
 				}
 
+				pos += messageLength;
+
 				if (transaction.messageIsText && data.messageIsText != "true") {
 					return false;
 				}
@@ -1101,6 +1103,8 @@ var NRS = (function(NRS, $, undefined) {
 
 				transaction.encryptedMessageNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
 
+				pos += 32;
+
 				var messageToEncryptIsText = (transaction.messageToEncryptIsText ? "true" : "false");
 
 				if (messageToEncryptIsText != data.messageToEncryptIsText) {
@@ -1111,6 +1115,28 @@ var NRS = (function(NRS, $, undefined) {
 					return false;
 				}
 			} else if (data.encryptedMessageData) {
+				return false;
+			}
+
+			position <<= 1;
+
+			if (transaction.flags && position != 0) {
+				var attachmentVersion = byteArray[pos];
+
+				pos++;
+
+				alert("here we are");
+				var recipientPublicKey = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+				alert(recipientPublicKey);
+				alert(data.recipientPublicKey);
+
+				if (recipientPublicKey != data.recipientPublicKey) {
+					alert("not the same");
+					return false;
+				}
+				pos += 32;
+			} else if (data.recipientPublicKey) {
 				return false;
 			}
 		}
