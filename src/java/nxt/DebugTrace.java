@@ -110,7 +110,7 @@ public final class DebugTrace {
 
     private static final String[] columns = {"height", "event", "account", "asset", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance",
-            "transaction amount", "transaction fee", "generation fee",
+            "transaction amount", "transaction fee", "generation fee", "effective balance",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
             "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
@@ -307,6 +307,7 @@ public final class DebugTrace {
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block" + (isUndo ? " undo" : ""));
+        map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
         return map;
     }
 
