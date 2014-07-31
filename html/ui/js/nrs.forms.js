@@ -37,7 +37,7 @@ var NRS = (function(NRS, $, undefined) {
 		return $.t("error_" + requestType);
 	}
 
-	function handleMessageData(data, requestType) {
+	NRS.addMessageData = function(data, requestType) {
 		if (!data.add_message && requestType != "sendMessage") {
 			delete data.message;
 			delete data.encrypt_message;
@@ -46,8 +46,14 @@ var NRS = (function(NRS, $, undefined) {
 			return data;
 		}
 
+		data["_extra"] = {
+			"message": data.message
+		};
+
 		if (data.message) {
-			if (data.encrypt_message) {
+			if (!NRS.dgsBlockPassed) {
+				data.message = converters.stringToHexString(data.message);
+			} else if (data.encrypt_message) {
 				try {
 					var encrypted = NRS.encryptNote(data.message, {
 						"account": data.recipient
@@ -215,30 +221,6 @@ var NRS = (function(NRS, $, undefined) {
 			data = NRS.getFormData($form);
 		}
 
-		try {
-			data = handleMessageData(data, requestType);
-		} catch (err) {
-			$form.find(".error_message").html(String(err.message).escapeHTML()).show();
-			if (formErrorFunction) {
-				formErrorFunction();
-			}
-			NRS.unlockForm($modal, $btn);
-			return;
-		}
-
-		if (data.deadline) {
-			data.deadline = String(data.deadline * 60); //hours to minutes
-		}
-
-		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
-			$form.find(".error_message").html($.t("error_passphrase_required")).show();
-			if (formErrorFunction) {
-				formErrorFunction(false, data);
-			}
-			NRS.unlockForm($modal, $btn);
-			return;
-		}
-
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
 			if (/^\d+$/.test(data.recipient)) {
@@ -264,6 +246,30 @@ var NRS = (function(NRS, $, undefined) {
 					};
 				}
 			}
+		}
+
+		try {
+			data = NRS.addMessageData(data, requestType);
+		} catch (err) {
+			$form.find(".error_message").html(String(err.message).escapeHTML()).show();
+			if (formErrorFunction) {
+				formErrorFunction();
+			}
+			NRS.unlockForm($modal, $btn);
+			return;
+		}
+
+		if (data.deadline) {
+			data.deadline = String(data.deadline * 60); //hours to minutes
+		}
+
+		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+			$form.find(".error_message").html($.t("error_passphrase_required")).show();
+			if (formErrorFunction) {
+				formErrorFunction(false, data);
+			}
+			NRS.unlockForm($modal, $btn);
+			return;
 		}
 
 		if (!NRS.showedFormWarning) {
