@@ -8,6 +8,8 @@ import org.h2.jdbcx.JdbcConnectionPool;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class Db {
 
@@ -15,6 +17,7 @@ public final class Db {
     private static volatile int maxActiveConnections;
 
     private static final ThreadLocal<Connection> localConnection = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String,Map<Long,Object>>> transactionCaches = new ThreadLocal<>();
 
     private static final class DbConnection extends FilteredConnection {
 
@@ -92,6 +95,18 @@ public final class Db {
         return new DbConnection(con);
     }
 
+    static Map<Long,Object> getCache(String tableName) {
+        if (!isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
+        Map<Long,Object> cacheMap = transactionCaches.get().get(tableName);
+        if (cacheMap == null) {
+            cacheMap = new HashMap<>();
+            transactionCaches.get().put(tableName, cacheMap);
+        }
+        return cacheMap;
+    }
+
     public static boolean isInTransaction() {
         return localConnection.get() != null;
     }
@@ -105,6 +120,7 @@ public final class Db {
             con.setAutoCommit(false);
             con = new DbConnection(con);
             localConnection.set(con);
+            transactionCaches.set(new HashMap<String, Map<Long, Object>>());
             return con;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -141,6 +157,8 @@ public final class Db {
             throw new IllegalStateException("Not in transaction");
         }
         localConnection.set(null);
+        transactionCaches.get().clear();
+        transactionCaches.set(null);
         DbUtils.close(con);
     }
 

@@ -1,7 +1,7 @@
 package nxt;
 
+import nxt.db.CachingDbTable;
 import nxt.db.Db;
-import nxt.db.DbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +13,12 @@ import java.util.Map;
 
 public final class Vote {
 
-    private static final DbTable<Vote> voteTable = new DbTable<Vote>() {
+    private static final CachingDbTable<Vote> voteTable = new CachingDbTable<Vote>() {
+
+        @Override
+        protected Long getId(Vote vote) {
+            return vote.getId();
+        }
 
         @Override
         protected String table() {

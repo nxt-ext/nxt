@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO: caching?
 public abstract class ValuesDbTable<T,V> extends BasicDbTable {
 
     protected abstract V load(Connection con, ResultSet rs) throws SQLException;

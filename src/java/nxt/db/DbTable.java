@@ -40,7 +40,7 @@ public abstract class DbTable<T> extends BasicDbTable {
         }
     }
 
-    protected final T get(Connection con, PreparedStatement pstmt) throws SQLException {
+    protected T get(Connection con, PreparedStatement pstmt) throws SQLException {
         try (ResultSet rs = pstmt.executeQuery()) {
             T t = null;
             if (rs.next()) {
@@ -73,7 +73,7 @@ public abstract class DbTable<T> extends BasicDbTable {
         }
     }
 
-    public final List<T> getManyBy(Connection con, PreparedStatement pstmt) {
+    public List<T> getManyBy(Connection con, PreparedStatement pstmt) {
         try {
             List<T> result = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -106,7 +106,7 @@ public abstract class DbTable<T> extends BasicDbTable {
         }
     }
 
-    public final void delete(T t) {
+    public void delete(T t) {
         if (t == null) {
             return;
         }

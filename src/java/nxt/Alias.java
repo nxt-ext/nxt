@@ -131,8 +131,14 @@ public final class Alias {
 
     static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
         Alias alias = getAlias(attachment.getAliasName());
-        Long aliasId = alias == null ? transaction.getId() : alias.getId();
-        aliasTable.insert(new Alias(aliasId, transaction, attachment));
+        if (alias == null) {
+            alias = new Alias(transaction.getId(), transaction, attachment);
+        } else {
+            alias.accountId = transaction.getSenderId();
+            alias.aliasURI = attachment.getAliasURI();
+            alias.timestamp = transaction.getBlockTimestamp();
+        }
+        aliasTable.insert(alias);
     }
 
     static void rollbackAlias(Long aliasId) {
@@ -157,9 +163,11 @@ public final class Alias {
     }
 
     static void changeOwner(Long newOwnerId, String aliasName, int timestamp) {
-        Alias oldAlias = getAlias(aliasName);
-        aliasTable.insert(new Alias(oldAlias.id, newOwnerId, aliasName, oldAlias.aliasURI, timestamp));
-        Offer offer = getOffer(oldAlias);
+        Alias alias = getAlias(aliasName);
+        alias.accountId = newOwnerId;
+        alias.timestamp = timestamp;
+        aliasTable.insert(alias);
+        Offer offer = getOffer(alias);
         offerTable.delete(offer);
     }
 
@@ -168,11 +176,11 @@ public final class Alias {
         offerTable.truncate();
     }
 
-    private final Long accountId;
+    private Long accountId;
     private final Long id;
     private final String aliasName;
-    private final String aliasURI;
-    private final int timestamp;
+    private String aliasURI;
+    private int timestamp;
 
     private Alias(Long id, Long accountId, String aliasName, String aliasURI, int timestamp) {
         this.id = id;

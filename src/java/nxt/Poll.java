@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.DbTable;
+import nxt.db.CachingDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +11,12 @@ import java.util.Map;
 
 public final class Poll {
 
-    private static final DbTable<Poll> pollTable = new DbTable<Poll>() {
+    private static final CachingDbTable<Poll> pollTable = new CachingDbTable<Poll>() {
+
+        @Override
+        protected Long getId(Poll poll) {
+            return poll.getId();
+        }
 
         @Override
         protected String table() {
