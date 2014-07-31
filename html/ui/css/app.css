@@ -240,6 +240,11 @@ img {
 .bg-maroon {
   background-color: #85144b !important;
 }
+.small-box {
+  background-color: #158AAE !important;
+}
+
+
 /* Text colors */
 .text-red {
   color: #f56954 !important;
@@ -1975,7 +1980,14 @@ body > .header .logo .icon {
 */
 /* skin-blue navbar */
 .navbar {
-  background-color: #3c8dbc;
+  background: #005f82; /* Old browsers */
+  background: -moz-linear-gradient(top, #005f82 0%, #004a66 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#005f82), color-stop(100%,#004a66)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, #005f82 0%,#004a66 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, #005f82 0%,#004a66 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, #005f82 0%,#004a66 100%); /* IE10+ */
+  background: linear-gradient(to bottom, #005f82 0%,#004a66 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#005f82', endColorstr='#004a66',GradientType=0 ); /* IE6-9 */
 }
 .navbar .nav a {
   color: #fff;
@@ -1997,8 +2009,15 @@ body > .header .logo .icon {
 }
 /* skin-blue logo */
 .logo {
-  background-color: #367fa9;
   color: #f9f9f9;
+  background: #005f82; /* Old browsers */
+  background: -moz-linear-gradient(top, #005f82 0%, #004a66 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#005f82), color-stop(100%,#004a66)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, #005f82 0%,#004a66 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, #005f82 0%,#004a66 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, #005f82 0%,#004a66 100%); /* IE10+ */
+  background: linear-gradient(to bottom, #005f82 0%,#004a66 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#005f82', endColorstr='#004a66',GradientType=0 ); /* IE6-9 */
 }
 .logo > a {
   color: #f9f9f9;
