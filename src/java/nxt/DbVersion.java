@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.Db;
 import nxt.util.Logger;
 
 import java.sql.Connection;

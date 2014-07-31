@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.Db;
 import nxt.db.DbIterator;
 import nxt.peer.Peer;
 import nxt.peer.Peers;

@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.Db;
 import nxt.db.VersioningDbTable;
 import nxt.db.VersioningValuesDbTable;
 import nxt.util.Convert;

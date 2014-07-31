@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.Db;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;

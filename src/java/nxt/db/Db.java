@@ -1,7 +1,7 @@
-package nxt;
+package nxt.db;
 
-import nxt.db.DbUtils;
-import nxt.db.FilteredConnection;
+import nxt.Constants;
+import nxt.Nxt;
 import nxt.util.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
 
@@ -11,7 +11,7 @@ import java.sql.Statement;
 
 public final class Db {
 
-    private static volatile JdbcConnectionPool cp;
+    private static final JdbcConnectionPool cp;
     private static volatile int maxActiveConnections;
 
     private static final ThreadLocal<Connection> localConnection = new ThreadLocal<>();
@@ -38,7 +38,9 @@ public final class Db {
 
     }
 
-    static void init() {
+    public static void init() {}
+
+    static {
         long maxCacheSize = Nxt.getIntProperty("nxt.dbCacheKB");
         if (maxCacheSize == 0) {
             maxCacheSize = Runtime.getRuntime().maxMemory() / (1024 * 2);
@@ -58,19 +60,15 @@ public final class Db {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        DbVersion.init();
     }
 
-    static void shutdown() {
-        if (cp != null) {
-            try (Connection con = cp.getConnection();
-                 Statement stmt = con.createStatement()) {
-                stmt.execute("SHUTDOWN COMPACT");
-                Logger.logShutdownMessage("Database shutdown completed");
-            } catch (SQLException e) {
-                Logger.logShutdownMessage(e.toString(), e);
-            }
-            cp = null;
+    public static void shutdown() {
+        try (Connection con = cp.getConnection();
+             Statement stmt = con.createStatement()) {
+            stmt.execute("SHUTDOWN COMPACT");
+            Logger.logShutdownMessage("Database shutdown completed");
+        } catch (SQLException e) {
+            Logger.logShutdownMessage(e.toString(), e);
         }
     }
 

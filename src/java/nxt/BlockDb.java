@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.Db;
 import nxt.db.DbUtils;
 import nxt.util.Logger;
 
