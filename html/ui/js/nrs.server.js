@@ -92,6 +92,10 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
+		if (!data.recipientPublicKey) {
+			delete data.recipientPublicKey;
+		}
+
 		//gets account id from passphrase client side, used only for login.
 		if (requestType == "getAccountId") {
 			var accountId = NRS.getAccountId(data.secretPhrase);
@@ -395,6 +399,7 @@ var NRS = (function(NRS, $, undefined) {
 			transaction.referencedTransactionFullHash = "";
 		}
 		//transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
+
 
 		transaction.flags = 0;
 
@@ -1120,19 +1125,14 @@ var NRS = (function(NRS, $, undefined) {
 
 			position <<= 1;
 
-			if (transaction.flags && position != 0) {
+			if (transaction.flags & position != 0) {
 				var attachmentVersion = byteArray[pos];
 
 				pos++;
 
-				alert("here we are");
 				var recipientPublicKey = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
 
-				alert(recipientPublicKey);
-				alert(data.recipientPublicKey);
-
 				if (recipientPublicKey != data.recipientPublicKey) {
-					alert("not the same");
 					return false;
 				}
 				pos += 32;
