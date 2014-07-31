@@ -49,14 +49,16 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getAccountId = function(secretPhrase) {
-		var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+		return NRS.getAccountIdFromPublicKey(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
 
 		/*	
 		if (NRS.accountInfo && NRS.accountInfo.publicKey && publicKey != NRS.accountInfo.publicKey) {
 			return -1;
 		}
 		*/
+	}
 
+	NRS.getAccountIdFromPublicKey = function(publicKey, RSFormat) {
 		var hex = converters.hexStringToByteArray(publicKey);
 
 		_hash.init();
@@ -68,7 +70,19 @@ var NRS = (function(NRS, $, undefined) {
 
 		var slice = (converters.hexStringToByteArray(account)).slice(0, 8);
 
-		return byteArrayToBigInteger(slice).toString();
+		var accountId = byteArrayToBigInteger(slice).toString();
+
+		if (RSFormat) {
+			var address = new NxtAddress();
+
+			if (address.set(accountId)) {
+				return address.toString();
+			} else {
+				return "";
+			}
+		} else {
+			return accountId;
+		}
 	}
 
 	NRS.encryptNote = function(message, options, secretPhrase) {
@@ -96,7 +110,24 @@ var NRS = (function(NRS, $, undefined) {
 							"errorCode": 2
 						};
 					}
-					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+
+					try {
+						options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+					} catch (err) {
+						var nxtAddress = new NxtAddress();
+
+						if (!nxtAddress.set(options.account)) {
+							throw {
+								"message": $.t("error_invalid_account_id"),
+								"errorCode": 3
+							};
+						} else {
+							throw {
+								"message": $.t("error_public_key_not_specified"),
+								"errorCode": 4
+							};
+						}
+					}
 				}
 			}
 
@@ -107,13 +138,38 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
-			if (err.errorCode && err.errorCode < 3) {
+			if (err.errorCode && err.errorCode < 5) {
 				throw err;
 			} else {
 				throw {
 					"message": $.t("error_message_encryption"),
-					"errorCode": 3
+					"errorCode": 5
 				};
+			}
+		}
+	}
+
+	NRS.decryptData = function(data, options, secretPhrase) {
+		try {
+			return NRS.decryptNote(message, options, secretPhrase);
+		} catch (err) {
+			var mesage = String(err.message ? err.message : err);
+
+			if (err.errorCode && err.errorCode == 1) {
+				return false;
+			} else {
+				if (options.title) {
+					var translatedTitle = NRS.getTranslatedFieldName(options.title).toLowerCase();
+					if (!translatedTitle) {
+						translatedTitle = String(options.title).escapeHTML().toLowerCase();
+					}
+
+					return $.t("error_could_not_decrypt_var", {
+						"var": translatedTitle
+					}).capitalize();
+				} else {
+					return $.t("error_could_not_decrypt");
+				}
 			}
 		}
 	}
@@ -316,20 +372,33 @@ var NRS = (function(NRS, $, undefined) {
 			$.each(fields, function(key, title) {
 				var data = "";
 
-				var inAttachment = ("attachment" in transaction);
+				var encrypted = "";
+				var nonce = "";
+				var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 
-				var toDecrypt = (inAttachment ? transaction.attachment[key] : transaction[key]);
+				if (key == "encryptedMessage") {
+					encrypted = transaction.attachment.encryptedMessage.data;
+					nonce = transaction.attachment.encryptedMessage.nonce;
+				} else if (transaction.attachment && transaction.attachment[key]) {
+					encrypted = transaction.attachment[key];
+					nonce = transaction.attachment[nonceField];
+				} else if (transaction[key] && typeof transaction[key] == "object") {
+					encrypted = transaction[key].data;
+					nonce = transaction[key].nonce;
+				} else if (transaction[key]) {
+					encrypted = transaction[key];
+					nonce = transaction[nonceField];
+				} else {
+					encrypted = "";
+				}
 
-				if (toDecrypt) {
+				if (encrypted) {
 					if (typeof title != "string") {
-						var nonce = (inAttachment ? transaction.attachment[title.nonce] : transaction[title.nonce]);
 						title = title.title;
-					} else {
-						var nonce = (inAttachment ? transaction.attachment[key + "Nonce"] : transaction[key + "Nonce"]);
 					}
 
 					try {
-						data = NRS.decryptNote(toDecrypt, {
+						data = NRS.decryptNote(encrypted, {
 							"nonce": nonce,
 							"account": account
 						});
