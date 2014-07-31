@@ -115,6 +115,10 @@ public final class Convert {
         return l == 0 ? null : l;
     }
 
+    public static Integer zeroToNull(int i) {
+        return i == 0 ? null : i;
+    }
+
     public static long nullToZero(Long l) {
         return l == null ? 0 : l;
     }

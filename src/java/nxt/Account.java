@@ -183,11 +183,11 @@ public final class Account {
                 pstmt.setLong(++i, account.getForgedBalanceNQT());
                 DbUtils.setString(pstmt, ++i, account.getName());
                 DbUtils.setString(pstmt, ++i, account.getDescription());
-                pstmt.setInt(++i, account.getCurrentLeasingHeightFrom());
-                pstmt.setInt(++i, account.getCurrentLeasingHeightTo());
+                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getCurrentLeasingHeightFrom()));
+                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getCurrentLeasingHeightTo()));
                 DbUtils.setLong(pstmt, ++i, account.getCurrentLesseeId());
-                pstmt.setInt(++i, account.getNextLeasingHeightFrom());
-                pstmt.setInt(++i, account.getNextLeasingHeightTo());
+                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getNextLeasingHeightFrom()));
+                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getNextLeasingHeightTo()));
                 DbUtils.setLong(pstmt, ++i, account.getNextLesseeId());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
@@ -304,7 +304,8 @@ public final class Account {
 
     public static List<Account> getLeasingAccounts() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE "
+                     + "ORDER BY id ASC")) {
             pstmt.setLong(1, Long.MIN_VALUE); // this forces H2 to use the index, unlike WHERE IS NOT NULL which does a table scan
             return accountTable.getManyBy(con, pstmt);
         } catch (SQLException e) {
@@ -467,7 +468,8 @@ public final class Account {
     public List<Account> getLessors() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id = ? "
-                     + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE")) {
+                     + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE "
+                     + "ORDER BY id ASC")) {
             pstmt.setLong(1, this.id);
             pstmt.setInt(2, Nxt.getBlockchain().getHeight());
             pstmt.setInt(3, Nxt.getBlockchain().getHeight());
@@ -523,7 +525,7 @@ public final class Account {
                 if (!rs.next()) {
                     return balanceNQT;
                 }
-                return Convert.safeSubtract(balanceNQT, rs.getLong("additions"));
+                return Math.max(Convert.safeSubtract(balanceNQT, rs.getLong("additions")), 0);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
