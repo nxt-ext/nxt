@@ -732,7 +732,11 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getAccountLink = function(object, acc) {
-		return "<a href='#' data-user='" + String(object[acc]).escapeHTML() + "'>" + NRS.getAccountTitle(object, acc) + "</a>";
+		if (typeof object[acc + "RS"] == "undefined") {
+			return "/";
+		} else {
+			return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
+		}
 	}
 
 	NRS.getAccountTitle = function(object, acc) {
@@ -745,7 +749,7 @@ var NRS = (function(NRS, $, undefined) {
 			object = null;
 		} else {
 			if (typeof object[acc + "RS"] == "undefined") {
-				return $.t("none");
+				return "/";
 			} else {
 				formattedAcc = String(object[acc + "RS"]).escapeHTML();
 			}
