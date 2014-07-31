@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public final class Account {
 
@@ -126,7 +127,7 @@ public final class Account {
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
     private static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
-    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentSkipListMap<>();
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
