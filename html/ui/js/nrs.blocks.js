@@ -97,9 +97,13 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.lastBlockHeight = blockHeight;
 
 		if (!NRS.dgsBlockPassed) {
-			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 205000) || NRS.isTestNet) {
+			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 205000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
 				NRS.dgsBlockPassed = true;
 				$(".dgs_block").show();
+			}
+		} else if (!NRS.PKAnnouncementBlockPassed) {
+			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 210000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
+				NRS.PKAnnouncementBlockPassed = true;
 			}
 		}
 	}

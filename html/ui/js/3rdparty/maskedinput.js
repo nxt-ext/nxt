@@ -125,6 +125,10 @@
 								tests[p].test(c) && (shiftR(p), buffer[p] = c, writeBuffer(), next = seekNext(p),
 									android ? setTimeout($.proxy($.fn.caret, input, next), 0) : input.caret(next), settings.completed && next >= len && settings.completed.call(input))),
 							e.preventDefault());
+
+						if (/^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.test(input.val())) {
+							input.trigger("checkRecipient");
+						}
 					}
 
 					function clearBuffer(start, end) {
@@ -173,14 +177,14 @@
 
 						input.bind("keyup.remask", function(e) {
 							if (input.val().toLowerCase() == "nxt-") {
-								input.val("").mask("NXT-****-****-****-*****").trigger("focus").unbind(".remask");
+								input.val("").mask("NXT-****-****-****-*****").trigger("checkRecipient").unbind(".remask");
 							}
 						}).bind("paste.remask", function(e) {
 							setTimeout(function() {
 								var newInput = input.val();
 
 								if (/^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.test(newInput) || /^NXT[A-Z0-9]{17}/i.test(newInput)) {
-									input.mask("NXT-****-****-****-*****").trigger("focus").unbind(".remask");
+									input.mask("NXT-****-****-****-*****").trigger("checkRecipient").unbind(".remask");
 								}
 							}, 0);
 						});
@@ -200,19 +204,22 @@
 
 							var pasted = text_diff(oldInput, newInput);
 
-							if (pasted.length == 64 && pasted.match(/^[a-f0-9]+$/)) {
-								input.val(pasted);
-								input.trigger("unmask");
-							} else if (pasted != newInput) {
-								if (/^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.test(pasted)) {
-									input.val(pasted);
-								} else if (/^NXT[A-Z0-9]{17}/i.test(pasted)) {
-									input.val(pasted);
-								}
+							var match = /^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.exec(pasted);
 
-								var pos = checkVal(!0);
-								input.caret(pos), settings.completed && pos == input.val().length && settings.completed.call(input);
+							if (match && match[0]) {
+								input.val(match[0]).trigger("checkRecipient");
+							} else {
+								match = /^NXT[A-Z0-9]{17}/i.exec(pasted);
+								if (match && match[0]) {
+									input.val(pasted).trigger("checkRecipient");
+								} else {
+									input.trigger("checkRecipient");
+								}
 							}
+
+							var pos = checkVal(!0);
+							input.caret(pos), settings.completed && pos == input.val().length && settings.completed.call(input);
+
 						}, 0);
 					}), chrome && android && input.bind("keyup.mask", keypressEvent), checkVal();
 				}));
@@ -229,6 +236,13 @@
 			++end;
 		}
 		end = second.length - end;
-		return second.substr(start, end - start);
+
+		var diff = second.substr(start, end - start);
+
+		if (/^NXT\-/i.test(second) && !/^NXT\-/i.test(diff)) {
+			diff = "NXT-" + diff;
+		}
+
+		return diff;
 	}
 }(jQuery);

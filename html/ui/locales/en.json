@@ -578,7 +578,6 @@
 	"status_blockchain_downloading": "The blockchain is currently downloading. Please wait until it is up to date.",
 	"status_blockchain_rescanning": "The blockchain is currently rescanning. Please wait until that has completed.",
 	"status_new_account": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong> - When funding your account for the first time, you also need to announce your public key, which is __public_key__",
-	"status_new_account_public_key_announced": "Your account is now ready for use; please use this NXT ID from now on: <strong>__account_id__</strong>",
 	"status_account_id": "Your account ID is: <strong>__account_id__</strong>",
 	"error_account_rs": "Generated Reed Solomon address different from the one in the blockchain!",
 	"leased_out": "Leased Out",
@@ -647,6 +646,9 @@
 	"recipient_unknown": "The recipient account is an unknown account, meaning it has never had an incoming or outgoing transaction. Please double check your recipient address before submitting.",
 	"recipient_problem": "There is a problem with the recipient account:",
 	"recipient_no_public_key": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of __nxt__ NXT. Please double check your recipient address before submitting.",
+	"recipient_unknown_pka": "The recipient account is an unknown account, meaning it has never had an incoming or outgoing transaction. To submit this request you must supply the recipient public key also.",
+	"recipient_problem": "There is a problem with the recipient account:",
+	"recipient_no_public_key_pka": "The recipient account does not have a public key, meaning it has never had an outgoing transaction. The account has a balance of __nxt__ NXT. To submit this request you must supply the recipient public key also.",
 	"recipient_malformed_suggestion": "The recipient address is malformed, did you mean __recipient__ ?",
 	"recipient_malformed_suggestion_plural": "The recipient address is malformed, did you mean any of the following:",
 	"contact_account_link": "The contact links to account <strong>__account_id__</strong>.",
@@ -848,5 +850,7 @@
 	"error_wrong_buyer_for_alias": "Wrong buyer for alias.",
 	"error_public_key_already_announced": "Public key for this account has already been announced.",
 	"error_public_key_announcement_no_recipient": "Public key announcement cannot be attached to transactions with no recipient.",
-	"error_public_key_different_account_id": "Announced public key does not match recipient account ID."
+	"error_public_key_different_account_id": "Announced public key does not match recipient account ID.",
+	"recipient_public_key_account": "The public key corresponds to account <strong>__account_id__</strong>.",
+	"recipient_public_key_already_announced": "This account's public key is already announced. Use the account ID instead."
 }

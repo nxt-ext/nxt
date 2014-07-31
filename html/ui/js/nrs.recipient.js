@@ -3,7 +3,14 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
-		$("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient").blur(function() {
+		var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient");
+
+
+		$recipientFields.on("blur", function() {
+			$(this).trigger("checkRecipient");
+		});
+
+		$recipientFields.on("checkRecipient", function() {
 			var value = $(this).val();
 			var modal = $(this).closest(".modal");
 
@@ -119,8 +126,9 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (response.errorCode == 5) {
 						callback({
 							"type": "warning",
-							"message": $.t("recipient_unknown"),
-							"account": null
+							"message": $.t("recipient_unknown" + (NRS.PKAnnouncementBlockPassed ? "_pka" : "")),
+							"account": null,
+							"noPublicKey": true
 						});
 					} else {
 						callback({
@@ -132,10 +140,11 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					callback({
 						"type": "warning",
-						"message": $.t("recipient_no_public_key", {
+						"message": $.t("recipient_no_public_key" + (NRS.PKAnnouncementBlockPassed ? "_pka" : ""), {
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
-						"account": response
+						"account": response,
+						"noPublicKey": true
 					});
 				}
 			}
@@ -154,7 +163,6 @@ var NRS = (function(NRS, $, undefined) {
 		var recipientPublicKeyField = modal.find("input[name=recipientPublicKey]");
 
 		accountInputField.val("");
-		recipientPublicKeyField.val("");
 
 		account = $.trim(account);
 
@@ -164,6 +172,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
+					if (response.noPublicKey) {
+						modal.find(".recipient_public_key").show();
+					} else {
+						modal.find("input[name=recipientPublicKey]").val("");
+						modal.find(".recipient_public_key").hide();
+					}
+
 					var message = response.message.escapeHTML();
 
 					callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
@@ -187,29 +202,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		} else if (!(/^\d+$/.test(account))) {
-			if (account.length == 64 && account.match(/^[a-f0-9]+$/)) {
-				recipientPublicKeyField.val(account);
-
-				var rsAccount = NRS.getAccountIdFromPublicKey(account, true);
-
-				accountInputField.val(rsAccount);
-
-				NRS.sendRequest("getAccount", {
-					"account": rsAccount
-				}, function(response) {
-					if (response.errorCode) {
-						if (response.errorCode == 5) {
-							callout.removeClass(classes).addClass("callout-info").html($.t("recipient_public_key_account", {
-								"account_id": String(rsAccount).escapeHTML()
-							})).show();
-						} else {
-							callout.removeClass(classes).addClass("callout-danger").html(String(response.errorDescription).escapeHTML()).show();
-						}
-					} else {
-						callout.removeClass(classes).addClass("callout-danger").html($.t("recipient_public_key_already_announced")).show();
-					}
-				});
-			} else if (NRS.databaseSupport && account.charAt(0) != '@') {
+			if (NRS.databaseSupport && account.charAt(0) != '@') {
 				NRS.database.select("contacts", [{
 					"name": account
 				}], function(error, contact) {

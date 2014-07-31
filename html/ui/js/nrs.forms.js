@@ -55,9 +55,15 @@ var NRS = (function(NRS, $, undefined) {
 				data.message = converters.stringToHexString(data.message);
 			} else if (data.encrypt_message) {
 				try {
-					var encrypted = NRS.encryptNote(data.message, {
+					var options = {
 						"account": data.recipient
-					}, data.secretPhrase);
+					};
+
+					if (data.recipientPublicKey) {
+						options.publicKey = data.recipientPublicKey;
+					}
+
+					var encrypted = NRS.encryptNote(data.message, options, data.secretPhrase);
 
 					data.encryptedMessageData = encrypted.message;
 					data.encryptedMessageNonce = encrypted.nonce;

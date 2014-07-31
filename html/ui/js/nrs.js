@@ -66,6 +66,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.assetTableKeys = [];
 
 	NRS.dgsBlockPassed = false;
+	NRS.PKAnnouncementBlockPassed = false;
 
 	NRS.init = function() {
 		if (window.location.port && window.location.port != "6876") {

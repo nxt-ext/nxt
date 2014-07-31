@@ -99,6 +99,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".advanced").hide();
 
+		$(this).find(".recipient_public_key").hide();
+
 		$(this).find(".advanced_info a").text($.t("advanced"));
 
 		$(this).find(".advanced_extend").each(function(index, obj) {
