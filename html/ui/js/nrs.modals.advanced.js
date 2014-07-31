@@ -64,6 +64,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.broadcastTransactionComplete = function(response, data) {
 		$("#parse_transaction_form").find(".error_message").hide();
+		$("#transaction_operations_modal").modal("hide");
 	}
 
 	NRS.forms.parseTransactionComplete = function(response, data) {

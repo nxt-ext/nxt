@@ -562,6 +562,7 @@
 	"error_message_encryption": "The message could not be encrypted.",
 	"error_message_decryption": "The message could not be decrypted.",
 	"error_account_id_not_specified": "Account ID not specified.",
+	"error_public_key_not_specified": "Public key not specified.",
 	"error_passphrase_required": "Passphrase is a required field.",
 	"error_could_not_decrypt_var": "Could not decrypt __var__.",
 	"error_could_not_decrypt": "Could not decrypt.",
@@ -852,5 +853,6 @@
 	"error_public_key_announcement_no_recipient": "Public key announcement cannot be attached to transactions with no recipient.",
 	"error_public_key_different_account_id": "Announced public key does not match recipient account ID.",
 	"recipient_public_key_account": "The public key corresponds to account <strong>__account_id__</strong>.",
-	"recipient_public_key_already_announced": "This account's public key is already announced. Use the account ID instead."
+	"recipient_public_key_already_announced": "This account's public key is already announced. Use the account ID instead.",
+	"none": "None"
 }

@@ -745,7 +745,7 @@ var NRS = (function(NRS, $, undefined) {
 			object = null;
 		} else {
 			if (typeof object[acc + "RS"] == "undefined") {
-				return "None";
+				return $.t("none");
 			} else {
 				formattedAcc = String(object[acc + "RS"]).escapeHTML();
 			}
