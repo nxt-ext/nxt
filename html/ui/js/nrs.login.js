@@ -119,15 +119,21 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.login = function(password, callback) {
-		$("#login_password, #registration_password, #registration_password_repeat").val("");
-
 		if (!password.length) {
 			$.growl($.t("error_passphrase_required_login"), {
 				"type": "danger",
 				"offset": 10
 			});
 			return;
+		} else if (!NRS.isTestNet && password.length < 12 && $("#login_check_password_length").val() == 1) {
+			$("#login_check_password_length").val(0);
+			$("#login_error .callout").html($.t("error_passphrase_login_length"));
+			$("#login_error").show();
+			return;
 		}
+
+		$("#login_password, #registration_password, #registration_password_repeat").val("");
+		$("#login_check_password_length").val(1);
 
 		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
@@ -305,6 +311,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#lockscreen").hide();
 		$("body, html").removeClass("lockscreen");
+
+		$("#login_error").html("").hide();
 
 		$(document.documentElement).scrollTop(0);
 	}

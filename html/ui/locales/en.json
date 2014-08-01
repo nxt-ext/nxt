@@ -762,8 +762,12 @@
 	"success_set_account_info": "Your account info has been saved successfully.",
 	"success_buy_alias": "Your alias buy is in progress!",
 	"error_buy_alias": "An unknown error occured! Alias may or may not have been bought.",
-	"success_sell_alias": "Your alias sale has been cancelled successfully!",
-	"error_sell_alias": "An unknown error occured! Alias sale may or may not have been cancelled.",
+	"success_sell_alias": "Your alias sale offer has been created successfully!",
+	"error_sell_alias": "An unknown error occured! Alias sale offer may or may not be created.",
+	"success_transfer_alias": "Your alias has been transferred successfully!",
+	"error_transfer_alias": "An unknown error occured! Alias may or may not be transfered.",
+	"success_cancel_alias": "Your alias sale has been cancelled successfully!",
+	"error_cancel_alias": "An unknown error occured! Alias sale may or may not have been cancelled.",
 	"success_broadcast_transaction": "The transaction has been broadcasted successfully.",
 	"error_broadcast_transaction": "An unknown error occured! The transaction may or may not have been broadcasted.",
 	"success_asset_exchange_change_group_name": "Group name has been changed successfully.",
@@ -802,6 +806,7 @@
 	"deliver_goods_q": "Deliver goods?",
 	"error_max_value": "__field__: Maximum value is __max__.",
 	"error_min_value": "__field__: Minimum value is __min__.",
+	"error_not_a_number": "__field__ should be numeric.",
 	"error_invalid_field": "__field__ is invalid.",
 	"language": "Language",
 	"generate": "Generate",
@@ -854,5 +859,9 @@
 	"error_public_key_different_account_id": "Announced public key does not match recipient account ID.",
 	"recipient_public_key_account": "The public key corresponds to account <strong>__account_id__</strong>.",
 	"recipient_public_key_already_announced": "This account's public key is already announced. Use the account ID instead.",
-	"none": "None"
+	"none": "None",
+	"incorrect_purchase": "Incorrect purchase.",
+	"close": "Close",
+	"error_passphrase_login_length": "Your passphrase should be 12 characters in length or more, ideally over 35 characters. If you want to log in with this unsafe passphrase, hit ENTER again. If you are a new user, click the registration link below to register a secure passphrase."
+
 }
