@@ -4,22 +4,18 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	//todo: use a startForgingError function instaed!
-	/*
-	NRS.forms.errorMessages.startForging = {
-		"5": "You cannot forge. Either your balance is 0 or your account is too new (you must wait a day or so)."
-	};*/
 
 	NRS.forms.startForgingComplete = function(response, data) {
 		if ("deadline" in response) {
 			$("#forging_indicator").addClass("forging");
 			$("#forging_indicator span").html("Forging");
 			NRS.isForging = true;
-			$.growl($.t("success_forging_start"), {
+			$.growl($.t("success_start_forging"), {
 				type: "success"
 			});
 		} else {
 			NRS.isForging = false;
-			$.growl($.t("error_forging_start"), {
+			$.growl($.t("error_start_forging"), {
 				type: 'danger'
 			});
 		}
@@ -37,11 +33,11 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.isForging = false;
 
 		if (response.foundAndStopped) {
-			$.growl($.t("success_forging_stop"), {
+			$.growl($.t("success_stop_forging"), {
 				type: 'success'
 			});
 		} else {
-			$.growl($.t("error_forging_stop"), {
+			$.growl($.t("error_stop_forging"), {
 				type: 'danger'
 			});
 		}

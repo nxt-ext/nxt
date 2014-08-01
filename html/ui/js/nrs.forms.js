@@ -23,7 +23,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	function getSuccessMessage(requestType) {
 		var ignore = ["asset_exchange_change_group_name", "asset_exchange_group", "add_contact", "update_contact", "delete_contact",
-			"send_message", "decrypt_messages", "start_forging", "stop_forging", "generate_token", "send_money", "set_alias", "add_asset_bookmark"
+			"send_message", "decrypt_messages", "start_forging", "stop_forging", "generate_token", "send_money", "set_alias", "add_asset_bookmark", "sell_alias"
 		];
 
 		if (ignore.indexOf(requestType) != -1) {
@@ -34,7 +34,13 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	function getErrorMessage(requestType) {
-		return $.t("error_" + requestType);
+		var ignore = ["start_forging", "stop_forging"];
+
+		if (ignore.indexOf(requestType) != -1) {
+			return "";
+		} else {
+			return $.t("error_" + requestType);
+		}
 	}
 
 	NRS.addMessageData = function(data, requestType) {
@@ -144,28 +150,40 @@ var NRS = (function(NRS, $, undefined) {
 		$form.find(":input").each(function() {
 			if ($(this).is(":invalid")) {
 				var error = "";
-				var name = String($(this).attr("name")).capitalize();
+				var name = String($(this).attr("name")).replace("NXT", "").replace("NQT", "").capitalize();
 				var value = $(this).val();
 
 				if ($(this).hasAttr("max")) {
-					var max = $(this).attr("max");
-
-					if (value > max) {
-						error = $.t("error_max_value", {
-							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
-							"max": max
+					if (!/^[\d\.]+$/.test(value)) {
+						error = $.t("error_not_a_number", {
+							"field": NRS.getTranslatedFieldName(name).toLowerCase()
 						}).capitalize();
+					} else {
+						var max = $(this).attr("max");
+
+						if (value > max) {
+							error = $.t("error_max_value", {
+								"field": NRS.getTranslatedFieldName(name).toLowerCase(),
+								"max": max
+							}).capitalize();
+						}
 					}
 				}
 
 				if ($(this).hasAttr("min")) {
-					var min = $(this).attr("min");
-
-					if (value < min) {
-						error = $.t("error_min_value", {
-							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
-							"min": min
+					if (!/^[\d\.]+$/.test(value)) {
+						error = $.t("error_not_a_number", {
+							"field": NRS.getTranslatedFieldName(name).toLowerCase()
 						}).capitalize();
+					} else {
+						var min = $(this).attr("min");
+
+						if (value < min) {
+							error = $.t("error_min_value", {
+								"field": NRS.getTranslatedFieldName(name).toLowerCase(),
+								"min": min
+							}).capitalize();
+						}
 					}
 				}
 
@@ -210,10 +228,10 @@ var NRS = (function(NRS, $, undefined) {
 				if (output.data) {
 					data = output.data;
 				}
-				if (output.successMessage) {
+				if ("successMessage" in output) {
 					successMessage = output.successMessage;
 				}
-				if (output.errorMessage) {
+				if ("errorMessage" in output) {
 					errorMessage = output.errorMessage;
 				}
 				if (output.stop) {

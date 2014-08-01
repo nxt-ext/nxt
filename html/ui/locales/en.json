@@ -621,10 +621,10 @@
 	"alias_sale_cancellation": "Alias Sale Cancellation",
 	"alias_transfer": "Alias Transfer",
 	"parse_transaction_bytes": "Parse Transaction Bytes",
-	"success_forging_start": "Forging started successfully.",
-	"error_forging_start": "Couldn't start forging, unknown error.",
-	"success_forging_stop": "Forging stopped successfully.",
-	"error_forging_stop": "You weren't forging to begin with.",
+	"success_start_forging": "Forging started successfully.",
+	"error_start_forging": "Couldn't start forging, unknown error.",
+	"success_stop_forging": "Forging stopped successfully.",
+	"error_stop_forging": "You weren't forging to begin with.",
 	"error_forging_blockchain_downloading": "The blockchain is busy downloading, you cannot forge during this time. Please try again when the blockchain is fully synced.",
 	"error_forging_blockchain_rescanning": "The blockchain is currently being rescanned, you cannot forge during this time. Please try again in a minute.",
 	"error_forging_no_public_key": "You cannot forge because your account has no public key. Please make an outgoing transaction first.",
@@ -863,5 +863,4 @@
 	"incorrect_purchase": "Incorrect purchase.",
 	"close": "Close",
 	"error_passphrase_login_length": "Your passphrase should be 12 characters in length or more, ideally over 35 characters. If you want to log in with this unsafe passphrase, hit ENTER again. If you are a new user, click the registration link below to register a secure passphrase."
-
 }
