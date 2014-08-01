@@ -1042,14 +1042,18 @@
                                             <option value="de">Deutsch</option> <!-- german -->
                                             <option value="en">English</option> <!-- english -->
                                             <option value="es">Español</option> <!-- spanish -->
+                                            <option value="fi">Suomi</option> <!-- finnish -->
                                             <option value="fr">Français</option> <!-- french -->
+                                            <option value="gl">Galician</option> <!-- galician -->
                                             <option value="hr">Hrvatski</option> <!-- croatian -->
                                             <option value="ja">日本語</option> <!-- japanese -->
                                             <option value="lt">Lietuviškai</option> <!-- lithuanian -->
+                                            <option value="nl">Nederlands</option> <!-- dutch -->
+                                            <option value="sk">Slovensky</option> <!-- slovakian -->
                                             <option value="sr">Српски</option> <!-- serbian, cyrillic -->
                                             <option value="sr-cs">Srpski</option> <!-- serbian, latin -->
+                                            <option value="uk">Yкраiнска</option> <!-- ukranian -->
                                             <option value="ru">Русский</option> <!-- russian -->
-                                            <option value="sk">Slovak</option> <!-- slovakian -->
                                             <option value="zh">中文 (simplified)</option> <!-- chinese simplified -->
                                             <option value="zh-tw">中文 (traditional)</option> <!-- chinese traditional -->
                                         </select>
@@ -2262,8 +2266,8 @@
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
-										<label for="dgs_delisting_deadline" data-i18n="deadline_hours" DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="dgs_delisting_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
+										<label for="dgs_delisting_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+									     <input type="number" name="deadline" id="dgs_delisting_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
 									</div>
 								</div>
 							</div>
@@ -2492,6 +2496,9 @@
 							<div class="form-group">
 								<label for="dgs_purchase_message" data-i18n="note">NOTE</label>
 								<textarea class="form-control" id="dgs_purchase_message" name="message" rows="3" tabindex="4"></textarea>
+                                <div style="margin-top:3px">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3479,7 +3486,7 @@
                                     <label for="sell_alias_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="sell_alias_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
                                 </div>
                                 <div style="margin-top:3px;display:none" id="sell_alias_to_anyone_message_options">
-                                    <label for="sell_alias_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">Message is not encrypted</span></label>
+                                    <label for="sell_alias_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</span></label>
                                 </div>
                             </div>
 							<div class="form-group secret_phrase">
