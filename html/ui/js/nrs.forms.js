@@ -159,7 +159,7 @@ var NRS = (function(NRS, $, undefined) {
 				var value = $(this).val();
 
 				if ($(this).hasAttr("max")) {
-					if (!/^[\d\.]+$/.test(value)) {
+					if (!/^[\-\d\.]+$/.test(value)) {
 						error = $.t("error_not_a_number", {
 							"field": NRS.getTranslatedFieldName(name).toLowerCase()
 						}).capitalize();
@@ -176,7 +176,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if ($(this).hasAttr("min")) {
-					if (!/^[\d\.]+$/.test(value)) {
+					if (!/^[\-\d\.]+$/.test(value)) {
 						error = $.t("error_not_a_number", {
 							"field": NRS.getTranslatedFieldName(name).toLowerCase()
 						}).capitalize();

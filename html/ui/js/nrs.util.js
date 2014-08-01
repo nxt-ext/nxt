@@ -506,9 +506,14 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.format = function(params, no_escaping) {
 		if (typeof params != "object") {
+			var amount = String(params);
+			var negative = amount.charAt(0) == "-" ? "-" : "";
+			if (negative) {
+				amount = amount.substring(1);
+			}
 			params = {
-				"amount": String(params),
-				"negative": false,
+				"amount": amount,
+				"negative": negative,
 				"afterComma": ""
 			};
 		}
