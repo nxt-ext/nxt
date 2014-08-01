@@ -61,9 +61,14 @@ var NRS = (function(NRS, $, undefined) {
 				data.message = converters.stringToHexString(data.message);
 			} else if (data.encrypt_message) {
 				try {
-					var options = {
-						"account": data.recipient
-					};
+					var options = {};
+
+					if (data.recipient) {
+						options.account = data.recipient;
+					} else if (data.encryptedMessageRecipient) {
+						options.account = data.encryptedMessageRecipient;
+						delete data.encryptedMessageRecipient;
+					}
 
 					if (data.recipientPublicKey) {
 						options.publicKey = data.recipientPublicKey;

@@ -42,9 +42,17 @@ var NRS = (function(NRS, $, undefined) {
 		$(target).scrollTop(0);
 	})
 
+	$(".add_message").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find(".optional_message").fadeIn();
+		} else {
+			$(this).closest("form").find(".optional_message").hide();
+		}
+	});
+
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		$(this).find("input[name=recipient], input[name=account_id]").mask("NXT-****-****-****-*****");
+		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").mask("NXT-****-****-****-*****");
 
 		var $visible_modal = $(".modal.in");
 
@@ -66,7 +74,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	//Reset form to initial state when modal is closed
 	$(".modal").on("hidden.bs.modal", function(e) {
-		$(this).find("input[name=recipient], input[name=account_id]").trigger("unmask");
+		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").trigger("unmask");
 
 		$(this).find(":input:not(button)").each(function(index) {
 			var defaultValue = $(this).data("default");
@@ -100,6 +108,8 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".advanced").hide();
 
 		$(this).find(".recipient_public_key").hide();
+
+		$(this).find(".optional_message").hide();
 
 		$(this).find(".advanced_info a").text($.t("advanced"));
 

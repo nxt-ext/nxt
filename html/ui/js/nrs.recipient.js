@@ -32,19 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (account) {
-			$(this).find("input[name=recipient], input[name=account_id]").val(account).trigger("blur");
-		}
-	});
-
-	$("#send_money_modal").on("show.bs.modal", function(e) {
-		$("#send_money_message_container").hide();
-	});
-
-	$("#send_money_add_message").on("change", function(e) {
-		if ($(this).is(":checked")) {
-			$("#send_money_message_container").fadeIn();
-		} else {
-			$("#send_money_message_container").hide();
+			$(this).find("input[name=recipient], input[name=account_id]").val(account).trigger("checkRecipient");
 		}
 	});
 
@@ -77,7 +65,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("span.recipient_selector").on("click", "ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
-		$(this).closest("form").find("input[name=recipient],input[name=account_id]").trigger("unmask").val($(this).data("contact")).trigger("blur");
+		$(this).closest("form").find("input[name=recipient],input[name=account_id]").not("[type=hidden]").trigger("unmask").val($(this).data("contact")).trigger("blur");
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {

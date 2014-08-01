@@ -3273,3 +3273,7 @@ input.masked {
 .recipient_public_key {
   display:none;
 }
+
+.optional_message {
+  display:none;
+}
