@@ -48,6 +48,16 @@ public final class Account {
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
         }
 
+        private void save() {
+            if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
+                accountAssetTable.insert(this.accountId, this.assetId, this);
+            } else if (this.quantityQNT == 0 && this.unconfirmedQuantityQNT == 0) {
+                accountAssetTable.delete(this.accountId, this.assetId);
+            } else if (this.quantityQNT < 0 || this.unconfirmedQuantityQNT < 0) {
+                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(this.accountId));
+            }
+        }
+
         @Override
         public String toString() {
             return "AccountAsset account_id: " + Convert.toUnsignedLong(accountId) + " asset_id: " + Convert.toUnsignedLong(assetId)
@@ -670,13 +680,7 @@ public final class Account {
             long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
             assetBalance = Convert.safeAdd(assetBalance, quantityQNT);
             accountAsset = new AccountAsset(this.id, assetId, assetBalance, accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT);
-            if (assetBalance > 0) {
-                accountAssetTable.insert(this.id, assetId, accountAsset);
-            } else if (assetBalance == 0 && accountAsset.unconfirmedQuantityQNT == 0) {
-                accountAssetTable.delete(this.id, assetId);
-            } else if (assetBalance < 0) {
-                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(id));
-            }
+            accountAsset.save();
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
@@ -689,13 +693,7 @@ public final class Account {
             long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
             unconfirmedAssetBalance = Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
             accountAsset = new AccountAsset(this.id, assetId, accountAsset == null ? 0 : accountAsset.quantityQNT, unconfirmedAssetBalance);
-            if (unconfirmedAssetBalance > 0) {
-                accountAssetTable.insert(this.id, assetId, accountAsset);
-            } else if (unconfirmedAssetBalance == 0 && accountAsset.quantityQNT == 0) {
-                accountAssetTable.delete(this.id, assetId);
-            } else if (unconfirmedAssetBalance < 0) {
-                throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
-            }
+            accountAsset.save();
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
@@ -710,16 +708,7 @@ public final class Account {
             long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
             unconfirmedAssetBalance = Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
             accountAsset = new AccountAsset(this.id, assetId, assetBalance, unconfirmedAssetBalance);
-            if (assetBalance < 0) {
-                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(id));
-            } else if (unconfirmedAssetBalance < 0) {
-                throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
-            }
-            if (assetBalance > 0 || unconfirmedAssetBalance > 0) {
-                accountAssetTable.insert(this.id, assetId, accountAsset);
-            } else {
-                accountAssetTable.delete(this.id, assetId);
-            }
+            accountAsset.save();
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
