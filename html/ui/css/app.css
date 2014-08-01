@@ -241,9 +241,15 @@ img {
   background-color: #85144b !important;
 }
 .small-box {
-  background-color: #158AAE !important;
+  background: #217ba5; /* Old browsers */
+  background: -moz-linear-gradient(left,  #217ba5 0%, #56b3d8 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%,#217ba5), color-stop(100%,#56b3d8)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(left,  #217ba5 0%,#56b3d8 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(left,  #217ba5 0%,#56b3d8 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(left,  #217ba5 0%,#56b3d8 100%); /* IE10+ */
+  background: linear-gradient(to right,  #217ba5 0%,#56b3d8 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#217ba5', endColorstr='#56b3d8',GradientType=1 ); /* IE6-9 */
 }
-
 
 /* Text colors */
 .text-red {
@@ -2470,12 +2476,12 @@ a.list-group-item:hover {
 
 .chat .to.tentative p {
 	font-style:italic !important;
-	background-color:#DAE3F2 !important;
+	background-color:#cff4ff !important;
 	color:#000 !important;
 }
 
 .chat .to.tentative p:last-child:before {
-	border-left: 1.5em solid #DAE3F2 !important;
+	border-left: 1.5em solid #cff4ff !important;
 }
 
 
@@ -2618,13 +2624,13 @@ tr.your-order td {
 
 div.tentative {
   font-style: italic !important;
-  background-color: #DAE3F2 !important;
+  background-color: #c4e1ec !important;
   padding:5px;
 }
 
 tr.tentative td {
 	font-style: italic !important;
-	background-color: #DAE3F2 !important;
+	background-color: #c4e1ec !important;
 }
 
 .tentative a {
@@ -3102,7 +3108,18 @@ hr {
 #testnet_login {
   display:inline-block;
   text-align:left;
-  margin-bottom:5px;
+  margin-bottom:0px;
+}
+
+#login_error  {
+  text-align:left;
+  margin-bottom:10px;
+  margin: 0 auto;
+}
+
+#login_error .callout {
+  margin-top:10px;
+  margin-bottom:0;
 }
 
 #asset_exchange_sidebar_search {
