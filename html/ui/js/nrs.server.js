@@ -1067,10 +1067,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += messageLength;
 
-				if (transaction.messageIsText && data.messageIsText != "true") {
-					return false;
-				}
-
 				var messageIsText = (transaction.messageIsText ? "true" : "false");
 
 				if (messageIsText != data.messageIsText) {
@@ -1125,7 +1121,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			position <<= 1;
 
-			if (transaction.flags & position != 0) {
+			if ((transaction.flags & position) != 0) {
 				var attachmentVersion = byteArray[pos];
 
 				pos++;
