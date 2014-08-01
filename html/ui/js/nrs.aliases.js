@@ -171,9 +171,9 @@ var NRS = (function(NRS, $, undefined) {
 			successMessage = $.t("success_sell_alias");
 			errorMessage = $.t("error_sell_alias");
 
-			if (data.add_message && data.recipient == NRS.genesisRS) {
-				delete data.encrypt_message;
-			}
+			delete data.add_message;
+			delete data.encrypt_message;
+			delete data.message;
 		}
 
 		return {
@@ -209,6 +209,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	/*
 	$("#sell_alias_add_message").on("change", function(e) {
 		var $modal = $(this).closest(".modal");
 		var $active = $modal.find(".nav li.active a").first();
@@ -220,7 +221,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#sell_alias_to_anyone_message_options").hide();
 			$("#sell_alias_to_specific_account_message_options").show();
 		}
-	});
+	});*/
 
 	$("#sell_alias_to_specific_account, #sell_alias_to_anyone").on("click", function(e) {
 		e.preventDefault();
@@ -233,13 +234,17 @@ var NRS = (function(NRS, $, undefined) {
 		if ($(this).attr("id") == "sell_alias_to_anyone") {
 			$modal.find("input[name=recipient]").val(NRS.genesisRS);
 			$("#sell_alias_recipient_div").hide();
-			$("#sell_alias_to_anyone_message_options").show();
-			$("#sell_alias_to_specific_account_message_options").hide();
+			$modal.find(".add_message_container, .optional_message").hide();
 		} else {
 			$modal.find("input[name=recipient]").val("");
 			$("#sell_alias_recipient_div").show();
-			$("#sell_alias_to_anyone_message_options").hide();
-			$("#sell_alias_to_specific_account_message_options").show();
+			$modal.find(".add_message_container").show();
+
+			if ($("#sell_alias_add_message").is(":checked")) {
+				$modal.find(".optional_message").show();
+			} else {
+				$modal.find(".optional_message").hide();
+			}
 		}
 
 		$modal.find("input[name=converted_account_id]").val("");
@@ -280,7 +285,7 @@ var NRS = (function(NRS, $, undefined) {
 					$modal.find("input[name=recipient]").val(String(response.accountRS).escapeHTML());
 					$modal.find("input[name=aliasName]").val(alias.escapeHTML());
 					$modal.find(".alias_name_display").html(alias.escapeHTML());
-					$modal.find("input[name=priceNXT]").val(NRS.convertToNXT(response.priceNQT)).prop("readonly", true);
+					$modal.find("input[name=amountNXT]").val(NRS.convertToNXT(response.priceNQT)).prop("readonly", true);
 				}
 			}
 		}, false);
