@@ -32,7 +32,10 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
             DigitalGoodsStore.Goods[] goods = DigitalGoodsStore.getAllGoods().toArray(new DigitalGoodsStore.Goods[0]);
             for (int i = 0, count = 0; count - 1 <= lastIndex && i < goods.length; i++) {
                 DigitalGoodsStore.Goods good = goods[goods.length - 1 - i];
-                if (inStockOnly && (((good.isDelisted() || good.getQuantity() == 0)))) {
+                if (inStockOnly && good.getQuantity() == 0) {
+                    continue;
+                }
+                if (good.isDelisted()) {
                     continue;
                 }
                 if (count < firstIndex) {
@@ -52,7 +55,10 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
                 break;
             }
             if (count >= firstIndex) {
-                if (inStockOnly && (((good.isDelisted() || good.getQuantity() == 0)))) {
+                if (inStockOnly && good.getQuantity() == 0) {
+                    continue;
+                }
+                if (good.isDelisted()) {
                     continue;
                 }
                 goodsJSON.add(JSONData.goods(good));
