@@ -3197,6 +3197,7 @@ hr {
 
 .purchase_info th {
   white-space:nowrap;
+  padding-right:5px;
 }
 
 .purchase_info td {
