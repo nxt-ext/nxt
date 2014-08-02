@@ -1131,10 +1131,16 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Dividend payment not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
                 }
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                if (Asset.getAsset(attachment.getAssetId()) == null || Asset.getAsset(attachment.getAssetId()).getAccountId() != transaction.getSenderId()
-                        || attachment.getHeight() >= BlockchainImpl.getInstance().getLastBlock().getHeight()
-                        || attachment.getAmountNQTPerQNT() <= 0) {
-                    throw new NxtException.NotValidException("Invalid dividend payment: " + attachment.getJSONObject());
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                if (asset != null && asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
+                    throw new NxtException.NotValidException("Invalid divident payment sender or amount " + attachment.getJSONObject());
+                }
+                if (asset == null) {
+                    throw new NxtException.NotCurrentlyValidException("Asset " + Convert.toUnsignedLong(attachment.getAssetId())
+                            + "for dividend payment doesn't exist yet");
+                }
+                if (attachment.getHeight() >= BlockchainImpl.getInstance().getLastBlock().getHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }
 

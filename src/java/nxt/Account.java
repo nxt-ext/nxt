@@ -831,7 +831,7 @@ public final class Account {
         }
     }
 
-    public void payDividends(Long assetId, int height, boolean issuerIncluded, long amountNQTPerQNT) {
+    void payDividends(Long assetId, int height, boolean issuerIncluded, long amountNQTPerQNT) {
         Asset asset = Asset.getAsset(assetId);
         long quantityQNT = asset.getQuantityQNT() - (issuerIncluded ? 0 : getAssetBalanceQNTIncludingOrders(assetId, height));
         addToBalanceNQT(-Convert.safeMultiply(amountNQTPerQNT, quantityQNT));
