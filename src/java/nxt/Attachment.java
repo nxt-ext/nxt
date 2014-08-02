@@ -676,10 +676,10 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            byte[] commentBytes = Convert.toBytes(this.comment);
             buffer.putLong(Convert.nullToZero(assetId));
             buffer.putLong(quantityQNT);
-            if (getVersion() == 0) {
+            if (getVersion() == 0 && comment != null) {
+                byte[] commentBytes = Convert.toBytes(this.comment);
                 buffer.putShort((short) commentBytes.length);
                 buffer.put(commentBytes);
             }
