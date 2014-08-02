@@ -2386,7 +2386,6 @@ a.list-group-item:hover {
 .chat {
     margin: 0 auto;
     padding: 0;
-    font-weight: 200;
     font-size: 14px;
     font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
     color: #000;
@@ -3197,6 +3196,7 @@ hr {
 
 .purchase_info th {
   white-space:nowrap;
+  padding-right:5px;
 }
 
 .purchase_info td {

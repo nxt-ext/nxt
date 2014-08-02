@@ -601,11 +601,17 @@ var NRS = (function(NRS, $, undefined) {
 								"price": purchase.priceNQT
 							};
 
+							data["quantity_formatted_html"] = NRS.format(purchase.quantity);
+
+							if (purchase.quantity != "1") {
+								var orderTotal = NRS.formatAmount(new BigInteger(String(purchase.quantity)).multiply(new BigInteger(String(purchase.priceNQT))));
+								data["total_formatted_html"] = orderTotal + " NXT";
+							}
+
 							if (transaction.attachment.discountNQT) {
 								data["discount"] = transaction.attachment.discountNQT;
 							}
 
-							data["quantity_formatted_html"] = NRS.format(purchase.quantity);
 							data["buyer"] = NRS.getAccountFormatted(purchase, "buyer");
 							data["seller"] = NRS.getAccountFormatted(purchase, "seller");
 
@@ -711,11 +717,17 @@ var NRS = (function(NRS, $, undefined) {
 						}, function(goods) {
 							var data = {
 								"type": $.t("marketplace_refund"),
-								"item_name": goods.name,
-								"refund": transaction.attachment.refundNQT,
-								"buyer": NRS.getAccountFormatted(purchase, "buyer"),
-								"seller": NRS.getAccountFormatted(purchase, "seller")
+								"item_name": goods.name
 							};
+
+							var orderTotal = new BigInteger(String(purchase.quantity)).multiply(new BigInteger(String(purchase.priceNQT)));
+
+							data["order_total_formatted_html"] = NRS.formatAmount(orderTotal) + " NXT";
+
+							data["refund"] = transaction.attachment.refundNQT;
+
+							data["buyer"] = NRS.getAccountFormatted(purchase, "buyer");
+							data["seller"] = NRS.getAccountFormatted(purchase, "seller");
 
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
