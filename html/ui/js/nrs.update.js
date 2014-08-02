@@ -46,22 +46,41 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		if (NRS.inApp && NRS.appVersion) {
-			NRS.sendRequest("getAlias", {
-				"aliasName": "nxtwalletversion"
-			}, function(response) {
-				var newestVersion = response.aliasURI;
+		if (NRS.inApp) {
+			if (NRS.appPlatform && NRS.appVersion) {
+				NRS.sendRequest("getAlias", {
+					"aliasName": "nrswallet" + NRS.appPlatform
+				}, function(response) {
+					var versionInfo = $.parseJSON(response.aliasURI);
 
-				if (newestVersion && newestVersion != NRS.appVersion) {
-					var newerVersionAvailable = NRS.versionCompare(NRS.appVersion, newestVersion);
-					if (newerVersionAvailable) {
-						parent.postMessage({
-							"type": "appUpdate",
-							"version": newestVersion
-						}, "*");
+					if (versionInfo && versionInfo.version != NRS.appVersion) {
+						var newerVersionAvailable = NRS.versionCompare(NRS.appVersion, versionInfo.version);
+
+						if (newerVersionAvailable == -1) {
+							parent.postMessage({
+								"type": "appUpdate",
+								"version": versionInfo.version
+							}, "*");
+						}
 					}
+				});
+			} else {
+				//user uses an old version which does not supply the platform / version
+				//give me a few days to build this new version.. tempo!
+				var noticeDate = new Date(2014, 8, 5);
+
+				var noticeDate = new Date(2011, 8, 5);
+
+				if (new Date() > noticeDate) {
+					var isMac = navigator.platform.match(/Mac/i);
+
+					var downloadUrl = "https://bitbucket.org/wesleyh/nxt-wallet-" + (isMac ? "mac" : "win") + "/downloads";
+
+					$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html($.t("old_nxt_wallet_update", {
+						"link": downloadUrl
+					})).show();
 				}
-			});
+			}
 		}
 	}
 

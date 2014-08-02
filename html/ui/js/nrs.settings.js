@@ -884,6 +884,12 @@ var NRS = (function(NRS, $, undefined) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
 					$("[data-i18n]").i18n();
 				});
+				if (NRS.inApp) {
+					parent.postMessage({
+						"type": "language",
+						"version": NRS.settings["language"]
+					}, "*");
+				}
 			}
 		}
 

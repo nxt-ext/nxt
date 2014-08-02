@@ -63,6 +63,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.hasLocalStorage = true;
 	NRS.inApp = false;
 	NRS.appVersion = "";
+	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
 
 	NRS.dgsBlockPassed = false;
@@ -108,11 +109,14 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showLockscreen();
 
 		if (window.parent) {
-			var match = window.location.href.match(/\?app=?([\d\.]+)?/i);
+			var match = window.location.href.match(/\?app=?(win|mac|lin)\-([\d\.]+)?/i);
 
 			if (match) {
 				NRS.inApp = true;
 				if (match[1]) {
+					NRS.appPlatform = match[1];
+				}
+				if (match[2]) {
 					NRS.appVersion = match[1];
 				}
 
