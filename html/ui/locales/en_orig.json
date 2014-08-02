@@ -866,5 +866,7 @@
 	"message_is_not_encrypted": "This message is not encrypted.",
 	"message_is_encrypted": "This message is encrypted.",
 	"note_is_encrypted": "This note is encrypted.",
-	"data_is_encrypted": "Data is encrypted."
+	"data_is_encrypted": "Data is encrypted.",
+	"public_feedback": "Public Feedback",
+	"private_feedback": "Private Feedback"
 }
