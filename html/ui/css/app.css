@@ -3262,6 +3262,22 @@ input.masked {
   text-transform: uppercase;
 }
 
+.form-control::-webkit-input-placeholder {
+  text-transform:none !important;
+}
+
+.form-control:-moz-placeholder {
+  text-transform:none !important;
+}
+
+.form-control::-moz-placeholder{
+  text-transform:none !important;
+}
+
+.form-control:-ms-input-placeholder {
+  text-transform:none !important;
+}
+
 .navbar-right > .nav > .dropdown > a { 
   font-weight:bold;
 }
