@@ -358,7 +358,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -423,7 +423,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
 				}
 			});
 		}
@@ -499,30 +499,49 @@ var NRS = (function(NRS, $, undefined) {
 		var nrFields = Object.keys(_encryptedNote.fields).length;
 
 		$.each(_encryptedNote.fields, function(key, title) {
-			var note = (inAttachment ? _encryptedNote.transaction.attachment[key] : _encryptedNote.transaction[key]);
+			var data = "";
 
-			if (typeof title != "string") {
-				var noteNonce = (inAttachment ? _encryptedNote.transaction.attachment[title.nonce] : _encryptedNote.transaction[title.nonce]);
-				title = title.title;
+			var encrypted = "";
+			var nonce = "";
+			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
+
+			if (key == "encryptedMessage") {
+				encrypted = _encryptedNote.transaction.attachment.encryptedMessage.data;
+				nonce = _encryptedNote.transaction.attachment.encryptedMessage.nonce;
+			} else if (_encryptedNote.transaction.attachment && _encryptedNote.transaction.attachment[key]) {
+				encrypted = _encryptedNote.transaction.attachment[key];
+				nonce = _encryptedNote.transaction.attachment[nonceField];
+			} else if (_encryptedNote.transaction[key] && typeof _encryptedNote.transaction[key] == "object") {
+				encrypted = _encryptedNote.transaction[key].data;
+				nonce = _encryptedNote.transaction[key].nonce;
+			} else if (_encryptedNote.transaction[key]) {
+				encrypted = _encryptedNote.transaction[key];
+				nonce = _encryptedNote.transaction[nonceField];
 			} else {
-				var noteNonce = (inAttachment ? _encryptedNote.transaction.attachment[key + "Nonce"] : _encryptedNote.transaction[key + "Nonce"]);
+				encrypted = "";
 			}
 
-			try {
-				var note = NRS.decryptNote(note, {
-					"nonce": noteNonce,
-					"account": otherAccount
-				}, password);
+			if (encrypted) {
+				if (typeof title != "string") {
+					title = title.title;
+				}
 
-				decryptedFields[key] = note;
+				try {
+					data = NRS.decryptNote(encrypted, {
+						"nonce": nonce,
+						"account": otherAccount
+					}, password);
 
-				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
-			} catch (err) {
-				decryptionError = true;
-				var message = String(err.message ? err.message : err);
+					decryptedFields[key] = data;
+				} catch (err) {
+					decryptionError = true;
+					var message = String(err.message ? err.message : err);
 
-				$form.find(".callout").html(message.escapeHTML());
-				return false;
+					$form.find(".callout").html(message.escapeHTML());
+					return false;
+				}
+
+				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
 			}
 		});
 

@@ -309,9 +309,12 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"type": $.t("asset_transfer"),
 							"asset_name": asset.name,
-							"quantity": [transaction.attachment.quantityQNT, asset.decimals],
-							"comment": transaction.attachment.comment
+							"quantity": [transaction.attachment.quantityQNT, asset.decimals]
 						};
+
+						if (!NRS.dgsBlockPassed && transaction.attachment.comment) {
+							data["comment"] = transaction.attachment.comment;
+						}
 
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
 						data["recipient"] = NRS.getAccountTitle(transaction, "recipient");
@@ -541,24 +544,6 @@ var NRS = (function(NRS, $, undefined) {
 							"seller": NRS.getAccountFormatted(goods, "seller")
 						};
 
-						/*
-						if (transaction.attachment.note) {
-							if (NRS.account == goods.seller || NRS.account == transaction.sender) {
-								var decrypted = NRS.decryptData(transaction.note, {
-									"title": "Note",
-									"nonce": transaction.noteNonce,
-									"account": (transaction.sender == NRS.account ? goods.seller : transaction.sender)
-								});
-								if (decrypted) {
-									data["note"] = decrypted;
-								} else {
-									//show decryption form
-								}
-							} else {
-								data["note"] = $.t("encrypted_note_no_permission");
-							}
-						}*/
-
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
@@ -678,16 +663,6 @@ var NRS = (function(NRS, $, undefined) {
 								"seller": NRS.getAccountFormatted(purchase, "seller")
 							};
 
-							if (transaction.attachment.note) {
-								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
-									NRS.tryToDecrypt(transaction, {
-										"note": $.t("feedback"),
-									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
-								} else {
-									data["feedback"] = $.t("encrypted_feedback_no_permission");
-								}
-							}
-
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
@@ -742,16 +717,6 @@ var NRS = (function(NRS, $, undefined) {
 								"seller": NRS.getAccountFormatted(purchase, "seller")
 							};
 
-							if (transaction.attachment.note) {
-								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
-									NRS.tryToDecrypt(transaction, {
-										"note": $.t("note"),
-									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
-								} else {
-									data["note"] = $.t("encrypted_not_no_permission");
-								}
-							}
-
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
@@ -802,34 +767,23 @@ var NRS = (function(NRS, $, undefined) {
 						message = String(transaction.attachment.message);
 					}
 
-					$("#transaction_info_output_bottom").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>").show();
+					$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
 				}
 
 				if (transaction.attachment.encryptedMessage) {
-					NRS.tryToDecrypt(transaction, {
-						"encryptedMessage": "",
-					}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
-						"noPadding": true,
-						"formEl": "#transaction_info_output_bottom",
-						"outputEl": "#transaction_info_output_bottom"
-					});
-					/*
-					if (transaction.attachment.encryptedMessage.isText) {
+					if (NRS.account == transaction.sender || NRS.account == transaction.recipient) {
 						NRS.tryToDecrypt(transaction, {
-							"message": {
-								"title": "",
-								"nonce": "nonce"
-							}
+							"encryptedMessage": $.t("encrypted_message"),
 						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
-							"noPadding": true,
-							"formEl": "#transaction_info_decryption_form",
-							"outputEl": "#transaction_info_decrypted_note"
+							"formEl": "#transaction_info_output_bottom",
+							"outputEl": "#transaction_info_output_bottom"
 						});
-
 					} else {
-
-					}*/
+						$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</label><div>" + $.t("encrypted_message_no_permission") + "</div></div>");
+					}
 				}
+
+				$("#transaction_info_output_bottom").show();
 			}
 		}
 
