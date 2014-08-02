@@ -240,7 +240,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (unconfirmedTransactions) {
 			for (var i = 0; i < unconfirmedTransactions.length; i++) {
 				var unconfirmedTransaction = unconfirmedTransactions[i];
+
 				rows += "<tr class='tentative' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td class='price'>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
+
 			}
 		}
 
@@ -269,7 +271,7 @@ var NRS = (function(NRS, $, undefined) {
 							good.priceNQT = unconfirmedTransaction.priceNQT;
 							tentative = true;
 						} else {
-							good.quantity = NRS.format(good.quantity) + " " + NRS.format(unconfirmedTransaction.deltaQuantity);
+							good.quantity = NRS.format(good.quantity) + (String(unconfirmedTransaction.deltaQuantity).charAt(0) != "-" ? "+" : "") + NRS.format(unconfirmedTransaction.deltaQuantity);
 							tentative = true;
 							quantityFormatted = true;
 						}
@@ -387,23 +389,16 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}, false);
 
-		if (data.note) {
-			try {
-				var encrypted = NRS.encryptNote(data.note, {
-					"account": data.seller
-				}, data.secretPhrase);
+		data.add_message = true;
 
-				data.encryptedNoteNonce = encrypted.nonce;
-				data.encryptedNote = encrypted.message;
-			} catch (err) {
-				return {
-					"error": err.message
-				};
-			}
-			delete data.note;
+		if (data.feedback_type == "public") {
+			data.encrypt_message = false;
+		} else {
+			data.encrypt_message = true;
 		}
 
 		delete data.seller;
+		delete data.feedback_type;
 
 		return {
 			"data": data
@@ -425,25 +420,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}, false);
 
-		if (data.note) {
-			try {
-				var encrypted = NRS.encryptNote(data.note, {
-					"account": data.seller
-				}, data.secretPhrase);
-
-				data.encryptedNoteNonce = encrypted.nonce;
-				data.encryptedNote = encrypted.message;
-			} catch (err) {
-				return {
-					"error": err.message
-				};
-			}
-			delete data.note;
-		}
-
 		data.deliveryDeadlineTimestamp = String(Math.floor((new Date() - Date.UTC(2013, 10, 24, 12, 0, 0, 0)) / 1000) + (60 * 60 * data.deliveryDeadlineTimestamp));
-
-		//data.deliveryDeadlineTimestamp = String(Math.floor((new Date() - Date.UTC(2013, 10, 24, 12, 0, 0, 0)) / 1000) + (60 * 5));
 
 		delete data.seller;
 
@@ -471,20 +448,9 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		if (data.note) {
-			try {
-				var encrypted = NRS.encryptNote(data.note, {
-					"account": data.buyer
-				}, data.secretPhrase);
-
-				data.encryptedNoteNonce = encrypted.nonce;
-				data.encryptedNote = encrypted.message;
-			} catch (err) {
-				return {
-					"error": err.message
-				};
-			}
-			delete data.note;
+		if (data.message) {
+			data.add_message = true;
+			data.encrypt_message = true;
 		}
 
 		delete data.buyer;
@@ -519,8 +485,9 @@ var NRS = (function(NRS, $, undefined) {
 					"account": data.buyer
 				}, data.secretPhrase);
 
-				data.encryptedGoodsData = encrypted.message;
-				data.encryptedGoodsNonce = encrypted.nonce;
+				data.goodsData = encrypted.message;
+				data.goodsNonce = encrypted.nonce;
+				data.goodsIsText = "true";
 			} catch (err) {
 				return {
 					"error": err.message
@@ -545,10 +512,15 @@ var NRS = (function(NRS, $, undefined) {
 			if (!response.errorCode) {
 				if (data.quantity == response.quantity) {
 					data.deltaQuantity = "0";
-				} else if (data.quantity > response.quantity) {
-					data.deltaQuantity = "+" + (data.quantity - response.quantity);
 				} else {
-					data.deltaQuantity = "-" + (response.quantity - data.quantity);
+					var quantityA = new BigInteger(String(data.quantity));
+					var quantityB = new BigInteger(String(response.quantity));
+
+					if (quantityA.compareTo(quantityB) > 0) {
+						data.deltaQuantity = quantityA.subtract(quantityB).toString();
+					} else {
+						data.deltaQuantity = "-" + quantityB.subtract(quantityA).toString();
+					}
 				}
 			} else {
 				data.deltaQuantity = false;
@@ -581,7 +553,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var quantityField = $("#my_dgs_listings_table tr[data-goods=" + String(data.goods).escapeHTML() + "]").addClass("tentative").find(".quantity");
 
-		quantityField.html(quantityField.html() + " " + String(data.deltaQuantity).escapeHTML());
+		quantityField.html(quantityField.html() + (String(data.deltaQuantity).charAt(0) != "-" ? "+" : "") + NRS.format(data.deltaQuantity));
 	}
 
 	NRS.forms.dgsPriceChangeComplete = function(response, data) {
