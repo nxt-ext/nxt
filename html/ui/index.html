@@ -1901,10 +1901,16 @@
                                     <span class="input-group-addon" id="transfer_asset_quantity_name"></span>
                                 </div>
                             </div>
-							<div class="form-group">
-								<label for="transfer_asset_comment" data-i18n="comment">COMMENT</label>
-								<textarea class="form-control" id="transfer_asset_comment" name="comment" rows="3" tabindex="4" placeholder="Optional" data-i18n="[placeholder]optional"></textarea>
-							</div>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="transfer_asset_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="transfer_asset_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="transfer_asset_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="transfer_asset_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px" class="dgs_block">
+                                    <label for="transfer_asset_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="transfer_asset_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
