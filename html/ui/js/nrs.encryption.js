@@ -317,12 +317,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.tryToDecryptMessage = function(message) {
 		if (_decryptedTransactions && _decryptedTransactions[message.transaction]) {
-			return _decryptedTransactions[message.transaction].message;
+			return _decryptedTransactions[message.transaction].encryptedMessage;
 		}
 
 		try {
-			var decoded = NRS.decryptNote(message.attachment.message, {
-				"nonce": message.attachment.nonce,
+			var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
+				"nonce": message.attachment.encryptedMessage.nonce,
 				"account": (message.recipient == NRS.account ? message.sender : message.recipient)
 			});
 
@@ -590,30 +590,28 @@ var NRS = (function(NRS, $, undefined) {
 		var success = 0;
 		var error = 0;
 
-		for (var otherUser in messages) {
-			for (var key in messages[otherUser]) {
-				var message = messages[otherUser][key];
+		for (var i = 0; i < messages.length; i++) {
+			var message = messages[i];
 
-				if ((message.type = 1 && message.subtype == 8) || (message.type == 0 && message.subtype == 1)) {
-					if (!_decryptedTransactions[message.transaction]) {
-						try {
-							var decoded = NRS.decryptNote(message.attachment.message, {
-								"nonce": message.attachment.nonce,
-								"account": otherUser
-							}, password);
+			if (message.attachment.encryptedMessage && !_decryptedTransactions[message.transaction]) {
+				try {
+					var otherUser = (message.sender == NRS.account ? message.recipient : message.sender);
 
-							_decryptedTransactions[message.transaction] = {
-								"message": decoded
-							};
+					var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
+						"nonce": message.attachment.encryptedMessage.nonce,
+						"account": otherUser
+					}, password);
 
-							success++;
-						} catch (err) {
-							_decryptedTransactions[message.transaction] = {
-								"message": $.t("error_decryption_unknown")
-							};
-							error++;
-						}
-					}
+					_decryptedTransactions[message.transaction] = {
+						"message": decoded
+					};
+
+					success++;
+				} catch (err) {
+					_decryptedTransactions[message.transaction] = {
+						"message": $.t("error_decryption_unknown")
+					};
+					error++;
 				}
 			}
 		}
@@ -666,7 +664,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
-				"message": "Your browser is does not support client-side encryption. Aborting."
+				"message": $.t("error_encryption_browser_support")
 			};
 		}
 
