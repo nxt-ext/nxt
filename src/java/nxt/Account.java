@@ -147,7 +147,7 @@ public final class Account {
                 try (Connection con = Db.getConnection();
                      PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
                              + "WHERE height < ?")) {
-                    pstmtDelete.setInt(1, block.getHeight() - 2881);
+                    pstmtDelete.setInt(1, block.getHeight() - maxTrackedBalanceConfirmations);
                     pstmtDelete.executeUpdate();
                 } catch (SQLException e) {
                     throw new RuntimeException(e.toString(), e);
@@ -433,17 +433,13 @@ public final class Account {
     }
 
     public long getEffectiveBalanceNXT() {
-
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
-
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
                 && (getPublicKey() == null || lastBlock.getHeight() - keyHeight <= 1440)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
-
         if (lastBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_3
                 && this.creationHeight < Constants.TRANSPARENT_FORGING_BLOCK_2) {
-
             if (this.creationHeight == 0) {
                 return getBalanceNQT() / Constants.ONE_NXT;
             }
@@ -458,13 +454,10 @@ public final class Account {
             }
             return (getBalanceNQT() - receivedInlastBlock) / Constants.ONE_NXT;
         }
-
         if (lastBlock.getHeight() < currentLeasingHeightFrom) {
             return (getGuaranteedBalanceNQT(1440) + getLessorsGuaranteedBalanceNQT()) / Constants.ONE_NXT;
         }
-
         return getLessorsGuaranteedBalanceNQT() / Constants.ONE_NXT;
-
     }
 
     private long getLessorsGuaranteedBalanceNQT() {
@@ -478,45 +471,16 @@ public final class Account {
     public List<Account> getLessors() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id = ? "
-                     + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE "
-                     + "ORDER BY id ASC")) {
+                     + "AND current_leasing_height_from <= ? AND current_leasing_height_to > ? AND latest = TRUE ")) {
             pstmt.setLong(1, this.id);
-            pstmt.setInt(2, Nxt.getBlockchain().getHeight());
-            pstmt.setInt(3, Nxt.getBlockchain().getHeight());
+            int height = Nxt.getBlockchain().getHeight();
+            pstmt.setInt(2, height);
+            pstmt.setInt(3, height);
             return accountTable.getManyBy(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
-
-    /*
-    public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
-        if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
-            return 0;
-        }
-        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations < 0) {
-            throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
-        }
-        if (guaranteedBalances.isEmpty()) {
-            return 0;
-        }
-        int i = Collections.binarySearch(guaranteedBalances, new GuaranteedBalance(Nxt.getBlockchain().getLastBlock().getHeight() - numberOfConfirmations, 0));
-        if (i == -1) {
-            return 0;
-        }
-        if (i < -1) {
-            i = -i - 2;
-        }
-        if (i > guaranteedBalances.size() - 1) {
-            i = guaranteedBalances.size() - 1;
-        }
-        GuaranteedBalance result;
-        while ((result = guaranteedBalances.get(i)).ignore && i > 0) {
-            i--;
-        }
-        return result.ignore || result.balance < 0 ? 0 : result.balance;
-    }
-    */
 
     public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
@@ -775,61 +739,6 @@ public final class Account {
             throw new DoubleSpendingException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
         }
     }
-
-    /*
-    private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
-        int blockchainHeight = Nxt.getBlockchain().getLastBlock().getHeight();
-        GuaranteedBalance last = null;
-        if (guaranteedBalances.size() > 0 && (last = guaranteedBalances.get(guaranteedBalances.size() - 1)).height > blockchainHeight) {
-            // this only happens while last block is being popped off
-            if (amountNQT > 0) {
-                // this is a reversal of a withdrawal or a fee, so previous gb records need to be corrected
-                for (GuaranteedBalance gb : guaranteedBalances) {
-                    gb.balance += amountNQT;
-                }
-            } // deposits don't need to be reversed as they have never been applied to old gb records to begin with
-            last.ignore = true; // set dirty flag
-            return; // block popped off, no further processing
-        }
-        int trimTo = 0;
-        for (int i = 0; i < guaranteedBalances.size(); i++) {
-            GuaranteedBalance gb = guaranteedBalances.get(i);
-            if (gb.height < blockchainHeight - maxTrackedBalanceConfirmations
-                    && i < guaranteedBalances.size() - 1
-                    && guaranteedBalances.get(i + 1).height >= blockchainHeight - maxTrackedBalanceConfirmations) {
-                trimTo = i; // trim old gb records but keep at least one at height lower than the supported maxTrackedBalanceConfirmations
-                if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_4 && blockchainHeight < Constants.TRANSPARENT_FORGING_BLOCK_5) {
-                    gb.balance += amountNQT; // because of a bug which leads to a fork
-                } else if (blockchainHeight >= Constants.TRANSPARENT_FORGING_BLOCK_5 && amountNQT < 0) {
-                    gb.balance += amountNQT;
-                }
-            } else if (amountNQT < 0) {
-                gb.balance += amountNQT; // subtract current block withdrawals from all previous gb records
-            }
-            // ignore deposits when updating previous gb records
-        }
-        if (trimTo > 0) {
-            Iterator<GuaranteedBalance> iter = guaranteedBalances.iterator();
-            while (iter.hasNext() && trimTo > 0) {
-                iter.next();
-                iter.remove();
-                trimTo--;
-            }
-        }
-        if (guaranteedBalances.size() == 0 || last.height < blockchainHeight) {
-            // this is the first transaction affecting this account in a newly added block
-            guaranteedBalances.add(new GuaranteedBalance(blockchainHeight, balanceNQT));
-        } else if (last.height == blockchainHeight) {
-            // following transactions for same account in a newly added block
-            // for the current block, guaranteedBalance (0 confirmations) must be same as balance
-            last.balance = balanceNQT;
-            last.ignore = false;
-        } else {
-            // should have been handled in the block popped off case
-            throw new IllegalStateException("last guaranteed balance height exceeds blockchain height");
-        }
-    }
-    */
 
     //TODO: undo
     private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {

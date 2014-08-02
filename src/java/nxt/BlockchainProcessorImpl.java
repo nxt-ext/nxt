@@ -602,8 +602,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new BlockNotAcceptedException("Payload hash doesn't match");
                     }
 
-                    blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
                     block.setPrevious(previousLastBlock);
+                    blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
 
                     addBlock(block);
 
