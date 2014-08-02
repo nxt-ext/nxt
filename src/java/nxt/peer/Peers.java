@@ -40,6 +40,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class Peers {
 
@@ -178,30 +180,47 @@ public final class Peers {
         savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
 
         ThreadPool.runBeforeStart(new Runnable() {
+
+            private void loadPeers(List<Future<String>> unresolved, Collection<String> addresses) {
+                for (final String address : addresses) {
+                    Future<String> unresolvedAddress = sendToPeersService.submit(new Callable<String>() {
+                        @Override
+                        public String call() {
+                            Peer peer = Peers.addPeer(address);
+                            return peer == null ? address : null;
+                        }
+                    });
+                    unresolved.add(unresolvedAddress);
+                }
+            }
+
             @Override
             public void run() {
+                List<Future<String>> unresolvedPeers = new ArrayList<>();
                 if (! wellKnownPeers.isEmpty()) {
-                    StringBuilder buf = new StringBuilder();
-                    for (String address : wellKnownPeers) {
-                        Peer peer = Peers.addPeer(address);
-                        if (peer != null) {
-                            buf.append(peer.getPeerAddress()).append("; ");
-                        } else {
-                            Logger.logMessage("Invalid well known peer address: " + address);
-                        }
-                    }
-                    Logger.logDebugMessage("Well known peers: " + buf.toString());
+                    loadPeers(unresolvedPeers, wellKnownPeers);
                 }
-
                 if (usePeersDb) {
                     Logger.logDebugMessage("Loading known peers from the database...");
-                    for (String savedPeer : PeerDb.loadPeers()) {
-                        Peers.addPeer(savedPeer);
+                    loadPeers(unresolvedPeers, PeerDb.loadPeers());
+                }
+                for (Future<String> unresolvedPeer : unresolvedPeers) {
+                    try {
+                        String badAddress = unresolvedPeer.get(5, TimeUnit.SECONDS);
+                        if (badAddress != null) {
+                            Logger.logDebugMessage("Failed to resolve peer address: " + badAddress);
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        Logger.logDebugMessage("Failed to add peer", e);
+                    } catch (TimeoutException e) {
                     }
                 }
                 Logger.logDebugMessage("Known peers: " + peers.size());
             }
         }, false);
+
     }
 
     private static class Init {
