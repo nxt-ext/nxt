@@ -79,6 +79,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(":input:not(button)").each(function(index) {
 			var defaultValue = $(this).data("default");
 			var type = $(this).attr("type");
+			var tag = $(this).prop("tagName").toLowerCase();
 
 			if (type == "checkbox") {
 				if (defaultValue == "checked") {
@@ -89,6 +90,13 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (type == "hidden") {
 				if (defaultValue !== undefined) {
 					$(this).val(defaultValue);
+				}
+			} else if (tag == "select") {
+				if (defaultValue !== undefined) {
+					$(this).val(defaultValue);
+				} else {
+					$(this).find("option:selected").prop("selected", false);
+					$(this).find("option:first").prop("selected", "selected");
 				}
 			} else {
 				if (defaultValue !== undefined) {
