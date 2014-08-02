@@ -2499,13 +2499,16 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
-								<label for="dgs_purchase_message" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_purchase_message" name="message" rows="3" tabindex="4"></textarea>
-                                <div style="margin-top:3px">
-                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="dgs_purchase_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="dgs_purchase_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="dgs_purchase_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="dgs_purchase_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="dgs_purchase_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="dgs_purchase_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
                                 </div>
-							</div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2700,17 +2703,23 @@
 							</div>
 							<input type="hidden" name="recipient" id="dgs_refund_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_refund_purchase" value="" />
-							<div class="form-group">
-								<label for="dgs_refund_message" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_refund_message" name="message" rows="3" tabindex="2"></textarea>
-							</div>
-							<div class="form-group">
-								<label for="dgs_refund_refund" data-i18n="refund">REFUND</label>
-				                <div class="input-group">
-				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-i18n="[placeholder]refund_price" step="any" data-default="0" value="0" tabindex="3">
-				                	<span class="input-group-addon">NXT</span>
-								</div>
-							</div>
+                            <div class="form-group">
+                                <label for="dgs_refund_refund" data-i18n="refund">REFUND</label>
+                                <div class="input-group">
+                                    <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-i18n="[placeholder]refund_price" step="any" data-default="0" value="0" tabindex="3">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="dgs_refund_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="dgs_refund_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="dgs_refund_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="dgs_refund_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="dgs_refund_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="dgs_refund_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2768,9 +2777,16 @@
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
 							</div>
 							<div class="form-group">
-								<label for="dgs_feedback_message" data-i18n="note">NOTE</label>
+								<label for="dgs_feedback_message" data-i18n="feedback">Feedback</label>
 								<textarea class="form-control" id="dgs_feedback_message" name="message" rows="3" tabindex="2"></textarea>
 							</div>
+                            <div class="form-group">
+                                <label for="dgs_feedback_type" data-i18n="type">Type</label>
+                                <select class="form-control" name="feedback_type" id="dgs_feedback_type">
+                                    <option value="private" data-i18n="private_feedback">Private Feedback</option>
+                                    <option value="public" data-i18n="public_feedback">Public Feedback</option>
+                                </select>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
