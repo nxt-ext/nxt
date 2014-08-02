@@ -13,7 +13,7 @@ public final class GetAliases extends APIServlet.APIRequestHandler {
     static final GetAliases instance = new GetAliases();
 
     private GetAliases() {
-        super("timestamp", "account");
+        super(new APITag[] {APITag.ALIASES}, "timestamp", "account");
     }
 
     @Override

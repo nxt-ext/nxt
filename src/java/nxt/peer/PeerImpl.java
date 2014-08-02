@@ -3,7 +3,7 @@ package nxt.peer;
 import nxt.Account;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
-import nxt.TransactionType;
+import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
@@ -49,6 +49,7 @@ final class PeerImpl implements Peer {
     private volatile State state;
     private volatile long downloadedVolume;
     private volatile long uploadedVolume;
+    private volatile int lastUpdated;
 
     PeerImpl(String peerAddress, String announcedAddress) {
         this.peerAddress = peerAddress;
@@ -198,7 +199,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public void blacklist(Exception cause) {
-        if (cause instanceof TransactionType.NotYetEnabledException || cause instanceof BlockchainProcessor.BlockOutOfOrderException) {
+        if (cause instanceof NxtException.NotCurrentlyValidException || cause instanceof BlockchainProcessor.BlockOutOfOrderException) {
             // don't blacklist peers just because a feature is not yet enabled
             // prevents erroneous blacklisting during loading of blockchain from scratch
             return;
@@ -239,6 +240,15 @@ final class PeerImpl implements Peer {
     public void remove() {
         Peers.removePeer(this);
         Peers.notifyListeners(this, Peers.Event.REMOVE);
+    }
+
+    @Override
+    public int getLastUpdated() {
+        return lastUpdated;
+    }
+
+    void setLastUpdated(int lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     @Override
@@ -359,6 +369,13 @@ final class PeerImpl implements Peer {
             version = (String)response.get("version");
             platform = (String)response.get("platform");
             shareAddress = Boolean.TRUE.equals(response.get("shareAddress"));
+            String newAnnouncedAddress = Convert.emptyToNull((String)response.get("announcedAddress"));
+            if (newAnnouncedAddress != null && ! newAnnouncedAddress.equals(announcedAddress)) {
+                // force verification of changed announced address
+                setState(Peer.State.NON_CONNECTED);
+                setAnnouncedAddress(newAnnouncedAddress);
+                return;
+            }
             if (announcedAddress == null) {
                 setAnnouncedAddress(peerAddress);
                 Logger.logDebugMessage("Connected to peer without announced address, setting to " + peerAddress);
@@ -368,6 +385,7 @@ final class PeerImpl implements Peer {
             } else {
                 blacklist();
             }
+            lastUpdated = Convert.getEpochTime();
         } else {
             setState(State.NON_CONNECTED);
         }

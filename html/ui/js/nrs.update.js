@@ -45,6 +45,43 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		});
+
+		if (NRS.inApp) {
+			if (NRS.appPlatform && NRS.appVersion) {
+				NRS.sendRequest("getAlias", {
+					"aliasName": "nrswallet" + NRS.appPlatform
+				}, function(response) {
+					var versionInfo = $.parseJSON(response.aliasURI);
+
+					if (versionInfo && versionInfo.version != NRS.appVersion) {
+						var newerVersionAvailable = NRS.versionCompare(NRS.appVersion, versionInfo.version);
+
+						if (newerVersionAvailable == -1) {
+							parent.postMessage({
+								"type": "appUpdate",
+								"version": versionInfo.version
+							}, "*");
+						}
+					}
+				});
+			} else {
+				//user uses an old version which does not supply the platform / version
+				//give me a few days to build this new version.. tempo!
+				var noticeDate = new Date(2014, 8, 5);
+
+				var noticeDate = new Date(2011, 8, 5);
+
+				if (new Date() > noticeDate) {
+					var isMac = navigator.platform.match(/Mac/i);
+
+					var downloadUrl = "https://bitbucket.org/wesleyh/nxt-wallet-" + (isMac ? "mac" : "win") + "/downloads";
+
+					$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html($.t("old_nxt_wallet_update", {
+						"link": downloadUrl
+					})).show();
+				}
+			}
+		}
 	}
 
 	NRS.checkForNewVersion = function() {
@@ -192,9 +229,9 @@ var NRS = (function(NRS, $, undefined) {
 				$("#nrs_update_drop_zone").hide();
 
 				if (e.data.sha256 == NRS.downloadedVersion.hash) {
-					$("#nrs_update_result").html("The downloaded version has been verified, the hash is correct. You may proceed with the installation.").attr("class", " ");
+					$("#nrs_update_result").html($.t("success_hash_verification")).attr("class", " ");
 				} else {
-					$("#nrs_update_result").html("The downloaded version hash does not compare to the specified hash in the blockchain. DO NOT PROCEED.").attr("class", "incorrect");
+					$("#nrs_update_result").html($.t("error_hash_verification")).attr("class", "incorrect");
 				}
 
 				$("#nrs_update_hash_version").html(NRS.downloadedVersion.versionNr);

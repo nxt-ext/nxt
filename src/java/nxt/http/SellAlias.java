@@ -22,7 +22,7 @@ public final class SellAlias extends CreateTransaction {
     static final SellAlias instance = new SellAlias();
 
     private SellAlias() {
-        super("alias", "aliasName", "recipient", "priceNQT");
+        super(new APITag[] {APITag.ALIASES, APITag.CREATE_TRANSACTION}, "alias", "aliasName", "recipient", "priceNQT");
     }
 
     @Override

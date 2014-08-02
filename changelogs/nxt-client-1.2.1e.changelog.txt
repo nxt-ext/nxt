@@ -1,0 +1,62 @@
+This release is still considered experimental, but is now enabled to run on main
+net too. The DGS milestone block is set to 205000 for main net.
+
+Multiple bugfixes in DGS and Alias Transfer transaction validation. Restricted
+some types of alias and DGS transactions to one per alias / DGS purchase per
+block.
+
+Improved handling of IPv6 addresses.
+
+Improved the http://localhost:7876/test interface by adding support for tagging
+of API requests in multiple categories. All http API requests are now classified
+under separate tabs for easier navigation.
+
+Reduced startup time by running loading of peers and initial blockchain scanning
+in parallel.
+
+To improve database performance, transactions that do not have a recipient now
+have null instead of the genesis account id as recipient in the transactions
+table. Such transactions will also not have a recipient field in their JSON.
+
+Added support for pagination to the getAccountTransactionIds API.
+
+Added getAccountTransactions API returning the full transactions json.
+
+Refresh peer info for already connected peers every hour.
+
+Call setReuseAddress(true) for all jetty ServerConnectors.
+
+Refactoring of transaction attachment handling. Added support for transaction
+versions and global options. Transactions will switch to version 1 at DGS block.
+
+Added Message and EncryptedMessage attachments that can be attached to any
+transaction types, and can have either text or binary content. All APIs that
+create a new transaction now accept additional parameters to allow attaching
+a Message or EncryptedMessage (or both). This removes the need for creating
+new transaction types for encrypted messages or payments with messages.
+
+After DGS milestone block, Asset Transfer transactions can no longer have a
+"comment" field. Switch to using a plain text "message" attachment instead.
+
+Added transaction attachment versioning. Transactions of version 1 and later
+will have a version field in the attachment too, which allows future optional
+changes to one attachment type only, e.g. adding expiration field to asset issue
+attachment without having to add a new transaction type.
+
+Added PublicKeyAnnouncement attachment. Those will be accepted after DGS block,
+but only enforced after block 210000. After that block, transactions with
+recipient account that does not have a public key will be required to have such
+an attachment in order to announce and set the public key of the reciepient.
+To add a PublicKeyAnnouncement, just add a "recipientPublicKey" parameter with
+the hex-encoded public key string when sending the first transaction to that
+account. It is harmless (but useless) to keep adding the same recipientPublicKey
+for further transactions to the same account. But trying to set a different
+public key for an account that already has a public key will result in rejection
+of the transaction.
+
+Updated jetty to version 9.2.2 and bouncycastle to version 1.51.
+
+This release will cause a reset of testnet, deleting blocks and transactions
+after block 117907.
+
+

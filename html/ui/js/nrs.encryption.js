@@ -28,7 +28,7 @@ var NRS = (function(NRS, $, undefined) {
 				"account": accountNumber
 			}, function(response) {
 				if (!response.publicKey) {
-					throw "Account does not have a public key.";
+					throw $.t("error_no_public_key");
 				} else {
 					publicKey = response.publicKey;
 				}
@@ -49,14 +49,16 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getAccountId = function(secretPhrase) {
-		var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+		return NRS.getAccountIdFromPublicKey(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
 
 		/*	
 		if (NRS.accountInfo && NRS.accountInfo.publicKey && publicKey != NRS.accountInfo.publicKey) {
 			return -1;
 		}
 		*/
+	}
 
+	NRS.getAccountIdFromPublicKey = function(publicKey, RSFormat) {
 		var hex = converters.hexStringToByteArray(publicKey);
 
 		_hash.init();
@@ -68,7 +70,19 @@ var NRS = (function(NRS, $, undefined) {
 
 		var slice = (converters.hexStringToByteArray(account)).slice(0, 8);
 
-		return byteArrayToBigInteger(slice).toString();
+		var accountId = byteArrayToBigInteger(slice).toString();
+
+		if (RSFormat) {
+			var address = new NxtAddress();
+
+			if (address.set(accountId)) {
+				return address.toString();
+			} else {
+				return "";
+			}
+		} else {
+			return accountId;
+		}
 	}
 
 	NRS.encryptNote = function(message, options, secretPhrase) {
@@ -80,7 +94,7 @@ var NRS = (function(NRS, $, undefined) {
 							secretPhrase = _password;
 						} else {
 							throw {
-								"message": "Your password is required to encrypt this message.",
+								"message": $.t("error_encryption_passphrase_required"),
 								"errorCode": 1
 							};
 						}
@@ -92,11 +106,28 @@ var NRS = (function(NRS, $, undefined) {
 				if (!options.publicKey) {
 					if (!options.account) {
 						throw {
-							"message": "Account ID not specified.",
+							"message": $.t("error_account_id_not_specified"),
 							"errorCode": 2
 						};
 					}
-					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+
+					try {
+						options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+					} catch (err) {
+						var nxtAddress = new NxtAddress();
+
+						if (!nxtAddress.set(options.account)) {
+							throw {
+								"message": $.t("error_invalid_account_id"),
+								"errorCode": 3
+							};
+						} else {
+							throw {
+								"message": $.t("error_public_key_not_specified"),
+								"errorCode": 4
+							};
+						}
+					}
 				}
 			}
 
@@ -107,15 +138,38 @@ var NRS = (function(NRS, $, undefined) {
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
 			};
 		} catch (err) {
-			console.log(err);
-
-			if (err.errorCode && err.errorCode < 3) {
+			if (err.errorCode && err.errorCode < 5) {
 				throw err;
 			} else {
 				throw {
-					"message": "The message could not be encrypted.",
-					"errorCode": 3
+					"message": $.t("error_message_encryption"),
+					"errorCode": 5
 				};
+			}
+		}
+	}
+
+	NRS.decryptData = function(data, options, secretPhrase) {
+		try {
+			return NRS.decryptNote(message, options, secretPhrase);
+		} catch (err) {
+			var mesage = String(err.message ? err.message : err);
+
+			if (err.errorCode && err.errorCode == 1) {
+				return false;
+			} else {
+				if (options.title) {
+					var translatedTitle = NRS.getTranslatedFieldName(options.title).toLowerCase();
+					if (!translatedTitle) {
+						translatedTitle = String(options.title).escapeHTML().toLowerCase();
+					}
+
+					return $.t("error_could_not_decrypt_var", {
+						"var": translatedTitle
+					}).capitalize();
+				} else {
+					return $.t("error_could_not_decrypt");
+				}
 			}
 		}
 	}
@@ -131,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 							secretPhrase = _decryptionPassword;
 						} else {
 							throw {
-								"message": "Your password is required to decrypt this message.",
+								"message": $.t("error_decryption_passphrase_required"),
 								"errorCode": 1
 							};
 						}
@@ -143,7 +197,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (!options.publicKey) {
 					if (!options.account) {
 						throw {
-							"message": "Account ID not specified.",
+							"message": $.t("error_account_id_not_specified"),
 							"errorCode": 2
 						};
 					}
@@ -159,7 +213,7 @@ var NRS = (function(NRS, $, undefined) {
 				throw err;
 			} else {
 				throw {
-					"message": "The message could not be decrypted.",
+					"message": $.t("error_message_decryption"),
 					"errorCode": 3
 				};
 			}
@@ -180,7 +234,7 @@ var NRS = (function(NRS, $, undefined) {
 				secretPhrase = _decryptionPassword;
 			} else {
 				throw {
-					"message": "Your password is required.",
+					"message": $.t("error_passphrase_required"),
 					"errorCode": 3
 				};
 			}
@@ -304,7 +358,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -318,20 +372,33 @@ var NRS = (function(NRS, $, undefined) {
 			$.each(fields, function(key, title) {
 				var data = "";
 
-				var inAttachment = ("attachment" in transaction);
+				var encrypted = "";
+				var nonce = "";
+				var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 
-				var toDecrypt = (inAttachment ? transaction.attachment[key] : transaction[key]);
+				if (key == "encryptedMessage") {
+					encrypted = transaction.attachment.encryptedMessage.data;
+					nonce = transaction.attachment.encryptedMessage.nonce;
+				} else if (transaction.attachment && transaction.attachment[key]) {
+					encrypted = transaction.attachment[key];
+					nonce = transaction.attachment[nonceField];
+				} else if (transaction[key] && typeof transaction[key] == "object") {
+					encrypted = transaction[key].data;
+					nonce = transaction[key].nonce;
+				} else if (transaction[key]) {
+					encrypted = transaction[key];
+					nonce = transaction[nonceField];
+				} else {
+					encrypted = "";
+				}
 
-				if (toDecrypt) {
+				if (encrypted) {
 					if (typeof title != "string") {
-						var nonce = (inAttachment ? transaction.attachment[title.nonce] : transaction[title.nonce]);
 						title = title.title;
-					} else {
-						var nonce = (inAttachment ? transaction.attachment[key + "Nonce"] : transaction[key + "Nonce"]);
 					}
 
 					try {
-						data = NRS.decryptNote(toDecrypt, {
+						data = NRS.decryptNote(encrypted, {
 							"nonce": nonce,
 							"account": account
 						});
@@ -341,11 +408,22 @@ var NRS = (function(NRS, $, undefined) {
 							showDecryptionForm = true;
 							return false;
 						} else {
-							data = "Could not decrypt " + String(title).escapeHTML().toLowerCase() + ".";
+							if (title) {
+								var translatedTitle = NRS.getTranslatedFieldName(title).toLowerCase();
+								if (!translatedTitle) {
+									translatedTitle = String(title).escapeHTML().toLowerCase();
+								}
+
+								data = $.t("error_could_not_decrypt_var", {
+									"var": translatedTitle
+								}).capitalize();
+							} else {
+								data = $.t("error_could_not_decrypt");
+							}
 						}
 					}
 
-					output += "<div" + (!options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
 				}
 			});
 		}
@@ -385,7 +463,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $form = $(this);
 
 		if (!_encryptedNote) {
-			$form.find(".callout").html("Encrypted note not found.").show();
+			$form.find(".callout").html($.t("error_encrypted_note_not_found")).show();
 			return;
 		}
 
@@ -397,14 +475,14 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (_decryptionPassword) {
 				password = _decryptionPassword;
 			} else {
-				$form.find(".callout").html("Passphrase is a required field.").show();
+				$form.find(".callout").html($.t("error_passphrase_required")).show();
 				return;
 			}
 		}
 
 		var accountId = NRS.getAccountId(password);
 		if (accountId != NRS.account) {
-			$form.find(".callout").html("Incorrect passphrase.").show();
+			$form.find(".callout").html($.t("error_incorrect_passphrase")).show();
 			return;
 		}
 
@@ -421,30 +499,49 @@ var NRS = (function(NRS, $, undefined) {
 		var nrFields = Object.keys(_encryptedNote.fields).length;
 
 		$.each(_encryptedNote.fields, function(key, title) {
-			var note = (inAttachment ? _encryptedNote.transaction.attachment[key] : _encryptedNote.transaction[key]);
+			var data = "";
 
-			if (typeof title != "string") {
-				var noteNonce = (inAttachment ? _encryptedNote.transaction.attachment[title.nonce] : _encryptedNote.transaction[title.nonce]);
-				title = title.title;
+			var encrypted = "";
+			var nonce = "";
+			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
+
+			if (key == "encryptedMessage") {
+				encrypted = _encryptedNote.transaction.attachment.encryptedMessage.data;
+				nonce = _encryptedNote.transaction.attachment.encryptedMessage.nonce;
+			} else if (_encryptedNote.transaction.attachment && _encryptedNote.transaction.attachment[key]) {
+				encrypted = _encryptedNote.transaction.attachment[key];
+				nonce = _encryptedNote.transaction.attachment[nonceField];
+			} else if (_encryptedNote.transaction[key] && typeof _encryptedNote.transaction[key] == "object") {
+				encrypted = _encryptedNote.transaction[key].data;
+				nonce = _encryptedNote.transaction[key].nonce;
+			} else if (_encryptedNote.transaction[key]) {
+				encrypted = _encryptedNote.transaction[key];
+				nonce = _encryptedNote.transaction[nonceField];
 			} else {
-				var noteNonce = (inAttachment ? _encryptedNote.transaction.attachment[key + "Nonce"] : _encryptedNote.transaction[key + "Nonce"]);
+				encrypted = "";
 			}
 
-			try {
-				var note = NRS.decryptNote(note, {
-					"nonce": noteNonce,
-					"account": otherAccount
-				}, password);
+			if (encrypted) {
+				if (typeof title != "string") {
+					title = title.title;
+				}
 
-				decryptedFields[key] = note;
+				try {
+					data = NRS.decryptNote(encrypted, {
+						"nonce": nonce,
+						"account": otherAccount
+					}, password);
 
-				output += "<div" + (!_encryptedNote.options.noPadding ? " style='padding-left:5px'" : "") + ">" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + ">" + String(title).toUpperCase().escapeHTML() + "</label>" : "") + "<div>" + note.escapeHTML().nl2br() + "</div></div>";
-			} catch (err) {
-				decryptionError = true;
-				var message = String(err.message ? err.message : err);
+					decryptedFields[key] = data;
+				} catch (err) {
+					decryptionError = true;
+					var message = String(err.message ? err.message : err);
 
-				$form.find(".callout").html(message.escapeHTML());
-				return false;
+					$form.find(".callout").html(message.escapeHTML());
+					return false;
+				}
+
+				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
 			}
 		});
 
@@ -477,14 +574,14 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.decryptAllMessages = function(messages, password) {
 		if (!password) {
 			throw {
-				"message": "Passphrase is a required field.",
+				"message": $.t("error_passphrase_required"),
 				"errorCode": 1
 			};
 		} else {
 			var accountId = NRS.getAccountId(password);
 			if (accountId != NRS.account) {
 				throw {
-					"message": "Incorrect passphrase.",
+					"message": $.t("error_incorrect_passphrase"),
 					"errorCode": 2
 				};
 			}
@@ -497,7 +594,7 @@ var NRS = (function(NRS, $, undefined) {
 			for (var key in messages[otherUser]) {
 				var message = messages[otherUser][key];
 
-				if (message.type = 1 && message.subtype == 8) {
+				if ((message.type = 1 && message.subtype == 8) || (message.type == 0 && message.subtype == 1)) {
 					if (!_decryptedTransactions[message.transaction]) {
 						try {
 							var decoded = NRS.decryptNote(message.attachment.message, {
@@ -511,6 +608,9 @@ var NRS = (function(NRS, $, undefined) {
 
 							success++;
 						} catch (err) {
+							_decryptedTransactions[message.transaction] = {
+								"message": $.t("error_decryption_unknown")
+							};
 							error++;
 						}
 					}
@@ -647,7 +747,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!window.crypto && !window.msCrypto) {
 			throw {
 				"errorCode": -1,
-				"message": "Your browser does not support client-side encryption. Aborting."
+				"message": $.t("error_encryption_browser_support")
 			};
 		}
 

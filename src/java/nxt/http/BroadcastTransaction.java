@@ -17,7 +17,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
     static final BroadcastTransaction instance = new BroadcastTransaction();
 
     private BroadcastTransaction() {
-        super("transactionBytes");
+        super(new APITag[] {APITag.TRANSACTIONS}, "transactionBytes");
     }
 
     @Override

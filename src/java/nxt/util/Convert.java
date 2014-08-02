@@ -1,10 +1,12 @@
 package nxt.util;
 
 import nxt.Constants;
+import nxt.NxtException;
 import nxt.crypto.Crypto;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -149,6 +151,15 @@ public final class Convert {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    public static String readString(ByteBuffer buffer, int numBytes, int maxLength) throws NxtException.ValidationException {
+        if (numBytes > 3 * maxLength) {
+            throw new NxtException.NotValidException("Max parameter length exceeded");
+        }
+        byte[] bytes = new byte[numBytes];
+        buffer.get(bytes);
+        return Convert.toString(bytes);
     }
 
     public static String truncate(String s, String replaceNull, int limit, boolean dots) {

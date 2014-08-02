@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 
 import static nxt.http.JSONResponses.DECRYPTION_FAILED;
 import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
@@ -19,7 +18,7 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
     static final DecryptFrom instance = new DecryptFrom();
 
     private DecryptFrom() {
-        super("account", "data", "nonce", "secretPhrase");
+        super(new APITag[] {APITag.MESSAGES}, "account", "data", "nonce", "decryptedMessageIsText", "secretPhrase");
     }
 
     @Override
@@ -33,15 +32,13 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
         byte[] data = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("data")));
         byte[] nonce = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("nonce")));
         EncryptedData encryptedData = new EncryptedData(data, nonce);
+        boolean isText = "true".equalsIgnoreCase(req.getParameter("decryptedMessageIsText"));
         try {
             byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase);
             JSONObject response = new JSONObject();
-            response.put("data", Convert.toHexString(decrypted));
-            try {
-                response.put("text", new String(decrypted, "UTF-8"));
-            } catch (RuntimeException ignore) {}
+            response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
             return response;
-        } catch (UnsupportedEncodingException | RuntimeException e) {
+        } catch (RuntimeException e) {
             Logger.logDebugMessage(e.toString(), e);
             return DECRYPTION_FAILED;
         }

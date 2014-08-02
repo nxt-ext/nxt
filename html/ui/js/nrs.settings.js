@@ -11,7 +11,8 @@ var NRS = (function(NRS, $, undefined) {
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
 		"24_hour_format": 1,
-		"remember_passphrase": 0
+		"remember_passphrase": 0,
+		"language": "en"
 	};
 
 	NRS.defaultColors = {
@@ -820,7 +821,7 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 
 		var key = $(this).attr("name");
-		var value = parseInt($(this).val(), 10);
+		var value = $(this).val();
 
 		NRS.updateSettings(key, value);
 	});
@@ -878,6 +879,20 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.applySettings = function(key) {
+		if (!key || key == "language") {
+			if ($.i18n.lng() != NRS.settings["language"]) {
+				$.i18n.setLng(NRS.settings["language"], null, function() {
+					$("[data-i18n]").i18n();
+				});
+				if (NRS.inApp) {
+					parent.postMessage({
+						"type": "language",
+						"version": NRS.settings["language"]
+					}, "*");
+				}
+			}
+		}
+
 		if (!key || key == "submit_on_enter") {
 			if (NRS.settings["submit_on_enter"]) {
 				$(".modal form").on("submit.onEnter", function(e) {

@@ -15,7 +15,7 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
     static final GetAccountId instance = new GetAccountId();
 
     private GetAccountId() {
-        super("secretPhrase", "publicKey");
+        super(new APITag[] {APITag.ACCOUNTS}, "secretPhrase", "publicKey");
     }
 
     @Override
@@ -25,7 +25,9 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
         if (secretPhrase != null) {
-            accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+            byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+            accountId = Account.getId(publicKey);
+            publicKeyString = Convert.toHexString(publicKey);
         } else if (publicKeyString != null) {
             accountId = Account.getId(Convert.parseHexString(publicKeyString));
         } else {
@@ -33,8 +35,8 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("account", Convert.toUnsignedLong(accountId));
-        response.put("accountRS", Convert.rsAccount(accountId));
+        JSONData.putAccount(response, "account", accountId);
+        response.put("publicKey", publicKeyString);
 
         return response;
     }

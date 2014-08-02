@@ -131,14 +131,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 BlockImpl block;
                                 try {
                                     block = parseBlock(blockData);
-                                } catch (NxtException.ValidationException e) {
+                                } catch (NxtException.NotCurrentlyValidException e) {
                                     Logger.logDebugMessage("Cannot validate block: " + e.toString()
                                             + ", will try again later", e);
                                     processedAll = false;
                                     break outer;
-                                } catch (RuntimeException e) {
+                                } catch (RuntimeException|NxtException.ValidationException e) {
                                     Logger.logDebugMessage("Failed to parse block: " + e.toString(), e);
-                                    peer.blacklist();
+                                    peer.blacklist(e);
                                     return;
                                 }
                                 currentBlockId = block.getId();
@@ -359,7 +359,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 addGenesisBlock();
                 scan();
             }
-        });
+        }, false);
 
         ThreadPool.scheduleThread(getMoreBlocksThread, 1);
 
@@ -431,8 +431,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             SortedMap<Long,TransactionImpl> transactionsMap = new TreeMap<>();
 
             for (int i = 0; i < Genesis.GENESIS_RECIPIENTS.length; i++) {
-                TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, 0, (short) 0, Genesis.CREATOR_PUBLIC_KEY,
-                        Genesis.GENESIS_RECIPIENTS[i], Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, (String)null, 0, Long.valueOf(0), Genesis.GENESIS_SIGNATURES[i]);
+                TransactionImpl transaction = new TransactionImpl.BuilderImpl((byte) 0, Genesis.CREATOR_PUBLIC_KEY,
+                        Genesis.GENESIS_AMOUNTS[i] * Constants.ONE_NXT, 0, 0, (short) 0,
+                        Attachment.ORDINARY_PAYMENT)
+                        .recipientId(Genesis.GENESIS_RECIPIENTS[i])
+                        .signature(Genesis.GENESIS_SIGNATURES[i])
+                        .build();
                 transactionsMap.put(transaction.getId(), transaction);
             }
 
@@ -560,6 +564,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         + " for transaction " + transaction.getStringId(), transaction);
                             }
                         }
+                        if (! verifyVersion(transaction, previousLastBlock.getHeight())) {
+                            throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
+                                    + " at height " + previousLastBlock.getHeight(), transaction);
+                        }
                         if (!transaction.verify()) {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
@@ -599,7 +607,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
 
                     block.setPrevious(previousLastBlock);
-
+                    blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
                     addBlock(block);
 
                     unappliedUnconfirmed.removeAll(appliedUnconfirmed);
@@ -654,8 +662,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } // synchronized
 
         } catch (RuntimeException e) {
-            Logger.logDebugMessage("Error popping last block: " + e.getMessage());
-            throw new TransactionType.UndoNotSupportedException(e.getMessage());
+            Logger.logDebugMessage("Error popping last block: " + e.toString(), e);
+            throw new TransactionType.UndoNotSupportedException(e.toString());
         }
     }
 
@@ -699,7 +707,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 try {
                     transaction.validateAttachment();
+                } catch (NxtException.NotCurrentlyValidException e) {
+                    continue;
                 } catch (NxtException.ValidationException e) {
+                    transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList(transaction));
                     continue;
                 }
 
@@ -771,29 +782,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
-        int version = ((Long)blockData.get("version")).intValue();
-        int timestamp = ((Long)blockData.get("timestamp")).intValue();
-        Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-        long totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
-        long totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
-        int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
-        byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
-        byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));
-        byte[] generationSignature = Convert.parseHexString((String) blockData.get("generationSignature"));
-        byte[] blockSignature = Convert.parseHexString((String) blockData.get("blockSignature"));
-        byte[] previousBlockHash = version == 1 ? null : Convert.parseHexString((String) blockData.get("previousBlockHash"));
-
-        SortedMap<Long, TransactionImpl> blockTransactions = new TreeMap<>();
-        JSONArray transactionsData = (JSONArray)blockData.get("transactions");
-        for (Object transactionData : transactionsData) {
-            TransactionImpl transaction = transactionProcessor.parseTransaction((JSONObject) transactionData);
-            if (blockTransactions.put(transaction.getId(), transaction) != null) {
-                throw new NxtException.ValidationException("Block contains duplicate transactions: " + transaction.getStringId());
-            }
-        }
-
-        return new BlockImpl(version, timestamp, previousBlock, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash, generatorPublicKey,
-                generationSignature, blockSignature, previousBlockHash, new ArrayList<>(blockTransactions.values()));
+        return BlockImpl.parseBlock(blockData);
     }
 
     private boolean verifyVersion(Block block, int currentHeight) {
@@ -801,6 +790,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 (currentHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
                         : currentHeight < Constants.NQT_BLOCK ? 2
                         : 3);
+    }
+
+    private boolean verifyVersion(Transaction transaction, int currentHeight) {
+        return transaction.getVersion() == (currentHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0
+                : currentHeight < Constants.TRANSPARENT_FORGING_BLOCK_8 ? 1
+                : 2);
     }
 
     private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
@@ -844,18 +839,21 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     while (rs.next()) {
                         currentBlock = BlockDb.loadBlock(con, rs);
                         if (! currentBlock.getId().equals(currentBlockId)) {
-                            throw new NxtException.ValidationException("Database blocks in the wrong order!");
+                            throw new NxtException.NotValidException("Database blocks in the wrong order!");
                         }
                         if (validateAtScan && ! currentBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
                             if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
-                                throw new NxtException.ValidationException("Invalid block signature");
+                                throw new NxtException.NotValidException("Invalid block signature");
                             }
                             if (! verifyVersion(currentBlock, blockchain.getHeight())) {
-                                throw new NxtException.ValidationException("Invalid block version");
+                                throw new NxtException.NotValidException("Invalid block version");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                 if (!transaction.verify()) {
-                                    throw new NxtException.ValidationException("Invalid transaction signature");
+                                    throw new NxtException.NotValidException("Invalid transaction signature");
+                                }
+                                if (! verifyVersion(transaction, blockchain.getHeight())) {
+                                    throw new NxtException.NotValidException("Invalid transaction version");
                                 }
                                 transaction.validateAttachment();
                             }
@@ -866,6 +864,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         + transaction.getStringId(), transaction);
                             }
                         }
+                        blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
                         blockchain.setLastBlock(currentBlock);
                         blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_APPLY);
                         currentBlock.apply();

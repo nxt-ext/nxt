@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public final class Account {
 
@@ -126,7 +127,7 @@ public final class Account {
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
     private static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
-    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentSkipListMap<>();
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
@@ -163,7 +164,7 @@ public final class Account {
     }
 
     public static Account getAccount(Long id) {
-        return accounts.get(id);
+        return id == null ? null : accounts.get(id);
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -293,7 +294,7 @@ public final class Account {
             }
             long receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.getTransactions()) {
-                if (transaction.getRecipientId().equals(id)) {
+                if (id.equals(transaction.getRecipientId())) {
                     receivedInlastBlock += transaction.getAmountNQT();
                 }
             }
@@ -476,50 +477,66 @@ public final class Account {
     }
 
     void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
+        Long assetBalance;
         synchronized (this) {
-            Long assetBalance = assetBalances.get(assetId);
+            assetBalance = assetBalances.get(assetId);
             assetBalance = assetBalance == null ? quantityQNT : Convert.safeAdd(assetBalance, quantityQNT);
-            if (assetBalance < 0) {
+            if (assetBalance > 0) {
+                assetBalances.put(assetId, assetBalance);
+            } else if (assetBalance == 0) {
+                assetBalances.remove(assetId);
+            } else {
                 throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(id));
             }
-            assetBalances.put(assetId, assetBalance);
         }
         listeners.notify(this, Event.ASSET_BALANCE);
-        assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, assetBalance), Event.ASSET_BALANCE);
     }
 
     void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+        Long unconfirmedAssetBalance;
         synchronized (this) {
-            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
             unconfirmedAssetBalance = unconfirmedAssetBalance == null ? quantityQNT : Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
-            if (unconfirmedAssetBalance < 0) {
+            if (unconfirmedAssetBalance > 0) {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance);
+            } else if (unconfirmedAssetBalance == 0) {
+                unconfirmedAssetBalances.remove(assetId);
+            } else {
                 throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
             }
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance);
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
-        assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalance), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+        Long assetBalance;
+        Long unconfirmedAssetBalance;
         synchronized (this) {
-            Long assetBalance = assetBalances.get(assetId);
+            assetBalance = assetBalances.get(assetId);
             assetBalance = assetBalance == null ? quantityQNT : Convert.safeAdd(assetBalance, quantityQNT);
-            if (assetBalance < 0) {
+            if (assetBalance > 0) {
+                assetBalances.put(assetId, assetBalance);
+            } else if (assetBalance == 0) {
+                assetBalances.remove(assetId);
+            } else {
                 throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
             }
-            assetBalances.put(assetId, assetBalance);
-            Long unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
             unconfirmedAssetBalance = unconfirmedAssetBalance == null ? quantityQNT : Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
-            if (unconfirmedAssetBalance < 0) {
+            if (unconfirmedAssetBalance > 0) {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance);
+            } else if (unconfirmedAssetBalance == 0) {
+                unconfirmedAssetBalances.remove(assetId);
+            } else {
                 throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
             }
-            unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance);
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
-        assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
-        assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, assetBalance), Event.ASSET_BALANCE);
+        assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalance), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToBalanceNQT(long amountNQT) {

@@ -168,30 +168,39 @@ final class ParameterParser {
         }
     }
 
-    static byte[] getNote(HttpServletRequest req) throws ParameterException {
-        return Convert.toBytes(Convert.nullToEmpty(req.getParameter("note")));
-    }
-
-    static EncryptedData getEncryptedNote(HttpServletRequest req, Account recipientAccount) throws ParameterException {
-        String encryptedNote = Convert.emptyToNull(req.getParameter("encryptedNote"));
-        String encryptedNoteNonce = Convert.emptyToNull(req.getParameter("encryptedNoteNonce"));
-        if (encryptedNote != null && encryptedNoteNonce != null) {
+    static EncryptedData getEncryptedMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+        String data = Convert.emptyToNull(req.getParameter("encryptedMessageData"));
+        String nonce = Convert.emptyToNull(req.getParameter("encryptedMessageNonce"));
+        if (data != null && nonce != null) {
             try {
-                return new EncryptedData(Convert.parseHexString(encryptedNote), Convert.parseHexString(encryptedNoteNonce));
+                return new EncryptedData(Convert.parseHexString(data), Convert.parseHexString(nonce));
             } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_DGS_ENCRYPTED_NOTE);
+                throw new ParameterException(INCORRECT_ENCRYPTED_MESSAGE);
             }
         }
+        String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
+        if (plainMessage == null) {
+            return null;
+        }
+        if (recipientAccount == null) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
         String secretPhrase = getSecretPhrase(req);
-        return recipientAccount.encryptTo(getNote(req), secretPhrase);
+        boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        try {
+            byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
+            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
+        }
     }
 
     static EncryptedData getEncryptedGoods(HttpServletRequest req) throws ParameterException {
-        String encryptedGoodsData = Convert.emptyToNull(req.getParameter("encryptedGoodsData"));
-        String encryptedGoodsNonce = Convert.emptyToNull(req.getParameter("encryptedGoodsNonce"));
-        if (encryptedGoodsData != null && encryptedGoodsNonce != null) {
+        String data = Convert.emptyToNull(req.getParameter("goodsData"));
+        String nonce = Convert.emptyToNull(req.getParameter("goodsNonce"));
+        if (data != null && nonce != null) {
             try {
-                return new EncryptedData(Convert.parseHexString(encryptedGoodsData), Convert.parseHexString(encryptedGoodsNonce));
+                return new EncryptedData(Convert.parseHexString(data), Convert.parseHexString(nonce));
             } catch (RuntimeException e) {
                 throw new ParameterException(INCORRECT_DGS_ENCRYPTED_GOODS);
             }

@@ -31,7 +31,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
 		} else {
-			NRS.lastBlockHeight = NRS.blocks[0].height;
+			setLastBlockHeight(NRS.blocks[0].height);
 
 			//if no new blocks in 24 hours, show blockchain download progress..
 			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 24) {
@@ -84,13 +84,27 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.blocks = NRS.blocks.slice(0, 100);
 			}
 
-			//set new last block height
-			NRS.lastBlockHeight = NRS.blocks[0].height;
+			setLastBlockHeight(NRS.blocks[0].height);
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
 			NRS.tempBlocks.push(response);
 			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
+		}
+	}
+
+	function setLastBlockHeight(blockHeight) {
+		NRS.lastBlockHeight = blockHeight;
+
+		if (!NRS.dgsBlockPassed) {
+			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 210000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
+				NRS.dgsBlockPassed = true;
+				$(".dgs_block").not(".optional_message").show();
+			}
+		} else if (!NRS.PKAnnouncementBlockPassed) {
+			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 215000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
+				NRS.PKAnnouncementBlockPassed = true;
+			}
 		}
 	}
 
@@ -109,7 +123,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#dashboard_message").hide();
 				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 				$("#show_console").show();
-				$.growl("The block chain is now up to date.", {
+				$.growl($.t("success_blockchain_up_to_date"), {
 					"type": "success"
 				});
 				NRS.checkAliasVersions();
@@ -150,14 +164,18 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
-				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
+				$(this).attr("data-content", $.t("x_confirmations", {
+					"x": NRS.formatAmount(nrConfirmations, false, true)
+				}));
 
 				if (nrConfirmations > 10) {
 					nrConfirmations = '10+';
 				}
 				$(this).html(nrConfirmations);
 			} else {
-				$(this).attr("data-content", NRS.formatAmount(nrConfirmations, false, true) + " confirmations");
+				$(this).attr("data-content", $.t("x_confirmations", {
+					"x": NRS.formatAmount(nrConfirmations, false, true)
+				}));
 			}
 		});
 	}
@@ -258,7 +276,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			totalTransactions += block.numberOfTransactions;
 
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : "Genesis") + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
+			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : $.t("genesis")) + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
 		if (blocks.length) {

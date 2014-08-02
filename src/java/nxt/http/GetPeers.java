@@ -12,7 +12,9 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
 
     static final GetPeers instance = new GetPeers();
 
-    private GetPeers() {}
+    private GetPeers() {
+        super(new APITag[] {APITag.INFO});
+    }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {

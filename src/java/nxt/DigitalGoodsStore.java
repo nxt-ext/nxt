@@ -8,12 +8,14 @@ import nxt.util.Listeners;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class DigitalGoodsStore {
 
@@ -164,8 +166,10 @@ public final class DigitalGoodsStore {
         private final EncryptedData note;
         private final int timestamp;
         private volatile EncryptedData encryptedGoods;
+        private volatile boolean goodsIsText;
         private volatile EncryptedData refundNote;
-        private volatile EncryptedData feedbackNote;
+        private volatile List<EncryptedData> feedbackNotes;
+        private volatile List<String> publicFeedbacks;
         private volatile long discountNQT;
         private volatile long refundNQT;
 
@@ -228,8 +232,13 @@ public final class DigitalGoodsStore {
             return encryptedGoods;
         }
 
-        private void setEncryptedGoods(EncryptedData encryptedGoods) {
+        public boolean goodsIsText() {
+            return goodsIsText;
+        }
+
+        private void setEncryptedGoods(EncryptedData encryptedGoods, boolean goodsIsText) {
             this.encryptedGoods = encryptedGoods;
+            this.goodsIsText = goodsIsText;
         }
 
         public EncryptedData getRefundNote() {
@@ -240,12 +249,34 @@ public final class DigitalGoodsStore {
             this.refundNote = refundNote;
         }
 
-        public EncryptedData getFeedbackNote() {
-            return feedbackNote;
+        public List<EncryptedData> getFeedbackNotes() {
+            return feedbackNotes;
         }
 
-        private void setFeedbackNote(EncryptedData feedbackNote) {
-            this.feedbackNote = feedbackNote;
+        private void addFeedbackNote(EncryptedData feedbackNote) {
+            if (feedbackNotes == null) {
+                feedbackNotes = new CopyOnWriteArrayList<>();
+            }
+            feedbackNotes.add(feedbackNote);
+        }
+
+        private void removeFeedbackNote() {
+            feedbackNotes.remove(feedbackNotes.size() - 1);
+        }
+
+        public List<String> getPublicFeedback() {
+            return publicFeedbacks;
+        }
+
+        private void addPublicFeedback(String publicFeedback) {
+            if (publicFeedbacks == null) {
+                publicFeedbacks = new CopyOnWriteArrayList<>();
+            }
+            publicFeedbacks.add(publicFeedback);
+        }
+
+        private void removePublicFeedback() {
+            publicFeedbacks.remove(publicFeedbacks.size() - 1);
         }
 
         public long getDiscountNQT() {
@@ -358,9 +389,9 @@ public final class DigitalGoodsStore {
     }
 
     private static void addPurchase(Long purchaseId, Long buyerId, Long goodsId, Long sellerId, int quantity, long priceNQT,
-                                   int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
+                                   int deliveryDeadlineTimestamp,  Appendix.EncryptedMessage encryptedMessage, int timestamp) {
         Purchase purchase = new Purchase(purchaseId, buyerId, goodsId, sellerId, quantity, priceNQT,
-                deliveryDeadlineTimestamp, note, timestamp);
+                deliveryDeadlineTimestamp, encryptedMessage == null ? null : encryptedMessage.getEncryptedData(), timestamp);
         purchasesMap.put(purchaseId, purchase);
         pendingPurchasesMap.put(purchaseId, purchase);
         SortedSet<Purchase> set = sellerPurchasesMap.get(sellerId);
@@ -442,13 +473,13 @@ public final class DigitalGoodsStore {
     }
 
     static void purchase(Long purchaseId, Long buyerId, Long goodsId, int quantity, long priceNQT,
-                                int deliveryDeadlineTimestamp, EncryptedData note, int timestamp) {
+                                int deliveryDeadlineTimestamp, Appendix.EncryptedMessage encryptedMessage, int timestamp) {
         Goods goods = getGoods(goodsId);
         if (! goods.isDelisted() && quantity <= goods.getQuantity() && priceNQT == goods.getPriceNQT()
-                && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getHeight()) {
+                && deliveryDeadlineTimestamp > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
             goods.changeQuantity(-quantity);
             addPurchase(purchaseId, buyerId, goodsId, goods.getSellerId(), quantity, priceNQT,
-                    deliveryDeadlineTimestamp, note, timestamp);
+                    deliveryDeadlineTimestamp, encryptedMessage, timestamp);
         } else {
             Account buyer = Account.getAccount(buyerId);
             buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(quantity, priceNQT));
@@ -472,43 +503,41 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void deliver(Long sellerId, Long purchaseId, long discountNQT, EncryptedData encryptedGoods) {
+    static void deliver(Long sellerId, Long purchaseId, long discountNQT, EncryptedData encryptedGoods, boolean goodsIsText) {
         Purchase purchase = pendingPurchasesMap.remove(purchaseId);
-        if (purchase != null) {
-            long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
-            Account buyer = Account.getAccount(purchase.getBuyerId());
-            buyer.addToBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
-            buyer.addToUnconfirmedBalanceNQT(discountNQT);
-            Account seller = Account.getAccount(sellerId);
-            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
-            purchase.setEncryptedGoods(encryptedGoods);
-            purchase.setDiscountNQT(discountNQT);
-            purchaseListeners.notify(purchase, Event.DELIVERY);
-        }
+        long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+        Account buyer = Account.getAccount(purchase.getBuyerId());
+        buyer.addToBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
+        buyer.addToUnconfirmedBalanceNQT(discountNQT);
+        Account seller = Account.getAccount(sellerId);
+        seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
+        purchase.setEncryptedGoods(encryptedGoods, goodsIsText);
+        purchase.setDiscountNQT(discountNQT);
+        purchaseListeners.notify(purchase, Event.DELIVERY);
     }
 
     static void undoDeliver(Long sellerId, Long purchaseId, long discountNQT) {
         Purchase purchase = purchasesMap.get(purchaseId);
-        if (purchase != null) {
-            pendingPurchasesMap.put(purchaseId, purchase);
-            long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
-            Account buyer = Account.getAccount(purchase.getBuyerId());
-            buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
-            buyer.addToUnconfirmedBalanceNQT(- discountNQT);
-            Account seller = Account.getAccount(sellerId);
-            seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
-            purchase.setEncryptedGoods(null);
-            purchase.setDiscountNQT(0);
-        }
+        pendingPurchasesMap.put(purchaseId, purchase);
+        long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+        Account buyer = Account.getAccount(purchase.getBuyerId());
+        buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
+        buyer.addToUnconfirmedBalanceNQT(- discountNQT);
+        Account seller = Account.getAccount(sellerId);
+        seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
+        purchase.setEncryptedGoods(null, false);
+        purchase.setDiscountNQT(0);
     }
 
-    static void refund(Long sellerId, Long purchaseId, long refundNQT, EncryptedData encryptedNote) {
+    static void refund(Long sellerId, Long purchaseId, long refundNQT, Appendix.EncryptedMessage encryptedMessage) {
         Purchase purchase = purchasesMap.get(purchaseId);
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceNQT(-refundNQT);
         Account buyer = Account.getAccount(purchase.getBuyerId());
         buyer.addToBalanceAndUnconfirmedBalanceNQT(refundNQT);
-        purchase.setRefundNote(encryptedNote);
+        if (encryptedMessage != null) {
+            purchase.setRefundNote(encryptedMessage.getEncryptedData());
+        }
         purchase.setRefundNQT(refundNQT);
         pendingPurchasesMap.remove(purchaseId);
         purchaseListeners.notify(purchase, Event.REFUND);
@@ -522,20 +551,30 @@ public final class DigitalGoodsStore {
         buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
         purchase.setRefundNote(null);
         purchase.setRefundNQT(0);
-        if (purchase.encryptedGoods == null) {
+        if (purchase.getEncryptedGoods() == null) {
             pendingPurchasesMap.put(purchaseId, purchase);
         }
     }
 
-    static void feedback(Long purchaseId, EncryptedData encryptedNote) {
+    static void feedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = purchasesMap.get(purchaseId);
-        purchase.setFeedbackNote(encryptedNote);
+        if (encryptedMessage != null) {
+            purchase.addFeedbackNote(encryptedMessage.getEncryptedData());
+        }
+        if (message != null) {
+            purchase.addPublicFeedback(Convert.toString(message.getMessage()));
+        }
         purchaseListeners.notify(purchase, Event.FEEDBACK);
     }
 
-    static void undoFeedback(Long purchaseId) {
+    static void undoFeedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = purchasesMap.get(purchaseId);
-        purchase.setFeedbackNote(null);
+        if (encryptedMessage != null) {
+            purchase.removeFeedbackNote();
+        }
+        if (message != null) {
+            purchase.removePublicFeedback();
+        }
     }
 
 }

@@ -21,7 +21,8 @@ public final class DGSDelivery extends CreateTransaction {
     static final DGSDelivery instance = new DGSDelivery();
 
     private DGSDelivery() {
-        super("purchase", "discountNQT", "goodsData", "goodsText", "encryptedGoodsData", "encryptedGoodsNonce");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "purchase", "discountNQT", "goodsToEncrypt", "goodsIsText", "goodsData", "goodsNonce");
     }
 
     @Override
@@ -45,33 +46,32 @@ public final class DGSDelivery extends CreateTransaction {
         } catch (RuntimeException e) {
             return INCORRECT_DGS_DISCOUNT;
         }
-        if (discountNQT < 0 || discountNQT > Constants.MAX_BALANCE_NQT || discountNQT > purchase.getPriceNQT()) {
+        if (discountNQT < 0
+                || discountNQT > Constants.MAX_BALANCE_NQT
+                || discountNQT > Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity())) {
             return INCORRECT_DGS_DISCOUNT;
         }
 
         Account buyerAccount = Account.getAccount(purchase.getBuyerId());
+        boolean goodsIsText = !"false".equalsIgnoreCase(req.getParameter("goodsIsText"));
         EncryptedData encryptedGoods = ParameterParser.getEncryptedGoods(req);
 
         if (encryptedGoods == null) {
             String secretPhrase = ParameterParser.getSecretPhrase(req);
-            byte[] goodsData;
+            byte[] goodsBytes;
             try {
-                String goodsDataString = Convert.emptyToNull(req.getParameter("goodsData"));
-                if (goodsDataString != null) {
-                    goodsData = Convert.parseHexString(goodsDataString);
-                } else {
-                    goodsData = Convert.toBytes(Convert.nullToEmpty(req.getParameter("goodsText")));
-                }
-                if (goodsData.length == 0) {
+                String plainGoods = Convert.nullToEmpty(req.getParameter("goodsToEncrypt"));
+                if (plainGoods.length() == 0) {
                     return INCORRECT_DGS_GOODS;
                 }
+                goodsBytes = goodsIsText ? Convert.toBytes(plainGoods) : Convert.parseHexString(plainGoods);
             } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
-            encryptedGoods = buyerAccount.encryptTo(goodsData, secretPhrase);
+            encryptedGoods = buyerAccount.encryptTo(goodsBytes, secretPhrase);
         }
 
-        Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, discountNQT);
+        Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, goodsIsText, discountNQT);
         return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }

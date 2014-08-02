@@ -12,8 +12,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -179,35 +177,27 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return unconfirmedTransactions.get(transactionId);
     }
 
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash)
-            throws NxtException.ValidationException {
+    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
+                                                     Attachment attachment) throws NxtException.ValidationException {
+        int height = Nxt.getBlockchain().getHeight();
+        byte version = (byte) (height < Constants.DIGITAL_GOODS_STORE_BLOCK
+                ? 0 : height < Constants.TRANSPARENT_FORGING_BLOCK_8
+                ? 1 : 2);
         int timestamp = Convert.getEpochTime();
-        Block clusterDefiningBlock = EconomicClustering.getClusterDefiningBlockId(timestamp);
-        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, timestamp, deadline, senderPublicKey,
-                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlock.getHeight(), clusterDefiningBlock.getId(), null);
-        transaction.validateAttachment();
-        return transaction;
-    }
-
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash, Attachment attachment)
-            throws NxtException.ValidationException {
-        int timestamp = Convert.getEpochTime();
-        Block clusterDefiningBlock = EconomicClustering.getClusterDefiningBlockId(timestamp);
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), timestamp, deadline,
-                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlock.getHeight(), clusterDefiningBlock.getId(), null);
-        transaction.setAttachment(attachment);
-        transaction.validateAttachment();
-        return transaction;
+        TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
+                deadline, (Attachment.AbstractAttachment)attachment);
+        if (version > 1) {
+            Block clusterDefiningBlock = EconomicClustering.getClusterDefiningBlockId(timestamp);
+            builder.clusterDefiningBlockHeight(clusterDefiningBlock.getHeight());
+            builder.clusterDefiningBlockId(clusterDefiningBlock.getId());
+        }
+        return builder;
     }
 
     @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
         if (! transaction.verify()) {
-            throw new NxtException.ValidationException("Transaction signature verification failed");
+            throw new NxtException.NotValidException("Transaction signature verification failed");
         }
         List<Transaction> validTransactions = processTransactions(Collections.singletonList((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
@@ -215,80 +205,23 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
             Logger.logDebugMessage("Rejecting double spending transaction " + transaction.getStringId());
-            throw new NxtException.ValidationException("Double spending transaction");
+            throw new NxtException.NotValidException("Double spending transaction");
         }
     }
 
     @Override
-    public void processPeerTransactions(JSONObject request) {
+    public void processPeerTransactions(JSONObject request) throws NxtException.ValidationException {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
         processPeerTransactions(transactionsData, true);
     }
 
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        byte type = buffer.get();
-        byte subtype = buffer.get();
-        int timestamp = buffer.getInt();
-        short deadline = buffer.getShort();
-        byte[] senderPublicKey = new byte[32];
-        buffer.get(senderPublicKey);
-        Long recipientId = buffer.getLong();
-        long amountNQT = buffer.getLong();
-        long feeNQT = buffer.getLong();
-        String referencedTransactionFullHash = null;
-        byte[] referencedTransactionFullHashBytes = new byte[32];
-        buffer.get(referencedTransactionFullHashBytes);
-        if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-            referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-        }
-        int clusterDefiningBlockHeight;
-        Long clusterDefiningBlockId;
-        if (BlockchainImpl.getInstance().getLastBlock().getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_8) {
-            clusterDefiningBlockHeight = buffer.getInt();
-            clusterDefiningBlockId = buffer.getLong();
-        } else {
-            clusterDefiningBlockHeight = 0;
-            clusterDefiningBlockId = Long.valueOf(0);
-        }
-        byte[] signature = new byte[64];
-        buffer.get(signature);
-        signature = Convert.emptyToNull(signature);
-
-        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-        TransactionImpl transaction;
-        transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlockHeight, clusterDefiningBlockId, signature);
-        transactionType.loadAttachment(transaction, buffer);
-
-        return transaction;
+        return TransactionImpl.parseTransaction(bytes);
     }
 
     TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
-        byte type = ((Long)transactionData.get("type")).byteValue();
-        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-        short deadline = ((Long)transactionData.get("deadline")).shortValue();
-        byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-        Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-        if (recipientId == null) recipientId = 0L; // ugly
-        long amountNQT = (Long) transactionData.get("amountNQT");
-        long feeNQT = (Long) transactionData.get("feeNQT");
-        String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-        int clusterDefiningBlockHeight = ((Long)transactionData.get("clusterDefiningBlockHeight")).intValue();
-        Long clusterDefiningBlockId = Convert.parseUnsignedLong((String)transactionData.get("clusterDefiningBlockId"));
-        byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
-
-        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-        TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, clusterDefiningBlockHeight, clusterDefiningBlockId, signature);
-
-        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-        transactionType.loadAttachment(transaction, attachmentData);
-        return transaction;
+        return TransactionImpl.parseTransaction(transactionData);
     }
 
     void clear() {
@@ -361,11 +294,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void removeUnconfirmedTransactions(Collection<TransactionImpl> transactions) {
-        List<Transaction> removedList = new ArrayList<>();
-        for (TransactionImpl transaction : transactions) {
-            if (unconfirmedTransactions.remove(transaction.getId()) != null) {
-                transaction.undoUnconfirmed();
-                removedList.add(transaction);
+        List<Transaction> removedList;
+        synchronized (BlockchainImpl.getInstance()) {
+            removedList = new ArrayList<>();
+            for (TransactionImpl transaction : transactions) {
+                if (unconfirmedTransactions.remove(transaction.getId()) != null) {
+                    transaction.undoUnconfirmed();
+                    removedList.add(transaction);
+                }
             }
         }
         transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
@@ -375,14 +311,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
     }
 
-    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) {
+    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
                 transaction.validateAttachment();
                 transactions.add(transaction);
-            } catch (NxtException.ValidationException e) {
+            } catch (NxtException.NotCurrentlyValidException e) {
                 //if (! (e instanceof TransactionType.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}

@@ -7,7 +7,7 @@ public final class Constants {
 
     public static final int BLOCK_HEADER_LENGTH = 232;
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
-    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 160;
+    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 164;
     public static final long MAX_BALANCE_NXT = 1000000000;
     public static final long ONE_NXT = 100000000;
     public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
@@ -39,7 +39,6 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_NAME_LENGTH = 100;
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
-    public static final int MAX_DGS_NOTE_LENGTH = 1000;
     public static final int MAX_DGS_GOODS_LENGTH = 10240;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
@@ -64,9 +63,8 @@ public final class Constants {
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK = isTestnet ? 78000 : 140000;
     public static final int REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP = isTestnet ? 13031352 : 15134204;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int ALIAS_TRANSFER_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
-    public static final int ENCRYPTED_MESSAGES_BLOCK = isTestnet ? 0 : Integer.MAX_VALUE;
+    public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 117910 : 205000;
+    public static final int PUBLIC_KEY_ANNOUNCEMENT_BLOCK = isTestnet ? 117910 : 210000;
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 
