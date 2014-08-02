@@ -31,11 +31,11 @@
                 </a>
                 <div class="navbar-right">
                     <ul class="nav navbar-nav">
-                    	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
-                    	<li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
-	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#token_modal" data-i18n="generate_token">Generate Token</a></li>
-	                    <li class="dropdown"><a href="#" style="font-weight:bold;" data-toggle="modal" data-target="#transaction_operations_modal" data-i18n="transaction_operations">Transaction Operations</a></li>
-						<li class="dropdown"><a href="#" style="font-weight:bold;" class="goto-page" data-page="settings" data-i18n="settings">Settings</a></li>
+                    	<li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
+                    	<li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
+	                    <li class="dropdown"><a href="#" data-toggle="modal" data-target="#token_modal" data-i18n="generate_token">Generate Token</a></li>
+	                    <li class="dropdown"><a href="#" data-toggle="modal" data-target="#transaction_operations_modal" data-i18n="transaction_operations">Transaction Operations</a></li>
+						<li class="dropdown"><a href="#" class="goto-page" data-page="settings" data-i18n="settings">Settings</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <i class="fa fa-question-circle"></i>
@@ -80,7 +80,7 @@
                         	</div>
                         </div>
                     </div>       
-                    <form action="#" method="get" class="sidebar-form" id="id_search">
+                    <form action="#" method="get" class="sidebar-form" id="id_search" autocomplete="off">
                         <div class="input-group">
                             <input type="text" name="q" class="form-control" placeholder="Search by ID..." data-i18n="[placeholder]search_by_id">
                             <span class="input-group-btn">
@@ -100,7 +100,7 @@
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
                         	</ul>
                         </li>
-                        <li class="treeview" id="sidebar_dgs">
+                        <li class="treeview dgs_block" id="sidebar_dgs">
                         	<a href="#" data-page="newest_dgs"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                             	 <li id="dgs_seller_page_link" style="display:none"><a href="#" data-page="dgs_seller"><i class="fa fa-angle-double-right"></i> <span data-i18n="seller_products">Seller Products</span></a></li>
@@ -116,7 +116,7 @@
                         <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span data-i18n="contacts">Contacts</span></a></li>
                         <li><a href="#" data-page="messages"><i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span></a></li>
                         <li><a href="#" data-page="aliases"><i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span></a></li>
-                        <li class="testnet_only"><a href="#" data-page="polls"><i class="fa fa-thumbs-up"></i><span data-i18n="polls">Polls</span></a></li>
+                        <!-- <li class="testnet_only"><a href="#" data-page="polls"><i class="fa fa-thumbs-up"></i><span data-i18n="polls">Polls</span></a></li> -->
                         <li><a href="#" data-page="blocks"><i class="fa fa-bars"></i> <span data-i18n="blocks">Blocks</span></a></li>
                         <li><a href="#" data-page="peers"><i class="fa fa-cloud"></i> <span data-i18n="peers">Peers</span></a></li>
                         <li id="news_link"><a href="#" data-page="news"><i class="fa fa-book"></i> <span data-i18n="news">News</span></a></li>
@@ -128,13 +128,10 @@
 	                <section class="content-header"><h1 data-i18n="dashboard">Dashboard</h1></section>
 	                
 	                <section class="content">
-	                	<div class="alert-danger alert alert-no-icon" id="dashboard_message" style="display:none;padding:5px;padding-left:5px;margin-bottom:15px;">
-	                		<span data-i18n="[html]no_public_key_warning"><strong>Warning!</strong>: Your account does not have a public key! This means it's not as protected as other accounts. You must make an outgoing transaction to fix this issue.</span>
-	                		<span data-i18n="[html]public_key_actions">
-	                			<a href="#" data-toggle="modal" data-target="#account_info_modal">Set account info</a>, <a href="#" data-toggle="modal" data-target="#send_message_modal">send a message</a>, <a href="#" data-toggle="modal" data-target="#register_alias_modal">buy an alias</a>, <a href="#" data-toggle="modal" data-target="#send_money_modal">send NXT</a>, ...)
-	                		</span>
-	                	</div>
+	                	<div class="alert-danger alert alert-no-icon" id="dashboard_message" style="display:none;padding:5px;padding-left:5px;margin-bottom:15px;"></div>
 	               
+                        <div class="alert-danger alert alert-no-icon" id="secondary_dashboard_message" style="display:none;padding:5px;padding-left:5px;margin-bottom:15px;"></div>
+
 	                    <div class="row">
 	                        <div class="col-lg-3 col-xs-6">
 	                            <div class="small-box bg-aqua">
@@ -204,7 +201,7 @@
 						        </div>
 							</div>
 							<div class="col-md-6">
-							    <div class="box box-success">
+							    <div class="box box-primary">
 							        <div class="box-header"><h3 class="box-title" data-i18n="recent_blocks">Recent Blocks</h3></div>
 							        <div class="box-body no-padding">
 							        	<div class="data-container data-loading" data-no-padding="true" data-extra="#dashboard_blocks_footer">
@@ -329,7 +326,7 @@
 						         		
 						         		<div id="message_details">
 							           	</div>
-							           	<form role="form" id="inline_message_form" method="post" style="display:none;position:fixed;bottom:0;right:20px;left:485px;">
+							           	<form role="form" id="inline_message_form" method="post" style="display:none;position:fixed;bottom:0;right:20px;left:485px;" autocomplete="off">
 							           		<div class="form-group">
 							           			<textarea class="form-control" name="inline_message_text" id="inline_message_text" rows="3" placeholder="Message" data-i18n="[placeholder]message"></textarea>
 							           		</div>
@@ -337,7 +334,7 @@
 							           			<div class="col-xs-10 col-sm-10 col-md-10">
 							           				<div class="form-group">
 							           					<input type="password" class="form-control secret_phrase" id="inline_message_password" name="inline_message_password" placeholder="Passphrase" data-i18n="[placeholder]passphrase" style="display:inline;width:35%">
-							           					<label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="inline_message_encrypt" id="inline_message_encrypt" value="1" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+							           					<label for="inline_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="inline_message_encrypt" value="1" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
 							           				</div>
 							           			</div>
 							           			<div class="col-xs-2-col-sm-2 col-md-2">
@@ -420,7 +417,7 @@
                 	<section class="content-header">
                 		<h1 data-i18n="aliases">Aliases</h1>
                 		<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:180px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form" id="alias_search" style="width:180px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search Aliases..." data-i18n="[placeholder]search_aliases">
 									<span class="input-group-btn">
@@ -596,7 +593,7 @@
 			                        <div class="content-splitter-sidebar-inner">
 			                        	<div class="list-group unselectable sidebar_context" id="asset_exchange_sidebar">
 											<div id="asset_exchange_sidebar_search">
-												 <form action="#" method="get" class="sidebar-form" id="asset_exchange_search">
+												 <form action="#" method="get" class="sidebar-form" id="asset_exchange_search" autocomplete="off">
 													<div class="input-group">
 														<input type="text" name="q" class="form-control" placeholder="Search Assets..." data-i18n="[placeholder]search_assets">
 														<span class="input-group-btn">
@@ -652,7 +649,7 @@
 								                	    <div class="box-body no-padding" style="display:none">
 								                	    	<div style="background-color:#DFF0D9;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="buy_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_nxt_balance"></span> NXT</div>
 								                	    
-									                	    <form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;">
+									                	    <form role="form" class="form-horizontal" style="padding: 10px;;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 									                	    	<div style="margin-left:-20px">
 										                	    	<div class="form-group">
 										                	    		<label for="buy_asset_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
@@ -736,7 +733,7 @@
 								                        <div class="box-body no-padding" style="display:none">
 								                       		<div style="background-color:#F2DEDE;color: #666;padding-left:10px;padding-right: 10px;padding-top: 0px;padding-bottom:3px;" id="sell_automatic_price"><strong data-i18n="balance">Balance</strong>: <span id="your_asset_balance"></span> <span class="asset_name"></span></div>
 								                        								                        								                        
-									                        <form role="form" class="form-horizontal" style="padding: 10px;max-width:350px;margin-left:auto;margin-right:auto;">
+									                        <form role="form" class="form-horizontal" style="padding: 10px;max-width:350px;margin-left:auto;margin-right:auto;" autocomplete="off">
 										                        <div style="margin-left:-20px">
 										                        	<div class="form-group">
 										                        		<label for="sell_asset_quantity" class="col-sm-3 control-label" data-i18n="quantity">Quantity</label>
@@ -852,7 +849,7 @@
                     <section class="content-header">
                     	<h1 data-i18n="products_by_seller">Products By Seller</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller">
 									<span class="input-group-btn">
@@ -879,7 +876,7 @@
                     <section class="content-header">
                     	<h1 data-i18n="newest_products">Newest Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller">
 									<span class="input-group-btn">
@@ -906,7 +903,7 @@
                     <section class="content-header">
                     	<h1 data-i18n="purchased_products">Purchased Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller">
 									<span class="input-group-btn">
@@ -933,7 +930,7 @@
                     <section class="content-header">
                     	<h1 data-i18n="my_products">My Products</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller">
 									<span class="input-group-btn">
@@ -971,7 +968,7 @@
                     <section class="content-header">
                     	<h1 data-i18n="my_pending_orders">My Pending Orders</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller">
 									<span class="input-group-btn">
@@ -998,7 +995,7 @@
                     <section class="content-header">
                     	<h1 data-i18n="my_completed_orders">My Completed Orders</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
-							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;">
+							<form action="#" method="get" class="sidebar-form dgs_search" style="width:280px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
 								<div class="input-group">
 									<input type="text" name="q" class="form-control" placeholder="Search By Seller..." data-i18n="[placeholder]search_by_seller">
 									<span class="input-group-btn">
@@ -1034,7 +1031,7 @@
 							    <h3 class="box-title" data-i18n="general">General</h3>
 							</div>
 							
-							<form role="form">
+							<form role="form" autocomplete="off">
 							    <div class="box-body">
                                     <div class="form-group">
                                         <label for="settings_language" data-i18n="language">Language</label>
@@ -1042,14 +1039,18 @@
                                             <option value="de">Deutsch</option> <!-- german -->
                                             <option value="en">English</option> <!-- english -->
                                             <option value="es">Español</option> <!-- spanish -->
+                                            <option value="fi">Suomi</option> <!-- finnish -->
                                             <option value="fr">Français</option> <!-- french -->
+                                            <option value="gl">Galego</option> <!-- galician -->
                                             <option value="hr">Hrvatski</option> <!-- croatian -->
                                             <option value="ja">日本語</option> <!-- japanese -->
                                             <option value="lt">Lietuviškai</option> <!-- lithuanian -->
+                                            <option value="nl">Nederlands</option> <!-- dutch -->
+                                            <option value="sk">Slovensky</option> <!-- slovakian -->
                                             <option value="sr">Српски</option> <!-- serbian, cyrillic -->
                                             <option value="sr-cs">Srpski</option> <!-- serbian, latin -->
+                                            <option value="uk">Yкраiнска</option> <!-- ukranian -->
                                             <option value="ru">Русский</option> <!-- russian -->
-                                            <option value="sk">Slovak</option> <!-- slovakian -->
                                             <option value="zh">中文 (simplified)</option> <!-- chinese simplified -->
                                             <option value="zh-tw">中文 (traditional)</option> <!-- chinese traditional -->
                                         </select>
@@ -1110,7 +1111,7 @@
 							    <h3 class="box-title" data-i18n="form_warnings">Form Warnings</h3>
 							</div>
 							
-							<form role="form">
+							<form role="form" autocomplete="off">
 							    <div class="box-body" style="padding-top:0;">
 							    	<p class="help-block" data-i18n="form_warnings_help">Show a warning when an amount / fee entered is higher than specified below.</p>
 
@@ -1144,7 +1145,7 @@
 							    <h3 class="box-title" data-i18n="theme_settings">Theme Settings</h3>
 							</div>
 
-							<form role="form">
+							<form role="form" autocomplete="off">
 							    <div class="box-body">
 									<div class="form-group">
 										<label class="control-label" data-i18n="header">Header</label>
@@ -1337,7 +1338,7 @@
 	                <section class="content">
 		                <div class="row" id="rss_news_container">
 		                    <div class="col-md-6">
-		                    	<div class="box box-success">
+		                    	<div class="box box-primary">
 					                <div class="box-header"><h3 class="box-title">NxtForum.org</h3></div>
 					                <div class="box-body">
 					            		<div id="nxtforum_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -1351,35 +1352,28 @@
 				                    </div>
 				                </div>
 
-				                <div class="box box-warning">
-				                    <div class="box-header"><h3 class="box-title">NxtCrypto.org</h3></div>
-				                    <div class="box-body">
-				                		<div id="nxtcrypto_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-				                    </div>
-				                </div>				              
+                                <div class="box box-primary">
+                                    <div class="box-header"><h3 class="box-title">NxtCoin.Blogspot.com</h3></div>
+                                    <div class="box-body">
+                                        <div id="nxtcoin_blogspot_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                                    </div>
+                                </div>
 		                	</div>
 		            	    <div class="col-md-6">
-		            	        <div class="box box-warning">
+		            	        <div class="box box-primary">
 				                    <div class="box-header"><h3 class="box-title">Reddit.com/r/Nxt</h3></div>
 				                    <div class="box-body">
 				                		<div id="reddit_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 				                    </div>
 				                </div>
 
-								<div class="box box-success">
+								<div class="box box-primary">
 				                    <div class="box-header"><h3 class="box-title">Nxter.org</h3></div>
 				                    <div class="box-body">
 				                		<div id="nxter_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
 				                    </div>
 				                </div>
 				              
-				                <div class="box box-success">
-				                    <div class="box-header"><h3 class="box-title">NxtCoin.Blogspot.com</h3></div>
-				                    <div class="box-body">
-				                		<div id="nxtcoin_blogspot_news" class="rss_news data-loading"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-				                    </div>
-				                </div>
-
 				            </div>
 						</div>
 						<div id="rss_news_disabled" style="padding-top: 150px;text-align:center;"><span data-i18n="news_section_disabled">The news section is currently disabled.</span> <a href="#" id="rss_news_enable" data-i18n="click_here_to_enable">Click here to enable it.</a></div>
@@ -1511,11 +1505,13 @@
 			
 			<table id="center" style="display:none;width:100%;height:100%;">
 	        	<tr><td style="text-align:center;vertical-align:middle">
-		        	 <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="88" style="margin-bottom:40px;opacity: 0.5;;" /></center>
-		            	 
+                    <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="320" style="margin-bottom:40px;" /></center>
+
 		            <div id="login_panel">   
-		            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div>
-		                    	                    
+		            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
+                            <div class="callout callout-danger"></div>
+		                </div>
+
 			            <div class="lockscreen-item">
 			                <div class="lockscreen-credentials">   
 			                    <div class="input-group">
@@ -1523,6 +1519,7 @@
 			                        <div class="input-group-btn">
 			                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
 			                        </div>
+                                    <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
 			                    </div>
 			                </div>
 			            </div>	
@@ -1532,7 +1529,7 @@
 			            </div>
 			            
 			            <div id="registration_link">
-			            	<a href="#" style="color: #555555;" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
+			            	<a href="#" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
 			            </div> 
 		            </div>
 		            
@@ -1548,7 +1545,7 @@
 		            <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
 		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="create_your_account">Create Your Account</span></div>
 		                <div class="panel-body">
-							<form class="form-horizontal" role="form" method="post">
+							<form class="form-horizontal" role="form" method="post" autocomplete="off">
 		        				<div class="callout callout-info" style="max-width:500px;" data-i18n="passphrase_length_warning">Your passphrase must be at least 35 characters long.</div>
 		        				
 		        				<div class="callout callout-danger" data-i18n="[html]passphrase_warning"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
@@ -1603,7 +1600,7 @@
 		        					<div id="account_phrase_generator_stop" style="display:none">
 			        					<p data-i18n="automatically_generated_passphrase_is">Your automatically generated passphrase is:</p>
 			        					
-			        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+			        					<textarea style="width:100%;height:50px;margin-bottom:10px;padding:3px;" rows="2" readonly></textarea>
 		        					
 			        					<p data-i18n="memorize_passphrase_help">Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
 			        						        
@@ -1631,7 +1628,7 @@
 		            </div>  
 	            
 		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
-			    		<a href="#" style="color: #555555;" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
+			    		<a href="#" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
 					</div>
 				</td>
 				</tr>
@@ -1646,7 +1643,7 @@
 		        		<h4 class="modal-title" data-i18n="lease_your_balance">Lease Your Balance</h4>
 		      		</div>
 					<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger never_hide" id="lease_balance_message" data-i18n="[html]lease_balance_warning"><strong>Remember</strong>: Once submitted the lease cannot be cancelled.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
@@ -1658,10 +1655,14 @@
 								    </span>
 								</div>
 							</div>
+                            <div class="form-group recipient_public_key">
+                                <label for="lease_balance_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+                                <input type="text" class="form-control" name="recipientPublicKey" id="lease_balance_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                            </div>
 							<div class="row">
 								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="4">
 									<label for="lease_balance_period"><span data-i18n="period">PERIOD</span> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="The number of blocks the lease will last. 9000 blocks is about 10 days." data-i18n="[data-content]lease_balance_help" data-container="body"></i></label>
-									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-i18n="[placeholder]period" data-default="9000" value="9000" tabindex="2">
+									<input type="number" name="period" id="lease_balance_period" class="form-control" step="any" min="1440" max="32767" placeholder="Period" data-i18n="[placeholder]period" data-default="9000" value="9000" tabindex="3">
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
 									<label for="lease_balance_fee" data-i18n="fee">FEE</label>
@@ -1672,7 +1673,7 @@
 								</div>
 								<div class="col-xs-4 col-sm-4 col-md-4 advanced">
 									<label for="lease_balance_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-									<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="1" tabindex="4">
+									<input type="number" name="deadline" id="lease_balance_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="1" tabindex="5">
 								</div>
 							</div>
 							<div class="form-group">
@@ -1680,14 +1681,14 @@
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="lease_balance_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 							<div class="form-group advanced">
 								<label for="lease_balance_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="lease_balance_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="lease_balance_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="7" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
-								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -1713,7 +1714,7 @@
 		        		<h4 class="modal-title"><span data-i18n="confirm_forging_stop">Confirm Forging Stop</span><span class="show_logout" data-i18n="and_logout"> &amp; Logout</span></h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<p class="show_secret_phrase" data-i18n="stop_forging_confirmation_passphrase">If you are sure you want to stop forging, type your passphrase to confirm.</p>
 							<p class="hide_secret_phrase" style="display:none" data-i18n="stop_forging_confirmation">If you are sure you want to stop forging, click the button below to confirm.</p>
 							<div class="callout callout-danger remote_warning" style="display:none" data-i18n="[html]passphrase_remote_warning"><strong>Warning</strong>: Your passphrase will be sent to the server!</div>
@@ -1742,7 +1743,7 @@
 		        		<h4 class="modal-title" data-i18n="confirm_forging_start">Confirm Forging Start</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<p class="show_secret_phrase" data-i18n="start_forging_confirmation_passphrase">If you want to start forging, type your passphrase to confirm.</p>
 							<p class="hide_secret_phrase" style="display:none" data-i18n="start_forging_confirmation">If you you want to start forging, click the button below to confirm.</p>
 							<div class="callout callout-danger remote_warning" style="display:none" data-i18n="[html]passphrase_remote_warning"><strong>Warning</strong>: Your passphrase will be sent to the server!</div>
@@ -1771,7 +1772,7 @@
 		        		<h4 class="modal-title" data-i18n="confirm_order_cancellation">Confirm Order Cancellation</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p data-i18n="confirm_order_cancellation_help">If you are sure you want to cancel your order, type your passphrase to confirm.
 							<input type="hidden" name="order" id="cancel_order_order" value="" />
@@ -1826,7 +1827,7 @@
 		        		<h4 class="modal-title" data-i18n="confirm__order">Confirm <span class="asset_order_modal_type"></span> Order</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label data-i18n="order_description">ORDER DESCRIPTION</label>
@@ -1869,7 +1870,7 @@
 		        		<h4 class="modal-title" data-i18n="transfer_asset">Transfer Asset</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label data-i18n="asset">ASSET</label>
@@ -1886,6 +1887,10 @@
 								    </span>
 								</div>
 							</div>
+                            <div class="form-group recipient_public_key">
+                                <label for="transfer_asset_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+                                <input type="text" class="form-control" name="recipientPublicKey" id="transfer_asset_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                            </div>
                             <div class="form-group">
                                 <label for="transfer_asset_quantity" data-i18n="quantity">QUANTITY</label>
                                 <div class="input-group">
@@ -1893,16 +1898,22 @@
                                     <span class="input-group-addon" id="transfer_asset_quantity_name"></span>
                                 </div>
                             </div>
-							<div class="form-group">
-								<label for="transfer_asset_comment" data-i18n="comment">COMMENT</label>
-								<textarea class="form-control" id="transfer_asset_comment" name="comment" rows="3" tabindex="2" placeholder="Optional" data-i18n="[placeholder]optional"></textarea>
-							</div>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="transfer_asset_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="transfer_asset_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="transfer_asset_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="transfer_asset_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px" class="dgs_block">
+                                    <label for="transfer_asset_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="transfer_asset_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_asset_fee" data-i18n="fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="4">
+											<input type="number" name="feeNXT" id="transfer_asset_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="5">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -1910,20 +1921,20 @@
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_asset_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="transfer_asset_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="1" tabindex="5">
+										<input type="number" name="deadline" id="transfer_asset_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="1" tabindex="6">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="transfer_asset_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="6">
+								<input type="password" name="secretPhrase" id="transfer_asset_password" class="form-control" placeholder="" tabindex="7">
 							</div>
 							<div class="form-group advanced">
 								<label for="transfer_asset_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="8" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
-								<input type="checkbox" name="doNotBroadcast" id="transfer_asset_do_not_broadcast" value="1" /> <label for="transfer_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="transfer_asset_do_not_broadcast" value="1" /> <label for="transfer_asset_do_not_broadcast" style="font-weight:normal;" tabindex="9" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -1950,7 +1961,7 @@
 		        		<h4 class="modal-title" data-i18n="add_asset">Add Asset</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="add_asset_bookmark_id" data-i18n="asset_or_account_id">ASSET OR ACCOUNT ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help"></i></label>
@@ -1976,7 +1987,7 @@
 		        		<h4 class="modal-title" data-i18n="add_contact">Add Contact</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger never_hide" data-i18n="[html]contacts_local_storage_help"><strong>Remember</strong>: Contacts are stored locally, not on the blockchain.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
@@ -2018,7 +2029,7 @@
 		        		<h4 class="modal-title" data-i18n="update_contact">Update Contact</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="update_contact_name" data-i18n="name">NAME</label>
@@ -2060,7 +2071,7 @@
 		        		<h4 class="modal-title" data-i18n="delete_contact">Delete Contact</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger" data-i18n="delete_contact_confirmation">Are you sure you want to delete this contact?</div>
 							<p><strong data-i18n="name">Name</strong>: <span id="delete_contact_name"></span></p>
 
@@ -2085,7 +2096,7 @@
 		        		<h4 class="modal-title" data-i18n="issue_asset">Issue Asset</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger never_hide" data-i18n="[html]issue_asset_warning"><strong>Warning</strong>: Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</div>
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
@@ -2159,7 +2170,7 @@
 		        		<h4 class="modal-title" data-i18n="list_product_for_sale">List Product For Sale</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="dgs_listing_name" data-i18n="name">NAME</label>
@@ -2167,7 +2178,7 @@
 							</div>
 							<div class="form-group">
 								<label for="dgs_listing_description" data-i18n="description">DESCRIPTION</label>
-								<textarea class="form-control" id="dgs_listing_description" name="description" rows="3" tabindex="2" placeholder="Enter a description" data-i18n="enter_a_description"></textarea>
+								<textarea class="form-control" id="dgs_listing_description" name="description" rows="3" tabindex="2" placeholder="Enter a description" data-i18n="[placeholder]enter_a_description"></textarea>
 							</div>
 							<div class="form-group">
 								<label for="dgs_listing_tags"><span data-i18n="tags">TAGS</span> <i class="fa fa-question-circle show_popover" data-content="Choose up to 3 tags, separate them with comma's." data-i18n="[data-content]marketplace_tags_help" data-container="body" style="color:#4CAA6E" ></i></label>
@@ -2239,7 +2250,7 @@
 		        		<h4 class="modal-title" data-i18n="confirm_marketplace_deletion">Confirm Marketplace Deletion</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p data-i18n="confirm_marketplace_deletion_help">Please confirm if you want to delete this item.</p>
 							<input type="hidden" name="goods" id="dgs_delisting_goods" value="" />
@@ -2258,8 +2269,8 @@
 								</div>
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
-										<label for="dgs_delisting_deadline" data-i18n="deadline_hours" DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="dgs_delisting_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
+										<label for="dgs_delisting_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
+									     <input type="number" name="deadline" id="dgs_delisting_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="3">
 									</div>
 								</div>
 							</div>
@@ -2295,7 +2306,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_item_price_change">Marketplace Item Price Change</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<input type="hidden" name="goods" id="dgs_price_change_goods" value="" />
 							<div class="row">
@@ -2367,7 +2378,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_item_quantity_change">Marketplace Item Quantity Change</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<input type="hidden" name="goods" id="dgs_quantity_change_goods" value="" />
 							<div class="row">
@@ -2436,7 +2447,7 @@
 		        		<h4 class="modal-title" data-i18n="product_info">Product Info</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row">
 								<div class="goods_info" style="margin-bottom:0;" data-i18n="loading">Loading...</div>
@@ -2458,7 +2469,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_purchase">Marketplace Purchase</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row">
 								<div class="goods_info" data-i18n="loading">Loading...</div>
@@ -2485,10 +2496,16 @@
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
-								<label for="dgs_purchase_note" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_purchase_note" name="note" rows="3" tabindex="4"></textarea>
-							</div>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="dgs_purchase_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="dgs_purchase_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="dgs_purchase_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="dgs_purchase_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="dgs_purchase_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="dgs_purchase_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2538,7 +2555,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_purchase_delivery">Marketplace Purchase Delivery</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row">
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
@@ -2606,7 +2623,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_delivery">Marketplace Delivery</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row">
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
@@ -2630,7 +2647,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_purchase">Marketplace Purchase</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row" style="margin-bottom:none">
 								<div class="purchase_info" style="margin-bottom:0;" data-i18n="loading">Loading...</div>
@@ -2653,7 +2670,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_refund">Marketplace Refund</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row">
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
@@ -2676,24 +2693,30 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_purchase_refund">Marketplace Purchase Refund</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="row">
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
 							</div>
 							<input type="hidden" name="recipient" id="dgs_refund_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_refund_purchase" value="" />
-							<div class="form-group">
-								<label for="dgs_refund_note" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_refund_note" name="note" rows="3" tabindex="2"></textarea>
-							</div>
-							<div class="form-group">
-								<label for="dgs_refund_refund" data-i18n="refund">REFUND</label>
-				                <div class="input-group">
-				                	<input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-i18n="[placeholder]refund_price" step="any" data-default="0" value="0" tabindex="3">
-				                	<span class="input-group-addon">NXT</span>
-								</div>
-							</div>
+                            <div class="form-group">
+                                <label for="dgs_refund_refund" data-i18n="refund">REFUND</label>
+                                <div class="input-group">
+                                    <input type="number" name="refundNXT" id="dgs_refund_refund" class="form-control" min="0" placeholder="Refund Price" data-i18n="[placeholder]refund_price" step="any" data-default="0" value="0" tabindex="3">
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="dgs_refund_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="dgs_refund_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="dgs_refund_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="dgs_refund_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="dgs_refund_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="dgs_refund_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2743,7 +2766,7 @@
 		        		<h4 class="modal-title" data-i18n="marketplace_purchase_feedback">Marketplace Purchase Feedback</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<input type="hidden" name="recipient" id="dgs_feedback_recipient" value="" />
 							<input type="hidden" name="purchase" id="dgs_feedback_purchase" value="" />
@@ -2751,9 +2774,16 @@
 								<div class="purchase_info" data-i18n="loading">Loading...</div>
 							</div>
 							<div class="form-group">
-								<label for="dgs_feedback_note" data-i18n="note">NOTE</label>
-								<textarea class="form-control" id="dgs_feedback_note" name="note" rows="3" tabindex="2"></textarea>
+								<label for="dgs_feedback_message" data-i18n="feedback">Feedback</label>
+								<textarea class="form-control" id="dgs_feedback_message" name="message" rows="3" tabindex="2"></textarea>
 							</div>
+                            <div class="form-group">
+                                <label for="dgs_feedback_type" data-i18n="type">Type</label>
+                                <select class="form-control" name="feedback_type" id="dgs_feedback_type">
+                                    <option value="private" data-i18n="private_feedback">Private Feedback</option>
+                                    <option value="public" data-i18n="public_feedback">Public Feedback</option>
+                                </select>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -2803,7 +2833,7 @@
 		        		<h4 class="modal-title" data-i18n="create_poll">Create Poll</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="create_poll_name" data-i18n="name">NAME</label>
@@ -2901,7 +2931,7 @@
 		        		<h4 class="modal-title" data-i18n="cast_vote">Cast Vote</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="cast_vote_poll_name" data-i18n="name">NAME</label>
@@ -2961,7 +2991,7 @@
 		        		<h4 class="modal-title" data-i18n="send_nxt">Send NXT</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="send_money_recipient" data-i18n="recipient">RECIPIENT</label>
@@ -2972,12 +3002,16 @@
 								    </span>
 								</div>
 							</div>
+                            <div class="form-group recipient_public_key">
+                                <label for="send_money_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+                                <input type="text" class="form-control" name="recipientPublicKey" id="send_money_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                            </div>
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_money_amount" data-i18n="amount">AMOUNT</label>
 										<div class="input-group">
-											<input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="2">
+											<input type="text" name="amountNXT" id="send_money_amount" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="3">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2986,7 +3020,7 @@
 									<div class="form-group">
 										<label for="send_money_fee" data-i18n="fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+											<input type="number" name="feeNXT" id="send_money_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -2994,27 +3028,30 @@
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="send_money_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="send_money_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="4">
+										<input type="number" name="deadline" id="send_money_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
-							<div class="form-group">
-								<input type="checkbox" name="add_message" id="send_money_add_message" style="margin-top:5px;vertical-align:top;" tabindex="5" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+							<div class="form-group dgs_block">
+								<input type="checkbox" name="add_message" id="send_money_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
 							</div>
-							<div class="form-group" id="send_money_message_container">
+							<div class="form-group dgs_block optional_message">
 								<label for="send_money_message" data-i18n="message">MESSAGE</label>
-								<textarea class="form-control" id="send_money_message" name="message" rows="4" tabindex="6"></textarea>
+								<textarea class="form-control" id="send_money_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="send_money_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_money_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="send_money_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="7">
+								<input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 							<div class="form-group advanced">
 								<label for="send_money_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="8" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="9" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px">
-								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="9" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="10" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -3041,7 +3078,7 @@
 		       		 	<h4 class="modal-title" data-i18n="send_message">Send Message</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form" id="send_message_form">
+						<form role="form" id="send_message_form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="send_message_recipient" data-i18n="recipient">RECIPIENT</label>
@@ -3052,17 +3089,23 @@
 								    </span>
 								</div>
 							</div>
+                            <div class="form-group recipient_public_key">
+                                <label for="send_message_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+                                <input type="text" class="form-control" name="recipientPublicKey" id="send_message_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                            </div>
 							<div class="form-group">
 								<label for="send_message_message" data-i18n="message">MESSAGE</label>
-								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="2"></textarea>
-								<div style="margin-top:3px"><input type="checkbox" name="encrypt" id="send_message_encrypt" checked="checked" style="margin-top:5px;vertical-align:top;" data-default="checked" /> <label for="send_message_encrypt" style="font-weight:normal;margin-bottom:0;" data-i18n="encrypt_message">Encrypt Message</label></div>
+								<textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="3"></textarea>
+                                <div style="margin-top:3px" class="dgs_block">
+                                    <label for="send_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_message_encrypt" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
 							</div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_message_fee" data-i18n="fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+											<input type="number" name="feeNXT" id="send_message_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -3070,25 +3113,25 @@
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="send_message_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="send_message_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+										<input type="number" name="deadline" id="send_message_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="send_message_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="send_message_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 							<div class="form-group advanced">
 								<label for="send_message_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_message_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_message_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="7" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
-								<input type="checkbox" name="doNotBroadcast" id="send_message_do_not_broadcast" value="1" /> <label for="send_message_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="send_message_do_not_broadcast" value="1" /> <label for="send_message_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
-							<input type="hidden" name="request_type" value="sendEncryptedNote" data-default="sendEncryptedNote" />
+							<input type="hidden" name="request_type" value="sendMessage" data-default="sendMessage" />
 				       		<input type="hidden" name="converted_account_id" value="" />
 						</form>
 					</div>
@@ -3109,7 +3152,7 @@
 		       		 	<h4 class="modal-title" data-i18n="set_account_info">Set Account Info</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="account_info_name" data-i18n="name">NAME</label>
@@ -3168,7 +3211,7 @@
 		        		<h4 class="modal-title" data-i18n="register_alias">Register Alias</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label for="register_alias_type" data-i18n="type">TYPE</label>
@@ -3238,7 +3281,7 @@
 		        		<h4 class="modal-title" data-i18n="buy_alias">Buy Alias</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label data-i18n="alias">ALIAS</label>
@@ -3248,10 +3291,24 @@
 							<div class="form-group">
 								<label data-i18n="price">PRICE</label>
 								<div class="input-group">
-						        	<input type="text" name="priceNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" data-i18n="[placeholder]price" tabindex="1">
+						        	<input type="text" name="amountNXT" id="buy_alias_price" step="any" min="0" class="form-control" placeholder="Price" data-i18n="[placeholder]price" tabindex="1">
 						        	<span class="input-group-addon">NXT</span>
 								</div>
 							</div>
+                            <div class="form-group dgs_block">
+                                <input type="checkbox" name="add_message" id="buy_alias_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="buy_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group dgs_block optional_message">
+                                <label for="buy_alias_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="buy_alias_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="buy_alias_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="buy_alias_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
+                            <div class="form-group secret_phrase">
+                                <label for="send_money_password" data-i18n="passphrase">PASSPHRASE</label>
+                                <input type="password" name="secretPhrase" id="send_money_password" class="form-control" placeholder="" tabindex="8">
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
@@ -3281,6 +3338,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="buy_alias_do_not_broadcast" value="1" /> <label for="buy_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
 							<input type="hidden" name="request_type" value="buyAlias" />
+                            <input type="hidden" name="recipient" id="buy_alias_recipient" value="" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
@@ -3301,7 +3359,7 @@
 		        		<h4 class="modal-title" data-i18n="transfer_alias">Transfer Alias</h4>
 		      		</div>
 			      	<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label data-i18n="alias">ALIAS</label>
@@ -3319,12 +3377,26 @@
 								    </span>
 								</div>
 							</div>
+                            <div class="form-group recipient_public_key">
+                                <label for="transfer_alias_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+                                <input type="text" class="form-control" name="recipientPublicKey" id="transfer_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                            </div>
+                            <div class="form-group dgs_block">
+                                <input type="checkbox" name="add_message" id="transfer_alias_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="transfer_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group dgs_block optional_message">
+                                <label for="transfer_alias_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="transfer_alias_message" name="message" rows="4" tabindex="3"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="transfer_alias_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="transfer_alias_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="row advanced">
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_alias_fee" data-i18n="fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+											<input type="number" name="feeNXT" id="transfer_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -3332,20 +3404,20 @@
 								<div class="col-xs-6 col-sm-6 col-md-6">
 									<div class="form-group">
 										<label for="transfer_alias_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="transfer_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+										<input type="number" name="deadline" id="transfer_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
 							<div class="form-group secret_phrase">
 								<label for="transfer_alias_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="transfer_alias_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 							<div class="form-group advanced">
 								<label for="transfer_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
-								<input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
@@ -3376,7 +3448,7 @@
 							<li class="active"><a href="#" id="sell_alias_to_specific_account" data-i18n="sell_to_specific_account">Sell to Specific Account</a></li>
 							<li><a href="#" id="sell_alias_to_anyone" data-i18n="sell_to_anyone">Sell to Anyone</a></li>
 						</ul>		
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label data-i18n="alias">ALIAS</label>
@@ -3393,12 +3465,16 @@
 								    </span>
 								</div>
 							</div>
-							<div class="row">
+                            <div class="form-group recipient_public_key">
+                                <label for="sell_alias_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
+                                <input type="text" class="form-control" name="recipientPublicKey" id="sell_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                            </div>
+                           	<div class="row">
 								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
 									<div class="form-group">
 										<label for="sell_alias_price" data-i18n="price">PRICE</label>
 										<div class="input-group">
-						                	<input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="2">
+						                	<input type="text" name="priceNXT" id="sell_alias_price" step="any" min="0" class="form-control" placeholder="Price" tabindex="3">
 						                	<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -3407,7 +3483,7 @@
 									<div class="form-group">
 										<label for="sell_alias_fee" data-i18n="fee">FEE</label>
 										<div class="input-group">
-											<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="3">
+											<input type="number" name="feeNXT" id="sell_alias_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="4">
 											<span class="input-group-addon">NXT</span>
 										</div>
 									</div>
@@ -3415,17 +3491,30 @@
 								<div class="col-xs-3 col-sm-3 col-md-3 advanced">
 									<div class="form-group">
 										<label for="sell_alias_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-										<input type="number" name="deadline" id="sell_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="4">
+										<input type="number" name="deadline" id="sell_alias_deadline" class="form-control" placeholder="Deadline" data-i18n="[placeholder]deadline" min="1" data-default="24" value="24" tabindex="5">
 									</div>
 								</div>
 							</div>
+                            <div class="form-group dgs_block add_message_container">
+                                <input type="checkbox" name="add_message" id="sell_alias_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="sell_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group dgs_block optional_message">
+                                <label for="sell_alias_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="sell_alias_message" name="message" rows="4" tabindex="3"></textarea>
+                                 <div style="margin-top:3px" id="sell_alias_to_specific_account_message_options">
+                                    <label for="sell_alias_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="sell_alias_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                                <div style="margin-top:3px;display:none" id="sell_alias_to_anyone_message_options">
+                                    <label for="sell_alias_encrypt_message" style="font-weight:normal;color:#666" data-i18n="message_is_not_encrypted">This message is not encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="form-group secret_phrase">
 								<label for="sell_alias_password" data-i18n="passphrase">PASSPHRASE</label>
-								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="5">
+								<input type="password" name="secretPhrase" id="sell_alias_password" class="form-control" placeholder="" tabindex="6">
 							</div>
 							<div class="form-group advanced">
 								<label for="sell_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="sell_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="sell_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="sell_alias_do_not_broadcast" value="1" /> <label for="sell_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3433,8 +3522,8 @@
 
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 
+                            <input type="hidden" name="request_type" value="sellAlias" />
 				      		<input type="hidden" name="converted_account_id" value="" />
-			      			<input type="hidden" name="request_type" value="sellAlias" />
 						</form>
 					</div>
 			      	<div class="modal-footer" style="margin-top:0;">
@@ -3448,14 +3537,14 @@
 		</div>
 
 		<div class="modal fade" id="cancel_alias_sale_modal" tabindex="-1" role="dialog" aria-hidden="true">
-			<div class="modal-dialog modal-dialog-700">
+			<div class="modal-dialog">
 		    	<div class="modal-content">
 		      		<div class="modal-header">
 		        		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		        		<h4 class="modal-title" data-i18n="cancel_alias_sale">Cancel Alias Sale</h4>
 		      		</div>
 			      	<div class="modal-body">	
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<div class="form-group">
 								<label data-i18n="alias">ALIAS</label>
@@ -3480,6 +3569,16 @@
 									</div>
 								</div>
 							</div>
+                            <div class="form-group dgs_block">
+                                <input type="checkbox" name="add_message" id="cancel_alias_sale_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="cancel_alias_sale_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group dgs_block optional_message">
+                                <label for="cancel_alias_sale_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="cancel_alias_sale_message" name="message" rows="4" tabindex="3"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="cancel_alias_sale_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="cancel_alias_sale_encrypt_message" value="1" data-default="unchecked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="form-group secret_phrase">
 								<label for="cancel_alias_sale_password" data-i18n="passphrase">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="cancel_alias_sale_password" class="form-control" placeholder="" tabindex="5">
@@ -3518,7 +3617,7 @@
 						</ul>
 
 						<div id="token_modal_generate_token" class="token_modal_content" style="display:none">
-				      		<form role="form" id="generate_token_form">
+				      		<form role="form" id="generate_token_form" autocomplete="off">
 								<div class="callout callout-danger remote_warning" style="display:none" data-i18n="[html]passphrase_remote_warning"><strong>Warning</strong>: Your pass phrase will be sent to the server!</div>
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
@@ -3535,7 +3634,7 @@
 						 </div>
 
 						<div id="token_modal_validate_token" class="token_modal_content" style="display:none">     
-							<form role="form" id="validate_token_form">
+							<form role="form" id="validate_token_form" autocomplete="off">
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
 								<div class="form-group">
@@ -3902,7 +4001,7 @@
 						</div>
 					</div>
 					<div class="modal-footer" style="margin-top:0;">
-			        	<button type="button" class="btn btn-primary" data-dismiss="modal"<span data-i18n="close">>Close</button>
+			        	<button type="button" class="btn btn-primary" data-dismiss="modal"<span data-i18n="close">Close</button>
 			      	</div>
 				</div>
 			</div>
@@ -3927,10 +4026,7 @@
 							<table class="table table-striped" id="account_balance_table" style="margin-bottom:0;table-layout:fixed;">
 							    <tbody>
 							    	<tr>
-							    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_id"></span></td>
-							    	</tr>
-							    	<tr>
-							    		<td style="font-weight: bold"><span data-i18n="new_address_format">New Address Format</span>:</td><td><span id="account_balance_account_rs"></span></td>
+							    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_rs"></span></td>
 							    	</tr>
 							    	<tr>
 							    		<td style="font-weight: bold"><span data-i18n="balance">Balance</span>:</td><td><span id="account_balance_balance"></span></td>
@@ -4026,7 +4122,7 @@
 						</ul>
 
 						<div id="transaction_operations_modal_broadcast_transaction" class="tab_content" style="display:none">
-							<form role="form" id="broadcast_transaction_form">
+							<form role="form" id="broadcast_transaction_form" autocomplete="off">
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="form-group">
 									<label for="broadcast_transaction_transaction_bytes" data-i18n="transaction_bytes">TRANSACTION BYTES</label>
@@ -4037,11 +4133,11 @@
 						 </div>
 
 						<div id="transaction_operations_modal_parse_transaction" class="tab_content" style="display:none">   
-							<form role="form" id="parse_transaction_form">
+							<form role="form" id="parse_transaction_form" autocomplete="off">
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="form-group">
 									<label for="parse_transaction_transaction_bytes" data-i18n="transaction_bytes">TRANSACTION BYTES</label>
-									<textarea class="form-control" name="transactionBytes" id="parse_transaction_transaction_bytes" rows="4" placeholder="Transaction Bytes" data-i18n="transaction_bytes"></textarea>
+									<textarea class="form-control" name="transactionBytes" id="parse_transaction_transaction_bytes" rows="4" placeholder="Transaction Bytes" data-i18n="[placeholder]transaction_bytes"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="parseTransaction" />
 								<div id="parse_transaction_output" class="output" style="max-height:350px;overflow:auto">
@@ -4053,7 +4149,7 @@
 						</div>
 
 						<div id="transaction_operations_modal_calculate_full_hash" class="tab_content" style="display:none">
-  							<form role="form" id="calculate_full_hash_form">
+  							<form role="form" id="calculate_full_hash_form" autocomplete="off">
 								<div class="callout callout-danger error_message" style="display:none"></div>
 								<div class="form-group">
 									<label for="calculate_full_hash_unsigned_transaction_bytes" data-i18n="unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
@@ -4061,7 +4157,7 @@
 								</div>
 								<div class="form-group">
 									<label for="calculate_full_hash_signature_hash" data-i18n="signature_hash">SIGNATURE HASH</label>
-									<textarea class="form-control" name="signatureHash" id="calculate_full_hash-unsigned_transaction_bytes" rows="1" placeholder="Signature Hash" data-i18n="signature_hash"></textarea>
+									<textarea class="form-control" name="signatureHash" id="calculate_full_hash-unsigned_transaction_bytes" rows="1" placeholder="Signature Hash" data-i18n="[placeholder]signature_hash"></textarea>
 								</div>
 								<input type="hidden" name="request_type" value="calculateFullHash" />
 								<div id="calculate_full_hash_output" class="output" style="max-height:350px;overflow:auto">
@@ -4089,7 +4185,7 @@
 		        		<h4 class="modal-title" data-i18n="change_group_name">Change Group Name</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p data-i18n="change_group_name_help">Type a new group name.</p>
 							<div class="form-group">
@@ -4120,7 +4216,7 @@
 		        		<h4 class="modal-title" data-i18n="group_asset">Group Asset</h4>
 		      		</div>
 		      		<div class="modal-body">			
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="display:none"></div>
 							<p data-i18n="group_asset_help">Choose a group for this asset.</p>
 							<div class="form-group">
@@ -4156,7 +4252,7 @@
 		        		<h4 class="modal-title" data-i18n="decrypt_messages">Decrypt Messages</h4>
 		      		</div>
 		      		<div class="modal-body">
-						<form role="form">
+						<form role="form" autocomplete="off">
 							<div class="callout callout-danger error_message" style="background:#fbe7e7" data-i18n="passphrase_required_for_decryption">Your passphrase is required to decrypt these messages.</div>
 							<div class="form-group secret_phrase">
 								<label for="messages_decrypt_password" data-i18n="passphrase">PASSPHRASE</label>
@@ -4179,7 +4275,7 @@
 		</div>
 
 		<div id="decrypt_note_form_container" style="display:none;">
-			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;">
+			<form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;" autocomplete="off">
 				<div class="callout callout-danger error_message" style="background:#fbe7e7" data-i18n="passphrase_required_to_decrypt_data">Your passphrase is required to decrypt this data.</div>
 				<div class="form-group secret_phrase">
 					<label for="decrypt_note_form_password" data-i18n="phrase">PASSPHRASE</label>

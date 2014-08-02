@@ -87,11 +87,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_generator_panel .step_3 .callout").show();
 		} else {
 			NRS.newlyCreatedAccount = true;
-			NRS.login(password, function() {
-				$.growl($.t("success_passphrase_confirmed"), {
-					"type": "success"
-				});
-			});
+			NRS.login(password);
 			PassPhraseGenerator.reset();
 			$("#account_phrase_generator_panel textarea").val("");
 			$("#account_phrase_generator_panel .step_3 .callout").hide();
@@ -118,24 +114,26 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_custom_panel .callout").first().removeClass("callout-info").addClass("callout-danger").html(error);
 		} else {
 			$("#registration_password, #registration_password_repeat").val("");
-			NRS.login(password, function() {
-				$.growl($.t("success_passphrase_confirmed"), {
-					"type": "success"
-				});
-			});
+			NRS.login(password);
 		}
 	});
 
 	NRS.login = function(password, callback) {
-		$("#login_password, #registration_password, #registration_password_repeat").val("");
-
 		if (!password.length) {
 			$.growl($.t("error_passphrase_required_login"), {
 				"type": "danger",
 				"offset": 10
 			});
 			return;
+		} else if (!NRS.isTestNet && password.length < 12 && $("#login_check_password_length").val() == 1) {
+			$("#login_check_password_length").val(0);
+			$("#login_error .callout").html($.t("error_passphrase_login_length"));
+			$("#login_error").show();
+			return;
 		}
+
+		$("#login_password, #registration_password, #registration_password_repeat").val("");
+		$("#login_check_password_length").val(1);
 
 		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
@@ -155,6 +153,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response) {
 				if (!response.errorCode) {
 					NRS.account = String(response.accountId).escapeHTML();
+					NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
 				}
 
 				if (!NRS.account) {
@@ -222,7 +221,7 @@ var NRS = (function(NRS, $, undefined) {
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
 						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
 							$("#forging_indicator").removeClass("forging");
-							$("#forging_indicator span").html($.t("not_forging"));
+							$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
 							$("#forging_indicator").show();
 							NRS.isForging = false;
 						} else if (NRS.isLocalHost) {
@@ -231,11 +230,11 @@ var NRS = (function(NRS, $, undefined) {
 							}, function(response) {
 								if ("deadline" in response) {
 									$("#forging_indicator").addClass("forging");
-									$("#forging_indicator span").html($.t("forging"));
+									$("#forging_indicator span").html($.t("forging")).attr("data-i18n", "forging");
 									NRS.isForging = true;
 								} else {
 									$("#forging_indicator").removeClass("forging");
-									$("#forging_indicator span").html($.t("not_forging"));
+									$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
 									NRS.isForging = false;
 								}
 								$("#forging_indicator").show();
@@ -312,6 +311,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#lockscreen").hide();
 		$("body, html").removeClass("lockscreen");
+
+		$("#login_error").html("").hide();
 
 		$(document.documentElement).scrollTop(0);
 	}

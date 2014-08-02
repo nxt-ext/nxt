@@ -69,29 +69,6 @@ var NRS = (function(NRS, $, undefined) {
 					$("#transaction_info_table").show();
 
 					break;
-				case 1:
-					var data = {
-						"type": $.t("payment_with_message"),
-						"amount": transaction.amountNQT,
-						"fee": transaction.feeNQT,
-						"recipient": NRS.getAccountTitle(transaction, "recipient"),
-						"sender": NRS.getAccountTitle(transaction, "sender")
-					};
-
-					if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
-						NRS.tryToDecrypt(transaction, {
-							"message": {
-								"title": $.t("note"),
-								"nonce": "nonce"
-							}
-						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient));
-					} else {
-						$("#transaction_info_bottom").html("<div class='callout callout-bottom callout-warning'>" + $.t("encrypted_message_no_permission") + "</div>").show();
-					}
-
-					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-					$("#transaction_info_table").show();
-					break;
 				default:
 					incorrect = true;
 					break;
@@ -102,31 +79,58 @@ var NRS = (function(NRS, $, undefined) {
 				case 0:
 					var message;
 
-					try {
-						message = converters.hexStringToString(transaction.attachment.message);
-					} catch (err) {
-						if (transaction.attachment.message.indexOf("feff") === 0) {
-							message = NRS.convertFromHex16(transaction.attachment.message);
-						} else {
-							message = NRS.convertFromHex8(transaction.attachment.message);
+					var $output = $("#transaction_info_output_top");
+
+					if (NRS.dgsBlockPassed) {
+						if (transaction.attachment.message) {
+							if (!transaction.attachment["version.Message"]) {
+								try {
+									message = converters.hexStringToString(transaction.attachment.message);
+								} catch (err) {
+									//legacy
+									if (transaction.attachment.message.indexOf("feff") === 0) {
+										message = NRS.convertFromHex16(transaction.attachment.message);
+									} else {
+										message = NRS.convertFromHex8(transaction.attachment.message);
+									}
+								}
+							} else {
+								message = String(transaction.attachment.message);
+							}
+							$output.html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>");
 						}
-					}
 
-					var sender_info = "";
+						if (transaction.attachment.encryptedMessage) {
+							$output.append("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</div><div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='display:none;padding-bottom:10px;'></div>");
 
-					if (transaction.sender == NRS.account || transaction.recipient == NRS.account) {
-						if (transaction.sender == NRS.account) {
-							sender_info = "<strong>" + $.t("to") + "</strong>: " + NRS.getAccountLink(transaction, "recipient");
-
-						} else {
-							sender_info = "<strong>" + $.t("from") + "</strong>: " + NRS.getAccountLink(transaction, "sender");
+							if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+								NRS.tryToDecrypt(transaction, {
+									"encryptedMessage": ""
+								}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
+									"noPadding": true,
+									"formEl": "#transaction_info_decryption_form",
+									"outputEl": "#transaction_info_decrypted_note"
+								});
+							} else {
+								$output.append("<div style='padding-bottom:10px'>" + $.t("encrypted_message_no_permission") + "</div>");
+							}
 						}
 					} else {
-						sender_info = "<strong>" + $.t("to") + "</strong>: " + NRS.getAccountLink(transaction, "recipient") + "<br />";
-						sender_info += "<strong>" + $.t("from") + "</strong>: " + NRS.getAccountLink(transaction, "sender");
+						try {
+							message = converters.hexStringToString(transaction.attachment.message);
+						} catch (err) {
+							//legacy
+							if (transaction.attachment.message.indexOf("feff") === 0) {
+								message = NRS.convertFromHex16(transaction.attachment.message);
+							} else {
+								message = NRS.convertFromHex8(transaction.attachment.message);
+							}
+						}
+
+						$("#transaction_info_output_top").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>");
 					}
 
-					$("#transaction_info_output_top").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + message.escapeHTML().nl2br() + "</div>" + sender_info).show();
+					$output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
 
 					break;
 				case 1:
@@ -208,17 +212,17 @@ var NRS = (function(NRS, $, undefined) {
 						"alias_name": transaction.attachment.alias
 					}
 
-					if (type == "Alias Sale") {
+					if (type == $.t("alias_sale")) {
 						data["price"] = transaction.attachment.priceNQT
 					}
 
-					if (type != "Alias Sale Cancellation") {
+					if (type != $.t("alias_sale_cancellation")) {
 						data["recipient"] = NRS.getAccountTitle(transaction, "recipient");
 					}
 
 					data["sender"] = NRS.getAccountTitle(transaction, "sender");
 
-					if (type == "Alias Sale") {
+					if (type == $.t("alias_sale")) {
 						var message = "";
 						var messageStyle = "info";
 
@@ -229,7 +233,7 @@ var NRS = (function(NRS, $, undefined) {
 
 							if (!response.errorCode) {
 								if (transaction.recipient != response.buyer || transaction.attachment.priceNQT != response.priceNQT) {
-									message = $.t("error_alias_sale_info_outdated");
+									message = $.t("alias_sale_info_outdated");
 									messageStyle = "danger";
 								} else if (transaction.recipient == NRS.account) {
 									message = $.t("alias_sale_direct_offer", {
@@ -262,47 +266,13 @@ var NRS = (function(NRS, $, undefined) {
 					var data = {
 						"type": $.t("alias_buy"),
 						"alias_name": transaction.attachment.alias,
+						"price": transaction.amountNQT,
 						"recipient": NRS.getAccountTitle(transaction, "recipient"),
 						"sender": NRS.getAccountTitle(transaction, "sender")
 					}
 
 					$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 					$("#transaction_info_table").show();
-
-					break;
-				case 8:
-					var data = {
-						"type": $.t("encrypted_message")
-					}
-
-					$("#transaction_info_output_top").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</div><div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='display:none;padding-bottom:10px;'></div>");
-
-					var output = "";
-
-					if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
-						NRS.tryToDecrypt(transaction, {
-							"message": {
-								"title": "",
-								"nonce": "nonce"
-							}
-						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
-							"noPadding": true,
-							"formEl": "#transaction_info_decryption_form",
-							"outputEl": "#transaction_info_decrypted_note"
-						});
-
-						if (transaction.sender == NRS.account) {
-							output = "<strong>" + $.t("to") + "</strong>: " + NRS.getAccountLink(transaction, "recipient");
-						} else {
-							output = "<strong>" + $.t("from") + "</strong>: " + NRS.getAccountLink(transaction, "sender");
-						}
-					} else {
-						output = "<div style='padding-bottom:10px'>" + $.t("encrypted_message_no_permission") + "</div>";
-						output = "<strong>" + $.t("to") + "</strong>: " + NRS.getAccountLink(transaction, "recipient") + "<br />";
-						output = "<strong>" + $.t("from") + "</strong>: " + NRS.getAccountLink(transaction, "sender");
-					}
-
-					$("#transaction_info_output_top").append(output).show();
 
 					break;
 				default:
@@ -339,9 +309,12 @@ var NRS = (function(NRS, $, undefined) {
 						var data = {
 							"type": $.t("asset_transfer"),
 							"asset_name": asset.name,
-							"quantity": [transaction.attachment.quantityQNT, asset.decimals],
-							"comment": transaction.attachment.comment
+							"quantity": [transaction.attachment.quantityQNT, asset.decimals]
 						};
+
+						if (!NRS.dgsBlockPassed && transaction.attachment.comment) {
+							data["comment"] = transaction.attachment.comment;
+						}
 
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
 						data["recipient"] = NRS.getAccountTitle(transaction, "recipient");
@@ -571,51 +544,45 @@ var NRS = (function(NRS, $, undefined) {
 							"seller": NRS.getAccountFormatted(goods, "seller")
 						};
 
-						if (transaction.attachment.note) {
-							if (NRS.account == goods.seller || NRS.account == transaction.sender) {
-								NRS.tryToDecrypt(transaction, {
-									"note": $.t("note")
-								}, (transaction.sender == NRS.account ? goods.seller : transaction.sender));
-							} else {
-								data["note"] = $.t("encrypted_note_no_permission");
-							}
-						}
-
 						$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 						$("#transaction_info_table").show();
 
-						if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
-							NRS.sendRequest("getDGSPurchase", {
-								"purchase": transaction.transaction
-							}, function(purchase) {
-								var callout = "";
+						NRS.sendRequest("getDGSPurchase", {
+							"purchase": transaction.transaction
+						}, function(purchase) {
+							var callout = "";
 
-								if (purchase.pending) {
-									if (NRS.account == transaction.recipient) {
-										callout = "<a href='#' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(transaction.transaction).escapeHTML() + "'>" + $.t("deliver_goods_q") + "</a>";
-									} else {
-										callout = $.t("waiting_on_seller");
-									}
+							if (purchase.errorCode) {
+								if (purchase.errorCode == 4) {
+									callout = $.t("incorrect_purchase");
 								} else {
-									if (purchase.refundNQT) {
-										callout = $.t("purchase_refunded");
+									callout = String(purchase.errorDescription).escapeHTML();
+								}
+							} else {
+								if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
+									if (purchase.pending) {
+										if (NRS.account == transaction.recipient) {
+											callout = "<a href='#' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(transaction.transaction).escapeHTML() + "'>" + $.t("deliver_goods_q") + "</a>";
+										} else {
+											callout = $.t("waiting_on_seller");
+										}
 									} else {
-										callout = $.t("purchase_delivered");
+										if (purchase.refundNQT) {
+											callout = $.t("purchase_refunded");
+										} else {
+											callout = $.t("purchase_delivered");
+										}
 									}
 								}
+							}
 
-								if (callout) {
-									$("#transaction_info_bottom").html("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
-								}
+							if (callout) {
+								$("#transaction_info_bottom").html("<div class='callout " + (purchase.errorCode ? "callout-danger" : "callout-info") + " callout-bottom'>" + callout + "</div>").show();
+							}
 
-								$("#transaction_info_modal").modal("show");
-								NRS.fetchingModalData = false;
-
-							});
-						} else {
 							$("#transaction_info_modal").modal("show");
 							NRS.fetchingModalData = false;
-						}
+						});
 					});
 
 					break;
@@ -696,16 +663,6 @@ var NRS = (function(NRS, $, undefined) {
 								"seller": NRS.getAccountFormatted(purchase, "seller")
 							};
 
-							if (transaction.attachment.note) {
-								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
-									NRS.tryToDecrypt(transaction, {
-										"note": $.t("feedback"),
-									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
-								} else {
-									data["feedback"] = $.t("encrypted_feedback_no_permission");
-								}
-							}
-
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
@@ -760,16 +717,6 @@ var NRS = (function(NRS, $, undefined) {
 								"seller": NRS.getAccountFormatted(purchase, "seller")
 							};
 
-							if (transaction.attachment.note) {
-								if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
-									NRS.tryToDecrypt(transaction, {
-										"note": $.t("note"),
-									}, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
-								} else {
-									data["note"] = $.t("encrypted_not_no_permission");
-								}
-							}
-
 							$("#transaction_info_table tbody").append(NRS.createInfoTable(data));
 							$("#transaction_info_table").show();
 
@@ -799,6 +746,44 @@ var NRS = (function(NRS, $, undefined) {
 				default:
 					incorrect = true;
 					break;
+			}
+		}
+
+		if (NRS.dgsBlockPassed && !(transaction.type == 1 && transaction.subtype == 0)) {
+			if (transaction.attachment) {
+				if (transaction.attachment.message) {
+					if (!transaction.attachment["version.Message"]) {
+						try {
+							message = converters.hexStringToString(transaction.attachment.message);
+						} catch (err) {
+							//legacy
+							if (transaction.attachment.message.indexOf("feff") === 0) {
+								message = NRS.convertFromHex16(transaction.attachment.message);
+							} else {
+								message = NRS.convertFromHex8(transaction.attachment.message);
+							}
+						}
+					} else {
+						message = String(transaction.attachment.message);
+					}
+
+					$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
+				}
+
+				if (transaction.attachment.encryptedMessage) {
+					if (NRS.account == transaction.sender || NRS.account == transaction.recipient) {
+						NRS.tryToDecrypt(transaction, {
+							"encryptedMessage": $.t("encrypted_message"),
+						}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
+							"formEl": "#transaction_info_output_bottom",
+							"outputEl": "#transaction_info_output_bottom"
+						});
+					} else {
+						$("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</label><div>" + $.t("encrypted_message_no_permission") + "</div></div>");
+					}
+				}
+
+				$("#transaction_info_output_bottom").show();
 			}
 		}
 

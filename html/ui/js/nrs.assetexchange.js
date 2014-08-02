@@ -1688,6 +1688,17 @@ var NRS = (function(NRS, $, undefined) {
 		delete data.quantity;
 		delete data.decimals;
 
+		if (!data.add_message) {
+			delete data.add_message;
+			delete data.message;
+			delete data.encrypt_message;
+		} else if (!NRS.dgsBlockPassed) {
+			data.comment = data.message;
+			delete data.add_message;
+			delete data.message;
+			delete data.encrypt_message;
+		}
+
 		return {
 			"data": data
 		};

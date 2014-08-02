@@ -3,7 +3,14 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
-		$("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient").blur(function() {
+		var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient");
+
+
+		$recipientFields.on("blur", function() {
+			$(this).trigger("checkRecipient");
+		});
+
+		$recipientFields.on("checkRecipient", function() {
 			var value = $(this).val();
 			var modal = $(this).closest(".modal");
 
@@ -25,21 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (account) {
-			$(this).find("input[name=recipient], input[name=account_id]").val(account).trigger("blur");
-		}
-	});
-
-	$("#send_money_modal").on("show.bs.modal", function(e) {
-		$("#send_money_message_container").hide();
-	});
-
-	$("#send_money_add_message").on("change", function(e) {
-		if ($(this).is(":checked")) {
-			$("#send_money_message_container").fadeIn();
-			$(this).closest("form").find("input[name=request_type]").val("sendMoneyWithMessage");
-		} else {
-			$("#send_money_message_container").hide();
-			$(this).closest("form").find("input[name=request_type]").val("sendMoney");
+			$(this).find("input[name=recipient], input[name=account_id]").val(account).trigger("checkRecipient");
 		}
 	});
 
@@ -72,43 +65,8 @@ var NRS = (function(NRS, $, undefined) {
 	$("span.recipient_selector").on("click", "ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
-		$(this).closest("form").find("input[name=recipient],input[name=account_id]").trigger("unmask").val($(this).data("contact")).trigger("blur");
+		$(this).closest("form").find("input[name=recipient],input[name=account_id]").not("[type=hidden]").trigger("unmask").val($(this).data("contact")).trigger("blur");
 	});
-
-	NRS.forms.sendMoney = function($modal) {
-		var data = NRS.getFormData($modal.find("form:first"));
-
-		delete data.add_message;
-		delete data.message;
-
-		return {
-			"data": data
-		};
-	}
-
-	NRS.forms.sendMoneyWithMessage = function($modal) {
-		var data = NRS.getFormData($modal.find("form:first"));
-
-		try {
-			var encrypted = NRS.encryptNote(data.message, {
-				"account": data.recipient
-			}, data.secretPhrase);
-
-			data.encryptedNoteNonce = encrypted.nonce;
-			data.encryptedNote = encrypted.message;
-		} catch (err) {
-			return {
-				"error": err.message
-			};
-		}
-
-		delete data.add_message;
-		delete data.message;
-
-		return {
-			"data": data
-		};
-	}
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
 		if (!(data["_extra"] && data["_extra"].convertedAccount) && !(data.recipient in NRS.contacts)) {
@@ -156,8 +114,9 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (response.errorCode == 5) {
 						callback({
 							"type": "warning",
-							"message": $.t("recipient_unknown"),
-							"account": null
+							"message": $.t("recipient_unknown" + (NRS.PKAnnouncementBlockPassed ? "_pka" : "")),
+							"account": null,
+							"noPublicKey": true
 						});
 					} else {
 						callback({
@@ -169,10 +128,11 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					callback({
 						"type": "warning",
-						"message": $.t("recipient_no_public_key", {
+						"message": $.t("recipient_no_public_key" + (NRS.PKAnnouncementBlockPassed ? "_pka" : ""), {
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
-						"account": response
+						"account": response,
+						"noPublicKey": true
 					});
 				}
 			}
@@ -188,6 +148,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var callout = modal.find(".account_info").first();
 		var accountInputField = modal.find("input[name=converted_account_id]");
+		var recipientPublicKeyField = modal.find("input[name=recipientPublicKey]");
 
 		accountInputField.val("");
 
@@ -199,6 +160,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
+					if (response.noPublicKey) {
+						modal.find(".recipient_public_key").show();
+					} else {
+						modal.find("input[name=recipientPublicKey]").val("");
+						modal.find(".recipient_public_key").hide();
+					}
+
 					var message = response.message.escapeHTML();
 
 					callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
@@ -267,7 +235,7 @@ var NRS = (function(NRS, $, undefined) {
 			"aliasName": account
 		}, function(response) {
 			if (response.errorCode) {
-				callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? $.t("error") + ": " + String(response.errorDescription).escapeHTML() : $.t("error_alias")).show();
+				callout.removeClass(classes).addClass("callout-danger").html($.t("error_invalid_account_id")).show();
 			} else {
 				if (response.aliasURI) {
 					var alias = String(response.aliasURI);

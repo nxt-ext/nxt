@@ -21,6 +21,79 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
 
+	function getSuccessMessage(requestType) {
+		var ignore = ["asset_exchange_change_group_name", "asset_exchange_group", "add_contact", "update_contact", "delete_contact",
+			"send_message", "decrypt_messages", "start_forging", "stop_forging", "generate_token", "send_money", "set_alias", "add_asset_bookmark", "sell_alias"
+		];
+
+		if (ignore.indexOf(requestType) != -1) {
+			return "";
+		} else {
+			return $.t("success_" + requestType);
+		}
+	}
+
+	function getErrorMessage(requestType) {
+		var ignore = ["start_forging", "stop_forging"];
+
+		if (ignore.indexOf(requestType) != -1) {
+			return "";
+		} else {
+			return $.t("error_" + requestType);
+		}
+	}
+
+	NRS.addMessageData = function(data, requestType) {
+		if (!data.add_message && requestType != "sendMessage") {
+			delete data.message;
+			delete data.encrypt_message;
+			delete data.add_message;
+
+			return data;
+		}
+
+		data["_extra"] = {
+			"message": data.message
+		};
+
+		if (data.message) {
+			if (!NRS.dgsBlockPassed) {
+				data.message = converters.stringToHexString(data.message);
+			} else if (data.encrypt_message) {
+				try {
+					var options = {};
+
+					if (data.recipient) {
+						options.account = data.recipient;
+					} else if (data.encryptedMessageRecipient) {
+						options.account = data.encryptedMessageRecipient;
+						delete data.encryptedMessageRecipient;
+					}
+
+					if (data.recipientPublicKey) {
+						options.publicKey = data.recipientPublicKey;
+					}
+
+					var encrypted = NRS.encryptNote(data.message, options, data.secretPhrase);
+
+					data.encryptedMessageData = encrypted.message;
+					data.encryptedMessageNonce = encrypted.nonce;
+					data.messageToEncryptIsText = "true";
+					delete data.message;
+				} catch (err) {
+					throw err;
+				}
+			} else {
+				data.messageIsText = "true";
+			}
+		}
+
+		delete data.add_message;
+		delete data.encrypt_message;
+
+		return data;
+	}
+
 	NRS.submitForm = function($modal, $btn) {
 		if (!$btn) {
 			$btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
@@ -46,8 +119,8 @@ var NRS = (function(NRS, $, undefined) {
 			return "_" + $1.toLowerCase();
 		});
 
-		var successMessage = $.t("success_" + requestTypeKey);
-		var errorMessage = $.t("error_" + requestTypeKey);
+		var successMessage = getSuccessMessage(requestTypeKey);
+		var errorMessage = getErrorMessage(requestTypeKey);
 
 		var data = null;
 
@@ -82,28 +155,40 @@ var NRS = (function(NRS, $, undefined) {
 		$form.find(":input").each(function() {
 			if ($(this).is(":invalid")) {
 				var error = "";
-				var name = String($(this).attr("name")).capitalize();
+				var name = String($(this).attr("name")).replace("NXT", "").replace("NQT", "").capitalize();
 				var value = $(this).val();
 
 				if ($(this).hasAttr("max")) {
-					var max = $(this).attr("max");
-
-					if (value > max) {
-						error = $.t("error_max_value", {
-							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
-							"max": max
+					if (!/^[\-\d\.]+$/.test(value)) {
+						error = $.t("error_not_a_number", {
+							"field": NRS.getTranslatedFieldName(name).toLowerCase()
 						}).capitalize();
+					} else {
+						var max = $(this).attr("max");
+
+						if (value > max) {
+							error = $.t("error_max_value", {
+								"field": NRS.getTranslatedFieldName(name).toLowerCase(),
+								"max": max
+							}).capitalize();
+						}
 					}
 				}
 
 				if ($(this).hasAttr("min")) {
-					var min = $(this).attr("min");
-
-					if (value < min) {
-						error = $.t("error_min_value", {
-							"field": NRS.getTranslatedFieldName(name).toLowerCase(),
-							"min": min
+					if (!/^[\-\d\.]+$/.test(value)) {
+						error = $.t("error_not_a_number", {
+							"field": NRS.getTranslatedFieldName(name).toLowerCase()
 						}).capitalize();
+					} else {
+						var min = $(this).attr("min");
+
+						if (value < min) {
+							error = $.t("error_min_value", {
+								"field": NRS.getTranslatedFieldName(name).toLowerCase(),
+								"min": min
+							}).capitalize();
+						}
 					}
 				}
 
@@ -148,10 +233,10 @@ var NRS = (function(NRS, $, undefined) {
 				if (output.data) {
 					data = output.data;
 				}
-				if (output.successMessage) {
+				if ("successMessage" in output) {
 					successMessage = output.successMessage;
 				}
-				if (output.errorMessage) {
+				if ("errorMessage" in output) {
 					errorMessage = output.errorMessage;
 				}
 				if (output.stop) {
@@ -163,19 +248,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!data) {
 			data = NRS.getFormData($form);
-		}
-
-		if (data.deadline) {
-			data.deadline = String(data.deadline * 60); //hours to minutes
-		}
-
-		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
-			$form.find(".error_message").html($.t("error_passphrase_required")).show();
-			if (formErrorFunction) {
-				formErrorFunction(false, data);
-			}
-			NRS.unlockForm($modal, $btn);
-			return;
 		}
 
 		if (data.recipient) {
@@ -203,6 +275,30 @@ var NRS = (function(NRS, $, undefined) {
 					};
 				}
 			}
+		}
+
+		try {
+			data = NRS.addMessageData(data, requestType);
+		} catch (err) {
+			$form.find(".error_message").html(String(err.message).escapeHTML()).show();
+			if (formErrorFunction) {
+				formErrorFunction();
+			}
+			NRS.unlockForm($modal, $btn);
+			return;
+		}
+
+		if (data.deadline) {
+			data.deadline = String(data.deadline * 60); //hours to minutes
+		}
+
+		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+			$form.find(".error_message").html($.t("error_passphrase_required")).show();
+			if (formErrorFunction) {
+				formErrorFunction(false, data);
+			}
+			NRS.unlockForm($modal, $btn);
+			return;
 		}
 
 		if (!NRS.showedFormWarning) {

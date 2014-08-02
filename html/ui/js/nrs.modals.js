@@ -42,9 +42,17 @@ var NRS = (function(NRS, $, undefined) {
 		$(target).scrollTop(0);
 	})
 
+	$(".add_message").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find(".optional_message").fadeIn();
+		} else {
+			$(this).closest("form").find(".optional_message").hide();
+		}
+	});
+
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		$(this).find("input[name=recipient], input[name=account_id]").mask("NXT-****-****-****-*****");
+		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").mask("NXT-****-****-****-*****");
 
 		var $visible_modal = $(".modal.in");
 
@@ -66,11 +74,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	//Reset form to initial state when modal is closed
 	$(".modal").on("hidden.bs.modal", function(e) {
-		$(this).find("input[name=recipient], input[name=account_id]").trigger("unmask");
+		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").trigger("unmask");
 
 		$(this).find(":input:not(button)").each(function(index) {
 			var defaultValue = $(this).data("default");
 			var type = $(this).attr("type");
+			var tag = $(this).prop("tagName").toLowerCase();
 
 			if (type == "checkbox") {
 				if (defaultValue == "checked") {
@@ -81,6 +90,13 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (type == "hidden") {
 				if (defaultValue !== undefined) {
 					$(this).val(defaultValue);
+				}
+			} else if (tag == "select") {
+				if (defaultValue !== undefined) {
+					$(this).val(defaultValue);
+				} else {
+					$(this).find("option:selected").prop("selected", false);
+					$(this).find("option:first").prop("selected", "selected");
 				}
 			} else {
 				if (defaultValue !== undefined) {
@@ -98,6 +114,10 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
 
 		$(this).find(".advanced").hide();
+
+		$(this).find(".recipient_public_key").hide();
+
+		$(this).find(".optional_message").hide();
 
 		$(this).find(".advanced_info a").text($.t("advanced"));
 
