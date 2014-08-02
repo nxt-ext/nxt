@@ -684,12 +684,7 @@ final class TransactionImpl implements Transaction {
     // returns false iff double spending
     boolean applyUnconfirmed() {
         Account senderAccount = Account.getAccount(getSenderId());
-        if (senderAccount == null) {
-            return false;
-        }
-        synchronized(senderAccount) {
-            return type.applyUnconfirmed(this, senderAccount);
-        }
+        return senderAccount != null && type.applyUnconfirmed(this, senderAccount);
     }
 
     void apply() {

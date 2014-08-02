@@ -391,7 +391,7 @@ public final class Account {
         accountTable.insert(this);
     }
 
-    public synchronized byte[] getPublicKey() {
+    public byte[] getPublicKey() {
         if (this.keyHeight == -1) {
             return null;
         }
@@ -420,15 +420,15 @@ public final class Account {
         return encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
     }
 
-    public synchronized long getBalanceNQT() {
+    public long getBalanceNQT() {
         return balanceNQT;
     }
 
-    public synchronized long getUnconfirmedBalanceNQT() {
+    public long getUnconfirmedBalanceNQT() {
         return unconfirmedBalanceNQT;
     }
 
-    public synchronized long getForgedBalanceNQT() {
+    public long getForgedBalanceNQT() {
         return forgedBalanceNQT;
     }
 
@@ -482,7 +482,7 @@ public final class Account {
         }
     }
 
-    public synchronized long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
+    public long getGuaranteedBalanceNQT(final int numberOfConfirmations) {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
             return 0;
         }
@@ -510,7 +510,7 @@ public final class Account {
         return accountAssetTable.getManyByA(this.id);
     }
 
-    public synchronized Long getUnconfirmedAssetBalanceQNT(Long assetId) {
+    public Long getUnconfirmedAssetBalanceQNT(Long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(this.id, assetId);
         return accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
     }
@@ -575,7 +575,7 @@ public final class Account {
     // this.publicKey is set to null (in which case this.publicKey also gets set to key)
     // or
     // this.publicKey is already set to an array equal to key
-    synchronized boolean setOrVerify(byte[] key, int height) {
+    boolean setOrVerify(byte[] key, int height) {
         if (this.publicKey == null) {
             this.publicKey = key;
             this.keyHeight = -1;
@@ -603,7 +603,7 @@ public final class Account {
         return false;
     }
 
-    synchronized void apply(byte[] key, int height) {
+    void apply(byte[] key, int height) {
         if (! setOrVerify(key, this.creationHeight)) {
             throw new IllegalStateException("Generator public key mismatch");
         }
@@ -618,7 +618,7 @@ public final class Account {
     }
 
     //TODO
-    synchronized void undo(int height) {
+    void undo(int height) {
         if (this.keyHeight >= height) {
             Logger.logDebugMessage("Unsetting key for account " + Convert.toUnsignedLong(id) + " at height " + height
                     + ", was previously set at height " + keyHeight);
@@ -632,48 +632,42 @@ public final class Account {
         }
     }
 
-    synchronized long getAssetBalanceQNT(Long assetId) {
+    long getAssetBalanceQNT(Long assetId) {
         AccountAsset accountAsset = accountAssetTable.get(this.id, assetId);
         return accountAsset == null ? 0 : accountAsset.quantityQNT;
     }
 
     void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
         AccountAsset accountAsset;
-        synchronized (this) {
-            accountAsset = accountAssetTable.get(this.id, assetId);
-            long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
-            assetBalance = Convert.safeAdd(assetBalance, quantityQNT);
-            accountAsset = new AccountAsset(this.id, assetId, assetBalance, accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT);
-            accountAsset.save();
-        }
+        accountAsset = accountAssetTable.get(this.id, assetId);
+        long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
+        assetBalance = Convert.safeAdd(assetBalance, quantityQNT);
+        accountAsset = new AccountAsset(this.id, assetId, assetBalance, accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT);
+        accountAsset.save();
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
     }
 
     void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         AccountAsset accountAsset;
-        synchronized (this) {
-            accountAsset = accountAssetTable.get(this.id, assetId);
-            long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
-            unconfirmedAssetBalance = Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
-            accountAsset = new AccountAsset(this.id, assetId, accountAsset == null ? 0 : accountAsset.quantityQNT, unconfirmedAssetBalance);
-            accountAsset.save();
-        }
+        accountAsset = accountAssetTable.get(this.id, assetId);
+        long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
+        unconfirmedAssetBalance = Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
+        accountAsset = new AccountAsset(this.id, assetId, accountAsset == null ? 0 : accountAsset.quantityQNT, unconfirmedAssetBalance);
+        accountAsset.save();
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
         AccountAsset accountAsset;
-        synchronized (this) {
-            accountAsset = accountAssetTable.get(this.id, assetId);
-            long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
-            assetBalance = Convert.safeAdd(assetBalance, quantityQNT);
-            long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
-            unconfirmedAssetBalance = Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
-            accountAsset = new AccountAsset(this.id, assetId, assetBalance, unconfirmedAssetBalance);
-            accountAsset.save();
-        }
+        accountAsset = accountAssetTable.get(this.id, assetId);
+        long assetBalance = accountAsset == null ? 0 : accountAsset.quantityQNT;
+        assetBalance = Convert.safeAdd(assetBalance, quantityQNT);
+        long unconfirmedAssetBalance = accountAsset == null ? 0 : accountAsset.unconfirmedQuantityQNT;
+        unconfirmedAssetBalance = Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
+        accountAsset = new AccountAsset(this.id, assetId, assetBalance, unconfirmedAssetBalance);
+        accountAsset.save();
         listeners.notify(this, Event.ASSET_BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
@@ -681,12 +675,10 @@ public final class Account {
     }
 
     void addToBalanceNQT(long amountNQT) {
-        synchronized (this) {
-            this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
-            addToGuaranteedBalanceNQT(amountNQT);
-            checkBalance();
-            accountTable.insert(this);
-        }
+        this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
+        addToGuaranteedBalanceNQT(amountNQT);
+        checkBalance();
+        accountTable.insert(this);
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
         }
@@ -696,22 +688,18 @@ public final class Account {
         if (amountNQT == 0) {
             return;
         }
-        synchronized (this) {
-            this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
-            checkBalance();
-            accountTable.insert(this);
-        }
+        this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
+        checkBalance();
+        accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
 
     void addToBalanceAndUnconfirmedBalanceNQT(long amountNQT) {
-        synchronized (this) {
-            this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
-            this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
-            addToGuaranteedBalanceNQT(amountNQT);
-            checkBalance();
-            accountTable.insert(this);
-        }
+        this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
+        this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
+        addToGuaranteedBalanceNQT(amountNQT);
+        checkBalance();
+        accountTable.insert(this);
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
             listeners.notify(this, Event.UNCONFIRMED_BALANCE);
@@ -719,10 +707,8 @@ public final class Account {
     }
 
     void addToForgedBalanceNQT(long amountNQT) {
-        synchronized(this) {
-            this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
-            accountTable.insert(this);
-        }
+        this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
+        accountTable.insert(this);
     }
 
     private void checkBalance() {
@@ -741,7 +727,7 @@ public final class Account {
     }
 
     //TODO: undo
-    private synchronized void addToGuaranteedBalanceNQT(long amountNQT) {
+    private void addToGuaranteedBalanceNQT(long amountNQT) {
         if (amountNQT <= 0) {
             return;
         }
