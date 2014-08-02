@@ -95,6 +95,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (!data.recipientPublicKey) {
 			delete data.recipientPublicKey;
 		}
+		if (!data.referencedTransactionFullHash) {
+			delete data.referencedTransactionFullHash;
+		}
 
 		//gets account id from passphrase client side, used only for login.
 		if (requestType == "getAccountId") {
