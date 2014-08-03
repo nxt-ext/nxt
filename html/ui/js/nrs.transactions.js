@@ -28,11 +28,11 @@ var NRS = (function(NRS, $, undefined) {
 					transactions.push(transaction);
 
 					transactionIds.push(transaction.transaction);
-
-					NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-						NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
-					});
 				}
+
+				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+					NRS.handleInitialTransactions(transactions.concat(unconfirmedTransactions), transactionIds);
+				});
 			} else {
 				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
 					NRS.handleInitialTransactions(unconfirmedTransactions, []);
@@ -133,6 +133,16 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
 				var unconfirmedTransactions = [];
 				var unconfirmedTransactionIds = [];
+
+				response.unconfirmedTransactions.sort(function(x, y) {
+					if (x.timestamp < y.timestamp) {
+						return 1;
+					} else if (x.timestamp > y.timestamp) {
+						return -1;
+					} else {
+						return 0;
+					}
+				});
 
 				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
 					var unconfirmedTransaction = response.unconfirmedTransactions[i];

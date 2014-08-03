@@ -96,10 +96,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.incoming.newest_dgs = function() {
-		NRS.loadPage("newest_dgs");
-	}
-
 	NRS.pages.dgs_seller = function(callback) {
 		var content = "";
 
@@ -617,7 +613,7 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					} else {
 						var output = "<table>";
-						output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + "</td></tr>";
+						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + "</td></tr>";
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 						output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 
@@ -626,6 +622,13 @@ var NRS = (function(NRS, $, undefined) {
 								$modal.find("input[name=recipient]").val(response.buyerRS);
 							} else {
 								$modal.find("input[name=recipient]").val(response.sellerRS);
+							}
+							if (response.quantity != "1") {
+								var orderTotal = NRS.formatAmount(new BigInteger(String(response.quantity)).multiply(new BigInteger(String(response.priceNQT))));
+								output += "<tr><th><strong>" + $.t("total") + "</strong>:</th><td>" + orderTotal + " NXT</td></tr>";
+							}
+							if (response.discountNQT && (type == "dgs_refund_modal" || type == "dgs_feedback_modal")) {
+								output += "<tr><th><strong>" + $.t("discount") + "</strong>:</th><td>" + NRS.formatAmount(response.discountNQT) + " NXT</td></tr>";
 							}
 						}
 
@@ -663,8 +666,11 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						if (type == "dgs_refund_modal") {
+							var orderTotal = new BigInteger(String(response.quantity)).multiply(new BigInteger(String(response.priceNQT)));
+							var refund = orderTotal.subtract(new BigInteger(String(response.discountNQT)));
+
 							$("#dgs_refund_purchase").val(response.purchase);
-							$("#dgs_refund_refund").val(NRS.convertToNXT(response.priceNQT));
+							$("#dgs_refund_refund").val(NRS.convertToNXT(refund));
 						} else if (type == "dgs_view_purchase_modal") {
 							var $btn = $modal.find("button.btn-primary");
 							$btn.data("purchase", response.purchase);
