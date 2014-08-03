@@ -78,8 +78,8 @@ public final class Alias {
         aliasIdToAliasMappings.remove(alias.getId());
     }
 
-    static void addSellOffer(String aliasName, long priceNQT, Long buyerId) {
-        aliasesToSell.put(aliasName.toLowerCase(), new Offer(priceNQT, buyerId));
+    static void addSellOffer(String aliasName, long priceNQT, Account buyerAccount) {
+        aliasesToSell.put(aliasName.toLowerCase(), new Offer(priceNQT, buyerAccount != null ? buyerAccount.getId() : null));
     }
 
     static void changeOwner(Account newOwner, String aliasName, int timestamp) {
