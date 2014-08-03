@@ -321,10 +321,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		try {
-			var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
-				"nonce": message.attachment.encryptedMessage.nonce,
-				"account": (message.recipient == NRS.account ? message.sender : message.recipient)
-			});
+			if (!message.attachment.encryptedMessage.data) {
+				return $.t("message_empty");
+			} else {
+				var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
+					"nonce": message.attachment.encryptedMessage.nonce,
+					"account": (message.recipient == NRS.account ? message.sender : message.recipient)
+				});
+			}
 
 			return decoded;
 		} catch (err) {
