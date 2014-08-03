@@ -82,8 +82,6 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 		}
 
-		NRS.isLocalHost = false;
-
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
 		}
