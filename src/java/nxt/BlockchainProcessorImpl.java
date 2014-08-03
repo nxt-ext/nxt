@@ -831,7 +831,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
             try (Connection con = Db.getConnection(); PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block ORDER BY db_id ASC")) {
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
-                BlockImpl currentBlock;
+                BlockImpl currentBlock = null;
                 ResultSet rs = pstmt.executeQuery();
                 try {
                     while (rs.next()) {
@@ -875,7 +875,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 } catch (NxtException|RuntimeException e) {
                     Logger.logDebugMessage(e.toString(), e);
-                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
+                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
+                            + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                     BlockDb.deleteBlocksFrom(currentBlockId);
                     scan();
                 }
