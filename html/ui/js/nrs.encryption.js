@@ -607,13 +607,13 @@ var NRS = (function(NRS, $, undefined) {
 					}, password);
 
 					_decryptedTransactions[message.transaction] = {
-						"message": decoded
+						"encryptedMessage": decoded
 					};
 
 					success++;
 				} catch (err) {
 					_decryptedTransactions[message.transaction] = {
-						"message": $.t("error_decryption_unknown")
+						"encryptedMessage": $.t("error_decryption_unknown")
 					};
 					error++;
 				}

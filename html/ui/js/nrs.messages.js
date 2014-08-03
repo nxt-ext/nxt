@@ -494,7 +494,7 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < unconfirmedMessages.length; i++) {
 					var unconfirmedMessage = unconfirmedMessages[i];
 
-					if (unconfirmedMessage.attachment && unconfirmedTransaction.attachment.encryptedMessage) {
+					if (unconfirmedMessage.attachment && unconfirmedMessage.attachment.encryptedMessage) {
 						messagesToDecrypt.push(unconfirmedMessage);
 					}
 				}
