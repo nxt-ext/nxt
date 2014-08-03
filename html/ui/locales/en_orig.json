@@ -612,7 +612,6 @@
 	"error_passphrase_strength_secure": "Your passphrase does not contain numbers and uppercase letters. This is not secure.",
 	"nrs_update_available": "A new NRS release is available. It is recommended that you update.",
 	"error_decryption_unknown": "An unknown error occured during decryption.",
-	"error_message_required": "Message is a required field.",
 	"error_passphrase_incorrect": "Incorrect passphrase.",
 	"success_message_sent": "Your message has been sent.",
 	"add_recipient_to_contacts_q": "Add recipient to contacts?",
@@ -870,5 +869,6 @@
 	"public_feedback": "Public Feedback",
 	"private_feedback": "Private Feedback",
 	"old_nxt_wallet_update": "A new version of the NXT Wallet application is available for download <a href='__link__' target='_blank'>here</a>. It must be downloaded and installed manually.",
-	"order_total": "Order Total"
+	"order_total": "Order Total",
+	"message_empty": "Message is empty."
 }
