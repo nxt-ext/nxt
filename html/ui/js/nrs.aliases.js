@@ -97,7 +97,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					if (alias.status != "/") {
-						alias.status = "<span class='label label-info'>" + alias.status + "</span>";
+						alias.status = "<span class='label label-small label-info'>" + alias.status + "</span>";
 					}
 
 					rows += "<tr" + (alias.tentative ? " class='tentative'" : "") + " data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td><td class='status'>" + alias.status + "</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#register_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("edit") + "</a>" + (NRS.dgsBlockPassed ? " <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#transfer_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("transfer") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#sell_alias_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("sell") + "</a>" + (allowCancel ? " <a class='btn btn-xs btn-default cancel_alias_sale' href='#' data-toggle='modal' data-target='#cancel_alias_sale_modal' data-alias='" + String(alias.aliasName).escapeHTML() + "'>" + $.t("cancel_sale") + "</a>" : "") : "") + "</td></tr>";
@@ -150,14 +150,19 @@ var NRS = (function(NRS, $, undefined) {
 		var successMessage = "";
 		var errorMessage = "";
 
-		if (data.cancelSale) {
-			data.priceNQT = "0";
+		if (data.modal == "cancel_alias_sale") {
+			data.priceNXT = "0";
 			data.recipient = NRS.accountRS;
-			delete data.cancelSale;
 
 			successMessage = $.t("success_cancel_alias");
 			errorMessage = $.t("error_cancel_alias");
-		} else if (data.priceNQT == "0") {
+		} else if (data.modal == "transfer_alias") {
+			data.priceNXT = "0";
+
+			successMessage = $.t("success_transfer_alias");
+			errorMessage = $.t("error_transfer_alias");
+		} else {
+
 			if (!data.recipient) {
 				return {
 					"error": $.t("error_not_specified", {
@@ -165,16 +170,26 @@ var NRS = (function(NRS, $, undefined) {
 					}).capitalize()
 				};
 			}
-			successMessage = $.t("success_transfer_alias");
-			errorMessage = $.t("error_transfer_alias");
-		} else {
+
 			successMessage = $.t("success_sell_alias");
 			errorMessage = $.t("error_sell_alias");
 
-			delete data.add_message;
-			delete data.encrypt_message;
-			delete data.message;
+			if (data.recipient == NRS.genesisRS) {
+				if (!data.priceNXT || data.priceNXT == "0") {
+					return {
+						"error": $.t("error_not_specified", {
+							"name": $.t("price").toLowerCase()
+						}).capitalize()
+					};
+				}
+
+				delete data.add_message;
+				delete data.encrypt_message;
+				delete data.message;
+			}
 		}
+
+		delete data.modal;
 
 		return {
 			"data": data,
@@ -195,16 +210,16 @@ var NRS = (function(NRS, $, undefined) {
 		//transfer
 		if (data.priceNQT == "0") {
 			if (data.recipient == NRS.account) {
-				$row.find("td.status").html("<span class='label label-info'>" + $.t("cancelling_sale") + "</span>");
+				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("cancelling_sale") + "</span>");
 				$row.find("a.cancel_alias_sale").remove();
 			} else {
-				$row.find("td.status").html("<span class='label label-info'>" + $.t("transfer_in_progress") + "</span>");
+				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("transfer_in_progress") + "</span>");
 			}
 		} else {
 			if (data.recipient != NRS.genesis) {
-				$row.find("td.status").html("<span class='label label-info'>" + $.t("for_sale_direct") + "</span>");
+				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_direct") + "</span>");
 			} else {
-				$row.find("td.status").html("<span class='label label-info'>" + $.t("for_sale_indirect") + "</span>");
+				$row.find("td.status").html("<span class='label label-small label-info'>" + $.t("for_sale_indirect") + "</span>");
 			}
 		}
 	}
