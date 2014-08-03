@@ -86,8 +86,8 @@ public interface Transaction extends Comparable<Transaction> {
     Collection<TransactionType> getPhasedTransactionTypes();
     */
 
-    int getClusterDefiningBlockHeight();
+    int getECBlockHeight();
 
-    Long getClusterDefiningBlockId();
+    Long getECBlockId();
 
 }

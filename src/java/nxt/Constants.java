@@ -87,7 +87,7 @@ public final class Constants {
                                                         rule is outweighed by "economic majority" rule; the terminator
                                                         is set as number of seconds before the current time. */
 
-    public static final int EC_CLUSTER_BLOCK_DISTANCE_LIMIT = 60;
+    public static final int EC_BLOCK_DISTANCE_LIMIT = 60;
 
     private Constants() {} // never
 

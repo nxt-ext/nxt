@@ -292,6 +292,10 @@ final class JSONData {
         putAccount(json, "sender", transaction.getSenderId());
         json.put("height", transaction.getHeight());
         json.put("version", transaction.getVersion());
+        if (transaction.getVersion() > 0) {
+            json.put("ecBlockId", Convert.toUnsignedLong(transaction.getECBlockId()));
+            json.put("ecBlockHeight", transaction.getECBlockHeight());
+        }
 
         return json;
     }

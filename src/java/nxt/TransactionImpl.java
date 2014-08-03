@@ -40,8 +40,8 @@ final class TransactionImpl implements Transaction {
         private Long senderId;
         private int blockTimestamp = -1;
         private String fullHash;
-        private int clusterDefiningBlockHeight;
-        private Long clusterDefiningBlockId;
+        private int ecBlockHeight;
+        private Long ecBlockId;
 
         BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
                     Attachment.AbstractAttachment attachment) {
@@ -139,13 +139,13 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        BuilderImpl clusterDefiningBlockHeight(int height) {
-            this.clusterDefiningBlockHeight = height;
+        BuilderImpl ecBlockHeight(int height) {
+            this.ecBlockHeight = height;
             return this;
         }
 
-        BuilderImpl clusterDefiningBlockId(Long blockId) {
-            this.clusterDefiningBlockId = blockId;
+        BuilderImpl ecBlockId(Long blockId) {
+            this.ecBlockId = blockId;
             return this;
         }
 
@@ -158,8 +158,8 @@ final class TransactionImpl implements Transaction {
     private final long feeNQT;
     private final String referencedTransactionFullHash;
     private final TransactionType type;
-    private final int clusterDefiningBlockHeight;
-    private final Long clusterDefiningBlockId;
+    private final int ecBlockHeight;
+    private final Long ecBlockId;
     private final byte version;
     private final int timestamp;
     private final Attachment.AbstractAttachment attachment;
@@ -198,8 +198,8 @@ final class TransactionImpl implements Transaction {
         this.senderId = builder.senderId;
         this.blockTimestamp = builder.blockTimestamp;
         this.fullHash = builder.fullHash;
-		this.clusterDefiningBlockHeight = builder.clusterDefiningBlockHeight;
-        this.clusterDefiningBlockId = builder.clusterDefiningBlockId;
+		this.ecBlockHeight = builder.ecBlockHeight;
+        this.ecBlockId = builder.ecBlockId;
 
         List<Appendix.AbstractAppendix> list = new ArrayList<>();
         if ((this.attachment = builder.attachment) != null) {
@@ -473,8 +473,8 @@ final class TransactionImpl implements Transaction {
         buffer.put(signature != null ? signature : new byte[64]);
         if (version > 0) {
             buffer.putInt(getFlags());
-            buffer.putInt(clusterDefiningBlockHeight);
-            buffer.putLong(clusterDefiningBlockId);
+            buffer.putInt(ecBlockHeight);
+            buffer.putLong(ecBlockId);
         }
         for (Appendix appendage : appendages) {
             appendage.putBytes(buffer);
@@ -506,20 +506,20 @@ final class TransactionImpl implements Transaction {
         buffer.get(signature);
         signature = Convert.emptyToNull(signature);
         int flags = 0;
-        int clusterDefiningBlockHeight = 0;
-        Long clusterDefiningBlockId = null;
+        int ecBlockHeight = 0;
+        Long ecBlockId = null;
         if (version > 0) {
             flags = buffer.getInt();
-            clusterDefiningBlockHeight = buffer.getInt();
-            clusterDefiningBlockId = buffer.getLong();
+            ecBlockHeight = buffer.getInt();
+            ecBlockId = buffer.getLong();
         }
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
                 timestamp, deadline, transactionType.parseAttachment(buffer, version))
                 .referencedTransactionFullHash(referencedTransactionFullHash)
                 .signature(signature)
-                .clusterDefiningBlockHeight(clusterDefiningBlockHeight)
-                .clusterDefiningBlockId(clusterDefiningBlockId);
+                .ecBlockHeight(ecBlockHeight)
+                .ecBlockId(ecBlockId);
         if (transactionType.hasRecipient()) {
             builder.recipientId(recipientId);
         }
@@ -574,8 +574,8 @@ final class TransactionImpl implements Transaction {
         if (referencedTransactionFullHash != null) {
             json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
-        json.put("clusterDefiningBlockHeight", clusterDefiningBlockHeight);
-        json.put("clusterDefiningBlockId", Convert.toUnsignedLong(clusterDefiningBlockId));
+        json.put("ecBlockHeight", ecBlockHeight);
+        json.put("ecBlockId", Convert.toUnsignedLong(ecBlockId));
         json.put("signature", Convert.toHexString(signature));
         JSONObject attachmentJSON = new JSONObject();
         for (Appendix appendage : appendages) {
@@ -624,20 +624,20 @@ final class TransactionImpl implements Transaction {
             builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
         }
         if (version > 0) {
-            builder.clusterDefiningBlockHeight(((Long) transactionData.get("clusterDefiningBlockHeight")).intValue());
-            builder.clusterDefiningBlockId(Convert.parseUnsignedLong((String) transactionData.get("clusterDefiningBlockId")));
+            builder.ecBlockHeight(((Long) transactionData.get("ecBlockHeight")).intValue());
+            builder.ecBlockId(Convert.parseUnsignedLong((String) transactionData.get("ecBlockId")));
         }
         return builder.build();
     }
 
     @Override
-    public int getClusterDefiningBlockHeight() {
-        return clusterDefiningBlockHeight;
+    public int getECBlockHeight() {
+        return ecBlockHeight;
     }
 
     @Override
-    public Long getClusterDefiningBlockId() {
-        return clusterDefiningBlockId;
+    public Long getECBlockId() {
+        return ecBlockId;
     }
 
     @Override

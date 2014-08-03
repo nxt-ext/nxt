@@ -260,9 +260,9 @@ final class DbVersion {
             case 65:
                 apply("ALTER TABLE transaction ADD COLUMN has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
             case 66:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS cluster_defining_block_height INT DEFAULT NULL");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_height INT DEFAULT NULL");
             case 67:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS cluster_defining_block_id BIGINT DEFAULT NULL");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_id BIGINT DEFAULT NULL");
             case 68:
                 return;
             default:

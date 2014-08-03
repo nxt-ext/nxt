@@ -18,10 +18,10 @@ final class EconomicClustering {
 
     private static final Blockchain blockchain = BlockchainImpl.getInstance();
 
-    static Block getClusterDefiningBlockId(int timestamp) {
+    static Block getECBlockId(int timestamp) {
         Block block = blockchain.getLastBlock();
         int distance = 0;
-        while (block.getTimestamp() > timestamp - Constants.EC_RULE_TERMINATOR && distance < Constants.EC_CLUSTER_BLOCK_DISTANCE_LIMIT) {
+        while (block.getTimestamp() > timestamp - Constants.EC_RULE_TERMINATOR && distance < Constants.EC_BLOCK_DISTANCE_LIMIT) {
             block = blockchain.getBlock(block.getPreviousBlockId());
             distance += 1;
         }
@@ -32,11 +32,11 @@ final class EconomicClustering {
         if (blockchain.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8) {
             return true;
         }
-        if (blockchain.getHeight() - transaction.getClusterDefiningBlockHeight() > Constants.EC_CLUSTER_BLOCK_DISTANCE_LIMIT) {
+        if (blockchain.getHeight() - transaction.getECBlockHeight() > Constants.EC_BLOCK_DISTANCE_LIMIT) {
             return false;
         }
-        Block clusterDefiningBlock = blockchain.getBlock(transaction.getClusterDefiningBlockId());
-        return clusterDefiningBlock != null && clusterDefiningBlock.getHeight() == transaction.getClusterDefiningBlockHeight();
+        Block ecBlock = blockchain.getBlock(transaction.getECBlockId());
+        return ecBlock != null && ecBlock.getHeight() == transaction.getECBlockHeight();
     }
 
 }

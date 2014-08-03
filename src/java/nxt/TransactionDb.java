@@ -83,8 +83,8 @@ final class TransactionDb {
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
-            int clusterDefiningBlockHeight = rs.getInt("cluster_defining_block_height");
-            Long clusterDefiningBlockId = rs.getLong("cluster_defining_block_id");
+            int ecBlockHeight = rs.getInt("ec_block_height");
+            Long ecBlockId = rs.getLong("ec_block_id");
             byte[] signature = rs.getBytes("signature");
             Long blockId = rs.getLong("block_id");
             int height = rs.getInt("height");
@@ -125,9 +125,9 @@ final class TransactionDb {
             if (rs.getBoolean("has_public_key_announcement")) {
                 builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
             }
-            if (clusterDefiningBlockHeight != 0) {
-                builder.clusterDefiningBlockHeight(clusterDefiningBlockHeight);
-                builder.clusterDefiningBlockId(clusterDefiningBlockId);
+            if (ecBlockHeight != 0) {
+                builder.ecBlockHeight(ecBlockHeight);
+                builder.ecBlockId(ecBlockId);
             }
 
             return builder.build();
@@ -162,7 +162,7 @@ final class TransactionDb {
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "cluster_defining_block_height, cluster_defining_block_id) "
+                        + "ec_block_height, ec_block_id) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
@@ -207,8 +207,8 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getMessage() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
-                    pstmt.setInt(++i, transaction.getClusterDefiningBlockHeight());
-                    pstmt.setLong(++i, transaction.getClusterDefiningBlockId());
+                    pstmt.setInt(++i, transaction.getECBlockHeight());
+                    pstmt.setLong(++i, transaction.getECBlockId());
                     pstmt.executeUpdate();
                 }
             }
