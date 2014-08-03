@@ -179,14 +179,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
                                                      Attachment attachment) throws NxtException.ValidationException {
-        int height = Nxt.getBlockchain().getHeight();
-        byte version = (byte) (height < Constants.DIGITAL_GOODS_STORE_BLOCK
-                ? 0 : height < Constants.TRANSPARENT_FORGING_BLOCK_8
-                ? 1 : 2);
+        byte version = (byte) (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
         int timestamp = Convert.getEpochTime();
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
                 deadline, (Attachment.AbstractAttachment)attachment);
-        if (version > 1) {
+        if (version > 0) {
             Block clusterDefiningBlock = EconomicClustering.getClusterDefiningBlockId(timestamp);
             builder.clusterDefiningBlockHeight(clusterDefiningBlock.getHeight());
             builder.clusterDefiningBlockId(clusterDefiningBlock.getId());

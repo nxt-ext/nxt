@@ -94,11 +94,7 @@ final class TransactionDb {
             int blockTimestamp = rs.getInt("block_timestamp");
             byte[] fullHash = rs.getBytes("full_hash");
             byte version = rs.getByte("version");
-/*
-            TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-            TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId, amountNQT, feeNQT,
-                        referencedTransactionFullHash, clusterDefiningBlockHeight, clusterDefiningBlockId, signature, blockId, height, id, senderId, blockTimestamp, fullHash);
-*/
+
             ByteBuffer buffer = null;
             if (attachmentBytes != null) {
                 buffer = ByteBuffer.wrap(attachmentBytes);
@@ -128,6 +124,10 @@ final class TransactionDb {
             }
             if (rs.getBoolean("has_public_key_announcement")) {
                 builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+            }
+            if (clusterDefiningBlockHeight != 0) {
+                builder.clusterDefiningBlockHeight(clusterDefiningBlockHeight);
+                builder.clusterDefiningBlockId(clusterDefiningBlockId);
             }
 
             return builder.build();

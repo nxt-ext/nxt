@@ -473,8 +473,6 @@ final class TransactionImpl implements Transaction {
         buffer.put(signature != null ? signature : new byte[64]);
         if (version > 0) {
             buffer.putInt(getFlags());
-        }
-        if (version > 1) {
             buffer.putInt(clusterDefiningBlockHeight);
             buffer.putLong(clusterDefiningBlockId);
         }
@@ -508,12 +506,10 @@ final class TransactionImpl implements Transaction {
         buffer.get(signature);
         signature = Convert.emptyToNull(signature);
         int flags = 0;
-        if (version > 0) {
-            flags = buffer.getInt();
-        }
         int clusterDefiningBlockHeight = 0;
         Long clusterDefiningBlockId = null;
-        if (version > 1) {
+        if (version > 0) {
+            flags = buffer.getInt();
             clusterDefiningBlockHeight = buffer.getInt();
             clusterDefiningBlockId = buffer.getLong();
         }
@@ -521,13 +517,11 @@ final class TransactionImpl implements Transaction {
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
                 timestamp, deadline, transactionType.parseAttachment(buffer, version))
                 .referencedTransactionFullHash(referencedTransactionFullHash)
-                .signature(signature);
+                .signature(signature)
+                .clusterDefiningBlockHeight(clusterDefiningBlockHeight)
+                .clusterDefiningBlockId(clusterDefiningBlockId);
         if (transactionType.hasRecipient()) {
             builder.recipientId(recipientId);
-        }
-        if (version > 1) {
-            builder.clusterDefiningBlockHeight(clusterDefiningBlockHeight);
-            builder.clusterDefiningBlockId(clusterDefiningBlockId);
         }
         int position = 1;
         if ((flags & position) != 0 || (version == 0 && transactionType == TransactionType.Messaging.ARBITRARY_MESSAGE)) {
@@ -606,7 +600,6 @@ final class TransactionImpl implements Transaction {
         byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
         Long versionValue = (Long)transactionData.get("version");
         byte version = versionValue == null ? 0 : versionValue.byteValue();
-
         JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
 
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
@@ -630,7 +623,7 @@ final class TransactionImpl implements Transaction {
             builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
             builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
         }
-        if (version > 1) {
+        if (version > 0) {
             builder.clusterDefiningBlockHeight(((Long) transactionData.get("clusterDefiningBlockHeight")).intValue());
             builder.clusterDefiningBlockId(Convert.parseUnsignedLong((String) transactionData.get("clusterDefiningBlockId")));
         }
@@ -671,9 +664,6 @@ final class TransactionImpl implements Transaction {
             return false;
         }
         if (signature == null) {
-            return false;
-        }
-        if (BlockchainImpl.getInstance().getLastBlock().getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_8 && !EconomicClustering.validateClusterDefiningBlock(this.getClusterDefiningBlockHeight(), this.getClusterDefiningBlockId())) {
             return false;
         }
         byte[] data = zeroSignature(getBytes());

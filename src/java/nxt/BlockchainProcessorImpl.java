@@ -572,6 +572,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
+                        if (!EconomicClustering.verifyFork(transaction)) {
+                            throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
+                        }
                         if (transaction.getId().equals(Long.valueOf(0L))) {
                             throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                         }
@@ -705,6 +708,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
+                if (!EconomicClustering.verifyFork(transaction)) {
+                    continue;
+                }
+
                 try {
                     transaction.validateAttachment();
                 } catch (NxtException.NotCurrentlyValidException e) {
@@ -793,9 +800,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private boolean verifyVersion(Transaction transaction, int currentHeight) {
-        return transaction.getVersion() == (currentHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0
-                : currentHeight < Constants.TRANSPARENT_FORGING_BLOCK_8 ? 1
-                : 2);
+        return transaction.getVersion() == (currentHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
     }
 
     private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
@@ -854,6 +859,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 if (! verifyVersion(transaction, blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid transaction version");
+                                }
+                                if (! EconomicClustering.verifyFork(transaction)) {
+                                    throw new NxtException.NotValidException("Invalid transaction fork");
                                 }
                                 transaction.validateAttachment();
                             }

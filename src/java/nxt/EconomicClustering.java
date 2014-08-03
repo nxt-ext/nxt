@@ -16,18 +16,27 @@ package nxt;
  */
 final class EconomicClustering {
 
+    private static final Blockchain blockchain = BlockchainImpl.getInstance();
+
     static Block getClusterDefiningBlockId(int timestamp) {
-        Block block = BlockchainImpl.getInstance().getLastBlock();
-        do {
-            block = BlockchainImpl.getInstance().getBlock(block.getPreviousBlockId());
-        } while (block.getTimestamp() > timestamp - Constants.RULE_TERMINATOR);
+        Block block = blockchain.getLastBlock();
+        int distance = 0;
+        while (block.getTimestamp() > timestamp - Constants.EC_RULE_TERMINATOR && distance < Constants.EC_CLUSTER_BLOCK_DISTANCE_LIMIT) {
+            block = blockchain.getBlock(block.getPreviousBlockId());
+            distance += 1;
+        }
         return block;
     }
 
-    static boolean validateClusterDefiningBlock(int height, Long id) {
-
-        return BlockchainImpl.getInstance().getBlock(BlockchainImpl.getInstance().getBlockIdAtHeight(height)).getId().equals(id);
-
+    static boolean verifyFork(Transaction transaction) {
+        if (blockchain.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8) {
+            return true;
+        }
+        if (blockchain.getHeight() - transaction.getClusterDefiningBlockHeight() > Constants.EC_CLUSTER_BLOCK_DISTANCE_LIMIT) {
+            return false;
+        }
+        Block clusterDefiningBlock = blockchain.getBlock(transaction.getClusterDefiningBlockId());
+        return clusterDefiningBlock != null && clusterDefiningBlock.getHeight() == transaction.getClusterDefiningBlockHeight();
     }
 
 }

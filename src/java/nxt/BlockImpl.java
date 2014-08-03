@@ -344,12 +344,9 @@ final class BlockImpl implements Block {
             }
 
             int elapsedTime = timestamp - previousBlock.timestamp;
-            BigInteger target = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget())
-                    .multiply(BigInteger.valueOf(effectiveBalance))
-                    .multiply(BigInteger.valueOf(elapsedTime));
-            BigInteger prevTarget = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget())
-                    .multiply(BigInteger.valueOf(effectiveBalance))
-                    .multiply(BigInteger.valueOf(elapsedTime - 1));
+            BigInteger effectiveBaseTarget = BigInteger.valueOf(Nxt.getBlockchain().getLastBlock().getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance));
+            BigInteger target = effectiveBaseTarget.multiply(BigInteger.valueOf(elapsedTime));
+            BigInteger prevTarget = effectiveBaseTarget.multiply(BigInteger.valueOf(elapsedTime - 1));
 
             MessageDigest digest = Crypto.sha256();
             byte[] generationSignatureHash;
@@ -365,7 +362,10 @@ final class BlockImpl implements Block {
 
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 
-            return hit.compareTo(target) < 0 && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8 || hit.compareTo(prevTarget) >= 0);
+            return hit.compareTo(target) < 0
+                    && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
+                    || hit.compareTo(prevTarget) >= 0
+                    || elapsedTime > Constants.EC_RULE_TERMINATOR);
 
         } catch (RuntimeException e) {
 
