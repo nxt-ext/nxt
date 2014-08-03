@@ -711,7 +711,7 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public void validateAttachment() throws NxtException.ValidationException {
-        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK && type.hasRecipient()) {
+        if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK && type.hasRecipient() && recipientId != null) {
             Account recipientAccount = Account.getAccount(recipientId);
             if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
                 throw new NxtException.NotCurrentlyValidException("Recipient account does not have a public key, must attach a public key announcement");
