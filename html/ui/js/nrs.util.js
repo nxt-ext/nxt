@@ -1116,7 +1116,9 @@ var NRS = (function(NRS, $, undefined) {
 			if ($(this).height() > adjustheight) {
 				$(this).css("height", adjustheight).css("overflow", "hidden");
 				$(this).parent(".showmore").append(' <a href="#" class="adjust"></a>');
-				$(this).parent(".showmore").find("a.adjust").text(moreText).click(function() {
+				$(this).parent(".showmore").find("a.adjust").text(moreText).click(function(e) {
+					e.preventDefault();
+
 					if ($(this).text() == moreText) {
 						$(this).parents("div:first").find(".moreblock").css('height', 'auto').css('overflow', 'visible');
 						$(this).parents("div:first").find("p.continued").css('display', 'none');

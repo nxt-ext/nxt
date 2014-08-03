@@ -200,7 +200,7 @@
 		o.interpolationPrefixEscaped = f.regexEscape(o.interpolationPrefix);
 		o.interpolationSuffixEscaped = f.regexEscape(o.interpolationSuffix);
 
-		if (!o.lng) o.lng = f.detectLanguage();
+		//if (!o.lng) o.lng = f.detectLanguage();
 		if (!o.lng) {
 			o.lng = o.fallbackLng[0];
 		}

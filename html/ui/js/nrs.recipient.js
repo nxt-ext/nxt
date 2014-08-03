@@ -160,11 +160,13 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					if (response.noPublicKey) {
-						modal.find(".recipient_public_key").show();
-					} else {
-						modal.find("input[name=recipientPublicKey]").val("");
-						modal.find(".recipient_public_key").hide();
+					if (NRS.PKAnnouncementBlockPassed) {
+						if (response.noPublicKey) {
+							modal.find(".recipient_public_key").show();
+						} else {
+							modal.find("input[name=recipientPublicKey]").val("");
+							modal.find(".recipient_public_key").hide();
+						}
 					}
 
 					var message = response.message.escapeHTML();

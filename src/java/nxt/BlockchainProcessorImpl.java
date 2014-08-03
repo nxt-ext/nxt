@@ -835,7 +835,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 blockchain.setLastBlock(BlockDb.findBlock(Genesis.GENESIS_BLOCK_ID));
                 Account.addOrGetAccount(Genesis.CREATOR_ID).apply(Genesis.CREATOR_PUBLIC_KEY, 0);
                 Long currentBlockId = Genesis.GENESIS_BLOCK_ID;
-                BlockImpl currentBlock;
+                BlockImpl currentBlock = null;
                 ResultSet rs = pstmt.executeQuery();
                 try {
                     while (rs.next()) {
@@ -883,7 +883,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Db.rollbackTransaction();
                     Db.endTransaction();
                     Logger.logDebugMessage(e.toString(), e);
-                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " failed, deleting from database");
+                    Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
+                            + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                     BlockDb.deleteBlocksFrom(currentBlockId);
                     scan();
                 }

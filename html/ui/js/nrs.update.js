@@ -65,6 +65,8 @@ var NRS = (function(NRS, $, undefined) {
 					}
 				});
 			} else {
+				//wait until non-beta
+				/*
 				//user uses an old version which does not supply the platform / version
 				//give me a few days to build this new version.. tempo!
 				var noticeDate = new Date(2014, 8, 5);
@@ -79,7 +81,7 @@ var NRS = (function(NRS, $, undefined) {
 					$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html($.t("old_nxt_wallet_update", {
 						"link": downloadUrl
 					})).show();
-				}
+				}*/
 			}
 		}
 	}
