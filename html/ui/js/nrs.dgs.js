@@ -96,10 +96,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.incoming.newest_dgs = function() {
-		NRS.loadPage("newest_dgs");
-	}
-
 	NRS.pages.dgs_seller = function(callback) {
 		var content = "";
 

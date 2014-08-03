@@ -342,7 +342,7 @@ var NRS = (function(NRS, $, undefined) {
 			var accountId = NRS.getAccountId(data.secretPhrase);
 
 			if (accountId != NRS.account) {
-				$.growl($.t("passphrase_incorrect"), {
+				$.growl($.t("error_passphrase_incorrect"), {
 					"type": "danger"
 				});
 				return;
@@ -357,7 +357,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var requestType = "sendMessage";
 
-		if ($("#inline_message_encrypt").is(":checked")) {
+		if (NRS.dgsBlockPassed && $("#inline_message_encrypt").is(":checked")) {
 			data.encrypt_message = true;
 		}
 
