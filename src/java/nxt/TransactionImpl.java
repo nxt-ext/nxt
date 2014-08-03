@@ -216,7 +216,7 @@ final class TransactionImpl implements Transaction {
         }
         this.appendages = Collections.unmodifiableList(list);
 
-        int size = signatureOffset() + 64  + (version > 0 ? 4 : 0);
+        int size = signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0);
         for (Appendix appendage : appendages) {
             size += appendage.getSize();
         }
