@@ -365,7 +365,7 @@ final class BlockImpl implements Block {
             return hit.compareTo(target) < 0
                     && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
                     || hit.compareTo(prevTarget) >= 0
-                    || elapsedTime > Constants.EC_RULE_TERMINATOR);
+                    || elapsedTime > 3600);
 
         } catch (RuntimeException e) {
 
