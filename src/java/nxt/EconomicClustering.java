@@ -32,6 +32,9 @@ final class EconomicClustering {
         if (blockchain.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
             return true;
         }
+        if (transaction.getReferencedTransactionFullHash() != null) {
+            return true;
+        }
         if (blockchain.getHeight() - transaction.getECBlockHeight() > Constants.EC_BLOCK_DISTANCE_LIMIT) {
             return false;
         }
