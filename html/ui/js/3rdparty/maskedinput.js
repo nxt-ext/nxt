@@ -92,11 +92,13 @@
 							var currentInput = input.val();
 							var pos = input.caret();
 
-							//backspace, remove
-							if ((pos.begin == 0 && pos.end == 24) || (currentInput == "NXT-____-____-____-_____" && pos.begin == 4)) {
-								input.val("");
-								$(this).trigger("unmask");
-								return;
+							if (settings.unmask !== false) {
+								//backspace, remove
+								if ((pos.begin == 0 && pos.end == 24) || (currentInput == "NXT-____-____-____-_____" && pos.begin == 4)) {
+									input.val("");
+									$(this).trigger("unmask");
+									return;
+								}
 							}
 						}
 

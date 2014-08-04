@@ -229,6 +229,7 @@
 	"add_asset": "Add Asset",
 	"bookmark_asset": "Bookmark This Asset",
 	"clear_search_results": "Clear Search Results",
+	"clear_results": "Clear Results",
 	"search_assets": "Search Assets...",
 	"no_assets_available": "You don't have any assets in your bookmark list yet. Click on \"Add Asset\" in the top right corner to add one.",
 	"no_asset_search_results": "No assets found that match search query.",
@@ -870,5 +871,8 @@
 	"private_feedback": "Private Feedback",
 	"old_nxt_wallet_update": "A new version of the NXT Wallet application is available for download <a href='__link__' target='_blank'>here</a>. It must be downloaded and installed manually.",
 	"order_total": "Order Total",
-	"message_empty": "Message is empty."
+	"message_empty": "Message is empty.",
+	"seller_account_id": "Seller's Account ID",
+	"dgs_search_description": "Enter the seller's Account ID below to view their store."
+
 }
