@@ -573,7 +573,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
                         if (!EconomicClustering.verifyFork(transaction)) {
-                            throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
+                            Logger.logErrorMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
+                                    + transaction.getStringId());
+                            //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
                         }
                         if (transaction.getId().equals(Long.valueOf(0L))) {
                             throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
@@ -709,7 +711,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 if (!EconomicClustering.verifyFork(transaction)) {
-                    continue;
+                    Logger.logErrorMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
+                    //continue;
                 }
 
                 try {
@@ -861,7 +864,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     throw new NxtException.NotValidException("Invalid transaction version");
                                 }
                                 if (! EconomicClustering.verifyFork(transaction)) {
-                                    throw new NxtException.NotValidException("Invalid transaction fork");
+                                    Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
+                                            + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight());
+                                    //throw new NxtException.NotValidException("Invalid transaction fork");
                                 }
                                 transaction.validateAttachment();
                             }

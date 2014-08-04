@@ -29,7 +29,7 @@ final class EconomicClustering {
     }
 
     static boolean verifyFork(Transaction transaction) {
-        if (blockchain.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8) {
+        if (blockchain.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
             return true;
         }
         if (blockchain.getHeight() - transaction.getECBlockHeight() > Constants.EC_BLOCK_DISTANCE_LIMIT) {
