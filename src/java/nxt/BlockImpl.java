@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -365,7 +366,8 @@ final class BlockImpl implements Block {
             return hit.compareTo(target) < 0
                     && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
                     || hit.compareTo(prevTarget) >= 0
-                    || elapsedTime > 3600);
+                    || elapsedTime > 3600
+                    || Peers.getAllPeers().size() == 0);
 
         } catch (RuntimeException e) {
 

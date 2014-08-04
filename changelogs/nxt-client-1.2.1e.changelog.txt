@@ -72,6 +72,9 @@ transaction will include a reference to a recent blockId. For now this is used
 only to detect forks, and transactions refering to a different fork are still
 not rejected.
 
+Next step of Transparent Forging will be enabled at block 215000: accounts that
+miss their turn to forge will not be able to forge for the next one hour.
+
 Updated jetty to version 9.2.2 and bouncycastle to version 1.51.
 
 This release will cause a reset of testnet, deleting blocks and transactions
