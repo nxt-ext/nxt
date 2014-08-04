@@ -277,7 +277,7 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
             case 70:
                 apply("CREATE TABLE IF NOT EXISTS alias_offer (id BIGINT NOT NULL, "
-                        + "price BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
+                        + "price BIGINT NOT NULL, buyer_id BIGINT, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
             case 71:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_offer_id_height_idx ON alias_offer (id, height DESC)");

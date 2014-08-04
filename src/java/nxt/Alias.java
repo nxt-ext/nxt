@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbUtils;
 import nxt.db.VersioningDbTable;
 
 import java.sql.Connection;
@@ -25,7 +26,7 @@ public final class Alias {
         private Offer(ResultSet rs) throws SQLException {
             this.aliasId = rs.getLong("id");
             this.priceNQT = rs.getLong("price");
-            this.buyerId  = rs.getLong("buyer_id");
+            this.buyerId  = DbUtils.getLong(rs, "buyer_id");
         }
 
         public Long getId() {
@@ -101,7 +102,7 @@ public final class Alias {
                 int i = 0;
                 pstmt.setLong(++i, offer.getId());
                 pstmt.setLong(++i, offer.getPriceNQT());
-                pstmt.setLong(++i, offer.getBuyerId());
+                DbUtils.setLong(pstmt, ++i, offer.getBuyerId());
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }

@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Attachment;
 import nxt.Constants;
-import nxt.Genesis;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
@@ -45,10 +44,8 @@ public final class SellAlias extends CreateTransaction {
         }
 
         String recipientValue = Convert.emptyToNull(req.getParameter("recipient"));
-        Long recipientId;
-        if (recipientValue == null || "0".equals(recipientValue)) {
-            recipientId = Genesis.CREATOR_ID;
-        } else {
+        Long recipientId = null;
+        if (recipientValue != null) {
             try {
                 recipientId = Convert.parseAccountId(recipientValue);
             } catch (RuntimeException e) {

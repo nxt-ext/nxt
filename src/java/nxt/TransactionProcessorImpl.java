@@ -190,7 +190,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
                                                      Attachment attachment) throws NxtException.ValidationException {
-        byte version = (byte) (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
+        byte version = (byte) getTransactionVersion(Nxt.getBlockchain().getHeight());
         return new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, Convert.getEpochTime(),
                 deadline, (Attachment.AbstractAttachment)attachment);
     }
@@ -310,6 +310,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     void shutdown() {
         removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
+    }
+
+    int getTransactionVersion(int previousBlockHeight) {
+        return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
     }
 
     private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
