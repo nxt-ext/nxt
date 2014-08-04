@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Alias;
 import nxt.Attachment;
 import nxt.Constants;
-import nxt.Genesis;
 import nxt.NxtException;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
