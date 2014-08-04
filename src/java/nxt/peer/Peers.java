@@ -84,6 +84,7 @@ public final class Peers {
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
 
     private static final ConcurrentMap<String, PeerImpl> peers = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, String> validAnnouncedAddresses = new ConcurrentHashMap<>();
 
     static final Collection<PeerImpl> allPeers = Collections.unmodifiableCollection(peers.values());
 
@@ -514,6 +515,16 @@ public final class Peers {
 
     static PeerImpl removePeer(PeerImpl peer) {
         return peers.remove(peer.getPeerAddress());
+    }
+
+    static void updateAddress(PeerImpl peer) {
+        if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+            String oldAddress = validAnnouncedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
+            if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
+                Peer oldPeer = peers.get(oldAddress);
+                oldPeer.remove();
+            }
+        }
     }
 
     public static void sendToSomePeers(Block block) {
