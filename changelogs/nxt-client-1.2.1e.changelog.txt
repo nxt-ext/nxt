@@ -77,4 +77,21 @@ Updated jetty to version 9.2.2 and bouncycastle to version 1.51.
 This release will cause a reset of testnet, deleting blocks and transactions
 after block 117907.
 
+Client Updates:
+
+Redesign login page.
+
+Multilingual interface. Some translations are incomplete and still considered
+experimental.
+
+Most forms now allow you to add an encrypted or public message to them.
+
+Added public key announcement support.
+
+Passphrase login length check.
+
+Automatically enable certain features at DGS block.
+
+Several DGS bug fixes.
+
 
