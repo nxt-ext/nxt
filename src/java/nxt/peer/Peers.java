@@ -524,7 +524,9 @@ public final class Peers {
                 Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
                         + " to " + peer.getPeerAddress());
                 Peer oldPeer = peers.get(oldAddress);
-                oldPeer.remove();
+                if (oldPeer != null) {
+                    oldPeer.remove();
+                }
             }
         }
     }
