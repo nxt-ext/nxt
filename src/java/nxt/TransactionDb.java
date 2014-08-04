@@ -85,6 +85,8 @@ final class TransactionDb {
             long amountNQT = rs.getLong("amount");
             long feeNQT = rs.getLong("fee");
             byte[] referencedTransactionFullHash = rs.getBytes("referenced_transaction_full_hash");
+            int ecBlockHeight = rs.getInt("ec_block_height");
+            Long ecBlockId = rs.getLong("ec_block_id");
             byte[] signature = rs.getBytes("signature");
             Long blockId = rs.getLong("block_id");
             int height = rs.getInt("height");
@@ -114,7 +116,10 @@ final class TransactionDb {
                     .blockTimestamp(blockTimestamp)
                     .fullHash(fullHash);
             if (transactionType.hasRecipient()) {
-                builder.recipientId(rs.getLong("recipient_id"));
+                long recipientId = rs.getLong("recipient_id");
+                if (! rs.wasNull()) {
+                    builder.recipientId(recipientId);
+                }
             }
             if (rs.getBoolean("has_message")) {
                 builder.message(new Appendix.Message(buffer, version));
@@ -124,6 +129,10 @@ final class TransactionDb {
             }
             if (rs.getBoolean("has_public_key_announcement")) {
                 builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
+            }
+            if (ecBlockHeight != 0) {
+                builder.ecBlockHeight(ecBlockHeight);
+                builder.ecBlockId(ecBlockId);
             }
 
             return builder.build();
@@ -157,8 +166,9 @@ final class TransactionDb {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO transaction (id, deadline, sender_public_key, "
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
-                        + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
+                        + "ec_block_height, ec_block_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -194,6 +204,8 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getMessage() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
+                    pstmt.setInt(++i, transaction.getECBlockHeight());
+                    pstmt.setLong(++i, transaction.getECBlockId());
                     pstmt.executeUpdate();
                 }
             }

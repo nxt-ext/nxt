@@ -568,6 +568,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
+                        if (!EconomicClustering.verifyFork(transaction)) {
+                            Logger.logErrorMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
+                                    + transaction.getStringId());
+                            //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
+                        }
                         if (transaction.getId().equals(Long.valueOf(0L))) {
                             throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                         }
@@ -714,6 +719,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
+                if (!EconomicClustering.verifyFork(transaction)) {
+                    Logger.logErrorMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
+                    //continue;
+                }
+
                 try {
                     transaction.validateAttachment();
                 } catch (NxtException.NotCurrentlyValidException e) {
@@ -850,6 +860,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid transaction version");
+                                }
+                                if (! EconomicClustering.verifyFork(transaction)) {
+                                    Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
+                                            + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight());
+                                    //throw new NxtException.NotValidException("Invalid transaction fork");
                                 }
                                 transaction.validateAttachment();
                             }

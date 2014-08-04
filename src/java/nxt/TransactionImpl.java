@@ -40,6 +40,8 @@ final class TransactionImpl implements Transaction {
         private Long senderId;
         private int blockTimestamp = -1;
         private String fullHash;
+        private int ecBlockHeight;
+        private Long ecBlockId;
 
         BuilderImpl(byte version, byte[] senderPublicKey, long amountNQT, long feeNQT, int timestamp, short deadline,
                     Attachment.AbstractAttachment attachment) {
@@ -137,6 +139,16 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
+        BuilderImpl ecBlockHeight(int height) {
+            this.ecBlockHeight = height;
+            return this;
+        }
+
+        BuilderImpl ecBlockId(Long blockId) {
+            this.ecBlockId = blockId;
+            return this;
+        }
+
     }
 
     private final short deadline;
@@ -146,6 +158,8 @@ final class TransactionImpl implements Transaction {
     private final long feeNQT;
     private final String referencedTransactionFullHash;
     private final TransactionType type;
+    private final int ecBlockHeight;
+    private final Long ecBlockId;
     private final byte version;
     private final int timestamp;
     private final Attachment.AbstractAttachment attachment;
@@ -184,6 +198,9 @@ final class TransactionImpl implements Transaction {
         this.senderId = builder.senderId;
         this.blockTimestamp = builder.blockTimestamp;
         this.fullHash = builder.fullHash;
+		this.ecBlockHeight = builder.ecBlockHeight;
+        this.ecBlockId = builder.ecBlockId;
+
         List<Appendix.AbstractAppendix> list = new ArrayList<>();
         if ((this.attachment = builder.attachment) != null) {
             list.add(this.attachment);
@@ -199,7 +216,7 @@ final class TransactionImpl implements Transaction {
         }
         this.appendages = Collections.unmodifiableList(list);
 
-        int size = signatureOffset() + 64  + (version > 0 ? 4 : 0);
+        int size = signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0);
         for (Appendix appendage : appendages) {
             size += appendage.getSize();
         }
@@ -435,7 +452,7 @@ final class TransactionImpl implements Transaction {
         buffer.putInt(timestamp);
         buffer.putShort(deadline);
         buffer.put(senderPublicKey);
-        buffer.putLong(recipientId != null ? recipientId : Genesis.CREATOR_ID);
+        buffer.putLong(type.hasRecipient() ? Convert.nullToZero(recipientId) : Genesis.CREATOR_ID);
         if (useNQT()) {
             buffer.putLong(amountNQT);
             buffer.putLong(feeNQT);
@@ -456,6 +473,8 @@ final class TransactionImpl implements Transaction {
         buffer.put(signature != null ? signature : new byte[64]);
         if (version > 0) {
             buffer.putInt(getFlags());
+            buffer.putInt(ecBlockHeight);
+            buffer.putLong(ecBlockId);
         }
         for (Appendix appendage : appendages) {
             appendage.putBytes(buffer);
@@ -474,7 +493,7 @@ final class TransactionImpl implements Transaction {
         short deadline = buffer.getShort();
         byte[] senderPublicKey = new byte[32];
         buffer.get(senderPublicKey);
-        Long recipientId = buffer.getLong();
+        Long recipientId = Convert.zeroToNull(buffer.getLong());
         long amountNQT = buffer.getLong();
         long feeNQT = buffer.getLong();
         String referencedTransactionFullHash = null;
@@ -487,14 +506,20 @@ final class TransactionImpl implements Transaction {
         buffer.get(signature);
         signature = Convert.emptyToNull(signature);
         int flags = 0;
+        int ecBlockHeight = 0;
+        Long ecBlockId = null;
         if (version > 0) {
             flags = buffer.getInt();
+            ecBlockHeight = buffer.getInt();
+            ecBlockId = buffer.getLong();
         }
         TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
         TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT,
                 timestamp, deadline, transactionType.parseAttachment(buffer, version))
                 .referencedTransactionFullHash(referencedTransactionFullHash)
-                .signature(signature);
+                .signature(signature)
+                .ecBlockHeight(ecBlockHeight)
+                .ecBlockId(ecBlockId);
         if (transactionType.hasRecipient()) {
             builder.recipientId(recipientId);
         }
@@ -538,7 +563,7 @@ final class TransactionImpl implements Transaction {
         json.put("timestamp", timestamp);
         json.put("deadline", deadline);
         json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
-        if (recipientId != null) {
+        if (type.hasRecipient()) {
             json.put("recipient", Convert.toUnsignedLong(recipientId));
         } else {
             // TODO: remove after 1.2.2
@@ -549,6 +574,8 @@ final class TransactionImpl implements Transaction {
         if (referencedTransactionFullHash != null) {
             json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
+        json.put("ecBlockHeight", ecBlockHeight);
+        json.put("ecBlockId", Convert.toUnsignedLong(ecBlockId));
         json.put("signature", Convert.toHexString(signature));
         JSONObject attachmentJSON = new JSONObject();
         for (Appendix appendage : appendages) {
@@ -586,9 +613,6 @@ final class TransactionImpl implements Transaction {
                 .signature(signature);
         if (transactionType.hasRecipient()) {
             Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-            if (recipientId == null) {
-                recipientId = 0L; // ugly
-            }
             builder.recipientId(recipientId);
         }
         if (attachmentData != null) {
@@ -596,7 +620,21 @@ final class TransactionImpl implements Transaction {
             builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
             builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
         }
+        if (version > 0) {
+            builder.ecBlockHeight(((Long) transactionData.get("ecBlockHeight")).intValue());
+            builder.ecBlockId(Convert.parseUnsignedLong((String) transactionData.get("ecBlockId")));
+        }
         return builder.build();
+    }
+
+    @Override
+    public int getECBlockHeight() {
+        return ecBlockHeight;
+    }
+
+    @Override
+    public Long getECBlockId() {
+        return ecBlockId;
     }
 
     @Override
