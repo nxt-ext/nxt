@@ -452,7 +452,7 @@ final class TransactionImpl implements Transaction {
         buffer.putInt(timestamp);
         buffer.putShort(deadline);
         buffer.put(senderPublicKey);
-        buffer.putLong(recipientId != null ? recipientId : Genesis.CREATOR_ID);
+        buffer.putLong(type.hasRecipient() ? Convert.nullToZero(recipientId) : Genesis.CREATOR_ID);
         if (useNQT()) {
             buffer.putLong(amountNQT);
             buffer.putLong(feeNQT);
@@ -493,7 +493,7 @@ final class TransactionImpl implements Transaction {
         short deadline = buffer.getShort();
         byte[] senderPublicKey = new byte[32];
         buffer.get(senderPublicKey);
-        Long recipientId = buffer.getLong();
+        Long recipientId = Convert.zeroToNull(buffer.getLong());
         long amountNQT = buffer.getLong();
         long feeNQT = buffer.getLong();
         String referencedTransactionFullHash = null;
@@ -563,7 +563,7 @@ final class TransactionImpl implements Transaction {
         json.put("timestamp", timestamp);
         json.put("deadline", deadline);
         json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
-        if (recipientId != null) {
+        if (type.hasRecipient()) {
             json.put("recipient", Convert.toUnsignedLong(recipientId));
         } else {
             // TODO: remove after 1.2.2
@@ -613,9 +613,6 @@ final class TransactionImpl implements Transaction {
                 .signature(signature);
         if (transactionType.hasRecipient()) {
             Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-            if (recipientId == null) {
-                recipientId = 0L; // ugly
-            }
             builder.recipientId(recipientId);
         }
         if (attachmentData != null) {
