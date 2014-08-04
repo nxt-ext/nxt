@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -365,7 +366,10 @@ final class BlockImpl implements Block {
             BigInteger hit = new BigInteger(1, new byte[] {generationSignatureHash[7], generationSignatureHash[6], generationSignatureHash[5], generationSignatureHash[4], generationSignatureHash[3], generationSignatureHash[2], generationSignatureHash[1], generationSignatureHash[0]});
 
             return (hit.compareTo(target) < 0 || (this.height < Constants.TRANSPARENT_FORGING_BLOCK_5 && badBlocks.contains(this.getId())))
-                    && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8 || hit.compareTo(prevTarget) >= 0 || elapsedTime > 3600);
+                    && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
+                    || hit.compareTo(prevTarget) >= 0
+                    || elapsedTime > 3600
+                    || Peers.getAllPeers().size() == 0);
 
         } catch (RuntimeException e) {
 

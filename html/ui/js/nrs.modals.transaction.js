@@ -239,7 +239,7 @@ var NRS = (function(NRS, $, undefined) {
 									message = $.t("alias_sale_direct_offer", {
 										"nxt": NRS.formatAmount(transaction.attachment.priceNQT)
 									}) + " <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
-								} else if (transaction.recipient == NRS.genesis) {
+								} else if (typeof transaction.recipient == "undefined") {
 									message = $.t("alias_sale_indirect_offer", {
 										"nxt": NRS.formatAmount(transaction.attachment.priceNQT)
 									}) + " <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";

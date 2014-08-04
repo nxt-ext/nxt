@@ -382,6 +382,7 @@ final class PeerImpl implements Peer {
             }
             if (analyzeHallmark(announcedAddress, (String)response.get("hallmark"))) {
                 setState(State.CONNECTED);
+                Peers.updateAddress(this);
             } else {
                 blacklist();
             }

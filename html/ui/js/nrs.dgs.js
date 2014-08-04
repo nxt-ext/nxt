@@ -73,63 +73,49 @@ var NRS = (function(NRS, $, undefined) {
 			"</div><hr />";
 	}
 
-	NRS.pages.newest_dgs = function() {
+	NRS.pages.dgs_search = function(callback) {
 		var content = "";
 
-		NRS.sendRequest("getDGSGoods+", {
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
-			if (response.goods && response.goods.length) {
-				if (response.goods.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.goods.pop();
+		var seller = $.trim($(".dgs_search input[name=q]").val());
+
+		if (seller) {
+			$("#dgs_search_contents").empty();
+			$("#dgs_search_results").show();
+			$("#dgs_search_center").hide();
+			$("#dgs_search_top").show();
+
+			NRS.sendRequest("getDGSGoods+", {
+				"seller": seller,
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+			}, function(response) {
+				if (response.goods && response.goods.length) {
+					if (response.goods.length > NRS.itemsPerPage) {
+						NRS.hasMorePages = true;
+						response.goods.pop();
+					}
+
+					var content = "";
+
+					for (var i = 0; i < response.goods.length; i++) {
+						content += NRS.getMarketplaceItemHTML(response.goods[i]);
+					}
 				}
 
-				for (var i = 0; i < response.goods.length; i++) {
-					content += NRS.getMarketplaceItemHTML(response.goods[i]);
+				NRS.dataLoaded(content);
+				NRS.showMore();
+
+				if (callback) {
+					callback();
 				}
-			}
-
-			NRS.dataLoaded(content);
-			NRS.showMore();
-		});
-	}
-
-	NRS.pages.dgs_seller = function(callback) {
-		var content = "";
-
-		var seller = $(".dgs_search input[name=q]").val();
-
-		NRS.sendRequest("getDGSGoods+", {
-			"seller": seller,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
-			if (response.goods && response.goods.length) {
-				if (response.goods.length > NRS.itemsPerPage) {
-					NRS.hasMorePages = true;
-					response.goods.pop();
-				}
-
-				var content = "";
-
-				for (var i = 0; i < response.goods.length; i++) {
-					content += NRS.getMarketplaceItemHTML(response.goods[i]);
-				}
-			}
-
-			NRS.dataLoaded(content);
-			NRS.showMore();
-
-			if (callback) {
-				callback();
-			}
-		});
-	}
-
-	NRS.incoming.dgs_seller = function() {
-		NRS.loadPage("dgs_seller");
+			});
+		} else {
+			$("#dgs_search_center").show();
+			$("#dgs_search_top").hide();
+			$("#dgs_search_results").hide();
+			$("#dgs_search_contents").empty();
+			NRS.pageLoaded();
+		}
 	}
 
 	NRS.pages.purchased_dgs = function() {
@@ -837,18 +823,32 @@ var NRS = (function(NRS, $, undefined) {
 		$(".dgs_search input[name=q]").val(seller);
 
 		if (seller == "") {
-			$("#dgs_seller_page_link").hide();
+			NRS.pages.dgs_search();
+		} else if (/^(NXT\-)/i.test(seller)) {
+			var address = new NxtAddress();
 
-			NRS.goToPage("newest_dgs");
-		} else if (/^\d+$/.test(seller) || /^(NXT\-)/i.test(seller)) {
-			$("#dgs_seller_page_link").show();
-
-			NRS.goToPage("dgs_seller");
+			if (!address.set(seller)) {
+				$.growl($.t("error_invalid_seller"), {
+					"type": "danger"
+				});
+			} else {
+				NRS.pages.dgs_search();
+			}
 		} else {
 			$.growl($.t("error_invalid_seller"), {
 				"type": "danger"
 			});
 		}
+	});
+
+	$("#dgs_clear_results").on("click", function(e) {
+		e.preventDefault();
+
+		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
+			"unmask": false
+		});
+
+		NRS.pages.dgs_search();
 	});
 
 	$("#user_info_modal").on("click", "a[data-goto-goods]", function(e) {
@@ -865,9 +865,8 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.goToGoods = function(seller, goods) {
 		$(".dgs_search input[name=q]").val(seller);
-		$("#dgs_seller_page_link").show();
 
-		NRS.goToPage("dgs_seller", function() {
+		NRS.goToPage("dgs_search", function() {
 			_goodsToShow = goods;
 			$("#dgs_purchase_modal").modal("show");
 		});

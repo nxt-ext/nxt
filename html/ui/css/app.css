@@ -2832,6 +2832,10 @@ a.list-group-item-header:hover {
   font-weight: bold;
 }
 
+.label-small {
+  font-size:12px;
+}
+
 .scrollable-menu {
     height: auto;
     max-height: 500px;
