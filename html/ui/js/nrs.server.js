@@ -403,11 +403,12 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		//transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
 
-
 		transaction.flags = 0;
 
 		if (transaction.version > 0) {
 			transaction.flags = converters.byteArrayToSignedInt32(byteArray, 160);
+			transaction.ecBlockHeight = String(converters.byteArrayToSignedInt32(byteArray, 164));
+			transaction.ecBlockId = String(converters.byteArrayToBigInteger(byteArray, 168));
 		}
 
 		if (!("amountNQT" in data)) {
@@ -443,9 +444,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (transaction.version > 0) {
 			//has empty attachment, so no attachmentVersion byte...
 			if (requestType == "sendMoney" || requestType == "sendMessage") {
-				var pos = 164;
+				var pos = 176;
 			} else {
-				var pos = 165;
+				var pos = 177;
 			}
 		} else {
 			var pos = 160;
@@ -900,21 +901,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 4;
 
-				/*
-				var encryptedNoteLength = converters.byteArrayToSignedShort(byteArray, pos);
-
-				pos += 2;
-
-				transaction.encryptedNote = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedNoteLength));
-
-				pos += encryptedNoteLength;
-
-				transaction.encryptedNoteNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
-			
-				transaction.encryptedNote !== data.encryptedNote || transaction.encryptedNoteNonce !== data.encryptedNoteNonce) {
-
-				*/
-
 				if (transaction.goods !== data.goods || transaction.quantity !== data.quantity || transaction.priceNQT !== data.priceNQT || transaction.deliveryDeadlineTimestamp !== data.deliveryDeadlineTimestamp) {
 					return false;
 				}
@@ -973,20 +959,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 8;
 
-				/*
-				var encryptedNoteLength = converters.byteArrayToSignedShort(byteArray, pos);
-
-				pos += 2;
-
-				transaction.encryptedNote = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedNoteLength));
-
-				pos += encryptedNoteLength;
-
-				transaction.encryptedNoteNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
-				*/
-
 				if (transaction.purchase !== data.purchase) {
-					// || transaction.encryptedNote !== data.encryptedNote || transaction.encryptedNoteNonce !== data.encryptedNoteNonce) {
 					return false;
 				}
 
@@ -1003,20 +976,6 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.refundNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
 
 				pos += 8;
-
-				/*
-				var encryptedNoteLength = converters.byteArrayToSignedShort(byteArray, pos);
-
-				pos += 2;
-
-				transaction.encryptedNote = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedNoteLength));
-
-				pos += encryptedNoteLength;
-
-				transaction.encryptedNoteNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
-			
-				} || transaction.encryptedNote !== data.encryptedNote || transaction.encryptedNoteNonce !== data.encryptedNoteNonce) {
-				*/
 
 				if (transaction.purchase !== data.purchase || transaction.refundNQT !== data.refundNQT) {
 					return false;
