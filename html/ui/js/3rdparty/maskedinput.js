@@ -177,7 +177,7 @@
 
 						input.bind("keyup.remask", function(e) {
 							if (input.val().toLowerCase() == "nxt-") {
-								input.val("").mask("NXT-****-****-****-*****").trigger("checkRecipient").unbind(".remask");
+								input.val("").mask("NXT-****-****-****-*****").unbind(".remask").trigger("focus");
 							}
 						}).bind("paste.remask", function(e) {
 							setTimeout(function() {
@@ -227,6 +227,9 @@
 	});
 
 	function text_diff(first, second) {
+		first = first.toUpperCase();
+		second = second.toUpperCase();
+
 		var start = 0;
 		while (start < first.length && first[start] == second[start]) {
 			++start;
