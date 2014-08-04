@@ -873,6 +873,7 @@
 	"order_total": "Order Total",
 	"message_empty": "Message is empty.",
 	"seller_account_id": "Seller's Account ID",
-	"dgs_search_description": "Enter the seller's Account ID below to view their store."
+	"dgs_search_description": "Enter the seller's Account ID below to view their store.",
+	"search_marketplace": "Search Marketplace"
 
 }
