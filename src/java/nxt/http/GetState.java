@@ -52,7 +52,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("numberOfOrders", Order.Ask.getCount() + Order.Bid.getCount());
         response.put("numberOfTrades", Trade.getCount());
         response.put("numberOfAliases", Alias.getCount());
-        response.put("numberOfPolls", Poll.getAllPolls().size());
+        response.put("numberOfPolls", Poll.getCount());
         response.put("numberOfVotes", Vote.getCount());
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());

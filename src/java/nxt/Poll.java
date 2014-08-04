@@ -200,6 +200,10 @@ public final class Poll {
         return pollTable.getManyBy("active", false);
     }
 
+    public static int getCount() {
+        return pollTable.getCount();
+    }
+
     public static boolean isActive(long pollId) {
         Poll poll = pollTable.get(pollId);
         return poll.isActive();
