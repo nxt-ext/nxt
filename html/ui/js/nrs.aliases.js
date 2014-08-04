@@ -10,6 +10,8 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
 
+				console.log(response.aliases);
+
 				if (NRS.unconfirmedTransactions.length) {
 					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
@@ -66,7 +68,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (unconfirmedTransaction) {
 						alias.tentative = true;
-						alias.buyer = unconfirmedTransaction.recipient;
+						if (unconfirmedTransaction.recipient) {
+							alias.buyer = unconfirmedTransaction.recipient;
+						}
 						alias.priceNQT = unconfirmedTransaction.priceNQT;
 					}
 
@@ -85,7 +89,11 @@ var NRS = (function(NRS, $, undefined) {
 
 					var allowCancel = false;
 
-					if (alias.buyer) {
+					console.log(alias);
+
+					if ("priceNQT" in alias) {
+						console.log(typeof alias.buyer);
+
 						if (alias.priceNQT == "0") {
 							if (alias.buyer == NRS.account) {
 								alias.status = $.t("cancelling_sale");
@@ -97,7 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 								allowCancel = true;
 							}
 
-							if (alias.buyer != NRS.genesis) {
+							if (typeof alias.buyer != "undefined") {
 								alias.status = $.t("for_sale_direct");
 							} else {
 								alias.status = $.t("for_sale_indirect");
@@ -171,7 +179,6 @@ var NRS = (function(NRS, $, undefined) {
 			successMessage = $.t("success_transfer_alias");
 			errorMessage = $.t("error_transfer_alias");
 		} else {
-
 			if (!data.recipient) {
 				return {
 					"error": $.t("error_not_specified", {
@@ -195,6 +202,7 @@ var NRS = (function(NRS, $, undefined) {
 				delete data.add_message;
 				delete data.encrypt_message;
 				delete data.message;
+				delete data.recipient;
 			}
 		}
 
@@ -295,12 +303,12 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger"
 				});
 			} else {
-				if (!response.buyer) {
+				if (!("priceNQT" in response)) {
 					e.preventDefault();
 					$.growl($.t("error_alias_not_for_sale"), {
 						"type": "danger"
 					});
-				} else if (response.buyer != NRS.genesis && response.buyer != NRS.account) {
+				} else if (typeof response.buyer != "undefined" && response.buyer != NRS.account) {
 					e.preventDefault();
 					$.growl($.t("error_alias_sale_different_account"), {
 						"type": "danger"
@@ -520,12 +528,12 @@ var NRS = (function(NRS, $, undefined) {
 				var message;
 
 				if (!response.errorCode) {
-					if (response.buyer) {
+					if ("priceNQT" in response) {
 						if (response.buyer == NRS.account) {
 							message = $.t("alias_sale_direct_offer", {
 								"nxt": NRS.formatAmount(response.priceNQT)
 							}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
-						} else if (response.buyer == NRS.genesis) {
+						} else if (typeof response.buyer == "undefined") {
 							message = $.t("alias_sale_indirect_offer", {
 								"nxt": NRS.formatAmount(response.priceNQT)
 							}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
@@ -643,12 +651,12 @@ var NRS = (function(NRS, $, undefined) {
 					"data_formatted_html": String(response.aliasURI).autoLink()
 				}
 
-				if (response.buyer) {
+				if ("priceNQT" in response) {
 					if (response.buyer == NRS.account) {
 						$("#alias_sale_callout").html($.t("alias_sale_direct_offer", {
 							"nxt": NRS.formatAmount(response.priceNQT)
 						}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>").show();
-					} else if (response.buyer == NRS.genesis) {
+					} else if (typeof response.buyer == "undefined") {
 						$("#alias_sale_callout").html($.t("alias_sale_indirect_offer", {
 							"nxt": NRS.formatAmount(response.priceNQT)
 						}) + " <a href='#' data-alias='" + String(response.aliasName).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>").show();

@@ -425,8 +425,16 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 
-		if (transaction.deadline !== data.deadline || transaction.recipient !== data.recipient) {
+		if (transaction.deadline !== data.deadline) {
 			return false;
+		}
+
+		if (transaction.recipient !== data.recipient) {
+			if (data.recipient == "1739068987193023818" && transaction.recipient == "0") {
+				//ok
+			} else {
+				return false;
+			}
 		}
 
 		if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
