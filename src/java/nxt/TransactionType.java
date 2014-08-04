@@ -441,11 +441,10 @@ public abstract class TransactionType {
                         (Attachment.MessagingAliasSell) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
                 final long priceNQT = attachment.getPriceNQT();
-                final Long buyerId = recipientAccount.getId();
                 if (priceNQT > 0) {
-                    Alias.addSellOffer(aliasName, priceNQT, buyerId);
+                    Alias.addSellOffer(aliasName, priceNQT, recipientAccount);
                 } else {
-                    Alias.changeOwner(Account.getAccount(buyerId), aliasName, transaction.getBlockTimestamp());
+                    Alias.changeOwner(recipientAccount, aliasName, transaction.getBlockTimestamp());
                 }
             }
 
@@ -480,8 +479,12 @@ public abstract class TransactionType {
                 if (priceNQT < 0 || priceNQT > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid alias sell price: " + priceNQT);
                 }
-                if (priceNQT == 0 && Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
-                    throw new NxtException.NotValidException("Transferring aliases to Genesis account not allowed");
+                if (priceNQT == 0) {
+                    if (Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
+                        throw new NxtException.NotValidException("Transferring aliases to Genesis account not allowed");
+                    } else if (transaction.getRecipientId() == null) {
+                        throw new NxtException.NotValidException("Missing alias transfer recipient");
+                    }
                 }
                 final Alias alias = Alias.getAlias(aliasName);
                 if (alias == null) {
@@ -559,7 +562,7 @@ public abstract class TransactionType {
                             + transaction.getAmountNQT() + " < " + offer.getPriceNQT() + ")";
                     throw new NxtException.NotCurrentlyValidException(msg);
                 }
-                if (! offer.getBuyerId().equals(Genesis.CREATOR_ID) && ! offer.getBuyerId().equals(transaction.getSenderId())) {
+                if (offer.getBuyerId() != null && ! offer.getBuyerId().equals(transaction.getSenderId())) {
                     throw new NxtException.NotCurrentlyValidException("Wrong buyer for " + aliasName + ": "
                             + Convert.toUnsignedLong(transaction.getSenderId()) + " expected: "
                             + Convert.toUnsignedLong(offer.getBuyerId()));
