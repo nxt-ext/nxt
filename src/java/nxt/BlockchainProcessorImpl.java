@@ -486,7 +486,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException("Previous block id doesn't match");
                 }
 
-                if (! verifyVersion(block, previousLastBlock.getHeight())) {
+                if (block.getVersion() != getBlockVersion(previousLastBlock.getHeight())) {
                     throw new BlockNotAcceptedException("Invalid version " + block.getVersion());
                 }
 
@@ -564,7 +564,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                         + " for transaction " + transaction.getStringId(), transaction);
                             }
                         }
-                        if (! verifyVersion(transaction, previousLastBlock.getHeight())) {
+                        if (transaction.getVersion() != transactionProcessor.getTransactionVersion(previousLastBlock.getHeight())) {
                             throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
                                     + " at height " + previousLastBlock.getHeight(), transaction);
                         }
@@ -672,6 +672,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
+    int getBlockVersion(int previousBlockHeight) {
+        return previousBlockHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
+                : previousBlockHeight < Constants.NQT_BLOCK ? 2
+                : 3;
+    }
+
     void generateBlock(String secretPhrase) {
 
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
@@ -754,12 +760,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         byte[] generationSignature = digest.digest(publicKey);
 
         BlockImpl block;
-        int version = previousBlock.getHeight() < Constants.NQT_BLOCK ? 2 : 3;
         byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.getBytes());
 
         try {
 
-            block = new BlockImpl(version, blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
+            block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,
                         payloadHash, publicKey, generationSignature, null, previousBlockHash, new ArrayList<>(newTransactions.values()));
 
         } catch (NxtException.ValidationException e) {
@@ -793,17 +798,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
         return BlockImpl.parseBlock(blockData);
-    }
-
-    private boolean verifyVersion(Block block, int currentHeight) {
-        return block.getVersion() ==
-                (currentHeight < Constants.TRANSPARENT_FORGING_BLOCK ? 1
-                        : currentHeight < Constants.NQT_BLOCK ? 2
-                        : 3);
-    }
-
-    private boolean verifyVersion(Transaction transaction, int currentHeight) {
-        return transaction.getVersion() == (currentHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
     }
 
     private boolean hasAllReferencedTransactions(Transaction transaction, int timestamp, int count) {
@@ -853,14 +847,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             if (!currentBlock.verifyBlockSignature() || !currentBlock.verifyGenerationSignature()) {
                                 throw new NxtException.NotValidException("Invalid block signature");
                             }
-                            if (! verifyVersion(currentBlock, blockchain.getHeight())) {
+                            if (currentBlock.getVersion() != getBlockVersion(blockchain.getHeight())) {
                                 throw new NxtException.NotValidException("Invalid block version");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                 if (!transaction.verify()) {
                                     throw new NxtException.NotValidException("Invalid transaction signature");
                                 }
-                                if (! verifyVersion(transaction, blockchain.getHeight())) {
+                                if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid transaction version");
                                 }
                                 if (! EconomicClustering.verifyFork(transaction)) {
