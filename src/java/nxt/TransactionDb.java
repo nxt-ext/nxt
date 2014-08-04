@@ -211,7 +211,11 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
-                    pstmt.setLong(++i, transaction.getECBlockId());
+                    if (transaction.getECBlockId() != null) {
+                        pstmt.setLong(++i, transaction.getECBlockId());
+                    } else {
+                        pstmt.setNull(++i, Types.BIGINT);
+                    }
                     pstmt.executeUpdate();
                 }
             }
