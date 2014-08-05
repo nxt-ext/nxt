@@ -261,6 +261,46 @@ public interface Appendix {
 
     }
 
+    public static class EncryptToSelfMessage extends EncryptedMessage {
+
+        static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
+            JSONObject encryptToSelfMessageJSON = (JSONObject)attachmentData.get("encryptToSelfMessage");
+            if (encryptToSelfMessageJSON == null ) {
+                return null;
+            }
+            return new EncryptToSelfMessage(encryptToSelfMessageJSON);
+        }
+
+        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+        }
+
+        EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
+        }
+
+        public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText) {
+            super(encryptedData, isText);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            JSONObject encryptToSelfMessageJSON = new JSONObject();
+            encryptToSelfMessageJSON.put("data", Convert.toHexString(getEncryptedData().getData()));
+            encryptToSelfMessageJSON.put("nonce", Convert.toHexString(getEncryptedData().getNonce()));
+            encryptToSelfMessageJSON.put("isText", isText());
+            json.put("encryptToSelfMessage", encryptToSelfMessageJSON);
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (transaction.getVersion() == 0) {
+                throw new NxtException.NotValidException("Encrypt-to-self message attachments not enabled for version 0 transactions");
+            }
+        }
+
+    }
+
     public static class PublicKeyAnnouncement extends AbstractAppendix {
 
         static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.ValidationException {

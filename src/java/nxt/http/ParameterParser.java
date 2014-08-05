@@ -195,6 +195,33 @@ final class ParameterParser {
         }
     }
 
+    static EncryptedData getEncryptToSelfMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+        String data = Convert.emptyToNull(req.getParameter("encryptToSelfMessageData"));
+        String nonce = Convert.emptyToNull(req.getParameter("encryptToSelfMessageNonce"));
+        if (data != null && nonce != null) {
+            try {
+                return new EncryptedData(Convert.parseHexString(data), Convert.parseHexString(nonce));
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_ENCRYPTED_MESSAGE);
+            }
+        }
+        String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncryptToSelf"));
+        if (plainMessage == null) {
+            return null;
+        }
+        if (recipientAccount == null) {
+            throw new ParameterException(INCORRECT_RECIPIENT);
+        }
+        String secretPhrase = getSecretPhrase(req);
+        boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
+        try {
+            byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
+            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
+        }
+    }
+
     static EncryptedData getEncryptedGoods(HttpServletRequest req) throws ParameterException {
         String data = Convert.emptyToNull(req.getParameter("goodsData"));
         String nonce = Convert.emptyToNull(req.getParameter("goodsNonce"));
