@@ -678,7 +678,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 : 3;
     }
 
-    void generateBlock(String secretPhrase) {
+    void generateBlock(String secretPhrase, int blockTimestamp) {
 
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
@@ -694,8 +694,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         long totalAmountNQT = 0;
         long totalFeeNQT = 0;
         int payloadLength = 0;
-
-        int blockTimestamp = Convert.getEpochTime();
 
         while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH) {
 
