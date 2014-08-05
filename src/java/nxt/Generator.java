@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 public final class Generator {
 
@@ -36,8 +37,9 @@ public final class Generator {
 
             try {
                 try {
+                    int timestamp = Convert.getEpochTime();
                     for (Generator generator : generators.values()) {
-                        generator.forge();
+                        generator.forge(timestamp);
                     }
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error in block generation thread", e);
@@ -53,7 +55,7 @@ public final class Generator {
     };
 
     static {
-        ThreadPool.scheduleThread(generateBlockThread, 1);
+        ThreadPool.scheduleThread(generateBlockThread, 500, TimeUnit.MILLISECONDS);
     }
 
     static void init() {}
@@ -159,7 +161,7 @@ public final class Generator {
         this.publicKey = publicKey;
         // need to store publicKey in addition to accountId, because the account may not have had its publicKey set yet
         this.accountId = account.getId();
-        forge(); // initialize deadline
+        forge(Convert.getEpochTime()); // initialize deadline
     }
 
     public byte[] getPublicKey() {
@@ -174,7 +176,7 @@ public final class Generator {
         return deadline;
     }
 
-    private void forge() {
+    private void forge(int timestamp) {
 
         if (Nxt.getBlockchainProcessor().isScanning()) {
             return;
@@ -208,7 +210,6 @@ public final class Generator {
 
         }
 
-        int timestamp = Convert.getEpochTime();
         if (verifyHit(hits.get(accountId), effectiveBalance, lastBlock, timestamp)) {
             BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
         }
