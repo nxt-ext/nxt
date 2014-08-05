@@ -107,7 +107,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showLockscreen();
 
 		if (window.parent) {
-			var match = window.location.href.match(/\?app=?(win|mac|lin)\-([\d\.]+)?/i);
+			var match = window.location.href.match(/\?app=?(win|mac|lin)?\-?([\d\.]+)?/i);
 
 			if (match) {
 				NRS.inApp = true;
