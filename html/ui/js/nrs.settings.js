@@ -531,5 +531,24 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.applySettings(key);
 	}
 
+	$("#settings_box select").on("change", function(e) {
+		e.preventDefault();
+
+		var key = $(this).attr("name");
+		var value = $(this).val();
+
+		NRS.updateSettings(key, value);
+	});
+
+	$("#settings_box input[type=text]").on("input", function(e) {
+		var key = $(this).attr("name");
+		var value = $(this).val();
+
+		if (/_warning/i.test(key) && key != "asset_transfer_warning") {
+			value = NRS.convertToNQT(value);
+		}
+		NRS.updateSettings(key, value);
+	});
+
 	return NRS;
 }(NRS || {}, jQuery));
