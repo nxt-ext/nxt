@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -111,6 +112,22 @@ public final class Generator {
         return allGenerators;
     }
 
+    static boolean verifyHit(BigInteger hit, long effectiveBalance, Block previousBlock, int timestamp) {
+        int elapsedTime = timestamp - previousBlock.getTimestamp();
+        if (elapsedTime <= 0) {
+            return false;
+        }
+        BigInteger effectiveBaseTarget = BigInteger.valueOf(previousBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance));
+        BigInteger prevTarget = effectiveBaseTarget.multiply(BigInteger.valueOf(elapsedTime - 1));
+        BigInteger target = prevTarget.add(effectiveBaseTarget);
+
+        return hit.compareTo(target) < 0
+                && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
+                || hit.compareTo(prevTarget) >= 0
+                || elapsedTime > 3600
+                || Peers.getAllPeers().size() == 0);
+    }
+
     static long getHitTime(Account account, Block block) {
         return getHitTime(account.getEffectiveBalanceNXT(), getHit(account.getPublicKey(), block), block);
     }
@@ -191,14 +208,9 @@ public final class Generator {
 
         }
 
-        int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
-        if (elapsedTime > 0) {
-            BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget())
-                    .multiply(BigInteger.valueOf(effectiveBalance))
-                    .multiply(BigInteger.valueOf(elapsedTime));
-            if (hits.get(accountId).compareTo(target) < 0) {
-                BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
-            }
+        int timestamp = Convert.getEpochTime();
+        if (verifyHit(hits.get(accountId), effectiveBalance, lastBlock, timestamp)) {
+            BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
         }
 
     }
