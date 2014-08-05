@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -13,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 public final class Generator {
 
@@ -30,13 +32,19 @@ public final class Generator {
 
     private static final Runnable generateBlockThread = new Runnable() {
 
+        private volatile int lastTimestamp;
+
         @Override
         public void run() {
 
             try {
                 try {
-                    for (Generator generator : generators.values()) {
-                        generator.forge();
+                    int timestamp = Convert.getEpochTime();
+                    if (timestamp != lastTimestamp) {
+                        lastTimestamp = timestamp;
+                        for (Generator generator : generators.values()) {
+                            generator.forge(timestamp);
+                        }
                     }
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error in block generation thread", e);
@@ -52,7 +60,7 @@ public final class Generator {
     };
 
     static {
-        ThreadPool.scheduleThread(generateBlockThread, 1);
+        ThreadPool.scheduleThread(generateBlockThread, 500, TimeUnit.MILLISECONDS);
     }
 
     static void init() {}
@@ -111,6 +119,22 @@ public final class Generator {
         return allGenerators;
     }
 
+    static boolean verifyHit(BigInteger hit, long effectiveBalance, Block previousBlock, int timestamp) {
+        int elapsedTime = timestamp - previousBlock.getTimestamp();
+        if (elapsedTime <= 0) {
+            return false;
+        }
+        BigInteger effectiveBaseTarget = BigInteger.valueOf(previousBlock.getBaseTarget()).multiply(BigInteger.valueOf(effectiveBalance));
+        BigInteger prevTarget = effectiveBaseTarget.multiply(BigInteger.valueOf(elapsedTime - 1));
+        BigInteger target = prevTarget.add(effectiveBaseTarget);
+
+        return hit.compareTo(target) < 0
+                && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
+                || hit.compareTo(prevTarget) >= 0
+                || elapsedTime > 3600
+                || Peers.getAllPeers().size() == 0);
+    }
+
     static long getHitTime(Account account, Block block) {
         return getHitTime(account.getEffectiveBalanceNXT(), getHit(account.getPublicKey(), block), block);
     }
@@ -142,7 +166,7 @@ public final class Generator {
         this.publicKey = publicKey;
         // need to store publicKey in addition to accountId, because the account may not have had its publicKey set yet
         this.accountId = account.getId();
-        forge(); // initialize deadline
+        forge(Convert.getEpochTime()); // initialize deadline
     }
 
     public byte[] getPublicKey() {
@@ -157,7 +181,7 @@ public final class Generator {
         return deadline;
     }
 
-    private void forge() {
+    private void forge(int timestamp) {
 
         if (Nxt.getBlockchainProcessor().isScanning()) {
             return;
@@ -191,14 +215,8 @@ public final class Generator {
 
         }
 
-        int elapsedTime = Convert.getEpochTime() - lastBlock.getTimestamp();
-        if (elapsedTime > 0) {
-            BigInteger target = BigInteger.valueOf(lastBlock.getBaseTarget())
-                    .multiply(BigInteger.valueOf(effectiveBalance))
-                    .multiply(BigInteger.valueOf(elapsedTime));
-            if (hits.get(accountId).compareTo(target) < 0) {
-                BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase);
-            }
+        if (verifyHit(hits.get(accountId), effectiveBalance, lastBlock, timestamp)) {
+            BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
         }
 
     }
