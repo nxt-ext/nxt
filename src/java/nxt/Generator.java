@@ -32,7 +32,7 @@ public final class Generator {
 
     private static final Runnable generateBlockThread = new Runnable() {
 
-        private int lastTimestamp;
+        private volatile int lastTimestamp;
 
         @Override
         public void run() {
