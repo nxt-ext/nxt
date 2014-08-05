@@ -10,8 +10,6 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
 
-				console.log(response.aliases);
-
 				if (NRS.unconfirmedTransactions.length) {
 					for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
 						var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
@@ -89,11 +87,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var allowCancel = false;
 
-					console.log(alias);
-
 					if ("priceNQT" in alias) {
-						console.log(typeof alias.buyer);
-
 						if (alias.priceNQT == "0") {
 							if (alias.buyer == NRS.account) {
 								alias.status = $.t("cancelling_sale");
