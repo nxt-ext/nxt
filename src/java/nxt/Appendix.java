@@ -18,7 +18,7 @@ public interface Appendix {
         private final byte version;
 
         AbstractAppendix(JSONObject attachmentData) {
-            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getClass().getSimpleName())));
+            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getAppendixName())));
         }
 
         AbstractAppendix(ByteBuffer buffer, byte transactionVersion) {
@@ -37,6 +37,8 @@ public interface Appendix {
             //TODO: default to 1 after DGS
             this.version = (byte)(Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
         }
+
+        abstract String getAppendixName();
 
         @Override
         public final int getSize() {
@@ -59,7 +61,7 @@ public interface Appendix {
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
             if (version > 0) {
-                json.put("version." + getClass().getSimpleName(), version);
+                json.put("version." + getAppendixName(), version);
             }
             putMyJSON(json);
             return json;
@@ -128,6 +130,11 @@ public interface Appendix {
         public Message(String string) {
             this.message = Convert.toBytes(string);
             this.isText = true;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "Message";
         }
 
         @Override
@@ -215,6 +222,11 @@ public interface Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "EncryptedMessage";
+        }
+
+        @Override
         int getMySize() {
             return 4 + encryptedData.getSize();
         }
@@ -284,6 +296,11 @@ public interface Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "EncryptToSelfMessage";
+        }
+
+        @Override
         void putMyJSON(JSONObject json) {
             JSONObject encryptToSelfMessageJSON = new JSONObject();
             encryptToSelfMessageJSON.put("data", Convert.toHexString(getEncryptedData().getData()));
@@ -329,6 +346,11 @@ public interface Appendix {
 
         public PublicKeyAnnouncement(byte[] publicKey) {
             this.publicKey = publicKey;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "PublicKeyAnnouncement";
         }
 
         @Override
