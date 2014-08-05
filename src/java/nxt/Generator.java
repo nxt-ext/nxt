@@ -32,14 +32,19 @@ public final class Generator {
 
     private static final Runnable generateBlockThread = new Runnable() {
 
+        private int lastTimestamp;
+
         @Override
         public void run() {
 
             try {
                 try {
                     int timestamp = Convert.getEpochTime();
-                    for (Generator generator : generators.values()) {
-                        generator.forge(timestamp);
+                    if (timestamp != lastTimestamp) {
+                        lastTimestamp = timestamp;
+                        for (Generator generator : generators.values()) {
+                            generator.forge(timestamp);
+                        }
                     }
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error in block generation thread", e);
