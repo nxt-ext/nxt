@@ -4,6 +4,12 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	$("#account_details_modal").on("show.bs.modal", function(e) {
+		$("#account_details_modal_qr_code").empty().qrcode({
+			"text": NRS.accountRS,
+			"width": 128,
+			"height": 128
+		});
+
 		$("#account_details_modal_balance").show();
 
 		if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode != 5) {
@@ -53,6 +59,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".account_details_modal_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#account_details_balance_nav").addClass("active");
+		$("#account_details_modal_qr_code").empty();
 	});
 
 	return NRS;

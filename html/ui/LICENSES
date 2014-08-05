@@ -27,3 +27,4 @@ cryptojs - BSD - https://code.google.com/p/crypto-js/
 pako.js - MIT - https://github.com/nodeca/pako
 maskedinput.js - MIT - https://github.com/digitalBush/jquery.maskedinput
 i18next.js - MIT - https://github.com/jamuhl/i18next
+qrcode.js - MIT - https://github.com/jeromeetienne/jquery-qrcode/

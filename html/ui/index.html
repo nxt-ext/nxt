@@ -3895,7 +3895,7 @@
 						<div id="account_details_modal_balance" class="account_details_modal_content" style="display:none">
 				      		<div class="callout callout-danger" id="account_balance_warning" style="display:none"></div>
 			
-							<table class="table table-striped" id="account_balance_table" style="margin-bottom:0;table-layout:fixed;">
+							<table class="table" id="account_balance_table" style="margin-bottom:0;table-layout:fixed;">
 							    <tbody>
 							    	<tr>
 							    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_rs"></span></td>
@@ -3915,6 +3915,9 @@
 							    	<tr>
 							    		<td style="font-weight: bold"><span data-i18n="public_key">Public Key</span>:</td><td><span id="account_balance_public_key" style="word-break:break-all;word-wrap: break-word;"></span></td>
 							    	</tr>
+                                    <tr>
+                                        <td style="font-weight: bold"><span data-i18n="qr_code">QR Code</span>:</td><td><div id="account_details_modal_qr_code"></div></td>
+                                    </tr>
 							    </tbody>
 						 	</table>
 						 </div>
@@ -4234,6 +4237,7 @@
         <script src="js/3rdparty/big.js" type="text/javascript"></script>
         <script src="js/3rdparty/pako.js" type="text/javascript"></script>
         <script src="js/3rdparty/maskedinput.js" type="text/javascript"></script>
+        <script src="js/3rdparty/qrcode.js" type="text/javascript"></script>
 
         <script src="js/util/extensions.js" type="text/javascript"></script>
         <script src="js/util/converters.js" type="text/javascript"></script>
