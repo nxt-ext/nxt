@@ -92,6 +92,7 @@ public final class Peers {
 
     static {
 
+        boolean offline = Nxt.getBooleanProperty("nxt.offline");
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
         myAddress = Nxt.getStringProperty("nxt.myAddress");
         if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
@@ -101,7 +102,7 @@ public final class Peers {
         if (myPeerServerPort == TESTNET_PEER_PORT && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
-        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress");
+        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress") && ! offline;
         myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
@@ -153,7 +154,7 @@ public final class Peers {
 
         List<String> wellKnownPeersList = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
                 : Nxt.getStringListProperty("nxt.wellKnownPeers");
-        if (wellKnownPeersList.isEmpty()) {
+        if (wellKnownPeersList.isEmpty() || offline) {
             wellKnownPeers = Collections.emptySet();
         } else {
             wellKnownPeers = Collections.unmodifiableSet(new HashSet<>(wellKnownPeersList));
@@ -176,7 +177,7 @@ public final class Peers {
         blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
-        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb");
+        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! offline;
         savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
 
         ThreadPool.runBeforeStart(new Runnable() {
