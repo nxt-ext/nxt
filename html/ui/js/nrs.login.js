@@ -295,7 +295,7 @@ var NRS = (function(NRS, $, undefined) {
 			localStorage.setItem("logged_in", true);
 		}
 
-		var userStyles = ["header", "sidebar", "page_header"];
+		var userStyles = ["header", "sidebar", "boxes"];
 
 		for (var i = 0; i < userStyles.length; i++) {
 			var color = NRS.settings[userStyles[i] + "_color"];

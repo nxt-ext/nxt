@@ -2106,7 +2106,11 @@ body > .header .logo .icon {
   box-shadow: none;
   background-color: #fafafa;
   border: 1px solid #fafafa;
-  height: 35px;
+  height:34px;
+}
+
+.lockscreen-credentials .input-group-btn, .sidebar-form .input-group-btn {
+  height:34px;
 }
 .sidebar-form input[type="text"] {
   color: #666;
