@@ -300,6 +300,8 @@ final class DbVersion {
             case 67:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_id BIGINT DEFAULT NULL");
             case 68:
+                apply("ALTER TABLE transaction ADD COLUMN has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 69:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

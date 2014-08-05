@@ -14,7 +14,9 @@ public interface Transaction extends Comparable<Transaction> {
 
         Builder message(Appendix.Message message);
 
-        Builder encryptedMessage(Appendix.EncryptedMessage encryptedData);
+        Builder encryptedMessage(Appendix.EncryptedMessage encryptedMessage);
+
+        Builder encryptToSelfMessage(Appendix.EncryptToSelfMessage encryptToSelfMessage);
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
@@ -77,6 +79,8 @@ public interface Transaction extends Comparable<Transaction> {
     Appendix.Message getMessage();
 
     Appendix.EncryptedMessage getEncryptedMessage();
+
+    Appendix.EncryptToSelfMessage getEncryptToSelfMessage();
 
     List<? extends Appendix> getAppendages();
 

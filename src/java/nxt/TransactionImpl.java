@@ -33,6 +33,7 @@ final class TransactionImpl implements Transaction {
         private byte[] signature;
         private Appendix.Message message;
         private Appendix.EncryptedMessage encryptedMessage;
+        private Appendix.EncryptToSelfMessage encryptToSelfMessage;
         private Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
         private Long blockId;
         private int height = Integer.MAX_VALUE;
@@ -88,6 +89,12 @@ final class TransactionImpl implements Transaction {
         @Override
         public BuilderImpl encryptedMessage(Appendix.EncryptedMessage encryptedMessage) {
             this.encryptedMessage = encryptedMessage;
+            return this;
+        }
+
+        @Override
+        public BuilderImpl encryptToSelfMessage(Appendix.EncryptToSelfMessage encryptToSelfMessage) {
+            this.encryptToSelfMessage = encryptToSelfMessage;
             return this;
         }
 
@@ -165,6 +172,7 @@ final class TransactionImpl implements Transaction {
     private final Attachment.AbstractAttachment attachment;
     private final Appendix.Message message;
     private final Appendix.EncryptedMessage encryptedMessage;
+    private final Appendix.EncryptToSelfMessage encryptToSelfMessage;
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
 
     private final List<? extends Appendix.AbstractAppendix> appendages;
@@ -213,6 +221,9 @@ final class TransactionImpl implements Transaction {
         }
         if ((this.publicKeyAnnouncement = builder.publicKeyAnnouncement) != null) {
             list.add(this.publicKeyAnnouncement);
+        }
+        if ((this.encryptToSelfMessage = builder.encryptToSelfMessage) != null) {
+            list.add(this.encryptToSelfMessage);
         }
         this.appendages = Collections.unmodifiableList(list);
 
@@ -408,6 +419,11 @@ final class TransactionImpl implements Transaction {
         return encryptedMessage;
     }
 
+    @Override
+    public Appendix.EncryptToSelfMessage getEncryptToSelfMessage() {
+        return encryptToSelfMessage;
+    }
+
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
         return publicKeyAnnouncement;
     }
@@ -535,6 +551,10 @@ final class TransactionImpl implements Transaction {
         if ((flags & position) != 0) {
             builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
         }
+        position <<= 1;
+        if ((flags & position) != 0) {
+            builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
+        }
         return builder.build();
     }
 
@@ -619,6 +639,7 @@ final class TransactionImpl implements Transaction {
             builder.message(Appendix.Message.parse(attachmentData));
             builder.encryptedMessage(Appendix.EncryptedMessage.parse(attachmentData));
             builder.publicKeyAnnouncement((Appendix.PublicKeyAnnouncement.parse(attachmentData)));
+            builder.encryptToSelfMessage(Appendix.EncryptToSelfMessage.parse(attachmentData));
         }
         if (version > 0) {
             builder.ecBlockHeight(((Long) transactionData.get("ecBlockHeight")).intValue());
@@ -701,6 +722,10 @@ final class TransactionImpl implements Transaction {
         }
         position <<= 1;
         if (publicKeyAnnouncement != null) {
+            flags |= position;
+        }
+        position <<= 1;
+        if (encryptToSelfMessage != null) {
             flags |= position;
         }
         return flags;
