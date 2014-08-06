@@ -2,7 +2,7 @@ Added encrypt-to-self message attachment type. Any transaction can optionally
 have such an attachment, intended to be used for private notes that only the
 transaction sender can read.
 
-Added nxt.offline property. If set to true in nxt.properties, peer networking
+Added nxt.isOffline property. If set to true in nxt.properties, peer networking
 will not start, no peers will be loaded from the database, and no outgoing
 connections will be made.
 

@@ -46,6 +46,7 @@ public final class Constants {
     public static final long MIN_HUB_EFFECTIVE_BALANCE = 100000;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
+    public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
 
     public static final int ALIAS_SYSTEM_BLOCK = 22000;
     public static final int TRANSPARENT_FORGING_BLOCK = 30000;

@@ -1,7 +1,6 @@
 package nxt;
 
 import nxt.crypto.Crypto;
-import nxt.peer.Peers;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -131,8 +130,8 @@ public final class Generator {
         return hit.compareTo(target) < 0
                 && (previousBlock.getHeight() < Constants.TRANSPARENT_FORGING_BLOCK_8
                 || hit.compareTo(prevTarget) >= 0
-                || elapsedTime > 3600
-                || Peers.getAllPeers().size() == 0);
+                || (Constants.isTestnet ? elapsedTime > 300 : elapsedTime > 3600)
+                || Constants.isOffline);
     }
 
     static long getHitTime(Account account, Block block) {
