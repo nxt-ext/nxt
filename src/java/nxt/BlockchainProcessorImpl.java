@@ -688,6 +688,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }
 
+        BlockImpl previousBlock = blockchain.getLastBlock();
+        if (previousBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
+            return;
+        }
+
         SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
 
@@ -703,6 +708,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
                 int transactionLength = transaction.getSize();
                 if (newTransactions.get(transaction.getId()) != null || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                    continue;
+                }
+
+                if (transaction.getVersion() != transactionProcessor.getTransactionVersion(previousBlock.getHeight())) {
                     continue;
                 }
 
@@ -748,11 +757,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         byte[] payloadHash = digest.digest();
-
-        BlockImpl previousBlock = blockchain.getLastBlock();
-        if (previousBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-            return;
-        }
 
         digest.update(previousBlock.getGenerationSignature());
         byte[] generationSignature = digest.digest(publicKey);
