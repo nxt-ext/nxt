@@ -993,7 +993,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public String getAppendixName() {
+        String getAppendixName() {
             return "DividendPayment";
         }
 
