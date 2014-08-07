@@ -116,9 +116,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
                     boolean processedAll = true;
+                    int requestCount = 0;
                     outer:
-                    while (true) {
-
+                    while (forkBlocks.size() < 1440 && requestCount++ < 10) {
                         JSONArray nextBlocks = getNextBlocks(peer, currentBlockId);
                         if (nextBlocks == null || nextBlocks.size() == 0) {
                             break;
