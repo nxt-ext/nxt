@@ -116,9 +116,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     List<BlockImpl> forkBlocks = new ArrayList<>();
 
                     boolean processedAll = true;
+                    int requestCount = 0;
                     outer:
-                    while (true) {
-
+                    while (forkBlocks.size() < 1440 && requestCount++ < 10) {
                         JSONArray nextBlocks = getNextBlocks(peer, currentBlockId);
                         if (nextBlocks == null || nextBlocks.size() == 0) {
                             break;
@@ -573,7 +573,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
                         if (!EconomicClustering.verifyFork(transaction)) {
-                            Logger.logErrorMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
+                            Logger.logDebugMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
                                     + transaction.getStringId());
                             //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
                         }
@@ -688,6 +688,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }
 
+        BlockImpl previousBlock = blockchain.getLastBlock();
+        if (previousBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
+            return;
+        }
+
         SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
         Map<TransactionType, Set<String>> duplicates = new HashMap<>();
 
@@ -706,6 +711,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
+                if (transaction.getVersion() != transactionProcessor.getTransactionVersion(previousBlock.getHeight())) {
+                    continue;
+                }
+
                 if (transaction.getTimestamp() > blockTimestamp + 15 || (transaction.getExpiration() < blockTimestamp)) {
                     continue;
                 }
@@ -715,7 +724,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 if (!EconomicClustering.verifyFork(transaction)) {
-                    Logger.logErrorMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
+                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
                     //continue;
                 }
 
@@ -748,11 +757,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
 
         byte[] payloadHash = digest.digest();
-
-        BlockImpl previousBlock = blockchain.getLastBlock();
-        if (previousBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-            return;
-        }
 
         digest.update(previousBlock.getGenerationSignature());
         byte[] generationSignature = digest.digest(publicKey);

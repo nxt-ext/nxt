@@ -4,6 +4,7 @@ import nxt.Account;
 import nxt.Appendix;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -11,7 +12,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.DECRYPTION_FAILED;
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
 import static nxt.http.JSONResponses.NO_MESSAGE;
@@ -47,21 +47,38 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         Account senderAccount = Account.getAccount(transaction.getSenderId());
         Appendix.Message message = transaction.getMessage();
         Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
-        if (message == null && encryptedMessage == null) {
+        Appendix.EncryptToSelfMessage encryptToSelfMessage = transaction.getEncryptToSelfMessage();
+        if (message == null && encryptedMessage == null && encryptToSelfMessage == null) {
             return NO_MESSAGE;
-        }
-        if (encryptedMessage != null) {
-            String secretPhrase = ParameterParser.getSecretPhrase(req);
-            try {
-                byte[] decrypted = senderAccount.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
-                response.put("decryptedMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
-            } catch (RuntimeException e) {
-                Logger.logDebugMessage(e.toString(), e);
-                return DECRYPTION_FAILED;
-            }
         }
         if (message != null) {
             response.put("message", message.isText() ? Convert.toString(message.getMessage()) : Convert.toHexString(message.getMessage()));
+        }
+        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        if (secretPhrase != null) {
+            if (encryptedMessage != null) {
+                Long readerAccountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+                Account account = senderAccount.getId().equals(readerAccountId) ? Account.getAccount(transaction.getRecipientId()) : senderAccount;
+                if (account != null) {
+                    try {
+                        byte[] decrypted = account.decryptFrom(encryptedMessage.getEncryptedData(), secretPhrase);
+                        response.put("decryptedMessage", encryptedMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
+                    }
+                }
+            }
+            if (encryptToSelfMessage != null) {
+                Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
+                if (account != null) {
+                    try {
+                        byte[] decrypted = account.decryptFrom(encryptToSelfMessage.getEncryptedData(), secretPhrase);
+                        response.put("decryptedMessageToSelf", encryptToSelfMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                    } catch (RuntimeException e) {
+                        Logger.logDebugMessage("Decryption of message to self failed: " + e.toString());
+                    }
+                }
+            }
         }
         return response;
     }

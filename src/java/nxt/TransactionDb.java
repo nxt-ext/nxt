@@ -128,6 +128,9 @@ final class TransactionDb {
             if (rs.getBoolean("has_public_key_announcement")) {
                 builder.publicKeyAnnouncement(new Appendix.PublicKeyAnnouncement(buffer, version));
             }
+            if (rs.getBoolean("has_encrypttoself_message")) {
+                builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
+            }
             if (ecBlockHeight != 0) {
                 builder.ecBlockHeight(ecBlockHeight);
                 builder.ecBlockId(ecBlockId);
@@ -165,8 +168,8 @@ final class TransactionDb {
                         + "recipient_id, amount, fee, referenced_transaction_full_hash, height, "
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
-                        + "ec_block_height, ec_block_id) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_encrypttoself_message, ec_block_height, ec_block_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -210,6 +213,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getMessage() != null);
                     pstmt.setBoolean(++i, transaction.getEncryptedMessage() != null);
                     pstmt.setBoolean(++i, transaction.getPublicKeyAnnouncement() != null);
+                    pstmt.setBoolean(++i, transaction.getEncryptToSelfMessage() != null);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     if (transaction.getECBlockId() != null) {
                         pstmt.setLong(++i, transaction.getECBlockId());

@@ -18,7 +18,7 @@ public interface Appendix {
         private final byte version;
 
         AbstractAppendix(JSONObject attachmentData) {
-            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getClass().getSimpleName())));
+            version = (byte)Convert.nullToZero(((Long) attachmentData.get("version." + getAppendixName())));
         }
 
         AbstractAppendix(ByteBuffer buffer, byte transactionVersion) {
@@ -37,6 +37,8 @@ public interface Appendix {
             //TODO: default to 1 after DGS
             this.version = (byte)(Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
         }
+
+        abstract String getAppendixName();
 
         @Override
         public final int getSize() {
@@ -59,7 +61,7 @@ public interface Appendix {
         public final JSONObject getJSONObject() {
             JSONObject json = new JSONObject();
             if (version > 0) {
-                json.put("version." + getClass().getSimpleName(), version);
+                json.put("version." + getAppendixName(), version);
             }
             putMyJSON(json);
             return json;
@@ -131,6 +133,11 @@ public interface Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "Message";
+        }
+
+        @Override
         int getMySize() {
             return 4 + message.length;
         }
@@ -175,11 +182,10 @@ public interface Appendix {
     public static class EncryptedMessage extends AbstractAppendix {
 
         static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
-            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
-            if (encryptedMessageJSON == null ) {
+            if (attachmentData.get("encryptedMessage") == null ) {
                 return null;
             }
-            return new EncryptedMessage(encryptedMessageJSON);
+            return new EncryptedMessage(attachmentData);
         }
 
         private final EncryptedData encryptedData;
@@ -197,21 +203,27 @@ public interface Appendix {
 
         EncryptedMessage(JSONObject attachmentData) throws NxtException.ValidationException {
             super(attachmentData);
-            byte[] data = Convert.parseHexString((String)attachmentData.get("data"));
+            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
+            byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
             if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
-            byte[] nonce = Convert.parseHexString((String)attachmentData.get("nonce"));
+            byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
             if ((nonce.length != 32 && data.length > 0) || (nonce.length != 0 && data.length == 0)) {
                 throw new NxtException.NotValidException("Invalid nonce length " + nonce.length);
             }
             this.encryptedData = new EncryptedData(data, nonce);
-            this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("isText"));
+            this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
         }
 
         public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
             this.encryptedData = encryptedData;
             this.isText = isText;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "EncryptedMessage";
         }
 
         @Override
@@ -261,6 +273,50 @@ public interface Appendix {
 
     }
 
+    public static class EncryptToSelfMessage extends EncryptedMessage {
+
+        static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
+            if (attachmentData.get("encryptToSelfMessage") == null ) {
+                return null;
+            }
+            return new EncryptToSelfMessage(attachmentData);
+        }
+
+        EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+        }
+
+        EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
+        }
+
+        public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText) {
+            super(encryptedData, isText);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "EncryptToSelfMessage";
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            JSONObject encryptToSelfMessageJSON = new JSONObject();
+            encryptToSelfMessageJSON.put("data", Convert.toHexString(getEncryptedData().getData()));
+            encryptToSelfMessageJSON.put("nonce", Convert.toHexString(getEncryptedData().getNonce()));
+            encryptToSelfMessageJSON.put("isText", isText());
+            json.put("encryptToSelfMessage", encryptToSelfMessageJSON);
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (transaction.getVersion() == 0) {
+                throw new NxtException.NotValidException("Encrypt-to-self message attachments not enabled for version 0 transactions");
+            }
+        }
+
+    }
+
     public static class PublicKeyAnnouncement extends AbstractAppendix {
 
         static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.ValidationException {
@@ -289,6 +345,11 @@ public interface Appendix {
 
         public PublicKeyAnnouncement(byte[] publicKey) {
             this.publicKey = publicKey;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "PublicKeyAnnouncement";
         }
 
         @Override

@@ -75,6 +75,11 @@ public interface Attachment extends Appendix {
     public final static EmptyAttachment ORDINARY_PAYMENT = new EmptyAttachment() {
 
         @Override
+        String getAppendixName() {
+            return "OrdinaryPayment";
+        }
+
+        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Payment.ORDINARY;
         }
@@ -83,6 +88,11 @@ public interface Attachment extends Appendix {
 
     // the message payload is in the Appendix
     public final static EmptyAttachment ARBITRARY_MESSAGE = new EmptyAttachment() {
+
+        @Override
+        String getAppendixName() {
+            return "ArbitraryMessage";
+        }
 
         @Override
         public TransactionType getTransactionType() {
@@ -111,6 +121,11 @@ public interface Attachment extends Appendix {
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
             this.aliasName = aliasName.trim().intern();
             this.aliasURI = aliasURI.trim().intern();
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AliasAssignment";
         }
 
         @Override
@@ -171,6 +186,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "AliasSell";
+        }
+
+        @Override
         public TransactionType getTransactionType() {
             return TransactionType.Messaging.ALIAS_SELL;
         }
@@ -219,6 +239,11 @@ public interface Attachment extends Appendix {
 
         public MessagingAliasBuy(String aliasName) {
             this.aliasName = aliasName;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AliasBuy";
         }
 
         @Override
@@ -295,6 +320,11 @@ public interface Attachment extends Appendix {
             this.minNumberOfOptions = minNumberOfOptions;
             this.maxNumberOfOptions = maxNumberOfOptions;
             this.optionsAreBinary = optionsAreBinary;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "PollCreation";
         }
 
         @Override
@@ -394,6 +424,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "VoteCasting";
+        }
+
+        @Override
         int getMySize() {
             return 8 + 1 + this.pollVote.length;
         }
@@ -466,6 +501,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "HubAnnouncement";
+        }
+
+        @Override
         int getMySize() {
             int size = 8 + 1;
             for (String uri : uris) {
@@ -528,6 +568,11 @@ public interface Attachment extends Appendix {
         public MessagingAccountInfo(String name, String description) {
             this.name = name;
             this.description = description;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AccountInfo";
         }
 
         @Override
@@ -594,6 +639,11 @@ public interface Attachment extends Appendix {
             this.description = Convert.nullToEmpty(description);
             this.quantityQNT = quantityQNT;
             this.decimals = decimals;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AssetIssuance";
         }
 
         @Override
@@ -667,6 +717,11 @@ public interface Attachment extends Appendix {
             this.assetId = assetId;
             this.quantityQNT = quantityQNT;
             this.comment = getVersion() == 0 ? Convert.nullToEmpty(comment) : null;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "AssetTransfer";
         }
 
         @Override
@@ -786,6 +841,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "AskOrderPlacement";
+        }
+
+        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT;
         }
@@ -804,6 +864,11 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
             super(assetId, quantityQNT, priceNQT);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "BidOrderPlacement";
         }
 
         @Override
@@ -866,6 +931,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "AskOrderCancellation";
+        }
+
+        @Override
         public TransactionType getTransactionType() {
             return TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION;
         }
@@ -884,6 +954,11 @@ public interface Attachment extends Appendix {
 
         public ColoredCoinsBidOrderCancellation(Long orderId) {
             super(orderId);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "BidOrderCancellation";
         }
 
         @Override
@@ -925,6 +1000,11 @@ public interface Attachment extends Appendix {
             this.tags = tags;
             this.quantity = quantity;
             this.priceNQT = priceNQT;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "DigitalGoodsListing";
         }
 
         @Override
@@ -993,6 +1073,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "DigitalGoodsDelisting";
+        }
+
+        @Override
         int getMySize() {
             return 8;
         }
@@ -1036,6 +1121,11 @@ public interface Attachment extends Appendix {
         public DigitalGoodsPriceChange(Long goodsId, long priceNQT) {
             this.goodsId = goodsId;
             this.priceNQT = priceNQT;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "DigitalGoodsPriceChange";
         }
 
         @Override
@@ -1086,6 +1176,11 @@ public interface Attachment extends Appendix {
         public DigitalGoodsQuantityChange(Long goodsId, int deltaQuantity) {
             this.goodsId = goodsId;
             this.deltaQuantity = deltaQuantity;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "DigitalGoodsQuantityChange";
         }
 
         @Override
@@ -1144,6 +1239,11 @@ public interface Attachment extends Appendix {
             this.quantity = quantity;
             this.priceNQT = priceNQT;
             this.deliveryDeadlineTimestamp = deliveryDeadlineTimestamp;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "DigitalGoodsPurchase";
         }
 
         @Override
@@ -1218,6 +1318,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "DigitalGoodsDelivery";
+        }
+
+        @Override
         int getMySize() {
             return 8 + 4 + goods.getSize() + 8;
         }
@@ -1276,6 +1381,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "DigitalGoodsFeedback";
+        }
+
+        @Override
         int getMySize() {
             return 8;
         }
@@ -1322,6 +1432,11 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        String getAppendixName() {
+            return "DigitalGoodsRefund";
+        }
+
+        @Override
         int getMySize() {
             return 8 + 8;
         }
@@ -1365,6 +1480,11 @@ public interface Attachment extends Appendix {
 
         public AccountControlEffectiveBalanceLeasing(short period) {
             this.period = period;
+        }
+
+        @Override
+        String getAppendixName() {
+            return "EffectiveBalanceLeasing";
         }
 
         @Override

@@ -31,6 +31,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "deadline", "referencedTransactionFullHash", "broadcast",
             "message", "messageIsText",
             "messageToEncrypt", "messageToEncryptIsText", "encryptedMessageData", "encryptedMessageNonce",
+            "messageToEncryptToSelf", "messageToEncryptToSelfIsText", "encryptToSelfMessageData", "encryptToSelfMessageNonce",
             "recipientPublicKey"};
 
     private static String[] addCommonParameters(String[] parameters) {
@@ -68,6 +69,11 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (encryptedData != null) {
                 encryptedMessage = new Appendix.EncryptedMessage(encryptedData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText")));
             }
+        }
+        Appendix.EncryptToSelfMessage encryptToSelfMessage = null;
+        EncryptedData encryptedToSelfData = ParameterParser.getEncryptToSelfMessage(req, senderAccount);
+        if (encryptedToSelfData != null) {
+            encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText")));
         }
         Appendix.Message message = null;
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
@@ -144,6 +150,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             if (publicKeyAnnouncement != null) {
                 builder.publicKeyAnnouncement(publicKeyAnnouncement);
+            }
+            if (encryptToSelfMessage != null) {
+                builder.encryptToSelfMessage(encryptToSelfMessage);
             }
             Transaction transaction = builder.build();
             transaction.validateAttachment();
