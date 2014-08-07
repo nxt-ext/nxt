@@ -1983,18 +1983,33 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.forms.cancelOrder = function($modal) {
-		var orderType = $("#cancel_order_type").val();
+		var data = NRS.getFormData($modal.find("form:first"));
+
+		var requestType = data.cancel_order_type;
+
+		delete data.cancel_order_type;
 
 		return {
-			"requestType": orderType,
-			"successMessage": $modal.find("input[name=success_message]").val().replace("__", (orderType == "cancelBidOrder" ? "buy" : "sell"))
+			"data": data,
+			"requestType": requestType
 		};
 	}
 
 	NRS.forms.cancelOrderComplete = function(response, data) {
+		if (data.requestType == "cancelAskOrder") {
+			$.growl($.t("success_cancel_sell_order"), {
+				"type": "success"
+			});
+		} else {
+			$.growl($.t("success_cancel_buy_order"), {
+				"type": "success"
+			});
+		}
+
 		if (response.alreadyProcessed) {
 			return;
 		}
+
 		$("#open_orders_page tr[data-order=" + String(data.order).escapeHTML() + "]").addClass("tentative tentative-crossed").find("td.cancel").html("/");
 	}
 
