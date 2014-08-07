@@ -182,11 +182,10 @@ public interface Appendix {
     public static class EncryptedMessage extends AbstractAppendix {
 
         static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
-            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
-            if (encryptedMessageJSON == null ) {
+            if (attachmentData.get("encryptedMessage") == null ) {
                 return null;
             }
-            return new EncryptedMessage(encryptedMessageJSON);
+            return new EncryptedMessage(attachmentData);
         }
 
         private final EncryptedData encryptedData;
@@ -204,16 +203,17 @@ public interface Appendix {
 
         EncryptedMessage(JSONObject attachmentData) throws NxtException.ValidationException {
             super(attachmentData);
-            byte[] data = Convert.parseHexString((String)attachmentData.get("data"));
+            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
+            byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
             if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
-            byte[] nonce = Convert.parseHexString((String)attachmentData.get("nonce"));
+            byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
             if ((nonce.length != 32 && data.length > 0) || (nonce.length != 0 && data.length == 0)) {
                 throw new NxtException.NotValidException("Invalid nonce length " + nonce.length);
             }
             this.encryptedData = new EncryptedData(data, nonce);
-            this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("isText"));
+            this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
         }
 
         public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
@@ -276,11 +276,10 @@ public interface Appendix {
     public static class EncryptToSelfMessage extends EncryptedMessage {
 
         static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
-            JSONObject encryptToSelfMessageJSON = (JSONObject)attachmentData.get("encryptToSelfMessage");
-            if (encryptToSelfMessageJSON == null ) {
+            if (attachmentData.get("encryptToSelfMessage") == null ) {
                 return null;
             }
-            return new EncryptToSelfMessage(encryptToSelfMessageJSON);
+            return new EncryptToSelfMessage(attachmentData);
         }
 
         EncryptToSelfMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
