@@ -179,19 +179,12 @@ public interface Appendix {
         }
     }
 
-    public static class EncryptedMessage extends AbstractAppendix {
-
-        static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
-            if (attachmentData.get("encryptedMessage") == null ) {
-                return null;
-            }
-            return new EncryptedMessage(attachmentData);
-        }
+    abstract static class AbstractEncryptedMessage extends AbstractAppendix {
 
         private final EncryptedData encryptedData;
         private final boolean isText;
 
-        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        private AbstractEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
             super(buffer, transactionVersion);
             int length = buffer.getInt();
             this.isText = length < 0;
@@ -201,9 +194,8 @@ public interface Appendix {
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
 
-        EncryptedMessage(JSONObject attachmentData) throws NxtException.ValidationException {
-            super(attachmentData);
-            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
+        private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) throws NxtException.ValidationException {
+            super(attachmentJSON);
             byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
             if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
@@ -216,14 +208,9 @@ public interface Appendix {
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
         }
 
-        public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
+        private AbstractEncryptedMessage(EncryptedData encryptedData, boolean isText) {
             this.encryptedData = encryptedData;
             this.isText = isText;
-        }
-
-        @Override
-        String getAppendixName() {
-            return "EncryptedMessage";
         }
 
         @Override
@@ -240,10 +227,57 @@ public interface Appendix {
 
         @Override
         void putMyJSON(JSONObject json) {
+            json.put("data", Convert.toHexString(encryptedData.getData()));
+            json.put("nonce", Convert.toHexString(encryptedData.getNonce()));
+            json.put("isText", isText);
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+        @Override
+        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
+
+        public final EncryptedData getEncryptedData() {
+            return encryptedData;
+        }
+
+        public final boolean isText() {
+            return isText;
+        }
+
+    }
+
+    public static class EncryptedMessage extends AbstractEncryptedMessage {
+
+        static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
+            if (attachmentData.get("encryptedMessage") == null ) {
+                return null;
+            }
+            return new EncryptedMessage(attachmentData);
+        }
+
+        EncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+        }
+
+        EncryptedMessage(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
+        }
+
+        public EncryptedMessage(EncryptedData encryptedData, boolean isText) {
+            super(encryptedData, isText);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "EncryptedMessage";
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
             JSONObject encryptedMessageJSON = new JSONObject();
-            encryptedMessageJSON.put("data", Convert.toHexString(encryptedData.getData()));
-            encryptedMessageJSON.put("nonce", Convert.toHexString(encryptedData.getNonce()));
-            encryptedMessageJSON.put("isText", isText);
+            super.putMyJSON(encryptedMessageJSON);
             json.put("encryptedMessage", encryptedMessageJSON);
         }
 
@@ -257,23 +291,9 @@ public interface Appendix {
             }
         }
 
-        @Override
-        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
-        public EncryptedData getEncryptedData() {
-            return encryptedData;
-        }
-
-        public boolean isText() {
-            return isText;
-        }
-
     }
 
-    public static class EncryptToSelfMessage extends EncryptedMessage {
+    public static class EncryptToSelfMessage extends AbstractEncryptedMessage {
 
         static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
             if (attachmentData.get("encryptToSelfMessage") == null ) {
@@ -287,7 +307,7 @@ public interface Appendix {
         }
 
         EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.ValidationException {
-            super(attachmentData);
+            super(attachmentData, (JSONObject)attachmentData.get("encryptToSelfMessage"));
         }
 
         public EncryptToSelfMessage(EncryptedData encryptedData, boolean isText) {
@@ -302,9 +322,7 @@ public interface Appendix {
         @Override
         void putMyJSON(JSONObject json) {
             JSONObject encryptToSelfMessageJSON = new JSONObject();
-            encryptToSelfMessageJSON.put("data", Convert.toHexString(getEncryptedData().getData()));
-            encryptToSelfMessageJSON.put("nonce", Convert.toHexString(getEncryptedData().getNonce()));
-            encryptToSelfMessageJSON.put("isText", isText());
+            super.putMyJSON(encryptToSelfMessageJSON);
             json.put("encryptToSelfMessage", encryptToSelfMessageJSON);
         }
 
