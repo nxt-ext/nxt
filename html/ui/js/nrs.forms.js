@@ -29,17 +29,29 @@ var NRS = (function(NRS, $, undefined) {
 		if (ignore.indexOf(requestType) != -1) {
 			return "";
 		} else {
-			return $.t("success_" + requestType);
+			var key = "success_" + requestType;
+
+			if ($.i18n.exists(key)) {
+				return $.t(key);
+			} else {
+				return "";
+			}
 		}
 	}
 
 	function getErrorMessage(requestType) {
-		var ignore = ["start_forging", "stop_forging"];
+		var ignore = ["start_forging", "stop_forging", "generate_token", "validate_token"];
 
 		if (ignore.indexOf(requestType) != -1) {
 			return "";
 		} else {
-			return $.t("error_" + requestType);
+			var key = "error_" + requestType;
+
+			if ($.i18n.exists(key)) {
+				return $.t(key);
+			} else {
+				return "";
+			}
 		}
 	}
 
