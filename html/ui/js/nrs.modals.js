@@ -52,7 +52,17 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").mask("NXT-****-****-****-*****");
+		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
+
+		$.each($inputFields, function() {
+			if ($(this).hasClass("noMask")) {
+				$(this).mask("NXT-****-****-****-*****", {
+					"noMask": true
+				}).removeClass("noMask");
+			} else {
+				$(this).mask("NXT-****-****-****-*****");
+			}
+		});
 
 		var $visible_modal = $(".modal.in");
 
