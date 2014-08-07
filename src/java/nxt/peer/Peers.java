@@ -413,9 +413,13 @@ public final class Peers {
     }
 
     static {
-        ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
-        ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
-        ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+        if (! Constants.isOffline) {
+            ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
+            ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
+            if (Nxt.getBooleanProperty("nxt.getMorePeers")) {
+                ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+            }
+        }
     }
 
     public static void init() {
