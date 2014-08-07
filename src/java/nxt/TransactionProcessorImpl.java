@@ -330,7 +330,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 transaction.validateAttachment();
                 transactions.add(transaction);
             } catch (NxtException.NotCurrentlyValidException e) {
-                //if (! (e instanceof TransactionType.NotYetEnabledException)) {
+                //if (! (e instanceof NxtException.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}
             }
@@ -363,11 +363,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             break; // not ready to process transactions
                         }
 
-                        Long id = transaction.getId();
-                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
-                                || !transaction.verify()) {
-                            continue;
-                        }
+	                    Long id = transaction.getId();
+    	                if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)) {
+        	                continue;
+            	        }
+
+                	    if (! transaction.verify()) {
+                    	    Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+                        	continue;
+	                    }
 
                         if (transaction.applyUnconfirmed()) {
                             if (sendToPeers) {

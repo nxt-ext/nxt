@@ -5,7 +5,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
 		var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient");
 
-
 		$recipientFields.on("blur", function() {
 			$(this).trigger("checkRecipient");
 		});
@@ -32,7 +31,13 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (account) {
-			$(this).find("input[name=recipient], input[name=account_id]").val(account).trigger("checkRecipient");
+			var $inputField = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
+
+			if (!/NXT\-/i.test(account)) {
+				$inputField.addClass("noMask");
+			}
+
+			$inputField.val(account).trigger("checkRecipient");
 		}
 	});
 

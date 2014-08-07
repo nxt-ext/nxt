@@ -93,7 +93,6 @@ public final class Peers {
 
     static {
 
-        boolean offline = Nxt.getBooleanProperty("nxt.offline");
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
         myAddress = Nxt.getStringProperty("nxt.myAddress");
         if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
@@ -103,7 +102,7 @@ public final class Peers {
         if (myPeerServerPort == TESTNET_PEER_PORT && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
-        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress") && ! offline;
+        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress") && ! Constants.isOffline;
         myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
@@ -155,7 +154,7 @@ public final class Peers {
 
         List<String> wellKnownPeersList = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
                 : Nxt.getStringListProperty("nxt.wellKnownPeers");
-        if (wellKnownPeersList.isEmpty() || offline) {
+        if (wellKnownPeersList.isEmpty() || Constants.isOffline) {
             wellKnownPeers = Collections.emptySet();
         } else {
             wellKnownPeers = Collections.unmodifiableSet(new HashSet<>(wellKnownPeersList));
@@ -178,7 +177,7 @@ public final class Peers {
         blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
-        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! offline;
+        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
         savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
 
         ThreadPool.runBeforeStart(new Runnable() {
@@ -424,9 +423,13 @@ public final class Peers {
     }
 
     static {
-        ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
-        ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
-        ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+        if (! Constants.isOffline) {
+            ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
+            ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
+            if (Nxt.getBooleanProperty("nxt.getMorePeers")) {
+                ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+            }
+        }
     }
 
     public static void init() {
