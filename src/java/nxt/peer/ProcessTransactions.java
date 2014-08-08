@@ -20,7 +20,7 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
         try {
             Nxt.getTransactionProcessor().processPeerTransactions(request);
         } catch (RuntimeException | NxtException.ValidationException e) {
-            Logger.logDebugMessage("Failed to parse peer transactions: " + request.toJSONString());
+            //Logger.logDebugMessage("Failed to parse peer transactions: " + request.toJSONString());
             peer.blacklist(e);
         }
 

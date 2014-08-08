@@ -499,7 +499,7 @@ final class TransactionImpl implements Transaction {
             }
             return buffer.array();
         } catch (RuntimeException e) {
-            Logger.logErrorMessage("Failed to get transaction bytes for transaction: " + getJSONObject().toJSONString());
+            Logger.logDebugMessage("Failed to get transaction bytes for transaction: " + getJSONObject().toJSONString());
             throw e;
         }
     }
@@ -564,7 +564,7 @@ final class TransactionImpl implements Transaction {
             }
             return builder.build();
         } catch (NxtException.ValidationException|RuntimeException e) {
-            Logger.logErrorMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
+            Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
             throw e;
         }
     }
@@ -659,7 +659,7 @@ final class TransactionImpl implements Transaction {
             }
             return builder.build();
         } catch (NxtException.ValidationException|RuntimeException e) {
-            Logger.logErrorMessage("Failed to parse transaction: " + transactionData.toJSONString());
+            Logger.logDebugMessage("Failed to parse transaction: " + transactionData.toJSONString());
             throw e;
         }
     }
