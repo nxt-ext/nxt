@@ -1891,7 +1891,6 @@ body > .header .logo .icon {
 .lockscreen > body {
   background: transparent;
   min-height: 100% !important;
-  overflow: hidden !important;
 }
 /* We will put the dynamically generated digital clock here */
 .lockscreen .headline {
@@ -3044,6 +3043,7 @@ hr {
 
 #lockscreen {
   height:100%;
+  overflow:auto;
 }
 
 #center .panel {
