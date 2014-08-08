@@ -359,7 +359,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
 
                     if (! transaction.verify()) {
-                        Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+                        if (Account.getAccount(transaction.getSenderId()) != null) {
+                            Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+                        }
                         continue;
                     }
 
