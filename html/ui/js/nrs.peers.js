@@ -48,7 +48,7 @@ var NRS = (function(NRS, $, undefined) {
 
 									var versionToCompare = (!NRS.isTestNet ? NRS.normalVersion.versionNr : NRS.state.version);
 
-									if (NRS.versionCompare(peer.version, versionToCompare)) {
+									if (NRS.versionCompare(peer.version, versionToCompare) >= 0) {
 										upToDate++;
 									}
 
