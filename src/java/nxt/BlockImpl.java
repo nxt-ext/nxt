@@ -253,8 +253,8 @@ final class BlockImpl implements Block {
         int version = ((Long)blockData.get("version")).intValue();
         int timestamp = ((Long)blockData.get("timestamp")).intValue();
         Long previousBlock = Convert.parseUnsignedLong((String) blockData.get("previousBlock"));
-        long totalAmountNQT = ((Long)blockData.get("totalAmountNQT"));
-        long totalFeeNQT = ((Long)blockData.get("totalFeeNQT"));
+        long totalAmountNQT = Convert.parseLong(blockData.get("totalAmountNQT"));
+        long totalFeeNQT = Convert.parseLong(blockData.get("totalFeeNQT"));
         int payloadLength = ((Long)blockData.get("payloadLength")).intValue();
         byte[] payloadHash = Convert.parseHexString((String) blockData.get("payloadHash"));
         byte[] generatorPublicKey = Convert.parseHexString((String) blockData.get("generatorPublicKey"));

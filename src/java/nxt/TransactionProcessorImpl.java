@@ -217,7 +217,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return TransactionImpl.parseTransaction(bytes);
     }
 
-    TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+    @Override
+    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
         return TransactionImpl.parseTransaction(transactionData);
     }
 
