@@ -346,6 +346,16 @@ public final class Peers {
             getPeersRequest = JSON.prepareRequest(request);
         }
 
+        private volatile boolean addedNewPeer;
+        {
+            Peers.addListener(new Listener<Peer>() {
+                @Override
+                public void notify(Peer peer) {
+                    addedNewPeer = true;
+                }
+            }, Event.NEW_PEER);
+        }
+
         @Override
         public void run() {
 
@@ -367,8 +377,9 @@ public final class Peers {
                     for (Object announcedAddress : peers) {
                         addPeer((String) announcedAddress);
                     }
-                    if (savePeers) {
+                    if (savePeers && addedNewPeer) {
                         updateSavedPeers();
+                        addedNewPeer = false;
                     }
 
                 } catch (Exception e) {
@@ -393,8 +404,10 @@ public final class Peers {
             Set<String> toDelete = new HashSet<>(oldPeers);
             toDelete.removeAll(currentPeers);
             PeerDb.deletePeers(toDelete);
+            //Logger.logDebugMessage("Deleted " + toDelete.size() + " peers from the peers database");
             currentPeers.removeAll(oldPeers);
             PeerDb.addPeers(currentPeers);
+            //Logger.logDebugMessage("Added " + currentPeers.size() + " peers to the peers database");
         }
 
     };
