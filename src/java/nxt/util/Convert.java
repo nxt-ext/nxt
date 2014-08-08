@@ -72,6 +72,18 @@ public final class Convert {
         return zeroToNull(bigInt.longValue());
     }
 
+    public static long parseLong(Object o) {
+        if (o == null) {
+            return 0;
+        } else if (o instanceof Long) {
+            return ((Long)o);
+        } else if (o instanceof String) {
+            return Long.parseLong((String)o);
+        } else {
+            throw new IllegalArgumentException("Not a long: " + o);
+        }
+    }
+
     public static Long parseAccountId(String account) {
         if (account == null) {
             return null;

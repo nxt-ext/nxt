@@ -227,7 +227,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return TransactionImpl.parseTransaction(bytes);
     }
 
-    TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+    @Override
+    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
         return TransactionImpl.parseTransaction(transactionData);
     }
 
@@ -369,7 +370,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             	        }
 
                 	    if (! transaction.verify()) {
-                    	    Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+	                        if (Account.getAccount(transaction.getSenderId()) != null) {
+    	                        Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+        	                }
                         	continue;
 	                    }
 

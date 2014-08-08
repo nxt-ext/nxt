@@ -177,7 +177,7 @@ public interface Attachment extends Appendix {
         MessagingAliasSell(JSONObject attachmentData) {
             super(attachmentData);
             this.aliasName = Convert.nullToEmpty((String) attachmentData.get("alias"));
-            this.priceNQT = Convert.nullToZero((Long) attachmentData.get("priceNQT"));
+            this.priceNQT = Convert.parseLong(attachmentData.get("priceNQT"));
         }
 
         public MessagingAliasSell(String aliasName, long priceNQT) {
@@ -630,7 +630,7 @@ public interface Attachment extends Appendix {
             super(attachmentData);
             this.name = (String) attachmentData.get("name");
             this.description = Convert.nullToEmpty((String) attachmentData.get("description"));
-            this.quantityQNT = (Long) attachmentData.get("quantityQNT");
+            this.quantityQNT = Convert.parseLong(attachmentData.get("quantityQNT"));
             this.decimals = ((Long) attachmentData.get("decimals")).byteValue();
         }
 
@@ -709,7 +709,7 @@ public interface Attachment extends Appendix {
         ColoredCoinsAssetTransfer(JSONObject attachmentData) {
             super(attachmentData);
             this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
-            this.quantityQNT = (Long) attachmentData.get("quantityQNT");
+            this.quantityQNT = Convert.parseLong(attachmentData.get("quantityQNT"));
             this.comment = getVersion() == 0 ? Convert.nullToEmpty((String) attachmentData.get("comment")) : null;
         }
 
@@ -784,8 +784,8 @@ public interface Attachment extends Appendix {
         private ColoredCoinsOrderPlacement(JSONObject attachmentData) {
             super(attachmentData);
             this.assetId = Convert.parseUnsignedLong((String) attachmentData.get("asset"));
-            this.quantityQNT = (Long) attachmentData.get("quantityQNT");
-            this.priceNQT = (Long) attachmentData.get("priceNQT");
+            this.quantityQNT = Convert.parseLong(attachmentData.get("quantityQNT"));
+            this.priceNQT = Convert.parseLong(attachmentData.get("priceNQT"));
         }
 
         private ColoredCoinsOrderPlacement(Long assetId, long quantityQNT, long priceNQT) {
@@ -991,7 +991,7 @@ public interface Attachment extends Appendix {
             this.description = (String) attachmentData.get("description");
             this.tags = (String) attachmentData.get("tags");
             this.quantity = ((Long) attachmentData.get("quantity")).intValue();
-            this.priceNQT = (Long) attachmentData.get("priceNQT");
+            this.priceNQT = Convert.parseLong(attachmentData.get("priceNQT"));
         }
 
         public DigitalGoodsListing(String name, String description, String tags, int quantity, long priceNQT) {
@@ -1115,7 +1115,7 @@ public interface Attachment extends Appendix {
         DigitalGoodsPriceChange(JSONObject attachmentData) {
             super(attachmentData);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
-            this.priceNQT = (Long)attachmentData.get("priceNQT");
+            this.priceNQT = Convert.parseLong(attachmentData.get("priceNQT"));
         }
 
         public DigitalGoodsPriceChange(Long goodsId, long priceNQT) {
@@ -1230,7 +1230,7 @@ public interface Attachment extends Appendix {
             super(attachmentData);
             this.goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
             this.quantity = ((Long)attachmentData.get("quantity")).intValue();
-            this.priceNQT = (Long)attachmentData.get("priceNQT");
+            this.priceNQT = Convert.parseLong(attachmentData.get("priceNQT"));
             this.deliveryDeadlineTimestamp = ((Long)attachmentData.get("deliveryDeadlineTimestamp")).intValue();
         }
 
@@ -1306,8 +1306,8 @@ public interface Attachment extends Appendix {
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
             this.goods = new EncryptedData(Convert.parseHexString((String)attachmentData.get("goodsData")),
                     Convert.parseHexString((String)attachmentData.get("goodsNonce")));
-            this.discountNQT = (Long)attachmentData.get("discountNQT");
-            this.goodsIsText = Boolean.TRUE.equals((Boolean)attachmentData.get("goodsIsText"));
+            this.discountNQT = Convert.parseLong(attachmentData.get("discountNQT"));
+            this.goodsIsText = Boolean.TRUE.equals(attachmentData.get("goodsIsText"));
         }
 
         public DigitalGoodsDelivery(Long purchaseId, EncryptedData goods, boolean goodsIsText, long discountNQT) {
@@ -1423,7 +1423,7 @@ public interface Attachment extends Appendix {
         DigitalGoodsRefund(JSONObject attachmentData) {
             super(attachmentData);
             this.purchaseId = Convert.parseUnsignedLong((String)attachmentData.get("purchase"));
-            this.refundNQT = (Long)attachmentData.get("refundNQT");
+            this.refundNQT = Convert.parseLong(attachmentData.get("refundNQT"));
         }
 
         public DigitalGoodsRefund(Long purchaseId, long refundNQT) {

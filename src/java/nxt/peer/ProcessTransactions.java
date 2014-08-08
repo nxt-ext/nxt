@@ -3,7 +3,6 @@ package nxt.peer;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.util.JSON;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -20,7 +19,7 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
         try {
             Nxt.getTransactionProcessor().processPeerTransactions(request);
         } catch (RuntimeException | NxtException.ValidationException e) {
-            Logger.logDebugMessage("Failed to parse peer transactions: " + request.toJSONString());
+            //Logger.logDebugMessage("Failed to parse peer transactions: " + request.toJSONString());
             peer.blacklist(e);
         }
 

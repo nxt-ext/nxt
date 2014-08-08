@@ -173,6 +173,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 response.put("broadcasted", false);
             }
             response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
+            response.put("transactionJSON", JSONData.unconfirmedTransaction(transaction));
 
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;

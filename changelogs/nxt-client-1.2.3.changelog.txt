@@ -1,0 +1,6 @@
+Minor bugfixes.
+
+ParseTransaction, signTransaction, and broadcastTransaction API can now accept
+transaction in JSON format instead of transaction bytes.
+
+

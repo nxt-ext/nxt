@@ -535,8 +535,8 @@ public final class Peers {
         if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
             String oldAddress = validAnnouncedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
             if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-                Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-                        + " to " + peer.getPeerAddress());
+                //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+                //        + " to " + peer.getPeerAddress());
                 Peer oldPeer = peers.get(oldAddress);
                 if (oldPeer != null) {
                     oldPeer.remove();
