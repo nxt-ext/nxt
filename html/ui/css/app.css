@@ -3240,6 +3240,10 @@ input.masked {
   display:none;
 }
 
-.optional_message {
+.optional_message, .optional_note {
   display:none;
+}
+
+.modal-body {
+  padding-bottom:8px;
 }

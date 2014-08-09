@@ -15,6 +15,14 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.generatePublicKey = function(secretPhrase) {
+		if (!secretPhrase) {
+			if (NRS.rememberPassword) {
+				secretPhrase = _password;
+			} else {
+				throw $.t("error_generate_public_key_no_password");
+			}
+		}
+
 		return NRS.getPublicKey(converters.stringToHexString(secretPhrase));
 	}
 
@@ -128,6 +136,8 @@ var NRS = (function(NRS, $, undefined) {
 							};
 						}
 					}
+				} else if (typeof options.publicKey == "string") {
+					options.publicKey = converters.hexStringToByteArray(options.publicKey);
 				}
 			}
 
@@ -201,6 +211,7 @@ var NRS = (function(NRS, $, undefined) {
 							"errorCode": 2
 						};
 					}
+
 					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
 				}
 			}
@@ -380,9 +391,9 @@ var NRS = (function(NRS, $, undefined) {
 				var nonce = "";
 				var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 
-				if (key == "encryptedMessage") {
-					encrypted = transaction.attachment.encryptedMessage.data;
-					nonce = transaction.attachment.encryptedMessage.nonce;
+				if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
+					encrypted = transaction.attachment[key].data;
+					nonce = transaction.attachment[key].nonce;
 				} else if (transaction.attachment && transaction.attachment[key]) {
 					encrypted = transaction.attachment[key];
 					nonce = transaction.attachment[nonceField];
@@ -453,6 +464,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.removeDecryptionForm = function($modal) {
 		if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && $("#decrypt_note_form_container").length)) {
 			$("#decrypt_note_form_container input").val("");
+			$("#decrypt_note_form_container").find(".callout").html($.t("passphrase_required_to_decrypt_data"));
 			$("#decrypt_note_form_container").hide().detach().appendTo("body");
 		}
 	}
@@ -509,9 +521,9 @@ var NRS = (function(NRS, $, undefined) {
 			var nonce = "";
 			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 
-			if (key == "encryptedMessage") {
-				encrypted = _encryptedNote.transaction.attachment.encryptedMessage.data;
-				nonce = _encryptedNote.transaction.attachment.encryptedMessage.nonce;
+			if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
+				encrypted = _encryptedNote.transaction.attachment[key].data;
+				nonce = _encryptedNote.transaction.attachment[key].nonce;
 			} else if (_encryptedNote.transaction.attachment && _encryptedNote.transaction.attachment[key]) {
 				encrypted = _encryptedNote.transaction.attachment[key];
 				nonce = _encryptedNote.transaction.attachment[nonceField];
@@ -722,7 +734,6 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			var sharedKey = options.sharedKey.slice(0); //clone
 		}
-
 
 		for (var i = 0; i < 32; i++) {
 			sharedKey[i] ^= options.nonce[i];

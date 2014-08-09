@@ -1105,6 +1105,44 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (data.recipientPublicKey) {
 				return false;
 			}
+
+			position <<= 1;
+
+			if ((transaction.flags & position) != 0) {
+				var attachmentVersion = byteArray[pos];
+
+				pos++;
+
+				var encryptedToSelfMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
+
+				transaction.messageToEncryptToSelfIsText = encryptedToSelfMessageLength < 0;
+
+				if (encryptedToSelfMessageLength < 0) {
+					encryptedToSelfMessageLength &= 2147483647;
+				}
+
+				pos += 4;
+
+				transaction.encryptToSelfMessageData = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedToSelfMessageLength));
+
+				pos += encryptedToSelfMessageLength;
+
+				transaction.encryptToSelfMessageNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+				pos += 32;
+
+				var messageToEncryptToSelfIsText = (transaction.messageToEncryptToSelfIsText ? "true" : "false");
+
+				if (messageToEncryptToSelfIsText != data.messageToEncryptToSelfIsText) {
+					return false;
+				}
+
+				if (transaction.encryptToSelfMessageData !== data.encryptToSelfMessageData || transaction.encryptToSelfMessageNonce !== data.encryptToSelfMessageNonce) {
+					return false;
+				}
+			} else if (data.encryptToSelfMessageData) {
+				return false;
+			}
 		}
 
 		return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);

@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.dgsBlockPassed) {
 			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 210000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
 				NRS.dgsBlockPassed = true;
-				$(".dgs_block").not(".optional_message").show();
+				$(".dgs_block").not(".advanced, .optional_message, .optional_note").show();
 			}
 		}
 		if (!NRS.PKAnnouncementBlockPassed) {

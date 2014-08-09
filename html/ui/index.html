@@ -1500,7 +1500,7 @@
 		                </div>
 		            </div>  
 	            
-		            <div id="custom_passphrase_link" style="margin-top:30px;text-align:center;display:none;">
+		            <div id="custom_passphrase_link" style="margin-top:30px;margin-bottom:20px;text-align:center;display:none;">
 			    		<a href="#" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
 					</div>
 				</td>
@@ -1552,6 +1552,16 @@
 							<div class="form-group">
 								<p class="help-block" id="lease_balance_help" data-i18n="[html]lease_balance_help_2">A lease of <strong>9000 blocks</strong> is about 10 days.</p>
 							</div>
+                            <div class="form-group">
+                                <input type="checkbox" name="add_message" id="lease_balance_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="lease_balance_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                            </div>
+                            <div class="form-group optional_message">
+                                <label for="lease_balance_message" data-i18n="message">MESSAGE</label>
+                                <textarea class="form-control" id="lease_balance_message" name="message" rows="4" tabindex="7"></textarea>
+                                 <div style="margin-top:3px">
+                                    <label for="lease_balance_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="lease_balance_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                </div>
+                            </div>
 							<div class="form-group secret_phrase">
 								<label for="lease_balance_password" data-i18n="passphrase">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="lease_balance_password" class="form-control" placeholder="" tabindex="6">
@@ -1563,9 +1573,17 @@
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
-
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="lease_balance_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="lease_balance_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="lease_balance_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="lease_balance_note_to_self" name="note_to_self" rows="4" tabindex="10"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 			      			<input type="hidden" name="request_type" value="leaseBalance" />
 			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
@@ -1596,7 +1614,6 @@
 								<label for="stop_forging_password" data-i18n="passphrase">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="stop_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
-
 							<input type="hidden" name="request_type" value="stopForging" />
 						</form>
 		      		</div>
@@ -1625,7 +1642,6 @@
 								<label for="start_forging_password" data-i18n="passphrase">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="start_forging_password" class="form-control" placeholder="" tabindex="1">
 							</div>
-
 							<input type="hidden" name="request_type" value="startForging" />
 						</form>
 		      		</div>
@@ -1671,12 +1687,22 @@
 								<input type="password" name="secretPhrase" id="cancel_order_password" class="form-control" placeholder="" tabindex="1">
 							</div>
 							<div class="form-group advanced">
-								<label for="lease_balance_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="lease_balance_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<label for="cancel_order_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_order_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
-								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
+								<input type="checkbox" name="doNotBroadcast" id="cancel_order_do_not_broadcast" value="1" /> <label for="cancel_order_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="cancel_order_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="cancel_order_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="cancel_order_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="cancel_order_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="cancel_order_type"  id="cancel_order_type" />
 				      		<input type="hidden" name="request_type" value="cancelOrder" />
 						</form>
@@ -1809,9 +1835,17 @@
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="transfer_asset_do_not_broadcast" value="1" /> <label for="transfer_asset_do_not_broadcast" style="font-weight:normal;" tabindex="9" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
-
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="transfer_asset_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="10" /> <label for="transfer_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="transfer_asset_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="transfer_asset_note_to_self" name="note_to_self" rows="4" tabindex="11"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 							<input type="hidden" name="request_type" value="transferAsset" />
 							<input type="hidden" name="converted_account_id" value="" />
 						</form>
@@ -1840,7 +1874,6 @@
 								<label for="add_asset_bookmark_id" data-i18n="asset_or_account_id">ASSET OR ACCOUNT ID</label> <i class="fa fa-question-circle show_popover" style="color:#4CAA6E" data-content="Find the ID on the issuer's website or announcement page." data-container="body" data-i18n="[data-content]find_asset_id_help"></i></label>
 								<input type="text" class="form-control" name="id" id="add_asset_bookmark_id" placeholder="ID" autofocus tabindex="1" />
 							</div>
-
 							<input type="hidden" name="request_type" value="addAssetBookmark" />
 						</form>
 			    	</div>
@@ -1879,9 +1912,7 @@
 								<label for="add_contact_description" data-i18n="description">DESCRIPTION</label>
 								<textarea class="form-control" id="add_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional" data-i18n="[placeholder]optional"></textarea>
 							</div>
-
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 							<input type="hidden" name="request_type" value="addContact" />
 							<input type="hidden" name="converted_account_id" value="" />
 						</form>
@@ -1920,9 +1951,7 @@
 								<label for="update_contact_description" data-i18n="description">DESCRIPTION</label>
 								<textarea class="form-control" id="update_contact_description" name="description" rows="3" tabindex="4" placeholder="Optional" data-i18n="[placeholder]optional"></textarea>
 							</div>
-
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 							<input type="hidden" name="contact_id" id="update_contact_id" value="" />
 							<input type="hidden" name="request_type" value="updateContact" />
 							<input type="hidden" name="converted_account_id" value="" />
@@ -2022,6 +2051,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="issue_asset_do_not_broadcast" value="1" /> <label for="issue_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="issue_asset_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="issue_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="issue_asset_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="issue_asset_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="issueAsset" />
 						</form>
 			    	</div>
@@ -2102,6 +2141,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_listing_do_not_broadcast" value="1" /> <label for="dgs_listing_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_listing_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_listing_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_listing_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_listing_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsListing" />
 						</form>
 			    	</div>
@@ -2158,6 +2207,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_delisting_do_not_broadcast" value="1" /> <label for="dgs_delisting_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_delisting_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_delisting_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_delisting_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_delisting_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsDelisting" />
 						</form>
 		      		</div>
@@ -2230,6 +2289,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_price_change_do_not_broadcast" value="1" /> <label for="dgs_price_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_price_change_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_price_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_price_change_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_price_change_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsPriceChange" />
 						</form>
 		      		</div>
@@ -2299,6 +2368,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_quantity_change_do_not_broadcast" value="1" /> <label for="dgs_quantity_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_quantity_change_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_quantity_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_quantity_change_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_quantity_change_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsQuantityChange" />
 						</form>
 		      		</div>
@@ -2407,6 +2486,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_purchase_do_not_broadcast" value="1" /> <label for="dgs_purchase_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_purchase_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_purchase_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_purchase_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_purchase_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsPurchase" />
 						</form>
 			    	</div>
@@ -2475,6 +2564,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_delivery_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="dgs_delivery_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_delivery_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_delivery_note_to_self" name="note_to_self" rows="4" tabindex="10"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsDelivery" />
 						</form>
 			    	</div>
@@ -2618,6 +2717,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_refund_do_not_broadcast" value="1" /> <label for="dgs_refund_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_refund_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_refund_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_refund_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_refund_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsRefund" />
 						</form>
 			    	</div>
@@ -2685,6 +2794,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_feedback_do_not_broadcast" value="1" /> <label for="dgs_feedback_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="dgs_feedback_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_feedback_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="dgs_feedback_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="dgs_feedback_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="dgsFeedback" />
 						</form>
 			    	</div>
@@ -2926,9 +3045,17 @@
 							<div class="form-group advanced" style="margin-bottom:5px">
 								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="10" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
-
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="send_money_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="11" /> <label for="send_money_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="send_money_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="send_money_note_to_self" name="note_to_self" rows="4" tabindex="12"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 			      			<input type="hidden" name="request_type" value="sendMoney" data-default="sendMoney" />
 			      			<input type="hidden" name="converted_account_id" value="" />
 						</form>
@@ -3001,9 +3128,17 @@
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="send_message_do_not_broadcast" value="1" /> <label for="send_message_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
-
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="send_message_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="send_message_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="send_message_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="send_message_note_to_self" name="note_to_self" rows="4" tabindex="10"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 							<input type="hidden" name="request_type" value="sendMessage" data-default="sendMessage" />
 				       		<input type="hidden" name="converted_account_id" value="" />
 						</form>
@@ -3063,6 +3198,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="account_info_do_not_broadcast" value="1" /> <label for="account_info_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="account_info_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="account_info_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="account_info_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="account_info_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="setAccountInfo" />
 						</form>
 					</div>
@@ -3132,6 +3277,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="register_alias_do_not_broadcast" value="1" /> <label for="register_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="register_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="register_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="register_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="register_alias_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
 				      		<input type="hidden" name="request_type" value="setAlias" />
 						</form>
@@ -3206,6 +3361,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="buy_alias_do_not_broadcast" value="1" /> <label for="buy_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="buy_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="buy_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="buy_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="buy_alias_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="buyAlias" />
                             <input type="hidden" name="recipient" id="buy_alias_recipient" value="" />
 						</form>
@@ -3288,9 +3453,17 @@
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
-
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="transfer_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="transfer_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="transfer_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="transfer_alias_note_to_self" name="note_to_self" rows="4" tabindex="10"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
 							<input type="hidden" name="request_type" value="sellAlias" />
                             <input type="hidden" name="modal" value="transfer_alias" />
 				      		<input type="hidden" name="converted_account_id" value="" />
@@ -3389,9 +3562,17 @@
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="sell_alias_do_not_broadcast" value="1" /> <label for="sell_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
-
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="sell_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="sell_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="sell_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="sell_alias_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
-
                             <input type="hidden" name="modal" value="sell_alias" />
                             <input type="hidden" name="request_type" value="sellAlias" />
 				      		<input type="hidden" name="converted_account_id" value="" />
@@ -3461,6 +3642,16 @@
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="cancel_alias_sale_do_not_broadcast" value="1" /> <label for="cancel_alias_sale_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
+                            <div class="form-group dgs_block advanced">
+                                <input type="checkbox" name="add_note_to_self" id="cancel_alias_sale_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="cancel_alias_sale_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                            </div>
+                            <div class="form-group dgs_block advanced optional_note">
+                                <label for="cancel_alias_sale_note_to_self" data-i18n="note_to_self">Note to Self</label>
+                                <textarea class="form-control" id="cancel_alias_sale_note_to_self" name="note_to_self" rows="4" tabindex="9"></textarea>
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</span></label>
+                                </div>
+                            </div>
 							<input type="hidden" name="request_type" value="sellAlias" />
 						</form>
 					</div>
@@ -4106,7 +4297,6 @@
 							<div class="form-group" id="asset_exchange_group_new_group_div" style="display:none">
 								<input type="text" class="form-control" name="asset_exchange_group_new_group" id="asset_exchange_group_new_group" placeholder="New Group Title" data-i18n="new_group_title"/>
 							</div>
-
 							<input type="hidden" name="request_type" value="assetExchangeGroup" />
 						</form>
 		      		</div>
@@ -4132,11 +4322,9 @@
 								<label for="messages_decrypt_password" data-i18n="passphrase">PASSPHRASE</label>
 								<input type="password" name="secretPhrase" id="messages_decrypt_password" class="form-control" placeholder="" tabindex="8">
 							</div>
-
 							<div class="form-group" style="margin-bottom:0">
 								<input type="checkbox" name="rememberPassword" id="messages_decrypt_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="messages_decrypt_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label>
 							</div>
-
 							<input type="hidden" name="request_type" value="decryptMessages" />
 						</form>
 		      		</div>
