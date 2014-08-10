@@ -12,10 +12,10 @@ var NRS = (function(NRS, $, undefined) {
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
 			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
-			"<span class='tags'><strong>" + $.t("tags") + "</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
+			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span> <span class='tags'><strong>" + $.t("tags") + "</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
 	}
 
-	NRS.getMarketplacePurchaseHTML = function(purchase) {
+	NRS.getMarketplacePurchaseHTML = function(purchase, showBuyer) {
 		var status, statusHTML, modal;
 
 		if (purchase.unconfirmed) {
@@ -38,7 +38,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>" +
+			(showBuyer ? "<strong>" + $.t("buyer") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" :
+			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>") +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='" + (modal ? modal : "#dgs_view_delivery_modal") + "'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
@@ -122,7 +123,10 @@ var NRS = (function(NRS, $, undefined) {
 		var content = "";
 
 		if (NRS.pageNumber == 1) {
-			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4);
+
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4, {
+				"sender": NRS.account
+			});
 
 			if (unconfirmedTransactions) {
 				for (var i = 0; i < unconfirmedTransactions.length; i++) {
@@ -174,7 +178,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				for (var i = 0; i < response.purchases.length; i++) {
-					content += NRS.getMarketplacePurchaseHTML(response.purchases[i]);
+					content += NRS.getMarketplacePurchaseHTML(response.purchases[i], true);
 				}
 			}
 
@@ -745,9 +749,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#dgs_refund_purchase").val("");
 		} else if (type == "dgs_view_delivery_modal") {
 			$("#dgs_delivery_purchase").val("");
-		}
-
-		if (type == "dgs_view_delivery_modal") {
+			$("#dgs_view_delivery_output").empty();
 			$(this).find("button.btn-primary").data("purchase", "");
 		}
 	});
@@ -780,6 +782,7 @@ var NRS = (function(NRS, $, undefined) {
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "seller") + "' class='user_info'>" + NRS.getAccountTitle(response, "seller") + "</a></td></tr>";
+				output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 
 				if (type == "dgs_purchase_modal" || type == "dgs_product_modal") {
 					output += "<tr><td colspan='2'><div style='max-height:150px;overflow:auto;'>" + String(response.description).escapeHTML().nl2br() + "</div></td></tr>";

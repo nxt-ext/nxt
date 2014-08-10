@@ -100,16 +100,23 @@ var NRS = (function(NRS, $, undefined) {
 							$output.html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>");
 						}
 
-						if (transaction.attachment.encryptedMessage) {
-							$output.append("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</div><div id='transaction_info_decryption_form'></div><div id='transaction_info_decrypted_note' style='display:none;padding-bottom:10px;'></div>");
+						if (transaction.attachment.encryptedMessage || transaction.attachment.encryptToSelfMessage) {
+							$output.append("<div id='transaction_info_decryption_form'></div><div id='transaction_info_decryption_output' style='display:none;padding-bottom:10px;'></div>");
 
 							if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
-								NRS.tryToDecrypt(transaction, {
-									"encryptedMessage": ""
-								}, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
+								var fieldsToDecrypt = {};
+
+								if (transaction.attachment.encryptedMessage) {
+									fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
+								}
+								if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
+									fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
+								}
+
+								NRS.tryToDecrypt(transaction, fieldsToDecrypt, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
 									"noPadding": true,
 									"formEl": "#transaction_info_decryption_form",
-									"outputEl": "#transaction_info_decrypted_note"
+									"outputEl": "#transaction_info_decryption_output"
 								});
 							} else {
 								$output.append("<div style='padding-bottom:10px'>" + $.t("encrypted_message_no_permission") + "</div>");

@@ -50,6 +50,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	$(".add_note_to_self").on("change", function(e) {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find(".optional_note").fadeIn();
+		} else {
+			$(this).closest("form").find(".optional_note").hide();
+		}
+	});
+
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
 		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
@@ -127,7 +135,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".recipient_public_key").hide();
 
-		$(this).find(".optional_message").hide();
+		$(this).find(".optional_message, .optional_note").hide();
 
 		$(this).find(".advanced_info a").text($.t("advanced"));
 
@@ -193,7 +201,7 @@ var NRS = (function(NRS, $, undefined) {
 		var text = $(this).text().toLowerCase();
 
 		if (text == $.t("advanced")) {
-			$modal.find(".advanced").fadeIn();
+			$modal.find(".advanced").not(".optional_note").fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
 		}

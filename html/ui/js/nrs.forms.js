@@ -56,19 +56,33 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.addMessageData = function(data, requestType) {
-		if (!data.add_message && requestType != "sendMessage") {
+		if (requestType == "sendMessage") {
+			data.add_message = true;
+		}
+
+		if (!data.add_message && !data.add_note_to_self) {
+			delete data.message;
+			delete data.note_to_self;
+			delete data.encrypt_message;
+			delete data.add_message;
+			delete data.add_note_to_self;
+
+			return data;
+		} else if (!data.add_message) {
 			delete data.message;
 			delete data.encrypt_message;
 			delete data.add_message;
-
-			return data;
+		} else if (!data.add_note_to_self) {
+			delete data.note_to_self;
+			delete data.add_note_to_self;
 		}
 
 		data["_extra"] = {
-			"message": data.message
+			"message": data.message,
+			"note_to_self": data.note_to_self
 		};
 
-		if (data.message) {
+		if (data.add_message && data.message) {
 			if (!NRS.dgsBlockPassed) {
 				data.message = converters.stringToHexString(data.message);
 			} else if (data.encrypt_message) {
@@ -91,6 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 					data.encryptedMessageData = encrypted.message;
 					data.encryptedMessageNonce = encrypted.nonce;
 					data.messageToEncryptIsText = "true";
+
 					delete data.message;
 				} catch (err) {
 					throw err;
@@ -98,10 +113,37 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				data.messageIsText = "true";
 			}
+		} else {
+			delete data.message;
+		}
+
+		if (data.add_note_to_self && data.note_to_self) {
+			if (!NRS.dgsBlockPassed) {
+				delete data.note_to_self;
+			} else {
+				try {
+					var options = {};
+
+					var encrypted = NRS.encryptNote(data.note_to_self, {
+						"publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
+					}, data.secretPhrase);
+
+					data.encryptToSelfMessageData = encrypted.message;
+					data.encryptToSelfMessageNonce = encrypted.nonce;
+					data.messageToEncryptToSelfIsText = "true";
+
+					delete data.note_to_self;
+				} catch (err) {
+					throw err;
+				}
+			}
+		} else {
+			delete data.note_to_self;
 		}
 
 		delete data.add_message;
 		delete data.encrypt_message;
+		delete data.add_note_to_self;
 
 		return data;
 	}

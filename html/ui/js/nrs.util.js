@@ -676,7 +676,7 @@ var NRS = (function(NRS, $, undefined) {
 			return false;
 		}
 		var parts = ip.split('.');
-		if (parts[0] === '10' || (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) || (parts[0] === '192' && parts[1] === '168')) {
+		if (parts[0] === '10' || parts[0] == '127' || (parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31)) || (parts[0] === '192' && parts[1] === '168')) {
 			return true;
 		}
 		return false;
@@ -1474,6 +1474,10 @@ var NRS = (function(NRS, $, undefined) {
 		var nameKey = String(name).replace(/NQT|QNT|RS$/, "").replace(/\s+/g, "").replace(/([A-Z])/g, function($1) {
 			return "_" + $1.toLowerCase();
 		});
+
+		if (nameKey.charAt(0) == "_") {
+			nameKey = nameKey.substring(1);
+		}
 
 		if ($.i18n.exists(nameKey)) {
 			return $.t(nameKey).escapeHTML();

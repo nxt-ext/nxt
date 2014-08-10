@@ -1891,7 +1891,6 @@ body > .header .logo .icon {
 .lockscreen > body {
   background: transparent;
   min-height: 100% !important;
-  overflow: hidden !important;
 }
 /* We will put the dynamically generated digital clock here */
 .lockscreen .headline {
@@ -3044,6 +3043,7 @@ hr {
 
 #lockscreen {
   height:100%;
+  overflow:auto;
 }
 
 #center .panel {
@@ -3166,7 +3166,7 @@ hr {
   font-weight:bold;
 }
 
-.dgs_page_contents span.tags {
+.dgs_page_contents span.tags, .dgs_page_contents span.quantity {
   color:#999999;
 }
 
@@ -3240,6 +3240,10 @@ input.masked {
   display:none;
 }
 
-.optional_message {
+.optional_message, .optional_note {
   display:none;
+}
+
+.modal-body {
+  padding-bottom:8px;
 }
