@@ -15,7 +15,7 @@ var NRS = (function(NRS, $, undefined) {
 			"<span class='tags'><strong>" + $.t("tags") + "</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
 	}
 
-	NRS.getMarketplacePurchaseHTML = function(purchase) {
+	NRS.getMarketplacePurchaseHTML = function(purchase, showBuyer) {
 		var status, statusHTML, modal;
 
 		if (purchase.unconfirmed) {
@@ -38,7 +38,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>" +
+			(showBuyer ? "<strong>" + $.t("buyer") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" :
+			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>") +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='" + (modal ? modal : "#dgs_view_delivery_modal") + "'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
@@ -177,7 +178,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				for (var i = 0; i < response.purchases.length; i++) {
-					content += NRS.getMarketplacePurchaseHTML(response.purchases[i]);
+					content += NRS.getMarketplacePurchaseHTML(response.purchases[i], true);
 				}
 			}
 
