@@ -220,15 +220,15 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp) {
-        return getTransactions(account, type, subtype, timestamp, Boolean.TRUE);
+        return getTransactions(account, type, subtype, timestamp, 0, -1);
     }
 
-    @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending) {
+        @Override
+    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int timestamp, int from, int to) {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT * FROM transaction WHERE (recipient_id = ? OR sender_id = ?) ");
+            buf.append("SELECT * FROM transaction WHERE recipient_id = ? AND sender_id <> ? ");
             if (timestamp > 0) {
                 buf.append("AND timestamp >= ? ");
             }
@@ -238,16 +238,38 @@ final class BlockchainImpl implements Blockchain {
                     buf.append("AND subtype = ? ");
                 }
             }
-            if (Boolean.TRUE.equals(orderAscending)) {
-                buf.append("ORDER BY timestamp ASC");
-            } else if (Boolean.FALSE.equals(orderAscending)) {
-                buf.append("ORDER BY timestamp DESC");
+            buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
+            if (timestamp > 0) {
+                buf.append("AND timestamp >= ? ");
+            }
+            if (type >= 0) {
+                buf.append("AND type = ? ");
+                if (subtype >= 0) {
+                    buf.append("AND subtype = ? ");
+                }
+            }
+            buf.append("ORDER BY timestamp DESC");
+            if (to >= from && to < Integer.MAX_VALUE) {
+                buf.append(" LIMIT " + (to - from + 1));
+            }
+            if (from > 0) {
+                buf.append(" OFFSET " + from);
             }
             con = Db.getConnection();
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());
             pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, account.getId());
+            if (timestamp > 0) {
+                pstmt.setInt(++i, timestamp);
+            }
+            if (type >= 0) {
+                pstmt.setByte(++i, type);
+                if (subtype >= 0) {
+                    pstmt.setByte(++i, subtype);
+                }
+            }
             pstmt.setLong(++i, account.getId());
             if (timestamp > 0) {
                 pstmt.setInt(++i, timestamp);

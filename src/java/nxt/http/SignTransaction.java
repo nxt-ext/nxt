@@ -7,6 +7,7 @@ import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+import org.json.simple.JSONValue;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,14 +20,15 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     static final SignTransaction instance = new SignTransaction();
 
     private SignTransaction() {
-        super("unsignedTransactionBytes", "secretPhrase");
+        super(new APITag[] {APITag.TRANSACTIONS}, "unsignedTransactionBytes", "unsignedTransactionJSON", "secretPhrase");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException.ValidationException {
 
         String transactionBytes = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
-        if (transactionBytes == null) {
+        String transactionJSON = Convert.emptyToNull(req.getParameter("unsignedTransactionJSON"));
+        if (transactionBytes == null && transactionJSON == null) {
             return MISSING_UNSIGNED_BYTES;
         }
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
@@ -35,8 +37,14 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
         }
 
         try {
-            byte[] bytes = Convert.parseHexString(transactionBytes);
-            Transaction transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
+            Transaction transaction;
+            if (transactionBytes != null) {
+                byte[] bytes = Convert.parseHexString(transactionBytes);
+                transaction = Nxt.getTransactionProcessor().parseTransaction(bytes);
+            } else {
+                JSONObject json = (JSONObject) JSONValue.parse(transactionJSON);
+                transaction = Nxt.getTransactionProcessor().parseTransaction(json);
+            }
             transaction.validateAttachment();
             if (transaction.getSignature() != null) {
                 JSONObject response = new JSONObject();
