@@ -282,7 +282,7 @@
 							<table class="table table-striped" id="transactions_table">
 								<thead>
 							    <tr>
-							    	<th data-i18n="transaction_id">Transaction ID</th>
+							    	<th data-i18n="transaction_id" style="width:1%">Transaction ID</th>
                                     <th><i class='fa fa-envelope-o'></i></th>
 							        <th data-i18n="date">Date</th>
 							        <th data-i18n="type">Type</th>
@@ -2541,7 +2541,10 @@
 							<div class="form-group">
 								<label for="dgs_delivery_data" data-i18n="data">DATA</label>
 								<textarea class="form-control" id="dgs_delivery_data" name="data" rows="3" tabindex="2"></textarea>
-							</div>
+							    <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="data_is_encrypted">Data is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="form-group">
 								<label for="dgs_delivery_discount" data-i18n="discount">DISCOUNT</label>	
 								<div class="input-group">
