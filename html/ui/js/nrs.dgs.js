@@ -122,7 +122,10 @@ var NRS = (function(NRS, $, undefined) {
 		var content = "";
 
 		if (NRS.pageNumber == 1) {
-			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4);
+
+			var unconfirmedTransactions = NRS.getUnconfirmedTransactionsFromCache(3, 4, {
+				"sender": NRS.account
+			});
 
 			if (unconfirmedTransactions) {
 				for (var i = 0; i < unconfirmedTransactions.length; i++) {
