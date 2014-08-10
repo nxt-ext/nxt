@@ -12,7 +12,7 @@ var NRS = (function(NRS, $, undefined) {
 			"<h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3>" +
 			"<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>" +
 			"<div class='showmore'><div class='moreblock description'>" + String(good.description).escapeHTML().nl2br() + "</div></div>" +
-			"<span class='tags'><strong>" + $.t("tags") + "</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
+			"<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span> <span class='tags'><strong>" + $.t("tags") + "</strong>: " + String(good.tags).escapeHTML() + "</span><hr />";
 	}
 
 	NRS.getMarketplacePurchaseHTML = function(purchase, showBuyer) {
@@ -784,6 +784,7 @@ var NRS = (function(NRS, $, undefined) {
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "seller") + "' class='user_info'>" + NRS.getAccountTitle(response, "seller") + "</a></td></tr>";
+				output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 
 				if (type == "dgs_purchase_modal" || type == "dgs_product_modal") {
 					output += "<tr><td colspan='2'><div style='max-height:150px;overflow:auto;'>" + String(response.description).escapeHTML().nl2br() + "</div></td></tr>";
