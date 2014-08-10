@@ -101,7 +101,9 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		NRS.getState(function() {
-			NRS.checkAliasVersions();
+			setTimeout(function() {
+				NRS.checkAliasVersions();
+			}, 5000);
 		});
 
 		NRS.showLockscreen();
@@ -115,7 +117,18 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.appPlatform = match[1];
 				}
 				if (match[2]) {
-					NRS.appVersion = match[1];
+					NRS.appVersion = match[2];
+				}
+
+				if (!NRS.appPlatform || NRS.appPlatform == "mac") {
+					var macVersion = navigator.userAgent.match(/OS X 10_([0-9]+)/i);
+					if (macVersion && macVersion[1]) {
+						macVersion = parseInt(macVersion[1]);
+
+						if (macVersion < 9) {
+							$(".modal").removeClass("fade");
+						}
+					}
 				}
 
 				$("#show_console").hide();
@@ -522,7 +535,8 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
-							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+							var translationKey = (NRS.dgsBlockPassed ? "status_new_account" : "status_new_account_old");
+							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t(translationKey, {
 								"account_id": String(NRS.accountRS).escapeHTML(),
 								"public_key": String(NRS.publicKey).escapeHTML()
 							}) + "<br /><br />" + $.t("status_blockchain_downloading")).show();
@@ -532,7 +546,8 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+						var translationKey = (NRS.dgsBlockPassed ? "status_new_account" : "status_new_account_old");
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t(translationKey, {
 							"account_id": String(NRS.accountRS).escapeHTML(),
 							"public_key": String(NRS.publicKey).escapeHTML()
 						})).show();
