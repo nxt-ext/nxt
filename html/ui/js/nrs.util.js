@@ -1475,6 +1475,10 @@ var NRS = (function(NRS, $, undefined) {
 			return "_" + $1.toLowerCase();
 		});
 
+		if (nameKey.charAt(0) == "_") {
+			nameKey = nameKey.substring(1);
+		}
+
 		if ($.i18n.exists(nameKey)) {
 			return $.t(nameKey).escapeHTML();
 		} else {
