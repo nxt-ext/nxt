@@ -201,7 +201,11 @@ var NRS = (function(NRS, $, undefined) {
 		var text = $(this).text().toLowerCase();
 
 		if (text == $.t("advanced")) {
-			$modal.find(".advanced").not(".optional_note").fadeIn();
+			var not = ".optional_note";
+			if (!NRS.dgsBlockPassed) {
+				not += ", .dgs_block";
+			}
+			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
 		}

@@ -282,7 +282,7 @@
 							<table class="table table-striped" id="transactions_table">
 								<thead>
 							    <tr>
-							    	<th data-i18n="transaction_id">Transaction ID</th>
+							    	<th data-i18n="transaction_id" style="width:1%">Transaction ID</th>
                                     <th><i class='fa fa-envelope-o'></i></th>
 							        <th data-i18n="date">Date</th>
 							        <th data-i18n="type">Type</th>
@@ -1002,6 +1002,8 @@
                                             <option value="fr">Français</option> <!-- french -->
                                             <option value="gl">Galego</option> <!-- galician -->
                                             <option value="hr">Hrvatski</option> <!-- croatian -->
+                                            <option value="id">Bahasa Indonesia</option> <!-- indonesian -->
+                                            <option value="it">Italiano</option> <!-- italian -->
                                             <option value="ja">日本語</option> <!-- japanese -->
                                             <option value="lt">Lietuviškai</option> <!-- lithuanian -->
                                             <option value="nl">Nederlands</option> <!-- dutch -->
@@ -1565,7 +1567,7 @@
 								<p class="help-block" id="lease_balance_help" data-i18n="[html]lease_balance_help_2">A lease of <strong>9000 blocks</strong> is about 10 days.</p>
 							</div>
                             <div class="form-group">
-                                <input type="checkbox" name="add_message" id="lease_balance_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="lease_balance_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="lease_balance_add_message" class="add_message"  tabindex="6" /> <label for="lease_balance_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group optional_message">
                                 <label for="lease_balance_message" data-i18n="message">MESSAGE</label>
@@ -1586,7 +1588,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="lease_balance_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="lease_balance_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="lease_balance_add_note_to_self" class="add_note_to_self" tabindex="9" /> <label for="lease_balance_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="lease_balance_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -1706,7 +1708,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="cancel_order_do_not_broadcast" value="1" /> <label for="cancel_order_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="cancel_order_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="cancel_order_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="cancel_order_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="cancel_order_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="cancel_order_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -1810,7 +1812,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <input type="checkbox" name="add_message" id="transfer_asset_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="transfer_asset_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="transfer_asset_add_message" class="add_message" tabindex="6" /> <label for="transfer_asset_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group optional_message">
                                 <label for="transfer_asset_message" data-i18n="message">MESSAGE</label>
@@ -1848,7 +1850,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="transfer_asset_do_not_broadcast" value="1" /> <label for="transfer_asset_do_not_broadcast" style="font-weight:normal;" tabindex="9" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="transfer_asset_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="10" /> <label for="transfer_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="transfer_asset_add_note_to_self" class="add_note_to_self" tabindex="10" /> <label for="transfer_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="transfer_asset_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2064,7 +2066,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="issue_asset_do_not_broadcast" value="1" /> <label for="issue_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="issue_asset_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="issue_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="issue_asset_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="issue_asset_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="issue_asset_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2154,7 +2156,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_listing_do_not_broadcast" value="1" /> <label for="dgs_listing_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_listing_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_listing_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_listing_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_listing_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_listing_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2220,7 +2222,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_delisting_do_not_broadcast" value="1" /> <label for="dgs_delisting_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_delisting_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_delisting_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_delisting_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_delisting_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_delisting_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2302,7 +2304,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_price_change_do_not_broadcast" value="1" /> <label for="dgs_price_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_price_change_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_price_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_price_change_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_price_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_price_change_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2381,7 +2383,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_quantity_change_do_not_broadcast" value="1" /> <label for="dgs_quantity_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_quantity_change_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_quantity_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_quantity_change_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_quantity_change_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_quantity_change_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2461,7 +2463,7 @@
 								</div>
 							</div>
                             <div class="form-group">
-                                <input type="checkbox" name="add_message" id="dgs_purchase_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="dgs_purchase_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="dgs_purchase_add_message" class="add_message" tabindex="6" /> <label for="dgs_purchase_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group optional_message">
                                 <label for="dgs_purchase_message" data-i18n="message">MESSAGE</label>
@@ -2500,7 +2502,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_purchase_do_not_broadcast" value="1" /> <label for="dgs_purchase_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_purchase_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_purchase_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_purchase_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_purchase_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_purchase_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2541,7 +2543,10 @@
 							<div class="form-group">
 								<label for="dgs_delivery_data" data-i18n="data">DATA</label>
 								<textarea class="form-control" id="dgs_delivery_data" name="data" rows="3" tabindex="2"></textarea>
-							</div>
+							    <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="data_is_encrypted">Data is encrypted.</span></label>
+                                </div>
+                            </div>
 							<div class="form-group">
 								<label for="dgs_delivery_discount" data-i18n="discount">DISCOUNT</label>	
 								<div class="input-group">
@@ -2578,7 +2583,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_delivery_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="dgs_delivery_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_delivery_add_note_to_self" class="add_note_to_self" tabindex="9" /> <label for="dgs_delivery_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_delivery_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2693,7 +2698,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <input type="checkbox" name="add_message" id="dgs_refund_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="dgs_refund_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="dgs_refund_add_message" class="add_message" tabindex="6" /> <label for="dgs_refund_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group optional_message">
                                 <label for="dgs_refund_message" data-i18n="message">MESSAGE</label>
@@ -2731,7 +2736,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_refund_do_not_broadcast" value="1" /> <label for="dgs_refund_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_refund_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_refund_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_refund_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_refund_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_refund_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -2808,7 +2813,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="dgs_feedback_do_not_broadcast" value="1" /> <label for="dgs_feedback_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="dgs_feedback_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="dgs_feedback_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="dgs_feedback_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="dgs_feedback_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="dgs_feedback_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3038,7 +3043,7 @@
 								</div>
 							</div>
 							<div class="form-group dgs_block">
-								<input type="checkbox" name="add_message" id="send_money_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+								<input type="checkbox" name="add_message" id="send_money_add_message" class="add_message"  tabindex="6" /> <label for="send_money_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
 							</div>
 							<div class="form-group dgs_block optional_message">
 								<label for="send_money_message" data-i18n="message">MESSAGE</label>
@@ -3059,7 +3064,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="10" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="send_money_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="11" /> <label for="send_money_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="send_money_add_note_to_self" class="add_note_to_self" tabindex="11" /> <label for="send_money_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="send_money_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3142,7 +3147,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="send_message_do_not_broadcast" value="1" /> <label for="send_message_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="send_message_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="send_message_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="send_message_add_note_to_self" class="add_note_to_self" tabindex="9" /> <label for="send_message_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="send_message_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3212,7 +3217,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="account_info_do_not_broadcast" value="1" /> <label for="account_info_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="account_info_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="account_info_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="account_info_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="account_info_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="account_info_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3291,7 +3296,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="register_alias_do_not_broadcast" value="1" /> <label for="register_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="register_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="register_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="register_alias_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="register_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="register_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3337,7 +3342,7 @@
 								</div>
 							</div>
                             <div class="form-group dgs_block">
-                                <input type="checkbox" name="add_message" id="buy_alias_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="buy_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="buy_alias_add_message" class="add_message" tabindex="6" /> <label for="buy_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group dgs_block optional_message">
                                 <label for="buy_alias_message" data-i18n="message">MESSAGE</label>
@@ -3375,7 +3380,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="buy_alias_do_not_broadcast" value="1" /> <label for="buy_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="buy_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="buy_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="buy_alias_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="buy_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="buy_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3429,7 +3434,7 @@
                                 <input type="text" class="form-control" name="recipientPublicKey" id="transfer_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
                             </div>
                             <div class="form-group dgs_block">
-                                <input type="checkbox" name="add_message" id="transfer_alias_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="transfer_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="transfer_alias_add_message" class="add_message" tabindex="6" /> <label for="transfer_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group dgs_block optional_message">
                                 <label for="transfer_alias_message" data-i18n="message">MESSAGE</label>
@@ -3467,7 +3472,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="transfer_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="9" /> <label for="transfer_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="transfer_alias_add_note_to_self" class="add_note_to_self" tabindex="9" /> <label for="transfer_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="transfer_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3552,7 +3557,7 @@
 								</div>
 							</div>
                             <div class="form-group dgs_block add_message_container">
-                                <input type="checkbox" name="add_message" id="sell_alias_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="sell_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="sell_alias_add_message" class="add_message" tabindex="6" /> <label for="sell_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group dgs_block optional_message">
                                 <label for="sell_alias_message" data-i18n="message">MESSAGE</label>
@@ -3576,7 +3581,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="sell_alias_do_not_broadcast" value="1" /> <label for="sell_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="sell_alias_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="sell_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="sell_alias_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="sell_alias_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="sell_alias_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -3635,7 +3640,7 @@
 								</div>
 							</div>
                             <div class="form-group dgs_block">
-                                <input type="checkbox" name="add_message" id="cancel_alias_sale_add_message" class="add_message" style="margin-top:5px;vertical-align:top;" tabindex="6" /> <label for="cancel_alias_sale_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
+                                <input type="checkbox" name="add_message" id="cancel_alias_sale_add_message" class="add_message" tabindex="6" /> <label for="cancel_alias_sale_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
                             </div>
                             <div class="form-group dgs_block optional_message">
                                 <label for="cancel_alias_sale_message" data-i18n="message">MESSAGE</label>
@@ -3656,7 +3661,7 @@
 								<input type="checkbox" name="doNotBroadcast" id="cancel_alias_sale_do_not_broadcast" value="1" /> <label for="cancel_alias_sale_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
 							</div>
                             <div class="form-group dgs_block advanced">
-                                <input type="checkbox" name="add_note_to_self" id="cancel_alias_sale_add_note_to_self" class="add_note_to_self" style="margin-top:5px;vertical-align:top;" tabindex="8" /> <label for="cancel_alias_sale_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
+                                <input type="checkbox" name="add_note_to_self" id="cancel_alias_sale_add_note_to_self" class="add_note_to_self" tabindex="8" /> <label for="cancel_alias_sale_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
                             </div>
                             <div class="form-group dgs_block advanced optional_note">
                                 <label for="cancel_alias_sale_note_to_self" data-i18n="note_to_self">Note to Self</label>
@@ -4103,6 +4108,9 @@
 							    	<tr>
 							    		<td style="font-weight: bold;width:180px;"><span data-i18n="account_id">Account ID</span>:</td><td><span id="account_balance_account_rs"></span></td>
 							    	</tr>
+                                    <tr>
+                                        <td style="font-weight: bold;width:180px;"><span data-i18n="numeric_account_id">Numeric Account ID</span>:</td><td><span id="account_balance_account"></span></td>
+                                    </tr>
 							    	<tr>
 							    		<td style="font-weight: bold"><span data-i18n="balance">Balance</span>:</td><td><span id="account_balance_balance"></span></td>
 							    	</tr>
@@ -4336,7 +4344,7 @@
 								<input type="password" name="secretPhrase" id="messages_decrypt_password" class="form-control" placeholder="" tabindex="8">
 							</div>
 							<div class="form-group" style="margin-bottom:0">
-								<input type="checkbox" name="rememberPassword" id="messages_decrypt_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="messages_decrypt_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label>
+								<input type="checkbox" name="rememberPassword" id="messages_decrypt_remember_password" /> <label for="messages_decrypt_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label>
 							</div>
 							<input type="hidden" name="request_type" value="decryptMessages" />
 						</form>
@@ -4357,7 +4365,7 @@
 					<input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
 				</div>
 
-				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" style="margin-top:5px;vertical-align:top;" /> <label for="decrypt_note_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label></div>
+				<div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" /> <label for="decrypt_note_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label></div>
 
 		        <button type="button" class="btn btn-primary" data-ignore="true" data-i18n="decrypt">Decrypt</button>
 			</form>

@@ -8,6 +8,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.assetSearch = false;
 	NRS.lastIssuerCheck = false;
 	NRS.viewingAsset = false; //viewing non-bookmarked asset
+	NRS.currentAsset = {};
+	var currentAssetID = 0;
 
 	NRS.pages.asset_exchange = function(callback) {
 		$(".content.content-stretch:visible").width($(".page:visible").width());
@@ -468,7 +470,7 @@ var NRS = (function(NRS, $, undefined) {
 	$("#asset_exchange_sidebar").on("click", "a", function(e, data) {
 		e.preventDefault();
 
-		var assetId = $(this).data("asset");
+		currentAssetID = String($(this).data("asset")).escapeHTML();
 
 		//refresh is true if data is refreshed automatically by the system (when a new block arrives)
 		if (data && data.refresh) {
@@ -478,7 +480,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		//clicked on a group
-		if (!assetId) {
+		if (!currentAssetID) {
 			if (NRS.databaseSupport) {
 				var group = $(this).data("groupname");
 				var closed = $(this).data("closed");
@@ -518,21 +520,19 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
-		assetId = assetId.escapeHTML();
-
 		if (NRS.databaseSupport) {
 			NRS.database.select("assets", [{
-				"asset": assetId
+				"asset": currentAssetID
 			}], function(error, asset) {
-				if (asset && asset.length) {
+				if (asset && asset.length && asset[0].asset == currentAssetID) {
 					NRS.loadAsset(asset[0], refresh);
 				}
 			});
 		} else {
 			NRS.sendRequest("getAsset+", {
-				"asset": assetId
+				"asset": currentAssetID
 			}, function(response, input) {
-				if (!response.errorCode) {
+				if (!response.errorCode && response.asset == currentAssetID) {
 					NRS.loadAsset(response, refresh);
 				}
 			});

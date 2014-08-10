@@ -19,6 +19,14 @@ var NRS = (function(NRS, $, undefined) {
 				modal.find(".account_info").hide();
 			}
 		});
+
+		$recipientFields.on("oldRecipientPaste", function() {
+			var modal = $(this).closest(".modal");
+
+			var callout = modal.find(".account_info").first();
+
+			callout.removeClass("callout-info callout-danger callout-warning").addClass("callout-danger").html($.t("error_numeric_ids_not_allowed")).show();
+		});
 	}
 
 	$("#send_message_modal, #send_money_modal, #add_contact_modal").on("show.bs.modal", function(e) {

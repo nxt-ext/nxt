@@ -195,7 +195,7 @@ final class ParameterParser {
         }
     }
 
-    static EncryptedData getEncryptToSelfMessage(HttpServletRequest req, Account recipientAccount) throws ParameterException {
+    static EncryptedData getEncryptToSelfMessage(HttpServletRequest req) throws ParameterException {
         String data = Convert.emptyToNull(req.getParameter("encryptToSelfMessageData"));
         String nonce = Convert.emptyToNull(req.getParameter("encryptToSelfMessageNonce"));
         if (data != null && nonce != null) {
@@ -209,14 +209,12 @@ final class ParameterParser {
         if (plainMessage == null) {
             return null;
         }
-        if (recipientAccount == null) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
         String secretPhrase = getSecretPhrase(req);
+        Account senderAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase));
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
         try {
             byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase);
+            return senderAccount.encryptTo(plainMessageBytes, secretPhrase);
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
         }

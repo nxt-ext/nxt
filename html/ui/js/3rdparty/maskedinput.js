@@ -225,16 +225,21 @@
 
 							var pasted = text_diff(oldInput, newInput);
 
-							var match = /^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.exec(pasted);
-
-							if (match && match[0]) {
-								input.val(match[0]).trigger("checkRecipient");
+							if (/^NXT\-[0-9]{19,20}$/i.test(pasted)) {
+								//old style accounts..
+								input.val("").trigger("oldRecipientPaste");
 							} else {
-								match = /^NXT[A-Z0-9]{17}/i.exec(pasted);
+								var match = /^NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/i.exec(pasted);
+
 								if (match && match[0]) {
-									input.val(pasted).trigger("checkRecipient");
+									input.val(match[0]).trigger("checkRecipient");
 								} else {
-									input.trigger("checkRecipient");
+									match = /^NXT[A-Z0-9]{17}/i.exec(pasted);
+									if (match && match[0]) {
+										input.val(pasted).trigger("checkRecipient");
+									} else {
+										input.trigger("checkRecipient");
+									}
 								}
 							}
 
