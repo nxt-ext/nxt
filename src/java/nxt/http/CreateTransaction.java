@@ -71,7 +71,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
         }
         Appendix.EncryptToSelfMessage encryptToSelfMessage = null;
-        EncryptedData encryptedToSelfData = ParameterParser.getEncryptToSelfMessage(req, senderAccount);
+        EncryptedData encryptedToSelfData = ParameterParser.getEncryptToSelfMessage(req);
         if (encryptedToSelfData != null) {
             encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText")));
         }
