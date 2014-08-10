@@ -317,7 +317,7 @@ public final class DigitalGoodsStore {
             @Override
             protected void save(Connection con, Purchase purchase, String publicFeedback) throws SQLException {
                 try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO purchase_public_feedback (id, public_feedback, "
-                        + "height, latest) VALUES (?, ?, ?, ?, TRUE)")) {
+                        + "height, latest) VALUES (?, ?, ?, TRUE)")) {
                     int i = 0;
                     pstmt.setLong(++i, purchase.getId());
                     pstmt.setString(++i, publicFeedback);
