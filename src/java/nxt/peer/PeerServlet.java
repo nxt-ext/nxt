@@ -1,7 +1,6 @@
 package nxt.peer;
 
 import nxt.util.CountingInputStream;
-import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -12,13 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,13 +110,14 @@ public final class PeerServlet extends HttpServlet {
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
-        CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
-            response.writeJSONString(writer);
-        }
-
+        StringWriter jsonResponse = new StringWriter();
+        response.writeJSONString(jsonResponse);
+        byte[] responseBytes = jsonResponse.toString().getBytes("UTF-8");
+        resp.setContentLength(responseBytes.length);
+        resp.getOutputStream().write(responseBytes);
+        resp.getOutputStream().flush();
         if (peer != null) {
-            peer.updateUploadedVolume(cos.getCount());
+            peer.updateUploadedVolume(responseBytes.length);
         }
     }
 

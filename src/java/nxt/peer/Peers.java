@@ -16,6 +16,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlets.DoSFilter;
+import org.eclipse.jetty.servlets.GzipFilter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -216,13 +217,16 @@ public final class Peers {
                 ServletHandler peerHandler = new ServletHandler();
                 peerHandler.addServletWithMapping(PeerServlet.class, "/*");
                 if (Nxt.getBooleanProperty("nxt.enablePeerServerDoSFilter")) {
-                    FilterHolder filterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
-                    filterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
-                    filterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
-                    filterHolder.setInitParameter("maxRequestMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestMs"));
-                    filterHolder.setInitParameter("trackSessions", "false");
-                    filterHolder.setAsyncSupported(true);
+                    FilterHolder dosFilterHolder = peerHandler.addFilterWithMapping(DoSFilter.class, "/*", FilterMapping.DEFAULT);
+                    dosFilterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
+                    dosFilterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
+                    dosFilterHolder.setInitParameter("maxRequestMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestMs"));
+                    dosFilterHolder.setInitParameter("trackSessions", "false");
+                    dosFilterHolder.setAsyncSupported(true);
                 }
+                FilterHolder gzipFilterHolder = peerHandler.addFilterWithMapping(GzipFilter.class, "/*", FilterMapping.DEFAULT);
+                gzipFilterHolder.setInitParameter("methods", "GET,POST");
+                gzipFilterHolder.setAsyncSupported(true);
 
                 peerServer.setHandler(peerHandler);
                 peerServer.setStopAtShutdown(true);
