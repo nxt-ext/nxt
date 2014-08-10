@@ -494,6 +494,8 @@ var NRS = (function(NRS, $, undefined) {
 					$("#show_console").show();
 				}
 			}
+		} else if (NRS.inApp) {
+			$("#show_console").hide();
 		}
 
 		if (key == "24_hour_format") {
