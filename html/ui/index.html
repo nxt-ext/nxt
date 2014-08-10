@@ -96,17 +96,21 @@
                                 <li><a href="#" data-toggle="modal" data-target="#issue_asset_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="issue_asset">Issue Asset</span></a></li>
                         	</ul>
                         </li>
-                        <li class="treeview dgs_block" id="sidebar_dgs">
+                        <li class="treeview dgs_block" id="sidebar_dgs_buyer">
                         	<a href="#" data-page="dgs_search"><i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
                             <ul class="treeview-menu" style="display: none;">
                             	 <li><a href="#" data-page="dgs_search"><i class="fa fa-angle-double-right"></i> <span data-i18n="search_marketplace">Search Marketplace</span></a></li>
-                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="purchased_products">Purchased Products</span>
-                            	</a></li>
+                            	<li><a href="#" data-page="purchased_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="purchased_products">Purchased Products</span></a></li>
+                        	</ul>
+                        </li>
+                        <li class="treeview dgs_block" id="sidebar_dgs_seller">
+                            <a href="#" data-page="my_dgs_listings"><i class="fa fa-shopping-cart"></i><span data-i18n="my_store">My Store</span><i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>
+                            <ul class="treeview-menu" style="display: none;">
                                 <li><a href="#" data-page="my_dgs_listings"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_products_for_sale">My Products For Sale</span></a></li>
                                 <li><a href="#" data-page="pending_orders_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_pending_orders">My Pending Orders</span></a></li>
                                 <li><a href="#" data-page="completed_orders_dgs"><i class="fa fa-angle-double-right"></i> <span data-i18n="my_completed_orders">My Completed Orders</span></a></li>
                                 <li><a href="#" data-toggle="modal" data-target="#dgs_listing_modal"><i class="fa fa-angle-double-right"></i> <span data-i18n="list_product_for_sale">List Product For Sale</span></a></li>
-                        	</ul>
+                            </ul>
                         </li>
                         <li><a href="#" data-page="contacts"><i class="fa fa-user"></i> <span data-i18n="contacts">Contacts</span></a></li>
                         <li><a href="#" data-page="messages"><i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span></a></li>
@@ -903,7 +907,7 @@
 
                 <div id="my_dgs_listings_page" class="paginated page">
                     <section class="content-header">
-                    	<h1 data-i18n="my_products">My Products</h1>
+                    	<h1 data-i18n="my_products_for_sale">My Products For Sale</h1>
                     	<div style="position:absolute;top:9px;right:9px;">
 							<button id="add_dgs_listing_button" type="button" class="btn btn-default" data-toggle="modal" data-target="#dgs_listing_modal" data-i18n="list_product_for_sale">List Product For Sale</button>
 						</div>
