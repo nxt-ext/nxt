@@ -97,7 +97,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.lastBlockHeight = blockHeight;
 
 		if (!NRS.dgsBlockPassed) {
-			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 210000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
+			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 213000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
 				NRS.dgsBlockPassed = true;
 				$(".dgs_block").not(".advanced, .optional_message, .optional_note").show();
 			}
