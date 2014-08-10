@@ -461,7 +461,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (!key || key == "submit_on_enter") {
 			if (NRS.settings["submit_on_enter"]) {
-				$(".modal form").on("submit.onEnter", function(e) {
+				$(".modal form:not('#decrypt_note_form_container')").on("submit.onEnter", function(e) {
 					e.preventDefault();
 					NRS.submitForm($(this).closest(".modal"));
 				});

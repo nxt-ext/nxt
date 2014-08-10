@@ -470,13 +470,16 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#decrypt_note_form_container button.btn-primary").click(function() {
-		$("#decrypt_note_form_container").trigger("submit");
+		NRS.decryptNoteFormSubmit();
 	});
 
 	$("#decrypt_note_form_container").on("submit", function(e) {
 		e.preventDefault();
+		NRS.decryptNoteFormSubmit();
+	});
 
-		var $form = $(this);
+	NRS.decryptNoteFormSubmit = function() {
+		var $form = $("#decrypt_note_form_container");
 
 		if (!_encryptedNote) {
 			$form.find(".callout").html($.t("error_encrypted_note_not_found")).show();
@@ -585,7 +588,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (rememberPassword) {
 			_decryptionPassword = password;
 		}
-	});
+	}
 
 	NRS.decryptAllMessages = function(messages, password) {
 		if (!password) {
