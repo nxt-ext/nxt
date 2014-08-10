@@ -2458,8 +2458,9 @@
                             <div class="form-group optional_message">
                                 <label for="dgs_purchase_message" data-i18n="message">MESSAGE</label>
                                 <textarea class="form-control" id="dgs_purchase_message" name="message" rows="4" tabindex="7"></textarea>
-                                 <div style="margin-top:3px">
-                                    <label for="dgs_purchase_encrypt_message" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="dgs_purchase_encrypt_message" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                                <input type="hidden" name="encrypt_message" value="1" />
+                                <div style="margin-top:3px;">
+                                    <label style="font-weight:normal;color:#666" data-i18n="message_is_encrypted">This message is encrypted.</span></label>
                                 </div>
                             </div>
 							<div class="row advanced">
