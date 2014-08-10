@@ -749,9 +749,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#dgs_refund_purchase").val("");
 		} else if (type == "dgs_view_delivery_modal") {
 			$("#dgs_delivery_purchase").val("");
-		}
-
-		if (type == "dgs_view_delivery_modal") {
+			$("#dgs_view_delivery_output").empty();
 			$(this).find("button.btn-primary").data("purchase", "");
 		}
 	});
