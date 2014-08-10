@@ -242,7 +242,9 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
-                BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                }
                 apply(null);
             case 53:
                 apply("DROP INDEX transaction_recipient_id_idx");

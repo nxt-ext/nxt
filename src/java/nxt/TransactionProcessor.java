@@ -25,6 +25,8 @@ public interface TransactionProcessor extends Observable<List<Transaction>,Trans
 
     Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException;
 
+    Transaction parseTransaction(JSONObject json) throws NxtException.ValidationException;
+
     Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline, Attachment attachment)
             throws NxtException.ValidationException;
 

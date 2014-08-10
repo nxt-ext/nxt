@@ -177,7 +177,7 @@ final class TransactionImpl implements Transaction {
     private final Appendix.PublicKeyAnnouncement publicKeyAnnouncement;
 
     private final List<? extends Appendix.AbstractAppendix> appendages;
-    private final int size;
+    private final int appendagesSize;
 
     private int height = Integer.MAX_VALUE;
     private Long blockId;
@@ -227,12 +227,11 @@ final class TransactionImpl implements Transaction {
             list.add(this.encryptToSelfMessage);
         }
         this.appendages = Collections.unmodifiableList(list);
-
-        int size = signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0);
+        int appendagesSize = 0;
         for (Appendix appendage : appendages) {
-            size += appendage.getSize();
+            appendagesSize += appendage.getSize();
         }
-        this.size = size;
+        this.appendagesSize = appendagesSize;
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
@@ -626,8 +625,8 @@ final class TransactionImpl implements Transaction {
             int timestamp = ((Long) transactionData.get("timestamp")).intValue();
             short deadline = ((Long) transactionData.get("deadline")).shortValue();
             byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-            long amountNQT = (Long) transactionData.get("amountNQT");
-            long feeNQT = (Long) transactionData.get("feeNQT");
+            long amountNQT = Convert.parseLong(transactionData.get("amountNQT"));
+            long feeNQT = Convert.parseLong(transactionData.get("feeNQT"));
             String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
             byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
             Long versionValue = (Long) transactionData.get("version");
@@ -706,7 +705,7 @@ final class TransactionImpl implements Transaction {
     }
 
     int getSize() {
-        return size;
+        return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
     private int signatureOffset() {

@@ -23,7 +23,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_DEADLINE = missing("deadline");
     public static final JSONStreamAware INCORRECT_DEADLINE = incorrect("deadline");
     public static final JSONStreamAware INCORRECT_FEE = incorrect("fee");
-    public static final JSONStreamAware MISSING_TRANSACTION_BYTES = missing("transactionBytes");
+    public static final JSONStreamAware MISSING_TRANSACTION_BYTES_OR_JSON = missing("transactionBytes", "transactionJSON");
     public static final JSONStreamAware INCORRECT_TRANSACTION_BYTES = incorrect("transactionBytes");
     public static final JSONStreamAware MISSING_ORDER = missing("order");
     public static final JSONStreamAware INCORRECT_ORDER = incorrect("order");

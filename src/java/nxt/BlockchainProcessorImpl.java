@@ -13,6 +13,7 @@ import nxt.util.ThreadPool;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+import org.json.simple.JSONValue;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -852,6 +853,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             if (currentBlock.getVersion() != getBlockVersion(blockchain.getHeight())) {
                                 throw new NxtException.NotValidException("Invalid block version");
                             }
+                            byte[] blockBytes = currentBlock.getBytes();
+                            JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
+                            if (! Arrays.equals(blockBytes, parseBlock(blockJSON).getBytes())) {
+                                throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
+                            }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
                                 if (!transaction.verify()) {
                                     throw new NxtException.NotValidException("Invalid transaction signature");
@@ -865,6 +871,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     //throw new NxtException.NotValidException("Invalid transaction fork");
                                 }
                                 transaction.validateAttachment();
+                                byte[] transactionBytes = transaction.getBytes();
+                                if (currentBlock.getHeight() > Constants.NQT_BLOCK
+                                        && ! Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytes())) {
+                                    throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction");
+                                }
+                                JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
+                                if (! Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionJSON).getBytes())) {
+                                    throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction");
+                                }
                             }
                         }
                         for (TransactionImpl transaction : currentBlock.getTransactions()) {
