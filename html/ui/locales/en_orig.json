@@ -875,5 +875,12 @@
 	"seller_account_id": "Seller's Account ID",
 	"dgs_search_description": "Enter the seller's Account ID below to view their store.",
 	"search_marketplace": "Search Marketplace",
-	"account_qr_code": "Account QR Code"
+	"account_qr_code": "Account QR Code",
+	"note_to_self": "Note to Self",
+	"add_note_to_self_q": "Add Note to Self?",
+	"error_generate_public_key_no_password": "Can't generate public key without the user's password.",
+	"my_store": "My Store",
+	"advanced_uppercase": "Advanced",
+	"numeric_account_id": "Numeric Account ID",
+	"status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>. You should fund it with some coins."
 }
