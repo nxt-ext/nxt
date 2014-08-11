@@ -70,20 +70,25 @@ var NRS = (function(NRS, $, undefined) {
 				var qs = [];
 
 				$.each(NRS.accountInfo.unconfirmedAssetBalances, function(key, assetBalance) {
-					qs.push("assets=" + encodeURIComponent(assetBalance.asset));
+					if (NRS.assetIds.indexOf(assetBalance.asset) == -1) {
+						qs.push("assets=" + encodeURIComponent(assetBalance.asset));
+					}
 				});
+
 				qs = qs.join("&");
 
-				NRS.sendRequest("getAssets+", {
-					"querystring": qs
-				}, function(response) {
-					if (response.assets && response.assets.length) {
-						$.each(response.assets, function(key, asset) {
-							NRS.cacheAsset(asset);
-						});
-					}
-					NRS.loadAssetExchangeSidebar(callback);
-				});
+				if (qs) {
+					NRS.sendRequest("getAssets+", {
+						"querystring": qs
+					}, function(response) {
+						if (response.assets && response.assets.length) {
+							$.each(response.assets, function(key, asset) {
+								NRS.cacheAsset(asset);
+							});
+						}
+						NRS.loadAssetExchangeSidebar(callback);
+					});
+				}
 			} else {
 				NRS.loadAssetExchangeSidebar(callback);
 			}
@@ -91,6 +96,10 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.cacheAsset = function(asset) {
+		if (NRS.assetIds.indexOf(asset.asset) != -1) {
+			return;
+		}
+
 		NRS.assetIds.push(asset.asset);
 
 		if (!asset.groupName) {
@@ -109,8 +118,6 @@ var NRS = (function(NRS, $, undefined) {
 		};
 
 		NRS.assets.push(asset);
-
-		return asset;
 	}
 
 	NRS.forms.addAssetBookmark = function($modal) {
