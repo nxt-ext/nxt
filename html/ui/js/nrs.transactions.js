@@ -520,7 +520,9 @@ var NRS = (function(NRS, $, undefined) {
 		var hasMessage = false;
 
 		if (transaction.attachment) {
-			if (transaction.attachment.encryptedMessage || transaction.attachment.message || transaction.attachment.encryptToSelfMessage) {
+			if (transaction.attachment.encryptedMessage || transaction.attachment.message) {
+				hasMessage = true;
+			} else if (transaction.sender == NRS.account && transaction.attachment.encryptToSelfMessage) {
 				hasMessage = true;
 			}
 		}
