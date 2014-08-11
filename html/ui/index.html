@@ -4415,12 +4415,14 @@
 		<div id="show_console">
 			<a href="#" onclick="NRS.showConsole();return false;" style="color:black;"><i class="fa fa-terminal" style="font-weight:bold"></i></a>
 		</div>
-				
-		<!--[if lte IE 9]>
-		<script type="text/javascript">
-	    	document.getElementById("old_browser_warning").style.display = "block";
-		</script>
-		<![endif]-->		
+			
+        <!--[if lte IE 9]>
+        <script type="text/javascript">
+            window.onload = function() {
+                document.body.innerHTML = '<div id="old_browser_warning" style="margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;">You are using an old browser which this application does not support.</div>';
+            }
+        </script>
+        <![endif]-->        
 
         <script src="js/3rdparty/jquery.js"></script>
         <script src="js/3rdparty/bootstrap.js" type="text/javascript"></script>
