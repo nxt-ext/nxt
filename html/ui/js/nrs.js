@@ -198,7 +198,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	function _fix() {
 		var height = $(window).height() - $("body > .header").height();
-		$(".wrapper").css("min-height", height + "px");
+		//$(".wrapper").css("min-height", height + "px");
 		var content = $(".wrapper").height();
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());

@@ -291,7 +291,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.positionAssetSidebar = function() {
 		$("#asset_exchange_sidebar").parent().css("position", "relative");
 		$("#asset_exchange_sidebar").parent().css("padding-bottom", "5px");
-		$("#asset_exchange_sidebar_content").height($(window).height() - 120);
+		//$("#asset_exchange_sidebar_content").height($(window).height() - 120);
 		$("#asset_exchange_sidebar").height($(window).height() - 120);
 	}
 
