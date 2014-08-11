@@ -92,6 +92,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             if (commentValue != null) {
                 message = new Appendix.Message(commentValue);
             }
+        } else if (attachment == Attachment.ARBITRARY_MESSAGE && blockchainHeight < Constants.DIGITAL_GOODS_STORE_BLOCK) {
+            // TODO: remove after DGS block
+            message = new Appendix.Message(new byte[0]);
         }
         Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
         String recipientPublicKey = Convert.emptyToNull(req.getParameter("recipientPublicKey"));

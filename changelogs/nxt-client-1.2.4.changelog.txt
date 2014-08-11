@@ -1,0 +1,2 @@
+Fixed important bugs affecting arbitrary message and asset transfer transactions before DGS block.
+
