@@ -3,6 +3,7 @@ package nxt.peer;
 import nxt.util.CountingInputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.eclipse.jetty.server.Response;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
@@ -117,7 +118,7 @@ public final class PeerServlet extends HttpServlet {
         resp.getOutputStream().write(responseBytes);
         resp.getOutputStream().flush();
         if (peer != null) {
-            peer.updateUploadedVolume(responseBytes.length);
+            peer.updateUploadedVolume(((Response)resp).getContentCount());
         }
     }
 
