@@ -32,6 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				$("#account_balance_public_key").html(String(NRS.accountInfo.publicKey).escapeHTML());
 				$("#account_balance_account_rs").html(String(NRS.accountInfo.accountRS).escapeHTML());
+				$("#account_balance_account").html(String(NRS.account).escapeHTML());
 
 				if (!NRS.accountInfo.publicKey) {
 					$("#account_balance_public_key").html("/");

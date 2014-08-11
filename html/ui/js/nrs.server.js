@@ -341,7 +341,7 @@ var NRS = (function(NRS, $, undefined) {
 						callback(response, data);
 					}
 					if (data.referencedTransactionFullHash) {
-						$.growl("Due to you using a referenced transaction hash, 50 NXT is held in custody until the transaction is confirmed or expired.", {
+						$.growl($.t("info_referenced_transaction_hash"), {
 							"type": "info"
 						});
 					}

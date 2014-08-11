@@ -93,7 +93,7 @@ public class APITestServlet extends HttpServlet {
             "</div> <!-- col -->" +
             "</div> <!-- row -->" +
             "</div> <!-- container -->" +
-            "<script src=\"js/3rdparty/jquery-2.1.0.js\"></script>" +
+            "<script src=\"js/3rdparty/jquery.js\"></script>" +
             "<script src=\"js/3rdparty/bootstrap.js\" type=\"text/javascript\"></script>" +
             "</body>\n" +
             "</html>\n";

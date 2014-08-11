@@ -340,6 +340,9 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
+                if (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK && transaction.getMessage() == null) {
+                    throw new NxtException.NotCurrentlyValidException("Missing message appendix not allowed before DGS block");
+                }
             }
 
             @Override
