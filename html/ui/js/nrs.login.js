@@ -307,7 +307,7 @@ var NRS = (function(NRS, $, undefined) {
 		var contentHeaderHeight = $(".content-header").height();
 		var navBarHeight = $("nav.navbar").height();
 
-		$(".content-splitter-right").css("bottom", (contentHeaderHeight + navBarHeight + 10) + "px");
+		//	$(".content-splitter-right").css("bottom", (contentHeaderHeight + navBarHeight + 10) + "px");
 
 		$("#lockscreen").hide();
 		$("body, html").removeClass("lockscreen");
