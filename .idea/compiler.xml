@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="?*.properties" />
+      <entry name="?*.xml" />
+      <entry name="?*.gif" />
+      <entry name="?*.png" />
+      <entry name="?*.jpeg" />
+      <entry name="?*.jpg" />
+      <entry name="?*.html" />
+      <entry name="?*.dtd" />
+      <entry name="?*.tld" />
+      <entry name="?*.ftl" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="apache-jsp" />
+        <module name="apache-jstl" />
+        <module name="example-async-rest-jar" />
+        <module name="example-async-rest-webapp" />
+        <module name="example-jetty-embedded" />
+        <module name="fcgi-client" />
+        <module name="fcgi-server" />
+        <module name="javax-websocket-client-impl" />
+        <module name="javax-websocket-server-impl" />
+        <module name="jetty-alpn-client" />
+        <module name="jetty-alpn-server" />
+        <module name="jetty-annotations" />
+        <module name="jetty-ant" />
+        <module name="jetty-client" />
+        <module name="jetty-continuation" />
+        <module name="jetty-deploy" />
+        <module name="jetty-http" />
+        <module name="jetty-http-spi" />
+        <module name="jetty-httpservice" />
+        <module name="jetty-io" />
+        <module name="jetty-jaas" />
+        <module name="jetty-jaspi" />
+        <module name="jetty-jmx" />
+        <module name="jetty-jndi" />
+        <module name="jetty-jsp" />
+        <module name="jetty-jspc-maven-plugin" />
+        <module name="jetty-maven-plugin" />
+        <module name="jetty-monitor" />
+        <module name="jetty-nosql" />
+        <module name="jetty-osgi-alpn" />
+        <module name="jetty-osgi-boot" />
+        <module name="jetty-osgi-boot-jsp" />
+        <module name="jetty-osgi-boot-warurl" />
+        <module name="jetty-osgi-npn" />
+        <module name="jetty-plus" />
+        <module name="jetty-proxy" />
+        <module name="jetty-quickstart" />
+        <module name="jetty-rewrite" />
+        <module name="jetty-runner" />
+        <module name="jetty-security" />
+        <module name="jetty-server" />
+        <module name="jetty-servlet" />
+        <module name="jetty-servlets" />
+        <module name="jetty-spring" />
+        <module name="jetty-start" />
+        <module name="jetty-util" />
+        <module name="jetty-util-ajax" />
+        <module name="jetty-webapp" />
+        <module name="jetty-xml" />
+        <module name="spdy-alpn-tests" />
+        <module name="spdy-client" />
+        <module name="spdy-core" />
+        <module name="spdy-example-webapp" />
+        <module name="spdy-http-client-transport" />
+        <module name="spdy-http-common" />
+        <module name="spdy-http-server" />
+        <module name="spdy-npn-tests" />
+        <module name="spdy-server" />
+        <module name="test-container-initializer" />
+        <module name="test-continuation" />
+        <module name="test-hash-sessions" />
+        <module name="test-integration" />
+        <module name="test-jaas-webapp" />
+        <module name="test-jdbc-sessions" />
+        <module name="test-jetty-osgi" />
+        <module name="test-jetty-osgi-context" />
+        <module name="test-jetty-osgi-webapp" />
+        <module name="test-jetty-webapp" />
+        <module name="test-jndi-webapp" />
+        <module name="test-loginservice" />
+        <module name="test-mock-resources" />
+        <module name="test-proxy-webapp" />
+        <module name="test-sessions-common" />
+        <module name="test-spec-webapp" />
+        <module name="test-web-fragment" />
+        <module name="test-webapp-rfc2616" />
+        <module name="websocket-api" />
+        <module name="websocket-client" />
+        <module name="websocket-common" />
+        <module name="websocket-server" />
+        <module name="websocket-servlet" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="apache-jsp" target="1.7" />
+      <module name="apache-jstl" target="1.7" />
+      <module name="example-async-rest" target="1.7" />
+      <module name="example-async-rest-jar" target="1.7" />
+      <module name="example-async-rest-webapp" target="1.7" />
+      <module name="example-jetty-embedded" target="1.7" />
+      <module name="examples-parent" target="1.7" />
+      <module name="fcgi-client" target="1.7" />
+      <module name="fcgi-parent" target="1.7" />
+      <module name="fcgi-server" target="1.7" />
+      <module name="javax-websocket-client-impl" target="1.7" />
+      <module name="javax-websocket-server-impl" target="1.7" />
+      <module name="jetty-alpn-client" target="1.7" />
+      <module name="jetty-alpn-parent" target="1.7" />
+      <module name="jetty-alpn-server" target="1.7" />
+      <module name="jetty-annotations" target="1.7" />
+      <module name="jetty-ant" target="1.7" />
+      <module name="jetty-client" target="1.7" />
+      <module name="jetty-continuation" target="1.7" />
+      <module name="jetty-deploy" target="1.7" />
+      <module name="jetty-distribution" target="1.7" />
+      <module name="jetty-http" target="1.7" />
+      <module name="jetty-http-spi" target="1.7" />
+      <module name="jetty-httpservice" target="1.7" />
+      <module name="jetty-io" target="1.7" />
+      <module name="jetty-jaas" target="1.7" />
+      <module name="jetty-jaspi" target="1.7" />
+      <module name="jetty-jmx" target="1.7" />
+      <module name="jetty-jndi" target="1.7" />
+      <module name="jetty-jsp" target="1.7" />
+      <module name="jetty-jspc-maven-plugin" target="1.7" />
+      <module name="jetty-maven-plugin" target="1.7" />
+      <module name="jetty-monitor" target="1.7" />
+      <module name="jetty-nosql" target="1.7" />
+      <module name="jetty-osgi-alpn" target="1.7" />
+      <module name="jetty-osgi-boot" target="1.7" />
+      <module name="jetty-osgi-boot-jsp" target="1.7" />
+      <module name="jetty-osgi-boot-warurl" target="1.7" />
+      <module name="jetty-osgi-npn" target="1.7" />
+      <module name="jetty-osgi-project" target="1.7" />
+      <module name="jetty-plus" target="1.7" />
+      <module name="jetty-project" target="1.7" />
+      <module name="jetty-proxy" target="1.7" />
+      <module name="jetty-quickstart" target="1.7" />
+      <module name="jetty-rewrite" target="1.7" />
+      <module name="jetty-runner" target="1.7" />
+      <module name="jetty-security" target="1.7" />
+      <module name="jetty-server" target="1.7" />
+      <module name="jetty-servlet" target="1.7" />
+      <module name="jetty-servlets" target="1.7" />
+      <module name="jetty-spring" target="1.7" />
+      <module name="jetty-start" target="1.7" />
+      <module name="jetty-util" target="1.7" />
+      <module name="jetty-util-ajax" target="1.7" />
+      <module name="jetty-webapp" target="1.7" />
+      <module name="jetty-xml" target="1.7" />
+      <module name="spdy-alpn-tests" target="1.7" />
+      <module name="spdy-client" target="1.7" />
+      <module name="spdy-core" target="1.7" />
+      <module name="spdy-example-webapp" target="1.7" />
+      <module name="spdy-http-client-transport" target="1.7" />
+      <module name="spdy-http-common" target="1.7" />
+      <module name="spdy-http-server" target="1.7" />
+      <module name="spdy-npn-tests" target="1.7" />
+      <module name="spdy-parent" target="1.7" />
+      <module name="spdy-server" target="1.7" />
+      <module name="test-container-initializer" target="1.7" />
+      <module name="test-continuation" target="1.7" />
+      <module name="test-hash-sessions" target="1.7" />
+      <module name="test-integration" target="1.7" />
+      <module name="test-jaas-webapp" target="1.7" />
+      <module name="test-jdbc-sessions" target="1.7" />
+      <module name="test-jetty-osgi" target="1.7" />
+      <module name="test-jetty-osgi-context" target="1.7" />
+      <module name="test-jetty-osgi-webapp" target="1.7" />
+      <module name="test-jetty-webapp" target="1.7" />
+      <module name="test-jndi-webapp" target="1.7" />
+      <module name="test-loginservice" target="1.7" />
+      <module name="test-mock-resources" target="1.7" />
+      <module name="test-proxy-webapp" target="1.7" />
+      <module name="test-servlet-spec-parent" target="1.7" />
+      <module name="test-sessions-common" target="1.7" />
+      <module name="test-sessions-parent" target="1.7" />
+      <module name="test-spec-webapp" target="1.7" />
+      <module name="test-web-fragment" target="1.7" />
+      <module name="test-webapp-rfc2616" target="1.7" />
+      <module name="test-webapps-parent" target="1.7" />
+      <module name="tests-parent" target="1.7" />
+      <module name="websocket-api" target="1.7" />
+      <module name="websocket-client" target="1.7" />
+      <module name="websocket-common" target="1.7" />
+      <module name="websocket-parent" target="1.7" />
+      <module name="websocket-server" target="1.7" />
+      <module name="websocket-servlet" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
+
