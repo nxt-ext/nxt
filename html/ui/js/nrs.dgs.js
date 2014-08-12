@@ -3,6 +3,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	var _goodsToShow;
+	var _currentSeller;
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
@@ -80,7 +81,11 @@ var NRS = (function(NRS, $, undefined) {
 		var seller = $.trim($(".dgs_search input[name=q]").val());
 
 		if (seller) {
-			$("#dgs_search_contents").empty();
+			if (seller != _currentSeller) {
+				$("#dgs_search_contents").empty();
+				_currentSeller = seller;
+			}
+
 			$("#dgs_search_results").show();
 			$("#dgs_search_center").hide();
 			$("#dgs_search_top").show();
@@ -90,6 +95,8 @@ var NRS = (function(NRS, $, undefined) {
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response) {
+				$("#dgs_search_contents").empty();
+
 				if (response.goods && response.goods.length) {
 					if (response.goods.length > NRS.itemsPerPage) {
 						NRS.hasMorePages = true;
