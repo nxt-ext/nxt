@@ -94,7 +94,10 @@ var NRS = (function(NRS, $, undefined) {
 			installVersusBeta = NRS.versionCompare(NRS.state.version, NRS.betaVersion.versionNr);
 		}
 
-		$("#nrs_update_explanation span").hide();
+		$("#nrs_update_explanation > span").hide();
+
+		$("#nrs_update_explanation_wait").attr("style", "display: none !important");
+
 		$(".nrs_new_version_nr").html(NRS.normalVersion.versionNr).show();
 		$(".nrs_beta_version_nr").html(NRS.betaVersion.versionNr).show();
 
