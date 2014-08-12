@@ -5,6 +5,7 @@
 /*.log
 /*.log.*
 /html/doc/*
+/html/**/*.gz
 /keystore
 /nxt.jar
 /nxt_test_db/
