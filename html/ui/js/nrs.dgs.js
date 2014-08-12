@@ -224,7 +224,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("pending_orders_dgs");
 	}
 
-	//todo: pagination
 	NRS.pages.my_dgs_listings = function() {
 		var rows = "";
 
@@ -235,17 +234,21 @@ var NRS = (function(NRS, $, undefined) {
 				var unconfirmedTransaction = unconfirmedTransactions[i];
 
 				rows += "<tr class='tentative' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td class='price'>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
-
 			}
 		}
 
 		NRS.sendRequest("getDGSGoods+", {
 			"seller": NRS.account,
-			"firstIndex": 0,
-			"lastIndex": 100,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
 			"inStockOnly": "false"
 		}, function(response) {
 			if (response.goods && response.goods.length) {
+				if (response.goods.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.goods.pop();
+				}
+
 				for (var i = 0; i < response.goods.length; i++) {
 					var good = response.goods[i];
 
