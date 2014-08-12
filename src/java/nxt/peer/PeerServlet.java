@@ -1,6 +1,7 @@
 package nxt.peer;
 
 import nxt.util.CountingInputStream;
+import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.eclipse.jetty.server.Response;
@@ -9,6 +10,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -54,6 +56,14 @@ public final class PeerServlet extends HttpServlet {
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
     }
 
+    private boolean isGzipEnabled;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        isGzipEnabled = Boolean.parseBoolean(config.getInitParameter("isGzipEnabled"));
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
@@ -83,12 +93,12 @@ public final class PeerServlet extends HttpServlet {
                 Peers.updateAddress(peer);
             }
             peer.updateDownloadedVolume(cis.getCount());
-            if (!peer.analyzeHallmark(peer.getPeerAddress(), (String) request.get("hallmark"))) {
+            if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
                 peer.blacklist();
                 return;
             }
 
-            if (request.get("protocol") != null && ((Number) request.get("protocol")).intValue() == 1) {
+            if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
                 PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
                 if (peerRequestHandler != null) {
                     response = peerRequestHandler.processRequest(request, peer);
@@ -108,14 +118,23 @@ public final class PeerServlet extends HttpServlet {
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
-        StringWriter jsonResponse = new StringWriter();
-        response.writeJSONString(jsonResponse);
-        byte[] responseBytes = jsonResponse.toString().getBytes("UTF-8");
-        resp.setContentLength(responseBytes.length);
-        resp.getOutputStream().write(responseBytes);
-        resp.getOutputStream().close();
-        long byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
-        Logger.logDebugMessage(String.format("uncompressed size %d compressed size %d\n", responseBytes.length, byteCount));
+        long byteCount;
+        if (isGzipEnabled) {
+            StringWriter jsonResponse = new StringWriter();
+            response.writeJSONString(jsonResponse);
+            byte[] responseBytes = jsonResponse.toString().getBytes("UTF-8");
+            resp.setContentLength(responseBytes.length);
+            resp.getOutputStream().write(responseBytes);
+            resp.getOutputStream().close();
+            byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
+            Logger.logDebugMessage(String.format("uncompressed size %d compressed size %d\n", responseBytes.length, byteCount));
+        } else {
+            CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
+                response.writeJSONString(writer);
+            }
+            byteCount = cos.getCount();
+        }
         if (peer != null) {
             peer.updateUploadedVolume(byteCount);
         }
