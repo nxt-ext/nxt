@@ -46,7 +46,7 @@ final class DbVersion {
                 }
                 stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
                 con.commit();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 con.rollback();
                 throw e;
             }
@@ -285,25 +285,25 @@ final class DbVersion {
             case 58:
                 apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp DESC)");
             case 59:
-                apply("ALTER TABLE transaction ADD COLUMN version TINYINT");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS version TINYINT");
             case 60:
                 apply("UPDATE transaction SET version = 0");
             case 61:
                 apply("ALTER TABLE transaction ALTER COLUMN version SET NOT NULL");
             case 62:
-                apply("ALTER TABLE transaction ADD COLUMN has_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 63:
-                apply("ALTER TABLE transaction ADD COLUMN has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 64:
                 apply("UPDATE transaction SET has_message = TRUE WHERE type = 1 AND subtype = 0");
             case 65:
-                apply("ALTER TABLE transaction ADD COLUMN has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
             case 66:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_height INT DEFAULT NULL");
             case 67:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_id BIGINT DEFAULT NULL");
             case 68:
-                apply("ALTER TABLE transaction ADD COLUMN has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 69:
                 return;
             default:
