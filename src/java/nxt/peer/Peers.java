@@ -5,6 +5,7 @@ import nxt.Block;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -39,6 +40,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class Peers {
 
@@ -82,6 +85,7 @@ public final class Peers {
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
 
     private static final ConcurrentMap<String, PeerImpl> peers = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, String> validAnnouncedAddresses = new ConcurrentHashMap<>();
 
     static final Collection<PeerImpl> allPeers = Collections.unmodifiableCollection(peers.values());
 
@@ -91,27 +95,27 @@ public final class Peers {
 
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
         myAddress = Nxt.getStringProperty("nxt.myAddress");
-        if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && ! Constants.isTestnet) {
+        if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
         myPeerServerPort = Nxt.getIntProperty("nxt.peerServerPort");
-        if (myPeerServerPort == TESTNET_PEER_PORT && ! Constants.isTestnet) {
+        if (myPeerServerPort == TESTNET_PEER_PORT && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
-        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress");
+        shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress") && ! Constants.isOffline;
         myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
-                if (! hallmark.isValid() || myAddress == null) {
+                if (!hallmark.isValid() || myAddress == null) {
                     throw new RuntimeException();
                 }
                 URI uri = new URI("http://" + myAddress.trim());
                 String host = uri.getHost();
-                if (! hallmark.getHost().equals(host)) {
+                if (!hallmark.getHost().equals(host)) {
                     throw new RuntimeException();
                 }
-            } catch (RuntimeException|URISyntaxException e) {
+            } catch (RuntimeException | URISyntaxException e) {
                 Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
                 throw new RuntimeException(e.toString(), e);
             }
@@ -120,14 +124,14 @@ public final class Peers {
         JSONObject json = new JSONObject();
         if (myAddress != null && myAddress.length() > 0) {
             try {
-                URI uri = new URI("http://"+myAddress.trim());
+                URI uri = new URI("http://" + myAddress.trim());
                 String host = uri.getHost();
                 int port = uri.getPort();
                 if (!Constants.isTestnet) {
                     if (port >= 0)
                         json.put("announcedAddress", myAddress);
                     else
-                        json.put("announcedAddress", host+(myPeerServerPort!=DEFAULT_PEER_PORT ? ":"+myPeerServerPort : ""));
+                        json.put("announcedAddress", host + (myPeerServerPort != DEFAULT_PEER_PORT ? ":" + myPeerServerPort : ""));
                 } else {
                     json.put("announcedAddress", host);
                 }
@@ -139,7 +143,7 @@ public final class Peers {
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             json.put("hallmark", Peers.myHallmark);
         }
-        json.put("application", "NRS");
+        json.put("application", Nxt.APPLICATION);
         json.put("version", Nxt.VERSION);
         json.put("platform", Peers.myPlatform);
         json.put("shareAddress", Peers.shareMyAddress);
@@ -150,7 +154,7 @@ public final class Peers {
 
         List<String> wellKnownPeersList = Constants.isTestnet ? Nxt.getStringListProperty("nxt.testnetPeers")
                 : Nxt.getStringListProperty("nxt.wellKnownPeers");
-        if (wellKnownPeersList.isEmpty()) {
+        if (wellKnownPeersList.isEmpty() || Constants.isOffline) {
             wellKnownPeers = Collections.emptySet();
         } else {
             wellKnownPeers = Collections.unmodifiableSet(new HashSet<>(wellKnownPeersList));
@@ -173,29 +177,50 @@ public final class Peers {
         blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
+        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
+        savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
 
-        if (! wellKnownPeers.isEmpty()) {
-            StringBuilder buf = new StringBuilder();
-            for (String address : wellKnownPeers) {
-                Peer peer = Peers.addPeer(address);
-                if (peer != null) {
-                    buf.append(peer.getPeerAddress()).append("; ");
-                } else {
-                    Logger.logMessage("Invalid well known peer address: " + address);
+        ThreadPool.runBeforeStart(new Runnable() {
+
+            private void loadPeers(List<Future<String>> unresolved, Collection<String> addresses) {
+                for (final String address : addresses) {
+                    Future<String> unresolvedAddress = sendToPeersService.submit(new Callable<String>() {
+                        @Override
+                        public String call() {
+                            Peer peer = Peers.addPeer(address);
+                            return peer == null ? address : null;
+                        }
+                    });
+                    unresolved.add(unresolvedAddress);
                 }
             }
-            Logger.logDebugMessage("Well known peers: " + buf.toString());
-        }
 
-        usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb");
-        if (usePeersDb) {
-            Logger.logDebugMessage("Loading known peers from the database...");
-            for (String savedPeer : PeerDb.loadPeers()) {
-                Peers.addPeer(savedPeer);
+            @Override
+            public void run() {
+                List<Future<String>> unresolvedPeers = new ArrayList<>();
+                if (! wellKnownPeers.isEmpty()) {
+                    loadPeers(unresolvedPeers, wellKnownPeers);
+                }
+                if (usePeersDb) {
+                    Logger.logDebugMessage("Loading known peers from the database...");
+                    loadPeers(unresolvedPeers, PeerDb.loadPeers());
+                }
+                for (Future<String> unresolvedPeer : unresolvedPeers) {
+                    try {
+                        String badAddress = unresolvedPeer.get(5, TimeUnit.SECONDS);
+                        if (badAddress != null) {
+                            Logger.logDebugMessage("Failed to resolve peer address: " + badAddress);
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        Logger.logDebugMessage("Failed to add peer", e);
+                    } catch (TimeoutException e) {
+                    }
+                }
+                Logger.logDebugMessage("Known peers: " + peers.size());
             }
-        }
-        Logger.logDebugMessage("Known peers: " + peers.size());
-        savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
+        }, false);
 
     }
 
@@ -212,6 +237,7 @@ public final class Peers {
                 final String host = Nxt.getStringProperty("nxt.peerServerHost");
                 connector.setHost(host);
                 connector.setIdleTimeout(Nxt.getIntProperty("nxt.peerServerIdleTimeout"));
+                connector.setReuseAddress(true);
                 peerServer.addConnector(connector);
 
                 ServletHandler peerHandler = new ServletHandler();
@@ -241,7 +267,7 @@ public final class Peers {
                             throw new RuntimeException(e.toString(), e);
                         }
                     }
-                });
+                }, true);
             } else {
                 peerServer = null;
                 Logger.logMessage("shareMyAddress is disabled, will not start peer networking server");
@@ -295,6 +321,13 @@ public final class Peers {
                         }
                     }
 
+                    int now = Convert.getEpochTime();
+                    for (PeerImpl peer : peers.values()) {
+                        if (peer.getState() == Peer.State.CONNECTED && now - peer.getLastUpdated() > 3600) {
+                            peer.connect();
+                        }
+                    }
+
                 } catch (Exception e) {
                     Logger.logDebugMessage("Error connecting to peer", e);
                 }
@@ -315,6 +348,16 @@ public final class Peers {
             JSONObject request = new JSONObject();
             request.put("requestType", "getPeers");
             getPeersRequest = JSON.prepareRequest(request);
+        }
+
+        private volatile boolean addedNewPeer;
+        {
+            Peers.addListener(new Listener<Peer>() {
+                @Override
+                public void notify(Peer peer) {
+                    addedNewPeer = true;
+                }
+            }, Event.NEW_PEER);
         }
 
         @Override
@@ -338,8 +381,9 @@ public final class Peers {
                     for (Object announcedAddress : peers) {
                         addPeer((String) announcedAddress);
                     }
-                    if (savePeers) {
+                    if (savePeers && addedNewPeer) {
                         updateSavedPeers();
+                        addedNewPeer = false;
                     }
 
                 } catch (Exception e) {
@@ -364,8 +408,10 @@ public final class Peers {
             Set<String> toDelete = new HashSet<>(oldPeers);
             toDelete.removeAll(currentPeers);
             PeerDb.deletePeers(toDelete);
+            //Logger.logDebugMessage("Deleted " + toDelete.size() + " peers from the peers database");
             currentPeers.removeAll(oldPeers);
             PeerDb.addPeers(currentPeers);
+            //Logger.logDebugMessage("Added " + currentPeers.size() + " peers to the peers database");
         }
 
     };
@@ -384,9 +430,13 @@ public final class Peers {
     }
 
     static {
-        ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
-        ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
-        ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+        if (! Constants.isOffline) {
+            ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
+            ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
+            if (Nxt.getBooleanProperty("nxt.getMorePeers")) {
+                ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
+            }
+        }
     }
 
     public static void init() {
@@ -453,7 +503,13 @@ public final class Peers {
 
     static PeerImpl addPeer(final String address, final String announcedAddress) {
 
-        String peerAddress = normalizeHostAndPort(address);
+        //re-add the [] to ipv6 addresses lost in getHostAddress() above
+        String clean_address = address;
+        if (clean_address.split(":").length > 2) {
+            clean_address = "[" + clean_address + "]";
+        }
+
+        String peerAddress = normalizeHostAndPort(clean_address);
         if (peerAddress == null) {
             return null;
         }
@@ -480,6 +536,20 @@ public final class Peers {
 
     static PeerImpl removePeer(PeerImpl peer) {
         return peers.remove(peer.getPeerAddress());
+    }
+
+    static void updateAddress(PeerImpl peer) {
+        if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+            String oldAddress = validAnnouncedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
+            if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
+                //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+                //        + " to " + peer.getPeerAddress());
+                Peer oldPeer = peers.get(oldAddress);
+                if (oldPeer != null) {
+                    oldPeer.remove();
+                }
+            }
+        }
     }
 
     public static void sendToSomePeers(Block block) {

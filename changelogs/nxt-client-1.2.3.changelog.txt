@@ -1,0 +1,13 @@
+Everyone should upgrade to 1.2.3 before block 213000.
+
+Those upgrading from the previous stable release, 1.1.6 or earlier, should also
+consult the changelogs for 1.2.0e, 1.2.1e and 1.2.2e for important changes
+introduced in the 1.2 branch.
+
+Minor bugfixes.
+
+ParseTransaction, signTransaction, and broadcastTransaction API can now accept
+transaction in JSON format instead of transaction bytes.
+
+Moved DGS block forward, will be enabled at 213000 instead of 210000.
+

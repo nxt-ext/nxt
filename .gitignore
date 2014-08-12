@@ -3,6 +3,7 @@
 /webapps/
 /classes/
 /*.log
+/*.log.*
 /html/doc/*
 /keystore
 /nxt.jar
@@ -12,3 +13,9 @@
 /README_win.txt
 /package.sh
 /nxt.log.lck
+/bin
+/.classpath
+/.project
+/.settings/
+
+

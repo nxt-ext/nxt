@@ -15,7 +15,7 @@ public final class GetGuaranteedBalance extends APIServlet.APIRequestHandler {
     static final GetGuaranteedBalance instance = new GetGuaranteedBalance();
 
     private GetGuaranteedBalance() {
-        super("account", "numberOfConfirmations");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.FORGING}, "account", "numberOfConfirmations");
     }
 
     @Override

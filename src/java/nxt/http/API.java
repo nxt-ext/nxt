@@ -70,6 +70,7 @@ public final class API {
             connector.setPort(port);
             connector.setHost(host);
             connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+            connector.setReuseAddress(true);
             apiServer.addConnector(connector);
 
             HandlerList apiHandlers = new HandlerList();
@@ -122,7 +123,7 @@ public final class API {
                     }
 
                 }
-            });
+            }, true);
 
         } else {
             apiServer = null;
