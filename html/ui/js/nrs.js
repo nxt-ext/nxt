@@ -419,7 +419,7 @@ var NRS = (function(NRS, $, undefined) {
 		var output = "";
 
 		if (NRS.pageNumber == 2) {
-			output += "<a href='#' data-page='1'>&laquo; " + $.t("prevous_page") + "</a>";
+			output += "<a href='#' data-page='1'>&laquo; " + $.t("previous_page") + "</a>";
 		} else if (NRS.pageNumber > 2) {
 			//output += "<a href='#' data-page='1'>&laquo; First Page</a>";
 			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous_page") + "</a>";
