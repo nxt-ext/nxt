@@ -233,13 +233,14 @@ var NRS = (function(NRS, $, undefined) {
 				//todo
 			} else {
 				var firstTime = !("lastBlock" in NRS.state);
+				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
 
 				NRS.state = response;
 
 				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-				} else if (response.isScanning) {
+				} else if (NRS.state.isScanning) {
 					//do nothing but reset NRS.state so that when isScanning is done, everything is reset.
 					isScanning = true;
 				} else if (isScanning) {
@@ -252,7 +253,7 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.getInitialTransactions();
 						NRS.getAccountInfo();
 					}
-				} else if (NRS.state.lastBlock != response.lastBlock) {
+				} else if (previousLastBlock != NRS.state.lastBlock) {
 					NRS.tempBlocks = [];
 					if (NRS.account) {
 						NRS.getAccountInfo();
@@ -729,10 +730,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			accountLeasingLabel += $.t("x_lessor", {
-				"x": NRS.accountInfo.lessors.length
+				"count": NRS.accountInfo.lessors.length
 			});
 			accountLeasingStatus += $.t("x_lessor_lease", {
-				"x": NRS.accountInfo.lessors.length
+				"count": NRS.accountInfo.lessors.length
 			});
 
 			var rows = "";
@@ -886,7 +887,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#downloading_blockchain .progress").hide();
 		} else {
 			$("#downloading_blockchain .progress").show();
-			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").attr("aria-valuenow", percentage);
+			$("#downloading_blockchain .progress-bar").css("width", percentage + "%");
 			$("#downloading_blockchain .sr-only").html($.t("percent_complete", {
 				"percent": percentage
 			}));
