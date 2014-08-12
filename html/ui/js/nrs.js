@@ -71,6 +71,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	var stateInterval;
 	var stateIntervalSeconds = 30;
+	var isScanning = false;
 
 	NRS.init = function() {
 		if (window.location.port && window.location.port != "6876") {
@@ -231,24 +232,28 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.errorCode) {
 				//todo
 			} else {
-				if (!("lastBlock" in NRS.state)) {
-					//first time...
-					NRS.state = response;
+				var firstTime = !("lastBlock" in NRS.state);
 
+				NRS.state = response;
+
+				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
-
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-				} else if (NRS.state.isScanning) {
+				} else if (response.isScanning) {
+					//do nothing but reset NRS.state so that when isScanning is done, everything is reset.
+					isScanning = true;
+				} else if (isScanning) {
+					//rescan is done, now we must reset everything...
+					isScanning = false;
 					NRS.blocks = [];
 					NRS.tempBlocks = [];
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-					NRS.getInitialTransactions();
 					if (NRS.account) {
+						NRS.getInitialTransactions();
 						NRS.getAccountInfo();
 					}
 				} else if (NRS.state.lastBlock != response.lastBlock) {
 					NRS.tempBlocks = [];
-					NRS.state = response;
 					if (NRS.account) {
 						NRS.getAccountInfo();
 					}
