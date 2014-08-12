@@ -69,6 +69,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.dgsBlockPassed = false;
 	NRS.PKAnnouncementBlockPassed = false;
 
+	var stateInterval;
+	var stateIntervalSeconds = 30;
+
 	NRS.init = function() {
 		if (window.location.port && window.location.port != "6876") {
 			$(".testnet_only").hide();
@@ -139,10 +142,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		//every 30 seconds check for new block..
-		setInterval(function() {
-			NRS.getState();
-		}, 1000 * 30);
+		NRS.setStateInterval(30);
 
 		if (!NRS.isTestNet) {
 			setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
@@ -208,6 +208,22 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$(".left-side, html, body").css("min-height", height + "px");
 		}
+	}
+
+	NRS.setStateInterval = function(seconds) {
+		if (seconds == stateIntervalSeconds && stateInterval) {
+			return;
+		}
+
+		if (stateInterval) {
+			clearInterval(stateInterval);
+		}
+
+		stateIntervalSeconds = seconds;
+
+		stateInterval = setInterval(function() {
+			NRS.getState();
+		}, 1000 * seconds);
 	}
 
 	NRS.getState = function(callback) {
@@ -865,7 +881,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#downloading_blockchain .progress").hide();
 		} else {
 			$("#downloading_blockchain .progress").show();
-			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
+			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").attr("aria-valuenow", percentage);
 			$("#downloading_blockchain .sr-only").html($.t("percent_complete", {
 				"percent": percentage
 			}));

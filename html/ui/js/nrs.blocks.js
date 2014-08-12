@@ -33,13 +33,29 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			setLastBlockHeight(NRS.blocks[0].height);
 
-			//if no new blocks in 24 hours, show blockchain download progress..
-			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp > 60 * 60 * 24) {
-				NRS.downloadingBlockchain = true;
-				$("#nrs_update_explanation span").hide();
-				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
-				$("#show_console").hide();
-				NRS.updateBlockchainDownloadProgress();
+			if (NRS.state) {
+				//if no new blocks in 6 hours, show blockchain download progress..
+				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
+				if (timeDiff > 60 * 60 * 6) {
+					if (timeDiff > 60 * 60 * 24 * 14) {
+						NRS.setStateInterval(30);
+					} else if (timeDiff > 60 * 60 * 24 * 7) {
+						//second to last week
+						NRS.setStateInterval(15);
+					} else if (timeDiff > 60 * 60 * 24) {
+						//last week
+						NRS.setStateInterval(10);
+					} else {
+						//last 24 hours
+						NRS.setStateInterval(5);
+					}
+					NRS.downloadingBlockchain = true;
+					$("#nrs_update_explanation span").hide();
+					$("#nrs_update_explanation_wait").attr("style", "display: none !important");
+					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
+					$("#show_console").hide();
+					NRS.updateBlockchainDownloadProgress();
+				}
 			}
 
 			var rows = "";
@@ -119,18 +135,38 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.downloadingBlockchain) {
-			if (NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24) {
-				NRS.downloadingBlockchain = false;
-				$("#dashboard_message").hide();
-				$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
-				$("#show_console").show();
-				$.growl($.t("success_blockchain_up_to_date"), {
-					"type": "success"
-				});
-				NRS.checkAliasVersions();
-				NRS.checkIfOnAFork();
-			} else {
-				NRS.updateBlockchainDownloadProgress();
+			if (NRS.state) {
+				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
+				if (timeDiff < 60 * 60 * 6) {
+					NRS.setStateInterval(30);
+					NRS.downloadingBlockchain = false;
+					$("#dashboard_message").hide();
+					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
+					$("#nrs_update_explanation_wait").removeAttr("style");
+					if (NRS.settings["console_log"] && !NRS.inApp) {
+						$("#show_console").show();
+					}
+					$.growl($.t("success_blockchain_up_to_date"), {
+						"type": "success"
+					});
+					NRS.checkAliasVersions();
+					NRS.checkIfOnAFork();
+				} else {
+					if (timeDiff > 60 * 60 * 24 * 14) {
+						NRS.setStateInterval(30);
+					} else if (timeDiff > 60 * 60 * 24 * 7) {
+						//second to last week
+						NRS.setStateInterval(15);
+					} else if (timeDiff > 60 * 60 * 24) {
+						//last week
+						NRS.setStateInterval(10);
+					} else {
+						//last 24 hours
+						NRS.setStateInterval(5);
+					}
+
+					NRS.updateBlockchainDownloadProgress();
+				}
 			}
 		}
 
