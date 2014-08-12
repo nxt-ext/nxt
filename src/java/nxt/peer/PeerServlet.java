@@ -4,6 +4,7 @@ import nxt.util.CountingInputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
@@ -62,7 +63,7 @@ public final class PeerServlet extends HttpServlet {
         try {
             String remoteAddr = req.getRemoteAddr();
             if (remoteAddr.indexOf(':') >= 0)
-                remoteAddr = "["+remoteAddr+"]";
+                remoteAddr = "[" + remoteAddr + "]";
             peer = Peers.addPeer(remoteAddr, null);
             if (peer == null) {
                 //Logger.logDebugMessage("Rejected request from "+remoteAddr);
@@ -86,12 +87,12 @@ public final class PeerServlet extends HttpServlet {
                 peer.setState(Peer.State.CONNECTED);
             }
             peer.updateDownloadedVolume(cis.getCount());
-            if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
+            if (!peer.analyzeHallmark(peer.getPeerAddress(), (String) request.get("hallmark"))) {
                 peer.blacklist();
                 return;
             }
 
-            if (request.get("protocol") != null && ((Number)request.get("protocol")).intValue() == 1) {
+            if (request.get("protocol") != null && ((Number) request.get("protocol")).intValue() == 1) {
                 PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
                 if (peerRequestHandler != null) {
                     response = peerRequestHandler.processRequest(request, peer);
@@ -116,10 +117,11 @@ public final class PeerServlet extends HttpServlet {
         byte[] responseBytes = jsonResponse.toString().getBytes("UTF-8");
         resp.setContentLength(responseBytes.length);
         resp.getOutputStream().write(responseBytes);
-        resp.getOutputStream().flush();
+        resp.getOutputStream().close();
+        long byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
+        Logger.logDebugMessage(String.format("uncompressed size %d compressed size %d\n", responseBytes.length, byteCount));
         if (peer != null) {
-            peer.updateUploadedVolume(((Response)resp).getContentCount());
+            peer.updateUploadedVolume(byteCount);
         }
     }
-
 }
