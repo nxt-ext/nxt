@@ -33,6 +33,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
 
@@ -276,6 +277,7 @@ final class PeerImpl implements Peer {
             connection.setDoOutput(true);
             connection.setConnectTimeout(Peers.connectTimeout);
             connection.setReadTimeout(Peers.readTimeout);
+            connection.setRequestProperty("Accept-Encoding", "gzip");
 
             CountingOutputStream cos = new CountingOutputStream(connection.getOutputStream());
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
@@ -284,33 +286,33 @@ final class PeerImpl implements Peer {
             updateUploadedVolume(cos.getCount());
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-
+                CountingInputStream cis = new CountingInputStream(connection.getInputStream());
+                InputStream responseStream = cis;
+                if ("gzip".equals(connection.getHeaderField("Content-Encoding"))) {
+                    responseStream = new GZIPInputStream(cis);
+                }
                 if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0) {
-                    // inefficient
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[65536];
+                    byte[] buffer = new byte[1024];
                     int numberOfBytes;
-                    try (InputStream inputStream = connection.getInputStream()) {
-                        while ((numberOfBytes = inputStream.read(buffer)) > 0) {
+                    try (InputStream inputStream = responseStream) {
+                        while ((numberOfBytes = inputStream.read(buffer, 0, buffer.length)) > 0) {
                             byteArrayOutputStream.write(buffer, 0, numberOfBytes);
                         }
                     }
                     String responseValue = byteArrayOutputStream.toString("UTF-8");
+                    if (responseValue.length() > 0 && responseStream instanceof GZIPInputStream) {
+                        log += String.format("[length: %d, compression ratio: %.2f]", cis.getCount(), (double)cis.getCount() / (double)responseValue.length());
+                    }
                     log += " >>> " + responseValue;
                     showLog = true;
-                    updateDownloadedVolume(responseValue.getBytes("UTF-8").length);
                     response = (JSONObject) JSONValue.parse(responseValue);
-
                 } else {
-
-                    CountingInputStream cis = new CountingInputStream(connection.getInputStream());
-                    try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
+                    try (Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"))) {
                         response = (JSONObject)JSONValue.parse(reader);
                     }
-                    updateDownloadedVolume(cis.getCount());
-
                 }
-
+                updateDownloadedVolume(cis.getCount());
             } else {
 
                 if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_NON200_RESPONSES) != 0) {
