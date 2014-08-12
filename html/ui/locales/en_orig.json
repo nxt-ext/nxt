@@ -882,5 +882,6 @@
 	"my_store": "My Store",
 	"advanced_uppercase": "Advanced",
 	"numeric_account_id": "Numeric Account ID",
-	"status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>. You should fund it with some coins."
+	"status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>. You should fund it with some coins.",
+	"checking_for_updates": "Checking for updates..."
 }
