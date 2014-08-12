@@ -1,0 +1,5 @@
+Added peer networking gzip compression, patch submitted by Lior Yaffe. It is
+enabled by default, and will make downloading of the blockchain faster, but in
+case it causes extra load on your public node can be disabled by setting
+nxt.enablePeerServerGZIPFilter=false in nxt.properties.
+
