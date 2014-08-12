@@ -2812,7 +2812,7 @@ a.list-group-item-header:hover {
     border:1px solid #D6E8C7;
     display:none;
 }
-#nrs_update_explanation span {
+#nrs_update_explanation > span {
 	display:none;
 }
 .incorrect {
@@ -2820,10 +2820,10 @@ a.list-group-item-header:hover {
     color:white !important;
     border:1px solid #E4404B !important;
 }
-#nrs_update_explanation_1, #nrs_update_explanation_2, #nrs_update_explanation_3, #nrs_update_explanation_4 {
-    display:none;
+#nrs_update_explanation_wait {
+  display:inline !important;
 }
-nrs_update_hashes {
+#nrs_update_hashes {
     display:none;
     margin-top:20px;
 }

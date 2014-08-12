@@ -4,10 +4,13 @@ import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,6 +61,14 @@ public final class PeerServlet extends HttpServlet {
         JSONObject response = new JSONObject();
         response.put("error", "Unsupported protocol!");
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
+    }
+
+    private boolean isGzipEnabled;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        isGzipEnabled = Boolean.parseBoolean(config.getInitParameter("isGzipEnabled"));
     }
 
     @Override
@@ -113,13 +125,25 @@ public final class PeerServlet extends HttpServlet {
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
-        CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
-            response.writeJSONString(writer);
+        long byteCount;
+        if (isGzipEnabled) {
+            StringWriter jsonResponse = new StringWriter();
+            response.writeJSONString(jsonResponse);
+            byte[] responseBytes = jsonResponse.toString().getBytes("UTF-8");
+            resp.setContentLength(responseBytes.length);
+            resp.getOutputStream().write(responseBytes);
+            resp.getOutputStream().close();
+            byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
+            //Logger.logDebugMessage(String.format("uncompressed size %d compressed size %d\n", responseBytes.length, byteCount));
+        } else {
+            CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
+                response.writeJSONString(writer);
+            }
+            byteCount = cos.getCount();
         }
-
         if (peer != null) {
-            peer.updateUploadedVolume(cos.getCount());
+            peer.updateUploadedVolume(byteCount);
         }
     }
 

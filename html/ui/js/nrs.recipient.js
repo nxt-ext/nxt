@@ -193,7 +193,7 @@ var NRS = (function(NRS, $, undefined) {
 					})).show();
 				} else if (address.guess.length > 1) {
 					var html = $.t("recipient_malformed_suggestion", {
-						"plural": "yes"
+						"count": address.guess.length
 					}) + "<ul>";
 					for (var i = 0; i < address.guess.length; i++) {
 						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";

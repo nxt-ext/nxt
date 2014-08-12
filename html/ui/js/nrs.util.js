@@ -1376,11 +1376,12 @@ var NRS = (function(NRS, $, undefined) {
 					$.each(fieldNames, function(fieldName) {
 						translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName).toLowerCase());
 					});
-					translatedFieldNames = translatedFieldNames.join(", ");
+
+					var translatedFieldNamesJoined = translatedFieldNames.join(", ");
 
 					return $.t("error_not_specified", {
-						"names": translatedFieldNames,
-						"plural": "yes"
+						"names": translatedFieldNamesJoined,
+						"count": translatedFieldNames.length
 					}).capitalize();
 				} else {
 					return response.errorDescription;
