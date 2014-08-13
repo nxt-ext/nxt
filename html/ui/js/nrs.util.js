@@ -1100,7 +1100,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.hasTransactionUpdates = function(transactions) {
-		return (transactions && transactions.length || NRS.unconfirmedTransactionsChange);
+		return ((transactions && transactions.length) || NRS.unconfirmedTransactionsChange);
 	}
 
 	NRS.showMore = function($el) {
