@@ -211,6 +211,10 @@ var NRS = (function(NRS, $, undefined) {
 						});
 					}
 
+					if (NRS.state) {
+						NRS.checkBlockHeight();
+					}
+
 					NRS.getAccountInfo(true, function() {
 						if (NRS.accountInfo.currentLeasingHeightFrom) {
 							NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);

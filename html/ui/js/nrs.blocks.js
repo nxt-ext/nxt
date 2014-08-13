@@ -32,7 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
 		} else {
-			setLastBlockHeight(NRS.blocks[0].height);
+			NRS.checkBlockHeight(NRS.blocks[0].height);
 
 			if (NRS.state) {
 				//if no new blocks in 6 hours, show blockchain download progress..
@@ -107,7 +107,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.blocks = NRS.blocks.slice(0, 100);
 			}
 
-			setLastBlockHeight(NRS.blocks[0].height);
+			NRS.checkBlockHeight(NRS.blocks[0].height);
 
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
@@ -116,17 +116,19 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
-	function setLastBlockHeight(blockHeight) {
-		NRS.lastBlockHeight = blockHeight;
+	NRS.checkBlockHeight = function(blockHeight) {
+		if (blockHeight) {
+			NRS.lastBlockHeight = blockHeight;
+		}
 
 		if (!NRS.dgsBlockPassed) {
-			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 213000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
+			if ((!NRS.isTestNet && (NRS.lastBlockHeight >= 213000 || NRS.state.lastBlockchainFeederHeight >= 213000)) || (NRS.isTestNet && (NRS.lastBlockHeight >= 117910 || NRS.state.lastBlockchainFeederHeight >= 117910))) {
 				NRS.dgsBlockPassed = true;
 				$(".dgs_block").not(".advanced, .optional_message, .optional_note").show();
 			}
 		}
 		if (!NRS.PKAnnouncementBlockPassed) {
-			if ((!NRS.isTestNet && NRS.lastBlockHeight >= 215000) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
+			if ((!NRS.isTestNet && (NRS.lastBlockHeight >= 215000 || NRS.state.lastBlockchainFeederHeight >= 215000)) || (NRS.isTestNet && (NRS.lastBlockHeight >= 117910 || NRS.state.lastBlockchainFeederHeight >= 117910))) {
 				NRS.PKAnnouncementBlockPassed = true;
 			}
 		}
