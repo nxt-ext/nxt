@@ -53,6 +53,15 @@ var NRS = (function(NRS, $, undefined) {
 					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
 					$("#show_console").hide();
 					NRS.updateBlockchainDownloadProgress();
+				} else {
+					//continue with faster state intervals if we still haven't reached current block from within 1 hour
+					if (timeDiff < 60 * 60) {
+						NRS.setStateInterval(30);
+						trackBlockchain = false;
+					} else {
+						NRS.setStateInterval(10);
+						trackBlockchain = true;
+					}
 				}
 			}
 
