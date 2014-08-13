@@ -246,9 +246,7 @@
 					        	<ul id="transactions_page_type" class="dropdown-menu" role="menu" style="right:0;left:auto;">
 					        		<li><a href="#" data-type="" data-i18n="all_transactions">All Transactions</a></li>
 					          		<li><a href="#" data-type="0:0" data-i18n="ordinary_payment">Ordinary Payment</a></li>
-					          		<li><a href="#" data-type="0:1" data-i18n="payment_with_message">Payment With Message</a></li>
 					           		<li><a href="#" data-type="1:0" data-i18n="arbitrary_message">Arbitrary Message</a></li>
-					           		<li><a href="#" data-type="1:8" data-i18n="encrypted_message">Encrypted Message</a></li>
 					           		<li><a href="#" data-type="1:1" data-i18n="alias_assignment">Alias Assignment</a></li>
 					           		<li><a href="#" data-type="1:6" data-i18n="alias_sale">Alias Sale</a></li>
 					           		<li><a href="#" data-type="1:7" data-i18n="alias_buy">Alias Buy</a></li>
@@ -1010,6 +1008,7 @@
                                             <option value="lt">Lietuviškai</option> <!-- lithuanian -->
                                             <option value="nl">Nederlands</option> <!-- dutch -->
                                             <option value="sk">Slovensky</option> <!-- slovakian -->
+                                            <option value="pt">Português</option> <!-- portugese -->
                                             <option value="sr">Српски</option> <!-- serbian, cyrillic -->
                                             <option value="sr-cs">Srpski</option> <!-- serbian, latin -->
                                             <option value="uk">Yкраiнска</option> <!-- ukranian -->
@@ -1468,7 +1467,7 @@
 									<div id="account_phrase_generator_seeder" class="seeder">
 										<p data-i18n="seed_password_generator">Move your cursor around to seed the random number generator...</p>
 										<div class="progress progress-striped">
-								            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+								            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
 								                <span class="sr-only">0% Seeded</span>
 								            </div>
 										</div>
@@ -3988,6 +3987,7 @@
 						<div id="nrs_modal_update" class="nrs_modal_content" style="display:none">
 							<div id="nrs_update_explanation" class="nrs_message">
 								<span id="nrs_update_explanation_blockchain_sync" data-i18n="update_blockchain_downloading">The blockchain is still downloading, check again after it's up to date.</span>
+                                <span id="nrs_update_explanation_wait" data-i18n="checking_for_updates">Checking for updates...</span>
 								<span id="nrs_update_explanation_testnet" data-i18n="update_testnet">NRS cannot be updated whilst connected to the testnet.</span>
 								<span id="nrs_update_explanation_up_to_date" data-i18n="update_up_to_date">You have the latest release already. There is no need to update.</span>
 								<span id="nrs_update_explanation_new_release">
@@ -4406,7 +4406,7 @@
 		<div id="downloading_blockchain">
 			<span data-i18n="downloading_blockchain">Downloading blockchain</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span>
 			<div class="progress progress-striped sm active" style="margin-bottom:5px;margin-top:5px;">
-	            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+	            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
 	                <span class="sr-only">0% Complete</span>
 	            </div>
 	        </div>
@@ -4429,6 +4429,7 @@
         <script src="js/3rdparty/i18next.js" type="text/javascript"></script>
         <script type="text/javascript">
             $.i18n.init({
+                lng: "en",
                 fallbackLng: "en",
                 lowerCaseLng: true,
                 resGetPath: "locales/__lng__.json",

@@ -3,6 +3,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	var _goodsToShow;
+	var _currentSeller;
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		return "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
@@ -80,7 +81,11 @@ var NRS = (function(NRS, $, undefined) {
 		var seller = $.trim($(".dgs_search input[name=q]").val());
 
 		if (seller) {
-			$("#dgs_search_contents").empty();
+			if (seller != _currentSeller) {
+				$("#dgs_search_contents").empty();
+				_currentSeller = seller;
+			}
+
 			$("#dgs_search_results").show();
 			$("#dgs_search_center").hide();
 			$("#dgs_search_top").show();
@@ -90,6 +95,8 @@ var NRS = (function(NRS, $, undefined) {
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 			}, function(response) {
+				$("#dgs_search_contents").empty();
+
 				if (response.goods && response.goods.length) {
 					if (response.goods.length > NRS.itemsPerPage) {
 						NRS.hasMorePages = true;
@@ -136,7 +143,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		NRS.sendRequest("getDGSPurchases", {
+		NRS.sendRequest("getDGSPurchases+", {
 			"buyer": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
@@ -163,7 +170,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.completed_orders_dgs = function() {
-		NRS.sendRequest("getDGSPurchases", {
+		NRS.sendRequest("getDGSPurchases+", {
 			"seller": NRS.account,
 			"completed": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -191,7 +198,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.pending_orders_dgs = function() {
-		NRS.sendRequest("getDGSPendingPurchases", {
+		NRS.sendRequest("getDGSPendingPurchases+", {
 			"seller": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
@@ -217,7 +224,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("pending_orders_dgs");
 	}
 
-	//todo: pagination
 	NRS.pages.my_dgs_listings = function() {
 		var rows = "";
 
@@ -228,17 +234,21 @@ var NRS = (function(NRS, $, undefined) {
 				var unconfirmedTransaction = unconfirmedTransactions[i];
 
 				rows += "<tr class='tentative' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_listing_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + String(unconfirmedTransaction.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(unconfirmedTransaction.quantity) + "</td><td class='price'>" + NRS.formatAmount(unconfirmedTransaction.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(unconfirmedTransaction.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
-
 			}
 		}
 
 		NRS.sendRequest("getDGSGoods+", {
 			"seller": NRS.account,
-			"firstIndex": 0,
-			"lastIndex": 100,
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
 			"inStockOnly": "false"
 		}, function(response) {
 			if (response.goods && response.goods.length) {
+				if (response.goods.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.goods.pop();
+				}
+
 				for (var i = 0; i < response.goods.length; i++) {
 					var good = response.goods[i];
 

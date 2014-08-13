@@ -121,14 +121,7 @@ var NRS = (function(NRS, $, undefined) {
 					var transactionType = "Unknown";
 
 					if (transaction.type == 0) {
-						switch (transaction.subtype) {
-							case 0:
-								transactionType = $.t("ordinary_payment");
-								break;
-							case 1:
-								transactionType = $.t("payment_with_message");
-								break;
-						}
+						transactionType = $.t("ordinary_payment");
 					} else if (transaction.type == 1) {
 						switch (transaction.subtype) {
 							case 0:
@@ -162,9 +155,6 @@ var NRS = (function(NRS, $, undefined) {
 								break;
 							case 7:
 								transactionType = $.t("alias_buy");
-								break;
-							case 8:
-								transactionType = $.t("encrypted_message");
 								break;
 						}
 					} else if (transaction.type == 2) {

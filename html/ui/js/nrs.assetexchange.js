@@ -995,7 +995,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (isQuantityField) {
 					errorMessage = $.t("error_asset_decimals", {
-						"count": String(NRS.currentAsset.decimals).escapeHTML()
+						"count": (0 + NRS.currentAsset.decimals)
 					});
 				} else {
 					errorMessage = $.t("error_decimals", {
