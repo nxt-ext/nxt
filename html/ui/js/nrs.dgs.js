@@ -143,7 +143,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		NRS.sendRequest("getDGSPurchases", {
+		NRS.sendRequest("getDGSPurchases+", {
 			"buyer": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
@@ -170,7 +170,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.completed_orders_dgs = function() {
-		NRS.sendRequest("getDGSPurchases", {
+		NRS.sendRequest("getDGSPurchases+", {
 			"seller": NRS.account,
 			"completed": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -198,7 +198,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.pending_orders_dgs = function() {
-		NRS.sendRequest("getDGSPendingPurchases", {
+		NRS.sendRequest("getDGSPendingPurchases+", {
 			"seller": NRS.account,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
