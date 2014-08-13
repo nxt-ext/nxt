@@ -354,11 +354,7 @@ public interface Appendix {
 
         PublicKeyAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
             super(attachmentData);
-            byte[] publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
-            if (publicKey.length != 32) {
-                throw new NxtException.NotValidException("Invalid recipient public key: " + attachmentData.get("recipientPublicKey"));
-            }
-            this.publicKey = publicKey;
+            this.publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
         }
 
         public PublicKeyAnnouncement(byte[] publicKey) {
@@ -389,6 +385,9 @@ public interface Appendix {
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (! transaction.getType().hasRecipient()) {
                 throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
+            }
+            if (publicKey.length != 32) {
+                throw new NxtException.NotValidException("Invalid recipient public key length: " + Convert.toHexString(publicKey));
             }
             Long recipientId = transaction.getRecipientId();
             if (! Account.getId(this.publicKey).equals(recipientId)) {
