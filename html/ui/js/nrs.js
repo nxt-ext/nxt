@@ -268,6 +268,10 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
 					}
+					//only done so that download progress meter updates correctly based on lastFeederHeight
+					if (NRS.downloadingBlockchain) {
+						NRS.updateBlockchainDownloadProgress();
+					}
 				}
 
 				if (callback) {
