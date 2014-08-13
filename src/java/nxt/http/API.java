@@ -9,11 +9,9 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.*;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.util.Collections;
@@ -96,6 +94,12 @@ public final class API {
             }
 
             apiHandler.addServlet(APIServlet.class, "/nxt");
+            if (Nxt.getBooleanProperty("nxt.apiServerGZIPFilter")) {
+                FilterHolder gzipFilterHolder = apiHandler.addFilter(GzipFilter.class, "/nxt", null);
+                gzipFilterHolder.setInitParameter("methods", "GET,POST");
+                gzipFilterHolder.setAsyncSupported(true);
+            }
+
             apiHandler.addServlet(APITestServlet.class, "/test");
 
             if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
