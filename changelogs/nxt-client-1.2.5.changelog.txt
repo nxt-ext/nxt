@@ -12,4 +12,4 @@ by default. This would be helpful when running the server on a remote machine,
 for online wallets and service providers, to enable it set
 nxt.enableAPIServerGZIPFilter=true in nxt.properties.
 
-
+Fixed client-side rescanning bug that caused UI to appear outdated.
