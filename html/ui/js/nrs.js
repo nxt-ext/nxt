@@ -268,6 +268,10 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
 					}
+					//only done so that download progress meter updates correctly based on lastFeederHeight
+					if (NRS.downloadingBlockchain) {
+						NRS.updateBlockchainDownloadProgress();
+					}
 				}
 
 				if (callback) {
@@ -425,6 +429,9 @@ var NRS = (function(NRS, $, undefined) {
 			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous_page") + "</a>";
 		}
 		if (NRS.hasMorePages) {
+			if (NRS.pageNumber > 1) {
+				output += "&nbsp;&nbsp;&nbsp;";
+			}
 			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next_page") + " &raquo;</a>";
 		}
 

@@ -924,7 +924,9 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (fadeIn) {
-			$parent.fadeIn();
+			$parent.fadeIn(400, function() {
+				$parent.show();
+			});
 		}
 	}
 
@@ -1098,7 +1100,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.hasTransactionUpdates = function(transactions) {
-		return (transactions && transactions.length || NRS.unconfirmedTransactionsChange || NRS.state.isScanning);
+		return ((transactions && transactions.length) || NRS.unconfirmedTransactionsChange);
 	}
 
 	NRS.showMore = function($el) {

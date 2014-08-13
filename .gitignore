@@ -1,4 +1,5 @@
 /.idea/
+/nxt.iml
 /nxt_db/
 /webapps/
 /classes/
@@ -18,5 +19,4 @@
 /.classpath
 /.project
 /.settings/
-
-
+/compile.bat

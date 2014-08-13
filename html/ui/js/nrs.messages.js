@@ -3,11 +3,9 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	var _messages = {};
-	var _messageTypesChecked = 0;
 
 	NRS.pages.messages = function(callback) {
 		_messages = {};
-		_messageTypesChecked = 0;
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
