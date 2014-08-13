@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public interface Appendix {
 
@@ -397,14 +398,16 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Public key announcements not enabled for version 0 transactions");
             }
             Account recipientAccount = Account.getAccount(recipientId);
-            if (recipientAccount != null && recipientAccount.getPublicKey() != null) {
-                throw new NxtException.NotCurrentlyValidException("Public key for this account has already been announced");
+            if (recipientAccount != null && recipientAccount.getPublicKey() != null && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
+                throw new NxtException.NotCurrentlyValidException("A different public key for this account has already been announced");
             }
         }
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            recipientAccount.apply(this.publicKey, transaction.getHeight());
+            if (recipientAccount.setOrVerify(publicKey, transaction.getHeight())) {
+                recipientAccount.apply(this.publicKey, transaction.getHeight());
+            }
         }
 
         @Override

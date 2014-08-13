@@ -127,17 +127,13 @@ public final class PeerServlet extends HttpServlet {
         resp.setContentType("text/plain; charset=UTF-8");
         long byteCount;
         if (isGzipEnabled) {
-            StringWriter jsonResponse = new StringWriter();
-            response.writeJSONString(jsonResponse);
-            byte[] responseBytes = jsonResponse.toString().getBytes("UTF-8");
-            resp.setContentLength(responseBytes.length);
-            resp.getOutputStream().write(responseBytes);
-            resp.getOutputStream().close();
+            try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
+                response.writeJSONString(writer);
+            }
             byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
-            //Logger.logDebugMessage(String.format("uncompressed size %d compressed size %d\n", responseBytes.length, byteCount));
         } else {
             CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
+            try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
                 response.writeJSONString(writer);
             }
             byteCount = cos.getCount();
