@@ -385,13 +385,7 @@ var NRS = (function(NRS, $, undefined) {
 		//	$("#blocks_page_type li a").click(function(e) {
 		e.preventDefault();
 
-		var type = $.trim($(this).text()).toLowerCase();
-
-		if (type == "forged by you") {
-			NRS.blocksPageType = "forged_blocks";
-		} else {
-			NRS.blocksPageType = "";
-		}
+		NRS.blocksPageType = $(this).data("type");
 
 		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
 		$("#blocks_table tbody").empty();
