@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import nxt.Attachment.MessagingPollCreation.PollBuilder;
+
 
 public abstract class TransactionType {
 
@@ -19,7 +19,6 @@ public abstract class TransactionType {
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
-    private static final byte SUBTYPE_PAYMENT_WITH_MESSAGE = 1;
 
     private static final byte SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
     private static final byte SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT = 1;
@@ -135,26 +134,17 @@ public abstract class TransactionType {
 
     public abstract byte getSubtype();
 
-    final void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-        doLoadAttachment(transaction, buffer);
-        //validateAttachment(transaction);
-    }
+    abstract Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException;
 
-    abstract void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException;
-
-    final void loadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-        doLoadAttachment(transaction, attachmentData);
-        //validateAttachment(transaction);
-    }
-
-    abstract void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException;
+    abstract Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException;
 
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
     // return false iff double spending
     final boolean applyUnconfirmed(Transaction transaction, Account senderAccount) {
         long totalAmountNQT = Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT());
-        if (transaction.getReferencedTransactionFullHash() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null
+                && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             totalAmountNQT = Convert.safeAdd(totalAmountNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (senderAccount.getUnconfirmedBalanceNQT() < totalAmountNQT
@@ -173,7 +163,8 @@ public abstract class TransactionType {
 
     final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
         senderAccount.addToBalanceNQT(- (Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT())));
-        if (transaction.getReferencedTransactionFullHash() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null
+                && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (recipientAccount != null) {
@@ -186,7 +177,8 @@ public abstract class TransactionType {
 
     final void undoUnconfirmed(Transaction transaction, Account senderAccount) {
         senderAccount.addToUnconfirmedBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionFullHash() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null
+                && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         undoAttachmentUnconfirmed(transaction, senderAccount);
@@ -196,7 +188,8 @@ public abstract class TransactionType {
 
     final void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
         senderAccount.addToBalanceNQT(Convert.safeAdd(transaction.getAmountNQT(), transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionFullHash() != null) {
+        if (transaction.getReferencedTransactionFullHash() != null
+                && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(- Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (recipientAccount != null) {
@@ -316,11 +309,6 @@ public abstract class TransactionType {
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
         }
 
-        @Override
-        final void updateTotals(Transaction transaction, Map<Long, Long> accumulatedAmounts,
-                                Map<Long, Map<Long, Long>> accumulatedAssetQuantities, Long accumulatedAmount) {
-        }
-
         public final static TransactionType ARBITRARY_MESSAGE = new Messaging() {
 
             @Override
@@ -329,20 +317,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                int messageLength = buffer.getInt();
-                if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                    throw new NxtException.ValidationException("Invalid arbitrary message length: " + messageLength);
-                }
-                byte[] message = new byte[messageLength];
-                buffer.get(message);
-                transaction.setAttachment(new Attachment.MessagingArbitraryMessage(message));
+            Attachment.EmptyAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+                return Attachment.ARBITRARY_MESSAGE;
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                String message = (String) attachmentData.get("message");
-                transaction.setAttachment(new Attachment.MessagingArbitraryMessage(Convert.parseHexString(message)));
+            Attachment.EmptyAttachment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return Attachment.ARBITRARY_MESSAGE;
             }
 
             @Override
@@ -364,47 +345,9 @@ public abstract class TransactionType {
                 }
             }
 
-        };
-
-        public final static TransactionType ENCRYPTED_MESSAGE = new Messaging() {
-
             @Override
             public boolean hasRecipient() {
                 return true;
-            }
-
-            @Override
-            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                EncryptedData encryptedMessage = readEncryptedData(buffer, buffer.getShort(), Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
-                transaction.setAttachment(new Attachment.MessagingEncryptedMessage(encryptedMessage));
-            }
-
-            @Override
-            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                EncryptedData encryptedMessage = new EncryptedData(Convert.parseHexString((String)attachmentData.get("message")),
-                        Convert.parseHexString((String)attachmentData.get("nonce")));
-                transaction.setAttachment(new Attachment.MessagingEncryptedMessage(encryptedMessage));
-            }
-
-            @Override
-            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            }
-
-            @Override
-            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            }
-
-            @Override
-            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.ENCRYPTED_MESSAGES_BLOCK) {
-                    throw new NotYetEnabledException("Encrypted messages not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
-                Attachment.MessagingEncryptedMessage attachment = (Attachment.MessagingEncryptedMessage) transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0
-                        || attachment.getEncryptedMessage().getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH
-                        || attachment.getEncryptedMessage().getNonce().length != (attachment.getEncryptedMessage().getData().length == 0 ? 0 : 32)) {
-                    throw new NxtException.ValidationException("Invalid encrypted message: " + attachment.getJSONObject());
-                }
             }
 
         };
@@ -417,47 +360,32 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String aliasName = readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
-                String aliasURI = readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH);
-                transaction.setAttachment(new Attachment.MessagingAliasAssignment(aliasName, aliasURI));
+            Attachment.MessagingAliasAssignment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasAssignment(buffer, transactionVersion);
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                String alias = (String) attachmentData.get("alias");
-                String uri = (String) attachmentData.get("uri");
-                transaction.setAttachment(new Attachment.MessagingAliasAssignment(alias, uri));
+            Attachment.MessagingAliasAssignment parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasAssignment(attachmentData);
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                Alias.addOrUpdateAlias(senderAccount, transaction.getId(), attachment.getAliasName(),
-                        attachment.getAliasURI(), transaction.getBlockTimestamp());
+                Alias.addOrUpdateAlias(transaction, attachment);
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
                 Alias alias = Alias.getAlias(attachment.getAliasName());
-                if (alias.getId().equals(transaction.getId())) {
-                    Alias.remove(alias);
-                } else {
-                    // alias has been updated, can't tell what was its previous uri
-                    throw new UndoNotSupportedException("Reversal of alias assignment not supported");
-                }
+                Alias.rollbackAlias(alias.getId());
             }
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -480,6 +408,11 @@ public abstract class TransactionType {
                 }
             }
 
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+
         };
 
         public static final TransactionType ALIAS_SELL = new Messaging() {
@@ -490,47 +423,35 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String alias = readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
-                long priceNQT = buffer.getLong();
-                transaction.setAttachment(new Attachment.MessagingAliasSell(alias, priceNQT));
+            Attachment.MessagingAliasSell parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasSell(buffer, transactionVersion);
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                String alias = (String) attachmentData.get("alias");
-                long priceNQT = (Long) attachmentData.get("priceNQT");
-                transaction.setAttachment(new Attachment.MessagingAliasSell(alias, priceNQT));
+            Attachment.MessagingAliasSell parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasSell(attachmentData);
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 final Attachment.MessagingAliasSell attachment =
                         (Attachment.MessagingAliasSell) transaction.getAttachment();
-                final String aliasName = attachment.getAliasName();
-                final long priceNQT = attachment.getPriceNQT();
-                final Long buyerId = recipientAccount.getId();
-                if (priceNQT > 0) {
-                    Alias.addSellOffer(aliasName, priceNQT, buyerId);
-                } else {
-                    Alias.changeOwner(Account.getAccount(buyerId), aliasName, transaction.getBlockTimestamp());
-                }
+                Alias.sellAlias(transaction, attachment);
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException("Reversal of alias sell offer not supported");
+                Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName());
+                Alias.rollbackAlias(alias.getId());
+                Alias.rollbackOffer(alias.getId());
             }
 
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Set<String>> duplicates) {
-                Set<String> myDuplicates = duplicates.get(this);
-                if (myDuplicates == null) {
-                    myDuplicates = new HashSet<>();
-                    duplicates.put(this, myDuplicates);
-                }
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
-                return !myDuplicates.add(attachment.getAliasName().toLowerCase());
+                // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates);
             }
 
             @Override
@@ -566,6 +487,12 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
             }
+
+            @Override
+            public boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public static final TransactionType ALIAS_BUY = new Messaging() {
@@ -576,15 +503,13 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
-                String alias = readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
-                transaction.setAttachment(new Attachment.MessagingAliasBuy(alias));
+            Attachment.MessagingAliasBuy parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasBuy(buffer, transactionVersion);
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                String alias = (String) attachmentData.get("alias");
-                transaction.setAttachment(new Attachment.MessagingAliasBuy(alias));
+            Attachment.MessagingAliasBuy parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingAliasBuy(attachmentData);
             }
 
             @Override
@@ -592,12 +517,15 @@ public abstract class TransactionType {
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
-                Alias.changeOwner(senderAccount, aliasName, transaction.getBlockTimestamp());
+                Alias.changeOwner(transaction.getSenderId(), aliasName, transaction.getBlockTimestamp());
             }
 
             @Override
             void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
-                throw new UndoNotSupportedException("Reversal of alias buy not supported");
+                Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
+                Alias alias = Alias.getAlias(attachment.getAliasName());
+                Alias.rollbackAlias(alias.getId());
+                Alias.rollbackOffer(alias.getId());
             }
 
             @Override
@@ -622,7 +550,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias is owned by account other than recipient: "
                             + Convert.toUnsignedLong(alias.getAccountId()));
                 }
-                Alias.Offer offer = Alias.getOffer(aliasName);
+                Alias.Offer offer = Alias.getOffer(alias);
                 if (offer == null) {
                     throw new NxtException.NotCurrentlyValidException("Alias is not for sale: " + aliasName);
                 }
@@ -637,6 +565,12 @@ public abstract class TransactionType {
                             + Convert.toUnsignedLong(offer.getBuyerId()));
                 }
             }
+
+            @Override
+            public boolean hasRecipient() {
+                return true;
+            }
+
         };
 
         public final static TransactionType POLL_CREATION = new Messaging() {
@@ -646,6 +580,16 @@ public abstract class TransactionType {
             }
 
             @Override
+            Attachment.MessagingPollCreation parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+                return new Attachment.MessagingPollCreation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingPollCreation parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingPollCreation(attachmentData);
+            }
+
+            /*@Override
             void doLoadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
                 String pollName = readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
                 String pollDescription = readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
@@ -700,12 +644,11 @@ public abstract class TransactionType {
                 }
 
                 transaction.setAttachment(builder.buildAttachment());
-            }
+            } */
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
-                Poll.addPoll(transaction, attachment);
                 Poll.addPoll(transaction.getId(), attachment.getPollName(), attachment.getPollDescription(),
                         attachment.getPollOptions(),
                         attachment.getFinishBlockHeight(),
@@ -734,29 +677,28 @@ public abstract class TransactionType {
                 }
 
                 if (attachment.getAssetId() != 0 && Asset.getAsset(attachment.getAssetId()) == null) {
-                    throw new NxtException.ValidationException("Invalid asset id for voting: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid asset id for voting: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE && attachment.getMinNumberOfOptions() < 1) {
-                    throw new NxtException.ValidationException("Invalid min number of options: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid min number of options: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getOptionModel() == Poll.OPTION_MODEL_CHOICE &&
                         (attachment.getMaxNumberOfOptions() < 1 ||
                                 attachment.getMaxNumberOfOptions() > attachment.getPollOptions().length)) {
-                    throw new NxtException.ValidationException("Invalid max number of options: " + attachment.getJSONObject());
+                    throw new NxtException.NotValidException("Invalid max number of options: " + attachment.getJSONObject());
                 }
 
                 if (attachment.getPollName().length() > Constants.MAX_POLL_NAME_LENGTH
                         || attachment.getPollDescription().length() > Constants.MAX_POLL_DESCRIPTION_LENGTH
-                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT
-                        || transaction.getAmountNQT() != 0
-                        || !Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
-                    throw new NxtException.ValidationException("Invalid poll attachment: " + attachment.getJSONObject());
+                        || attachment.getPollOptions().length > Constants.MAX_POLL_OPTION_COUNT) {
+                    throw new NxtException.NotValidException("Invalid poll attachment: " + attachment.getJSONObject());
                 }
-                if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                        || transaction.getFeeNQT() < Constants.POLL_FEE_NQT) {
-                    throw new NxtException.ValidationException("Invalid tx params for poll: " + attachment.getJSONObject());
+                if (transaction.getRecipientId() != null
+                        || transaction.getFeeNQT() < Constants.POLL_FEE_NQT
+                        || transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Invalid tx params for poll: " + attachment.getJSONObject());
                 }
             }
 
@@ -764,7 +706,6 @@ public abstract class TransactionType {
             public boolean hasRecipient() {
                 return false;
             }
-
         };
 
         public final static TransactionType VOTE_CASTING = new Messaging() {
@@ -774,6 +715,16 @@ public abstract class TransactionType {
             }
 
             @Override
+            Attachment.MessagingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+                return new Attachment.MessagingVoteCasting(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingVoteCasting parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.MessagingVoteCasting(attachmentData);
+            }
+
+            /*@Override
             Attachment.MessagingVoteCasting parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
                 return new Attachment.MessagingVoteCasting(buffer, transactionVersion);
             void loadAttachment(TransactionImpl transaction, ByteBuffer buffer) throws NxtException.ValidationException {
@@ -798,17 +749,16 @@ public abstract class TransactionType {
                     pollVote[i] = ((Long) vote.get(i)).byteValue();
                 }
                 transaction.setAttachment(new Attachment.MessagingVoteCasting(pollId, pollVote));
-            }
+            } */
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
-                Poll poll = Poll.getPoll(attachment.getPollId());
-                if (poll != null) {
-                    Vote vote = Vote.addVote(transaction.getId(), attachment.getPollId(), transaction.getSenderId(),
-                            attachment.getPollVote());
-                    poll.addVoter(transaction.getSenderId(), vote.getId());
-                }
+                //Poll poll = Poll.getPoll(attachment.getPollId());
+                //if (poll != null) {
+                    Vote vote = Vote.addVote(transaction, attachment);
+                    //poll.addVoter(transaction.getSenderId(), vote.getId());
+                //}
             }
 
             @Override
@@ -826,21 +776,35 @@ public abstract class TransactionType {
                         || attachment.getPollVote().length > Constants.MAX_POLL_OPTION_COUNT) {
                     throw new NxtException.NotValidException("Invalid vote casting attachment: " + attachment.getJSONObject());
                 }
-                if (Poll.getPoll(attachment.getPollId()) == null) {
-                    throw new NxtException.ValidationException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
+
+                Poll poll = Poll.getPoll(attachment.getPollId());
+                if (poll == null) {
+                    throw new NxtException.NotValidException("Invalid poll: " + Convert.toUnsignedLong(attachment.getPollId()));
                 }
-                if (transaction.getAmountNQT() != 0 || !Genesis.CREATOR_ID.equals(transaction.getRecipientId())) {
-                    throw new NxtException.ValidationException("Invalid vote casting amount or recipient");
+
+                byte[] votes = attachment.getPollVote();
+                int positiveCount = 0;
+                for (byte vote : votes) {
+                    if (vote < 0 || vote > 1) {
+                        throw new NxtException.NotValidException("Invalid vote: " + attachment.getJSONObject());
+                    }
+                    if (vote == 1) {
+                        positiveCount++;
+                    }
+                }
+
+                if (poll.getOptionModel() == Poll.OPTION_MODEL_CHOICE
+                        && (positiveCount < poll.getMinNumberOfOptions() || positiveCount > poll.getMaxNumberOfOptions())) {
+                    throw new NxtException.NotValidException("Invalid num of choices: " + attachment.getJSONObject());
+                }
+
+                if (transaction.getAmountNQT() != 0 || transaction.getRecipientId() != null) {
+                    throw new NxtException.NotValidException("Invalid vote casting amount or recipient");
                 }
             }
 
             @Override
             public boolean hasRecipient() {
-                return false;
-            }
-
-            @Override
-            boolean hasRecipient() {
                 return false;
             }
         };
@@ -1000,8 +964,7 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (! Genesis.CREATOR_ID.equals(transaction.getRecipientId()) || transaction.getAmountNQT() != 0
-                        || transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
+                if (transaction.getFeeNQT() < Constants.ASSET_ISSUANCE_FEE_NQT
                         || attachment.getName().length() < Constants.MIN_ASSET_NAME_LENGTH
                         || attachment.getName().length() > Constants.MAX_ASSET_NAME_LENGTH
                         || attachment.getDescription().length() > Constants.MAX_ASSET_DESCRIPTION_LENGTH
@@ -1367,9 +1330,8 @@ public abstract class TransactionType {
             if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
                 throw new NxtException.NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
             }
-            if (!Genesis.CREATOR_ID.equals(transaction.getRecipientId())
-                    || transaction.getAmountNQT() != 0) {
-                throw new NxtException.ValidationException("Invalid digital goods transaction");
+            if (transaction.getAmountNQT() != 0) {
+                throw new NxtException.NotValidException("Invalid digital goods transaction");
             }
             doValidateAttachment(transaction);
         }
@@ -1438,9 +1400,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            void doLoadAttachment(TransactionImpl transaction, JSONObject attachmentData) throws NxtException.ValidationException {
-                Long goodsId = Convert.parseUnsignedLong((String)attachmentData.get("goods"));
-                transaction.setAttachment(new Attachment.DigitalGoodsDelisting(goodsId));
+            Attachment.DigitalGoodsDelisting parseAttachment(JSONObject attachmentData) throws NxtException.ValidationException {
+                return new Attachment.DigitalGoodsDelisting(attachmentData);
             }
 
             @Override

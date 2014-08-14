@@ -87,6 +87,34 @@ public abstract class DbTable<T> extends BasicDbTable {
         }
     }
 
+    public List<Long> getManyIdsBy(String targetColumnName, String filterColumnName, Long value) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT " + targetColumnName + " FROM " + table()
+                     + " WHERE " + filterColumnName + " = ? ")) {
+            pstmt.setLong(1, value);
+            List<Long> result = new ArrayList<>();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getLong(targetColumnName));
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public List<T> getManyBy(String columnName, Boolean value) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+                     + " WHERE " + columnName + " = ? ")) {
+            pstmt.setBoolean(1, value);
+            return getManyBy(con, pstmt);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
     public int getCount() {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM " + table());

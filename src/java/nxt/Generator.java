@@ -220,5 +220,4 @@ public final class Generator {
             BlockchainProcessorImpl.getInstance().generateBlock(secretPhrase, timestamp);
         }
     }
-
 }

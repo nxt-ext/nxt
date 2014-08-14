@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.DbTable;
 import nxt.util.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

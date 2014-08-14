@@ -331,8 +331,77 @@ public interface Attachment extends Appendix {
         private final byte votingModel;
 
         private final long minBalance; //for all kinds of voting
-        private final byte minNumberOfOptions, maxNumberOfOptions; //only for choice voting
-        private final long assetId; // only for asset voting
+        private byte minNumberOfOptions = Poll.DEFAULT_MIN_NUMBER_OF_CHOICES, maxNumberOfOptions; //only for choice voting
+        private long assetId = 0; // only for asset voting
+
+
+        MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+            super(buffer, transactionVersion);
+            pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
+            pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
+
+            finishBlockHeight = buffer.getInt();
+
+            int numberOfOptions = buffer.get();
+            if (numberOfOptions > Constants.MAX_POLL_OPTION_COUNT) {
+                throw new NxtException.NotValidException("Invalid number of poll options: " + numberOfOptions);
+            }
+
+            pollOptions = new String[numberOfOptions];
+            for (int i = 0; i < numberOfOptions; i++) {
+                pollOptions[i] = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_OPTION_LENGTH);
+            }
+
+            optionModel = buffer.get();
+
+            votingModel = buffer.get();
+
+            minBalance = buffer.getLong();
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                minNumberOfOptions = buffer.get();
+                maxNumberOfOptions = buffer.get();
+            }
+
+
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                assetId = buffer.getLong();
+            }
+        }
+
+        MessagingPollCreation(JSONObject attachmentData) throws NxtException.ValidationException {
+            super(attachmentData);
+
+            pollName = ((String) attachmentData.get("name")).trim();
+            pollDescription = ((String) attachmentData.get("description")).trim();
+            finishBlockHeight = ((Long) attachmentData.get("finishBlockHeight")).intValue();
+
+            JSONArray options = (JSONArray) attachmentData.get("options");
+            pollOptions = new String[options.size()];
+            for (int i = 0; i < pollOptions.length; i++) {
+                pollOptions[i] = ((String) options.get(i)).trim();
+            }
+
+            minBalance = (Long) attachmentData.get("minBalance");
+
+            optionModel = ((Long) attachmentData.get("optionModel")).byteValue();
+            votingModel = ((Long) attachmentData.get("votingModel")).byteValue();
+
+            /*PollBuilder builder = new PollBuilder(pollName, pollDescription, pollOptions,
+                    finishBlockHeight, optionModel, votingModel);
+
+            builder.minBalance(minBalance);*/
+
+            if (optionModel == Poll.OPTION_MODEL_CHOICE) {
+                minNumberOfOptions = ((Long) attachmentData.get("minNumberOfOptions")).byteValue();
+                maxNumberOfOptions = ((Long) attachmentData.get("maxNumberOfOptions")).byteValue();
+            }
+
+            if (votingModel == Poll.VOTING_MODEL_ASSET) {
+                assetId = (Long) attachmentData.get("assetId");
+//                builder.assetId(assetId);
+            }
+        }
 
         public MessagingPollCreation(PollBuilder builder) {
             this.pollName = builder.pollName;
@@ -385,8 +454,6 @@ public interface Attachment extends Appendix {
                 options[i] = Convert.toBytes(this.pollOptions[i]);
             }
 
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putShort((short) name.length);
             buffer.put(name);
             buffer.putShort((short) description.length);
@@ -409,8 +476,6 @@ public interface Attachment extends Appendix {
             if (votingModel == Poll.VOTING_MODEL_ASSET) {
                 buffer.putLong(this.assetId);
             }
-
-            return buffer.array();
         }
 
         @Override
@@ -438,8 +503,6 @@ public interface Attachment extends Appendix {
             }
 
             attachment.put("minBalance", this.minBalance);
-
-            return attachment;
         }
 
         @Override
@@ -493,10 +556,30 @@ public interface Attachment extends Appendix {
         private final Long pollId;
         private final byte[] pollVote;
 
+        public MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion){
+            pollId = buffer.getLong();
+            int numberOfOptions = buffer.get();
+            pollVote = new byte[numberOfOptions];
+            buffer.get(pollVote);
+        }
+
+        public MessagingVoteCasting(JSONObject attachmentData){
+            pollId = Convert.parseUnsignedLong((String)attachmentData.get("pollId"));
+            JSONArray vote = (JSONArray)attachmentData.get("vote");
+            pollVote = new byte[vote.size()];
+            for (int i = 0; i < pollVote.length; i++) {
+                pollVote[i] = ((Long) vote.get(i)).byteValue();
+            }
+        }
+
         public MessagingVoteCasting(Long pollId, byte[] pollVote) {
             this.pollId = pollId;
             this.pollVote = pollVote;
+        }
 
+        @Override
+        String getAppendixName() {
+            return "VoteCasting";
         }
 
         @Override
@@ -505,14 +588,10 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public byte[] getBytes() {
-            ByteBuffer buffer = ByteBuffer.allocate(getSize());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        public void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(this.pollId);
             buffer.put((byte) this.pollVote.length);
             buffer.put(this.pollVote);
-
-            return buffer.array();
         }
 
         @Override
@@ -1088,7 +1167,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             return 2 + Convert.toBytes(name).length + 2 + Convert.toBytes(description).length + 2
-                        + Convert.toBytes(tags).length + 4 + 8;
+                    + Convert.toBytes(tags).length + 4 + 8;
         }
 
         @Override

@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.DbTable;
+import nxt.db.DbTable;
 import nxt.util.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -58,7 +58,7 @@ public abstract class PollResults<K, V> {
                 } else if(pr instanceof Choice){
                     resultsType = CHOICE_RESULTS;
                 }else{
-                    throw new NxtException.ValidationException("Wrong kind of results");
+                    throw new NxtException.NotValidException("Wrong kind of results");
                 }
 
                 pstmt.setByte(++i, resultsType);
@@ -94,7 +94,7 @@ public abstract class PollResults<K, V> {
             }else if(mode==CHOICE_RESULTS){
                 results = new Choice(pollId, resultsAsJson);
             }else{
-                throw new NxtException.ValidationException("wrong kind of results");
+                throw new NxtException.NotValidException("wrong kind of results");
             }
         } catch (NxtException.ValidationException e) {
             throw new SQLException(e);
@@ -135,7 +135,7 @@ public abstract class PollResults<K, V> {
             JSONParser parser = new JSONParser();
             return (Map<K, V>)(parser.parse(json));
         } catch (ParseException e) {
-            throw new NxtException.ValidationException("Illegal contents of pollresults: "+json);
+            throw new NxtException.NotValidException("Illegal contents of pollresults: "+json);
         }
     }
 
@@ -171,7 +171,7 @@ public abstract class PollResults<K, V> {
                 }
                 return resulting;
             } catch (ParseException e) {
-                throw new NxtException.ValidationException("Illegal contents of pollresults: "+json);
+                throw new NxtException.NotValidException("Illegal contents of pollresults: "+json);
             }
         }
     }

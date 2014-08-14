@@ -452,6 +452,33 @@ final class DbVersion {
             case 116:
                 apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_id_height_idx ON purchase_public_feedback (id, height DESC)");
             case 117:
+                apply("ALTER TABLE poll DROP COLUMN binary_options");
+            case 118:
+                apply("ALTER TABLE poll ADD asset_id BIGINT");
+            case 119:
+                apply("ALTER TABLE poll ADD finish INT");
+            case 120:
+                apply("ALTER TABLE poll ADD option_model TINYINT");
+            case 121:
+                apply("ALTER TABLE poll ADD voting_model TINYINT");
+            case 122:
+                apply("ALTER TABLE poll ADD min_balance BIGINT");
+            case 123:
+                apply("ALTER TABLE poll ADD active BOOLEAN");
+            case 124:
+                apply("ALTER TABLE poll ADD FOREIGN KEY (asset_id) REFERENCES asset(id)");
+            case 125:
+                apply("ALTER TABLE poll ALTER COLUMN finish SET NOT NULL");
+            case 126:
+                apply("ALTER TABLE poll ALTER COLUMN finish SET NOT NULL");
+            case 127:
+                apply("ALTER TABLE poll ALTER COLUMN option_model SET NOT NULL");
+            case 128:
+                apply("ALTER TABLE poll ALTER COLUMN voting_model SET NOT NULL");
+            case 129:
+                apply("CREATE TABLE IF NOT EXISTS poll_results (db_id INT IDENTITY, id BIGINT NOT NULL, "
+                        + "results_type TINYINT NOT NULL, results_json VARCHAR NOT NULL)");
+            case 130:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

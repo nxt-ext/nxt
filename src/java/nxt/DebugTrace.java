@@ -170,20 +170,6 @@ public final class DebugTrace {
         return false;
     }
 
-    private boolean include(Attachment attachment) {
-        if (attachment instanceof Attachment.DigitalGoodsPurchase) {
-            Long sellerId = DigitalGoodsStore.getGoods(((Attachment.DigitalGoodsPurchase)attachment).getGoodsId()).getSellerId();
-            return include(sellerId);
-        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
-            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsDelivery)attachment).getPurchaseId()).getBuyerId();
-            return include(buyerId);
-        } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
-            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsRefund)attachment).getPurchaseId()).getBuyerId();
-            return include(buyerId);
-        }
-        return false;
-    }
-
     // Note: Trade events occur before the change in account balances
     private void trace(Trade trade) {
         Long askAccountId = Order.Ask.getAskOrder(trade.getAskOrderId()).getAccountId();
