@@ -1,7 +1,7 @@
 #!/bin/sh
 CP=conf/:classes/:lib/*:testlib/*
 SP=src/java/:test/java/
-TESTS="nxt.crypto.Curve25519Test nxt.crypto.ReedSolomonTest"
+TESTS="nxt.crypto.Curve25519Test nxt.crypto.ReedSolomonTest nxt.peer.HallmarkTest"
 
 /bin/mkdir -p classes/
 
