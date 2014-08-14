@@ -31,7 +31,7 @@ public final class Poll {
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
-                    + "options, min_num_options, max_num_options, binary_options) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                    + "options, min_num_options, max_num_options, binary_options, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setString(++i, poll.getName());
@@ -40,6 +40,7 @@ public final class Poll {
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
                 pstmt.setBoolean(++i, poll.isOptionsAreBinary());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }

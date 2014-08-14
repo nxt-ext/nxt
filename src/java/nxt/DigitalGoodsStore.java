@@ -648,10 +648,6 @@ public final class DigitalGoodsStore {
         goodsListeners.notify(goods, Event.GOODS_LISTED);
     }
 
-    static void undoListGoods(Long goodsId) {
-        Goods.goodsTable.rollbackTo(goodsId, Nxt.getBlockchain().getHeight());
-    }
-
     static void delistGoods(Long goodsId) {
         Goods goods = Goods.goodsTable.get(goodsId);
         if (! goods.isDelisted()) {
@@ -659,15 +655,6 @@ public final class DigitalGoodsStore {
             goodsListeners.notify(goods, Event.GOODS_DELISTED);
         } else {
             throw new IllegalStateException("Goods already delisted");
-        }
-    }
-
-    static void undoDelistGoods(Long goodsId) {
-        Goods goods = Goods.goodsTable.get(goodsId);
-        if (goods.isDelisted()) {
-            goods.setDelisted(false);
-        } else {
-            throw new IllegalStateException("Goods were not delisted");
         }
     }
 
@@ -704,17 +691,6 @@ public final class DigitalGoodsStore {
         }
     }
 
-    static void undoPurchase(Long purchaseId, Long buyerId, int quantity, long priceNQT) {
-        Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        Purchase.purchaseTable.rollbackTo(purchaseId, Nxt.getBlockchain().getHeight());
-        if (purchase != null) {
-            Goods.goodsTable.rollbackTo(purchase.getGoodsId(), Nxt.getBlockchain().getHeight());
-        } else {
-            Account buyer = Account.getAccount(buyerId);
-            buyer.addToUnconfirmedBalanceNQT(-Convert.safeMultiply(quantity, priceNQT));
-        }
-    }
-
     static void deliver(Transaction transaction, Attachment.DigitalGoodsDelivery attachment) {
         Purchase purchase = getPendingPurchase(attachment.getPurchaseId());
         purchase.setPending(false);
@@ -727,19 +703,6 @@ public final class DigitalGoodsStore {
         purchase.setEncryptedGoods(attachment.getGoods(), attachment.goodsIsText());
         purchase.setDiscountNQT(attachment.getDiscountNQT());
         purchaseListeners.notify(purchase, Event.DELIVERY);
-    }
-
-    static void undoDeliver(Long sellerId, Long purchaseId, long discountNQT) {
-        Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        purchase.setPending(true);
-        long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
-        Account buyer = Account.getAccount(purchase.getBuyerId());
-        buyer.addToBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, discountNQT));
-        buyer.addToUnconfirmedBalanceNQT(- discountNQT);
-        Account seller = Account.getAccount(sellerId);
-        seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(discountNQT, totalWithoutDiscount));
-        purchase.setEncryptedGoods(null, false);
-        purchase.setDiscountNQT(0);
     }
 
     static void refund(Long sellerId, Long purchaseId, long refundNQT, Appendix.EncryptedMessage encryptedMessage) {
@@ -755,16 +718,6 @@ public final class DigitalGoodsStore {
         purchaseListeners.notify(purchase, Event.REFUND);
     }
 
-    static void undoRefund(Long sellerId, Long purchaseId, long refundNQT) {
-        Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        Account seller = Account.getAccount(sellerId);
-        seller.addToBalanceNQT(refundNQT);
-        Account buyer = Account.getAccount(purchase.getBuyerId());
-        buyer.addToBalanceAndUnconfirmedBalanceNQT(-refundNQT);
-        purchase.setRefundNote(null);
-        purchase.setRefundNQT(0);
-    }
-
     static void feedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
         Purchase purchase = Purchase.purchaseTable.get(purchaseId);
         if (encryptedMessage != null) {
@@ -774,19 +727,6 @@ public final class DigitalGoodsStore {
             purchase.addPublicFeedback(Convert.toString(message.getMessage()));
         }
         purchaseListeners.notify(purchase, Event.FEEDBACK);
-    }
-
-    static void undoFeedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
-        Purchase purchase = Purchase.purchaseTable.get(purchaseId);
-        // TODO: this may not be needed
-        /*
-        if (encryptedMessage != null) {
-            purchase.removeFeedbackNote();
-        }
-        if (message != null) {
-            purchase.removePublicFeedback();
-        }
-        */
     }
 
     private static EncryptedData loadEncryptedData(ResultSet rs, String dataColumn, String nonceColumn) throws SQLException {

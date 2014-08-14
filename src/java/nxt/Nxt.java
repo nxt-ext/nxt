@@ -157,8 +157,8 @@ public final class Nxt {
             Logger.init();
             Db.init();
             DbVersion.init();
-            BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
+            BlockchainProcessorImpl.getInstance();
             Peers.init();
             Generator.init();
             API.init();

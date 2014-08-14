@@ -381,13 +381,6 @@ final class BlockImpl implements Block {
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
     }
 
-    void undo() {
-        Account generatorAccount = Account.getAccount(getGeneratorId());
-        generatorAccount.undo(getHeight());
-        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(-totalFeeNQT);
-        generatorAccount.addToForgedBalanceNQT(-totalFeeNQT);
-    }
-
     void setPrevious(BlockImpl previousBlock) {
         if (previousBlock != null) {
             if (! previousBlock.getId().equals(getPreviousBlockId())) {
