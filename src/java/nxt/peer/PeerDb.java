@@ -1,6 +1,6 @@
 package nxt.peer;
 
-import nxt.Db;
+import nxt.db.Db;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

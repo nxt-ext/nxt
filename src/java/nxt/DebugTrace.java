@@ -97,6 +97,12 @@ public final class DebugTrace {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
+                debugTrace.traceBeforeAccept(block, false);
+            }
+        }, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
                 debugTrace.trace(block, false);
             }
         }, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
@@ -110,7 +116,7 @@ public final class DebugTrace {
 
     private static final String[] columns = {"height", "event", "account", "asset", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance",
-            "transaction amount", "transaction fee", "generation fee",
+            "transaction amount", "transaction fee", "generation fee", "effective balance",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
             "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
@@ -147,7 +153,21 @@ public final class DebugTrace {
     }
 
     private boolean include(Long accountId) {
-        return accountIds.isEmpty() || accountIds.contains(accountId);
+        return accountId != null && (accountIds.isEmpty() || accountIds.contains(accountId));
+    }
+
+    private boolean include(Attachment attachment) {
+        if (attachment instanceof Attachment.DigitalGoodsPurchase) {
+            Long sellerId = DigitalGoodsStore.getGoods(((Attachment.DigitalGoodsPurchase)attachment).getGoodsId()).getSellerId();
+            return include(sellerId);
+        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
+            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsDelivery)attachment).getPurchaseId()).getBuyerId();
+            return include(buyerId);
+        } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
+            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsRefund)attachment).getPurchaseId()).getBuyerId();
+            return include(buyerId);
+        }
+        return false;
     }
 
     private boolean include(Attachment attachment) {
@@ -196,7 +216,7 @@ public final class DebugTrace {
         log(getValues(accountLease.lessorId, accountLease, start));
     }
 
-    private void trace(Block block, boolean isUndo) {
+    private void traceBeforeAccept(Block block, boolean isUndo) {
         Long generatorId = block.getGeneratorId();
         if (include(generatorId)) {
             log(getValues(generatorId, block, isUndo));
@@ -204,11 +224,14 @@ public final class DebugTrace {
         for (Long accountId : accountIds) {
             Account account = Account.getAccount(accountId);
             if (account != null) {
-                for (Long lessorId : account.getLessorIds()) {
-                    log(lessorGuaranteedBalance(lessorId, accountId));
+                for (Account lessor : account.getLessors()) {
+                    log(lessorGuaranteedBalance(lessor, accountId));
                 }
             }
         }
+    }
+
+    private void trace(Block block, boolean isUndo) {
         for (Transaction transaction : block.getTransactions()) {
             Long senderId = transaction.getSenderId();
             if (include(senderId)) {
@@ -228,12 +251,10 @@ public final class DebugTrace {
         }
     }
 
-    private Map<String,String> lessorGuaranteedBalance(Long accountId, Long lesseeId) {
+    private Map<String,String> lessorGuaranteedBalance(Account account, Long lesseeId) {
         Map<String,String> map = new HashMap<>();
-        map.put("account", Convert.toUnsignedLong(accountId));
-        Account account = Account.getAccount(accountId);
-        // use 1441 instead of 1440 as at this point the newly generated block has already been pushed
-        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1441)));
+        map.put("account", Convert.toUnsignedLong(account.getId()));
+        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
         map.put("lessee", Convert.toUnsignedLong(lesseeId));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
@@ -307,6 +328,9 @@ public final class DebugTrace {
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block" + (isUndo ? " undo" : ""));
+        map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
+        map.put("timestamp", String.valueOf(block.getTimestamp()));
+        map.put("height", String.valueOf(block.getHeight()));
         return map;
     }
 
@@ -450,12 +474,12 @@ public final class DebugTrace {
                 }
             }
             map.put("refund", String.valueOf(refundNQT));
-        } else if (attachment instanceof Attachment.MessagingArbitraryMessage) {
+        } else if (attachment == Attachment.ARBITRARY_MESSAGE) {
             map = new HashMap<>();
             map.put("account", Convert.toUnsignedLong(accountId));
             map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
             map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
-            map.put("event", "message");
+            map.put("event", attachment == Attachment.ARBITRARY_MESSAGE ? "message" : "encrypted message");
             if (isRecipient) {
                 map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
             } else {

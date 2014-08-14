@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.DbTable;
+import nxt.db.CachingDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +11,12 @@ import java.util.List;
 
 public final class Asset {
 
-    private static final DbTable<Asset> assetTable = new DbTable<Asset>() {
+    private static final CachingDbTable<Asset> assetTable = new CachingDbTable<Asset>() {
+
+        @Override
+        protected Long getId(Asset asset) {
+            return asset.getId();
+        }
 
         @Override
         protected String table() {

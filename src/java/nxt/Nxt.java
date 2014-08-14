@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.Db;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -148,7 +149,7 @@ public final class Nxt {
         TransactionProcessorImpl.getInstance().shutdown();
         ThreadPool.shutdown();
         Db.shutdown();
-        Logger.logMessage("Nxt server " + VERSION + " stopped.");
+        Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
     }
 
@@ -159,6 +160,7 @@ public final class Nxt {
             long startTime = System.currentTimeMillis();
             Logger.init();
             Db.init();
+            DbVersion.init();
             BlockchainProcessorImpl.getInstance();
             TransactionProcessorImpl.getInstance();
             Peers.init();

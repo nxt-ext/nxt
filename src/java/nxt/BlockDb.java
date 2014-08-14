@@ -1,5 +1,7 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.DbUtils;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
@@ -8,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.List;
 
 final class BlockDb {
@@ -63,10 +64,7 @@ final class BlockDb {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
-            Long previousBlockId = rs.getLong("previous_block_id");
-            if (rs.wasNull()) {
-                previousBlockId = null;
-            }
+            Long previousBlockId = DbUtils.getLong(rs, "previous_block_id");
             long totalAmountNQT = rs.getLong("total_amount");
             long totalFeeNQT = rs.getLong("total_fee");
             int payloadLength = rs.getInt("payload_length");
@@ -74,10 +72,7 @@ final class BlockDb {
             byte[] previousBlockHash = rs.getBytes("previous_block_hash");
             BigInteger cumulativeDifficulty = new BigInteger(rs.getBytes("cumulative_difficulty"));
             long baseTarget = rs.getLong("base_target");
-            Long nextBlockId = rs.getLong("next_block_id");
-            if (rs.wasNull()) {
-                nextBlockId = null;
-            }
+            Long nextBlockId = DbUtils.getLong(rs, "next_block_id");
             int height = rs.getInt("height");
             byte[] generationSignature = rs.getBytes("generation_signature");
             byte[] blockSignature = rs.getBytes("block_signature");
@@ -111,11 +106,7 @@ final class BlockDb {
                 pstmt.setLong(++i, block.getId());
                 pstmt.setInt(++i, block.getVersion());
                 pstmt.setInt(++i, block.getTimestamp());
-                if (block.getPreviousBlockId() != null) {
-                    pstmt.setLong(++i, block.getPreviousBlockId());
-                } else {
-                    pstmt.setNull(++i, Types.BIGINT);
-                }
+                DbUtils.setLong(pstmt, ++i, block.getPreviousBlockId());
                 pstmt.setLong(++i, block.getTotalAmountNQT());
                 pstmt.setLong(++i, block.getTotalFeeNQT());
                 pstmt.setInt(++i, block.getPayloadLength());
@@ -123,11 +114,7 @@ final class BlockDb {
                 pstmt.setBytes(++i, block.getPreviousBlockHash());
                 pstmt.setBytes(++i, block.getCumulativeDifficulty().toByteArray());
                 pstmt.setLong(++i, block.getBaseTarget());
-                if (block.getNextBlockId()!= null) {
-                    pstmt.setLong(++i, block.getNextBlockId());
-                } else {
-                    pstmt.setNull(++i, Types.BIGINT);
-                }
+                DbUtils.setLong(pstmt, ++i, block.getNextBlockId());
                 pstmt.setInt(++i, block.getHeight());
                 pstmt.setBytes(++i, block.getGenerationSignature());
                 pstmt.setBytes(++i, block.getBlockSignature());

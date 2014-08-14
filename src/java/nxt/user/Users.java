@@ -104,6 +104,7 @@ public final class Users {
             connector.setPort(port);
             connector.setHost(host);
             connector.setIdleTimeout(Nxt.getIntProperty("nxt.uiServerIdleTimeout"));
+            connector.setReuseAddress(true);
             userServer.addConnector(connector);
 
 
@@ -602,7 +603,7 @@ public final class Users {
             try {
                 userServer.stop();
             } catch (Exception e) {
-                Logger.logDebugMessage("Failed to stop user interface server", e);
+                Logger.logShutdownMessage("Failed to stop user interface server", e);
             }
         }
     }

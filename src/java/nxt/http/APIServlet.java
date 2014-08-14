@@ -86,7 +86,6 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
         map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
         map.put("getAccountTransactions", GetAccountTransactions.instance);
-        map.put("getActivePollIds", GetActivePollIds.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -106,7 +105,6 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSPurchases", GetDGSPurchases.instance);
         map.put("getDGSPurchase", GetDGSPurchase.instance);
         map.put("getDGSPendingPurchases", GetDGSPendingPurchases.instance);
-        map.put("getFinishedPollIds", GetFinishedPollIds.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         if (Constants.isTestnet) {
@@ -115,7 +113,6 @@ public final class APIServlet extends HttpServlet {
         map.put("getPeer", GetPeer.instance);
         map.put("getPeers", GetPeers.instance);
         map.put("getPoll", GetPoll.instance);
-        map.put("getPollResults", GetPollResults.instance);
         map.put("getState", GetState.instance);
         map.put("getTime", GetTime.instance);
         map.put("getTrades", GetTrades.instance);
@@ -140,11 +137,9 @@ public final class APIServlet extends HttpServlet {
         map.put("placeAskOrder", PlaceAskOrder.instance);
         map.put("placeBidOrder", PlaceBidOrder.instance);
         map.put("rsConvert", RSConvert.instance);
-        map.put("readEncryptedNote", ReadEncryptedNote.instance);
-        map.put("sendEncryptedNote", SendEncryptedNote.instance);
+        map.put("readMessage", ReadMessage.instance);
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
-        map.put("sendMoneyWithMessage", SendMoneyWithMessage.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
         map.put("setAlias", SetAlias.instance);
         map.put("signTransaction", SignTransaction.instance);

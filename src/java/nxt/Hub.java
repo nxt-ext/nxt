@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.util.VersioningDbTable;
+import nxt.db.VersioningDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -73,7 +73,7 @@ public class Hub {
     }
 
     static void rollbackHub(Long accountId) {
-        hubTable.deleteAfter(accountId, Nxt.getBlockchain().getHeight());
+        hubTable.rollbackTo(accountId, Nxt.getBlockchain().getHeight());
     }
 
     static void clear() {

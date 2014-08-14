@@ -1,7 +1,8 @@
 package nxt;
 
+import nxt.db.Db;
+import nxt.db.VersioningDbTable;
 import nxt.util.Convert;
-import nxt.util.VersioningDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -34,10 +35,7 @@ public abstract class Order {
                     && askOrder.getId() < bidOrder.getId())
                     ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
 
-            Block lastBlock=Nxt.getBlockchain().getLastBlock();
-            int timestamp=lastBlock.getTimestamp();
-            
-            Trade.addTrade(assetId, timestamp, lastBlock.getHeight(), lastBlock.getId(), askOrder.getId(), bidOrder.getId(), quantityQNT, priceNQT);
+            Trade.addTrade(assetId, Nxt.getBlockchain().getLastBlock(), askOrder.getId(), bidOrder.getId(), quantityQNT, priceNQT);
 
             askOrder.updateQuantityQNT(Convert.safeSubtract(askOrder.getQuantityQNT(), quantityQNT));
             Account askAccount = Account.getAccount(askOrder.getAccountId());
@@ -102,6 +100,12 @@ public abstract class Order {
 
     public int getHeight() {
         return height;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " id: " + Convert.toUnsignedLong(id) + " account: " + Convert.toUnsignedLong(accountId)
+                + " asset: " + Convert.toUnsignedLong(assetId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
     }
 
     private void setQuantityQNT(long quantityQNT) {
@@ -225,7 +229,7 @@ public abstract class Order {
         }
 
         static void rollbackOrder(Long orderId) {
-            askOrderTable.deleteAfter(orderId, Nxt.getBlockchain().getHeight());
+            askOrderTable.rollbackTo(orderId, Nxt.getBlockchain().getHeight());
         }
 
         static void removeOrder(Long orderId) {
@@ -360,7 +364,7 @@ public abstract class Order {
         }
 
         static void rollbackOrder(Long orderId) {
-            bidOrderTable.deleteAfter(orderId, Nxt.getBlockchain().getHeight());
+            bidOrderTable.rollbackTo(orderId, Nxt.getBlockchain().getHeight());
         }
 
         static void removeOrder(Long orderId) {

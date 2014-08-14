@@ -4,7 +4,6 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
@@ -22,8 +21,7 @@ public final class DGSPurchase extends CreateTransaction {
 
     private DGSPurchase() {
         super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
-                "goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp", "note",
-                "encryptedNote", "encryptedNoteNonce");
+                "goods", "priceNQT", "quantity", "deliveryDeadlineTimestamp");
     }
 
     @Override
@@ -60,10 +58,9 @@ public final class DGSPurchase extends CreateTransaction {
 
         Account buyerAccount = ParameterParser.getSenderAccount(req);
         Account sellerAccount = Account.getAccount(goods.getSellerId());
-        EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, sellerAccount);
 
         Attachment attachment = new Attachment.DigitalGoodsPurchase(goods.getId(), quantity, priceNQT,
-                deliveryDeadline, encryptedNote);
+                deliveryDeadline);
         return createTransaction(req, buyerAccount, sellerAccount.getId(), 0, attachment);
 
     }

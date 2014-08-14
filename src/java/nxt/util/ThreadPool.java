@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public final class ThreadPool {
 
     private static ScheduledExecutorService scheduledThreadPool;
-    private static Map<Runnable,Integer> backgroundJobs = new HashMap<>();
+    private static Map<Runnable,Long> backgroundJobs = new HashMap<>();
     private static List<Runnable> beforeStartJobs = new ArrayList<>();
     private static List<Runnable> lastBeforeStartJobs = new ArrayList<>();
 
@@ -28,10 +28,14 @@ public final class ThreadPool {
     }
 
     public static synchronized void scheduleThread(Runnable runnable, int delay) {
+        scheduleThread(runnable, delay, TimeUnit.SECONDS);
+    }
+
+    public static synchronized void scheduleThread(Runnable runnable, int delay, TimeUnit timeUnit) {
         if (scheduledThreadPool != null) {
             throw new IllegalStateException("Executor service already started, no new jobs accepted");
         }
-        backgroundJobs.put(runnable, delay);
+        backgroundJobs.put(runnable, timeUnit.toMillis(delay));
     }
 
     public static synchronized void start() {
@@ -49,17 +53,17 @@ public final class ThreadPool {
 
         Logger.logDebugMessage("Starting " + backgroundJobs.size() + " background jobs");
         scheduledThreadPool = Executors.newScheduledThreadPool(backgroundJobs.size());
-        for (Map.Entry<Runnable,Integer> entry : backgroundJobs.entrySet()) {
-            scheduledThreadPool.scheduleWithFixedDelay(entry.getKey(), 0, entry.getValue(), TimeUnit.SECONDS);
+        for (Map.Entry<Runnable,Long> entry : backgroundJobs.entrySet()) {
+            scheduledThreadPool.scheduleWithFixedDelay(entry.getKey(), 0, entry.getValue(), TimeUnit.MILLISECONDS);
         }
         backgroundJobs = null;
     }
 
     public static synchronized void shutdown() {
-        Logger.logDebugMessage("Stopping background jobs...");
+        Logger.logShutdownMessage("Stopping background jobs...");
         shutdownExecutor(scheduledThreadPool);
         scheduledThreadPool = null;
-        Logger.logDebugMessage("...Done");
+        Logger.logShutdownMessage("...Done");
     }
 
     public static void shutdownExecutor(ExecutorService executor) {
@@ -70,7 +74,7 @@ public final class ThreadPool {
             Thread.currentThread().interrupt();
         }
         if (! executor.isTerminated()) {
-            Logger.logMessage("some threads didn't terminate, forcing shutdown");
+            Logger.logShutdownMessage("some threads didn't terminate, forcing shutdown");
             executor.shutdownNow();
         }
     }

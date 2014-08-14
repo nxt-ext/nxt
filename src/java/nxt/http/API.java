@@ -70,6 +70,7 @@ public final class API {
             connector.setPort(port);
             connector.setHost(host);
             connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+            connector.setReuseAddress(true);
             apiServer.addConnector(connector);
 
             HandlerList apiHandlers = new HandlerList();
@@ -138,7 +139,7 @@ public final class API {
             try {
                 apiServer.stop();
             } catch (Exception e) {
-                Logger.logDebugMessage("Failed to stop API server", e);
+                Logger.logShutdownMessage("Failed to stop API server", e);
             }
         }
     }
