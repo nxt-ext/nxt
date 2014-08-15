@@ -76,6 +76,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (peer == null) {
                         return;
                     }
+                    if (! Nxt.APPLICATION.equals(peer.getApplication())) {
+                        return;
+                    }
                     lastBlockchainFeeder = peer;
                     JSONObject response = peer.send(getCumulativeDifficultyRequest);
                     if (response == null) {
@@ -581,6 +584,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (transaction.getId().equals(Long.valueOf(0L))) {
                             throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                         }
+                        if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905"))
+                                && previousLastBlock.getHeight() >= 209885) {
+                            throw new TransactionNotAcceptedException("Account disabled", transaction);
+                        }
                         if (transaction.isDuplicate(duplicates)) {
                             throw new TransactionNotAcceptedException("Transaction is a duplicate: "
                                     + transaction.getStringId(), transaction);
@@ -864,6 +871,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                                if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905"))
+                                        && currentBlock.getHeight() > 209885) {
+                                    throw new NxtException.NotValidException("Account disabled");
+                                }
                                 if (!transaction.verify()) {
                                     throw new NxtException.NotValidException("Invalid transaction signature");
                                 }
