@@ -37,13 +37,13 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.state) {
 				//if no new blocks in 6 hours, show blockchain download progress..
 				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
-				if (timeDiff > 60 * 60 * 6) {
+				if (timeDiff > 60 * 60 * 18) {
 					if (timeDiff > 60 * 60 * 24 * 14) {
 						NRS.setStateInterval(30);
 					} else if (timeDiff > 60 * 60 * 24 * 7) {
 						//second to last week
 						NRS.setStateInterval(15);
-					} else if (timeDiff > 60 * 60 * 24) {
+					} else {
 						//last week
 						NRS.setStateInterval(10);
 					}
@@ -146,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
 				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
-				if (timeDiff < 60 * 60 * 24) {
+				if (timeDiff < 60 * 60 * 18) {
 					if (timeDiff < 60 * 60) {
 						NRS.setStateInterval(30);
 					} else {
@@ -171,7 +171,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (timeDiff > 60 * 60 * 24 * 7) {
 						//second to last week
 						NRS.setStateInterval(15);
-					} else if (timeDiff > 60 * 60 * 24) {
+					} else {
 						//last week
 						NRS.setStateInterval(10);
 					}
