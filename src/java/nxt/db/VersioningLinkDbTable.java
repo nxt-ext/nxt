@@ -2,6 +2,7 @@ package nxt.db;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -67,27 +68,29 @@ public abstract class VersioningLinkDbTable<R> extends LinkDbTable<R> {
         }
     }
 
-    public final void rollbackToA(Long idA, int height) {
-        rollbackTo(idColumnA(), idA, height);
-    }
-
-    public final void rollbackToB(Long idB, int height) {
-        rollbackTo(idColumnB(), idB, height);
-    }
-
-    private final void rollbackTo(String columnName, Long id, int height) {
+    @Override
+    final void rollback(int height) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
-                     + " WHERE " + columnName + " = ? AND height > ?");
-             PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()
-                     + " SET latest = TRUE WHERE " + columnName + " = ? AND height ="
-                     + " (SELECT MAX(height) FROM " + table() + " WHERE " + columnName + " = ?)")) {
-            pstmtDelete.setLong(1, id);
-            pstmtDelete.setInt(2, height);
-            pstmtDelete.executeUpdate();
-            pstmtSetLatest.setLong(1, id);
-            pstmtSetLatest.setLong(2, id);
-            pstmtSetLatest.executeUpdate();
+             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT " + idColumnA() + ", " + idColumnB()
+                     + " FROM " + table() + " WHERE height >= ?");
+             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + " WHERE height >= ?");
+             PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table() + " SET latest = TRUE "
+                     + "WHERE " + idColumnA() + " = ? AND " + idColumnB() + " = ? AND height = "
+                     + "(SELECT MAX(height) FROM " + table() + " WHERE " + idColumnA() + " = ? AND " + idColumnB() + " = ?)")) {
+            pstmtSelectToDelete.setInt(1, height);
+            try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
+                while (rs.next()) {
+                    Long idA = rs.getLong(idColumnA());
+                    Long idB = rs.getLong(idColumnB());
+                    pstmtDelete.setInt(1, height);
+                    pstmtDelete.executeUpdate();
+                    pstmtSetLatest.setLong(1, idA);
+                    pstmtSetLatest.setLong(2, idB);
+                    pstmtSetLatest.setLong(3, idA);
+                    pstmtSetLatest.setLong(4, idB);
+                    pstmtSetLatest.executeUpdate();
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

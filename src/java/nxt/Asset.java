@@ -31,7 +31,7 @@ public final class Asset {
         @Override
         protected void save(Connection con, Asset asset) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
-                    + "description, quantity, decimals) VALUES (?, ?, ?, ?, ?, ?)")) {
+                    + "description, quantity, decimals, height) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, asset.getId());
                 pstmt.setLong(++i, asset.getAccountId());
@@ -39,6 +39,7 @@ public final class Asset {
                 pstmt.setString(++i, asset.getDescription());
                 pstmt.setLong(++i, asset.getQuantityQNT());
                 pstmt.setByte(++i, asset.getDecimals());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -71,10 +72,6 @@ public final class Asset {
 
     static void addAsset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
         assetTable.insert(new Asset(transaction, attachment));
-    }
-
-    static void removeAsset(Long assetId) {
-        assetTable.delete(getAsset(assetId));
     }
 
     static void clear() {

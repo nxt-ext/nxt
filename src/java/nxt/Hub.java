@@ -72,10 +72,6 @@ public class Hub {
         hubTable.insert(new Hub(transaction, attachment));
     }
 
-    static void rollbackHub(Long accountId) {
-        hubTable.rollbackTo(accountId, Nxt.getBlockchain().getHeight());
-    }
-
     static void clear() {
         hubTable.truncate();
     }

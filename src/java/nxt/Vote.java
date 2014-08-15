@@ -25,12 +25,13 @@ public final class Vote {
         @Override
         protected void save(Connection con, Vote vote) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote (id, poll_id, voter_id, "
-                    + "vote_bytes) VALUES (?, ?, ?, ?)")) {
+                    + "vote_bytes, height) VALUES (?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, vote.getId());
                 pstmt.setLong(++i, vote.getPollId());
                 pstmt.setLong(++i, vote.getVoterId());
                 pstmt.setBytes(++i, vote.getVote());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }

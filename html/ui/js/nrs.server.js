@@ -193,6 +193,22 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 
+		if (data.referencedTransactionFullHash) {
+			if (!/^[a-z0-9]{64}$/.test(data.referencedTransactionFullHash)) {
+				if (callback) {
+					callback({
+						"errorCode": -1,
+						"errorDescription": $.t("error_invalid_referenced_transaction_hash")
+					}, data);
+				} else {
+					$.growl($.t("error_invalid_referenced_transaction_hash"), {
+						"type": "danger"
+					});
+				}
+				return;
+			}
+		}
+
 		if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
 			if (NRS.rememberPassword) {
 				secretPhrase = _password;
@@ -315,6 +331,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
 					response.errorDescription = NRS.translateServerError(response);
+					delete response.fullHash;
 					if (!response.errorCode) {
 						response.errorCode = -1;
 					}
@@ -340,7 +357,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						callback(response, data);
 					}
-					if (data.referencedTransactionFullHash) {
+					if (data.referencedTransactionFullHash && !response.errorCode) {
 						$.growl($.t("info_referenced_transaction_hash"), {
 							"type": "info"
 						});

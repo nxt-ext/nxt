@@ -783,16 +783,6 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    // NOTE: when undo is called, lastBlock has already been set to the previous block
-    void undo() throws TransactionType.UndoNotSupportedException {
-        Account senderAccount = Account.getAccount(senderId);
-        senderAccount.undo(this.getHeight());
-        Account recipientAccount = Account.getAccount(recipientId);
-        for (Appendix.AbstractAppendix appendage : appendages) {
-            appendage.undo(this, senderAccount, recipientAccount);
-        }
-    }
-
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }

@@ -590,9 +590,9 @@
 	"balance_not_leased_out": "Your account effective balance is not leased out.",
 	"balance_leasing_help": "<strong>Remember</strong>: Once submitted the lease cannot be cancelled.",
 	"x_lessor": "1 lessor",
-	"x_lessor_plural": "__x__ lessors",
+	"x_lessor_plural": "__count__ lessors",
 	"x_lessor_lease": "1 lessor has leased their effective balance to your account.",
-	"x_lessor_lease_plural": "__x__ lessors have leased their effective balance to your account.",
+	"x_lessor_lease_plural": "__count__ lessors have leased their effective balance to your account.",
 	"percent_complete": "__percent__% Complete",
 	"percent_seeded": "__percent__% Seeded",
 	"fork_warning": "<strong>Warning</strong>: You are most likely on a fork (you have forged the last 10 blocks).",
@@ -682,7 +682,7 @@
 	"error_assets_save_db": "Note that the assets could not be saved in the database.",
 	"error_fractions": "Fractions are not allowed.",
 	"error_asset_decimals": "Only 1 digit after the decimal mark is allowed for this asset.",
-	"error_asset_decimals_plural": "Only __count digit after the decimal mark are allowed for this asset.",
+	"error_asset_decimals_plural": "Only __count__ digit after the decimal mark are allowed for this asset.",
 	"error_decimals": "Only 1 digit after the decimal mark is allowed.",
 	"error_decimals_plural": "Only __count__ digits after the decimal mark are allowed.",
 	"error_comma_not_allowed": "Comma is not allowed, use a dot instead.",
@@ -882,5 +882,7 @@
 	"my_store": "My Store",
 	"advanced_uppercase": "Advanced",
 	"numeric_account_id": "Numeric Account ID",
-	"status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>. You should fund it with some coins."
+	"status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>. You should fund it with some coins.",
+	"checking_for_updates": "Checking for updates...",
+	"error_invalid_referenced_transaction_hash": "Invalid referenced transaction hash."
 }

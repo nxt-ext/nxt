@@ -228,10 +228,6 @@ public abstract class Order {
             matchOrders(attachment.getAssetId());
         }
 
-        static void rollbackOrder(Long orderId) {
-            askOrderTable.rollbackTo(orderId, Nxt.getBlockchain().getHeight());
-        }
-
         static void removeOrder(Long orderId) {
             askOrderTable.delete(getAskOrder(orderId));
         }
@@ -361,10 +357,6 @@ public abstract class Order {
             Bid order = new Bid(transaction, attachment);
             bidOrderTable.insert(order);
             matchOrders(attachment.getAssetId());
-        }
-
-        static void rollbackOrder(Long orderId) {
-            bidOrderTable.rollbackTo(orderId, Nxt.getBlockchain().getHeight());
         }
 
         static void removeOrder(Long orderId) {

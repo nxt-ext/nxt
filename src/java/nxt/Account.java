@@ -129,18 +129,6 @@ public final class Account {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
-                int height = block.getHeight();
-                for (Account account : getLeasingAccounts()) {
-                    if (height == account.currentLeasingHeightFrom || height == account.currentLeasingHeightTo) {
-                        accountTable.rollbackTo(account.getId(), height - 1);
-                    }
-                }
-            }
-        }, BlockchainProcessor.Event.BLOCK_POPPED);
-
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
                 if (block.getHeight() % 1440 != 0) {
                     return;
                 }
@@ -154,6 +142,7 @@ public final class Account {
                 }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+
     }
 
     private static final int maxTrackedBalanceConfirmations = 2881;
@@ -612,7 +601,7 @@ public final class Account {
 
     void apply(byte[] key, int height) {
         if (! setOrVerify(key, this.creationHeight)) {
-            throw new IllegalStateException("Generator public key mismatch");
+            throw new IllegalStateException("Public key mismatch");
         }
         if (this.publicKey == null) {
             throw new IllegalStateException("Public key has not been set for account " + Convert.toUnsignedLong(id)
@@ -621,21 +610,6 @@ public final class Account {
         if (this.keyHeight == -1 || this.keyHeight > height) {
             this.keyHeight = height;
             accountTable.insert(this);
-        }
-    }
-
-    //TODO
-    void undo(int height) {
-        if (this.keyHeight >= height) {
-            Logger.logDebugMessage("Unsetting key for account " + Convert.toUnsignedLong(id) + " at height " + height
-                    + ", was previously set at height " + keyHeight);
-            this.publicKey = null;
-            this.keyHeight = -1;
-            accountTable.insert(this);
-        }
-        if (this.creationHeight == height) {
-            Logger.logDebugMessage("Removing account " + Convert.toUnsignedLong(id) + " which was created in the popped off block");
-            accountTable.delete(this);
         }
     }
 
@@ -733,7 +707,6 @@ public final class Account {
         }
     }
 
-    //TODO: undo
     private void addToGuaranteedBalanceNQT(long amountNQT) {
         if (amountNQT <= 0) {
             return;

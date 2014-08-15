@@ -4,16 +4,18 @@ import nxt.util.CountingInputStream;
 import nxt.util.CountingOutputStream;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -57,6 +59,14 @@ public final class PeerServlet extends HttpServlet {
         JSONObject response = new JSONObject();
         response.put("error", "Unsupported protocol!");
         UNSUPPORTED_PROTOCOL = JSON.prepare(response);
+    }
+
+    private boolean isGzipEnabled;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        isGzipEnabled = Boolean.parseBoolean(config.getInitParameter("isGzipEnabled"));
     }
 
     @Override
@@ -113,13 +123,21 @@ public final class PeerServlet extends HttpServlet {
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
-        CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(cos, "UTF-8"))) {
-            response.writeJSONString(writer);
+        long byteCount;
+        if (isGzipEnabled) {
+            try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
+                response.writeJSONString(writer);
+            }
+            byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
+        } else {
+            CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+            try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
+                response.writeJSONString(writer);
+            }
+            byteCount = cos.getCount();
         }
-
         if (peer != null) {
-            peer.updateUploadedVolume(cos.getCount());
+            peer.updateUploadedVolume(byteCount);
         }
     }
 

@@ -1,10 +1,12 @@
 /.idea/
+/nxt.iml
 /nxt_db/
 /webapps/
 /classes/
 /*.log
 /*.log.*
 /html/doc/*
+/html/**/*.gz
 /keystore
 /nxt.jar
 /nxt_test_db/
@@ -17,5 +19,6 @@
 /.classpath
 /.project
 /.settings/
+/compile.bat
 deploy.sh
 

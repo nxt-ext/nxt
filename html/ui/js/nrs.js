@@ -69,6 +69,10 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.dgsBlockPassed = false;
 	NRS.PKAnnouncementBlockPassed = false;
 
+	var stateInterval;
+	var stateIntervalSeconds = 30;
+	var isScanning = false;
+
 	NRS.init = function() {
 		if (window.location.port && window.location.port != "6876") {
 			$(".testnet_only").hide();
@@ -139,10 +143,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		//every 30 seconds check for new block..
-		setInterval(function() {
-			NRS.getState();
-		}, 1000 * 30);
+		NRS.setStateInterval(30);
 
 		if (!NRS.isTestNet) {
 			setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
@@ -210,29 +211,50 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	}
 
+	NRS.setStateInterval = function(seconds) {
+		if (seconds == stateIntervalSeconds && stateInterval) {
+			return;
+		}
+
+		if (stateInterval) {
+			clearInterval(stateInterval);
+		}
+
+		stateIntervalSeconds = seconds;
+
+		stateInterval = setInterval(function() {
+			NRS.getState();
+		}, 1000 * seconds);
+	}
+
 	NRS.getState = function(callback) {
 		NRS.sendRequest("getBlockchainStatus", function(response) {
 			if (response.errorCode) {
 				//todo
 			} else {
-				if (!("lastBlock" in NRS.state)) {
-					//first time...
-					NRS.state = response;
+				var firstTime = !("lastBlock" in NRS.state);
+				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
 
+				NRS.state = response;
+
+				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
-
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
 				} else if (NRS.state.isScanning) {
+					//do nothing but reset NRS.state so that when isScanning is done, everything is reset.
+					isScanning = true;
+				} else if (isScanning) {
+					//rescan is done, now we must reset everything...
+					isScanning = false;
 					NRS.blocks = [];
 					NRS.tempBlocks = [];
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-					NRS.getInitialTransactions();
 					if (NRS.account) {
+						NRS.getInitialTransactions();
 						NRS.getAccountInfo();
 					}
-				} else if (NRS.state.lastBlock != response.lastBlock) {
+				} else if (previousLastBlock != NRS.state.lastBlock) {
 					NRS.tempBlocks = [];
-					NRS.state = response;
 					if (NRS.account) {
 						NRS.getAccountInfo();
 					}
@@ -245,6 +267,10 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
+					}
+					//only done so that download progress meter updates correctly based on lastFeederHeight
+					if (NRS.downloadingBlockchain) {
+						NRS.updateBlockchainDownloadProgress();
 					}
 				}
 
@@ -397,12 +423,15 @@ var NRS = (function(NRS, $, undefined) {
 		var output = "";
 
 		if (NRS.pageNumber == 2) {
-			output += "<a href='#' data-page='1'>&laquo; " + $.t("prevous_page") + "</a>";
+			output += "<a href='#' data-page='1'>&laquo; " + $.t("previous_page") + "</a>";
 		} else if (NRS.pageNumber > 2) {
 			//output += "<a href='#' data-page='1'>&laquo; First Page</a>";
 			output += " <a href='#' data-page='" + (NRS.pageNumber - 1) + "'>&laquo; " + $.t("previous_page") + "</a>";
 		}
 		if (NRS.hasMorePages) {
+			if (NRS.pageNumber > 1) {
+				output += "&nbsp;&nbsp;&nbsp;";
+			}
 			output += " <a href='#' data-page='" + (NRS.pageNumber + 1) + "'>" + $.t("next_page") + " &raquo;</a>";
 		}
 
@@ -708,10 +737,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			accountLeasingLabel += $.t("x_lessor", {
-				"x": NRS.accountInfo.lessors.length
+				"count": NRS.accountInfo.lessors.length
 			});
 			accountLeasingStatus += $.t("x_lessor_lease", {
-				"x": NRS.accountInfo.lessors.length
+				"count": NRS.accountInfo.lessors.length
 			});
 
 			var rows = "";
@@ -865,7 +894,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#downloading_blockchain .progress").hide();
 		} else {
 			$("#downloading_blockchain .progress").show();
-			$("#downloading_blockchain .progress-bar").css("width", percentage + "%").prop("aria-valuenow", percentage);
+			$("#downloading_blockchain .progress-bar").css("width", percentage + "%");
 			$("#downloading_blockchain .sr-only").html($.t("percent_complete", {
 				"percent": percentage
 			}));

@@ -50,8 +50,8 @@ final class DbVersion {
                 }
                 stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
                 Db.commitTransaction();
-            } catch (SQLException e) {
-                con.rollback();
+            } catch (Exception e) {
+                Db.rollbackTransaction();
                 throw e;
             }
         } catch (SQLException e) {
@@ -210,9 +210,10 @@ final class DbVersion {
                             "('46.109.165.4'), ('panzetti.vps.nxtcrypto.org'), ('80.137.230.115')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('109.87.169.253'), ('nxtnet.fr'), ('node10.mynxtcoin.org'), ('50.112.241.97'), " +
-                            "('node9.mynxtcoin.org'), ('2.84.142.149'), ('192.241.223.132'), ('node3.mynxtcoin.org'), " +
-                            "('bug.airdns.org')");
+                            "('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), ('node10.mynxtcoin.org'), " +
+                            "('node3.mynxtcoin.org'), ('109.87.169.253'), ('nxtnet.fr'), ('50.112.241.97'), " +
+                            "('2.84.142.149'), ('bug.airdns.org'), ('83.212.103.14'), ('62.210.131.30'), ('104.131.254.22'), " +
+                            "('46.28.111.249')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
@@ -288,25 +289,25 @@ final class DbVersion {
             case 58:
                 apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp DESC)");
             case 59:
-                apply("ALTER TABLE transaction ADD COLUMN version TINYINT");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS version TINYINT");
             case 60:
                 apply("UPDATE transaction SET version = 0");
             case 61:
                 apply("ALTER TABLE transaction ALTER COLUMN version SET NOT NULL");
             case 62:
-                apply("ALTER TABLE transaction ADD COLUMN has_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 63:
-                apply("ALTER TABLE transaction ADD COLUMN has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 64:
                 apply("UPDATE transaction SET has_message = TRUE WHERE type = 1 AND subtype = 0");
             case 65:
-                apply("ALTER TABLE transaction ADD COLUMN has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
             case 66:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_height INT DEFAULT NULL");
             case 67:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_id BIGINT DEFAULT NULL");
             case 68:
-				apply("ALTER TABLE transaction ADD COLUMN has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 69:
                 apply("CREATE TABLE IF NOT EXISTS alias (id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES transaction (id), "
                         + "account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
@@ -328,7 +329,8 @@ final class DbVersion {
             case 75:
                 apply("CREATE TABLE IF NOT EXISTS asset (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), account_id BIGINT NOT NULL, "
-                        + "name VARCHAR NOT NULL, description VARCHAR, quantity BIGINT NOT NULL, decimals TINYINT NOT NULL)");
+                        + "name VARCHAR NOT NULL, description VARCHAR, quantity BIGINT NOT NULL, decimals TINYINT NOT NULL, "
+                        + "height INT NOT NULL)");
             case 76:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_idx ON asset (id)");
             case 77:
@@ -369,7 +371,7 @@ final class DbVersion {
             case 89:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                        + "transaction (id), poll_id BIGINT NOT NULL, "
-                        + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL)");
+                        + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
             case 90:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
             case 91:
@@ -378,7 +380,7 @@ final class DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
-                        +" binary_options BOOLEAN NOT NULL)");
+                        +" binary_options BOOLEAN NOT NULL, height INT NOT NULL)");
             case 93:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
             case 94:
@@ -448,10 +450,15 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS purchase_feedback_id_height_idx ON purchase_feedback (id, height DESC)");
             case 115:
                 apply("CREATE TABLE IF NOT EXISTS purchase_public_feedback (db_id INT IDENTITY, id BIGINT NOT NULL, public_feedback "
-                        + " VARCHAR NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                        + "VARCHAR NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 116:
                 apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_id_height_idx ON purchase_public_feedback (id, height DESC)");
             case 117:
+                apply("CREATE TABLE IF NOT EXISTS unconfirmed_transaction (id BIGINT NOT NULL, transaction_bytes VARBINARY NOT NULL, "
+                        + "height INT NULL DEFAULT NULL)");
+            case 118:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
+            case 119:
                 apply("ALTER TABLE poll DROP COLUMN IF EXISTS binary_options");
             case 118:
                 apply("ALTER TABLE poll ADD IF NOT EXISTS asset_id BIGINT");

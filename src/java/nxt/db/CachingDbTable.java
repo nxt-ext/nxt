@@ -11,12 +11,6 @@ public abstract class CachingDbTable<T> extends DbTable<T> {
 
     protected abstract Long getId(T t);
 
-    protected abstract T load(Connection con, ResultSet rs) throws SQLException;
-
-    protected abstract void save(Connection con, T t) throws SQLException;
-
-    protected abstract void delete(Connection con, T t) throws SQLException;
-
     protected String defaultSort() {
         return "ORDER BY height DESC";
     }

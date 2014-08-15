@@ -111,19 +111,28 @@ public abstract class VersioningDbTable<T> extends CachingDbTable<T> {
         }
     }
 
-    public final void rollbackTo(Long id, int height) {
+    @Override
+    final void rollback(int height) {
         try (Connection con = Db.getConnection();
+             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT id FROM " + table()
+                    + " WHERE height >= ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
-                     + " WHERE id = ? AND height > ?");
+                     + " WHERE height >= ?");
              PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()
                      + " SET latest = TRUE WHERE id = ? AND height ="
                      + " (SELECT MAX(height) FROM " + table() + " WHERE id = ?)")) {
-            pstmtDelete.setLong(1, id);
-            pstmtDelete.setInt(2, height);
-            pstmtDelete.executeUpdate();
-            pstmtSetLatest.setLong(1, id);
-            pstmtSetLatest.setLong(2, id);
-            pstmtSetLatest.executeUpdate();
+            pstmtSelectToDelete.setInt(1, height);
+            try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
+                while (rs.next()) {
+                    Long id = rs.getLong("id");
+                    pstmtDelete.setInt(1, height);
+                    pstmtDelete.executeUpdate();
+                    pstmtSetLatest.setLong(1, id);
+                    pstmtSetLatest.setLong(2, id);
+                    pstmtSetLatest.executeUpdate();
+                    Db.getCache(table()).remove(id);
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

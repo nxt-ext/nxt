@@ -5,6 +5,7 @@ import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public interface Appendix {
 
@@ -81,8 +82,6 @@ public interface Appendix {
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
-
-        abstract void undo(Transaction transaction, Account senderAccount, Account recipientAccount) throws TransactionType.UndoNotSupportedException;
 
     }
 
@@ -167,9 +166,6 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
         public byte[] getMessage() {
             return message;
         }
@@ -234,9 +230,6 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
-
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public final EncryptedData getEncryptedData() {
             return encryptedData;
@@ -354,11 +347,7 @@ public interface Appendix {
 
         PublicKeyAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
             super(attachmentData);
-            byte[] publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
-            if (publicKey.length != 32) {
-                throw new NxtException.NotValidException("Invalid recipient public key: " + attachmentData.get("recipientPublicKey"));
-            }
-            this.publicKey = publicKey;
+            this.publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
         }
 
         public PublicKeyAnnouncement(byte[] publicKey) {
@@ -390,6 +379,9 @@ public interface Appendix {
             if (! transaction.getType().hasRecipient()) {
                 throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
             }
+            if (publicKey.length != 32) {
+                throw new NxtException.NotValidException("Invalid recipient public key length: " + Convert.toHexString(publicKey));
+            }
             Long recipientId = transaction.getRecipientId();
             if (! Account.getId(this.publicKey).equals(recipientId)) {
                 throw new NxtException.NotValidException("Announced public key does not match recipient accountId");
@@ -398,19 +390,16 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Public key announcements not enabled for version 0 transactions");
             }
             Account recipientAccount = Account.getAccount(recipientId);
-            if (recipientAccount != null && recipientAccount.getPublicKey() != null) {
-                throw new NxtException.NotCurrentlyValidException("Public key for this account has already been announced");
+            if (recipientAccount != null && recipientAccount.getPublicKey() != null && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
+                throw new NxtException.NotCurrentlyValidException("A different public key for this account has already been announced");
             }
         }
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            recipientAccount.apply(this.publicKey, transaction.getHeight());
-        }
-
-        @Override
-        void undo(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            recipientAccount.undo(transaction.getHeight());
+            if (recipientAccount.setOrVerify(publicKey, transaction.getHeight())) {
+                recipientAccount.apply(this.publicKey, transaction.getHeight());
+            }
         }
 
         public byte[] getPublicKey() {
