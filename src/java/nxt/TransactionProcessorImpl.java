@@ -332,7 +332,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    private List<Transaction> processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
+    List<Transaction> processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
         List<Transaction> sendToPeersTransactions = new ArrayList<>();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
