@@ -700,9 +700,6 @@ final class TransactionImpl implements Transaction {
         if (signature == null) {
             return false;
         }
-        if (BlockchainImpl.getInstance().getLastBlock().getHeight() >= 209886 && account.getId().equals(Convert.parseUnsignedLong("10715382765594435905"))) {
-            return false;
-        }
         byte[] data = zeroSignature(getBytes());
         return Crypto.verify(signature, data, senderPublicKey, useNQT()) && account.setOrVerify(senderPublicKey, this.getHeight());
     }
