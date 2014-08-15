@@ -15,7 +15,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -86,7 +85,7 @@ public final class PeerServlet extends HttpServlet {
 
             JSONObject request;
             CountingInputStream cis = new CountingInputStream(req.getInputStream());
-            try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
+            try (Reader reader = new InputStreamReader(cis, "UTF-8")) {
                 request = (JSONObject) JSONValue.parse(reader);
             }
             if (request == null) {
