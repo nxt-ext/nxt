@@ -315,6 +315,32 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
+        private void popOffTo(Block commonBlock) {
+            try {
+                Long lastBlockId = blockchain.getLastBlock().getId();
+                while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                    lastBlockId = popLastBlock();
+                }
+            } catch (TransactionType.UndoNotSupportedException e) {
+                Logger.logDebugMessage(e.getMessage());
+                Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
+                resetTo(commonBlock);
+            }
+        }
+
+        private void resetTo(Block commonBlock) {
+            if (commonBlock.getNextBlockId() != null) {
+                Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+                Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
+                BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
+            }
+            Logger.logMessage("Will do a re-scan");
+            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
+            scan();
+            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
+            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+        }
+
     };
 
     private BlockchainProcessorImpl() {
@@ -622,32 +648,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Peers.sendToSomePeers(block);
         }
 
-    }
-
-    private void popOffTo(Block commonBlock) {
-        try {
-            Long lastBlockId = blockchain.getLastBlock().getId();
-            while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                lastBlockId = popLastBlock();
-            }
-        } catch (TransactionType.UndoNotSupportedException e) {
-            Logger.logDebugMessage(e.getMessage());
-            Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-            resetTo(commonBlock);
-        }
-    }
-
-    private void resetTo(Block commonBlock) {
-        if (commonBlock.getNextBlockId() != null) {
-            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-            Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-            BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
-        }
-        Logger.logMessage("Will do a re-scan");
-        blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-        scan();
-        blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
-        Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
     }
 
     private Long popLastBlock() throws TransactionType.UndoNotSupportedException {
