@@ -66,7 +66,7 @@ public abstract class DbTable<T> extends BasicDbTable {
 
     public List<T> getAll() {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " " + defaultSort())) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table())){ //todo: submit bug + " " + defaultSort())) {
             return getManyBy(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
