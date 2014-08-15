@@ -631,6 +631,10 @@ public final class Peers {
         }
 
         if (selectedPeers.size() > 0) {
+            if (! Peers.enableHallmarkProtection) {
+                return selectedPeers.get(ThreadLocalRandom.current().nextInt(selectedPeers.size()));
+            }
+
             long totalWeight = 0;
             for (Peer peer : selectedPeers) {
                 long weight = peer.getWeight();
