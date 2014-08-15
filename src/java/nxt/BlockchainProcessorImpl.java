@@ -315,32 +315,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        private void popOffTo(Block commonBlock) {
-            try {
-                Long lastBlockId = blockchain.getLastBlock().getId();
-                while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                    lastBlockId = popLastBlock();
-                }
-            } catch (TransactionType.UndoNotSupportedException e) {
-                Logger.logDebugMessage(e.getMessage());
-                Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-                resetTo(commonBlock);
-            }
-        }
-
-        private void resetTo(Block commonBlock) {
-            if (commonBlock.getNextBlockId() != null) {
-                Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-                Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-                BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
-            }
-            Logger.logMessage("Will do a re-scan");
-            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-            scan();
-            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
-            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-        }
-
     };
 
     private BlockchainProcessorImpl() {
@@ -525,6 +499,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (block.getId().equals(Long.valueOf(0L)) || BlockDb.hasBlock(block.getId())) {
                     throw new BlockNotAcceptedException("Duplicate block or invalid id");
                 }
+                if (block.getId().equals(Convert.parseUnsignedLong("11441067699374044604"))) {
+                    throw new BlockNotAcceptedException("Blacklisted block id");
+                }
                 if (! block.verifyGenerationSignature()) {
                     throw new BlockNotAcceptedException("Generation signature verification failed");
                 }
@@ -572,6 +549,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (!transaction.verify()) {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
+                        }
+                        if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905")) && previousLastBlock.getHeight() >= 209885) {
+                            throw new TransactionNotAcceptedException("Account disabled", transaction);
                         }
                         if (!EconomicClustering.verifyFork(transaction)) {
                             Logger.logDebugMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
@@ -648,6 +628,32 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Peers.sendToSomePeers(block);
         }
 
+    }
+
+    private void popOffTo(Block commonBlock) {
+        try {
+            Long lastBlockId = blockchain.getLastBlock().getId();
+            while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                lastBlockId = popLastBlock();
+            }
+        } catch (TransactionType.UndoNotSupportedException e) {
+            Logger.logDebugMessage(e.getMessage());
+            Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
+            resetTo(commonBlock);
+        }
+    }
+
+    private void resetTo(Block commonBlock) {
+        if (commonBlock.getNextBlockId() != null) {
+            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+            Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
+            BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
+        }
+        Logger.logMessage("Will do a re-scan");
+        blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
+        scan();
+        blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
+        Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
     }
 
     private Long popLastBlock() throws TransactionType.UndoNotSupportedException {
@@ -865,6 +871,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid transaction version");
                                 }
+                                if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905")) && currentBlock.getHeight() > 209885) {
+                                    throw new NxtException.NotValidException("Account disabled");
+                                }
                                 if (! EconomicClustering.verifyFork(transaction)) {
                                     Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
                                             + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight());
@@ -903,8 +912,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage(e.toString(), e);
                     Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
                             + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
+                    List<TransactionImpl> lostTransactions = new ArrayList<>();
+                    for (Block block = currentBlock ; block != null; block = block.getNextBlockId() != null ? BlockDb.findBlock(block.getNextBlockId()) : null) {
+                        lostTransactions.addAll((List<TransactionImpl>)block.getTransactions());
+                    }
                     BlockDb.deleteBlocksFrom(currentBlockId);
                     scan();
+                    transactionProcessor.processTransactions(lostTransactions, false);
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
