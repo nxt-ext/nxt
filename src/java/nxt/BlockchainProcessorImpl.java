@@ -906,9 +906,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage(e.toString(), e);
                     Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
                             + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
-                    popOffTo(blockchain.getBlock(currentBlock.getPreviousBlockId()));
-                    //BlockDb.deleteBlocksFrom(currentBlockId);
+                    List<TransactionImpl> lostTransactions = new ArrayList<>();
+                    for (Block block = currentBlock ; block != null; block = BlockDb.findBlock(currentBlock.getNextBlockId())) {
+                        lostTransactions.addAll((List<TransactionImpl>)block.getTransactions());
+                    }
+                    BlockDb.deleteBlocksFrom(currentBlockId);
                     scan();
+                    transactionProcessor.processTransactions(lostTransactions, false);
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
