@@ -547,9 +547,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
-                        if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905")) && previousLastBlock.getHeight() >= 209885) {
-                            throw new TransactionNotAcceptedException("Account disabled", transaction);
-                        }
                         if (!EconomicClustering.verifyFork(transaction)) {
                             Logger.logDebugMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
                                     + transaction.getStringId());
@@ -872,9 +869,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid transaction version");
-                                }
-                                if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905")) && currentBlock.getHeight() > 209885) {
-                                    throw new NxtException.NotValidException("Account disabled");
                                 }
                                 if (! EconomicClustering.verifyFork(transaction)) {
                                     Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
