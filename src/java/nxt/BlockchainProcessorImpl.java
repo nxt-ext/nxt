@@ -835,7 +835,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Trade.clear();
             Vote.clear();
             DigitalGoodsStore.clear();
-            List<TransactionImpl> lostTransactions = new ArrayList<>(transactionProcessor.getAllUnconfirmedTransactions());
+            Map<Long,TransactionImpl> lostTransactions = new HashMap<>();
+            for (TransactionImpl lostTransaction : transactionProcessor.getAllUnconfirmedTransactions()) {
+                lostTransactions.put(lostTransaction.getId(), lostTransaction);
+            }
             transactionProcessor.clear();
             Generator.clear();
             blockchain.setLastBlock(BlockDb.findBlock(Genesis.GENESIS_BLOCK_ID));
@@ -911,12 +914,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
                                 + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                         if (currentBlock != null) {
-                            lostTransactions.addAll(currentBlock.getTransactions());
+                            for (TransactionImpl lostTransaction : currentBlock.getTransactions()) {
+                                lostTransactions.put(lostTransaction.getId(), lostTransaction);
+                            }
                         }
                         while (rs.next()) {
                             try {
                                 currentBlock = BlockDb.loadBlock(con, rs);
-                                lostTransactions.addAll(currentBlock.getTransactions());
+                                for (TransactionImpl lostTransaction : currentBlock.getTransactions()) {
+                                    lostTransactions.put(lostTransaction.getId(), lostTransaction);
+                                }
                             } catch (NxtException.ValidationException ignore) {
                             }
                         }
@@ -927,7 +934,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
-            transactionProcessor.processTransactions(lostTransactions, true);
+            transactionProcessor.processTransactions(new ArrayList<>(lostTransactions.values()), true);
             validateAtScan = false;
             Logger.logMessage("...done");
             isScanning = false;
