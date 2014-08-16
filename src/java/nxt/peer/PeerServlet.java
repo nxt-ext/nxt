@@ -34,6 +34,7 @@ public final class PeerServlet extends HttpServlet {
 
     static {
         Map<String,PeerRequestHandler> map = new HashMap<>();
+        map.put("addPeers", AddPeers.instance);
         map.put("getCumulativeDifficulty", GetCumulativeDifficulty.instance);
         map.put("getInfo", GetInfo.instance);
         map.put("getMilestoneBlockIds", GetMilestoneBlockIds.instance);
