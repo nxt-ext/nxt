@@ -631,10 +631,6 @@ public final class Peers {
         }
 
         if (selectedPeers.size() > 0) {
-            if (! Peers.enableHallmarkProtection) {
-                return selectedPeers.get(ThreadLocalRandom.current().nextInt(selectedPeers.size()));
-            }
-
             long totalWeight = 0;
             for (Peer peer : selectedPeers) {
                 long weight = peer.getWeight();
@@ -684,7 +680,7 @@ public final class Peers {
     private static int getNumberOfConnectedPublicPeers() {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
-            if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+            if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null && peer.getWeight() > 0) {
                 numberOfConnectedPeers++;
             }
         }
