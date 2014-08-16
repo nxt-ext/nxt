@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.CachingDbTable;
 import nxt.db.Db;
 import nxt.db.DbTable;
 import nxt.util.*;
@@ -22,7 +23,7 @@ public final class Poll {
 
     public static final byte NO_ASSET_CODE = 0;
 
-    private static class PollTable extends DbTable<Poll> {
+    private static class PollTable extends CachingDbTable<Poll> {
         @Override
         protected String table() {
             return "poll";
@@ -37,7 +38,7 @@ public final class Poll {
         protected void save(Connection con, Poll poll) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
                     + "options, finish, option_model, voting_model, min_balance, asset_id, "
-                    + "min_num_options, max_num_options, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + "min_num_options, max_num_options, active, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setString(++i, poll.getName());
@@ -55,6 +56,7 @@ public final class Poll {
                 pstmt.setByte(++i, poll.getMinNumberOfOptions());
                 pstmt.setByte(++i, poll.getMaxNumberOfOptions());
                 pstmt.setBoolean(++i, poll.isActive());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -75,6 +77,11 @@ public final class Poll {
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
+        }
+
+        @Override
+        protected Long getId(Poll poll) {
+            return poll.getId();
         }
     }
 

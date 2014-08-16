@@ -248,7 +248,7 @@ final class DbVersion {
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
                 if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                    //BlockchainProcessorImpl.getInstance().validateAtNextScan();
                 }
                 apply(null);
             case 53:
@@ -370,7 +370,7 @@ final class DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS bid_order_asset_id_price_idx ON bid_order (asset_id, price DESC)");
             case 89:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
-                       + "transaction (id), poll_id BIGINT NOT NULL, "
+                        + "transaction (id), poll_id BIGINT NOT NULL, "
                         + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
             case 90:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
@@ -380,7 +380,8 @@ final class DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
-                        +" binary_options BOOLEAN NOT NULL, height INT NOT NULL)");
+                        + "finish INT NOT NULL, option_model TINYINT NOT NULL, voting_model TINYINT NOT NULL, min_balance BIGINT, "
+                        + "asset_id BIGINT, active BOOLEAN, height INT NOT NULL)");
             case 93:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
             case 94:
@@ -459,31 +460,11 @@ final class DbVersion {
             case 118:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
             case 119:
-                apply("ALTER TABLE poll DROP COLUMN IF EXISTS binary_options");
-            case 118:
-                apply("ALTER TABLE poll ADD IF NOT EXISTS asset_id BIGINT");
-            case 119:
-                apply("ALTER TABLE poll ADD IF NOT EXISTS finish INT");
-            case 120:
-                apply("ALTER TABLE poll ADD IF NOT EXISTS option_model TINYINT");
-            case 121:
-                apply("ALTER TABLE poll ADD IF NOT EXISTS voting_model TINYINT");
-            case 122:
-                apply("ALTER TABLE poll ADD IF NOT EXISTS min_balance BIGINT");
-            case 123:
-                apply("ALTER TABLE poll ADD IF NOT EXISTS active BOOLEAN");
-            case 124:
                 apply("ALTER TABLE poll ADD FOREIGN KEY (asset_id) REFERENCES asset(id)");
-            case 125:
-                apply("ALTER TABLE poll ALTER COLUMN finish SET NOT NULL");
-            case 126:
-                apply("ALTER TABLE poll ALTER COLUMN option_model SET NOT NULL");
-            case 127:
-                apply("ALTER TABLE poll ALTER COLUMN voting_model SET NOT NULL");
-            case 128:
+            case 120:
                 apply("CREATE TABLE IF NOT EXISTS poll_results (db_id INT IDENTITY, id BIGINT NOT NULL, "
                         + "results_type TINYINT NOT NULL, results_json VARCHAR NOT NULL)");
-            case 129:
+            case 121:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
