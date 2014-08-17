@@ -150,7 +150,13 @@ public final class DigitalGoodsStore {
 
         @Override
         public int compareTo(Goods other) {
-            return name.compareTo(other.name);
+            if (!name.equals(other.name)) {
+                return name.compareTo(other.name);
+            }
+            if (!description.equals(other.description)) {
+                return description.compareTo(other.description);
+            }
+            return Long.compare(id, other.id);
         }
 
     }
