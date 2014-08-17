@@ -76,9 +76,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (peer == null) {
                         return;
                     }
-                    if (! Nxt.APPLICATION.equals(peer.getApplication())) {
-                        return;
-                    }
                     lastBlockchainFeeder = peer;
                     JSONObject response = peer.send(getCumulativeDifficultyRequest);
                     if (response == null) {
@@ -584,10 +581,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (transaction.getId().equals(Long.valueOf(0L))) {
                             throw new TransactionNotAcceptedException("Invalid transaction id", transaction);
                         }
-                        if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905"))
-                                && previousLastBlock.getHeight() >= 209885) {
-                            throw new TransactionNotAcceptedException("Account disabled", transaction);
-                        }
                         if (transaction.isDuplicate(duplicates)) {
                             throw new TransactionNotAcceptedException("Transaction is a duplicate: "
                                     + transaction.getStringId(), transaction);
@@ -841,10 +834,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             Trade.clear();
             Vote.clear();
             DigitalGoodsStore.clear();
-            Map<Long,TransactionImpl> lostTransactions = new HashMap<>();
-            for (TransactionImpl lostTransaction : transactionProcessor.getAllUnconfirmedTransactions()) {
-                lostTransactions.put(lostTransaction.getId(), lostTransaction);
-            }
+            Set<TransactionImpl> lostTransactions = new HashSet<>(transactionProcessor.getAllUnconfirmedTransactions());
             transactionProcessor.clear();
             Generator.clear();
             blockchain.setLastBlock(BlockDb.findBlock(Genesis.GENESIS_BLOCK_ID));
@@ -873,10 +863,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905"))
-                                        && currentBlock.getHeight() > 209885) {
-                                    throw new NxtException.NotValidException("Account disabled");
-                                }
                                 if (!transaction.verify()) {
                                     throw new NxtException.NotValidException("Invalid transaction signature");
                                 }
@@ -921,18 +907,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
                                 + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
                         if (currentBlock != null) {
-                            for (TransactionImpl lostTransaction : currentBlock.getTransactions()) {
-                                lostTransactions.put(lostTransaction.getId(), lostTransaction);
-                            }
+                            lostTransactions.addAll(currentBlock.getTransactions());
                         }
                         while (rs.next()) {
                             try {
                                 currentBlock = BlockDb.loadBlock(con, rs);
-                                for (TransactionImpl lostTransaction : currentBlock.getTransactions()) {
-                                    lostTransactions.put(lostTransaction.getId(), lostTransaction);
-                                }
-                            } catch (NxtException.ValidationException ignore) {
-                            }
+                                lostTransactions.addAll(currentBlock.getTransactions());
+                            } catch (NxtException.ValidationException ignore) {}
                         }
                         BlockDb.deleteBlocksFrom(currentBlockId);
                         scan();
@@ -941,7 +922,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
-            transactionProcessor.processTransactions(new ArrayList<>(lostTransactions.values()), true);
+            transactionProcessor.processTransactions(lostTransactions, true);
             validateAtScan = false;
             Logger.logMessage("...done");
             isScanning = false;
