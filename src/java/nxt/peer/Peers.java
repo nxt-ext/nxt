@@ -64,6 +64,7 @@ public final class Peers {
     static final int connectTimeout;
     static final int readTimeout;
     static final int blacklistingPeriod;
+    static final boolean getMorePeers;
 
     static final int DEFAULT_PEER_PORT = 7874;
     static final int TESTNET_PEER_PORT = 6874;
@@ -180,6 +181,7 @@ public final class Peers {
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
         usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
         savePeers = usePeersDb && Nxt.getBooleanProperty("nxt.savePeers");
+        getMorePeers = Nxt.getBooleanProperty("nxt.getMorePeers");
 
         ThreadPool.runBeforeStart(new Runnable() {
 
@@ -381,15 +383,33 @@ public final class Peers {
                         return;
                     }
                     JSONArray peers = (JSONArray)response.get("peers");
-                    if (peers == null) {
-                        return;
+                    Set<String> addedAddresses = new HashSet<>();
+                    if (peers != null) {
+                        for (Object announcedAddress : peers) {
+                            if (addPeer((String) announcedAddress) != null) {
+                                addedAddresses.add((String) announcedAddress);
+                            }
+                        }
+                        if (savePeers && addedNewPeer) {
+                            updateSavedPeers();
+                            addedNewPeer = false;
+                        }
                     }
-                    for (Object announcedAddress : peers) {
-                        addPeer((String) announcedAddress);
+
+                    JSONArray myPeers = new JSONArray();
+                    for (Peer myPeer : Peers.getAllPeers()) {
+                        if (! myPeer.isBlacklisted() && myPeer.getAnnouncedAddress() != null
+                                && myPeer.getState() == Peer.State.CONNECTED && myPeer.shareAddress()
+                                && ! addedAddresses.contains(myPeer.getAnnouncedAddress())
+                                && ! myPeer.getAnnouncedAddress().equals(peer.getAnnouncedAddress())) {
+                            myPeers.add(myPeer.getAnnouncedAddress());
+                        }
                     }
-                    if (savePeers && addedNewPeer) {
-                        updateSavedPeers();
-                        addedNewPeer = false;
+                    if (myPeers.size() > 0) {
+                        JSONObject request = new JSONObject();
+                        request.put("requestType", "addPeers");
+                        request.put("peers", myPeers);
+                        peer.send(JSON.prepareRequest(request));
                     }
 
                 } catch (Exception e) {
@@ -439,7 +459,7 @@ public final class Peers {
         if (! Constants.isOffline) {
             ThreadPool.scheduleThread(Peers.peerConnectingThread, 5);
             ThreadPool.scheduleThread(Peers.peerUnBlacklistingThread, 1);
-            if (Nxt.getBooleanProperty("nxt.getMorePeers")) {
+            if (Peers.getMorePeers) {
                 ThreadPool.scheduleThread(Peers.getMorePeersThread, 5);
             }
         }
@@ -631,6 +651,10 @@ public final class Peers {
         }
 
         if (selectedPeers.size() > 0) {
+            if (! Peers.enableHallmarkProtection) {
+                return selectedPeers.get(ThreadLocalRandom.current().nextInt(selectedPeers.size()));
+            }
+
             long totalWeight = 0;
             for (Peer peer : selectedPeers) {
                 long weight = peer.getWeight();
@@ -680,7 +704,8 @@ public final class Peers {
     private static int getNumberOfConnectedPublicPeers() {
         int numberOfConnectedPeers = 0;
         for (Peer peer : peers.values()) {
-            if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+            if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
+                    && (peer.getWeight() > 0 || ! Peers.enableHallmarkProtection)) {
                 numberOfConnectedPeers++;
             }
         }

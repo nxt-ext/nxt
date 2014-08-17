@@ -315,6 +315,32 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
+        private void popOffTo(Block commonBlock) {
+            try {
+                Long lastBlockId = blockchain.getLastBlock().getId();
+                while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                    lastBlockId = popLastBlock();
+                }
+            } catch (TransactionType.UndoNotSupportedException e) {
+                Logger.logDebugMessage(e.getMessage());
+                Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
+                resetTo(commonBlock);
+            }
+        }
+
+        private void resetTo(Block commonBlock) {
+            if (commonBlock.getNextBlockId() != null) {
+                Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+                Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
+                BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
+            }
+            Logger.logMessage("Will do a re-scan");
+            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
+            scan();
+            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
+            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
+        }
+
     };
 
     private BlockchainProcessorImpl() {
@@ -547,9 +573,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
-                        if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905")) && previousLastBlock.getHeight() >= 209885) {
-                            throw new TransactionNotAcceptedException("Account disabled", transaction);
-                        }
                         if (!EconomicClustering.verifyFork(transaction)) {
                             Logger.logDebugMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
                                     + transaction.getStringId());
@@ -627,32 +650,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     }
 
-    private void popOffTo(Block commonBlock) {
-        try {
-            Long lastBlockId = blockchain.getLastBlock().getId();
-            while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                lastBlockId = popLastBlock();
-            }
-        } catch (TransactionType.UndoNotSupportedException e) {
-            Logger.logDebugMessage(e.getMessage());
-            Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-            resetTo(commonBlock);
-        }
-    }
-
-    private void resetTo(Block commonBlock) {
-        if (commonBlock.getNextBlockId() != null) {
-            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-            Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-            BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
-        }
-        Logger.logMessage("Will do a re-scan");
-        blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-        scan();
-        blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
-        Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-    }
-
     private Long popLastBlock() throws TransactionType.UndoNotSupportedException {
         try {
             synchronized (blockchain) {
@@ -682,7 +679,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 : 3;
     }
 
-    void generateBlock(String secretPhrase, int blockTimestamp) {
+    boolean generateBlock(String secretPhrase, int blockTimestamp) {
 
         Set<TransactionImpl> sortedTransactions = new TreeSet<>();
 
@@ -694,7 +691,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         BlockImpl previousBlock = blockchain.getLastBlock();
         if (previousBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
-            return;
+            return true;
         }
 
         SortedMap<Long, TransactionImpl> newTransactions = new TreeMap<>();
@@ -776,13 +773,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } catch (NxtException.ValidationException e) {
             // shouldn't happen because all transactions are already validated
             Logger.logMessage("Error generating block", e);
-            return;
+            return true;
         }
 
         block.sign(secretPhrase);
 
         if (isScanning) {
-            return;
+            return true;
         }
 
         block.setPrevious(previousBlock);
@@ -791,15 +788,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
             Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
+            return true;
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
             Transaction transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
             transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList((TransactionImpl)transaction));
+            return false;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
         }
-
+        return true;
     }
 
     private BlockImpl parseBlock(JSONObject blockData) throws NxtException.ValidationException {
@@ -872,9 +871,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
                                     throw new NxtException.NotValidException("Invalid transaction version");
-                                }
-                                if (transaction.getSenderId().equals(Convert.parseUnsignedLong("10715382765594435905")) && currentBlock.getHeight() > 209885) {
-                                    throw new NxtException.NotValidException("Account disabled");
                                 }
                                 if (! EconomicClustering.verifyFork(transaction)) {
                                     Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()

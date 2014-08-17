@@ -15,13 +15,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +34,7 @@ public final class PeerServlet extends HttpServlet {
 
     static {
         Map<String,PeerRequestHandler> map = new HashMap<>();
+        map.put("addPeers", AddPeers.instance);
         map.put("getCumulativeDifficulty", GetCumulativeDifficulty.instance);
         map.put("getInfo", GetInfo.instance);
         map.put("getMilestoneBlockIds", GetMilestoneBlockIds.instance);
@@ -88,7 +86,7 @@ public final class PeerServlet extends HttpServlet {
 
             JSONObject request;
             CountingInputStream cis = new CountingInputStream(req.getInputStream());
-            try (Reader reader = new BufferedReader(new InputStreamReader(cis, "UTF-8"))) {
+            try (Reader reader = new InputStreamReader(cis, "UTF-8")) {
                 request = (JSONObject) JSONValue.parse(reader);
             }
             if (request == null) {
