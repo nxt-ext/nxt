@@ -735,9 +735,14 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 8;
 
-				if (transaction.name !== data.name || transaction.description !== data.description || transaction.quantityQNT !== data.quantityQNT) {
+				transaction.decimals = byteArray[pos];
+
+				pos++;
+
+				if (transaction.name !== data.name || transaction.description !== data.description || transaction.quantityQNT !== data.quantityQNT || transaction.decimals !== data.decimals) {
 					return false;
 				}
+
 				break;
 			case "transferAsset":
 				if (transaction.type !== 2 || transaction.subtype !== 1) {
