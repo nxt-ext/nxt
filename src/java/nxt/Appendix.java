@@ -116,9 +116,6 @@ public interface Appendix {
             String messageString = (String)attachmentData.get("message");
             this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("messageIsText"));
             this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
-            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
-            }
         }
 
         public Message(byte[] message) {
@@ -161,6 +158,9 @@ public interface Appendix {
             if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
                 throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
             }
+            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+            }
         }
 
         @Override
@@ -193,13 +193,7 @@ public interface Appendix {
         private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) throws NxtException.ValidationException {
             super(attachmentJSON);
             byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
-            if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Max encrypted message length exceeded");
-            }
             byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
-            if ((nonce.length != 32 && data.length > 0) || (nonce.length != 0 && data.length == 0)) {
-                throw new NxtException.NotValidException("Invalid nonce length " + nonce.length);
-            }
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
         }
@@ -229,6 +223,16 @@ public interface Appendix {
         }
 
         @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Max encrypted message length exceeded");
+            }
+            if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
+                    || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
+                throw new NxtException.NotValidException("Invalid nonce length " + encryptedData.getNonce().length);
+            }
+        }
+
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         public final EncryptedData getEncryptedData() {
@@ -276,6 +280,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            super.validate(transaction);
             if (! transaction.getType().hasRecipient()) {
                 throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
             }
@@ -321,6 +326,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            super.validate(transaction);
             if (transaction.getVersion() == 0) {
                 throw new NxtException.NotValidException("Encrypt-to-self message attachments not enabled for version 0 transactions");
             }

@@ -37,13 +37,13 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.state) {
 				//if no new blocks in 6 hours, show blockchain download progress..
 				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
-				if (timeDiff > 60 * 60 * 6) {
+				if (timeDiff > 60 * 60 * 18) {
 					if (timeDiff > 60 * 60 * 24 * 14) {
 						NRS.setStateInterval(30);
 					} else if (timeDiff > 60 * 60 * 24 * 7) {
 						//second to last week
 						NRS.setStateInterval(15);
-					} else if (timeDiff > 60 * 60 * 24) {
+					} else {
 						//last week
 						NRS.setStateInterval(10);
 					}
@@ -124,7 +124,6 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.dgsBlockPassed) {
 			if ((!NRS.isTestNet && (NRS.lastBlockHeight >= 213000 || (NRS.downloadingBlockchain && NRS.state.lastBlockchainFeederHeight >= 213000))) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
 				NRS.dgsBlockPassed = true;
-				alert("hho ho");
 				$(".dgs_block").not(".advanced, .optional_message, .optional_note").show();
 			}
 		}
@@ -147,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
 				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
-				if (timeDiff < 60 * 60 * 24) {
+				if (timeDiff < 60 * 60 * 18) {
 					if (timeDiff < 60 * 60) {
 						NRS.setStateInterval(30);
 					} else {
@@ -172,7 +171,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (timeDiff > 60 * 60 * 24 * 7) {
 						//second to last week
 						NRS.setStateInterval(15);
-					} else if (timeDiff > 60 * 60 * 24) {
+					} else {
 						//last week
 						NRS.setStateInterval(10);
 					}
@@ -385,13 +384,7 @@ var NRS = (function(NRS, $, undefined) {
 		//	$("#blocks_page_type li a").click(function(e) {
 		e.preventDefault();
 
-		var type = $.trim($(this).text()).toLowerCase();
-
-		if (type == "forged by you") {
-			NRS.blocksPageType = "forged_blocks";
-		} else {
-			NRS.blocksPageType = "";
-		}
+		NRS.blocksPageType = $(this).data("type");
 
 		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
 		$("#blocks_table tbody").empty();

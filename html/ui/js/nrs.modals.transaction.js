@@ -73,8 +73,7 @@ var NRS = (function(NRS, $, undefined) {
 					incorrect = true;
 					break;
 			}
-		}
-		if (transaction.type == 1) {
+		} else if (transaction.type == 1) {
 			switch (transaction.subtype) {
 				case 0:
 					var message;
