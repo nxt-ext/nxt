@@ -75,7 +75,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_MESSAGE = missing("message");
     public static final JSONStreamAware MISSING_RECIPIENT = missing("recipient");
     public static final JSONStreamAware INCORRECT_RECIPIENT = incorrect("recipient");
-    public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message", "(length must be not longer than " + Constants.MAX_ARBITRARY_MESSAGE_LENGTH + " bytes)");
+    public static final JSONStreamAware INCORRECT_ARBITRARY_MESSAGE = incorrect("message");
     public static final JSONStreamAware MISSING_AMOUNT = missing("amountNQT");
     public static final JSONStreamAware INCORRECT_AMOUNT = incorrect("amount");
     public static final JSONStreamAware MISSING_DESCRIPTION = missing("description");
