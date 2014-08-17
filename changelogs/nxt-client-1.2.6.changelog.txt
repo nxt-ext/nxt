@@ -16,4 +16,6 @@ processing the response, the peer will also send to the other peer all peer
 addresses it is connected to which are not present in the other peer's peers
 set, to improve the propagation of peer addresses through the network.
 
+Minor bugfixes.
+
 

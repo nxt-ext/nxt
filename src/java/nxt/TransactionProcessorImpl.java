@@ -196,7 +196,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (! transaction.verify()) {
             throw new NxtException.NotValidException("Transaction signature verification failed");
         }
-        List<Transaction> validTransactions = processTransactions(Collections.singletonList((TransactionImpl) transaction), true);
+        List<Transaction> validTransactions = processTransactions(Collections.singleton((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
             nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
@@ -332,7 +332,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    List<Transaction> processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
+    List<Transaction> processTransactions(Collection<TransactionImpl> transactions, final boolean sendToPeers) {
         List<Transaction> sendToPeersTransactions = new ArrayList<>();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
