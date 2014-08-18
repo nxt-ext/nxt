@@ -60,6 +60,23 @@ final class BlockDb {
         }
     }
 
+    static BlockImpl findLastBlock() {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id = (SELECT MAX(db_id) FROM block)")) {
+            ResultSet rs = pstmt.executeQuery();
+            BlockImpl block = null;
+            if (rs.next()) {
+                block = loadBlock(con, rs);
+            }
+            rs.close();
+            return block;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } catch (NxtException.ValidationException e) {
+            throw new RuntimeException("Last block already in database does not pass validation!");
+        }
+    }
+
     static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
         try {
             int version = rs.getInt("version");

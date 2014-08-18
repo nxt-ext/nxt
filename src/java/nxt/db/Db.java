@@ -149,6 +149,7 @@ public final class Db {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        transactionCaches.get().clear();
     }
 
     public static void endTransaction() {

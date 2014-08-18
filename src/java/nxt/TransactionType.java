@@ -1628,16 +1628,4 @@ public abstract class TransactionType {
 
     }
 
-    public static final class UndoNotSupportedException extends NxtException {
-
-        UndoNotSupportedException(String message) {
-            super(message);
-        }
-
-        UndoNotSupportedException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-    }
-
 }

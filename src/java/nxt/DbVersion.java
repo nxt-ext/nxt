@@ -459,6 +459,9 @@ final class DbVersion {
             case 118:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
             case 119:
+                BlockchainProcessorImpl.getInstance().forceScanAtStart();
+                apply(null);
+            case 120:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

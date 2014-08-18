@@ -316,19 +316,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
+        //TODO: optimize to use rollback
         private void popOffTo(Block commonBlock) {
-            try {
-                Long lastBlockId = blockchain.getLastBlock().getId();
-                while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                    lastBlockId = popLastBlock();
-                }
-            } catch (TransactionType.UndoNotSupportedException e) {
-                Logger.logDebugMessage(e.getMessage());
-                Logger.logDebugMessage("Popping off last block not possible, will do a rescan");
-                resetTo(commonBlock);
+            Long lastBlockId = blockchain.getLastBlock().getId();
+            while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+                lastBlockId = popLastBlock();
             }
         }
 
+        /*
         private void resetTo(Block commonBlock) {
             if (commonBlock.getNextBlockId() != null) {
                 Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
@@ -341,6 +337,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
             Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
         }
+        */
 
     };
 
@@ -359,7 +356,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             @Override
             public void run() {
                 addGenesisBlock();
-                scan();
+                if (forceScan) {
+                    scan();
+                }
             }
         }, false);
 
@@ -420,6 +419,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private void addGenesisBlock() {
         if (BlockDb.hasBlock(Genesis.GENESIS_BLOCK_ID)) {
             Logger.logMessage("Genesis block already in database");
+            BlockImpl lastBlock = BlockDb.findLastBlock();
+            blockchain.setLastBlock(lastBlock);
+            Logger.logMessage("Last block height: " + lastBlock.getHeight());
             return;
         }
         Logger.logMessage("Genesis block not in database, starting from scratch");
@@ -648,7 +650,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     }
 
-    private Long popLastBlock() throws TransactionType.UndoNotSupportedException {
+    private Long popLastBlock() {
         synchronized (blockchain) {
             try {
                 Db.beginTransaction();
@@ -668,7 +670,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (RuntimeException e) {
                 Db.rollbackTransaction();
                 Logger.logDebugMessage("Error popping last block: " + e.toString());
-                throw new TransactionType.UndoNotSupportedException(e.toString(), e);
+                throw e;
             } finally {
                 Db.endTransaction();
             }
@@ -816,6 +818,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return transaction != null && hasAllReferencedTransactions(transaction, timestamp, count + 1);
     }
 
+    private volatile boolean forceScan = Nxt.getBooleanProperty("nxt.forceScan");
+
+    void forceScanAtStart() {
+        forceScan = true;
+    }
+
     private volatile boolean validateAtScan = Nxt.getBooleanProperty("nxt.forceValidate");
 
     void validateAtNextScan() {
@@ -907,10 +915,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
                         currentBlockId = currentBlock.getNextBlockId();
                         Db.commitTransaction();
-                        Db.endTransaction();
                     } catch (NxtException | RuntimeException e) {
                         Db.rollbackTransaction();
-                        Db.endTransaction();
                         Logger.logDebugMessage(e.toString(), e);
                         Logger.logDebugMessage("Applying block " + Convert.toUnsignedLong(currentBlockId) + " at height "
                                 + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
@@ -928,6 +934,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         scan();
                     }
                 }
+                Db.endTransaction();
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }

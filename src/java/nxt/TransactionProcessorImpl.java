@@ -294,7 +294,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    void undo(BlockImpl block) throws TransactionType.UndoNotSupportedException {
+    void undo(BlockImpl block) {
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         for (TransactionImpl transaction : block.getTransactions()) {
             unconfirmedTransactionTable.insert(transaction);
@@ -422,17 +422,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             break; // not ready to process transactions
                         }
 
-	                    Long id = transaction.getId();
-    	                if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(id) != null) {
-        	                continue;
-            	        }
+                        Long id = transaction.getId();
+                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(id) != null) {
+                            continue;
+                        }
 
-                	    if (! transaction.verify()) {
-	                        if (Account.getAccount(transaction.getSenderId()) != null) {
-    	                        Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
-        	                }
-                        	continue;
-	                    }
+                        if (! transaction.verify()) {
+                            if (Account.getAccount(transaction.getSenderId()) != null) {
+                                Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+                            }
+                            continue;
+                        }
 
                         if (transaction.applyUnconfirmed()) {
                             if (sendToPeers) {
