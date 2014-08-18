@@ -724,11 +724,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
 
-                if (!EconomicClustering.verifyFork(transaction)) {
-                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
-                    //continue;
-                }
-
                 try {
                     transaction.validateAttachment();
                 } catch (NxtException.NotCurrentlyValidException e) {
@@ -736,6 +731,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } catch (NxtException.ValidationException e) {
                     transactionProcessor.removeUnconfirmedTransactions(Collections.singletonList(transaction));
                     continue;
+                }
+
+                if (!EconomicClustering.verifyFork(transaction)) {
+                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
+                    //continue;
                 }
 
                 newTransactions.put(transaction.getId(), transaction);
