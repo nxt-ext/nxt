@@ -318,9 +318,6 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
-                if (Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK && transaction.getMessage() == null) {
-                    throw new NxtException.NotCurrentlyValidException("Missing message appendix not allowed before DGS block");
-                }
             }
 
             @Override
@@ -419,9 +416,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Alias transfer not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Invalid sell alias transaction: " +
                             transaction.getJSONObject());
@@ -492,9 +486,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Alias transfer not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-                }
                 final Attachment.MessagingAliasBuy attachment =
                         (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 final String aliasName = attachment.getAliasName();
@@ -1095,9 +1086,6 @@ public abstract class TransactionType {
 
         @Override
         final void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Digital goods listing not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
-            }
             if (transaction.getAmountNQT() != 0) {
                 throw new NxtException.NotValidException("Invalid digital goods transaction");
             }

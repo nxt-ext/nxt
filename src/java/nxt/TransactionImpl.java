@@ -595,9 +595,6 @@ final class TransactionImpl implements Transaction {
         json.put("senderPublicKey", Convert.toHexString(senderPublicKey));
         if (type.hasRecipient()) {
             json.put("recipient", Convert.toUnsignedLong(recipientId));
-        } else {
-            // TODO: remove after 1.2.2
-            json.put("recipient", Convert.toUnsignedLong(Genesis.CREATOR_ID));
         }
         json.put("amountNQT", amountNQT);
         json.put("feeNQT", feeNQT);
