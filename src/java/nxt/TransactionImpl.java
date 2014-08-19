@@ -58,7 +58,7 @@ final class TransactionImpl implements Transaction {
         }
 
         @Override
-        public TransactionImpl build() throws NxtException.ValidationException {
+        public TransactionImpl build() throws NxtException.NotValidException {
             return new TransactionImpl(this);
         }
 
@@ -562,7 +562,7 @@ final class TransactionImpl implements Transaction {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
             return builder.build();
-        } catch (NxtException.ValidationException|RuntimeException e) {
+        } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
             throw e;
         }
@@ -615,7 +615,7 @@ final class TransactionImpl implements Transaction {
         return json;
     }
 
-    static TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+    static TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {
         try {
             byte type = ((Long) transactionData.get("type")).byteValue();
             byte subtype = ((Long) transactionData.get("subtype")).byteValue();
@@ -654,7 +654,7 @@ final class TransactionImpl implements Transaction {
                 builder.ecBlockId(Convert.parseUnsignedLong((String) transactionData.get("ecBlockId")));
             }
             return builder.build();
-        } catch (NxtException.ValidationException|RuntimeException e) {
+        } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction: " + transactionData.toJSONString());
             throw e;
         }
