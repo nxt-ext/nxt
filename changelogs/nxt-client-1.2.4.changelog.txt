@@ -1,0 +1,7 @@
+Fixed important bugs affecting arbitrary message and asset transfer transactions
+before DGS block.
+
+Minor client UI bugfixes.
+
+Updated jquery to version 2.1.1 and bootstrap to version 3.2.0.
+

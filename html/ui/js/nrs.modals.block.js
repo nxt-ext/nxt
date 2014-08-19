@@ -1,3 +1,7 @@
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
 var NRS = (function(NRS, $, undefined) {
 	$("#blocks_table, #dashboard_blocks_table").on("click", "a[data-block]", function(event) {
 		event.preventDefault();

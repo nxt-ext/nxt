@@ -21,6 +21,7 @@ public final class DebugTrace {
 
     static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "");
     static final String SEPARATOR = Nxt.getStringProperty("nxt.debugTraceSeparator", "\t");
+    static final boolean LOG_UNCONFIRMED = Nxt.getBooleanProperty("nxt.debugLogUnconfirmed");
 
     static void init() {
         List<String> accountIds = Nxt.getStringListProperty("nxt.debugTraceAccounts");
@@ -49,27 +50,31 @@ public final class DebugTrace {
         Account.addListener(new Listener<Account>() {
             @Override
             public void notify(Account account) {
-                debugTrace.trace(account);
+                debugTrace.trace(account, false);
             }
         }, Account.Event.BALANCE);
-        Account.addListener(new Listener<Account>() {
-            @Override
-            public void notify(Account account) {
-                debugTrace.trace(account);
-            }
-        }, Account.Event.UNCONFIRMED_BALANCE);
+        if (LOG_UNCONFIRMED) {
+            Account.addListener(new Listener<Account>() {
+                @Override
+                public void notify(Account account) {
+                    debugTrace.trace(account, true);
+                }
+            }, Account.Event.UNCONFIRMED_BALANCE);
+        }
         Account.addAssetListener(new Listener<Account.AccountAsset>() {
             @Override
             public void notify(Account.AccountAsset accountAsset) {
                 debugTrace.trace(accountAsset, false);
             }
         }, Account.Event.ASSET_BALANCE);
-        Account.addAssetListener(new Listener<Account.AccountAsset>() {
-            @Override
-            public void notify(Account.AccountAsset accountAsset) {
-                debugTrace.trace(accountAsset, true);
-            }
-        }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
+        if (LOG_UNCONFIRMED) {
+            Account.addAssetListener(new Listener<Account.AccountAsset>() {
+                @Override
+                public void notify(Account.AccountAsset accountAsset) {
+                    debugTrace.trace(accountAsset, true);
+                }
+            }, Account.Event.UNCONFIRMED_ASSET_BALANCE);
+        }
         Account.addLeaseListener(new Listener<Account.AccountLease>() {
             @Override
             public void notify(Account.AccountLease accountLease) {
@@ -92,6 +97,12 @@ public final class DebugTrace {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
+                debugTrace.traceBeforeAccept(block, false);
+            }
+        }, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
+        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
+            @Override
+            public void notify(Block block) {
                 debugTrace.trace(block, false);
             }
         }, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
@@ -105,7 +116,7 @@ public final class DebugTrace {
 
     private static final String[] columns = {"height", "event", "account", "asset", "balance", "unconfirmed balance",
             "asset balance", "unconfirmed asset balance",
-            "transaction amount", "transaction fee", "generation fee",
+            "transaction amount", "transaction fee", "generation fee", "effective balance",
             "order", "order price", "order quantity", "order cost",
             "trade price", "trade quantity", "trade cost",
             "asset quantity", "transaction", "lessee", "lessor guaranteed balance",
@@ -142,7 +153,21 @@ public final class DebugTrace {
     }
 
     private boolean include(Long accountId) {
-        return accountIds.isEmpty() || accountIds.contains(accountId);
+        return accountId != null && (accountIds.isEmpty() || accountIds.contains(accountId));
+    }
+
+    private boolean include(Attachment attachment) {
+        if (attachment instanceof Attachment.DigitalGoodsPurchase) {
+            Long sellerId = DigitalGoodsStore.getGoods(((Attachment.DigitalGoodsPurchase)attachment).getGoodsId()).getSellerId();
+            return include(sellerId);
+        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
+            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsDelivery)attachment).getPurchaseId()).getBuyerId();
+            return include(buyerId);
+        } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
+            Long buyerId = DigitalGoodsStore.getPurchase(((Attachment.DigitalGoodsRefund)attachment).getPurchaseId()).getBuyerId();
+            return include(buyerId);
+        }
+        return false;
     }
 
     // Note: Trade events occur before the change in account balances
@@ -157,9 +182,9 @@ public final class DebugTrace {
         }
     }
 
-    private void trace(Account account) {
+    private void trace(Account account, boolean unconfirmed) {
         if (include(account.getId())) {
-            log(getValues(account.getId()));
+            log(getValues(account.getId(), unconfirmed));
         }
     }
 
@@ -177,7 +202,7 @@ public final class DebugTrace {
         log(getValues(accountLease.lessorId, accountLease, start));
     }
 
-    private void trace(Block block, boolean isUndo) {
+    private void traceBeforeAccept(Block block, boolean isUndo) {
         Long generatorId = block.getGeneratorId();
         if (include(generatorId)) {
             log(getValues(generatorId, block, isUndo));
@@ -190,6 +215,9 @@ public final class DebugTrace {
                 }
             }
         }
+    }
+
+    private void trace(Block block, boolean isUndo) {
         for (Transaction transaction : block.getTransactions()) {
             Long senderId = transaction.getSenderId();
             if (include(senderId)) {
@@ -200,6 +228,11 @@ public final class DebugTrace {
             if (include(recipientId)) {
                 log(getValues(recipientId, transaction, true, isUndo));
                 log(getValues(recipientId, transaction, transaction.getAttachment(), true, isUndo));
+            } else {
+                Attachment attachment = transaction.getAttachment();
+                if (include(attachment)) {
+                    log(getValues(recipientId, transaction, transaction.getAttachment(), true, isUndo));
+                }
             }
         }
     }
@@ -208,8 +241,7 @@ public final class DebugTrace {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
-        // use 1441 instead of 1440 as at this point the newly generated block has already been pushed
-        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1441)));
+        map.put("lessor guaranteed balance", String.valueOf(account.getGuaranteedBalanceNQT(1440)));
         map.put("lessee", Convert.toUnsignedLong(lesseeId));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
@@ -217,7 +249,7 @@ public final class DebugTrace {
         return map;
     }
 
-    private Map<String,String> getValues(Long accountId) {
+    private Map<String,String> getValues(Long accountId, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
         Account account = Account.getAccount(accountId);
@@ -225,12 +257,12 @@ public final class DebugTrace {
         map.put("unconfirmed balance", String.valueOf(account != null ? account.getUnconfirmedBalanceNQT() : 0));
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
-        map.put("event", "balance");
+        map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
         return map;
     }
 
     private Map<String,String> getValues(Long accountId, Trade trade, boolean isAsk) {
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         map.put("asset", Convert.toUnsignedLong(trade.getAssetId()));
         map.put("trade quantity", String.valueOf(isAsk ? - trade.getQuantityQNT() : trade.getQuantityQNT()));
         map.put("trade price", String.valueOf(trade.getPriceNQT()));
@@ -258,7 +290,7 @@ public final class DebugTrace {
         if (fee == 0 && amount == 0) {
             return Collections.emptyMap();
         }
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         map.put("transaction amount", String.valueOf(amount));
         map.put("transaction fee", String.valueOf(fee));
         map.put("transaction", transaction.getStringId());
@@ -279,10 +311,13 @@ public final class DebugTrace {
         if (isUndo) {
             fee = - fee;
         }
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block" + (isUndo ? " undo" : ""));
+        map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
+        map.put("timestamp", String.valueOf(block.getTimestamp()));
+        map.put("height", String.valueOf(block.getHeight()));
         return map;
     }
 
@@ -308,7 +343,7 @@ public final class DebugTrace {
     }
 
     private Map<String,String> getValues(Long accountId, Transaction transaction, Attachment attachment, boolean isRecipient, boolean isUndo) {
-        Map<String,String> map = getValues(accountId);
+        Map<String,String> map = getValues(accountId, false);
         if (attachment instanceof Attachment.ColoredCoinsOrderPlacement) {
             if (isRecipient) {
                 return Collections.emptyMap();
@@ -371,26 +406,33 @@ public final class DebugTrace {
             map.put("event", "order cancel");
         } else if (attachment instanceof Attachment.DigitalGoodsPurchase) {
             Attachment.DigitalGoodsPurchase purchase = (Attachment.DigitalGoodsPurchase)transaction.getAttachment();
+            if (isRecipient) {
+                map = getValues(DigitalGoodsStore.getGoods(purchase.getGoodsId()).getSellerId(), false);
+            }
             map.put("event", "purchase");
             map.put("purchase", transaction.getStringId());
+        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
+            Attachment.DigitalGoodsDelivery delivery = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
+            DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.getPurchase(delivery.getPurchaseId());
+            if (isRecipient) {
+                map = getValues(purchase.getBuyerId(), false);
+            }
+            map.put("event", "delivery");
+            map.put("purchase", Convert.toUnsignedLong(delivery.getPurchaseId()));
+            long discount = delivery.getDiscountNQT();
             map.put("purchase price", String.valueOf(purchase.getPriceNQT()));
             map.put("purchase quantity", String.valueOf(purchase.getQuantity()));
             long cost = Convert.safeMultiply(purchase.getPriceNQT(), purchase.getQuantity());
             if (isRecipient) {
-                if (isUndo) {
+                if (! isUndo) {
                     cost = - cost;
                 }
             } else {
-                if (! isUndo) {
+                if (isUndo) {
                     cost = - cost;
                 }
             }
             map.put("purchase cost", String.valueOf(cost));
-        } else if (attachment instanceof Attachment.DigitalGoodsDelivery) {
-            Attachment.DigitalGoodsDelivery delivery = (Attachment.DigitalGoodsDelivery)transaction.getAttachment();
-            map.put("event", "delivery");
-            map.put("purchase", Convert.toUnsignedLong(delivery.getPurchaseId()));
-            long discount = delivery.getDiscountNQT();
             if (isRecipient) {
                 if (isUndo) {
                     discount = - discount;
@@ -403,6 +445,9 @@ public final class DebugTrace {
             map.put("discount", String.valueOf(discount));
         } else if (attachment instanceof Attachment.DigitalGoodsRefund) {
             Attachment.DigitalGoodsRefund refund = (Attachment.DigitalGoodsRefund)transaction.getAttachment();
+            if (isRecipient) {
+                map = getValues(DigitalGoodsStore.getPurchase(refund.getPurchaseId()).getBuyerId(), false);
+            }
             map.put("event", "refund");
             map.put("purchase", Convert.toUnsignedLong(refund.getPurchaseId()));
             long refundNQT = refund.getRefundNQT();
@@ -416,17 +461,19 @@ public final class DebugTrace {
                 }
             }
             map.put("refund", String.valueOf(refundNQT));
-        } else if (attachment instanceof Attachment.MessagingArbitraryMessage) {
+        } else if (attachment == Attachment.ARBITRARY_MESSAGE) {
             map = new HashMap<>();
             map.put("account", Convert.toUnsignedLong(accountId));
             map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
             map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
-            map.put("event", "message");
+            map.put("event", attachment == Attachment.ARBITRARY_MESSAGE ? "message" : "encrypted message");
             if (isRecipient) {
                 map.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
             } else {
                 map.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
             }
+        } else {
+            return Collections.emptyMap();
         }
         return map;
     }
@@ -437,6 +484,9 @@ public final class DebugTrace {
         }
         StringBuilder buf = new StringBuilder();
         for (String column : columns) {
+            if (!LOG_UNCONFIRMED && column.startsWith("unconfirmed")) {
+                continue;
+            }
             String value = map.get(column);
             if (value != null) {
                 buf.append(QUOTE).append(value).append(QUOTE);

@@ -12,13 +12,13 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -177,101 +177,49 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return unconfirmedTransactions.get(transactionId);
     }
 
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash)
-            throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(TransactionType.Payment.ORDINARY, Convert.getEpochTime(), deadline, senderPublicKey,
-                recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
-        transaction.validateAttachment();
-        return transaction;
-    }
-
-    @Override
-    public Transaction newTransaction(short deadline, byte[] senderPublicKey, Long recipientId,
-                                      long amountNQT, long feeNQT, String referencedTransactionFullHash, Attachment attachment)
-            throws NxtException.ValidationException {
-        TransactionImpl transaction = new TransactionImpl(attachment.getTransactionType(), Convert.getEpochTime(), deadline,
-                senderPublicKey, recipientId, amountNQT, feeNQT, referencedTransactionFullHash, null);
-        transaction.setAttachment(attachment);
-        transaction.validateAttachment();
-        return transaction;
+    public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
+                                                     Attachment attachment) throws NxtException.ValidationException {
+        byte version = (byte) getTransactionVersion(Nxt.getBlockchain().getHeight());
+        int timestamp = Convert.getEpochTime();
+        TransactionImpl.BuilderImpl builder = new TransactionImpl.BuilderImpl(version, senderPublicKey, amountNQT, feeNQT, timestamp,
+                deadline, (Attachment.AbstractAttachment)attachment);
+        if (version > 0) {
+            Block ecBlock = EconomicClustering.getECBlockId(timestamp);
+            builder.ecBlockHeight(ecBlock.getHeight());
+            builder.ecBlockId(ecBlock.getId());
+        }
+        return builder;
     }
 
     @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
         if (! transaction.verify()) {
-            throw new NxtException.ValidationException("Transaction signature verification failed");
+            throw new NxtException.NotValidException("Transaction signature verification failed");
         }
-        List<Transaction> validTransactions = processTransactions(Collections.singletonList((TransactionImpl) transaction), true);
+        List<Transaction> validTransactions = processTransactions(Collections.singleton((TransactionImpl) transaction), true);
         if (validTransactions.contains(transaction)) {
             nonBroadcastedTransactions.put(transaction.getId(), (TransactionImpl) transaction);
             Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
         } else {
             Logger.logDebugMessage("Rejecting double spending transaction " + transaction.getStringId());
-            throw new NxtException.ValidationException("Double spending transaction");
+            throw new NxtException.NotValidException("Double spending transaction");
         }
     }
 
     @Override
-    public void processPeerTransactions(JSONObject request) {
+    public void processPeerTransactions(JSONObject request) throws NxtException.ValidationException {
         JSONArray transactionsData = (JSONArray)request.get("transactions");
         processPeerTransactions(transactionsData, true);
     }
 
     @Override
     public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        byte type = buffer.get();
-        byte subtype = buffer.get();
-        int timestamp = buffer.getInt();
-        short deadline = buffer.getShort();
-        byte[] senderPublicKey = new byte[32];
-        buffer.get(senderPublicKey);
-        Long recipientId = buffer.getLong();
-        long amountNQT = buffer.getLong();
-        long feeNQT = buffer.getLong();
-        String referencedTransactionFullHash = null;
-        byte[] referencedTransactionFullHashBytes = new byte[32];
-        buffer.get(referencedTransactionFullHashBytes);
-        if (Convert.emptyToNull(referencedTransactionFullHashBytes) != null) {
-            referencedTransactionFullHash = Convert.toHexString(referencedTransactionFullHashBytes);
-        }
-        byte[] signature = new byte[64];
-        buffer.get(signature);
-        signature = Convert.emptyToNull(signature);
-
-        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-        TransactionImpl transaction;
-        transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, signature);
-        transactionType.loadAttachment(transaction, buffer);
-
-        return transaction;
+        return TransactionImpl.parseTransaction(bytes);
     }
 
-    TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
-        byte type = ((Long)transactionData.get("type")).byteValue();
-        byte subtype = ((Long)transactionData.get("subtype")).byteValue();
-        int timestamp = ((Long)transactionData.get("timestamp")).intValue();
-        short deadline = ((Long)transactionData.get("deadline")).shortValue();
-        byte[] senderPublicKey = Convert.parseHexString((String) transactionData.get("senderPublicKey"));
-        Long recipientId = Convert.parseUnsignedLong((String) transactionData.get("recipient"));
-        if (recipientId == null) recipientId = 0L; // ugly
-        long amountNQT = (Long) transactionData.get("amountNQT");
-        long feeNQT = (Long) transactionData.get("feeNQT");
-        String referencedTransactionFullHash = (String) transactionData.get("referencedTransactionFullHash");
-        byte[] signature = Convert.parseHexString((String) transactionData.get("signature"));
-
-        TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
-        TransactionImpl transaction = new TransactionImpl(transactionType, timestamp, deadline, senderPublicKey, recipientId,
-                amountNQT, feeNQT, referencedTransactionFullHash, signature);
-
-        JSONObject attachmentData = (JSONObject)transactionData.get("attachment");
-        transactionType.loadAttachment(transaction, attachmentData);
-        return transaction;
+    @Override
+    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+        return TransactionImpl.parseTransaction(transactionData);
     }
 
     void clear() {
@@ -282,11 +230,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void apply(BlockImpl block) {
         block.apply();
         for (TransactionImpl transaction : block.getTransactions()) {
-            if (! unconfirmedTransactions.containsKey(transaction.getId())) {
-                transaction.applyUnconfirmed();
-            }
-            //TODO: Phaser not yet implemented
-            //Phaser.processTransaction(transaction);
             transaction.apply();
         }
     }
@@ -304,6 +247,29 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
+    void applyUnconfirmed(Set<Long> unapplied) {
+        List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
+        for (Long transactionId : unapplied) {
+            TransactionImpl transaction = unconfirmedTransactions.get(transactionId);
+            if (! transaction.applyUnconfirmed()) {
+                unconfirmedTransactions.remove(transactionId);
+                removedUnconfirmedTransactions.add(transaction);
+            }
+        }
+        if (removedUnconfirmedTransactions.size() > 0) {
+            transactionListeners.notify(removedUnconfirmedTransactions, TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }
+    }
+
+    Set<Long> undoAllUnconfirmed() {
+        HashSet<Long> undone = new HashSet<>();
+        for (TransactionImpl transaction : unconfirmedTransactions.values()) {
+            transaction.undoUnconfirmed();
+            undone.add(transaction.getId());
+        }
+        return undone;
+    }
+
     void updateUnconfirmedTransactions(BlockImpl block) {
         List<Transaction> addedConfirmedTransactions = new ArrayList<>();
         List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
@@ -313,17 +279,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             Transaction removedTransaction = unconfirmedTransactions.remove(transaction.getId());
             if (removedTransaction != null) {
                 removedUnconfirmedTransactions.add(removedTransaction);
-            }
-        }
-
-        Iterator<TransactionImpl> iterator = unconfirmedTransactions.values().iterator();
-        while (iterator.hasNext()) {
-            TransactionImpl transaction = iterator.next();
-            transaction.undoUnconfirmed();
-            if (! transaction.applyUnconfirmed()) {
-                iterator.remove();
-                removedUnconfirmedTransactions.add(transaction);
-                transactionListeners.notify(Collections.singletonList((Transaction)transaction), Event.ADDED_DOUBLESPENDING_TRANSACTIONS);
             }
         }
 
@@ -337,11 +292,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void removeUnconfirmedTransactions(Collection<TransactionImpl> transactions) {
-        List<Transaction> removedList = new ArrayList<>();
-        for (TransactionImpl transaction : transactions) {
-            if (unconfirmedTransactions.remove(transaction.getId()) != null) {
-                transaction.undoUnconfirmed();
-                removedList.add(transaction);
+        List<Transaction> removedList;
+        synchronized (BlockchainImpl.getInstance()) {
+            removedList = new ArrayList<>();
+            for (TransactionImpl transaction : transactions) {
+                if (unconfirmedTransactions.remove(transaction.getId()) != null) {
+                    transaction.undoUnconfirmed();
+                    removedList.add(transaction);
+                }
             }
         }
         transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
@@ -351,15 +309,19 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactions.values()));
     }
 
-    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) {
+    int getTransactionVersion(int previousBlockHeight) {
+        return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
+    }
+
+    private void processPeerTransactions(JSONArray transactionsData, final boolean sendToPeers) throws NxtException.ValidationException {
         List<TransactionImpl> transactions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
                 transaction.validateAttachment();
                 transactions.add(transaction);
-            } catch (NxtException.ValidationException e) {
-                //if (! (e instanceof TransactionType.NotYetEnabledException)) {
+            } catch (NxtException.NotCurrentlyValidException e) {
+                //if (! (e instanceof NxtException.NotYetEnabledException)) {
                 //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
                 //}
             }
@@ -370,7 +332,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    private List<Transaction> processTransactions(List<TransactionImpl> transactions, final boolean sendToPeers) {
+    List<Transaction> processTransactions(Collection<TransactionImpl> transactions, final boolean sendToPeers) {
         List<Transaction> sendToPeersTransactions = new ArrayList<>();
         List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
         List<Transaction> addedDoubleSpendingTransactions = new ArrayList<>();
@@ -392,8 +354,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
 
                     Long id = transaction.getId();
-                    if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)
-                            || ! transaction.verify()) {
+                    if (TransactionDb.hasTransaction(id) || unconfirmedTransactions.containsKey(id)) {
+                        continue;
+                    }
+
+                    if (! transaction.verify()) {
+                        if (Account.getAccount(transaction.getSenderId()) != null) {
+                            Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
+                        }
                         continue;
                     }
 

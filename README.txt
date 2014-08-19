@@ -57,7 +57,7 @@ from scratch.
 The default Nxt client does not store any wallet-type file on disk. Unlike
 bitcoin, your password is the only thing you need to get access to your account,
 and is the only piece of data you need to backup or remember. This also means
-that anybody can get access to your account with only you password - so make
+that anybody can get access to your account with only your password - so make
 sure it is long and random. A weak password will result in your funds being
 stolen immediately.
 

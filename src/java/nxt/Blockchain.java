@@ -44,7 +44,7 @@ public interface Blockchain {
 
     DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int timestamp);
 
-    DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int timestamp, Boolean orderAscending);
+    DbIterator<? extends Transaction> getTransactions(Account account, byte type, byte subtype, int timestamp, int from, int to);
 
     DbIterator<? extends Transaction> getTransactions(Connection con, PreparedStatement pstmt);
 

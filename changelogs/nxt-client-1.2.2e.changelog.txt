@@ -1,0 +1,14 @@
+This is still a test release intended to get testnet working. Please update
+your testnet nodes.
+
+Bugfixes in transaction attachment versioning and version validation.
+
+Added encrypt-to-self message attachment type. Any transaction can optionally
+have such an attachment, intended to be used for private notes that only the
+transaction sender can read. This feature is not yet supported by the GUI.
+
+Added nxt.isOffline property. If set to true in nxt.properties, peer networking
+will not start, no peers will be loaded from the database, and no outgoing
+connections will be made.
+
+

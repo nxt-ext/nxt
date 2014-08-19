@@ -1,9 +1,12 @@
 /.idea/
+/nxt.iml
 /nxt_db/
 /webapps/
 /classes/
 /*.log
+/*.log.*
 /html/doc/*
+/html/**/*.gz
 /keystore
 /nxt.jar
 /nxt_test_db/
@@ -12,3 +15,8 @@
 /README_win.txt
 /package.sh
 /nxt.log.lck
+/bin
+/.classpath
+/.project
+/.settings/
+/compile.bat

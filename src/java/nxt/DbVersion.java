@@ -3,6 +3,7 @@ package nxt;
 import nxt.util.Logger;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -43,9 +44,9 @@ final class DbVersion {
                     Logger.logDebugMessage("Will apply sql:\n" + sql);
                     stmt.executeUpdate(sql);
                 }
-                stmt.executeUpdate("UPDATE version SET next_update = (SELECT next_update + 1 FROM version)");
+                stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
                 con.commit();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 con.rollback();
                 throw e;
             }
@@ -101,7 +102,7 @@ final class DbVersion {
             case 16:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS block_timestamp INT");
             case 17:
-                apply("UPDATE transaction SET block_timestamp = (SELECT timestamp FROM block WHERE block.id = transaction.block_id)");
+                apply(null);
             case 18:
                 apply("ALTER TABLE transaction ALTER COLUMN block_timestamp SET NOT NULL");
             case 19:
@@ -123,13 +124,13 @@ final class DbVersion {
             case 27:
                 apply("ALTER TABLE transaction ALTER COLUMN fee BIGINT");
             case 28:
-                apply("UPDATE block SET total_amount = total_amount * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 29:
-                apply("UPDATE block SET total_fee = total_fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 30:
-                apply("UPDATE transaction SET amount = amount * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 31:
-                apply("UPDATE transaction SET fee = fee * " + Constants.ONE_NXT + " WHERE height <= " + Constants.NQT_BLOCK);
+                apply(null);
             case 32:
                 apply(null);
             case 33:
@@ -143,40 +144,72 @@ final class DbVersion {
             case 37:
                 if (!Constants.isTestnet) {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('77.179.106.9'), ('110.143.228.78'), ('54.72.7.96'), ('54.86.139.231'), " +
-                            "('abctc.vps.nxtcrypto.org'), ('nxt.pucchiwerk.eu'), ('185.4.72.115'), ('vps4.nxtcrypto.org'), " +
-                            "('89.250.240.63'), ('162.243.145.83'), ('85.10.199.79'), ('89.70.254.145'), " +
-                            "('103.224.81.143'), ('85.181.230.69'), ('198.199.85.20'), ('217.17.88.5'), " +
-                            "('109.87.169.253'), ('87.172.190.182'), ('67.149.193.205'), ('31.15.211.201'), " +
-                            "('178.24.158.31'), ('46.4.77.180'), ('188.226.242.50'), ('108.170.40.2'), ('217.117.208.17'), " +
-                            "('89.250.243.150'), ('178.26.207.190'), ('wallet.nxtty.com'), ('nxtnet.fr'), " +
-                            "('188.194.241.72'), ('nxt.alkeron.com'), ('xyzzyx.vps.nxtcrypto.org'), ('69.207.170.32'), " +
-                            "('bitsy02.vps.nxtcrypto.org'), ('83.240.14.35'), ('212.85.38.25'), ('212.85.38.103'), " +
-                            "('vps9.nxtcrypto.org'), ('84.241.44.180'), ('158.195.217.79'), ('89.133.34.109'), " +
-                            "('stakexplorer.com'), ('198.27.64.207'), ('vps5.nxtcrypto.org'), ('185.12.44.108'), " +
-                            "('nxtcoin.ru'), ('vps6.nxtcrypto.org'), ('92.129.239.166'), ('91.69.121.229'), " +
-                            "('nxtpi.zapto.org'), ('92.228.252.60'), ('216.8.180.222'), ('bitsy05.vps.nxtcrypto.org'), " +
-                            "('88.198.142.92'), ('31.19.188.145'), ('54.186.135.231'), ('ankhy.no-ip.biz'), " +
-                            "('94.26.187.66'), ('bitsy01.vps.nxtcrypto.org'), ('bitsy04.vps.nxtcrypto.org'), " +
-                            "('90.188.4.177'), ('88.184.64.208'), ('raspnxt.hopto.org'), ('151.236.29.228'), " +
-                            "('188.138.88.154'), ('nxt.homer.ru'), ('107.170.208.249'), ('31.150.173.6'), " +
-                            "('vps10.nxtcrypto.org'), ('bitsy03.vps.nxtcrypto.org'), ('xeqtorcreed2.vps.nxtcrypto.org'), " +
-                            "('lyynx.vps.nxtcrypto.org'), ('146.185.145.192'), ('37.138.105.143'), ('162.220.167.190'), " +
-                            "('94.74.170.10'), ('vps7.nxtcrypto.org'), ('nxt01.now.im'), ('2.225.88.10'), " +
-                            "('85.214.222.82'), ('vps8.nxtcrypto.org'), ('178.122.5.83'), ('88.160.247.181'), " +
-                            "('85.229.150.2'), ('158.195.19.226'), ('nxt.ravensbloodrealms.com'), ('105.229.251.144'), " +
-                            "('nxt.olxp.in'), ('37.59.47.155'), ('nxtportal.org'), ('87.198.219.221'), ('87.172.180.199'), " +
-                            "('36.74.56.184'), ('nxtx.ru'), ('58.95.145.117'), ('109.230.224.65'), ('www.pagezo.de'), " +
-                            "('allbits.vps.nxtcrypto.org'), ('107.170.3.62'), ('192.157.244.160'), ('vps12.nxtcrypto.org'), " +
-                            "('nacho.damnserver.com'), ('67.212.71.173'), ('vps11.nxtcrypto.org'), ('miasik.no-ip.org'), " +
-                            "('212.85.37.150'), ('217.26.24.27'), ('24.161.110.115'), ('89.70.164.196'), ('46.28.111.249'), " +
-                            "('vps1.nxtcrypto.org'), ('199.195.148.27'), ('176.226.191.152'), " +
-                            "('37.44.107.50'), ('95.143.216.60'), ('62.57.125.237'), ('xeqtorcreed.vps.nxtcrypto.org')");
+                            "('178.194.110.193'), ('nrs01.nxtsolaris.info'), ('xeqtorcreed2.vps.nxtcrypto.org'), ('5.101.101.137'), " +
+                            "('54.76.203.25'), ('ns1.anameserver.de'), ('cryptkeeper.vps.nxtcrypto.org'), ('vps11.nxtcrypto.org'), " +
+                            "('80.137.236.53'), ('wallet.nxtty.com'), ('2.84.130.26'), ('91.121.223.107'), ('80.137.229.25'), " +
+                            "('enricoip.no-ip.biz'), ('195.154.127.172'), ('69.64.35.62'), ('88.168.85.129:7874'), ('105.229.160.133'), " +
+                            "('rigel1.ddns.net'), ('59.36.74.47'), ('n2.nxtportal.org'), ('samson.vps.nxtcrypto.org'), " +
+                            "('nrs02.nxtsolaris.info'), ('miasik.no-ip.org'), ('vh44.ddns.net:7873'), ('212.18.225.173'), " +
+                            "('91.121.41.192'), ('serras.homenet.org'), ('217.17.88.5'), ('77.179.100.57'), ('89.98.191.95'), " +
+                            "('nxt1107.no-ip.biz'), ('mycrypto.no-ip.biz'), ('89.250.240.63'), ('vps4.nxtcrypto.org'), " +
+                            "('89.72.57.246'), ('bitsy10.vps.nxtcrypto.org'), ('85.191.52.188'), ('gayka.no-ip.info'), " +
+                            "('77.179.99.25'), ('106.186.127.189'), ('23.238.198.218'), ('www.mycoinmine.org'), ('162.201.61.133'), " +
+                            "('54.191.200.44'), ('54.186.166.78'), ('212.129.12.103'), ('node0.forgenxt.com'), ('188.226.179.119'), " +
+                            "('lyynx.vps.nxtcrypto.org'), ('nxt.phukhew.com'), ('162.242.16.147'), ('pakisnxt.no-ip.org'), " +
+                            "('85.214.200.59'), ('101.164.96.109'), ('nxt.alkeron.com'), ('83.212.102.244'), ('23.88.229.194'), " +
+                            "('162.243.213.190'), ('87.139.122.157'), ('nxt1.webice.ru'), ('37.59.41.216'), ('46.149.84.141'), " +
+                            "('87.138.143.21'), ('151.236.29.228'), ('99.244.142.34'), ('nxt10.webice.ru'), ('cobaltskky.hopto.org'), " +
+                            "('83.212.103.18'), ('nxt9.webice.ru'), ('89.70.254.145'), ('190.10.9.166'), ('95.85.46.177'), " +
+                            "('dreschel2.dyndns.org'), ('113.77.223.63'), ('50.98.11.195'), ('209.126.70.159'), ('178.24.158.31'), " +
+                            "('54.210.102.135'), ('83.212.102.193'), ('195.154.174.124'), ('162.243.243.32'), ('87.148.12.130'), " +
+                            "('83.69.2.13'), ('cryonet.de'), ('79.24.191.97'), ('nxt.homer.ru'), ('nxtpi.zapto.org'), " +
+                            "('nxs1.hanza.co.id'), ('23.102.0.45'), ('2.86.61.231'), ('87.230.14.1'), ('105.224.252.123'), " +
+                            "('88.163.78.131'), ('50.43.35.122'), ('80.137.233.81'), ('24.149.8.238'), ('91.34.227.212'), " +
+                            "('217.186.178.66'), ('178.198.145.191'), ('73.36.141.199'), ('192.3.157.232'), ('2.225.88.10'), " +
+                            "('74.192.195.151'), ('108.61.57.76'), ('109.230.224.65'), ('94.26.187.66'), ('124.244.49.12'), " +
+                            "('88.12.55.125'), ('180.129.0.77'), ('162.243.145.83'), ('93.171.209.103'), ('87.139.122.48'), " +
+                            "('89.250.240.60'), ('83.212.102.234'), ('112.199.191.219'), ('vps10.nxtcrypto.org'), ('85.10.201.15'), " +
+                            "('179.43.128.136'), ('85.25.134.59'), ('80.86.92.70'), ('178.162.39.12'), ('46.194.145.144'), " +
+                            "('bitsy09.vps.nxtcrypto.org'), ('147.32.246.247'), ('74.91.124.3'), ('95.68.87.206'), " +
+                            "('115.28.220.183'), ('91.34.239.93'), ('121.40.84.99'), ('168.63.232.16'), ('105.227.3.50'), " +
+                            "('211.149.213.86'), ('nxtcoint119a.no-ip.org'), ('186.220.71.26'), ('bitsy05.vps.nxtcrypto.org'), " +
+                            "('80.137.229.62'), ('162.243.198.24'), ('61.131.37.210'), ('n1.nxtportal.org'), ('nxtx.ru'), " +
+                            "('201.209.45.121'), ('5.35.119.103'), ('105.229.173.29'), ('114.215.142.34:15011'), ('caelum.no-ip.org'), " +
+                            "('46.109.166.244'), ('89.250.240.56'), ('77.179.96.66'), ('90.184.9.47'), ('188.226.206.41'), " +
+                            "('nxtnode.noip.me'), ('bitsy07.vps.nxtcrypto.org'), ('abctc.vps.nxtcrypto.org'), " +
+                            "('bitsy01.vps.nxtcrypto.org'), ('107.170.189.27'), ('109.74.203.187:7874'), ('188.35.156.10'), " +
+                            "('cubie-solar.mjke.de:7873'), ('46.173.9.98'), ('xyzzyx.vps.nxtcrypto.org'), ('188.226.197.131'), " +
+                            "('jefdiesel.vps.nxtcrypto.org'), ('89.250.243.166'), ('46.194.14.81'), ('109.254.63.44'), " +
+                            "('80.86.92.139'), ('91.121.41.45'), ('nxt01.now.im'), ('54.179.177.81'), ('83.212.124.193'), " +
+                            "('bitsy03.vps.nxtcrypto.org'), ('xeqtorcreed.vps.nxtcrypto.org'), ('bitsy08.vps.nxtcrypto.org'), " +
+                            "('178.62.50.75'), ('212.83.145.17'), ('107.170.164.129'), ('67.212.71.172'), ('oldnbold.vps.nxtcrypto.org'), " +
+                            "('54.72.17.26'), ('24.224.68.29'), ('107.170.35.110'), ('nxt7.webice.ru'), ('88.79.173.189'), " +
+                            "('83.212.102.194'), ('113.10.136.142'), ('54.187.11.72'), ('139.228.37.156'), ('105.224.252.84'), " +
+                            "('bitsy02.vps.nxtcrypto.org'), ('199.217.119.33'), ('silvanoip.dhcp.biz'), ('84.242.91.139'), " +
+                            "('80.153.101.190'), ('198.199.81.29'), ('54.86.132.52'), ('77.58.253.73'), ('213.46.57.77'), " +
+                            "('54.84.4.195'), ('105.229.177.132'), ('217.26.24.27'), ('raspnxt.hopto.org'), ('188.138.88.154'), " +
+                            "('113.78.101.129'), ('nxt2.webice.ru'), ('vps5.nxtcrypto.org'), ('80.86.92.66'), ('107.170.3.62'), " +
+                            "('85.214.222.82'), ('94.74.170.10'), ('24.230.136.187'), ('99.47.218.132'), ('nxt.hofhom.nl'), " +
+                            "('nxt.sx'), ('188.167.90.118'), ('77.103.104.254'), ('allbits.vps.nxtcrypto.org'), ('24.161.110.115'), " +
+                            "('90.146.62.91'), ('91.69.121.229'), ('131.151.103.114'), ('82.146.36.253'), ('162.243.80.209'), " +
+                            "('89.250.243.200'), ('83.167.48.253'), ('54.88.54.58'), ('105.224.252.58'), ('nxt6.webice.ru'), " +
+                            "('178.15.99.67'), ('54.85.132.143'), ('89.250.243.167'), ('85.214.199.215'), ('82.46.194.21'), " +
+                            "('83.212.102.247'), ('bitsy06.vps.nxtcrypto.org'), ('nxs2.hanza.co.id'), ('23.238.198.144'), " +
+                            "('screenname.vps.nxtcrypto.org'), ('67.212.71.171'), ('54.191.19.147'), ('24.91.143.15'), ('83.212.103.90'), " +
+                            "('83.212.97.126'), ('77.249.237.229'), ('67.212.71.173'), ('37.120.168.131'), ('nxt4.webice.ru'), " +
+                            "('184.57.30.220'), ('95.24.87.207'), ('162.243.38.34'), ('14.200.16.219'), ('80.137.243.161'), " +
+                            "('113.78.102.157'), ('59.37.188.95'), ('nxt8.webice.ru'), ('nxtnode.hopto.org'), ('113.77.25.179'), " +
+                            "('178.33.203.157'), ('91.120.22.146'), ('178.150.207.53'), ('77.179.117.226'), ('69.141.139.8'), " +
+                            "('vh44.ddns.net'), ('83.212.103.212'), ('95.85.24.151'), ('5.39.76.123'), ('209.126.70.170'), " +
+                            "('cubie-solar.mjke.de'), ('106.187.95.232'), ('185.12.44.108'), ('vps9.nxtcrypto.org'), ('nxt5.webice.ru'), " +
+                            "('bitsy04.vps.nxtcrypto.org'), ('nxt3.webice.ru'), ('69.122.140.198'), ('54.210.102.134'), " +
+                            "('46.109.165.4'), ('panzetti.vps.nxtcrypto.org'), ('80.137.230.115')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('109.87.169.253'), ('nxtnet.fr'), ('node10.mynxtcoin.org'), ('50.112.241.97'), " +
-                            "('node9.mynxtcoin.org'), ('2.84.142.149'), ('192.241.223.132'), ('node3.mynxtcoin.org'), " +
-                            "('bug.airdns.org')");
+                            "('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), ('node10.mynxtcoin.org'), " +
+                            "('node3.mynxtcoin.org'), ('109.87.169.253'), ('nxtnet.fr'), ('50.112.241.97'), " +
+                            "('2.84.142.149'), ('bug.airdns.org'), ('83.212.103.14'), ('62.210.131.30'), ('104.131.254.22'), " +
+                            "('46.28.111.249')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
@@ -189,8 +222,7 @@ final class DbVersion {
             case 42:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
             case 43:
-                apply("UPDATE transaction a SET a.referenced_transaction_full_hash = "
-                        + "(SELECT full_hash FROM transaction b WHERE b.id = a.referenced_transaction_id)");
+                apply(null);
             case 44:
                 apply(null);
             case 45:
@@ -211,6 +243,68 @@ final class DbVersion {
             case 51:
                 apply("ALTER TABLE transaction DROP COLUMN hash");
             case 52:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().validateAtNextScan();
+                }
+                apply(null);
+            case 53:
+                apply("DROP INDEX transaction_recipient_id_idx");
+            case 54:
+                apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
+            case 55:
+                try (Connection con = Db.getConnection();
+                     Statement stmt = con.createStatement();
+                     PreparedStatement pstmt = con.prepareStatement("UPDATE transaction SET recipient_id = null WHERE type = ? AND subtype = ?")) {
+                    try {
+                        for (byte type = 0; type <= 4; type++) {
+                            for (byte subtype = 0; subtype <= 8; subtype++) {
+                                TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+                                if (transactionType == null) {
+                                    continue;
+                                }
+                                if (!transactionType.hasRecipient()) {
+                                    pstmt.setByte(1, type);
+                                    pstmt.setByte(2, subtype);
+                                    pstmt.executeUpdate();
+                                }
+                            }
+                        }
+                        stmt.executeUpdate("UPDATE version SET next_update = next_update + 1");
+                        con.commit();
+                    } catch (SQLException e) {
+                        con.rollback();
+                        throw e;
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            case 56:
+                apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
+            case 57:
+                apply("DROP INDEX transaction_timestamp_idx");
+            case 58:
+                apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp DESC)");
+            case 59:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS version TINYINT");
+            case 60:
+                apply("UPDATE transaction SET version = 0");
+            case 61:
+                apply("ALTER TABLE transaction ALTER COLUMN version SET NOT NULL");
+            case 62:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 63:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 64:
+                apply("UPDATE transaction SET has_message = TRUE WHERE type = 1 AND subtype = 0");
+            case 65:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
+            case 66:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_height INT DEFAULT NULL");
+            case 67:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_id BIGINT DEFAULT NULL");
+            case 68:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
+            case 69:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");

@@ -5,13 +5,13 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.DigitalGoodsStore;
 import nxt.NxtException;
-import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.DUPLICATE_REFUND;
+import static nxt.http.JSONResponses.GOODS_NOT_DELIVERED;
 import static nxt.http.JSONResponses.INCORRECT_DGS_REFUND;
 import static nxt.http.JSONResponses.INCORRECT_PURCHASE;
 
@@ -20,7 +20,8 @@ public final class DGSRefund extends CreateTransaction {
     static final DGSRefund instance = new DGSRefund();
 
     private DGSRefund() {
-        super("purchase", "refundNQT", "note", "encryptedNote", "encryptedNoteNonce");
+        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+                "purchase", "refundNQT");
     }
 
     @Override
@@ -33,6 +34,9 @@ public final class DGSRefund extends CreateTransaction {
         }
         if (purchase.getRefundNote() != null) {
             return DUPLICATE_REFUND;
+        }
+        if (purchase.getEncryptedGoods() == null) {
+            return GOODS_NOT_DELIVERED;
         }
 
         String refundValueNQT = Convert.emptyToNull(req.getParameter("refundNQT"));
@@ -49,10 +53,9 @@ public final class DGSRefund extends CreateTransaction {
         }
 
         Account buyerAccount = Account.getAccount(purchase.getBuyerId());
-        EncryptedData encryptedNote = ParameterParser.getEncryptedNote(req, buyerAccount);
 
-        Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT, encryptedNote);
-        return createTransaction(req, sellerAccount, attachment);
+        Attachment attachment = new Attachment.DigitalGoodsRefund(purchase.getId(), refundNQT);
+        return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }
 

@@ -1,0 +1,73 @@
+This release will run only on testnet. Set nxt.isTestnet=true in nxt.properties.
+
+New features:
+
+Digital goods store.
+
+New http API calls for creating transactions: 
+dgsListing, dgsDelisting, dgsPriceChange, dgsQuantityChange, dgsPurchase,
+dgsDelivery, dgsRefund, dgsFeedback
+
+New http API calls for quering DGS:
+getDGSGood, getDGSGoods, getDGSPurchase, getDGSPurchases, getDGSPendingPurchases
+
+Goods and notes exchanged between buyer and seller are encrypted with AES, and
+gzip compressed before encryption. Maximum allowed digital goods size is 10240
+bytes after compression and encryption.
+
+Alias transfer.
+
+New http API calls: sellAlias, buyAlias
+
+Alias sale can be restricted to a specific buyer, or open to anyone. Alias sale
+with price 0 is treated as immediate transfer and doesn't require a separate buy
+alias transaction. To change the ask price, submit a new sellAlias transaction.
+To cancel a sale, submit a new sellAlias transaction to yourself with price 0.
+
+Buy alias transaction can only be placed if the alias is already for sale. It is
+not currently possible to just bid on an alias that is not for sale.
+
+Encrypted messages.
+AES encrypted messages are now supported in the core, so there is no need to use
+externally encrypted arbitrary messages anymore. Use arbitrary messages only for
+plain text, encrypted messages for confidential messaging.
+
+New APIs: sendEncryptedNote and readEncryptedNote. Max message length is 1000
+bytes, after compression and encryption.
+
+New http API calls: encryptTo/decryptFrom can be used for encrypting and
+decrypting arbitrary text to/from an account. But those just do the encryption
+and decryption, don't actually send messages between accounts.
+
+New rsConvert http query for converting account number to RS format and back.
+
+New getBlockId API to get blockId for a given height.
+
+Improved logging, to handle the case when Nxt is embedded as a library.
+
+Minor improvements: getState and getBlockchainStatus now also show application
+name, block JSON also shows generatorPublickKey, getAccountId also accepts
+publicKey as a parameter.
+
+Updated jetty to version 9.2.1.
+
+Client Updates: 
+
+Digital Goods Store UI.
+
+Alias Trading UI.
+
+Encrypted Messages.
+
+Only RS account numbers are allowed. Exchanges and services should switch to RS 
+format ASAP.
+
+Decode Token Functionality.
+
+Hide Fee / Deadline by default, show via advanced toggle.
+
+Show warning message if user is on a fork (if his account has generated at least
+the last 10 blocks).
+
+Several settings (remember passphrase by default, 12/24 hour format).
+

@@ -1,0 +1,21 @@
+Preserve unconfirmed transactions during rescan instead of relying on being
+able to get them again from peers.
+
+Keep retrying the block generation in the case it fails due to an invalid
+transaction. Prevent block generation failures due to minimum transaction size
+changes.
+
+Ignore peer weights in choosing a random peer when hallmark protection is
+disabled (it is enabled by default). When hallmark protection is enabled, the
+nxt.maxNumberOfConnectedPublicPeers count is now based on hallmarked peers only,
+i.e. the node will keep trying to connect to more peers until it is connected
+to at least that many hallmarked peers.
+
+Added peer networking addPeers request. After sending a getPeers request and
+processing the response, the peer will also send to the other peer all peer
+addresses it is connected to which are not present in the other peer's peers
+set, to improve the propagation of peer addresses through the network.
+
+Minor bugfixes.
+
+

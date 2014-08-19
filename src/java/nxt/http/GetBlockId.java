@@ -15,7 +15,7 @@ public final class GetBlockId extends APIServlet.APIRequestHandler {
     static final GetBlockId instance = new GetBlockId();
 
     private GetBlockId() {
-        super("height");
+        super(new APITag[] {APITag.BLOCKS}, "height");
     }
 
     @Override

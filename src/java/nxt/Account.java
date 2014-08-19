@@ -2,7 +2,11 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
-import nxt.util.*;
+import nxt.util.Convert;
+import nxt.util.Listener;
+import nxt.util.Listeners;
+import nxt.util.Logger;
+import nxt.util.SuperComplexNumber;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public final class Account {
 
@@ -49,6 +54,14 @@ public final class Account {
             this.lesseeId = lesseeId;
             this.fromHeight = fromHeight;
             this.toHeight = toHeight;
+        }
+
+    }
+
+    static class DoubleSpendingException extends RuntimeException {
+
+        DoubleSpendingException(String message) {
+            super(message);
         }
 
     }
@@ -115,7 +128,7 @@ public final class Account {
     private static final int maxTrackedBalanceConfirmations = 2881;
     private static final ConcurrentMap<Long, Account> accounts = new ConcurrentHashMap<>();
     private static final Collection<Account> allAccounts = Collections.unmodifiableCollection(accounts.values());
-    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, Account> leasingAccounts = new ConcurrentSkipListMap<>();
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
@@ -152,7 +165,7 @@ public final class Account {
     }
 
     public static Account getAccount(Long id) {
-        return accounts.get(id);
+        return id == null ? null : accounts.get(id);
     }
 
     public static Account getAccount(byte[] publicKey) {
@@ -276,6 +289,12 @@ public final class Account {
 
     public long getEffectiveBalanceNXT() {
 
+        /*
+        if (Constants.isTestnet && Constants.isOffline) {
+            return Constants.MAX_BALANCE_NXT;
+        }
+        */
+
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
         if (lastBlock.getHeight() >= Constants.TRANSPARENT_FORGING_BLOCK_6
@@ -294,7 +313,7 @@ public final class Account {
             }
             long receivedInlastBlock = 0;
             for (Transaction transaction : lastBlock.getTransactions()) {
-                if (transaction.getRecipientId().equals(id)) {
+                if (id.equals(transaction.getRecipientId())) {
                     receivedInlastBlock += transaction.getAmountNQT();
                 }
             }
@@ -444,7 +463,7 @@ public final class Account {
 
     synchronized void apply(byte[] key, int height) {
         if (! setOrVerify(key, this.height)) {
-            throw new IllegalStateException("Generator public key mismatch");
+            throw new IllegalStateException("Public key mismatch");
         }
         if (this.publicKey == null) {
             throw new IllegalStateException("Public key has not been set for account " + Convert.toUnsignedLong(id)
@@ -481,25 +500,74 @@ public final class Account {
     }
 
     void addToAssetBalanceQNT(Long assetId, long quantityQNT) {
+        Long assetBalance;
         synchronized (this) {
+        //TODO: fix merge
             assetBalances.add(assetId, quantityQNT);
+/*
+            assetBalance = assetBalances.get(assetId);
+            assetBalance = assetBalance == null ? quantityQNT : Convert.safeAdd(assetBalance, quantityQNT);
+            if (assetBalance > 0) {
+                assetBalances.put(assetId, assetBalance);
+            } else if (assetBalance == 0) {
+                assetBalances.remove(assetId);
+            } else {
+                throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(id));
+            }
+*/
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, assetBalances.get(assetId)), Event.ASSET_BALANCE);
     }
 
     void addToUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+        Long unconfirmedAssetBalance;
         synchronized (this) {
             unconfirmedAssetBalances.add(assetId, quantityQNT);
+			//TODO: fix merge
+/*
+            unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            unconfirmedAssetBalance = unconfirmedAssetBalance == null ? quantityQNT : Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
+            if (unconfirmedAssetBalance > 0) {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance);
+            } else if (unconfirmedAssetBalance == 0) {
+                unconfirmedAssetBalances.remove(assetId);
+            } else {
+                throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
+            }
+*/
         }
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(new AccountAsset(id, assetId, unconfirmedAssetBalances.get(assetId)), Event.UNCONFIRMED_ASSET_BALANCE);
     }
 
     void addToAssetAndUnconfirmedAssetBalanceQNT(Long assetId, long quantityQNT) {
+        Long assetBalance;
+        Long unconfirmedAssetBalance;
         synchronized (this) {
+        //TODO: review merge
             assetBalances.add(assetId, quantityQNT);
             unconfirmedAssetBalances.add(assetId, quantityQNT);
+/*
+            assetBalance = assetBalances.get(assetId);
+            assetBalance = assetBalance == null ? quantityQNT : Convert.safeAdd(assetBalance, quantityQNT);
+            if (assetBalance > 0) {
+                assetBalances.put(assetId, assetBalance);
+            } else if (assetBalance == 0) {
+                assetBalances.remove(assetId);
+            } else {
+                throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
+            }
+            unconfirmedAssetBalance = unconfirmedAssetBalances.get(assetId);
+            unconfirmedAssetBalance = unconfirmedAssetBalance == null ? quantityQNT : Convert.safeAdd(unconfirmedAssetBalance, quantityQNT);
+            if (unconfirmedAssetBalance > 0) {
+                unconfirmedAssetBalances.put(assetId, unconfirmedAssetBalance);
+            } else if (unconfirmedAssetBalance == 0) {
+                unconfirmedAssetBalances.remove(assetId);
+            } else {
+                throw new DoubleSpendingException("Negative unconfirmed asset balance for account " + Convert.toUnsignedLong(id));
+            }
+*/
         }
         listeners.notify(this, Event.ASSET_BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
@@ -545,6 +613,7 @@ public final class Account {
         synchronized (this) {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
+            checkBalance();
         }
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
@@ -557,6 +626,7 @@ public final class Account {
         }
         synchronized (this) {
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
+            checkBalance();
         }
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
     }
@@ -566,6 +636,7 @@ public final class Account {
             this.balanceNQT = Convert.safeAdd(this.balanceNQT, amountNQT);
             this.unconfirmedBalanceNQT = Convert.safeAdd(this.unconfirmedBalanceNQT, amountNQT);
             addToGuaranteedBalanceNQT(amountNQT);
+            checkBalance();
         }
         if (amountNQT != 0) {
             listeners.notify(this, Event.BALANCE);
@@ -576,6 +647,21 @@ public final class Account {
     void addToForgedBalanceNQT(long amountNQT) {
         synchronized(this) {
             this.forgedBalanceNQT = Convert.safeAdd(this.forgedBalanceNQT, amountNQT);
+        }
+    }
+
+    private void checkBalance() {
+        if (id.equals(Genesis.CREATOR_ID)) {
+            return;
+        }
+        if (balanceNQT < 0) {
+            throw new DoubleSpendingException("Negative balance for account " + Convert.toUnsignedLong(id));
+        }
+        if (unconfirmedBalanceNQT < 0) {
+            throw new DoubleSpendingException("Negative unconfirmed balance for account " + Convert.toUnsignedLong(id));
+        }
+        if (unconfirmedBalanceNQT > balanceNQT) {
+            throw new DoubleSpendingException("Unconfirmed balance exceeds balance for account " + Convert.toUnsignedLong(id));
         }
     }
 

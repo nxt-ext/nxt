@@ -1,0 +1,16 @@
+Added peer networking gzip compression. It is enabled by default, and will make
+downloading of the blockchain faster, but in case it causes extra load on your
+public node can be disabled by setting nxt.enablePeerServerGZIPFilter=false in
+nxt.properties.
+
+Enabled serving gzip compressed static resources (html, javascript, css files)
+by the API Server. This would make loading the wallet UI from remote servers
+faster. The compressed .gz files are included in the installation package.
+
+Allow gzip compression of API Server responses too, however this is disabled
+by default. This would be helpful when running the server on a remote machine,
+for online wallets and service providers, to enable it set
+nxt.enableAPIServerGZIPFilter=true in nxt.properties.
+
+Fixed client-side rescanning bug that caused UI to appear outdated.
+

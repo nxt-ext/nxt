@@ -2,8 +2,8 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Alias;
+import nxt.Appendix;
 import nxt.Asset;
-import nxt.Attachment;
 import nxt.Block;
 import nxt.DigitalGoodsStore;
 import nxt.Nxt;
@@ -12,7 +12,9 @@ import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
+import nxt.TransactionType;
 import nxt.crypto.Crypto;
+import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -25,8 +27,7 @@ final class JSONData {
 
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();
-        json.put("account", Convert.toUnsignedLong(alias.getAccountId()));
-        json.put("accountRS", Convert.rsAccount(alias.getAccountId()));
+        putAccount(json, "account", alias.getAccountId());
         json.put("aliasName", alias.getAliasName());
         json.put("aliasURI", alias.getAliasURI());
         json.put("timestamp", alias.getTimestamp());
@@ -34,7 +35,9 @@ final class JSONData {
         Alias.Offer offer = Alias.getOffer(alias.getAliasName());
         if (offer != null) {
             json.put("priceNQT", String.valueOf(offer.getPriceNQT()));
-            json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
+            if (offer.getBuyerId() != null) {
+                json.put("buyer", Convert.toUnsignedLong(offer.getBuyerId()));
+            }
         }
         return json;
     }
@@ -61,8 +64,7 @@ final class JSONData {
 
     static JSONObject asset(Asset asset) {
         JSONObject json = new JSONObject();
-        json.put("account", Convert.toUnsignedLong(asset.getAccountId()));
-        json.put("accountRS", Convert.rsAccount(asset.getAccountId()));
+        putAccount(json, "account", asset.getAccountId());
         json.put("name", asset.getName());
         json.put("description", asset.getDescription());
         json.put("decimals", asset.getDecimals());
@@ -88,8 +90,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("order", Convert.toUnsignedLong(order.getId()));
         json.put("asset", Convert.toUnsignedLong(order.getAssetId()));
-        json.put("account", Convert.toUnsignedLong(order.getAccount().getId()));
-        json.put("accountRS", Convert.rsAccount(order.getAccount().getId()));
+        putAccount(json, "account", order.getAccount().getId());
         json.put("quantityQNT", String.valueOf(order.getQuantityQNT()));
         json.put("priceNQT", String.valueOf(order.getPriceNQT()));
         json.put("height", order.getHeight());
@@ -99,8 +100,7 @@ final class JSONData {
     static JSONObject block(Block block) {
         JSONObject json = new JSONObject();
         json.put("height", block.getHeight());
-        json.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
-        json.put("generatorRS", Convert.rsAccount(block.getGeneratorId()));
+        putAccount(json, "generator", block.getGeneratorId());
         json.put("generatorPublicKey", Convert.toHexString(block.getGeneratorPublicKey()));
         json.put("timestamp", block.getTimestamp());
         json.put("numberOfTransactions", block.getTransactionIds().size());
@@ -129,6 +129,13 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject encryptedData(EncryptedData encryptedData) {
+        JSONObject json = new JSONObject();
+        json.put("data", Convert.toHexString(encryptedData.getData()));
+        json.put("nonce", Convert.toHexString(encryptedData.getNonce()));
+        return json;
+    }
+
     static JSONObject goods(DigitalGoodsStore.Goods goods) {
         JSONObject json = new JSONObject();
         json.put("goods", Convert.toUnsignedLong(goods.getId()));
@@ -136,8 +143,7 @@ final class JSONData {
         json.put("description", goods.getDescription());
         json.put("quantity", goods.getQuantity());
         json.put("priceNQT", String.valueOf(goods.getPriceNQT()));
-        json.put("seller", Convert.toUnsignedLong(goods.getSellerId()));
-        json.put("sellerRS", Convert.rsAccount(goods.getSellerId()));
+        putAccount(json, "seller", goods.getSellerId());
         json.put("tags", goods.getTags());
         json.put("delisted", goods.isDelisted());
         return json;
@@ -145,9 +151,7 @@ final class JSONData {
 
     static JSONObject hallmark(Hallmark hallmark) {
         JSONObject json = new JSONObject();
-        Long accountId = Account.getId(hallmark.getPublicKey());
-        json.put("account", Convert.toUnsignedLong(accountId));
-        json.put("accountRS", Convert.rsAccount(accountId));
+        putAccount(json, "account", Account.getId(hallmark.getPublicKey()));
         json.put("host", hallmark.getHost());
         json.put("weight", hallmark.getWeight());
         String dateString = Hallmark.formatDate(hallmark.getDate());
@@ -158,9 +162,7 @@ final class JSONData {
 
     static JSONObject token(Token token) {
         JSONObject json = new JSONObject();
-        Long accountId = Account.getId(token.getPublicKey());
-        json.put("account", Convert.toUnsignedLong(accountId));
-        json.put("accountRS", Convert.rsAccount(accountId));
+        putAccount(json, "account", Account.getId(token.getPublicKey()));
         json.put("timestamp", token.getTimestamp());
         json.put("valid", token.isValid());
         return json;
@@ -181,6 +183,7 @@ final class JSONData {
         json.put("version", peer.getVersion());
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
+        json.put("lastUpdated", peer.getLastUpdated());
         return json;
     }
 
@@ -206,28 +209,37 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("purchase", Convert.toUnsignedLong(purchase.getId()));
         json.put("goods", Convert.toUnsignedLong(purchase.getGoodsId()));
-        json.put("seller", Convert.toUnsignedLong(purchase.getSellerId()));
-        json.put("sellerRS", Convert.rsAccount(purchase.getSellerId()));
+        json.put("name", purchase.getName());
+        putAccount(json, "seller", purchase.getSellerId());
         json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));
         json.put("quantity", purchase.getQuantity());
-        json.put("buyer", Convert.toUnsignedLong(purchase.getBuyerId()));
-        json.put("buyerRS", Convert.rsAccount(purchase.getBuyerId()));
+        putAccount(json, "buyer", purchase.getBuyerId());
         json.put("timestamp", purchase.getTimestamp());
         json.put("deliveryDeadlineTimestamp", purchase.getDeliveryDeadlineTimestamp());
-        json.put("note", Convert.toHexString(purchase.getNote().getData()));
-        json.put("noteNonce", Convert.toHexString(purchase.getNote().getNonce()));
+        if (purchase.getNote() != null) {
+            json.put("note", encryptedData(purchase.getNote()));
+        }
         json.put("pending", purchase.isPending());
         if (purchase.getEncryptedGoods() != null) {
-            json.put("goodsData", Convert.toHexString(purchase.getEncryptedGoods().getData()));
-            json.put("goodsDataNonce", Convert.toHexString(purchase.getEncryptedGoods().getNonce()));
+            json.put("goodsData", encryptedData(purchase.getEncryptedGoods()));
+            json.put("goodsIsText", purchase.goodsIsText());
         }
-        if (purchase.getFeedbackNote() != null) {
-            json.put("feedbackNote", Convert.toHexString(purchase.getFeedbackNote().getData()));
-            json.put("feedbackNoteNonce", Convert.toHexString(purchase.getFeedbackNote().getNonce()));
+        if (purchase.getFeedbackNotes() != null) {
+            JSONArray feedbacks = new JSONArray();
+            for (EncryptedData encryptedData : purchase.getFeedbackNotes()) {
+                feedbacks.add(encryptedData(encryptedData));
+            }
+            json.put("feedbackNotes", feedbacks);
+        }
+        if (purchase.getPublicFeedback() != null) {
+            JSONArray publicFeedbacks = new JSONArray();
+            for (String publicFeedback : purchase.getPublicFeedback()) {
+                publicFeedbacks.add(publicFeedback);
+            }
+            json.put("publicFeedbacks", publicFeedbacks);
         }
         if (purchase.getRefundNote() != null) {
-            json.put("refundNote", Convert.toHexString(purchase.getRefundNote().getData()));
-            json.put("refundNoteNonce", Convert.toHexString(purchase.getRefundNote().getNonce()));
+            json.put("refundNote", encryptedData(purchase.getRefundNote()));
         }
         if (purchase.getDiscountNQT() > 0) {
             json.put("discountNQT", String.valueOf(purchase.getDiscountNQT()));
@@ -257,8 +269,9 @@ final class JSONData {
         json.put("timestamp", transaction.getTimestamp());
         json.put("deadline", transaction.getDeadline());
         json.put("senderPublicKey", Convert.toHexString(transaction.getSenderPublicKey()));
-        json.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
-        json.put("recipientRS", Convert.rsAccount(transaction.getRecipientId()));
+        if (transaction.getRecipientId() != null) {
+            putAccount(json, "recipient", transaction.getRecipientId());
+        }
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
         if (transaction.getReferencedTransactionFullHash() != null) {
@@ -271,12 +284,30 @@ final class JSONData {
             json.put("fullHash", transaction.getFullHash());
             json.put("transaction", transaction.getStringId());
         }
-        if (transaction.getAttachment() != null) {
-            json.put("attachment", attachment(transaction.getAttachment()));
+        JSONObject attachmentJSON = new JSONObject();
+        for (Appendix appendage : transaction.getAppendages()) {
+            attachmentJSON.putAll(appendage.getJSONObject());
         }
-        json.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
-        json.put("senderRS", Convert.rsAccount(transaction.getSenderId()));
+        if (! attachmentJSON.isEmpty()) {
+            modifyAttachmentJSON(attachmentJSON);
+            if (transaction.getType() == TransactionType.ColoredCoins.ASSET_TRANSFER) {
+                //TODO: remove some time after DGS block
+                String comment = (String)attachmentJSON.get("comment");
+                String message = (String)attachmentJSON.get("message");
+                if (comment == null && message != null) {
+                    attachmentJSON.put("comment", message);
+                }
+            }
+            json.put("attachment", attachmentJSON);
+        }
+        putAccount(json, "sender", transaction.getSenderId());
         json.put("height", transaction.getHeight());
+        json.put("version", transaction.getVersion());
+        if (transaction.getVersion() > 0) {
+            json.put("ecBlockId", Convert.toUnsignedLong(transaction.getECBlockId()));
+            json.put("ecBlockHeight", transaction.getECBlockHeight());
+        }
+
         return json;
     }
 
@@ -289,8 +320,7 @@ final class JSONData {
     }
 
     // ugly, hopefully temporary
-    static JSONObject attachment(Attachment attachment) {
-        JSONObject json = attachment.getJSONObject();
+    private static void modifyAttachmentJSON(JSONObject json) {
         Long quantityQNT = (Long) json.remove("quantityQNT");
         if (quantityQNT != null) {
             json.put("quantityQNT", String.valueOf(quantityQNT));
@@ -299,7 +329,19 @@ final class JSONData {
         if (priceNQT != null) {
             json.put("priceNQT", String.valueOf(priceNQT));
         }
-        return json;
+        Long discountNQT = (Long) json.remove("discountNQT");
+        if (discountNQT != null) {
+            json.put("discountNQT", String.valueOf(discountNQT));
+        }
+        Long refundNQT = (Long) json.remove("refundNQT");
+        if (refundNQT != null) {
+            json.put("refundNQT", String.valueOf(refundNQT));
+        }
+    }
+
+    static void putAccount(JSONObject json, String name, Long accountId) {
+        json.put(name, Convert.toUnsignedLong(accountId));
+        json.put(name + "RS", Convert.rsAccount(accountId));
     }
 
     private JSONData() {} // never
