@@ -140,10 +140,11 @@ public final class PeerServlet extends HttpServlet {
             if (peer != null) {
                 peer.updateUploadedVolume(byteCount);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             if (peer != null) {
                 peer.blacklist(e);
             }
+            throw e;
         }
     }
 
