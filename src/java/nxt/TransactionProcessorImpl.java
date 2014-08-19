@@ -346,6 +346,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         || transaction.getDeadline() > 1440) {
                     continue;
                 }
+                if (transaction.getVersion() < 1) {
+                    continue;
+                }
 
                 synchronized (BlockchainImpl.getInstance()) {
 
