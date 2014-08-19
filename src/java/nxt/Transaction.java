@@ -20,7 +20,7 @@ public interface Transaction extends Comparable<Transaction> {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
-        Transaction build() throws NxtException.ValidationException;
+        Transaction build() throws NxtException.NotValidException;
 
     }
 

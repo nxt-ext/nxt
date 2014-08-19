@@ -196,7 +196,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                     try {
                         processPeerTransactions(transactionsData, false);
-                    } catch (RuntimeException e) {
+                    } catch (NxtException.ValidationException|RuntimeException e) {
                         peer.blacklist(e);
                     }
                 } catch (Exception e) {
@@ -278,7 +278,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {
         return TransactionImpl.parseTransaction(transactionData);
     }
 
@@ -386,12 +386,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
-                transaction.validateAttachment();
+                try {
+                    transaction.validateAttachment();
+                } catch (NxtException.NotCurrentlyValidException ignore) {}
                 transactions.add(transaction);
-            } catch (NxtException.NotCurrentlyValidException e) {
-                //if (! (e instanceof NxtException.NotYetEnabledException)) {
-                //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
-                //}
+            } catch (NxtException.NotValidException e) {
+                Logger.logDebugMessage("Invalid transaction from peer: " + ((JSONObject) transactionData).toJSONString());
+                throw e;
             }
         }
         processTransactions(transactions, sendToPeers);
@@ -412,6 +413,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 int curTime = Convert.getEpochTime();
                 if (transaction.getTimestamp() > curTime + 15 || transaction.getExpiration() < curTime
                         || transaction.getDeadline() > 1440) {
+                    continue;
+                }
+                if (transaction.getVersion() < 1) {
                     continue;
                 }
 
