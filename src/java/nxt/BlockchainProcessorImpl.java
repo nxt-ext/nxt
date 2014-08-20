@@ -574,7 +574,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
                         if (!EconomicClustering.verifyFork(transaction)) {
-                            Logger.logDebugMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
+                            Logger.logDebugMessage("Block " + block.getStringId() + " height " + (previousLastBlock.getHeight() + 1)
+                                    + " contains transaction that was generated on a fork: "
                                     + transaction.getStringId() + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId "
                                     + Convert.toUnsignedLong(transaction.getECBlockId()));
                             //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
