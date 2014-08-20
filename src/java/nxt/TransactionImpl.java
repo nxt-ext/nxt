@@ -179,11 +179,11 @@ final class TransactionImpl implements Transaction {
     private final List<? extends Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
 
-    private int height = Integer.MAX_VALUE;
-    private Long blockId;
+    private volatile int height = Integer.MAX_VALUE;
+    private volatile Long blockId;
     private volatile Block block;
     private volatile byte[] signature;
-    private int blockTimestamp = -1;
+    private volatile int blockTimestamp = -1;
     private volatile Long id;
     private volatile String stringId;
     private volatile Long senderId;
@@ -320,7 +320,7 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public Block getBlock() {
-        if (block == null) {
+        if (block == null && blockId != null) {
             block = BlockDb.findBlock(blockId);
         }
         return block;
@@ -331,6 +331,14 @@ final class TransactionImpl implements Transaction {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.blockTimestamp = block.getTimestamp();
+    }
+
+    private void unsetBlock() {
+        this.block = null;
+        this.blockId = null;
+        this.blockTimestamp = -1;
+        // must keep the height set, as transactions already having been included in a popped-off block before
+        // get priority when sorted for inclusion in a new block
     }
 
     @Override
@@ -793,6 +801,7 @@ final class TransactionImpl implements Transaction {
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.undo(this, senderAccount, recipientAccount);
         }
+        unsetBlock();
     }
 
     boolean isDuplicate(Map<TransactionType, Set<String>> duplicates) {
