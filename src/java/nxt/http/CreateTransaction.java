@@ -154,7 +154,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 builder.encryptToSelfMessage(encryptToSelfMessage);
             }
             Transaction transaction = builder.build();
-            transaction.validateAttachment();
+            transaction.validate();
 
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
