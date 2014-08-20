@@ -508,6 +508,16 @@ public final class Peers {
         return allPeers;
     }
 
+    public static Collection<? extends Peer> getActivePeers() {
+        List<PeerImpl> activePeers = new ArrayList<>();
+        for (PeerImpl peer : peers.values()) {
+            if (peer.getState() != Peer.State.NON_CONNECTED) {
+                activePeers.add(peer);
+            }
+        }
+        return activePeers;
+    }
+
     public static Peer getPeer(String peerAddress) {
         return peers.get(peerAddress);
     }

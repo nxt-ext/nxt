@@ -59,7 +59,7 @@ final class TransactionImpl implements Transaction {
         }
 
         @Override
-        public TransactionImpl build() throws NxtException.ValidationException {
+        public TransactionImpl build() throws NxtException.NotValidException {
             return new TransactionImpl(this);
         }
 
@@ -180,11 +180,11 @@ final class TransactionImpl implements Transaction {
     private final List<? extends Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
 
-    private int height = Integer.MAX_VALUE;
-    private Long blockId;
+    private volatile int height = Integer.MAX_VALUE;
+    private volatile Long blockId;
     private volatile Block block;
     private volatile byte[] signature;
-    private int blockTimestamp = -1;
+    private volatile int blockTimestamp = -1;
     private volatile Long id;
     private volatile String stringId;
     private volatile Long senderId;
@@ -321,7 +321,7 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public Block getBlock() {
-        if (block == null) {
+        if (block == null && blockId != null) {
             block = BlockDb.findBlock(blockId);
         }
         return block;
@@ -332,6 +332,14 @@ final class TransactionImpl implements Transaction {
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.blockTimestamp = block.getTimestamp();
+    }
+
+    private void unsetBlock() {
+        this.block = null;
+        this.blockId = null;
+        this.blockTimestamp = -1;
+        // must keep the height set, as transactions already having been included in a popped-off block before
+        // get priority when sorted for inclusion in a new block
     }
 
     @Override
@@ -563,7 +571,7 @@ final class TransactionImpl implements Transaction {
                 builder.encryptToSelfMessage(new Appendix.EncryptToSelfMessage(buffer, version));
             }
             return builder.build();
-        } catch (NxtException.ValidationException|RuntimeException e) {
+        } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
             throw e;
         }
@@ -616,7 +624,7 @@ final class TransactionImpl implements Transaction {
         return json;
     }
 
-    static TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+    static TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {
         try {
             byte type = ((Long) transactionData.get("type")).byteValue();
             byte subtype = ((Long) transactionData.get("subtype")).byteValue();
@@ -655,7 +663,7 @@ final class TransactionImpl implements Transaction {
                 builder.ecBlockId(Convert.parseUnsignedLong((String) transactionData.get("ecBlockId")));
             }
             return builder.build();
-        } catch (NxtException.ValidationException|RuntimeException e) {
+        } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction: " + transactionData.toJSONString());
             throw e;
         }
@@ -690,7 +698,7 @@ final class TransactionImpl implements Transaction {
         return getId().hashCode();
     }
 
-    public boolean verify() {
+    public boolean verifySignature() {
         Account account = Account.getAccount(getSenderId());
         if (account == null) {
             return false;
@@ -746,7 +754,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public void validateAttachment() throws NxtException.ValidationException {
+    public void validate() throws NxtException.ValidationException {
         if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK && type.hasRecipient() && recipientId != null) {
             Account recipientAccount = Account.getAccount(recipientId);
             if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {
@@ -794,6 +802,7 @@ final class TransactionImpl implements Transaction {
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.undo(this, senderAccount, recipientAccount);
         }
+        unsetBlock();
     }
 
     void updateSpendings(Map<Long, SuperComplexNumber> spendings) {

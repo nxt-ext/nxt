@@ -136,7 +136,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     }
                     try {
                         processPeerTransactions(transactionsData, false);
-                    } catch (RuntimeException e) {
+                    } catch (NxtException.ValidationException|RuntimeException e) {
                         peer.blacklist(e);
                     }
                 } catch (Exception e) {
@@ -193,7 +193,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
-        if (! transaction.verify()) {
+        if (! transaction.verifySignature()) {
             throw new NxtException.NotValidException("Transaction signature verification failed");
         }
         List<Transaction> validTransactions = processTransactions(Collections.singleton((TransactionImpl) transaction), true);
@@ -218,7 +218,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.ValidationException {
+    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {
         return TransactionImpl.parseTransaction(transactionData);
     }
 
@@ -318,12 +318,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         for (Object transactionData : transactionsData) {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
-                transaction.validateAttachment();
+                try {
+                    transaction.validate();
+                } catch (NxtException.NotCurrentlyValidException ignore) {}
                 transactions.add(transaction);
-            } catch (NxtException.NotCurrentlyValidException e) {
-                //if (! (e instanceof NxtException.NotYetEnabledException)) {
-                //    Logger.logDebugMessage("Dropping invalid transaction: " + e.getMessage());
-                //}
+            } catch (NxtException.NotValidException e) {
+                Logger.logDebugMessage("Invalid transaction from peer: " + ((JSONObject) transactionData).toJSONString());
+                throw e;
             }
         }
         processTransactions(transactions, sendToPeers);
@@ -346,6 +347,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         || transaction.getDeadline() > 1440) {
                     continue;
                 }
+                if (transaction.getVersion() < 1) {
+                    continue;
+                }
 
                 synchronized (BlockchainImpl.getInstance()) {
 
@@ -358,7 +362,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         continue;
                     }
 
-                    if (! transaction.verify()) {
+                    if (! transaction.verifySignature()) {
                         if (Account.getAccount(transaction.getSenderId()) != null) {
                             Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
                         }
