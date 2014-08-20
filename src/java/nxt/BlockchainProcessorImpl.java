@@ -575,7 +575,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                         if (!EconomicClustering.verifyFork(transaction)) {
                             Logger.logDebugMessage("Block " + block.getStringId() + " contains transaction that was generated on a fork: "
-                                    + transaction.getStringId());
+                                    + transaction.getStringId() + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId "
+                                    + Convert.toUnsignedLong(transaction.getECBlockId()));
                             //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
                         }
                         if (transaction.getId().equals(Long.valueOf(0L))) {
@@ -734,7 +735,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 if (!EconomicClustering.verifyFork(transaction)) {
-                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId());
+                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId()
+                            + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
                     //continue;
                 }
 
@@ -787,7 +789,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         try {
             pushBlock(block);
             blockListeners.notify(block, Event.BLOCK_GENERATED);
-            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId());
+            Logger.logDebugMessage("Account " + Convert.toUnsignedLong(block.getGeneratorId()) + " generated block " + block.getStringId()
+                    + " at height " + block.getHeight());
             return true;
         } catch (TransactionNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
@@ -871,7 +874,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 }
                                 if (! EconomicClustering.verifyFork(transaction)) {
                                     Logger.logDebugMessage("Found transaction that was generated on a fork: " + transaction.getStringId()
-                                            + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight());
+                                            + " in block " + currentBlock.getStringId() + " at height " + currentBlock.getHeight()
+                                            + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
                                     //throw new NxtException.NotValidException("Invalid transaction fork");
                                 }
                                 transaction.validateAttachment();
