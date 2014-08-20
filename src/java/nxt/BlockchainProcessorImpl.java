@@ -569,7 +569,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
                                     + " at height " + previousLastBlock.getHeight(), transaction);
                         }
-                        if (!transaction.verify()) {
+                        if (!transaction.verifySignature()) {
                             throw new TransactionNotAcceptedException("Signature verification failed for transaction "
                                     + transaction.getStringId() + " at height " + previousLastBlock.getHeight(), transaction);
                         }
@@ -588,7 +588,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     + transaction.getStringId(), transaction);
                         }
                         try {
-                            transaction.validateAttachment();
+                            transaction.validate();
                         } catch (NxtException.ValidationException e) {
                             throw new TransactionNotAcceptedException(e.getMessage(), transaction);
                         }
@@ -727,7 +727,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 try {
-                    transaction.validateAttachment();
+                    transaction.validate();
                 } catch (NxtException.NotCurrentlyValidException e) {
                     continue;
                 } catch (NxtException.ValidationException e) {
@@ -867,7 +867,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                 throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
                             }
                             for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                if (!transaction.verify()) {
+                                if (!transaction.verifySignature()) {
                                     throw new NxtException.NotValidException("Invalid transaction signature");
                                 }
                                 if (transaction.getVersion() != transactionProcessor.getTransactionVersion(blockchain.getHeight())) {
@@ -879,7 +879,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                             + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
                                     //throw new NxtException.NotValidException("Invalid transaction fork");
                                 }
-                                transaction.validateAttachment();
+                                transaction.validate();
                                 byte[] transactionBytes = transaction.getBytes();
                                 if (currentBlock.getHeight() > Constants.NQT_BLOCK
                                         && ! Arrays.equals(transactionBytes, transactionProcessor.parseTransaction(transactionBytes).getBytes())) {

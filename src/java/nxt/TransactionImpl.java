@@ -697,7 +697,7 @@ final class TransactionImpl implements Transaction {
         return getId().hashCode();
     }
 
-    public boolean verify() {
+    public boolean verifySignature() {
         Account account = Account.getAccount(getSenderId());
         if (account == null) {
             return false;
@@ -753,7 +753,7 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public void validateAttachment() throws NxtException.ValidationException {
+    public void validate() throws NxtException.ValidationException {
         if (Nxt.getBlockchain().getHeight() >= Constants.PUBLIC_KEY_ANNOUNCEMENT_BLOCK && type.hasRecipient() && recipientId != null) {
             Account recipientAccount = Account.getAccount(recipientId);
             if ((recipientAccount == null || recipientAccount.getPublicKey() == null) && publicKeyAnnouncement == null) {

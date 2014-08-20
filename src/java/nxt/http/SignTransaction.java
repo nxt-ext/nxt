@@ -45,7 +45,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
                 JSONObject json = (JSONObject) JSONValue.parse(transactionJSON);
                 transaction = Nxt.getTransactionProcessor().parseTransaction(json);
             }
-            transaction.validateAttachment();
+            transaction.validate();
             if (transaction.getSignature() != null) {
                 JSONObject response = new JSONObject();
                 response.put("errorCode", 4);
@@ -58,7 +58,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
             response.put("fullHash", transaction.getFullHash());
             response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
             response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
-            response.put("verify", transaction.verify());
+            response.put("verify", transaction.verifySignature());
             return response;
         } catch (NxtException.ValidationException|RuntimeException e) {
             //Logger.logDebugMessage(e.getMessage(), e);

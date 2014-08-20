@@ -193,7 +193,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public void broadcast(Transaction transaction) throws NxtException.ValidationException {
-        if (! transaction.verify()) {
+        if (! transaction.verifySignature()) {
             throw new NxtException.NotValidException("Transaction signature verification failed");
         }
         List<Transaction> validTransactions = processTransactions(Collections.singleton((TransactionImpl) transaction), true);
@@ -319,7 +319,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 TransactionImpl transaction = parseTransaction((JSONObject)transactionData);
                 try {
-                    transaction.validateAttachment();
+                    transaction.validate();
                 } catch (NxtException.NotCurrentlyValidException ignore) {}
                 transactions.add(transaction);
             } catch (NxtException.NotValidException e) {
@@ -362,7 +362,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         continue;
                     }
 
-                    if (! transaction.verify()) {
+                    if (! transaction.verifySignature()) {
                         if (Account.getAccount(transaction.getSenderId()) != null) {
                             Logger.logDebugMessage("Transaction " + transaction.getJSONObject().toJSONString() + " failed to verify");
                         }
