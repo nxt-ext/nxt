@@ -41,7 +41,7 @@ public final class EncryptedData {
     }
 
     public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength)
-            throws NxtException.ValidationException {
+            throws NxtException.NotValidException {
         if (length == 0) {
             return EMPTY_DATA;
         }

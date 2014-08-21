@@ -123,21 +123,28 @@ public final class PeerServlet extends HttpServlet {
         }
 
         resp.setContentType("text/plain; charset=UTF-8");
-        long byteCount;
-        if (isGzipEnabled) {
-            try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
-                response.writeJSONString(writer);
+        try {
+            long byteCount;
+            if (isGzipEnabled) {
+                try (Writer writer = new OutputStreamWriter(resp.getOutputStream(), "UTF-8")) {
+                    response.writeJSONString(writer);
+                }
+                byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
+            } else {
+                CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
+                try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
+                    response.writeJSONString(writer);
+                }
+                byteCount = cos.getCount();
             }
-            byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
-        } else {
-            CountingOutputStream cos = new CountingOutputStream(resp.getOutputStream());
-            try (Writer writer = new OutputStreamWriter(cos, "UTF-8")) {
-                response.writeJSONString(writer);
+            if (peer != null) {
+                peer.updateUploadedVolume(byteCount);
             }
-            byteCount = cos.getCount();
-        }
-        if (peer != null) {
-            peer.updateUploadedVolume(byteCount);
+        } catch (Exception e) {
+            if (peer != null) {
+                peer.blacklist(e);
+            }
+            throw e;
         }
     }
 

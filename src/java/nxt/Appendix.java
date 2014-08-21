@@ -35,8 +35,7 @@ public interface Appendix {
         }
 
         AbstractAppendix() {
-            //TODO: default to 1 after DGS
-            this.version = (byte)(Nxt.getBlockchain().getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1);
+            this.version = 1;
         }
 
         abstract String getAppendixName();
@@ -89,7 +88,7 @@ public interface Appendix {
 
     public static class Message extends AbstractAppendix {
 
-        static Message parse(JSONObject attachmentData) throws NxtException.ValidationException {
+        static Message parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (attachmentData.get("message") == null) {
                 return null;
             }
@@ -99,7 +98,7 @@ public interface Appendix {
         private final byte[] message;
         private final boolean isText;
 
-        Message(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        Message(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             int messageLength = buffer.getInt();
             this.isText = messageLength < 0; // ugly hack
@@ -113,14 +112,11 @@ public interface Appendix {
             buffer.get(this.message);
         }
 
-        Message(JSONObject attachmentData) throws NxtException.ValidationException {
+        Message(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
             String messageString = (String)attachmentData.get("message");
             this.isText = Boolean.TRUE.equals((Boolean)attachmentData.get("messageIsText"));
             this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
-            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
-            }
         }
 
         public Message(byte[] message) {
@@ -163,6 +159,9 @@ public interface Appendix {
             if (transaction.getVersion() == 0 && transaction.getAttachment() != Attachment.ARBITRARY_MESSAGE) {
                 throw new NxtException.NotValidException("Message attachments not enabled for version 0 transactions");
             }
+            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
+            }
         }
 
         @Override
@@ -185,7 +184,7 @@ public interface Appendix {
         private final EncryptedData encryptedData;
         private final boolean isText;
 
-        private AbstractEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        private AbstractEncryptedMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             int length = buffer.getInt();
             this.isText = length < 0;
@@ -195,16 +194,10 @@ public interface Appendix {
             this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
         }
 
-        private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) throws NxtException.ValidationException {
+        private AbstractEncryptedMessage(JSONObject attachmentJSON, JSONObject encryptedMessageJSON) throws NxtException.NotValidException {
             super(attachmentJSON);
             byte[] data = Convert.parseHexString((String)encryptedMessageJSON.get("data"));
-            if (data.length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
-                throw new NxtException.NotValidException("Max encrypted message length exceeded");
-            }
             byte[] nonce = Convert.parseHexString((String)encryptedMessageJSON.get("nonce"));
-            if ((nonce.length != 32 && data.length > 0) || (nonce.length != 0 && data.length == 0)) {
-                throw new NxtException.NotValidException("Invalid nonce length " + nonce.length);
-            }
             this.encryptedData = new EncryptedData(data, nonce);
             this.isText = Boolean.TRUE.equals(encryptedMessageJSON.get("isText"));
         }
@@ -234,6 +227,16 @@ public interface Appendix {
         }
 
         @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+                throw new NxtException.NotValidException("Max encrypted message length exceeded");
+            }
+            if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
+                    || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
+                throw new NxtException.NotValidException("Invalid nonce length " + encryptedData.getNonce().length);
+            }
+        }
+
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {}
 
         @Override
@@ -251,7 +254,7 @@ public interface Appendix {
 
     public static class EncryptedMessage extends AbstractEncryptedMessage {
 
-        static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
+        static EncryptedMessage parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (attachmentData.get("encryptedMessage") == null ) {
                 return null;
             }
@@ -262,7 +265,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptedMessage(JSONObject attachmentData) throws NxtException.ValidationException {
+        EncryptedMessage(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData, (JSONObject)attachmentData.get("encryptedMessage"));
         }
 
@@ -284,6 +287,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            super.validate(transaction);
             if (! transaction.getType().hasRecipient()) {
                 throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
             }
@@ -296,7 +300,7 @@ public interface Appendix {
 
     public static class EncryptToSelfMessage extends AbstractEncryptedMessage {
 
-        static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.ValidationException {
+        static EncryptToSelfMessage parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (attachmentData.get("encryptToSelfMessage") == null ) {
                 return null;
             }
@@ -307,7 +311,7 @@ public interface Appendix {
             super(buffer, transactionVersion);
         }
 
-        EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.ValidationException {
+        EncryptToSelfMessage(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData, (JSONObject)attachmentData.get("encryptToSelfMessage"));
         }
 
@@ -329,6 +333,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
+            super.validate(transaction);
             if (transaction.getVersion() == 0) {
                 throw new NxtException.NotValidException("Encrypt-to-self message attachments not enabled for version 0 transactions");
             }
@@ -338,7 +343,7 @@ public interface Appendix {
 
     public static class PublicKeyAnnouncement extends AbstractAppendix {
 
-        static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.ValidationException {
+        static PublicKeyAnnouncement parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (attachmentData.get("recipientPublicKey") == null) {
                 return null;
             }
@@ -353,7 +358,7 @@ public interface Appendix {
             buffer.get(this.publicKey);
         }
 
-        PublicKeyAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
+        PublicKeyAnnouncement(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
             this.publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
         }

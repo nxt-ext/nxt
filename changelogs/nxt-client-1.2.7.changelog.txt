@@ -1,0 +1,9 @@
+No longer allow creation of pre-DGS block transactions, and ignore such
+transactions received from old version peers on a fork.
+
+Improvements in exception handling, transaction validation, error logging.
+Updated run.bat file. Blacklist unreachable peers on connection timeout.
+
+Added an optional "active" parameter to the getPeers API request. If true,
+only active peers are returned (those in state CONNECTED or DISCONNECTED).
+
