@@ -399,12 +399,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		transaction.type = byteArray[0];
 
-		if (NRS.dgsBlockPassed) {
-			transaction.version = (byteArray[1] & 0xF0) >> 4;
-			transaction.subtype = byteArray[1] & 0x0F;
-		} else {
-			transaction.subtype = byteArray[1];
-		}
+		transaction.version = (byteArray[1] & 0xF0) >> 4;
+		transaction.subtype = byteArray[1] & 0x0F;
 
 		transaction.timestamp = String(converters.byteArrayToSignedInt32(byteArray, 2));
 		transaction.deadline = String(converters.byteArrayToSignedShort(byteArray, 6));
@@ -486,20 +482,6 @@ var NRS = (function(NRS, $, undefined) {
 			case "sendMessage":
 				if (transaction.type !== 1 || transaction.subtype !== 0) {
 					return false;
-				}
-
-				if (!NRS.dgsBlockPassed) {
-					var messageLength = String(converters.byteArrayToSignedInt32(byteArray, pos));
-
-					pos += 4;
-
-					var slice = byteArray.slice(pos, pos + messageLength);
-
-					transaction.message = converters.byteArrayToHexString(slice);
-
-					if (transaction.message !== data.message) {
-						return false;
-					}
 				}
 
 				break;
@@ -756,18 +738,6 @@ var NRS = (function(NRS, $, undefined) {
 				transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
 
 				pos += 8;
-
-				if (!NRS.dgsBlockPassed) {
-					var commentLength = converters.byteArrayToSignedShort(byteArray, pos);
-
-					pos += 2;
-
-					transaction.comment = converters.byteArrayToString(byteArray, pos, commentLength);
-
-					if (transaction.comment !== data.comment) {
-						return false;
-					}
-				}
 
 				if (transaction.asset !== data.asset || transaction.quantityQNT !== data.quantityQNT) {
 					return false;
@@ -1031,140 +1001,138 @@ var NRS = (function(NRS, $, undefined) {
 				return false;
 		}
 
-		if (NRS.dgsBlockPassed) {
-			var position = 1;
+		var position = 1;
 
-			//non-encrypted message
-			if ((transaction.flags & position) != 0 || (requestType == "sendMessage" && data.message)) {
-				var attachmentVersion = byteArray[pos];
+		//non-encrypted message
+		if ((transaction.flags & position) != 0 || (requestType == "sendMessage" && data.message)) {
+			var attachmentVersion = byteArray[pos];
 
-				pos++;
+			pos++;
 
-				var messageLength = converters.byteArrayToSignedInt32(byteArray, pos);
+			var messageLength = converters.byteArrayToSignedInt32(byteArray, pos);
 
-				transaction.messageIsText = messageLength < 0; // ugly hack??
+			transaction.messageIsText = messageLength < 0; // ugly hack??
 
-				if (messageLength < 0) {
-					messageLength &= 2147483647;
-				}
+			if (messageLength < 0) {
+				messageLength &= 2147483647;
+			}
 
-				pos += 4;
+			pos += 4;
 
-				if (transaction.messageIsText) {
-					transaction.message = converters.byteArrayToString(byteArray, pos, messageLength);
-				} else {
-					var slice = byteArray.slice(pos, pos + messageLength);
-					transaction.message = converters.byteArrayToHexString(slice);
-				}
+			if (transaction.messageIsText) {
+				transaction.message = converters.byteArrayToString(byteArray, pos, messageLength);
+			} else {
+				var slice = byteArray.slice(pos, pos + messageLength);
+				transaction.message = converters.byteArrayToHexString(slice);
+			}
 
-				pos += messageLength;
+			pos += messageLength;
 
-				var messageIsText = (transaction.messageIsText ? "true" : "false");
+			var messageIsText = (transaction.messageIsText ? "true" : "false");
 
-				if (messageIsText != data.messageIsText) {
-					return false;
-				}
-
-				if (transaction.message !== data.message) {
-					return false;
-				}
-			} else if (data.message) {
+			if (messageIsText != data.messageIsText) {
 				return false;
 			}
 
-			position <<= 1;
+			if (transaction.message !== data.message) {
+				return false;
+			}
+		} else if (data.message) {
+			return false;
+		}
 
-			//encrypted note
-			if ((transaction.flags & position) != 0) {
-				var attachmentVersion = byteArray[pos];
+		position <<= 1;
 
-				pos++;
+		//encrypted note
+		if ((transaction.flags & position) != 0) {
+			var attachmentVersion = byteArray[pos];
 
-				var encryptedMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
+			pos++;
 
-				transaction.messageToEncryptIsText = encryptedMessageLength < 0;
+			var encryptedMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
 
-				if (encryptedMessageLength < 0) {
-					encryptedMessageLength &= 2147483647;
-				}
+			transaction.messageToEncryptIsText = encryptedMessageLength < 0;
 
-				pos += 4;
+			if (encryptedMessageLength < 0) {
+				encryptedMessageLength &= 2147483647;
+			}
 
-				transaction.encryptedMessageData = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedMessageLength));
+			pos += 4;
 
-				pos += encryptedMessageLength;
+			transaction.encryptedMessageData = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedMessageLength));
 
-				transaction.encryptedMessageNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+			pos += encryptedMessageLength;
 
-				pos += 32;
+			transaction.encryptedMessageNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
 
-				var messageToEncryptIsText = (transaction.messageToEncryptIsText ? "true" : "false");
+			pos += 32;
 
-				if (messageToEncryptIsText != data.messageToEncryptIsText) {
-					return false;
-				}
+			var messageToEncryptIsText = (transaction.messageToEncryptIsText ? "true" : "false");
 
-				if (transaction.encryptedMessageData !== data.encryptedMessageData || transaction.encryptedMessageNonce !== data.encryptedMessageNonce) {
-					return false;
-				}
-			} else if (data.encryptedMessageData) {
+			if (messageToEncryptIsText != data.messageToEncryptIsText) {
 				return false;
 			}
 
-			position <<= 1;
+			if (transaction.encryptedMessageData !== data.encryptedMessageData || transaction.encryptedMessageNonce !== data.encryptedMessageNonce) {
+				return false;
+			}
+		} else if (data.encryptedMessageData) {
+			return false;
+		}
 
-			if ((transaction.flags & position) != 0) {
-				var attachmentVersion = byteArray[pos];
+		position <<= 1;
 
-				pos++;
+		if ((transaction.flags & position) != 0) {
+			var attachmentVersion = byteArray[pos];
 
-				var recipientPublicKey = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+			pos++;
 
-				if (recipientPublicKey != data.recipientPublicKey) {
-					return false;
-				}
-				pos += 32;
-			} else if (data.recipientPublicKey) {
+			var recipientPublicKey = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+			if (recipientPublicKey != data.recipientPublicKey) {
+				return false;
+			}
+			pos += 32;
+		} else if (data.recipientPublicKey) {
+			return false;
+		}
+
+		position <<= 1;
+
+		if ((transaction.flags & position) != 0) {
+			var attachmentVersion = byteArray[pos];
+
+			pos++;
+
+			var encryptedToSelfMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
+
+			transaction.messageToEncryptToSelfIsText = encryptedToSelfMessageLength < 0;
+
+			if (encryptedToSelfMessageLength < 0) {
+				encryptedToSelfMessageLength &= 2147483647;
+			}
+
+			pos += 4;
+
+			transaction.encryptToSelfMessageData = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedToSelfMessageLength));
+
+			pos += encryptedToSelfMessageLength;
+
+			transaction.encryptToSelfMessageNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+
+			pos += 32;
+
+			var messageToEncryptToSelfIsText = (transaction.messageToEncryptToSelfIsText ? "true" : "false");
+
+			if (messageToEncryptToSelfIsText != data.messageToEncryptToSelfIsText) {
 				return false;
 			}
 
-			position <<= 1;
-
-			if ((transaction.flags & position) != 0) {
-				var attachmentVersion = byteArray[pos];
-
-				pos++;
-
-				var encryptedToSelfMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
-
-				transaction.messageToEncryptToSelfIsText = encryptedToSelfMessageLength < 0;
-
-				if (encryptedToSelfMessageLength < 0) {
-					encryptedToSelfMessageLength &= 2147483647;
-				}
-
-				pos += 4;
-
-				transaction.encryptToSelfMessageData = converters.byteArrayToHexString(byteArray.slice(pos, pos + encryptedToSelfMessageLength));
-
-				pos += encryptedToSelfMessageLength;
-
-				transaction.encryptToSelfMessageNonce = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
-
-				pos += 32;
-
-				var messageToEncryptToSelfIsText = (transaction.messageToEncryptToSelfIsText ? "true" : "false");
-
-				if (messageToEncryptToSelfIsText != data.messageToEncryptToSelfIsText) {
-					return false;
-				}
-
-				if (transaction.encryptToSelfMessageData !== data.encryptToSelfMessageData || transaction.encryptToSelfMessageNonce !== data.encryptToSelfMessageNonce) {
-					return false;
-				}
-			} else if (data.encryptToSelfMessageData) {
+			if (transaction.encryptToSelfMessageData !== data.encryptToSelfMessageData || transaction.encryptToSelfMessageNonce !== data.encryptToSelfMessageNonce) {
 				return false;
 			}
+		} else if (data.encryptToSelfMessageData) {
+			return false;
 		}
 
 		return transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);

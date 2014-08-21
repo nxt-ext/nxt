@@ -66,7 +66,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
 
-	NRS.dgsBlockPassed = false;
 	NRS.PKAnnouncementBlockPassed = false;
 
 	var stateInterval;
@@ -564,8 +563,7 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
-							var translationKey = (NRS.dgsBlockPassed ? "status_new_account" : "status_new_account_old");
-							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t(translationKey, {
+							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
 								"account_id": String(NRS.accountRS).escapeHTML(),
 								"public_key": String(NRS.publicKey).escapeHTML()
 							}) + "<br /><br />" + $.t("status_blockchain_downloading")).show();
@@ -575,8 +573,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
-						var translationKey = (NRS.dgsBlockPassed ? "status_new_account" : "status_new_account_old");
-						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t(translationKey, {
+						$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
 							"account_id": String(NRS.accountRS).escapeHTML(),
 							"public_key": String(NRS.publicKey).escapeHTML()
 						})).show();
