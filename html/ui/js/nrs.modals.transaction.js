@@ -80,7 +80,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var $output = $("#transaction_info_output_top");
 
-					if (NRS.dgsBlockPassed) {
+					if (transaction.attachment) {
 						if (transaction.attachment.message) {
 							if (!transaction.attachment["version.Message"]) {
 								try {
@@ -121,22 +121,9 @@ var NRS = (function(NRS, $, undefined) {
 								$output.append("<div style='padding-bottom:10px'>" + $.t("encrypted_message_no_permission") + "</div>");
 							}
 						}
-					} else {
-						try {
-							message = converters.hexStringToString(transaction.attachment.message);
-						} catch (err) {
-							//legacy
-							if (transaction.attachment.message.indexOf("feff") === 0) {
-								message = NRS.convertFromHex16(transaction.attachment.message);
-							} else {
-								message = NRS.convertFromHex8(transaction.attachment.message);
-							}
-						}
 
-						$("#transaction_info_output_top").html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>");
+						$output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
 					}
-
-					$output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
 
 					break;
 				case 1:
@@ -317,10 +304,6 @@ var NRS = (function(NRS, $, undefined) {
 							"asset_name": asset.name,
 							"quantity": [transaction.attachment.quantityQNT, asset.decimals]
 						};
-
-						if (!NRS.dgsBlockPassed && transaction.attachment.comment) {
-							data["comment"] = transaction.attachment.comment;
-						}
 
 						data["sender"] = NRS.getAccountTitle(transaction, "sender");
 						data["recipient"] = NRS.getAccountTitle(transaction, "recipient");
@@ -767,7 +750,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		if (NRS.dgsBlockPassed && !(transaction.type == 1 && transaction.subtype == 0)) {
+		if (!(transaction.type == 1 && transaction.subtype == 0)) {
 			if (transaction.attachment) {
 				if (transaction.attachment.message) {
 					if (!transaction.attachment["version.Message"]) {
