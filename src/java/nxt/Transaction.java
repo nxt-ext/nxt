@@ -20,6 +20,8 @@ public interface Transaction extends Comparable<Transaction> {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
+        Builder senderId(Long senderId);
+
         Transaction build() throws NxtException.NotValidException;
 
     }
@@ -67,6 +69,10 @@ public interface Transaction extends Comparable<Transaction> {
     boolean verifySignature();
 
     void validate() throws NxtException.ValidationException;
+
+    void validateFee(int height) throws NxtException.ValidationException;
+
+    void validateAmount() throws NxtException.ValidationException;
 
     byte[] getBytes();
 

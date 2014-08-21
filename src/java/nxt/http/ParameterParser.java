@@ -67,7 +67,7 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_FEE);
         }
-        if (feeNQT <= 0 || feeNQT >= Constants.MAX_BALANCE_NQT) {
+        if (feeNQT < 0 || feeNQT >= Constants.MAX_BALANCE_NQT) {
             throw new ParameterException(INCORRECT_FEE);
         }
         return feeNQT;

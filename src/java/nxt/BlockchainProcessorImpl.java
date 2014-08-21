@@ -588,6 +588,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     + transaction.getStringId(), transaction);
                         }
                         try {
+                            transaction.validateFee(previousLastBlock.getHeight());
                             transaction.validate();
                         } catch (NxtException.ValidationException e) {
                             throw new TransactionNotAcceptedException(e.getMessage(), transaction);

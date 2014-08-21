@@ -47,6 +47,13 @@ public abstract class TransactionType {
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
+    private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
+    private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
+    private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+    private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE - 1440;
+    private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
+    private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
+
     public static TransactionType findTransactionType(byte type, byte subtype) {
         switch (type) {
             case TYPE_PAYMENT:
@@ -793,6 +800,16 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE;
+            }
+
+            @Override
+            public Fee getBaselineFee() {
+                return BASELINE_ASSET_ISSUANCE_FEE;
+            }
+
+            @Override
+            public Fee getNextFee() {
+                return NEXT_ASSET_ISSUANCE_FEE;
             }
 
             @Override
@@ -1794,4 +1811,51 @@ public abstract class TransactionType {
 
     }
 
+    long minimumFeeNQT(int height, int appendagesSize) {
+        if (height < BASELINE_FEE_HEIGHT) {
+            return 0; // No need to validate fees before baseline block
+        }
+        Fee fee;
+        if (height - 1440 > NEXT_FEE_HEIGHT) {
+            fee = getNextFee();
+        } else {
+            fee = getBaselineFee();
+        }
+        long appendagesFee = Convert.safeMultiply(appendagesSize, fee.getAppendagesFee());
+        return Convert.safeAdd(fee.getConstantFee(), appendagesFee);
+    }
+
+    protected Fee getBaselineFee() {
+        return BASELINE_FEE;
+    }
+
+    protected Fee getNextFee() {
+        return NEXT_FEE;
+    }
+
+    public static final class Fee {
+        private final long constantFee;
+        private final long appendagesFee;
+
+        public Fee(long constantFee, long appendagesFee) {
+            this.constantFee = constantFee;
+            this.appendagesFee = appendagesFee;
+        }
+
+        public long getConstantFee() {
+            return constantFee;
+        }
+
+        public long getAppendagesFee() {
+            return appendagesFee;
+        }
+
+        @Override
+        public String toString() {
+            return "Fee{" +
+                    "constantFee=" + constantFee +
+                    ", appendagesFee=" + appendagesFee +
+                    '}';
+        }
+    }
 }
