@@ -475,20 +475,26 @@ var NRS = (function(NRS, $, undefined) {
 			};
 		}
 
-		if (data.data) {
-			try {
-				var encrypted = NRS.encryptNote(data.data, {
-					"account": data.buyer
-				}, data.secretPhrase);
+		if (!data.data) {
+			return {
+				"error": $.t("error_not_specified", {
+					"name": $.t("data").toLowerCase()
+				}).capitalize()
+			};
+		}
 
-				data.goodsData = encrypted.message;
-				data.goodsNonce = encrypted.nonce;
-				data.goodsIsText = "true";
-			} catch (err) {
-				return {
-					"error": err.message
-				};
-			}
+		try {
+			var encrypted = NRS.encryptNote(data.data, {
+				"account": data.buyer
+			}, data.secretPhrase);
+
+			data.goodsData = encrypted.message;
+			data.goodsNonce = encrypted.nonce;
+			data.goodsIsText = "true";
+		} catch (err) {
+			return {
+				"error": err.message
+			};
 		}
 
 		delete data.buyer;
