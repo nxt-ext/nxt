@@ -741,7 +741,7 @@ var NRS = (function(NRS, $, undefined) {
 			var rows = "";
 
 			for (var i = 0; i < NRS.accountInfo.lessors.length; i++) {
-				var lessor = NRS.accountInfo.lessors[i];
+				var lessor = NRS.convertNumericToRSAccountFormat(NRS.accountInfo.lessors[i]);
 
 				rows += "<tr><td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td></tr>";
 			}
