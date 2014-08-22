@@ -678,7 +678,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (response.name) {
-					$("#account_name").html(response.name.escapeHTML());
+					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
 				}
 			}
 
