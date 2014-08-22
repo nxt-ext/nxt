@@ -1499,7 +1499,7 @@ var NRS = (function(NRS, $, undefined) {
 		if ($.i18n.exists(nameKey)) {
 			return $.t(nameKey).escapeHTML();
 		} else {
-			return String(name).escapeHTML();
+			return nameKey.replace(/_/g, " ").escapeHTML();
 		}
 	}
 
