@@ -66,8 +66,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
 
-	NRS.PKAnnouncementBlockPassed = false;
-
 	var stateInterval;
 	var stateIntervalSeconds = 30;
 	var isScanning = false;

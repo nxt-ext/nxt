@@ -121,11 +121,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.lastBlockHeight = blockHeight;
 		}
 
-		if (!NRS.PKAnnouncementBlockPassed) {
-			if ((!NRS.isTestNet && (NRS.lastBlockHeight >= 215000 || (NRS.downloadingBlockchain && NRS.state.lastBlockchainFeederHeight >= 215000))) || (NRS.isTestNet && NRS.lastBlockHeight >= 117910)) {
-				NRS.PKAnnouncementBlockPassed = true;
-			}
-		}
+		//no checks needed at the moment
 	}
 
 	//we always update the dashboard page..
