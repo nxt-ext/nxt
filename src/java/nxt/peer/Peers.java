@@ -271,7 +271,7 @@ public final class Peers {
                             peerServer.start();
                             Logger.logMessage("Started peer networking server at " + host + ":" + port);
                         } catch (Exception e) {
-                            Logger.logDebugMessage("Failed to start peer networking server", e);
+                            Logger.logErrorMessage("Failed to start peer networking server", e);
                             throw new RuntimeException(e.toString(), e);
                         }
                     }
