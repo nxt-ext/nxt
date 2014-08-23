@@ -125,8 +125,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
         try {
             Transaction.Builder builder = Nxt.getTransactionProcessor().newTransactionBuilder(publicKey, amountNQT, feeNQT,
-                    deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash).
-                    senderId(senderAccount.getId());
+                    deadline, attachment).referencedTransactionFullHash(referencedTransactionFullHash);
             if (attachment.getTransactionType().hasRecipient()) {
                 builder.recipientId(recipientId);
             }
@@ -144,8 +143,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             Transaction transaction = builder.build();
             transaction.validate();
-            transaction.validateAmount();
-
+            try {
+                if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
+                    return NOT_ENOUGH_FUNDS;
+                }
+            } catch (ArithmeticException e) {
+                return NOT_ENOUGH_FUNDS;
+            }
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
                 response.put("transaction", transaction.getStringId());

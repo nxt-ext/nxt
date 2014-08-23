@@ -105,12 +105,6 @@ final class TransactionImpl implements Transaction {
             return this;
         }
 
-        @Override
-        public BuilderImpl senderId(Long senderId) {
-            this.senderId = senderId;
-            return this;
-        }
-
         BuilderImpl id(Long id) {
             this.id = id;
             return this;
@@ -128,6 +122,11 @@ final class TransactionImpl implements Transaction {
 
         BuilderImpl height(int height) {
             this.height = height;
+            return this;
+        }
+
+        BuilderImpl senderId(Long senderId) {
+            this.senderId = senderId;
             return this;
         }
 
@@ -164,6 +163,7 @@ final class TransactionImpl implements Transaction {
     private final byte[] senderPublicKey;
     private final Long recipientId;
     private final long amountNQT;
+    private final long feeNQT;
     private final String referencedTransactionFullHash;
     private final TransactionType type;
     private final int ecBlockHeight;
@@ -188,7 +188,6 @@ final class TransactionImpl implements Transaction {
     private volatile String stringId;
     private volatile Long senderId;
     private volatile String fullHash;
-    private volatile long feeNQT;
 
     private TransactionImpl(BuilderImpl builder) throws NxtException.NotValidException {
 
@@ -197,7 +196,6 @@ final class TransactionImpl implements Transaction {
         this.senderPublicKey = builder.senderPublicKey;
         this.recipientId = builder.recipientId;
         this.amountNQT = builder.amountNQT;
-        this.feeNQT = builder.feeNQT;
         this.referencedTransactionFullHash = builder.referencedTransactionFullHash;
         this.signature = builder.signature;
         this.type = builder.type;
@@ -235,12 +233,14 @@ final class TransactionImpl implements Transaction {
         this.appendagesSize = appendagesSize;
         int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
         long minimumFeeNQT = type.minimumFeeNQT(effectiveHeight, appendagesSize);
-        if (feeNQT > 0 && feeNQT < minimumFeeNQT) {
+        if (builder.feeNQT > 0 && builder.feeNQT < minimumFeeNQT) {
             throw new NxtException.NotValidException(String.format("Requested fee %d less than the minimum fee %d",
-                    feeNQT, minimumFeeNQT));
+                    builder.feeNQT, minimumFeeNQT));
         }
-        if (feeNQT <= 0) {
+        if (builder.feeNQT <= 0) {
             feeNQT = minimumFeeNQT;
+        } else {
+            feeNQT = builder.feeNQT;
         }
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
@@ -773,30 +773,11 @@ final class TransactionImpl implements Transaction {
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
         }
-    }
-
-    @Override
-    public void validateFee(int height) throws NxtException.NotValidException {
-        long minimumFeeNQT = type.minimumFeeNQT(height, appendagesSize);
+        int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getLastBlock().getHeight());
+        long minimumFeeNQT = type.minimumFeeNQT(effectiveHeight, appendagesSize);
         if (feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
+            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
                     feeNQT, minimumFeeNQT, height));
-        }
-    }
-
-    @Override
-    public void validateAmount() throws NxtException.ValidationException {
-        if (senderId != null) {
-            try {
-                long unconfirmedBalanceNQT = Account.getAccount(getSenderId()).getUnconfirmedBalanceNQT();
-                long transAmount = Convert.safeAdd(amountNQT, feeNQT);
-                if (transAmount > unconfirmedBalanceNQT) {
-                    throw new NxtException.NotValidException(String.format("Unconfirmed balance %d is less than transaction amount %d plus fee amount %d",
-                            unconfirmedBalanceNQT, amountNQT, feeNQT));
-                }
-            } catch (ArithmeticException e) {
-                throw new NxtException.NotValidException(String.format("Cannot validate unconfirmed balance for sender id %d", senderId));
-            }
         }
     }
 

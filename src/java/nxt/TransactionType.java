@@ -50,7 +50,7 @@ public abstract class TransactionType {
     private static final int BASELINE_FEE_HEIGHT = 1; // At release time must be less than current block - 1440
     private static final Fee BASELINE_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee BASELINE_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
-    private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE - 1440;
+    private static final int NEXT_FEE_HEIGHT = Integer.MAX_VALUE;
     private static final Fee NEXT_FEE = new Fee(Constants.ONE_NXT, 0);
     private static final Fee NEXT_ASSET_ISSUANCE_FEE = new Fee(1000 * Constants.ONE_NXT, 0);
 
@@ -1816,13 +1816,12 @@ public abstract class TransactionType {
             return 0; // No need to validate fees before baseline block
         }
         Fee fee;
-        if (height - 1440 > NEXT_FEE_HEIGHT) {
+        if (height >= NEXT_FEE_HEIGHT) {
             fee = getNextFee();
         } else {
             fee = getBaselineFee();
         }
-        long appendagesFee = Convert.safeMultiply(appendagesSize, fee.getAppendagesFee());
-        return Convert.safeAdd(fee.getConstantFee(), appendagesFee);
+        return Convert.safeAdd(fee.getConstantFee(), Convert.safeMultiply(appendagesSize, fee.getAppendagesFee()));
     }
 
     protected Fee getBaselineFee() {
