@@ -2,7 +2,7 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.db.Db;
-import nxt.db.VersioningDbTable;
+import nxt.db.VersioningEntityDbTable;
 import nxt.db.VersioningValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -73,7 +73,7 @@ public final class DigitalGoodsStore {
 
     public static final class Goods {
 
-        private static final VersioningDbTable<Goods> goodsTable = new VersioningDbTable<Goods>() {
+        private static final VersioningEntityDbTable<Goods> goodsTable = new VersioningEntityDbTable<Goods>() {
 
             @Override
             protected Long getId(Goods goods) {
@@ -92,22 +92,7 @@ public final class DigitalGoodsStore {
 
             @Override
             protected void save(Connection con, Goods goods) throws SQLException {
-                try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO goods (id, seller_id, name, "
-                        + "description, tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
-                    int i = 0;
-                    pstmt.setLong(++i, goods.getId());
-                    pstmt.setLong(++i, goods.getSellerId());
-                    pstmt.setString(++i, goods.getName());
-                    pstmt.setString(++i, goods.getDescription());
-                    pstmt.setString(++i, goods.getTags());
-                    pstmt.setInt(++i, goods.getTimestamp());
-                    pstmt.setInt(++i, goods.getQuantity());
-                    pstmt.setLong(++i, goods.getPriceNQT());
-                    pstmt.setBoolean(++i, goods.isDelisted());
-                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                    pstmt.executeUpdate();
-                }
+                goods.save(con);
             }
 
         };
@@ -144,6 +129,25 @@ public final class DigitalGoodsStore {
             this.priceNQT = rs.getLong("price");
             this.delisted = rs.getBoolean("delisted");
             this.timestamp = rs.getInt("timestamp");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO goods (id, seller_id, name, "
+                    + "description, tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.getId());
+                pstmt.setLong(++i, this.getSellerId());
+                pstmt.setString(++i, this.getName());
+                pstmt.setString(++i, this.getDescription());
+                pstmt.setString(++i, this.getTags());
+                pstmt.setInt(++i, this.getTimestamp());
+                pstmt.setInt(++i, this.getQuantity());
+                pstmt.setLong(++i, this.getPriceNQT());
+                pstmt.setBoolean(++i, this.isDelisted());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
 
         public Long getId() {
@@ -219,7 +223,7 @@ public final class DigitalGoodsStore {
 
     public static final class Purchase {
 
-        private static final VersioningDbTable<Purchase> purchaseTable = new VersioningDbTable<Purchase>() {
+        private static final VersioningEntityDbTable<Purchase> purchaseTable = new VersioningEntityDbTable<Purchase>() {
 
             @Override
             protected Long getId(Purchase purchase) {
@@ -238,33 +242,7 @@ public final class DigitalGoodsStore {
 
             @Override
             protected void save(Connection con, Purchase purchase) throws SQLException {
-                try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO purchase (id, buyer_id, goods_id, seller_id, "
-                        + "quantity, price, deadline, note, nonce, timestamp, pending, goods, goods_nonce, refund_note, "
-                        + "refund_nonce, has_feedback_notes, has_public_feedbacks, discount, refund, height, latest) KEY (id, height) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
-                    int i = 0;
-                    pstmt.setLong(++i, purchase.getId());
-                    pstmt.setLong(++i, purchase.getBuyerId());
-                    pstmt.setLong(++i, purchase.getGoodsId());
-                    pstmt.setLong(++i, purchase.getSellerId());
-                    pstmt.setInt(++i, purchase.getQuantity());
-                    pstmt.setLong(++i, purchase.getPriceNQT());
-                    pstmt.setInt(++i, purchase.getDeliveryDeadlineTimestamp());
-                    setEncryptedData(pstmt, purchase.getNote(), ++i);
-                    ++i;
-                    pstmt.setInt(++i, purchase.getTimestamp());
-                    pstmt.setBoolean(++i, purchase.isPending());
-                    setEncryptedData(pstmt, purchase.getEncryptedGoods(), ++i);
-                    ++i;
-                    setEncryptedData(pstmt, purchase.getRefundNote(), ++i);
-                    ++i;
-                    pstmt.setBoolean(++i, purchase.getFeedbackNotes() != null && purchase.getFeedbackNotes().size() > 0);
-                    pstmt.setBoolean(++i, purchase.getPublicFeedback() != null && purchase.getPublicFeedback().size() > 0);
-                    pstmt.setLong(++i, purchase.getDiscountNQT());
-                    pstmt.setLong(++i, purchase.getRefundNQT());
-                    pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                    pstmt.executeUpdate();
-                }
+                purchase.save(con);
             }
 
         };
@@ -384,6 +362,36 @@ public final class DigitalGoodsStore {
             this.hasPublicFeedbacks = rs.getBoolean("has_public_feedbacks");
             this.discountNQT = rs.getLong("discount");
             this.refundNQT = rs.getLong("refund");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO purchase (id, buyer_id, goods_id, seller_id, "
+                    + "quantity, price, deadline, note, nonce, timestamp, pending, goods, goods_nonce, refund_note, "
+                    + "refund_nonce, has_feedback_notes, has_public_feedbacks, discount, refund, height, latest) KEY (id, height) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.getId());
+                pstmt.setLong(++i, this.getBuyerId());
+                pstmt.setLong(++i, this.getGoodsId());
+                pstmt.setLong(++i, this.getSellerId());
+                pstmt.setInt(++i, this.getQuantity());
+                pstmt.setLong(++i, this.getPriceNQT());
+                pstmt.setInt(++i, this.getDeliveryDeadlineTimestamp());
+                setEncryptedData(pstmt, this.getNote(), ++i);
+                ++i;
+                pstmt.setInt(++i, this.getTimestamp());
+                pstmt.setBoolean(++i, this.isPending());
+                setEncryptedData(pstmt, this.getEncryptedGoods(), ++i);
+                ++i;
+                setEncryptedData(pstmt, this.getRefundNote(), ++i);
+                ++i;
+                pstmt.setBoolean(++i, this.getFeedbackNotes() != null && this.getFeedbackNotes().size() > 0);
+                pstmt.setBoolean(++i, this.getPublicFeedback() != null && this.getPublicFeedback().size() > 0);
+                pstmt.setLong(++i, this.getDiscountNQT());
+                pstmt.setLong(++i, this.getRefundNQT());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
 
         public Long getId() {
@@ -538,7 +546,7 @@ public final class DigitalGoodsStore {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM goods WHERE "
                      + "latest = TRUE AND delisted = FALSE AND quantity > 0 "
                      + "ORDER BY timestamp DESC")) {
-            return Goods.goodsTable.getManyBy(con, pstmt);
+            return Goods.goodsTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -548,9 +556,9 @@ public final class DigitalGoodsStore {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM goods WHERE seller_id = ? "
                      + "AND latest = TRUE " + (inStockOnly ? "AND delisted = FALSE AND quantity > 0" : "")
-                     + " ORDER BY name ASC")) {
+                     + " ORDER BY name ASC, description ASC, id ASC")) {
             pstmt.setLong(1, sellerId);
-            return Goods.goodsTable.getManyBy(con, pstmt);
+            return Goods.goodsTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -565,7 +573,7 @@ public final class DigitalGoodsStore {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM purchase WHERE seller_id = ? "
                      + "AND latest = TRUE ORDER BY timestamp DESC, id ASC")) {
             pstmt.setLong(1, sellerId);
-            return Purchase.purchaseTable.getManyBy(con, pstmt);
+            return Purchase.purchaseTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -576,7 +584,7 @@ public final class DigitalGoodsStore {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM purchase WHERE buyer_id = ? "
                      + "AND latest = TRUE ORDER BY timestamp DESC, id ASC")) {
             pstmt.setLong(1, buyerId);
-            return Purchase.purchaseTable.getManyBy(con, pstmt);
+            return Purchase.purchaseTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -588,7 +596,7 @@ public final class DigitalGoodsStore {
                      + "AND buyer_id = ? AND latest = TRUE ORDER BY timestamp DESC, id ASC")) {
             pstmt.setLong(1, sellerId);
             pstmt.setLong(2, buyerId);
-            return Purchase.purchaseTable.getManyBy(con, pstmt);
+            return Purchase.purchaseTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -603,7 +611,7 @@ public final class DigitalGoodsStore {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM purchase WHERE seller_id = ? "
                      + "AND pending = TRUE AND latest = TRUE ORDER BY timestamp DESC, id ASC")) {
             pstmt.setLong(1, sellerId);
-            return Purchase.purchaseTable.getManyBy(con, pstmt);
+            return Purchase.purchaseTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -619,7 +627,7 @@ public final class DigitalGoodsStore {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM purchase WHERE deadline < ? "
                      + "AND pending = TRUE AND latest = TRUE ORDER BY timestamp DESC, id ASC")) {
             pstmt.setLong(1, timestamp);
-            return Purchase.purchaseTable.getManyBy(con, pstmt);
+            return Purchase.purchaseTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
 		}
@@ -631,7 +639,7 @@ public final class DigitalGoodsStore {
                      + "AND latest = TRUE ORDER BY timestamp DESC, id ASC")) {
             pstmt.setLong(1, previousTimestamp);
             pstmt.setLong(2, currentTimestamp);
-            return Purchase.purchaseTable.getManyBy(con, pstmt);
+            return Purchase.purchaseTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

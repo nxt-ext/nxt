@@ -1,7 +1,7 @@
 package nxt;
 
 import nxt.db.Db;
-import nxt.db.VersioningDbTable;
+import nxt.db.VersioningEntityDbTable;
 import nxt.util.Convert;
 
 import java.sql.Connection;
@@ -78,6 +78,20 @@ public abstract class Order {
         this.height = rs.getInt("height");
     }
 
+    private void save(Connection con, String table) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO " + table + " (id, account_id, asset_id, "
+                + "price, quantity, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getId());
+            pstmt.setLong(++i, this.getAccountId());
+            pstmt.setLong(++i, this.getAssetId());
+            pstmt.setLong(++i, this.getPriceNQT());
+            pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setInt(++i, this.getHeight());
+            pstmt.executeUpdate();
+        }
+    }
+
     public Long getId() {
         return id;
     }
@@ -133,7 +147,7 @@ public abstract class Order {
 
     public static final class Ask extends Order {
 
-        private static final VersioningDbTable<Ask> askOrderTable = new VersioningDbTable<Ask>() {
+        private static final VersioningEntityDbTable<Ask> askOrderTable = new VersioningEntityDbTable<Ask>() {
 
             @Override
             protected Long getId(Ask ask) {
@@ -152,17 +166,7 @@ public abstract class Order {
 
             @Override
             protected void save(Connection con, Ask ask) throws SQLException {
-                try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO ask_order (id, account_id, asset_id, "
-                        + "price, quantity, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
-                    int i = 0;
-                    pstmt.setLong(++i, ask.getId());
-                    pstmt.setLong(++i, ask.getAccountId());
-                    pstmt.setLong(++i, ask.getAssetId());
-                    pstmt.setLong(++i, ask.getPriceNQT());
-                    pstmt.setLong(++i, ask.getQuantityQNT());
-                    pstmt.setInt(++i, ask.getHeight());
-                    pstmt.executeUpdate();
-                }
+                ask.save(con, table());
             }
 
         };
@@ -193,7 +197,7 @@ public abstract class Order {
                          + "AND asset_id = ? AND latest = TRUE ORDER BY height DESC")) {
                 pstmt.setLong(1, accountId);
                 pstmt.setLong(2, assetId);
-                return askOrderTable.getManyBy(con, pstmt);
+                return askOrderTable.getManyBy(con, pstmt, true);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -204,7 +208,7 @@ public abstract class Order {
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
                          + "AND latest = TRUE ORDER BY price ASC, height ASC, id ASC")) {
                 pstmt.setLong(1, assetId);
-                return askOrderTable.getManyBy(con, pstmt);
+                return askOrderTable.getManyBy(con, pstmt, true);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -215,7 +219,7 @@ public abstract class Order {
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM ask_order WHERE asset_id = ? "
                          + "AND latest = TRUE ORDER BY price ASC, height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
-                List<Ask> result = askOrderTable.getManyBy(con, pstmt);
+                List<Ask> result = askOrderTable.getManyBy(con, pstmt, true);
                 return result.isEmpty() ? null : result.get(0);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
@@ -238,6 +242,10 @@ public abstract class Order {
 
         private Ask(ResultSet rs) throws SQLException {
             super(rs);
+        }
+
+        private void save(Connection con, String table) throws SQLException {
+            super.save(con, table);
         }
 
         private void updateQuantityQNT(long quantityQNT) {
@@ -265,7 +273,7 @@ public abstract class Order {
 
     public static final class Bid extends Order {
 
-        private static final VersioningDbTable<Bid> bidOrderTable = new VersioningDbTable<Bid>() {
+        private static final VersioningEntityDbTable<Bid> bidOrderTable = new VersioningEntityDbTable<Bid>() {
 
             @Override
             protected Long getId(Bid bid) {
@@ -284,17 +292,7 @@ public abstract class Order {
 
             @Override
             protected void save(Connection con, Bid bid) throws SQLException {
-                try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO bid_order (id, account_id, asset_id, "
-                        + "price, quantity, height, latest) KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
-                    int i = 0;
-                    pstmt.setLong(++i, bid.getId());
-                    pstmt.setLong(++i, bid.getAccountId());
-                    pstmt.setLong(++i, bid.getAssetId());
-                    pstmt.setLong(++i, bid.getPriceNQT());
-                    pstmt.setLong(++i, bid.getQuantityQNT());
-                    pstmt.setInt(++i, bid.getHeight());
-                    pstmt.executeUpdate();
-                }
+                bid.save(con, table());
             }
         };
 
@@ -324,7 +322,7 @@ public abstract class Order {
                          + "AND asset_id = ? AND latest = TRUE ORDER BY height DESC")) {
                 pstmt.setLong(1, accountId);
                 pstmt.setLong(2, assetId);
-                return bidOrderTable.getManyBy(con, pstmt);
+                return bidOrderTable.getManyBy(con, pstmt, true);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -335,7 +333,7 @@ public abstract class Order {
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
                          + "AND latest = TRUE ORDER BY price DESC, height ASC, id ASC")) {
                 pstmt.setLong(1, assetId);
-                return bidOrderTable.getManyBy(con, pstmt);
+                return bidOrderTable.getManyBy(con, pstmt, true);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -346,7 +344,7 @@ public abstract class Order {
                  PreparedStatement pstmt = con.prepareStatement("SELECT * FROM bid_order WHERE asset_id = ? "
                          + "AND latest = TRUE ORDER BY price DESC, height ASC, id ASC LIMIT 1")) {
                 pstmt.setLong(1, assetId);
-                List<Bid> result = bidOrderTable.getManyBy(con, pstmt);
+                List<Bid> result = bidOrderTable.getManyBy(con, pstmt, true);
                 return result.isEmpty() ? null : result.get(0);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
@@ -369,6 +367,10 @@ public abstract class Order {
 
         private Bid(ResultSet rs) throws SQLException {
             super(rs);
+        }
+
+        private void save(Connection con, String table) throws SQLException {
+            super.save(con, table);
         }
 
         private void updateQuantityQNT(long quantityQNT) {

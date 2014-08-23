@@ -139,7 +139,7 @@ public final class Nxt {
     }
 
     public static void shutdown() {
-        Logger.logMessage("Shutting down...");
+        Logger.logShutdownMessage("Shutting down...");
         API.shutdown();
         Users.shutdown();
         Peers.shutdown();

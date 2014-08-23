@@ -1,7 +1,7 @@
 package nxt;
 
 import nxt.db.DbUtils;
-import nxt.db.VersioningDbTable;
+import nxt.db.VersioningEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,6 +29,18 @@ public final class Alias {
             this.buyerId  = DbUtils.getLong(rs, "buyer_id");
         }
 
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
+                    + "height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.getId());
+                pstmt.setLong(++i, this.getPriceNQT());
+                DbUtils.setLong(pstmt, ++i, this.getBuyerId());
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
         public Long getId() {
             return aliasId;
         }
@@ -43,7 +55,7 @@ public final class Alias {
 
     }
 
-    private static final VersioningDbTable<Alias> aliasTable = new VersioningDbTable<Alias>() {
+    private static final VersioningEntityDbTable<Alias> aliasTable = new VersioningEntityDbTable<Alias>() {
 
         @Override
         protected String table() {
@@ -62,23 +74,12 @@ public final class Alias {
 
         @Override
         protected void save(Connection con, Alias alias) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
-                    + "alias_uri, timestamp, height) "
-                    + "VALUES (?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, alias.getId());
-                pstmt.setLong(++i, alias.getAccountId());
-                pstmt.setString(++i, alias.getAliasName());
-                pstmt.setString(++i, alias.getAliasURI());
-                pstmt.setInt(++i, alias.getTimestamp());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            alias.save(con);
         }
 
     };
 
-    private static final VersioningDbTable<Offer> offerTable = new VersioningDbTable<Offer>() {
+    private static final VersioningEntityDbTable<Offer> offerTable = new VersioningEntityDbTable<Offer>() {
 
         @Override
         protected String table() {
@@ -97,15 +98,7 @@ public final class Alias {
 
         @Override
         protected void save(Connection con, Offer offer) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
-                    + "height) VALUES (?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, offer.getId());
-                pstmt.setLong(++i, offer.getPriceNQT());
-                DbUtils.setLong(pstmt, ++i, offer.getBuyerId());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            offer.save(con);
         }
 
     };
@@ -194,6 +187,21 @@ public final class Alias {
         this.aliasName = rs.getString("alias_name");
         this.aliasURI = rs.getString("alias_uri");
         this.timestamp = rs.getInt("timestamp");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
+                + "alias_uri, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getId());
+            pstmt.setLong(++i, this.getAccountId());
+            pstmt.setString(++i, this.getAliasName());
+            pstmt.setString(++i, this.getAliasURI());
+            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getId() {

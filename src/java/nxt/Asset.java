@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.CachingDbTable;
+import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +11,7 @@ import java.util.List;
 
 public final class Asset {
 
-    private static final CachingDbTable<Asset> assetTable = new CachingDbTable<Asset>() {
+    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>() {
 
         @Override
         protected Long getId(Asset asset) {
@@ -30,26 +30,7 @@ public final class Asset {
 
         @Override
         protected void save(Connection con, Asset asset) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
-                    + "description, quantity, decimals, height) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, asset.getId());
-                pstmt.setLong(++i, asset.getAccountId());
-                pstmt.setString(++i, asset.getName());
-                pstmt.setString(++i, asset.getDescription());
-                pstmt.setLong(++i, asset.getQuantityQNT());
-                pstmt.setByte(++i, asset.getDecimals());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
-        }
-
-        @Override
-        protected void delete(Connection con, Asset asset) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM asset WHERE id = ?")) {
-                pstmt.setLong(1, asset.getId());
-                pstmt.executeUpdate();
-            }
+            asset.save(con);
         }
 
     };
@@ -101,6 +82,21 @@ public final class Asset {
         this.description = rs.getString("description");
         this.quantityQNT = rs.getLong("quantity");
         this.decimals = rs.getByte("decimals");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
+                + "description, quantity, decimals, height) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getId());
+            pstmt.setLong(++i, this.getAccountId());
+            pstmt.setString(++i, this.getName());
+            pstmt.setString(++i, this.getDescription());
+            pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setByte(++i, this.getDecimals());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getId() {

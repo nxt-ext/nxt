@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.CachingDbTable;
+import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 public final class Poll {
 
-    private static final CachingDbTable<Poll> pollTable = new CachingDbTable<Poll>() {
+    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>() {
 
         @Override
         protected Long getId(Poll poll) {
@@ -30,28 +30,9 @@ public final class Poll {
 
         @Override
         protected void save(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
-                    + "options, min_num_options, max_num_options, binary_options, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, poll.getId());
-                pstmt.setString(++i, poll.getName());
-                pstmt.setString(++i, poll.getDescription());
-                pstmt.setObject(++i, poll.getOptions());
-                pstmt.setByte(++i, poll.getMinNumberOfOptions());
-                pstmt.setByte(++i, poll.getMaxNumberOfOptions());
-                pstmt.setBoolean(++i, poll.isOptionsAreBinary());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            poll.save(con);
         }
 
-        @Override
-        protected void delete(Connection con, Poll poll) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM poll WHERE id = ?")) {
-                pstmt.setLong(1, poll.getId());
-                pstmt.executeUpdate();
-            }
-        }
     };
 
     private final Long id;
@@ -79,6 +60,22 @@ public final class Poll {
         this.minNumberOfOptions = rs.getByte("min_num_options");
         this.maxNumberOfOptions = rs.getByte("max_num_options");
         this.optionsAreBinary = rs.getBoolean("binary_options");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO poll (id, name, description, "
+                + "options, min_num_options, max_num_options, binary_options, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getId());
+            pstmt.setString(++i, this.getName());
+            pstmt.setString(++i, this.getDescription());
+            pstmt.setObject(++i, this.getOptions());
+            pstmt.setByte(++i, this.getMinNumberOfOptions());
+            pstmt.setByte(++i, this.getMaxNumberOfOptions());
+            pstmt.setBoolean(++i, this.isOptionsAreBinary());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     static void addPoll(Transaction transaction, Attachment.MessagingPollCreation attachment) {

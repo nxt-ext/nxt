@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.VersioningDbTable;
+import nxt.db.VersioningEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,7 +36,7 @@ public class Hub {
 
     }
 
-    private static final VersioningDbTable<Hub> hubTable = new VersioningDbTable<Hub>() {
+    private static final VersioningEntityDbTable<Hub> hubTable = new VersioningEntityDbTable<Hub>() {
 
         @Override
         protected Long getId(Hub hub) {
@@ -55,15 +55,7 @@ public class Hub {
 
         @Override
         protected void save(Connection con, Hub hub) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO hub (account_id, min_fee_per_byte, "
-                    + "uris, height) KEY (account_id, height) VALUES (?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, hub.getAccountId());
-                pstmt.setLong(++i, hub.getMinFeePerByteNQT());
-                pstmt.setObject(++i, hub.getUris().toArray(new String[hub.getUris().size()]));
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            hub.save(con);
         }
 
     };
@@ -125,6 +117,18 @@ public class Hub {
         this.accountId = rs.getLong("account_id");
         this.minFeePerByteNQT = rs.getLong("min_fee_per_byte");
         this.uris = Collections.unmodifiableList(Arrays.asList((String[])rs.getObject("uris")));
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO hub (account_id, min_fee_per_byte, "
+                + "uris, height) KEY (account_id, height) VALUES (?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getAccountId());
+            pstmt.setLong(++i, this.getMinFeePerByteNQT());
+            pstmt.setObject(++i, this.getUris().toArray(new String[this.getUris().size()]));
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getAccountId() {

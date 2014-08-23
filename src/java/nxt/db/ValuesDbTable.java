@@ -10,23 +10,59 @@ import java.util.List;
 //TODO: caching?
 public abstract class ValuesDbTable<T,V> extends BasicDbTable {
 
+    private final boolean multiversion;
+
+    public ValuesDbTable() {
+        multiversion = false;
+    }
+
+    ValuesDbTable(boolean multiversion) {
+        this.multiversion = multiversion;
+    }
+
+    protected abstract Long getId(T t);
+
     protected abstract V load(Connection con, ResultSet rs) throws SQLException;
 
     protected abstract void save(Connection con, T t, V v) throws SQLException;
 
-    protected abstract void delete(Connection con, T t) throws SQLException;
-
-    public List<V> get(Long id) {
+    public final List<V> get(Long id) {
+        List<V> values;
+        if (Db.isInTransaction()) {
+            values = (List<V>)Db.getCache(table()).get(id);
+            if (values != null) {
+                return values;
+            }
+        }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?"
+             + (multiversion ? " AND latest = TRUE" : ""))) {
             pstmt.setLong(1, id);
-            return getManyBy(con, pstmt);
+            values = get(con, pstmt);
+            if (Db.isInTransaction()) {
+                Db.getCache(table()).put(id, values);
+            }
+            return values;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    public final List<V> getManyBy(Connection con, PreparedStatement pstmt) {
+    public final List<V> get(Long id, int height) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
+                     + " WHERE id = ? AND height = (SELECT MAX(height) FROM " + table()
+                     + " WHERE id = ? AND height <= ?)")) {
+            pstmt.setLong(1, id);
+            pstmt.setLong(2, id);
+            pstmt.setInt(3, height);
+            return get(con, pstmt);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    private List<V> get(Connection con, PreparedStatement pstmt) {
         try {
             List<V> result = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -40,30 +76,35 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
         }
     }
 
-    public void insert(T t, V v) {
+    public final void insert(T t, V v) {
+        Db.getCache(table()).remove(getId(t));
         try (Connection con = Db.getConnection()) {
+            if (multiversion) {
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                        + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
+                    pstmt.setLong(1, getId(t));
+                    pstmt.executeUpdate();
+                }
+            }
             save(con, t, v);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    public void insert(T t, List<V> values) {
+    public final void insert(T t, List<V> values) {
+        Db.getCache(table()).put(getId(t), values);
         try (Connection con = Db.getConnection()) {
+            if (multiversion) {
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                        + " SET latest = FALSE WHERE id = ? AND latest = TRUE")) {
+                    pstmt.setLong(1, getId(t));
+                    pstmt.executeUpdate();
+                }
+            }
             for (V v : values) {
                 save(con, t, v);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final void delete(T t) {
-        if (t == null) {
-            return;
-        }
-        try (Connection con = Db.getConnection()) {
-            delete(con, t);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

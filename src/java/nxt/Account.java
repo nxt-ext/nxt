@@ -5,7 +5,7 @@ import nxt.crypto.EncryptedData;
 import nxt.db.BasicDbTable;
 import nxt.db.Db;
 import nxt.db.DbUtils;
-import nxt.db.VersioningDbTable;
+import nxt.db.VersioningEntityDbTable;
 import nxt.db.VersioningLinkDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -46,6 +46,20 @@ public final class Account {
             this.assetId = rs.getLong("asset_id");
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
+        }
+
+        private void save(Connection con, Long idA, Long idB) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
+                    + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
+                    + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, idA);
+                pstmt.setLong(++i, idB);
+                pstmt.setLong(++i, this.quantityQNT);
+                pstmt.setLong(++i, this.unconfirmedQuantityQNT);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
         }
 
         private void save() {
@@ -147,7 +161,7 @@ public final class Account {
 
     private static final int maxTrackedBalanceConfirmations = 2881;
 
-    private static VersioningDbTable<Account> accountTable = new VersioningDbTable<Account>() {
+    private static VersioningEntityDbTable<Account> accountTable = new VersioningEntityDbTable<Account>() {
 
         @Override
         protected Long getId(Account account) {
@@ -166,31 +180,7 @@ public final class Account {
 
         @Override
         protected void save(Connection con, Account account) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, public_key, "
-                    + "key_height, balance, unconfirmed_balance, forged_balance, name, description, "
-                    + "current_leasing_height_from, current_leasing_height_to, current_lessee_id, "
-                    + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, "
-                    + "height, latest) "
-                    + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
-                int i = 0;
-                pstmt.setLong(++i, account.getId());
-                pstmt.setInt(++i, account.getCreationHeight());
-                DbUtils.setBytes(pstmt, ++i, account.getPublicKey());
-                pstmt.setInt(++i, account.getKeyHeight());
-                pstmt.setLong(++i, account.getBalanceNQT());
-                pstmt.setLong(++i, account.getUnconfirmedBalanceNQT());
-                pstmt.setLong(++i, account.getForgedBalanceNQT());
-                DbUtils.setString(pstmt, ++i, account.getName());
-                DbUtils.setString(pstmt, ++i, account.getDescription());
-                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getCurrentLeasingHeightFrom()));
-                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getCurrentLeasingHeightTo()));
-                DbUtils.setLong(pstmt, ++i, account.getCurrentLesseeId());
-                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getNextLeasingHeightFrom()));
-                DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(account.getNextLeasingHeightTo()));
-                DbUtils.setLong(pstmt, ++i, account.getNextLesseeId());
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            account.save(con);
         }
 
     };
@@ -209,17 +199,7 @@ public final class Account {
 
         @Override
         protected void save(Connection con, Long idA, Long idB, AccountAsset accountAsset) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
-                    + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
-                    + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
-                int i = 0;
-                pstmt.setLong(++i, idA);
-                pstmt.setLong(++i, idB);
-                pstmt.setLong(++i, accountAsset.quantityQNT);
-                pstmt.setLong(++i, accountAsset.unconfirmedQuantityQNT);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-                pstmt.executeUpdate();
-            }
+            accountAsset.save(con, idA, idB);
         }
 
         @Override
@@ -306,7 +286,7 @@ public final class Account {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM account WHERE current_lessee_id >= ? AND latest = TRUE "
                      + "ORDER BY id ASC")) {
             pstmt.setLong(1, Long.MIN_VALUE); // this forces H2 to use the index, unlike WHERE IS NOT NULL which does a table scan
-            return accountTable.getManyBy(con, pstmt);
+            return accountTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -360,6 +340,34 @@ public final class Account {
         this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
         this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
         this.nextLesseeId = DbUtils.getLong(rs, "next_lessee_id");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, public_key, "
+                + "key_height, balance, unconfirmed_balance, forged_balance, name, description, "
+                + "current_leasing_height_from, current_leasing_height_to, current_lessee_id, "
+                + "next_leasing_height_from, next_leasing_height_to, next_lessee_id, "
+                + "height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getId());
+            pstmt.setInt(++i, this.getCreationHeight());
+            DbUtils.setBytes(pstmt, ++i, this.getPublicKey());
+            pstmt.setInt(++i, this.getKeyHeight());
+            pstmt.setLong(++i, this.getBalanceNQT());
+            pstmt.setLong(++i, this.getUnconfirmedBalanceNQT());
+            pstmt.setLong(++i, this.getForgedBalanceNQT());
+            DbUtils.setString(pstmt, ++i, this.getName());
+            DbUtils.setString(pstmt, ++i, this.getDescription());
+            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getCurrentLeasingHeightFrom()));
+            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getCurrentLeasingHeightTo()));
+            DbUtils.setLong(pstmt, ++i, this.getCurrentLesseeId());
+            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getNextLeasingHeightFrom()));
+            DbUtils.setInt(pstmt, ++i, Convert.zeroToNull(this.getNextLeasingHeightTo()));
+            DbUtils.setLong(pstmt, ++i, this.getNextLesseeId());
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getId() {
@@ -472,7 +480,7 @@ public final class Account {
             int height = Nxt.getBlockchain().getHeight();
             pstmt.setInt(2, height);
             pstmt.setInt(3, height);
-            return accountTable.getManyBy(con, pstmt);
+            return accountTable.getManyBy(con, pstmt, true);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.DbTable;
+import nxt.db.EntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -20,11 +20,17 @@ public final class Trade {
 
     private static final Listeners<Trade,Event> listeners = new Listeners<>();
 
-    private static final DbTable<Trade> tradeTable = new DbTable<Trade>() {
+    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>() {
 
         @Override
         protected String table() {
             return "trade";
+        }
+
+        @Override
+        protected Long getId(Trade trade) {
+            //TODO
+            return null;
         }
 
         @Override
@@ -34,29 +40,7 @@ public final class Trade {
 
         @Override
         protected void save(Connection con, Trade trade) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                    + "ask_order_id, bid_order_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-                int i = 0;
-                pstmt.setLong(++i, trade.getAssetId());
-                pstmt.setLong(++i, trade.getBlockId());
-                pstmt.setLong(++i, trade.getAskOrderId());
-                pstmt.setLong(++i, trade.getBidOrderId());
-                pstmt.setLong(++i, trade.getQuantityQNT());
-                pstmt.setLong(++i, trade.getPriceNQT());
-                pstmt.setInt(++i, trade.getTimestamp());
-                pstmt.setInt(++i, trade.getHeight());
-                pstmt.executeUpdate();
-            }
-        }
-
-        @Override
-        protected void delete(Connection con, Trade trade) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement(
-                    "DELETE FROM trade WHERE ask_order_id = ? AND bid_order_id = ?")) {
-                pstmt.setLong(1, trade.getAskOrderId());
-                pstmt.setLong(2, trade.getBidOrderId());
-                pstmt.executeUpdate();
-            }
+            trade.save(con);
         }
 
     };
@@ -120,6 +104,22 @@ public final class Trade {
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
+    }
+
+    private void save(Connection con) throws SQLException {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
+                + "ask_order_id, bid_order_id, quantity, price, timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            int i = 0;
+            pstmt.setLong(++i, this.getAssetId());
+            pstmt.setLong(++i, this.getBlockId());
+            pstmt.setLong(++i, this.getAskOrderId());
+            pstmt.setLong(++i, this.getBidOrderId());
+            pstmt.setLong(++i, this.getQuantityQNT());
+            pstmt.setLong(++i, this.getPriceNQT());
+            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setInt(++i, this.getHeight());
+            pstmt.executeUpdate();
+        }
     }
 
     public Long getBlockId() { return blockId; }

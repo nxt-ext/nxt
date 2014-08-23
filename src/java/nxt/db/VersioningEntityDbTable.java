@@ -4,11 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
-public abstract class VersioningValuesDbTable<T, V> extends ValuesDbTable<T, V> {
+public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
 
-    protected VersioningValuesDbTable() {
+    protected VersioningEntityDbTable() {
         super(true);
     }
 
@@ -16,7 +15,7 @@ public abstract class VersioningValuesDbTable<T, V> extends ValuesDbTable<T, V> 
     final void rollback(int height) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT id FROM " + table()
-                     + " WHERE height >= ?");
+                    + " WHERE height >= ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
                      + " WHERE height >= ?");
              PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()
@@ -34,6 +33,23 @@ public abstract class VersioningValuesDbTable<T, V> extends ValuesDbTable<T, V> 
                     Db.getCache(table()).remove(id);
                 }
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
+    public final void delete(T t) {
+        if (t == null) {
+            return;
+        }
+        insert(t); // make sure current height is saved
+        Db.getCache(table()).remove(getId(t));
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
+                     + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
+            pstmt.setLong(1, getId(t));
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

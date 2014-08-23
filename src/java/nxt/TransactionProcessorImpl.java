@@ -1,6 +1,6 @@
 package nxt;
 
-import nxt.db.CachingDbTable;
+import nxt.db.EntityDbTable;
 import nxt.db.Db;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
@@ -35,7 +35,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    private static final CachingDbTable<TransactionImpl> unconfirmedTransactionTable = new CachingDbTable<TransactionImpl>() {
+    //TODO: optimize to store expiration in separate column
+    private static final EntityDbTable<TransactionImpl> unconfirmedTransactionTable = new EntityDbTable<TransactionImpl>() {
 
         @Override
         protected Long getId(TransactionImpl transaction) {
@@ -64,15 +65,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
 
         @Override
-        protected void delete(Connection con, TransactionImpl transaction) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement(
-                    "DELETE FROM unconfirmed_transaction WHERE id = ?")) {
-                pstmt.setLong(1, transaction.getId());
-                pstmt.executeUpdate();
-            }
-        }
-
-        @Override
         protected String table() {
             return "unconfirmed_transaction";
         }
@@ -84,7 +76,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    //private final ConcurrentMap<Long, TransactionImpl> unconfirmedTransactions = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, TransactionImpl> nonBroadcastedTransactions = new ConcurrentHashMap<>();
     private final Listeners<List<Transaction>,Event> transactionListeners = new Listeners<>();
 
