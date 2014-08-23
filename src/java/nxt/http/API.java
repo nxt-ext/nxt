@@ -129,7 +129,7 @@ public final class API {
                         apiServer.start();
                         Logger.logMessage("Started API server at " + host + ":" + port);
                     } catch (Exception e) {
-                        Logger.logDebugMessage("Failed to start API server", e);
+                        Logger.logErrorMessage("Failed to start API server", e);
                         throw new RuntimeException(e.toString(), e);
                     }
 

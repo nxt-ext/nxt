@@ -60,10 +60,12 @@ public final class ThreadPool {
     }
 
     public static synchronized void shutdown() {
-        Logger.logShutdownMessage("Stopping background jobs...");
-        shutdownExecutor(scheduledThreadPool);
-        scheduledThreadPool = null;
-        Logger.logShutdownMessage("...Done");
+        if (scheduledThreadPool != null) {
+	        Logger.logShutdownMessage("Stopping background jobs...");
+    	    shutdownExecutor(scheduledThreadPool);
+        	scheduledThreadPool = null;
+        	Logger.logShutdownMessage("...Done");
+        }
     }
 
     public static void shutdownExecutor(ExecutorService executor) {
@@ -81,8 +83,20 @@ public final class ThreadPool {
 
     private static void runAll(List<Runnable> jobs) {
         List<Thread> threads = new ArrayList<>();
-        for (Runnable runnable : jobs) {
-            Thread thread = new Thread(runnable);
+        final StringBuffer errors = new StringBuffer();
+        for (final Runnable runnable : jobs) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        runnable.run();
+                    } catch (Throwable t) {
+                        errors.append(t.getMessage()).append('\n');
+                        throw t;
+                    }
+                }
+            };
+            thread.setDaemon(true);
             thread.start();
             threads.add(thread);
         }
@@ -92,6 +106,9 @@ public final class ThreadPool {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+        }
+        if (errors.length() > 0) {
+            throw new RuntimeException("Errors running startup tasks:\n" + errors.toString());
         }
     }
 

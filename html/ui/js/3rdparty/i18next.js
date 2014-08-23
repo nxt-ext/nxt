@@ -590,7 +590,10 @@
 			var pluralKey = ns + o.nsseparator + key + o.pluralSuffix;
 			var pluralExtension = pluralExtensions.get(lngs[0], options.count);
 			if (pluralExtension >= 0) {
-				pluralKey = pluralKey + '_' + pluralExtension;
+				var newPluralKey = pluralKey + '_' + pluralExtension;
+				if (exists(newPluralKey)) {
+					pluralKey = newPluralKey;
+				}
 			} else if (pluralExtension === 1) {
 				pluralKey = ns + o.nsseparator + key; // singular
 			}

@@ -7,3 +7,5 @@ Updated run.bat file. Blacklist unreachable peers on connection timeout.
 Added an optional "active" parameter to the getPeers API request. If true,
 only active peers are returned (those in state CONNECTED or DISCONNECTED).
 
+Avoid unnecessary DNS queries.
+

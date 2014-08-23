@@ -127,7 +127,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else if (response.errorCode == 5) {
 						callback({
 							"type": "warning",
-							"message": $.t("recipient_unknown" + (NRS.PKAnnouncementBlockPassed ? "_pka" : "")),
+							"message": $.t("recipient_unknown_pka"),
 							"account": null,
 							"noPublicKey": true
 						});
@@ -141,7 +141,7 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					callback({
 						"type": "warning",
-						"message": $.t("recipient_no_public_key" + (NRS.PKAnnouncementBlockPassed ? "_pka" : ""), {
+						"message": $.t("recipient_no_public_key_pka", {
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
 						"account": response,
@@ -173,13 +173,11 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					if (NRS.PKAnnouncementBlockPassed) {
-						if (response.noPublicKey) {
-							modal.find(".recipient_public_key").show();
-						} else {
-							modal.find("input[name=recipientPublicKey]").val("");
-							modal.find(".recipient_public_key").hide();
-						}
+					if (response.noPublicKey) {
+						modal.find(".recipient_public_key").show();
+					} else {
+						modal.find("input[name=recipientPublicKey]").val("");
+						modal.find(".recipient_public_key").hide();
 					}
 
 					var message = response.message.escapeHTML();

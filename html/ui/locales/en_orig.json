@@ -884,5 +884,7 @@
 	"numeric_account_id": "Numeric Account ID",
 	"status_new_account_old": "Welcome to your new NXT account. Your account ID is <strong>__account_id__</strong>. You should fund it with some coins.",
 	"checking_for_updates": "Checking for updates...",
-	"error_invalid_referenced_transaction_hash": "Invalid referenced transaction hash."
+	"error_invalid_referenced_transaction_hash": "Invalid referenced transaction hash.",
+	"goods_to_encrypt": "Goods to encrypt",
+	"no_longer_for_sale": "No longer for sale."
 }
