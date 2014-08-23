@@ -289,14 +289,6 @@ final class JSONData {
         }
         if (! attachmentJSON.isEmpty()) {
             modifyAttachmentJSON(attachmentJSON);
-            if (transaction.getType() == TransactionType.ColoredCoins.ASSET_TRANSFER) {
-                //TODO: remove some time after DGS block
-                String comment = (String)attachmentJSON.get("comment");
-                String message = (String)attachmentJSON.get("message");
-                if (comment == null && message != null) {
-                    attachmentJSON.put("comment", message);
-                }
-            }
             json.put("attachment", attachmentJSON);
         }
         putAccount(json, "sender", transaction.getSenderId());
