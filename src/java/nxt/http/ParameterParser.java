@@ -1,10 +1,6 @@
 package nxt.http;
 
-import nxt.Account;
-import nxt.Alias;
-import nxt.Asset;
-import nxt.Constants;
-import nxt.DigitalGoodsStore;
+import nxt.*;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -37,6 +33,57 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_ALIAS);
         }
         return alias;
+    }
+
+    static byte getByte(HttpServletRequest req, String name, byte min, byte max) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            throw new ParameterException(missing(name));
+        }
+        byte value;
+        try {
+            value = Byte.parseByte(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        if (value < min || value > max) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
+    static int getInt(HttpServletRequest req, String name, int min, int max) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            throw new ParameterException(missing(name));
+        }
+        int value;
+        try {
+            value = Integer.parseInt(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        if (value < min || value > max) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
+    }
+
+    static long getLong(HttpServletRequest req, String name, long min, long max) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            throw new ParameterException(missing(name));
+        }
+        long value;
+        try {
+            value = Long.parseLong(paramValue);
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        if (value < min || value > max) {
+            throw new ParameterException(incorrect(name));
+        }
+        return value;
     }
 
     static long getAmountNQT(HttpServletRequest req) throws ParameterException {
@@ -106,6 +153,24 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_ASSET);
         }
         return asset;
+    }
+
+    static Currency getCurrency(HttpServletRequest req) throws ParameterException {
+        String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
+        if (currencyValue == null) {
+            throw new ParameterException(MISSING_CURRENCY);
+        }
+        Currency currency;
+        try {
+            Long currencyId = Convert.parseUnsignedLong(currencyValue);
+            currency = Currency.getCurrency(currencyId);
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_CURRENCY);
+        }
+        if (currency == null) {
+            throw new ParameterException(UNKNOWN_CURRENCY);
+        }
+        return currency;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {

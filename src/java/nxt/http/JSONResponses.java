@@ -123,6 +123,13 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
     public static final JSONStreamAware INCORRECT_PLAIN_MESSAGE = incorrect("messageToEncrypt");
+    public static final JSONStreamAware INCORRECT_CURRENCY_NAME_LENGTH = incorrect("name", "(length must be in [" + Constants.MIN_CURRENCY_NAME_LENGTH + ".." + Constants.MAX_CURRENCY_NAME_LENGTH + "] range)");
+    public static final JSONStreamAware INCORRECT_CURRENCY_CODE_LENGTH = incorrect("code", "(length must be [" + Constants.CURRENCY_CODE_LENGTH + "])");
+    public static final JSONStreamAware INCORRECT_CURRENCY_NAME = incorrect("name", "(must contain only digits and latin letters)");
+    public static final JSONStreamAware INCORRECT_CURRENCY_DESCRIPTION = incorrect("description", "(length must not exceed " + Constants.MAX_CURRENCY_DESCRIPTION_LENGTH + " characters)");
+    public static final JSONStreamAware MISSING_CURRENCY = missing("currency");
+    public static final JSONStreamAware UNKNOWN_CURRENCY = unknown("currency");
+    public static final JSONStreamAware INCORRECT_CURRENCY = incorrect("currency");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -220,7 +227,7 @@ public final class JSONResponses {
         NO_MESSAGE = JSON.prepare(response);
     }
 
-    private static JSONStreamAware missing(String... paramNames) {
+    static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
         if (paramNames.length == 1) {
@@ -231,7 +238,7 @@ public final class JSONResponses {
         return JSON.prepare(response);
     }
 
-    private static JSONStreamAware incorrect(String paramName) {
+    static JSONStreamAware incorrect(String paramName) {
         return incorrect(paramName, null);
     }
 

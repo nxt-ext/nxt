@@ -33,7 +33,7 @@ public abstract class CurrencyType {
 
             @Override
             public void applyCurrencyIssuanceAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance)transaction.getAttachment();
+                Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
 
                 Currency.addCurrency(transaction.getId(), attachment.getName(), attachment.getCode(), attachment.getDescription(), attachment.getType(), attachment.getTotalSupply(), attachment.getIssuanceHeight(), attachment.getMinReservePerUnitNQT(), attachment.getMinDifficulty(), attachment.getMaxDifficulty(), attachment.getRuleset(), attachment.getTotalSupply(), 0);
 
@@ -111,6 +111,10 @@ public abstract class CurrencyType {
 
     public static CurrencyType getCurrencyType(byte type) {
         return types.get(type);
+    }
+
+    public static byte getSize() {
+        return (byte)types.size();
     }
 
     public abstract boolean isCurrencyIssuanceAttachmentValid(Transaction transaction);

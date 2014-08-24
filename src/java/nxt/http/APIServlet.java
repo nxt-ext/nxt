@@ -132,8 +132,11 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrderIds", GetBidOrderIds.instance);
         map.put("getBidOrders", GetBidOrders.instance);
         map.put("issueAsset", IssueAsset.instance);
+        map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
         map.put("markHost", MarkHost.instance);
+        map.put("msIncreaseReserve", MSIncreaseReserve.instance);
+        map.put("msReserveClaim", MSReserveClaim.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
         map.put("placeBidOrder", PlaceBidOrder.instance);
