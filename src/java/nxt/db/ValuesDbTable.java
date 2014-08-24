@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO: caching?
 public abstract class ValuesDbTable<T,V> extends BasicDbTable {
 
     private final boolean multiversion;
@@ -43,20 +42,6 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
                 Db.getCache(table()).put(id, values);
             }
             return values;
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public final List<V> get(Long id, int height) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE id = ? AND height = (SELECT MAX(height) FROM " + table()
-                     + " WHERE id = ? AND height <= ?)")) {
-            pstmt.setLong(1, id);
-            pstmt.setLong(2, id);
-            pstmt.setInt(3, height);
-            return get(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }

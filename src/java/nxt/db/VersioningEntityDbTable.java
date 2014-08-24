@@ -15,7 +15,7 @@ public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
     final void rollback(int height) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT id FROM " + table()
-                    + " WHERE height >= ?");
+                     + " WHERE height >= ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
                      + " WHERE height >= ?");
              PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()

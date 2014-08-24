@@ -48,18 +48,6 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
         }
     }
 
-    public final T get(Long id, int height) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
-                     + " WHERE id = ? AND height <= ? ORDER BY height DESC LIMIT 1")) {
-            pstmt.setLong(1, id);
-            pstmt.setInt(2, height);
-            return get(con, pstmt, false);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
     public final T getBy(String columnName, String value) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()

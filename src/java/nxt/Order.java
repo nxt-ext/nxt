@@ -250,9 +250,13 @@ public abstract class Order {
 
         private void updateQuantityQNT(long quantityQNT) {
             super.setQuantityQNT(quantityQNT);
-            askOrderTable.insert(this);
-            if (quantityQNT == 0) {
+            if (quantityQNT > 0) {
+                askOrderTable.insert(this);
+            } else if (quantityQNT == 0) {
                 askOrderTable.delete(this);
+            } else {
+                throw new IllegalArgumentException("Negative quantity: " + quantityQNT
+                        + " for order: " + Convert.toUnsignedLong(getId()));
             }
         }
 
@@ -375,9 +379,13 @@ public abstract class Order {
 
         private void updateQuantityQNT(long quantityQNT) {
             super.setQuantityQNT(quantityQNT);
-            bidOrderTable.insert(this);
-            if (quantityQNT == 0) {
+            if (quantityQNT > 0) {
+                bidOrderTable.insert(this);
+            } else if (quantityQNT == 0) {
                 bidOrderTable.delete(this);
+            } else {
+                throw new IllegalArgumentException("Negative quantity: " + quantityQNT
+                        + " for order: " + Convert.toUnsignedLong(getId()));
             }
         }
 
