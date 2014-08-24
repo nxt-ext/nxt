@@ -30,9 +30,8 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
     }
 
     public final T get(Long id) {
-        T t;
         if (Db.isInTransaction()) {
-            t = (T)Db.getCache(table()).get(id);
+            T t = (T)Db.getCache(table()).get(id);
             if (t != null) {
                 return t;
             }
@@ -41,8 +40,7 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?"
              + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             pstmt.setLong(1, id);
-            t = get(con, pstmt, true);
-            return t;
+            return get(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -53,14 +51,14 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table()
                      + " WHERE " + columnName + " = ?" + (multiversion ? " AND latest = TRUE" : ""))) {
             pstmt.setString(1, value);
-            return get(con, pstmt, true);
+            return get(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
 
-    private T get(Connection con, PreparedStatement pstmt, boolean cache) throws SQLException {
-        cache = cache && Db.isInTransaction();
+    private T get(Connection con, PreparedStatement pstmt) throws SQLException {
+        final boolean cache = Db.isInTransaction();
         try (ResultSet rs = pstmt.executeQuery()) {
             if (!rs.next()) {
                 return null;
@@ -101,14 +99,15 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     T t = null;
+                    Long id = null;
                     if (cache) {
-                        Long id = rs.getLong("id");
+                        id = rs.getLong("id");
                         t = (T) Db.getCache(table()).get(id);
                     }
                     if (t == null) {
                         t = load(con, rs);
                         if (cache) {
-                            Db.getCache(table()).put(getId(t), t);
+                            Db.getCache(table()).put(id, t);
                         }
                     }
                     result.add(t);

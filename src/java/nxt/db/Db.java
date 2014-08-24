@@ -17,7 +17,7 @@ public final class Db {
     private static volatile int maxActiveConnections;
 
     private static final ThreadLocal<Connection> localConnection = new ThreadLocal<>();
-    private static final ThreadLocal<Map<String,Map<Long,Object>>> transactionCaches = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String,Map<Object,Object>>> transactionCaches = new ThreadLocal<>();
 
     private static final class DbConnection extends FilteredConnection {
 
@@ -95,11 +95,11 @@ public final class Db {
         return new DbConnection(con);
     }
 
-    static Map<Long,Object> getCache(String tableName) {
+    static Map<Object,Object> getCache(String tableName) {
         if (!isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
-        Map<Long,Object> cacheMap = transactionCaches.get().get(tableName);
+        Map<Object,Object> cacheMap = transactionCaches.get().get(tableName);
         if (cacheMap == null) {
             cacheMap = new HashMap<>();
             transactionCaches.get().put(tableName, cacheMap);
@@ -120,7 +120,7 @@ public final class Db {
             con.setAutoCommit(false);
             con = new DbConnection(con);
             localConnection.set(con);
-            transactionCaches.set(new HashMap<String, Map<Long, Object>>());
+            transactionCaches.set(new HashMap<String, Map<Object, Object>>());
             return con;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

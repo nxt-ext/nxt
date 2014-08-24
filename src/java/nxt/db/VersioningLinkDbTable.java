@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public abstract class VersioningLinkDbTable<R> extends LinkDbTable<R> {
 
@@ -33,6 +32,7 @@ public abstract class VersioningLinkDbTable<R> extends LinkDbTable<R> {
                     pstmtSetLatest.setLong(3, idA);
                     pstmtSetLatest.setLong(4, idB);
                     pstmtSetLatest.executeUpdate();
+                    Db.getCache(table()).remove(new cacheKey(idA, idB));
                 }
             }
         } catch (SQLException e) {
@@ -41,7 +41,11 @@ public abstract class VersioningLinkDbTable<R> extends LinkDbTable<R> {
     }
 
     @Override
-    public final void delete(Long idA, Long idB) {
+    public final void delete(R r) {
+        insert(r);
+        Long idA = getIdA(r);
+        Long idB = getIdB(r);
+        Db.getCache(table()).remove(new cacheKey(idA, idB));
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
                 + " SET latest = FALSE WHERE " + idColumnA() + " = ? AND " + idColumnB() + " = ? AND latest = TRUE limit 1")) {

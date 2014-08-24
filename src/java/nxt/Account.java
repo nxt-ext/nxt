@@ -48,13 +48,13 @@ public final class Account {
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
         }
 
-        private void save(Connection con, Long idA, Long idB) throws SQLException {
+        private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_asset "
                     + "(account_id, asset_id, quantity, unconfirmed_quantity, height, latest) "
                     + "KEY (account_id, asset_id, height) VALUES (?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
-                pstmt.setLong(++i, idA);
-                pstmt.setLong(++i, idB);
+                pstmt.setLong(++i, this.accountId);
+                pstmt.setLong(++i, this.assetId);
                 pstmt.setLong(++i, this.quantityQNT);
                 pstmt.setLong(++i, this.unconfirmedQuantityQNT);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -64,9 +64,9 @@ public final class Account {
 
         private void save() {
             if (this.quantityQNT > 0 || this.unconfirmedQuantityQNT > 0) {
-                accountAssetTable.insert(this.accountId, this.assetId, this);
+                accountAssetTable.insert(this);
             } else if (this.quantityQNT == 0 && this.unconfirmedQuantityQNT == 0) {
-                accountAssetTable.delete(this.accountId, this.assetId);
+                accountAssetTable.delete(this);
             } else if (this.quantityQNT < 0 || this.unconfirmedQuantityQNT < 0) {
                 throw new DoubleSpendingException("Negative asset balance for account " + Convert.toUnsignedLong(this.accountId));
             }
@@ -198,8 +198,8 @@ public final class Account {
         }
 
         @Override
-        protected void save(Connection con, Long idA, Long idB, AccountAsset accountAsset) throws SQLException {
-            accountAsset.save(con, idA, idB);
+        protected void save(Connection con, AccountAsset accountAsset) throws SQLException {
+            accountAsset.save(con);
         }
 
         @Override
@@ -210,6 +210,16 @@ public final class Account {
         @Override
         protected String idColumnB() {
             return "asset_id";
+        }
+
+        @Override
+        protected Long getIdA(AccountAsset accountAsset) {
+            return accountAsset.accountId;
+        }
+
+        @Override
+        protected Long getIdB(AccountAsset accountAsset) {
+            return accountAsset.assetId;
         }
 
     };
@@ -511,7 +521,7 @@ public final class Account {
     }
 
     public List<AccountAsset> getAccountAssets() {
-        return accountAssetTable.getManyByA(this.id);
+        return accountAssetTable.getManyBy("account_id", this.id);
     }
 
     public Long getUnconfirmedAssetBalanceQNT(Long assetId) {

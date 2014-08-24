@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.EntityDbTable;
+import nxt.db.LinkDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -20,7 +21,7 @@ public final class Trade {
 
     private static final Listeners<Trade,Event> listeners = new Listeners<>();
 
-    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>() {
+    private static final LinkDbTable<Trade> tradeTable = new LinkDbTable<Trade>() {
 
         @Override
         protected String table() {
@@ -28,9 +29,23 @@ public final class Trade {
         }
 
         @Override
-        protected Long getId(Trade trade) {
-            //TODO
-            return null;
+        protected String idColumnA() {
+            return "ask_order_id";
+        }
+
+        @Override
+        protected String idColumnB() {
+            return "bid_order_id";
+        }
+
+        @Override
+        protected Long getIdA(Trade trade) {
+            return trade.askOrderId;
+        }
+
+        @Override
+        protected Long getIdB(Trade trade) {
+            return trade.bidOrderId;
         }
 
         @Override
