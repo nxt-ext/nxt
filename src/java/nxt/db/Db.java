@@ -111,7 +111,7 @@ public final class Db {
         return localConnection.get() != null;
     }
 
-    public static <T> Connection beginTransaction() {
+    public static Connection beginTransaction() {
         if (localConnection.get() != null) {
             throw new IllegalStateException("Transaction already in progress");
         }

@@ -14,10 +14,10 @@ import java.util.Map;
 
 public final class Vote {
 
-    private static final DbKey.LongIdFactory<Vote> voteDbKeyFactory = new DbKey.LongIdFactory<Vote>("id") {
+    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = new DbKey.LongKeyFactory<Vote>("id") {
 
         @Override
-        public DbKey<Vote> newKey(Vote vote) {
+        public DbKey newKey(Vote vote) {
             return newKey(vote.getId());
         }
 

@@ -12,10 +12,10 @@ import java.util.List;
 
 public final class Asset {
 
-    private static final DbKey.LongIdFactory<Asset> assetDbKeyFactory = new DbKey.LongIdFactory<Asset>("id") {
+    private static final DbKey.LongKeyFactory<Asset> assetDbKeyFactory = new DbKey.LongKeyFactory<Asset>("id") {
 
         @Override
-        public DbKey<Asset> newKey(Asset asset) {
+        public DbKey newKey(Asset asset) {
             return newKey(asset.getId());
         }
 

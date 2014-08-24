@@ -74,7 +74,7 @@ public final class DigitalGoodsStore {
 
     public static final class Goods {
 
-        private static final DbKey.LongIdFactory<Goods> goodsDbKeyFactory = new DbKey.LongIdFactory<Goods>("id") {
+        private static final DbKey.LongKeyFactory<Goods> goodsDbKeyFactory = new DbKey.LongKeyFactory<Goods>("id") {
 
             @Override
             public DbKey newKey(Goods goods) {
@@ -228,10 +228,10 @@ public final class DigitalGoodsStore {
 
     public static final class Purchase {
 
-        private static final DbKey.LongIdFactory<Purchase> purchaseDbKeyFactory = new DbKey.LongIdFactory<Purchase>("id") {
+        private static final DbKey.LongKeyFactory<Purchase> purchaseDbKeyFactory = new DbKey.LongKeyFactory<Purchase>("id") {
 
             @Override
-            public DbKey<Purchase> newKey(Purchase purchase) {
+            public DbKey newKey(Purchase purchase) {
                 return newKey(purchase.getId());
             }
 
@@ -256,10 +256,10 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final DbKey.LongIdFactory<Purchase> feedbackDbKeyFactory = new DbKey.LongIdFactory<Purchase>("id") {
+        private static final DbKey.LongKeyFactory<Purchase> feedbackDbKeyFactory = new DbKey.LongKeyFactory<Purchase>("id") {
 
             @Override
-            public DbKey<Purchase> newKey(Purchase purchase) {
+            public DbKey newKey(Purchase purchase) {
                 return newKey(purchase.getId());
             }
 
@@ -294,10 +294,10 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final DbKey.LongIdFactory<Purchase> publicFeedbackDbKeyFactory = new DbKey.LongIdFactory<Purchase>("id") {
+        private static final DbKey.LongKeyFactory<Purchase> publicFeedbackDbKeyFactory = new DbKey.LongKeyFactory<Purchase>("id") {
 
             @Override
-            public DbKey<Purchase> newKey(Purchase purchase) {
+            public DbKey newKey(Purchase purchase) {
                 return newKey(purchase.getId());
             }
 

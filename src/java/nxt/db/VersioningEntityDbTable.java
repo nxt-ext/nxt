@@ -24,7 +24,7 @@ public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
             pstmtSelectToDelete.setInt(1, height);
             try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
                 while (rs.next()) {
-                    DbKey<T> dbKey = dbKeyFactory.newKey(rs);
+                    DbKey dbKey = dbKeyFactory.newKey(rs);
                     pstmtDelete.setInt(1, height);
                     pstmtDelete.executeUpdate();
                     int i = 1;
@@ -45,7 +45,7 @@ public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
             return;
         }
         insert(t); // make sure current height is saved
-        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        DbKey dbKey = dbKeyFactory.newKey(t);
         Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()

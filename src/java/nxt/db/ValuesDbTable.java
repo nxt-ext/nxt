@@ -62,7 +62,7 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
     }
 
     public final void insert(T t, V v) {
-        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        DbKey dbKey = dbKeyFactory.newKey(t);
         Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection()) {
             if (multiversion) {
@@ -79,7 +79,7 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
     }
 
     public final void insert(T t, List<V> values) {
-        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        DbKey dbKey = dbKeyFactory.newKey(t);
         Db.getCache(table()).put(dbKey, values);
         try (Connection con = Db.getConnection()) {
             if (multiversion) {

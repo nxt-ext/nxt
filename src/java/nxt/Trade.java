@@ -21,10 +21,10 @@ public final class Trade {
 
     private static final Listeners<Trade,Event> listeners = new Listeners<>();
 
-    private static final DbKey.LinkIdFactory<Trade> tradeDbKeyFactory = new DbKey.LinkIdFactory<Trade>("ask_order_id", "bid_order_id") {
+    private static final DbKey.LinkKeyFactory<Trade> tradeDbKeyFactory = new DbKey.LinkKeyFactory<Trade>("ask_order_id", "bid_order_id") {
 
         @Override
-        public DbKey<Trade> newKey(Trade trade) {
+        public DbKey newKey(Trade trade) {
             return newKey(trade.askOrderId, trade.bidOrderId);
         }
 

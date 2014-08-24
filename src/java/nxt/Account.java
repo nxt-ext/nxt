@@ -177,10 +177,10 @@ public final class Account {
 
     private static final int maxTrackedBalanceConfirmations = 2881;
 
-    private static final DbKey.LongIdFactory<Account> accountDbKeyFactory = new DbKey.LongIdFactory<Account>("id") {
+    private static final DbKey.LongKeyFactory<Account> accountDbKeyFactory = new DbKey.LongKeyFactory<Account>("id") {
 
         @Override
-        public DbKey<Account> newKey(Account account) {
+        public DbKey newKey(Account account) {
             return newKey(account.getId());
         }
 
@@ -205,10 +205,10 @@ public final class Account {
 
     };
 
-    private static final DbKey.LinkIdFactory<AccountAsset> accountAssetDbKeyFactory = new DbKey.LinkIdFactory<AccountAsset>("account_id", "asset_id") {
+    private static final DbKey.LinkKeyFactory<AccountAsset> accountAssetDbKeyFactory = new DbKey.LinkKeyFactory<AccountAsset>("account_id", "asset_id") {
 
         @Override
-        public DbKey<AccountAsset> newKey(AccountAsset accountAsset) {
+        public DbKey newKey(AccountAsset accountAsset) {
             return newKey(accountAsset.accountId, accountAsset.assetId);
         }
 

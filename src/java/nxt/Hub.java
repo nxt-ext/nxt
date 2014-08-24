@@ -37,10 +37,10 @@ public class Hub {
 
     }
 
-    private static final DbKey.LongIdFactory<Hub> hubDbKeyFactory = new DbKey.LongIdFactory<Hub>("account_id") {
+    private static final DbKey.LongKeyFactory<Hub> hubDbKeyFactory = new DbKey.LongKeyFactory<Hub>("account_id") {
 
         @Override
-        public DbKey<Hub> newKey(Hub hub) {
+        public DbKey newKey(Hub hub) {
             return newKey(hub.getAccountId());
         }
 

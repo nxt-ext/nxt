@@ -36,10 +36,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    private static final DbKey.LongIdFactory<TransactionImpl> unconfirmedTransactionDbKeyFactory = new DbKey.LongIdFactory<TransactionImpl>("id") {
+    private static final DbKey.LongKeyFactory<TransactionImpl> unconfirmedTransactionDbKeyFactory = new DbKey.LongKeyFactory<TransactionImpl>("id") {
 
         @Override
-        public DbKey<TransactionImpl> newKey(TransactionImpl transaction) {
+        public DbKey newKey(TransactionImpl transaction) {
             return newKey(transaction.getId());
         }
 

@@ -56,10 +56,10 @@ public final class Alias {
 
     }
 
-    private static final DbKey.LongIdFactory<Alias> aliasDbKeyFactory = new DbKey.LongIdFactory<Alias>("id") {
+    private static final DbKey.LongKeyFactory<Alias> aliasDbKeyFactory = new DbKey.LongKeyFactory<Alias>("id") {
 
         @Override
-        public DbKey<Alias> newKey(Alias alias) {
+        public DbKey newKey(Alias alias) {
             return newKey(alias.getId());
         }
 
@@ -84,10 +84,10 @@ public final class Alias {
 
     };
 
-    private static final DbKey.LongIdFactory<Offer> offerDbKeyFactory = new DbKey.LongIdFactory<Offer>("id") {
+    private static final DbKey.LongKeyFactory<Offer> offerDbKeyFactory = new DbKey.LongKeyFactory<Offer>("id") {
 
         @Override
-        public DbKey<Offer> newKey(Offer offer) {
+        public DbKey newKey(Offer offer) {
             return newKey(offer.getId());
         }
 

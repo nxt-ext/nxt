@@ -12,10 +12,10 @@ import java.util.Map;
 
 public final class Poll {
 
-    private static final DbKey.LongIdFactory<Poll> pollDbKeyFactory = new DbKey.LongIdFactory<Poll>("id") {
+    private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
 
         @Override
-        public DbKey<Poll> newKey(Poll poll) {
+        public DbKey newKey(Poll poll) {
             return newKey(poll.getId());
         }
 

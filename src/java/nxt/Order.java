@@ -148,10 +148,10 @@ public abstract class Order {
 
     public static final class Ask extends Order {
 
-        private static final DbKey.LongIdFactory<Ask> askOrderDbKeyFactory = new DbKey.LongIdFactory<Ask>("id") {
+        private static final DbKey.LongKeyFactory<Ask> askOrderDbKeyFactory = new DbKey.LongKeyFactory<Ask>("id") {
 
             @Override
-            public DbKey<Ask> newKey(Ask ask) {
+            public DbKey newKey(Ask ask) {
                 return newKey(ask.getId());
             }
 
@@ -282,10 +282,10 @@ public abstract class Order {
 
     public static final class Bid extends Order {
 
-        private static final DbKey.LongIdFactory<Bid> bidOrderDbKeyFactory = new DbKey.LongIdFactory<Bid>("id") {
+        private static final DbKey.LongKeyFactory<Bid> bidOrderDbKeyFactory = new DbKey.LongKeyFactory<Bid>("id") {
 
             @Override
-            public DbKey<Bid> newKey(Bid bid) {
+            public DbKey newKey(Bid bid) {
                 return newKey(bid.getId());
             }
 

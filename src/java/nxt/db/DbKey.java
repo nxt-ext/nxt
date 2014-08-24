@@ -4,13 +4,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public interface DbKey<T> {
+public interface DbKey {
 
     public static interface Factory<T> {
 
-        DbKey<T> newKey(T t);
+        DbKey newKey(T t);
 
-        DbKey<T> newKey(ResultSet rs) throws SQLException;
+        DbKey newKey(ResultSet rs) throws SQLException;
 
         String getPKClause();
 
@@ -23,21 +23,21 @@ public interface DbKey<T> {
     int setPK(PreparedStatement pstmt, int index) throws SQLException;
 
 
-    public static abstract class LongIdFactory<T> implements Factory<T> {
+    public static abstract class LongKeyFactory<T> implements Factory<T> {
 
         private final String idColumn;
 
-        public LongIdFactory(String idColumn) {
+        public LongKeyFactory(String idColumn) {
             this.idColumn = idColumn;
         }
 
         @Override
-        public DbKey<T> newKey(ResultSet rs) throws SQLException {
-            return new LongId<>(rs.getLong(idColumn));
+        public DbKey newKey(ResultSet rs) throws SQLException {
+            return new LongKey(rs.getLong(idColumn));
         }
 
-        public DbKey<T> newKey(Long id) {
-            return new LongId<>(id);
+        public DbKey newKey(Long id) {
+            return new LongKey(id);
         }
 
         @Override
@@ -52,23 +52,23 @@ public interface DbKey<T> {
 
     }
 
-    public static abstract class LinkIdFactory<T> implements Factory<T> {
+    public static abstract class LinkKeyFactory<T> implements Factory<T> {
 
         private final String idColumnA;
         private final String idColumnB;
 
-        public LinkIdFactory(String idColumnA, String idColumnB) {
+        public LinkKeyFactory(String idColumnA, String idColumnB) {
             this.idColumnA = idColumnA;
             this.idColumnB = idColumnB;
         }
 
         @Override
-        public DbKey<T> newKey(ResultSet rs) throws SQLException {
-            return new LinkId<>(rs.getLong(idColumnA), rs.getLong(idColumnB));
+        public DbKey newKey(ResultSet rs) throws SQLException {
+            return new LinkKey(rs.getLong(idColumnA), rs.getLong(idColumnB));
         }
 
-        public DbKey<T> newKey(Long idA, Long idB) {
-            return new LinkId<>(idA, idB);
+        public DbKey newKey(Long idA, Long idB) {
+            return new LinkKey(idA, idB);
         }
 
         @Override
@@ -82,11 +82,11 @@ public interface DbKey<T> {
         }
     }
 
-    static final class LongId<T> implements DbKey<T> {
+    static final class LongKey implements DbKey {
 
         private final Long id;
 
-        private LongId(Long id) {
+        private LongKey(Long id) {
             this.id = id;
         }
 
@@ -103,7 +103,7 @@ public interface DbKey<T> {
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof LongId && ((LongId)o).id.equals(id);
+            return o instanceof LongKey && ((LongKey)o).id.equals(id);
         }
 
         @Override
@@ -113,12 +113,12 @@ public interface DbKey<T> {
 
     }
 
-    static final class LinkId<T> implements DbKey<T> {
+    static final class LinkKey implements DbKey {
 
         private final Long idA;
         private final Long idB;
 
-        private LinkId(Long idA, Long idB) {
+        private LinkKey(Long idA, Long idB) {
             this.idA = idA;
             this.idB = idB;
         }
@@ -137,7 +137,7 @@ public interface DbKey<T> {
 
         @Override
         public boolean equals(Object o) {
-            return o instanceof LinkId && ((LinkId) o).idA.equals(idA) && ((LinkId) o).idB.equals(idB);
+            return o instanceof LinkKey && ((LinkKey) o).idA.equals(idA) && ((LinkKey) o).idB.equals(idB);
         }
 
         @Override

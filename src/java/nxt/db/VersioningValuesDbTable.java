@@ -24,7 +24,7 @@ public abstract class VersioningValuesDbTable<T, V> extends ValuesDbTable<T, V> 
             pstmtSelectToDelete.setInt(1, height);
             try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
                 while (rs.next()) {
-                    DbKey<T> dbKey = dbKeyFactory.newKey(rs);
+                    DbKey dbKey = dbKeyFactory.newKey(rs);
                     pstmtDelete.setInt(1, height);
                     pstmtDelete.executeUpdate();
                     int i = 1;

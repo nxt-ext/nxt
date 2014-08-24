@@ -64,7 +64,7 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
                 return null;
             }
             T t = null;
-            DbKey<T> dbKey = null;
+            DbKey dbKey = null;
             if (cache) {
                 dbKey = dbKeyFactory.newKey(rs);
                 t = (T) Db.getCache(table()).get(dbKey);
@@ -100,7 +100,7 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     T t = null;
-                    DbKey<T> dbKey = null;
+                    DbKey dbKey = null;
                     if (cache) {
                         dbKey = dbKeyFactory.newKey(rs);
                         t = (T) Db.getCache(table()).get(dbKey);
@@ -143,7 +143,7 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
     }
 
     public final void insert(T t) {
-        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        DbKey dbKey = dbKeyFactory.newKey(t);
         T cachedT = (T)Db.getCache(table()).get(dbKey);
         if (cachedT == null) {
             Db.getCache(table()).put(dbKey, t);
@@ -169,7 +169,7 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
         if (t == null) {
             return;
         }
-        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        DbKey dbKey = dbKeyFactory.newKey(t);
         Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table() + dbKeyFactory.getPKClause())) {
