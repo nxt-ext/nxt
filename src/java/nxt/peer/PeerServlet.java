@@ -95,7 +95,9 @@ public final class PeerServlet extends HttpServlet {
 
             if (peer.getState() == Peer.State.DISCONNECTED) {
                 peer.setState(Peer.State.CONNECTED);
-                Peers.updateAddress(peer);
+                if (peer.getAnnouncedAddress() != null) {
+                    Peers.updateAddress(peer);
+                }
             }
             peer.updateDownloadedVolume(cis.getCount());
             if (! peer.analyzeHallmark(peer.getPeerAddress(), (String)request.get("hallmark"))) {
