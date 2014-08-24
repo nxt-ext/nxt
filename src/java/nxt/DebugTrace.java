@@ -189,10 +189,10 @@ public final class DebugTrace {
     }
 
     private void trace(Account.AccountAsset accountAsset, boolean unconfirmed) {
-        if (! include(accountAsset.accountId)) {
+        if (! include(accountAsset.getAccountId())) {
             return;
         }
-        log(getValues(accountAsset.accountId, accountAsset, unconfirmed));
+        log(getValues(accountAsset.getAccountId(), accountAsset, unconfirmed));
     }
 
     private void trace(Account.AccountLease accountLease, boolean start) {
@@ -323,8 +323,12 @@ public final class DebugTrace {
     private Map<String,String> getValues(Long accountId, Account.AccountAsset accountAsset, boolean unconfirmed) {
         Map<String,String> map = new HashMap<>();
         map.put("account", Convert.toUnsignedLong(accountId));
-        map.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
-        map.put(unconfirmed ? "unconfirmed asset balance" : "asset balance", String.valueOf(Convert.nullToZero(accountAsset.quantityQNT)));
+        map.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+        if (unconfirmed) {
+            map.put("unconfirmed asset balance", String.valueOf(Convert.nullToZero(accountAsset.getUnconfirmedQuantityQNT())));
+        } else {
+            map.put("asset balance", String.valueOf(Convert.nullToZero(accountAsset.getQuantityQNT())));
+        }
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getLastBlock().getHeight()));
         map.put("event", "asset balance");

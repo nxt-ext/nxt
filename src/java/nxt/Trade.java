@@ -1,7 +1,7 @@
 package nxt;
 
+import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
-import nxt.db.LinkDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -21,31 +21,20 @@ public final class Trade {
 
     private static final Listeners<Trade,Event> listeners = new Listeners<>();
 
-    private static final LinkDbTable<Trade> tradeTable = new LinkDbTable<Trade>() {
+    private static final DbKey.LinkIdFactory<Trade> tradeDbKeyFactory = new DbKey.LinkIdFactory<Trade>("ask_order_id", "bid_order_id") {
+
+        @Override
+        public DbKey<Trade> newKey(Trade trade) {
+            return newKey(trade.askOrderId, trade.bidOrderId);
+        }
+
+    };
+
+    private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>(tradeDbKeyFactory) {
 
         @Override
         protected String table() {
             return "trade";
-        }
-
-        @Override
-        protected String idColumnA() {
-            return "ask_order_id";
-        }
-
-        @Override
-        protected String idColumnB() {
-            return "bid_order_id";
-        }
-
-        @Override
-        protected Long getIdA(Trade trade) {
-            return trade.askOrderId;
-        }
-
-        @Override
-        protected Long getIdB(Trade trade) {
-            return trade.bidOrderId;
         }
 
         @Override

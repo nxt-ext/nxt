@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersioningEntityDbTable;
 
@@ -55,16 +56,20 @@ public final class Alias {
 
     }
 
-    private static final VersioningEntityDbTable<Alias> aliasTable = new VersioningEntityDbTable<Alias>() {
+    private static final DbKey.LongIdFactory<Alias> aliasDbKeyFactory = new DbKey.LongIdFactory<Alias>("id") {
+
+        @Override
+        public DbKey<Alias> newKey(Alias alias) {
+            return newKey(alias.getId());
+        }
+
+    };
+
+    private static final VersioningEntityDbTable<Alias> aliasTable = new VersioningEntityDbTable<Alias>(aliasDbKeyFactory) {
 
         @Override
         protected String table() {
             return "alias";
-        }
-
-        @Override
-        protected Long getId(Alias alias) {
-            return alias.getId();
         }
 
         @Override
@@ -79,16 +84,20 @@ public final class Alias {
 
     };
 
-    private static final VersioningEntityDbTable<Offer> offerTable = new VersioningEntityDbTable<Offer>() {
+    private static final DbKey.LongIdFactory<Offer> offerDbKeyFactory = new DbKey.LongIdFactory<Offer>("id") {
+
+        @Override
+        public DbKey<Offer> newKey(Offer offer) {
+            return newKey(offer.getId());
+        }
+
+    };
+
+    private static final VersioningEntityDbTable<Offer> offerTable = new VersioningEntityDbTable<Offer>(offerDbKeyFactory) {
 
         @Override
         protected String table() {
             return "alias_offer";
-        }
-
-        @Override
-        protected Long getId(Offer offer) {
-            return offer.getId();
         }
 
         @Override
@@ -116,11 +125,11 @@ public final class Alias {
     }
 
     public static Alias getAlias(Long id) {
-        return aliasTable.get(id);
+        return aliasTable.get(aliasDbKeyFactory.newKey(id));
     }
 
     public static Offer getOffer(Alias alias) {
-        return offerTable.get(alias.getId());
+        return offerTable.get(offerDbKeyFactory.newKey(alias.getId()));
     }
 
     static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {

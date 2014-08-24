@@ -1,7 +1,8 @@
 package nxt;
 
-import nxt.db.EntityDbTable;
 import nxt.db.Db;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -35,13 +36,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    //TODO: optimize to store expiration in separate column
-    private static final EntityDbTable<TransactionImpl> unconfirmedTransactionTable = new EntityDbTable<TransactionImpl>() {
+    private static final DbKey.LongIdFactory<TransactionImpl> unconfirmedTransactionDbKeyFactory = new DbKey.LongIdFactory<TransactionImpl>("id") {
 
         @Override
-        protected Long getId(TransactionImpl transaction) {
-            return transaction.getId();
+        public DbKey<TransactionImpl> newKey(TransactionImpl transaction) {
+            return newKey(transaction.getId());
         }
+
+    };
+
+    //TODO: optimize to store expiration in separate column
+    private static final EntityDbTable<TransactionImpl> unconfirmedTransactionTable = new EntityDbTable<TransactionImpl>(unconfirmedTransactionDbKeyFactory) {
 
         @Override
         protected TransactionImpl load(Connection con, ResultSet rs) throws SQLException {
@@ -225,7 +230,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction getUnconfirmedTransaction(Long transactionId) {
-        return unconfirmedTransactionTable.get(transactionId);
+        return unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
     }
 
     public Transaction.Builder newTransactionBuilder(byte[] senderPublicKey, long amountNQT, long feeNQT, short deadline,
@@ -300,7 +305,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     void applyUnconfirmed(Set<Long> unapplied) {
         List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
         for (Long transactionId : unapplied) {
-            TransactionImpl transaction = unconfirmedTransactionTable.get(transactionId);
+            TransactionImpl transaction = unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
             if (! transaction.applyUnconfirmed()) {
                 unconfirmedTransactionTable.delete(transaction);
                 removedUnconfirmedTransactions.add(transaction);
@@ -326,7 +331,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         for (TransactionImpl transaction : block.getTransactions()) {
             addedConfirmedTransactions.add(transaction);
-            TransactionImpl unconfirmedTransaction = unconfirmedTransactionTable.get(transaction.getId());
+            TransactionImpl unconfirmedTransaction = unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transaction.getId()));
             if (unconfirmedTransaction != null) {
                 unconfirmedTransactionTable.delete(unconfirmedTransaction);
                 removedUnconfirmedTransactions.add(unconfirmedTransaction);
@@ -348,7 +353,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 Db.beginTransaction();
                 for (TransactionImpl transaction : transactions) {
-                    if (unconfirmedTransactionTable.get(transaction.getId()) != null) {
+                    if (unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transaction.getId())) != null) {
                         unconfirmedTransactionTable.delete(transaction);
                         transaction.undoUnconfirmed();
                         removedList.add(transaction);
@@ -419,7 +424,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         }
 
                         Long id = transaction.getId();
-                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(id) != null) {
+                        if (TransactionDb.hasTransaction(id) || unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(id)) != null) {
                             continue;
                         }
 

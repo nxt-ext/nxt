@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
@@ -11,12 +12,16 @@ import java.util.List;
 
 public final class Asset {
 
-    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>() {
+    private static final DbKey.LongIdFactory<Asset> assetDbKeyFactory = new DbKey.LongIdFactory<Asset>("id") {
 
         @Override
-        protected Long getId(Asset asset) {
-            return asset.getId();
+        public DbKey<Asset> newKey(Asset asset) {
+            return newKey(asset.getId());
         }
+
+    };
+
+    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>(assetDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -44,7 +49,7 @@ public final class Asset {
     }
 
     public static Asset getAsset(Long id) {
-        return assetTable.get(id);
+        return assetTable.get(assetDbKeyFactory.newKey(id));
     }
 
     public static List<Asset> getAssetsIssuedBy(Long accountId) {

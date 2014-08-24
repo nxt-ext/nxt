@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbKey;
 import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
@@ -11,12 +12,16 @@ import java.util.Map;
 
 public final class Poll {
 
-    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>() {
+    private static final DbKey.LongIdFactory<Poll> pollDbKeyFactory = new DbKey.LongIdFactory<Poll>("id") {
 
         @Override
-        protected Long getId(Poll poll) {
-            return poll.getId();
+        public DbKey<Poll> newKey(Poll poll) {
+            return newKey(poll.getId());
         }
+
+    };
+
+    private static final EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>(pollDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -87,7 +92,7 @@ public final class Poll {
     }
 
     public static Poll getPoll(Long id) {
-        return pollTable.get(id);
+        return pollTable.get(pollDbKeyFactory.newKey(id));
     }
 
     public static List<Poll> getAllPolls() {

@@ -10,36 +10,36 @@ import java.util.List;
 public abstract class ValuesDbTable<T,V> extends BasicDbTable {
 
     private final boolean multiversion;
+    protected final DbKey.Factory<T> dbKeyFactory;
 
-    public ValuesDbTable() {
-        multiversion = false;
+    public ValuesDbTable(DbKey.Factory<T> dbKeyFactory) {
+        this(dbKeyFactory, false);
     }
 
-    ValuesDbTable(boolean multiversion) {
+    ValuesDbTable(DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+        this.dbKeyFactory = dbKeyFactory;
         this.multiversion = multiversion;
     }
-
-    protected abstract Long getId(T t);
 
     protected abstract V load(Connection con, ResultSet rs) throws SQLException;
 
     protected abstract void save(Connection con, T t, V v) throws SQLException;
 
-    public final List<V> get(Long id) {
+    public final List<V> get(DbKey dbKey) {
         List<V> values;
         if (Db.isInTransaction()) {
-            values = (List<V>)Db.getCache(table()).get(id);
+            values = (List<V>)Db.getCache(table()).get(dbKey);
             if (values != null) {
                 return values;
             }
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?"
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + dbKeyFactory.getPKClause()
              + (multiversion ? " AND latest = TRUE" : ""))) {
-            pstmt.setLong(1, id);
+            dbKey.setPK(pstmt);
             values = get(con, pstmt);
             if (Db.isInTransaction()) {
-                Db.getCache(table()).put(id, values);
+                Db.getCache(table()).put(dbKey, values);
             }
             return values;
         } catch (SQLException e) {
@@ -62,12 +62,13 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
     }
 
     public final void insert(T t, V v) {
-        Db.getCache(table()).remove(getId(t));
+        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection()) {
             if (multiversion) {
                 try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                        + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
-                    pstmt.setLong(1, getId(t));
+                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
+                    dbKey.setPK(pstmt);
                     pstmt.executeUpdate();
                 }
             }
@@ -78,12 +79,13 @@ public abstract class ValuesDbTable<T,V> extends BasicDbTable {
     }
 
     public final void insert(T t, List<V> values) {
-        Db.getCache(table()).put(getId(t), values);
+        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        Db.getCache(table()).put(dbKey, values);
         try (Connection con = Db.getConnection()) {
             if (multiversion) {
                 try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                        + " SET latest = FALSE WHERE id = ? AND latest = TRUE")) {
-                    pstmt.setLong(1, getId(t));
+                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE")) {
+                    dbKey.setPK(pstmt);
                     pstmt.executeUpdate();
                 }
             }

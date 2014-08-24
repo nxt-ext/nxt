@@ -2,6 +2,7 @@ package nxt;
 
 import nxt.crypto.EncryptedData;
 import nxt.db.Db;
+import nxt.db.DbKey;
 import nxt.db.VersioningEntityDbTable;
 import nxt.db.VersioningValuesDbTable;
 import nxt.util.Convert;
@@ -73,12 +74,16 @@ public final class DigitalGoodsStore {
 
     public static final class Goods {
 
-        private static final VersioningEntityDbTable<Goods> goodsTable = new VersioningEntityDbTable<Goods>() {
+        private static final DbKey.LongIdFactory<Goods> goodsDbKeyFactory = new DbKey.LongIdFactory<Goods>("id") {
 
             @Override
-            protected Long getId(Goods goods) {
-                return goods.getId();
+            public DbKey newKey(Goods goods) {
+                return newKey(goods.getId());
             }
+
+        };
+
+        private static final VersioningEntityDbTable<Goods> goodsTable = new VersioningEntityDbTable<Goods>(goodsDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -223,12 +228,16 @@ public final class DigitalGoodsStore {
 
     public static final class Purchase {
 
-        private static final VersioningEntityDbTable<Purchase> purchaseTable = new VersioningEntityDbTable<Purchase>() {
+        private static final DbKey.LongIdFactory<Purchase> purchaseDbKeyFactory = new DbKey.LongIdFactory<Purchase>("id") {
 
             @Override
-            protected Long getId(Purchase purchase) {
-                return purchase.getId();
+            public DbKey<Purchase> newKey(Purchase purchase) {
+                return newKey(purchase.getId());
             }
+
+        };
+
+        private static final VersioningEntityDbTable<Purchase> purchaseTable = new VersioningEntityDbTable<Purchase>(purchaseDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -247,12 +256,16 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersioningValuesDbTable<Purchase, EncryptedData> purchaseFeedbackNotesTable = new VersioningValuesDbTable<Purchase, EncryptedData>() {
+        private static final DbKey.LongIdFactory<Purchase> feedbackDbKeyFactory = new DbKey.LongIdFactory<Purchase>("id") {
 
             @Override
-            protected Long getId(Purchase purchase) {
-                return purchase.getId();
+            public DbKey<Purchase> newKey(Purchase purchase) {
+                return newKey(purchase.getId());
             }
+
+        };
+
+        private static final VersioningValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersioningValuesDbTable<Purchase, EncryptedData>(feedbackDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -281,12 +294,16 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersioningValuesDbTable<Purchase, String> purchasePublicFeedbackTable = new VersioningValuesDbTable<Purchase, String>() {
+        private static final DbKey.LongIdFactory<Purchase> publicFeedbackDbKeyFactory = new DbKey.LongIdFactory<Purchase>("id") {
 
             @Override
-            protected Long getId(Purchase purchase) {
-                return purchase.getId();
+            public DbKey<Purchase> newKey(Purchase purchase) {
+                return newKey(purchase.getId());
             }
+
+        };
+
+        private static final VersioningValuesDbTable<Purchase, String> publicFeedbackTable = new VersioningValuesDbTable<Purchase, String>(publicFeedbackDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -468,7 +485,7 @@ public final class DigitalGoodsStore {
             if (!hasFeedbackNotes) {
                 return null;
             }
-            feedbackNotes = purchaseFeedbackNotesTable.get(id);
+            feedbackNotes = feedbackTable.get(feedbackDbKeyFactory.newKey(id));
             return feedbackNotes;
         }
 
@@ -479,14 +496,14 @@ public final class DigitalGoodsStore {
             feedbackNotes.add(feedbackNote);
             this.hasFeedbackNotes = true;
             purchaseTable.insert(this);
-            purchaseFeedbackNotesTable.insert(this, feedbackNote);
+            feedbackTable.insert(this, feedbackNote);
 		}
 
         public List<String> getPublicFeedback() {
             if (!hasPublicFeedbacks) {
                 return null;
             }
-            publicFeedbacks = purchasePublicFeedbackTable.get(id);
+            publicFeedbacks = publicFeedbackTable.get(publicFeedbackDbKeyFactory.newKey(id));
             return publicFeedbacks;
         }
 
@@ -497,7 +514,7 @@ public final class DigitalGoodsStore {
             publicFeedbacks.add(publicFeedback);
             this.hasPublicFeedbacks = true;
             purchaseTable.insert(this);
-            purchasePublicFeedbackTable.insert(this, publicFeedback);
+            publicFeedbackTable.insert(this, publicFeedback);
         }
 
         public long getDiscountNQT() {
@@ -534,7 +551,7 @@ public final class DigitalGoodsStore {
     }
 
     public static Goods getGoods(Long goodsId) {
-        return Goods.goodsTable.get(goodsId);
+        return Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
     }
 
     public static List<Goods> getAllGoods() {
@@ -603,7 +620,7 @@ public final class DigitalGoodsStore {
     }
 
     public static Purchase getPurchase(Long purchaseId) {
-        return Purchase.purchaseTable.get(purchaseId);
+        return Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
     }
 
     public static List<Purchase> getPendingSellerPurchases(Long sellerId) {
@@ -663,7 +680,7 @@ public final class DigitalGoodsStore {
     }
 
     static void delistGoods(Long goodsId) {
-        Goods goods = Goods.goodsTable.get(goodsId);
+        Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
         if (! goods.isDelisted()) {
             goods.setDelisted(true);
             goodsListeners.notify(goods, Event.GOODS_DELISTED);
@@ -673,7 +690,7 @@ public final class DigitalGoodsStore {
     }
 
     static void changePrice(Long goodsId, long priceNQT) {
-        Goods goods = Goods.goodsTable.get(goodsId);
+        Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
         if (! goods.isDelisted()) {
             goods.changePrice(priceNQT);
             goodsListeners.notify(goods, Event.GOODS_PRICE_CHANGE);
@@ -683,7 +700,7 @@ public final class DigitalGoodsStore {
     }
 
     static void changeQuantity(Long goodsId, int deltaQuantity) {
-        Goods goods = Goods.goodsTable.get(goodsId);
+        Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(goodsId));
         if (! goods.isDelisted()) {
             goods.changeQuantity(deltaQuantity);
             goodsListeners.notify(goods, Event.GOODS_QUANTITY_CHANGE);
@@ -693,7 +710,7 @@ public final class DigitalGoodsStore {
     }
 
     static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
-        Goods goods = Goods.goodsTable.get(attachment.getGoodsId());
+        Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(attachment.getGoodsId()));
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
                 && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
             goods.changeQuantity(-attachment.getQuantity());
@@ -720,7 +737,7 @@ public final class DigitalGoodsStore {
     }
 
     static void refund(Long sellerId, Long purchaseId, long refundNQT, Appendix.EncryptedMessage encryptedMessage) {
-        Purchase purchase = Purchase.purchaseTable.get(purchaseId);
+        Purchase purchase = Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
         Account seller = Account.getAccount(sellerId);
         seller.addToBalanceNQT(-refundNQT);
         Account buyer = Account.getAccount(purchase.getBuyerId());
@@ -733,7 +750,7 @@ public final class DigitalGoodsStore {
     }
 
     static void feedback(Long purchaseId, Appendix.EncryptedMessage encryptedMessage, Appendix.Message message) {
-        Purchase purchase = Purchase.purchaseTable.get(purchaseId);
+        Purchase purchase = Purchase.purchaseTable.get(Purchase.purchaseDbKeyFactory.newKey(purchaseId));
         if (encryptedMessage != null) {
             purchase.addFeedbackNote(encryptedMessage.getEncryptedData());
         }

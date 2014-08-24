@@ -1,7 +1,8 @@
 package nxt;
 
-import nxt.db.EntityDbTable;
 import nxt.db.Db;
+import nxt.db.DbKey;
+import nxt.db.EntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,12 +14,16 @@ import java.util.Map;
 
 public final class Vote {
 
-    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>() {
+    private static final DbKey.LongIdFactory<Vote> voteDbKeyFactory = new DbKey.LongIdFactory<Vote>("id") {
 
         @Override
-        protected Long getId(Vote vote) {
-            return vote.getId();
+        public DbKey<Vote> newKey(Vote vote) {
+            return newKey(vote.getId());
         }
+
+    };
+
+    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>(voteDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -52,7 +57,7 @@ public final class Vote {
     }
 
     public static Vote getVote(Long id) {
-        return voteTable.get(id);
+        return voteTable.get(voteDbKeyFactory.newKey(id));
     }
 
     public static Map<Long,Long> getVoters(Poll poll) {

@@ -1,6 +1,7 @@
 package nxt;
 
 import nxt.db.Db;
+import nxt.db.DbKey;
 import nxt.db.VersioningEntityDbTable;
 import nxt.util.Convert;
 
@@ -147,12 +148,16 @@ public abstract class Order {
 
     public static final class Ask extends Order {
 
-        private static final VersioningEntityDbTable<Ask> askOrderTable = new VersioningEntityDbTable<Ask>() {
+        private static final DbKey.LongIdFactory<Ask> askOrderDbKeyFactory = new DbKey.LongIdFactory<Ask>("id") {
 
             @Override
-            protected Long getId(Ask ask) {
-                return ask.getId();
+            public DbKey<Ask> newKey(Ask ask) {
+                return newKey(ask.getId());
             }
+
+        };
+
+        private static final VersioningEntityDbTable<Ask> askOrderTable = new VersioningEntityDbTable<Ask>(askOrderDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -176,7 +181,7 @@ public abstract class Order {
         }
 
         public static Ask getAskOrder(Long orderId) {
-            return askOrderTable.get(orderId);
+            return askOrderTable.get(askOrderDbKeyFactory.newKey(orderId));
         }
 
         public static List<Ask> getAll() {
@@ -277,12 +282,16 @@ public abstract class Order {
 
     public static final class Bid extends Order {
 
-        private static final VersioningEntityDbTable<Bid> bidOrderTable = new VersioningEntityDbTable<Bid>() {
+        private static final DbKey.LongIdFactory<Bid> bidOrderDbKeyFactory = new DbKey.LongIdFactory<Bid>("id") {
 
             @Override
-            protected Long getId(Bid bid) {
-                return bid.getId();
+            public DbKey<Bid> newKey(Bid bid) {
+                return newKey(bid.getId());
             }
+
+        };
+
+        private static final VersioningEntityDbTable<Bid> bidOrderTable = new VersioningEntityDbTable<Bid>(bidOrderDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -305,7 +314,7 @@ public abstract class Order {
         }
 
         public static Bid getBidOrder(Long orderId) {
-            return bidOrderTable.get(orderId);
+            return bidOrderTable.get(bidOrderDbKeyFactory.newKey(orderId));
         }
 
         public static List<Bid> getAll() {

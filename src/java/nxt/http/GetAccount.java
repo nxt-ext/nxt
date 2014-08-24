@@ -62,12 +62,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         JSONArray unconfirmedAssetBalances = new JSONArray();
         for (Account.AccountAsset accountAsset : accountAssets) {
             JSONObject assetBalance = new JSONObject();
-            assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
-            assetBalance.put("balanceQNT", String.valueOf(accountAsset.quantityQNT));
+            assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+            assetBalance.put("balanceQNT", String.valueOf(accountAsset.getQuantityQNT()));
             assetBalances.add(assetBalance);
             JSONObject unconfirmedAssetBalance = new JSONObject();
-            unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.assetId));
-            unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.unconfirmedQuantityQNT));
+            unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+            unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
             unconfirmedAssetBalances.add(unconfirmedAssetBalance);
         }
         if (assetBalances.size() > 0) {

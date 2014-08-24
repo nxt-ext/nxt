@@ -10,16 +10,16 @@ import java.util.List;
 public abstract class EntityDbTable<T> extends BasicDbTable {
 
     private final boolean multiversion;
+    protected final DbKey.Factory<T> dbKeyFactory;
 
-    public EntityDbTable() {
-        this.multiversion = false;
+    public EntityDbTable(DbKey.Factory<T> dbKeyFactory) {
+        this(dbKeyFactory, false);
     }
 
-    EntityDbTable(boolean multiversion) {
+    EntityDbTable(DbKey.Factory<T> dbKeyFactory, boolean multiversion) {
+        this.dbKeyFactory = dbKeyFactory;
         this.multiversion = multiversion;
     }
-
-    protected abstract Long getId(T t);
 
     protected abstract T load(Connection con, ResultSet rs) throws SQLException;
 
@@ -29,17 +29,17 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
         return "ORDER BY height DESC";
     }
 
-    public final T get(Long id) {
+    public final T get(DbKey dbKey) {
         if (Db.isInTransaction()) {
-            T t = (T)Db.getCache(table()).get(id);
+            T t = (T)Db.getCache(table()).get(dbKey);
             if (t != null) {
                 return t;
             }
         }
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + " WHERE id = ?"
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table() + dbKeyFactory.getPKClause()
              + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
-            pstmt.setLong(1, id);
+            dbKey.setPK(pstmt);
             return get(con, pstmt);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -64,14 +64,15 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
                 return null;
             }
             T t = null;
+            DbKey<T> dbKey = null;
             if (cache) {
-                Long id = rs.getLong("id");
-                t = (T) Db.getCache(table()).get(id);
+                dbKey = dbKeyFactory.newKey(rs);
+                t = (T) Db.getCache(table()).get(dbKey);
             }
             if (t == null) {
                 t = load(con, rs);
                 if (cache) {
-                    Db.getCache(table()).put(getId(t), t);
+                    Db.getCache(table()).put(dbKey, t);
                 }
             }
             if (rs.next()) {
@@ -99,15 +100,15 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     T t = null;
-                    Long id = null;
+                    DbKey<T> dbKey = null;
                     if (cache) {
-                        id = rs.getLong("id");
-                        t = (T) Db.getCache(table()).get(id);
+                        dbKey = dbKeyFactory.newKey(rs);
+                        t = (T) Db.getCache(table()).get(dbKey);
                     }
                     if (t == null) {
                         t = load(con, rs);
                         if (cache) {
-                            Db.getCache(table()).put(id, t);
+                            Db.getCache(table()).put(dbKey, t);
                         }
                     }
                     result.add(t);
@@ -142,9 +143,10 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
     }
 
     public final void insert(T t) {
-        T cachedT = (T)Db.getCache(table()).get(getId(t));
+        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        T cachedT = (T)Db.getCache(table()).get(dbKey);
         if (cachedT == null) {
-            Db.getCache(table()).put(getId(t), t);
+            Db.getCache(table()).put(dbKey, t);
         } else if (t != cachedT) { // not a bug
             throw new IllegalStateException("Different instance found in Db cache, perhaps trying to save an object "
                     + "that was read outside the current transaction");
@@ -152,8 +154,8 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
         try (Connection con = Db.getConnection()) {
             if (multiversion) {
                 try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                        + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
-                    pstmt.setLong(1, getId(t));
+                        + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
+                    dbKey.setPK(pstmt);
                     pstmt.executeUpdate();
                 }
             }
@@ -167,10 +169,11 @@ public abstract class EntityDbTable<T> extends BasicDbTable {
         if (t == null) {
             return;
         }
-        Db.getCache(table()).remove(getId(t));
+        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table() + " WHERE id = ?")) {
-            pstmt.setLong(1, getId(t));
+             PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table() + dbKeyFactory.getPKClause())) {
+            dbKey.setPK(pstmt);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

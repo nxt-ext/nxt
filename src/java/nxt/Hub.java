@@ -1,5 +1,6 @@
 package nxt;
 
+import nxt.db.DbKey;
 import nxt.db.VersioningEntityDbTable;
 
 import java.sql.Connection;
@@ -36,12 +37,16 @@ public class Hub {
 
     }
 
-    private static final VersioningEntityDbTable<Hub> hubTable = new VersioningEntityDbTable<Hub>() {
+    private static final DbKey.LongIdFactory<Hub> hubDbKeyFactory = new DbKey.LongIdFactory<Hub>("account_id") {
 
         @Override
-        protected Long getId(Hub hub) {
-            return hub.getAccountId();
+        public DbKey<Hub> newKey(Hub hub) {
+            return newKey(hub.getAccountId());
         }
+
+    };
+
+    private static final VersioningEntityDbTable<Hub> hubTable = new VersioningEntityDbTable<Hub>(hubDbKeyFactory) {
 
         @Override
         protected String table() {

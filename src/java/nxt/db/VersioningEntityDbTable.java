@@ -7,30 +7,31 @@ import java.sql.SQLException;
 
 public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
 
-    protected VersioningEntityDbTable() {
-        super(true);
+    protected VersioningEntityDbTable(DbKey.Factory<T> dbKeyFactory) {
+        super(dbKeyFactory, true);
     }
 
     @Override
     final void rollback(int height) {
         try (Connection con = Db.getConnection();
-             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT DISTINCT id FROM " + table()
-                     + " WHERE height >= ?");
+             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
+                     + " FROM " + table() + " WHERE height >= ?");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
                      + " WHERE height >= ?");
              PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()
-                     + " SET latest = TRUE WHERE id = ? AND height ="
-                     + " (SELECT MAX(height) FROM " + table() + " WHERE id = ?)")) {
+                     + " SET latest = TRUE " + dbKeyFactory.getPKClause() + " AND height ="
+                     + " (SELECT MAX(height) FROM " + table() + dbKeyFactory.getPKClause() + ")")) {
             pstmtSelectToDelete.setInt(1, height);
             try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
                 while (rs.next()) {
-                    Long id = rs.getLong("id");
+                    DbKey<T> dbKey = dbKeyFactory.newKey(rs);
                     pstmtDelete.setInt(1, height);
                     pstmtDelete.executeUpdate();
-                    pstmtSetLatest.setLong(1, id);
-                    pstmtSetLatest.setLong(2, id);
+                    int i = 1;
+                    i = dbKey.setPK(pstmtSetLatest, i);
+                    i = dbKey.setPK(pstmtSetLatest, i);
                     pstmtSetLatest.executeUpdate();
-                    Db.getCache(table()).remove(id);
+                    Db.getCache(table()).remove(dbKey);
                 }
             }
         } catch (SQLException e) {
@@ -44,11 +45,12 @@ public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
             return;
         }
         insert(t); // make sure current height is saved
-        Db.getCache(table()).remove(getId(t));
+        DbKey<T> dbKey = dbKeyFactory.newKey(t);
+        Db.getCache(table()).remove(dbKey);
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("UPDATE " + table()
-                     + " SET latest = FALSE WHERE id = ? AND latest = TRUE LIMIT 1")) {
-            pstmt.setLong(1, getId(t));
+                     + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
+            dbKey.setPK(pstmt);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
