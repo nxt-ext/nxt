@@ -99,6 +99,10 @@ public final class Poll {
         return pollTable.getAll();
     }
 
+    public static int getCount() {
+        return pollTable.getCount();
+    }
+
     public Long getId() {
         return id;
     }

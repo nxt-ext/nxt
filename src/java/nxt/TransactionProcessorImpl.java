@@ -45,7 +45,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    //TODO: optimize to store expiration in separate column
     private static final EntityDbTable<TransactionImpl> unconfirmedTransactionTable = new EntityDbTable<TransactionImpl>(unconfirmedTransactionDbKeyFactory) {
 
         @Override
@@ -60,10 +59,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         @Override
         protected void save(Connection con, TransactionImpl transaction) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO unconfirmed_transaction (id, transaction_bytes) "
-                    + "VALUES (?, ?)")) {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO unconfirmed_transaction (id, expiration, transaction_bytes) "
+                    + "VALUES (?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, transaction.getId());
+                pstmt.setInt(++i, transaction.getExpiration());
                 pstmt.setBytes(++i, transaction.getBytes());
                 pstmt.executeUpdate();
             }
@@ -96,11 +96,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     List<Transaction> removedUnconfirmedTransactions = new ArrayList<>();
 
                     synchronized (BlockchainImpl.getInstance()) {
-                        try {
-                            Db.beginTransaction();
-                            for (TransactionImpl transaction : unconfirmedTransactionTable.getAll()) {
-                                if (transaction.getExpiration() < curTime) {
-                                    unconfirmedTransactionTable.delete(transaction);
+                        try (Connection con = Db.beginTransaction();
+                             PreparedStatement pstmt = con.prepareStatement("SELECT FOR UPDATE * FROM unconfirmed_transaction "
+                                     + "WHERE expiration < ? ")) {
+                            pstmt.setInt(1, curTime);
+                            try (ResultSet rs = pstmt.executeQuery()) {
+                                while (rs.next()) {
+                                    TransactionImpl transaction = TransactionImpl.parseTransaction(rs.getBytes("transaction_bytes"));
+                                    rs.deleteRow();
                                     transaction.undoUnconfirmed();
                                     removedUnconfirmedTransactions.add(transaction);
                                 }
