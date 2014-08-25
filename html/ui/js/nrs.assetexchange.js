@@ -248,8 +248,9 @@ var NRS = (function(NRS, $, undefined) {
 				newAssetIds.push({
 					"asset": String(asset.asset)
 				});
-			} else {
+			} else if (NRS.assetIds.indexOf(asset.asset) == -1) {
 				NRS.assetIds.push(asset.asset);
+				newAsset.name = newAsset.name.toLowerCase();
 				NRS.assets.push(newAsset);
 			}
 		});
