@@ -13,30 +13,7 @@ public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
 
     @Override
     final void rollback(int height) {
-        try (Connection con = Db.getConnection();
-             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
-                     + " FROM " + table() + " WHERE height >= ?");
-             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table()
-                     + " WHERE height >= ?");
-             PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table()
-                     + " SET latest = TRUE " + dbKeyFactory.getPKClause() + " AND height ="
-                     + " (SELECT MAX(height) FROM " + table() + dbKeyFactory.getPKClause() + ")")) {
-            pstmtSelectToDelete.setInt(1, height);
-            try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
-                while (rs.next()) {
-                    DbKey dbKey = dbKeyFactory.newKey(rs);
-                    pstmtDelete.setInt(1, height);
-                    pstmtDelete.executeUpdate();
-                    int i = 1;
-                    i = dbKey.setPK(pstmtSetLatest, i);
-                    i = dbKey.setPK(pstmtSetLatest, i);
-                    pstmtSetLatest.executeUpdate();
-                    Db.getCache(table()).remove(dbKey);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+        rollback(table(), height, dbKeyFactory);
     }
 
     @Override
@@ -52,6 +29,33 @@ public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
                      + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
             dbKey.setPK(pstmt);
             pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static void rollback(String table, int height, DbKey.Factory dbKeyFactory) {
+        try (Connection con = Db.getConnection();
+             PreparedStatement pstmtSelectToDelete = con.prepareStatement("SELECT " + dbKeyFactory.getDistinctClause()
+                     + " FROM " + table + " WHERE height >= ?");
+             PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table
+                     + " WHERE height >= ?");
+             PreparedStatement pstmtSetLatest = con.prepareStatement("UPDATE " + table
+                     + " SET latest = TRUE " + dbKeyFactory.getPKClause() + " AND height ="
+                     + " (SELECT MAX(height) FROM " + table + dbKeyFactory.getPKClause() + ")")) {
+            pstmtSelectToDelete.setInt(1, height);
+            try (ResultSet rs = pstmtSelectToDelete.executeQuery()) {
+                while (rs.next()) {
+                    DbKey dbKey = dbKeyFactory.newKey(rs);
+                    pstmtDelete.setInt(1, height);
+                    pstmtDelete.executeUpdate();
+                    int i = 1;
+                    i = dbKey.setPK(pstmtSetLatest, i);
+                    i = dbKey.setPK(pstmtSetLatest, i);
+                    pstmtSetLatest.executeUpdate();
+                    Db.getCache(table).remove(dbKey);
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
