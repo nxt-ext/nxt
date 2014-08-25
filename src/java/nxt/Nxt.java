@@ -166,7 +166,7 @@ public final class Nxt {
                 ThreadPool.start();
 
                 long currentTime = System.currentTimeMillis();
-                Logger.logDebugMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
+                Logger.logMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
                 if (Constants.isTestnet) {
                     Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
