@@ -87,7 +87,7 @@ public final class Peers {
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
 
     private static final ConcurrentMap<String, PeerImpl> peers = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, String> validAnnouncedAddresses = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, String> announcedAddresses = new ConcurrentHashMap<>();
 
     static final Collection<PeerImpl> allPeers = Collections.unmodifiableCollection(peers.values());
 
@@ -271,7 +271,7 @@ public final class Peers {
                             peerServer.start();
                             Logger.logMessage("Started peer networking server at " + host + ":" + port);
                         } catch (Exception e) {
-                            Logger.logDebugMessage("Failed to start peer networking server", e);
+                            Logger.logErrorMessage("Failed to start peer networking server", e);
                             throw new RuntimeException(e.toString(), e);
                         }
                     }
@@ -526,9 +526,21 @@ public final class Peers {
         if (announcedAddress == null) {
             return null;
         }
+        announcedAddress = announcedAddress.trim();
+        Peer peer;
+        if ((peer = peers.get(announcedAddress)) != null) {
+            return peer;
+        }
+        String address;
+        if ((address = announcedAddresses.get(announcedAddress)) != null && (peer = peers.get(address)) != null) {
+            return peer;
+        }
         try {
-            URI uri = new URI("http://" + announcedAddress.trim());
+            URI uri = new URI("http://" + announcedAddress);
             String host = uri.getHost();
+            if ((peer = peers.get(host)) != null) {
+                return peer;
+            }
             InetAddress inetAddress = InetAddress.getByName(host);
             return addPeer(inetAddress.getHostAddress(), announcedAddress);
         } catch (URISyntaxException | UnknownHostException e) {
@@ -544,46 +556,52 @@ public final class Peers {
         if (clean_address.split(":").length > 2) {
             clean_address = "[" + clean_address + "]";
         }
-
+        PeerImpl peer;
+        if ((peer = peers.get(clean_address)) != null) {
+            return peer;
+        }
         String peerAddress = normalizeHostAndPort(clean_address);
         if (peerAddress == null) {
             return null;
         }
+        if ((peer = peers.get(peerAddress)) != null) {
+            return peer;
+        }
 
-        String announcedPeerAddress = normalizeHostAndPort(announcedAddress);
+        String announcedPeerAddress = address.equals(announcedAddress) ? peerAddress : normalizeHostAndPort(announcedAddress);
 
         if (Peers.myAddress != null && Peers.myAddress.length() > 0 && Peers.myAddress.equalsIgnoreCase(announcedPeerAddress)) {
             return null;
         }
 
-        PeerImpl peer = peers.get(peerAddress);
-        if (peer == null) {
-            peer = new PeerImpl(peerAddress, announcedPeerAddress);
-            if (Constants.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
-                Logger.logDebugMessage("Peer " + peerAddress + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");
-                return null;
-            }
-            peers.put(peerAddress, peer);
-            listeners.notify(peer, Event.NEW_PEER);
+        peer = new PeerImpl(peerAddress, announcedPeerAddress);
+        if (Constants.isTestnet && peer.getPort() > 0 && peer.getPort() != TESTNET_PEER_PORT) {
+            Logger.logDebugMessage("Peer " + peerAddress + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");
+            return null;
         }
-
+        peers.put(peerAddress, peer);
+        if (announcedAddress != null) {
+            updateAddress(peer);
+        }
+        listeners.notify(peer, Event.NEW_PEER);
         return peer;
     }
 
     static PeerImpl removePeer(PeerImpl peer) {
+        if (peer.getAnnouncedAddress() != null) {
+            announcedAddresses.remove(peer.getAnnouncedAddress());
+        }
         return peers.remove(peer.getPeerAddress());
     }
 
     static void updateAddress(PeerImpl peer) {
-        if (peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
-            String oldAddress = validAnnouncedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
-            if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
-                //Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
-                //        + " to " + peer.getPeerAddress());
-                Peer oldPeer = peers.get(oldAddress);
-                if (oldPeer != null) {
-                    oldPeer.remove();
-                }
+        String oldAddress = announcedAddresses.put(peer.getAnnouncedAddress(), peer.getPeerAddress());
+        if (oldAddress != null && !peer.getPeerAddress().equals(oldAddress)) {
+            Logger.logDebugMessage("Peer " + peer.getAnnouncedAddress() + " has changed address from " + oldAddress
+                    + " to " + peer.getPeerAddress());
+            Peer oldPeer = peers.remove(oldAddress);
+            if (oldPeer != null) {
+                Peers.notifyListeners(oldPeer, Peers.Event.REMOVE);
             }
         }
     }
