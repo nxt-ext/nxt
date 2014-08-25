@@ -23,6 +23,7 @@
 		fallbackLng: ['dev'],
 		fallbackNS: [],
 		detectLngQS: 'setLng',
+		detectLngFromLocalStorage: false,
 		ns: 'translation',
 		fallbackOnNull: true,
 		fallbackOnEmpty: false,
@@ -200,14 +201,15 @@
 		o.interpolationPrefixEscaped = f.regexEscape(o.interpolationPrefix);
 		o.interpolationSuffixEscaped = f.regexEscape(o.interpolationSuffix);
 
-		//if (!o.lng) o.lng = f.detectLanguage();
-		if (!o.lng) {
-			o.lng = o.fallbackLng[0];
-		}
+		if (!o.lng) o.lng = f.detectLanguage();
 
 		languages = f.toLanguages(o.lng);
 		currentLng = languages[0];
 		f.log('currentLng set to: ' + currentLng);
+
+		if (o.detectLngFromLocalStorage && typeof document !== 'undefined' && window.localstorage) {
+			window.localStorage.setItem('i18next_lng', currentLng);
+		}
 
 		var lngTranslate = translate;
 		if (options.fixLng) {
@@ -705,13 +707,25 @@
 			}
 		}
 
+		// get from localstorage
+		if (!detectedLng && typeof document !== 'undefined' && window.localstorage && o.detectLngFromLocalStorage) {
+			detectedLng = window.localStorage.getItem('i18next_lng');
+		}
+
 		// get from navigator
 		if (!detectedLng && typeof navigator !== 'undefined') {
 			detectedLng = (navigator.language) ? navigator.language : navigator.userLanguage;
 		}
 
+		//fallback
+		if (!detectedLng) {
+			detectedLng = o.fallbackLng[0];
+		}
+
 		if (detectedLng.indexOf("en-") == 0) {
 			detectedLng = "en";
+		} else if (detectedLng.indexOf("zh-") == 0 && detectedLng != "zh-tw") {
+			detectedLng = "zh";
 		}
 
 		return detectedLng;
