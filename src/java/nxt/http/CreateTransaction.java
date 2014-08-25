@@ -84,12 +84,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             } catch (RuntimeException e) {
                 throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
-        } else if (attachment instanceof Attachment.ColoredCoinsAssetTransfer) {
-            // TODO: remove after DGS block
-            String commentValue = Convert.emptyToNull(req.getParameter("comment"));
-            if (commentValue != null) {
-                message = new Appendix.Message(commentValue);
-            }
         }
         Appendix.PublicKeyAnnouncement publicKeyAnnouncement = null;
         String recipientPublicKey = Convert.emptyToNull(req.getParameter("recipientPublicKey"));
