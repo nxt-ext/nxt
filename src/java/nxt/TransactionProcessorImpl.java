@@ -372,9 +372,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         transactionListeners.notify(removedList, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
     }
 
-    //TODO: remove?
     void shutdown() {
-        removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactionTable.getAll()));
+        //removeUnconfirmedTransactions(new ArrayList<>(unconfirmedTransactionTable.getAll()));
     }
 
     int getTransactionVersion(int previousBlockHeight) {
