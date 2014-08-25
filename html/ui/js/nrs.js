@@ -821,19 +821,29 @@ var NRS = (function(NRS, $, undefined) {
 					if (asset.difference.charAt(0) != "-") {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						//TODO
-
-						$.growl("You received <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
-							"type": "success"
-						});
+						if (quantity != "0") {
+							$.growl($.t("you_received_assets", {
+								"asset": String(asset.asset).escapeHTML(),
+								"name": String(asset.name).escapeHTML(),
+								"count": quantity
+							}), {
+								"type": "success"
+							});
+						}
 					} else {
 						asset.difference = asset.difference.substring(1);
 
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						$.growl("You sold or transferred <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
-							"type": "success"
-						});
+						if (quantity != "0") {
+							$.growl($.t("you_sold_assets", {
+								"asset": String(asset.asset).escapeHTML(),
+								"name": String(asset.name).escapeHTML(),
+								"count": quantity
+							}), {
+								"type": "success"
+							});
+						}
 					}
 				});
 			}
