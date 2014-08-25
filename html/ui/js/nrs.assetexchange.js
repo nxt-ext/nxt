@@ -88,6 +88,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						NRS.loadAssetExchangeSidebar(callback);
 					});
+				} else {
+					NRS.loadAssetExchangeSidebar(callback);
 				}
 			} else {
 				NRS.loadAssetExchangeSidebar(callback);
@@ -305,7 +307,7 @@ var NRS = (function(NRS, $, undefined) {
 	//called on opening the asset exchange page and automatic refresh
 	NRS.loadAssetExchangeSidebar = function(callback) {
 		if (!NRS.assets.length) {
-			NRS.pageLoaded();
+			NRS.pageLoaded(callback);
 			$("#asset_exchange_sidebar_content").empty();
 			$("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
 			$("#no_assets_available").show();
