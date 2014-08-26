@@ -20,7 +20,7 @@ public interface Transaction extends Comparable<Transaction> {
 
         Builder publicKeyAnnouncement(Appendix.PublicKeyAnnouncement publicKeyAnnouncement);
 
-        Transaction build() throws NxtException.ValidationException;
+        Transaction build() throws NxtException.NotValidException;
 
     }
 
@@ -64,9 +64,9 @@ public interface Transaction extends Comparable<Transaction> {
 
     void sign(String secretPhrase);
 
-    boolean verify();
+    boolean verifySignature();
 
-    void validateAttachment() throws NxtException.ValidationException;
+    void validate() throws NxtException.ValidationException;
 
     byte[] getBytes();
 

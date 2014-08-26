@@ -40,7 +40,7 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
                 JSONObject json = (JSONObject) JSONValue.parse(transactionJSON);
                 transaction = Nxt.getTransactionProcessor().parseTransaction(json);
             }
-            transaction.validateAttachment();
+            transaction.validate();
 
             JSONObject response = new JSONObject();
 

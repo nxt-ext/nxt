@@ -40,9 +40,9 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
                 JSONObject json = (JSONObject) JSONValue.parse(transactionJSON);
                 transaction = Nxt.getTransactionProcessor().parseTransaction(json);
             }
-            transaction.validateAttachment();
+            transaction.validate();
             response = JSONData.unconfirmedTransaction(transaction);
-            response.put("verify", transaction.verify());
+            response.put("verify", transaction.verifySignature());
         } catch (NxtException.ValidationException|RuntimeException e) {
             Logger.logDebugMessage(e.getMessage(), e);
             return INCORRECT_TRANSACTION_BYTES;

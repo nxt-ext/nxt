@@ -197,7 +197,7 @@ public final class Generator {
 
         Block lastBlock = Nxt.getBlockchain().getLastBlock();
 
-        if (lastBlock.getHeight() < Constants.ASSET_EXCHANGE_BLOCK) {
+        if (lastBlock.getHeight() < Constants.DIGITAL_GOODS_STORE_BLOCK) {
             return;
         }
 

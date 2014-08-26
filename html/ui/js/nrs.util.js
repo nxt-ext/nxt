@@ -736,6 +736,20 @@ var NRS = (function(NRS, $, undefined) {
 		return data;
 	}
 
+	NRS.convertNumericToRSAccountFormat = function(account) {
+		if (/^NXT\-/i.test(account)) {
+			return String(account).escapeHTML();
+		} else {
+			var address = new NxtAddress();
+
+			if (address.set(account)) {
+				return address.toString().escapeHTML();
+			} else {
+				return "";
+			}
+		}
+	}
+
 	NRS.getAccountLink = function(object, acc) {
 		if (typeof object[acc + "RS"] == "undefined") {
 			return "/";
@@ -1485,7 +1499,7 @@ var NRS = (function(NRS, $, undefined) {
 		if ($.i18n.exists(nameKey)) {
 			return $.t(nameKey).escapeHTML();
 		} else {
-			return String(name).escapeHTML();
+			return nameKey.replace(/_/g, " ").escapeHTML();
 		}
 	}
 

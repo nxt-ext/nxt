@@ -106,7 +106,7 @@ public interface Attachment extends Appendix {
         private final String aliasName;
         private final String aliasURI;
 
-        MessagingAliasAssignment(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingAliasAssignment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH).trim().intern();
             aliasURI = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ALIAS_URI_LENGTH).trim().intern();
@@ -168,7 +168,7 @@ public interface Attachment extends Appendix {
         private final String aliasName;
         private final long priceNQT;
 
-        MessagingAliasSell(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingAliasSell(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
             this.priceNQT = buffer.getLong();
@@ -227,7 +227,7 @@ public interface Attachment extends Appendix {
 
         private final String aliasName;
 
-        MessagingAliasBuy(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingAliasBuy(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.aliasName = Convert.readString(buffer, buffer.get(), Constants.MAX_ALIAS_LENGTH);
         }
@@ -281,7 +281,7 @@ public interface Attachment extends Appendix {
         private final byte minNumberOfOptions, maxNumberOfOptions;
         private final boolean optionsAreBinary;
 
-        MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingPollCreation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.pollName = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_NAME_LENGTH);
             this.pollDescription = Convert.readString(buffer, buffer.getShort(), Constants.MAX_POLL_DESCRIPTION_LENGTH);
@@ -397,7 +397,7 @@ public interface Attachment extends Appendix {
         private final Long pollId;
         private final byte[] pollVote;
 
-        MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingVoteCasting(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.pollId = buffer.getLong();
             int numberOfOptions = buffer.get();
@@ -468,7 +468,7 @@ public interface Attachment extends Appendix {
         private final long minFeePerByteNQT;
         private final String[] uris;
 
-        MessagingHubAnnouncement(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingHubAnnouncement(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.minFeePerByteNQT = buffer.getLong();
             int numberOfUris = buffer.get();
@@ -481,7 +481,7 @@ public interface Attachment extends Appendix {
             }
         }
 
-        MessagingHubAnnouncement(JSONObject attachmentData) throws NxtException.ValidationException {
+        MessagingHubAnnouncement(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
             this.minFeePerByteNQT = (Long) attachmentData.get("minFeePerByte");
             try {
@@ -553,7 +553,7 @@ public interface Attachment extends Appendix {
         private final String name;
         private final String description;
 
-        MessagingAccountInfo(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        MessagingAccountInfo(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ACCOUNT_DESCRIPTION_LENGTH);
@@ -618,7 +618,7 @@ public interface Attachment extends Appendix {
         private final long quantityQNT;
         private final byte decimals;
 
-        ColoredCoinsAssetIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        ColoredCoinsAssetIssuance(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.get(), Constants.MAX_ASSET_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_ASSET_DESCRIPTION_LENGTH);
@@ -699,7 +699,7 @@ public interface Attachment extends Appendix {
         private final long quantityQNT;
         private final String comment;
 
-        ColoredCoinsAssetTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        ColoredCoinsAssetTransfer(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.assetId = Convert.zeroToNull(buffer.getLong());
             this.quantityQNT = buffer.getLong();
@@ -976,7 +976,7 @@ public interface Attachment extends Appendix {
         private final int quantity;
         private final long priceNQT;
 
-        DigitalGoodsListing(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        DigitalGoodsListing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.name = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_NAME_LENGTH);
             this.description = Convert.readString(buffer, buffer.getShort(), Constants.MAX_DGS_LISTING_DESCRIPTION_LENGTH);
@@ -1289,7 +1289,7 @@ public interface Attachment extends Appendix {
         private final long discountNQT;
         private final boolean goodsIsText;
 
-        DigitalGoodsDelivery(ByteBuffer buffer, byte transactionVersion) throws NxtException.ValidationException {
+        DigitalGoodsDelivery(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.purchaseId = buffer.getLong();
             int length = buffer.getInt();

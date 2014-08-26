@@ -83,9 +83,7 @@ var NRS = (function(NRS, $, undefined) {
 		};
 
 		if (data.add_message && data.message) {
-			if (!NRS.dgsBlockPassed) {
-				data.message = converters.stringToHexString(data.message);
-			} else if (data.encrypt_message) {
+			if (data.encrypt_message) {
 				try {
 					var options = {};
 
@@ -118,24 +116,20 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (data.add_note_to_self && data.note_to_self) {
-			if (!NRS.dgsBlockPassed) {
+			try {
+				var options = {};
+
+				var encrypted = NRS.encryptNote(data.note_to_self, {
+					"publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
+				}, data.secretPhrase);
+
+				data.encryptToSelfMessageData = encrypted.message;
+				data.encryptToSelfMessageNonce = encrypted.nonce;
+				data.messageToEncryptToSelfIsText = "true";
+
 				delete data.note_to_self;
-			} else {
-				try {
-					var options = {};
-
-					var encrypted = NRS.encryptNote(data.note_to_self, {
-						"publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
-					}, data.secretPhrase);
-
-					data.encryptToSelfMessageData = encrypted.message;
-					data.encryptToSelfMessageNonce = encrypted.nonce;
-					data.messageToEncryptToSelfIsText = "true";
-
-					delete data.note_to_self;
-				} catch (err) {
-					throw err;
-				}
+			} catch (err) {
+				throw err;
 			}
 		} else {
 			delete data.note_to_self;
