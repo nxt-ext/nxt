@@ -16,7 +16,7 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
     static final GetBlock instance = new GetBlock();
 
     private GetBlock() {
-        super(new APITag[] {APITag.BLOCKS}, "block");
+        super(new APITag[] {APITag.BLOCKS}, "block", "includeTransactions");
     }
 
     @Override
@@ -26,6 +26,7 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
         if (block == null) {
             return MISSING_BLOCK;
         }
+        boolean includeTransactions = "true".equalsIgnoreCase(req.getParameter("includeTransactions"));
 
         Block blockData;
         try {
@@ -37,7 +38,7 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
             return INCORRECT_BLOCK;
         }
 
-        return JSONData.block(blockData);
+        return JSONData.block(blockData, includeTransactions);
 
     }
 

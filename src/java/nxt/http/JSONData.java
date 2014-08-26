@@ -96,7 +96,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject block(Block block) {
+    static JSONObject block(Block block, boolean includeTransactions) {
         JSONObject json = new JSONObject();
         json.put("height", block.getHeight());
         putAccount(json, "generator", block.getGeneratorId());
@@ -121,8 +121,8 @@ final class JSONData {
         }
         json.put("blockSignature", Convert.toHexString(block.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Long transactionId : block.getTransactionIds()) {
-            transactions.add(Convert.toUnsignedLong(transactionId));
+        for (Transaction transaction : block.getTransactions()) {
+            transactions.add(includeTransactions ? transaction(transaction) : Convert.toUnsignedLong(transaction.getId()));
         }
         json.put("transactions", transactions);
         return json;
