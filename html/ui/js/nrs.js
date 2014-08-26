@@ -66,8 +66,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
 
-	NRS.PKAnnouncementBlockPassed = false;
-
 	var stateInterval;
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
@@ -680,7 +678,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				if (response.name) {
-					$("#account_name").html(response.name.escapeHTML());
+					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
 				}
 			}
 
@@ -743,7 +741,7 @@ var NRS = (function(NRS, $, undefined) {
 			var rows = "";
 
 			for (var i = 0; i < NRS.accountInfo.lessors.length; i++) {
-				var lessor = NRS.accountInfo.lessors[i];
+				var lessor = NRS.convertNumericToRSAccountFormat(NRS.accountInfo.lessors[i]);
 
 				rows += "<tr><td><a href='#' data-user='" + String(lessor).escapeHTML() + "'>" + NRS.getAccountTitle(lessor) + "</a></td></tr>";
 			}
@@ -823,19 +821,29 @@ var NRS = (function(NRS, $, undefined) {
 					if (asset.difference.charAt(0) != "-") {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						//TODO
-
-						$.growl("You received <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
-							"type": "success"
-						});
+						if (quantity != "0") {
+							$.growl($.t("you_received_assets", {
+								"asset": String(asset.asset).escapeHTML(),
+								"name": String(asset.name).escapeHTML(),
+								"count": quantity
+							}), {
+								"type": "success"
+							});
+						}
 					} else {
 						asset.difference = asset.difference.substring(1);
 
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
-						$.growl("You sold or transferred <a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + quantity + " " + String(asset.name).escapeHTML() + (quantity == "1" ? " asset" : " assets") + "</a>.", {
-							"type": "success"
-						});
+						if (quantity != "0") {
+							$.growl($.t("you_sold_assets", {
+								"asset": String(asset.asset).escapeHTML(),
+								"name": String(asset.name).escapeHTML(),
+								"count": quantity
+							}), {
+								"type": "success"
+							});
+						}
 					}
 				});
 			}

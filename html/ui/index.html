@@ -14,6 +14,155 @@
         <style id="user_boxes_style" type="text/css"></style>
     </head>
     <body class="lockscreen fixed">
+        <div id="lockscreen">
+            <div id="old_browser_warning" style="display:none;margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;" data-i18n="old_browser_warning">You are using an old browser which this application does not support.</div>
+            
+            <!--
+            <div style="position:absolute;top:10px;left:10px;" id="server_select">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        <span class="text">Use localhost</span> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#">Use localhost</a></li>
+                        <li><a href="#">Use TestNet</a></li>
+                    </ul>
+                </div>
+            </div>
+            -->
+            
+            <table id="center" style="display:none;width:100%;height:100%;">
+                <tr><td style="text-align:center;vertical-align:middle">
+                    <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="320" style="margin-bottom:40px;" /></center>
+
+                    <div id="login_panel">   
+                        <div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
+                            <div class="callout callout-danger"></div>
+                        </div>
+
+                        <div class="lockscreen-item">
+                            <div class="lockscreen-credentials">   
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus />
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+                                    </div>
+                                    <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
+                                </div>
+                            </div>
+                        </div>  
+                        
+                        <div id="remember_password_container">
+                            <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
+                        </div>
+                        
+                        <div id="registration_link">
+                            <a href="#" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
+                        </div> 
+                    </div>
+                    
+                    <div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
+                        <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="welcome_to_nxt">Welcome to Nxt</span></div>
+                        <div class="panel-body">
+                            <button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;" data-i18n="returning_user_q">Returning User?</button>
+                            &nbsp;&nbsp;
+                            <button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;" data-i18n="new_q_create_account">New? Create Your Account!</button>
+                        </div>
+                    </div>  
+                    
+                    <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
+                        <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="create_your_account">Create Your Account</span></div>
+                        <div class="panel-body">
+                            <form class="form-horizontal" role="form" method="post" autocomplete="off">
+                                <div class="callout callout-info" style="max-width:500px;" data-i18n="passphrase_length_warning">Your passphrase must be at least 35 characters long.</div>
+                                
+                                <div class="callout callout-danger" data-i18n="[html]passphrase_warning"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
+
+                                <div class="form-group">
+                                    <label for="registration_password" class="col-sm-3 control-label" data-i18n="passphrase">Passphrase</label>
+                                    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registration_password_repeat" class="col-sm-3 control-label" data-i18n="repeat">Repeat</label>
+                                    <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
+                                </div>
+                                
+                                <div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" data-i18n="[value]register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                
+                    <div class="panel panel-default" id="account_phrase_generator_panel" style="display:none;max-width:500px">
+                        <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="create_your_account">Create Your Account</span></div>
+                        <div class="panel-body">
+                            <div id="account_phrase_generator_loading">
+                                <p><span class="loading_text" data-i18n="loading_word_list">Loading Word List</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+                                
+                                <div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            </div>
+                            
+                            <div id="account_phrase_generator_loaded">                          
+                                <div class="step_1 account_phrase_generator_steps">
+                                    <div id="account_phrase_generator_seeder" class="seeder">
+                                        <p data-i18n="seed_password_generator">Move your cursor around to seed the random number generator...</p>
+                                        <div class="progress progress-striped">
+                                            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                                                <span class="sr-only">0% Seeded</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="text-align:right">
+                                        <button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="step_2 account_phrase_generator_steps">
+                                    <div id="account_phrase_generator_start">
+                                        <p><span data-i18n="generating_passphrase_wait">Generating your passphrase. Please wait</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
+                                        
+                                        <div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                                    </div>
+                                    
+                                    <div id="account_phrase_generator_stop" style="display:none">
+                                        <p data-i18n="automatically_generated_passphrase_is">Your automatically generated passphrase is:</p>
+                                        
+                                        <textarea style="width:100%;height:50px;margin-bottom:10px;padding:3px;" rows="2" readonly></textarea>
+                                    
+                                        <p data-i18n="memorize_passphrase_help">Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
+                                                    
+                                        <div class="callout callout-danger" data-i18n="[html]assphrase_disclosure_warning"><strong>Attention</strong>: Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
+                                    
+                                        <div style="text-align:right">
+                                            <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="step_3 account_phrase_generator_steps">
+                                    <p data-i18n="passphrase_write_below">Your passphrase is very important! In order to be sure that you have saved it, please write your passphrase below:</p>
+                                    
+                                    <div class="callout callout-danger" style="display:none" data-i18n="incorrectly_typed_passphrase">You have not typed the passphrase correctly, please try again!</div>
+
+                                    <textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
+                                    
+                                    <div style="text-align:right">
+                                        <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="NRS.verifyGeneratedPassphrase();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>  
+                
+                    <div id="custom_passphrase_link" style="margin-top:30px;margin-bottom:20px;text-align:center;display:none;">
+                        <a href="#" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
+                    </div>
+                </td>
+                </tr>
+            </table>           
+        </div>
+
         <header class="header">
             <a href="#" class="logo" id="logo" data-page="dashboard">
                 <img src="img/nxt_logo_small.png" style="opacity:0.95" />
@@ -1374,155 +1523,6 @@
 	
 		<div id="testnet_warning" style="display:none;position:fixed;bottom:0;left:0;padding:5px;background:red;color:white;border-top-right-radius:5px;" data-i18n="[html]testnet_warning"><strong>Warning</strong>: You are connected to the TestNet. Do not use your real passphrase!</div>
 
-		<div id="lockscreen">
-			<div id="old_browser_warning" style="display:none;margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;" data-i18n="old_browser_warning">You are using an old browser which this application does not support.</div>
-			
-			<!--
-			<div style="position:absolute;top:10px;left:10px;" id="server_select">
-		        <div class="btn-group">
-					<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-						<span class="text">Use localhost</span> <span class="caret"></span>
-					</button>
-		        	<ul class="dropdown-menu" role="menu">
-		          		<li><a href="#">Use localhost</a></li>
-		           		<li><a href="#">Use TestNet</a></li>
-		          	</ul>
-		        </div>
-		    </div>
-		    -->
-			
-			<table id="center" style="display:none;width:100%;height:100%;">
-	        	<tr><td style="text-align:center;vertical-align:middle">
-                    <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="320" style="margin-bottom:40px;" /></center>
-
-		            <div id="login_panel">   
-		            	<div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
-                            <div class="callout callout-danger"></div>
-		                </div>
-
-			            <div class="lockscreen-item">
-			                <div class="lockscreen-credentials">   
-			                    <div class="input-group">
-			                        <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus />
-			                        <div class="input-group-btn">
-			                            <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
-			                        </div>
-                                    <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
-			                    </div>
-			                </div>
-			            </div>	
-			            
-			            <div id="remember_password_container">
-			            	<input type="checkbox" name="remember_password" id="remember_password" value="1" /> <label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
-			            </div>
-			            
-			            <div id="registration_link">
-			            	<a href="#" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
-			            </div> 
-		            </div>
-		            
-					<div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
-		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="welcome_to_nxt">Welcome to Nxt</span></div>
-		                <div class="panel-body">
-		               		<button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;" data-i18n="returning_user_q">Returning User?</button>
-					   		&nbsp;&nbsp;
-					   		<button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;" data-i18n="new_q_create_account">New? Create Your Account!</button>
-		                </div>
-		            </div>  
-					
-		            <div class="panel panel-default" id="account_phrase_custom_panel" style="display:none;max-width:500px;">
-		                <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="create_your_account">Create Your Account</span></div>
-		                <div class="panel-body">
-							<form class="form-horizontal" role="form" method="post" autocomplete="off">
-		        				<div class="callout callout-info" style="max-width:500px;" data-i18n="passphrase_length_warning">Your passphrase must be at least 35 characters long.</div>
-		        				
-		        				<div class="callout callout-danger" data-i18n="[html]passphrase_warning"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
-
-			            		<div class="form-group">
-			            		    <label for="registration_password" class="col-sm-3 control-label" data-i18n="passphrase">Passphrase</label>
-			            		    <div class="col-sm-9"><input type="password" name="registration_password" class="form-control" id="registration_password" placeholder="" /></div>
-			            		</div>
-			                    <div class="form-group">
-			                        <label for="registration_password_repeat" class="col-sm-3 control-label" data-i18n="repeat">Repeat</label>
-			                        <div class="col-sm-9"><input type="password" name="registration_password_repeat" class="form-control" id="registration_password_repeat" placeholder="" /></div>
-			                    </div>
-			                    
-								<div style="text-align:right"><input type="submit" class="btn btn-primary btn-sm" value="Register" data-i18n="[value]register" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
-			                    </div>
-		                    </form>
-		                </div>
-		            </div>
-	            
-		            <div class="panel panel-default" id="account_phrase_generator_panel" style="display:none;max-width:500px">
-		            	<div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> <span data-i18n="create_your_account">Create Your Account</span></div>
-		                <div class="panel-body">
-		                	<div id="account_phrase_generator_loading">
-		                		<p><span class="loading_text" data-i18n="loading_word_list">Loading Word List</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
-		                		
-								<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-		                	</div>
-		                	
-		                	<div id="account_phrase_generator_loaded">	        				
-		        				<div class="step_1 account_phrase_generator_steps">
-									<div id="account_phrase_generator_seeder" class="seeder">
-										<p data-i18n="seed_password_generator">Move your cursor around to seed the random number generator...</p>
-										<div class="progress progress-striped">
-								            <div class="progress-bar progress-bar-info" id="account_phrase_generator_seed_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-								                <span class="sr-only">0% Seeded</span>
-								            </div>
-										</div>
-									</div>
-									
-									<div style="text-align:right">
-										<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
-									</div>
-		        				</div>
-		        				
-		        				<div class="step_2 account_phrase_generator_steps">
-		        					<div id="account_phrase_generator_start">
-		        						<p><span data-i18n="generating_passphrase_wait">Generating your passphrase. Please wait</span><span class="loading_dots"><span>.</span><span>.</span><span>.</span></span></p>
-		        						
-										<div style="text-align:center;margin-top:20px;margin-bottom:20px;"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-		        					</div>
-		        					
-		        					<div id="account_phrase_generator_stop" style="display:none">
-			        					<p data-i18n="automatically_generated_passphrase_is">Your automatically generated passphrase is:</p>
-			        					
-			        					<textarea style="width:100%;height:50px;margin-bottom:10px;padding:3px;" rows="2" readonly></textarea>
-		        					
-			        					<p data-i18n="memorize_passphrase_help">Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
-			        						        
-			        					<div class="callout callout-danger" data-i18n="[html]assphrase_disclosure_warning"><strong>Attention</strong>: Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
-			        				
-										<div style="text-align:right">
-											<input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
-										</div>
-		        					</div>
-		        				</div>
-		        				
-		        				<div class="step_3 account_phrase_generator_steps">
-		        					<p data-i18n="passphrase_write_below">Your passphrase is very important! In order to be sure that you have saved it, please write your passphrase below:</p>
-		        					
-		        					<div class="callout callout-danger" style="display:none" data-i18n="incorrectly_typed_passphrase">You have not typed the passphrase correctly, please try again!</div>
-
-		        					<textarea style="width:100%;height:50px;margin-bottom:10px;" rows="2"></textarea>
-		        					
-		        					<div style="text-align:right">
-										<input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="NRS.verifyGeneratedPassphrase();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
-									</div>
-		        				</div>
-		                	</div>
-		                </div>
-		            </div>  
-	            
-		            <div id="custom_passphrase_link" style="margin-top:30px;margin-bottom:20px;text-align:center;display:none;">
-			    		<a href="#" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
-					</div>
-				</td>
-				</tr>
-			</table>	       
-		</div>
-
 		<div class="modal fade" id="lease_balance_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog">
 		    	<div class="modal-content">
@@ -1545,7 +1545,7 @@
 							</div>
                             <div class="form-group recipient_public_key">
                                 <label for="lease_balance_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
-                                <input type="text" class="form-control" name="recipientPublicKey" id="lease_balance_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                                <input type="text" class="form-control" name="recipientPublicKey" id="lease_balance_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                             </div>
 							<div class="row">
 								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="4">
@@ -1583,7 +1583,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="lease_balance_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="lease_balance_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="7" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="lease_balance_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="lease_balance_do_not_broadcast" value="1" /> <label for="lease_balance_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -1703,7 +1703,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="cancel_order_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_order_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_order_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="cancel_order_do_not_broadcast" value="1" /> <label for="cancel_order_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -1803,7 +1803,7 @@
 							</div>
                             <div class="form-group recipient_public_key">
                                 <label for="transfer_asset_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
-                                <input type="text" class="form-control" name="recipientPublicKey" id="transfer_asset_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                                <input type="text" class="form-control" name="recipientPublicKey" id="transfer_asset_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                             </div>
                             <div class="form-group">
                                 <label for="transfer_asset_quantity" data-i18n="quantity">QUANTITY</label>
@@ -1845,7 +1845,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="transfer_asset_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="8" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="8" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="transfer_asset_do_not_broadcast" value="1" /> <label for="transfer_asset_do_not_broadcast" style="font-weight:normal;" tabindex="9" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2061,7 +2061,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="issue_asset_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_asset_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="issue_asset_do_not_broadcast" value="1" /> <label for="issue_asset_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2151,7 +2151,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_listing_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_listing_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_listing_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_listing_do_not_broadcast" value="1" /> <label for="dgs_listing_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2217,7 +2217,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_delisting_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delisting_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delisting_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_delisting_do_not_broadcast" value="1" /> <label for="dgs_delisting_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2299,7 +2299,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_price_change_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_price_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_price_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_price_change_do_not_broadcast" value="1" /> <label for="dgs_price_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2378,7 +2378,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_quantity_change_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_quantity_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_quantity_change_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_quantity_change_do_not_broadcast" value="1" /> <label for="dgs_quantity_change_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2497,7 +2497,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_purchase_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_purchase_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_purchase_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_purchase_do_not_broadcast" value="1" /> <label for="dgs_purchase_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2578,7 +2578,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_delivery_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delivery_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_delivery_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_delivery_do_not_broadcast" value="1" /> <label for="dgs_delivery_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2731,7 +2731,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_refund_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_refund_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_refund_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_refund_do_not_broadcast" value="1" /> <label for="dgs_refund_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2808,7 +2808,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="dgs_feedback_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_feedback_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="dgs_feedback_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="dgs_feedback_do_not_broadcast" value="1" /> <label for="dgs_feedback_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2913,7 +2913,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="create_poll_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="create_poll_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="create_poll_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="create_poll_do_not_broadcast" value="1" /> <label for="create_poll_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -2977,7 +2977,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="cast_vote_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cast_vote_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cast_vote_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="cast_vote_do_not_broadcast" value="1" /> <label for="cast_vote_do_not_broadcast" style="font-weight:normal;" tabindex="7"> <span data-i18n="do_not_broadcast">Do Not Broadcast</span></label>
@@ -3015,7 +3015,7 @@
 							</div>
                             <div class="form-group recipient_public_key">
                                 <label for="send_money_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
-                                <input type="text" class="form-control" name="recipientPublicKey" id="send_money_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                                <input type="text" class="form-control" name="recipientPublicKey" id="send_money_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                             </div>
 							<div class="row">
 								<div class="col-xs-6 col-sm-6 col-md-6">
@@ -3059,7 +3059,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="send_money_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="9" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_money_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="9" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px">
 								<input type="checkbox" name="doNotBroadcast" id="send_money_do_not_broadcast" value="1" /> <label for="send_money_do_not_broadcast" style="font-weight:normal;" tabindex="10" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3110,7 +3110,7 @@
 							</div>
                             <div class="form-group recipient_public_key">
                                 <label for="send_message_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
-                                <input type="text" class="form-control" name="recipientPublicKey" id="send_message_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                                <input type="text" class="form-control" name="recipientPublicKey" id="send_message_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                             </div>
 							<div class="form-group">
 								<label for="send_message_message" data-i18n="message">MESSAGE</label>
@@ -3142,7 +3142,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="send_message_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_message_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="7" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="send_message_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="send_message_do_not_broadcast" value="1" /> <label for="send_message_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3212,7 +3212,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="account_info_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="account_info_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="account_info_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="account_info_do_not_broadcast" value="1" /> <label for="account_info_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3291,7 +3291,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="register_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="register_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="register_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="register_alias_do_not_broadcast" value="1" /> <label for="register_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3375,7 +3375,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="buy_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="buy_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="buy_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="buy_alias_do_not_broadcast" value="1" /> <label for="buy_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3432,7 +3432,7 @@
 							</div>
                             <div class="form-group recipient_public_key">
                                 <label for="transfer_alias_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
-                                <input type="text" class="form-control" name="recipientPublicKey" id="transfer_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                                <input type="text" class="form-control" name="recipientPublicKey" id="transfer_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                             </div>
                             <div class="form-group">
                                 <input type="checkbox" name="add_message" id="transfer_alias_add_message" class="add_message" tabindex="6" /> <label for="transfer_alias_add_message" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_message_q">Add a Message?</span></label>
@@ -3467,7 +3467,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="transfer_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="transfer_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="transfer_alias_do_not_broadcast" value="1" /> <label for="transfer_alias_do_not_broadcast" style="font-weight:normal;" tabindex="8" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3529,7 +3529,7 @@
 							</div>
                             <div class="form-group recipient_public_key">
                                 <label for="sell_alias_recipient_public_key" data-i18n="recipient_public_key">Recipient Public Key</label>
-                                <input type="text" class="form-control" name="recipientPublicKey" id="sell_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" />
+                                <input type="text" class="form-control" name="recipientPublicKey" id="sell_alias_recipient_public_key" placeholder="Public Key" data-i18n="[placeholder]public_key" tabindex="2" spellcheck="false" />
                             </div>
                            	<div class="row">
 								<div class="col-xs-12 col-sm-12 col-md-12 advanced_extend" data-normal="12" data-advanced="6">
@@ -3576,7 +3576,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="sell_alias_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="sell_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="sell_alias_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="7" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:5px;">
 								<input type="checkbox" name="doNotBroadcast" id="sell_alias_do_not_broadcast" value="1" /> <label for="sell_alias_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -3656,7 +3656,7 @@
 							</div>
 							<div class="form-group advanced">
 								<label for="cancel_alias_sale_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_alias_sale_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" />
+								<input type="text" class="form-control" name="referencedTransactionFullHash" id="cancel_alias_sale_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="[placeholder]referenced_transaction_full_hash" tabindex="6" spellcheck="false" />
 							</div>
 							<div class="form-group advanced" style="margin-bottom:0;">
 								<input type="checkbox" name="doNotBroadcast" id="cancel_alias_sale_do_not_broadcast" value="1" /> <label for="cancel_alias_sale_do_not_broadcast" style="font-weight:normal;" tabindex="7" data-i18n="do_not_broadcast">Do Not Broadcast</label>
@@ -4429,9 +4429,9 @@
         <script src="js/3rdparty/i18next.js" type="text/javascript"></script>
         <script type="text/javascript">
             $.i18n.init({
-                lng: "en",
                 fallbackLng: "en",
                 lowerCaseLng: true,
+                detectLngFromLocalStorage: true,
                 resGetPath: "locales/__lng__.json",
                 debug: false
             }, function() {
