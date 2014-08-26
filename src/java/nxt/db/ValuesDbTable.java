@@ -12,7 +12,7 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;
 
-    public ValuesDbTable(DbKey.Factory<T> dbKeyFactory) {
+    protected ValuesDbTable(DbKey.Factory<T> dbKeyFactory) {
         this(dbKeyFactory, false);
     }
 

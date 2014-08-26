@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 public abstract class DerivedDbTable {
 
-    public DerivedDbTable() {
+    protected DerivedDbTable() {
         Nxt.getBlockchainProcessor().registerDerivedTable(this);
     }
 

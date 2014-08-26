@@ -12,7 +12,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;
 
-    public EntityDbTable(DbKey.Factory<T> dbKeyFactory) {
+    protected EntityDbTable(DbKey.Factory<T> dbKeyFactory) {
         this(dbKeyFactory, false);
     }
 
