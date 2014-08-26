@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -480,10 +481,11 @@ public final class Peers {
         String dumpPeersVersion = Nxt.getStringProperty("nxt.dumpPeersVersion");
         if (dumpPeersVersion != null) {
             StringBuilder buf = new StringBuilder();
-            for (Peer peer : new HashSet<>(peers.values())) {
-                if (peer.getAnnouncedAddress() != null && peer.shareAddress() && !peer.isBlacklisted()
+            for (Map.Entry<String,String> entry : announcedAddresses.entrySet()) {
+                Peer peer = peers.get(entry.getValue());
+                if (peer != null && peer.getState() == Peer.State.CONNECTED && peer.shareAddress() && !peer.isBlacklisted()
                         && peer.getVersion() != null && peer.getVersion().startsWith(dumpPeersVersion)) {
-                    buf.append("('").append(peer.getAnnouncedAddress()).append("'), ");
+                    buf.append("('").append(entry.getKey()).append("'), ");
                 }
             }
             Logger.logDebugMessage(buf.toString());
