@@ -248,7 +248,7 @@ final class BlockchainImpl implements Blockchain {
                     buf.append("AND subtype = ? ");
                 }
             }
-            buf.append("ORDER BY block_timestamp DESC");
+            buf.append("ORDER BY block_timestamp DESC, id DESC");
             if (to >= from && to < Integer.MAX_VALUE) {
                 buf.append(" LIMIT " + (to - from + 1));
             }
