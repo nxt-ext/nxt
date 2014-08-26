@@ -171,8 +171,8 @@ public final class Nxt {
                 if (Constants.isTestnet) {
                     Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
                 }
-            } catch (Throwable t) {
-                Logger.logErrorMessage(t.getMessage());
+            } catch (Exception e) {
+                Logger.logErrorMessage(e.getMessage(), e);
                 System.exit(1);
             }
         }
