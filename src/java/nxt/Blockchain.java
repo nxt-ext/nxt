@@ -14,6 +14,8 @@ public interface Blockchain {
 
     Block getBlock(Long blockId);
 
+    Block getBlockAtHeight(int height);
+
     boolean hasBlock(Long blockId);
 
     DbIterator<? extends Block> getAllBlocks();

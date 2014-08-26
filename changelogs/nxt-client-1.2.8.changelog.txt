@@ -14,6 +14,13 @@ The getAccountTransactionIds and getAccountTransactions requests now accept an
 optional numberOfConfirmations parameter, which can be used to retrieve only
 transactions with at least numberOfConfirmations number of confirmations.
 
+The getBlock API now optionally accepts height instead of block parameter, to
+retrieve the block at that height. If both block and height are specified,
+height parameter is ignored.
+
+The getBlock API now also accepts includeTransactions parameter, if set to
+true, full transaction JSON is returned instead of only transaction ids.
+
 There are no other changes between 1.2.7 and 1.2.8, so those who rely on the
 old behavior of the above APIs can continue to use 1.2.7 for the time being.
 

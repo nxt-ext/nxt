@@ -156,6 +156,18 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public BlockImpl getBlockAtHeight(int height) {
+        BlockImpl block = lastBlock.get();
+        if (height > block.getHeight()) {
+            throw new IllegalArgumentException("Invalid height " + height + ", current blockchain is at " + block.getHeight());
+        }
+        if (height == block.getHeight()) {
+            return block;
+        }
+        return BlockDb.findBlockAtHeight(height);
+    }
+
+    @Override
     public List<BlockImpl> getBlocksFromHeight(int height) {
         if (height < 0 || lastBlock.get().getHeight() - height > 1440) {
             throw new IllegalArgumentException("Can't go back more than 1440 blocks");
