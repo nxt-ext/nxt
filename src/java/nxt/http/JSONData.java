@@ -12,7 +12,6 @@ import nxt.Poll;
 import nxt.Token;
 import nxt.Trade;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;

@@ -220,11 +220,17 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp) {
-        return getTransactions(account, type, subtype, blockTimestamp, 0, -1);
+        return getTransactions(account, 0, type, subtype, blockTimestamp, 0, -1);
     }
 
-        @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp, int from, int to) {
+    @Override
+    public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
+                                                       int blockTimestamp, int from, int to) {
+        int height = numberOfConfirmations > 0 ? getHeight() - numberOfConfirmations : Integer.MAX_VALUE;
+        if (height < 0) {
+            throw new IllegalArgumentException("Number of confirmations required " + numberOfConfirmations
+                    + " exceeds current blockchain height " + getHeight());
+        }
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
@@ -238,6 +244,9 @@ final class BlockchainImpl implements Blockchain {
                     buf.append("AND subtype = ? ");
                 }
             }
+            if (height < Integer.MAX_VALUE) {
+                buf.append("AND height <= ? ");
+            }
             buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
             if (blockTimestamp > 0) {
                 buf.append("AND block_timestamp >= ? ");
@@ -247,6 +256,9 @@ final class BlockchainImpl implements Blockchain {
                 if (subtype >= 0) {
                     buf.append("AND subtype = ? ");
                 }
+            }
+            if (height < Integer.MAX_VALUE) {
+                buf.append("AND height <= ? ");
             }
             buf.append("ORDER BY block_timestamp DESC, id DESC");
             if (to >= from && to < Integer.MAX_VALUE) {
@@ -270,6 +282,9 @@ final class BlockchainImpl implements Blockchain {
                     pstmt.setByte(++i, subtype);
                 }
             }
+            if (height < Integer.MAX_VALUE) {
+                pstmt.setInt(++i, height);
+            }
             pstmt.setLong(++i, account.getId());
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
@@ -279,6 +294,9 @@ final class BlockchainImpl implements Blockchain {
                 if (subtype >= 0) {
                     pstmt.setByte(++i, subtype);
                 }
+            }
+            if (height < Integer.MAX_VALUE) {
+                pstmt.setInt(++i, height);
             }
             return getTransactions(con, pstmt);
         } catch (SQLException e) {
