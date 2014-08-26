@@ -60,10 +60,6 @@ public final class Asset {
         assetTable.insert(new Asset(transaction, attachment));
     }
 
-    static void clear() {
-        assetTable.truncate();
-    }
-
     private final Long assetId;
     private final Long accountId;
     private final String name;

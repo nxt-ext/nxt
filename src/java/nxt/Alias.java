@@ -2,7 +2,7 @@ package nxt;
 
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
-import nxt.db.VersioningEntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -65,7 +65,7 @@ public final class Alias {
 
     };
 
-    private static final VersioningEntityDbTable<Alias> aliasTable = new VersioningEntityDbTable<Alias>(aliasDbKeyFactory) {
+    private static final VersionedEntityDbTable<Alias> aliasTable = new VersionedEntityDbTable<Alias>(aliasDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -93,7 +93,7 @@ public final class Alias {
 
     };
 
-    private static final VersioningEntityDbTable<Offer> offerTable = new VersioningEntityDbTable<Offer>(offerDbKeyFactory) {
+    private static final VersionedEntityDbTable<Offer> offerTable = new VersionedEntityDbTable<Offer>(offerDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -164,11 +164,6 @@ public final class Alias {
         aliasTable.insert(alias);
         Offer offer = getOffer(alias);
         offerTable.delete(offer);
-    }
-
-    static void clear() {
-        aliasTable.truncate();
-        offerTable.truncate();
     }
 
     private Long accountId;

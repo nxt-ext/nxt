@@ -48,10 +48,6 @@ public final class Vote {
         return vote;
     }
 
-    static void clear() {
-        voteTable.truncate();
-    }
-
     public static int getCount() {
         return voteTable.getCount();
     }

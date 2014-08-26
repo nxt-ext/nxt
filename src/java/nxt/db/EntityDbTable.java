@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class EntityDbTable<T> extends BasicDbTable {
+public abstract class EntityDbTable<T> extends DerivedDbTable {
 
     private final boolean multiversion;
     protected final DbKey.Factory<T> dbKeyFactory;

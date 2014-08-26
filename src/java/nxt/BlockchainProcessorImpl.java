@@ -3,6 +3,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.db.Db;
 import nxt.db.DbIterator;
+import nxt.db.DerivedDbTable;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -33,6 +34,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
@@ -48,6 +50,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final BlockchainImpl blockchain = BlockchainImpl.getInstance();
     private final TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+
+    private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
@@ -316,29 +320,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        //TODO: optimize to use rollback
-        private void popOffTo(Block commonBlock) {
-            Long lastBlockId = blockchain.getLastBlock().getId();
-            while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
-                lastBlockId = popLastBlock();
-            }
-        }
-
-        /*
-        private void resetTo(Block commonBlock) {
-            if (commonBlock.getNextBlockId() != null) {
-                Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-                Logger.logDebugMessage("Deleting blocks after height " + commonBlock.getHeight());
-                BlockDb.deleteBlocksFrom(commonBlock.getNextBlockId());
-            }
-            Logger.logMessage("Will do a re-scan");
-            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_BEGIN);
-            scan();
-            blockListeners.notify(commonBlock, BlockchainProcessor.Event.RESCAN_END);
-            Logger.logDebugMessage("Last block is " + blockchain.getLastBlock().getStringId() + " at " + blockchain.getLastBlock().getHeight());
-        }
-        */
-
     };
 
     private BlockchainProcessorImpl() {
@@ -374,6 +355,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public boolean removeListener(Listener<Block> listener, Event eventType) {
         return blockListeners.removeListener(listener, eventType);
+    }
+
+    @Override
+    public void registerDerivedTable(DerivedDbTable table) {
+        derivedTables.add(table);
     }
 
     @Override
@@ -652,6 +638,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     }
 
+    //TODO: optimize to use rollback
+    private void popOffTo(Block commonBlock) {
+        Long lastBlockId = blockchain.getLastBlock().getId();
+        while (! lastBlockId.equals(commonBlock.getId()) && ! lastBlockId.equals(Genesis.GENESIS_BLOCK_ID)) {
+            lastBlockId = popLastBlock();
+        }
+    }
+
     private Long popLastBlock() {
         synchronized (blockchain) {
             try {
@@ -667,6 +661,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 transactionProcessor.undo(block);
                 BlockDb.deleteBlocksFrom(block.getId());
                 blockListeners.notify(block, Event.BLOCK_POPPED);
+                for (DerivedDbTable table : derivedTables) {
+                    table.rollback(block.getHeight());
+                }
                 Db.commitTransaction();
                 return previousBlock.getId();
             } catch (RuntimeException e) {
@@ -841,16 +838,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (validateAtScan) {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
-            Account.clear();
-            Alias.clear();
-            Asset.clear();
-            Order.clear();
-            Poll.clear();
-            Trade.clear();
-            Vote.clear();
-            Hub.clear();
-            DigitalGoodsStore.clear();
             Set<TransactionImpl> lostTransactions = new HashSet<>(transactionProcessor.getAllUnconfirmedTransactions());
+            for (DerivedDbTable table : derivedTables) {
+                table.truncate();
+            }
             transactionProcessor.clear();
             Generator.clear();
             try (Connection con = Db.beginTransaction();

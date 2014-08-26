@@ -1,29 +1,22 @@
 package nxt.db;
 
-import nxt.Block;
-import nxt.BlockchainProcessor;
 import nxt.Nxt;
-import nxt.util.Listener;
+import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public abstract class BasicDbTable {
+public abstract class DerivedDbTable {
 
-    public BasicDbTable() {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                BasicDbTable.this.rollback(block.getHeight());
-            }
-        }, BlockchainProcessor.Event.BLOCK_POPPED);
+    public DerivedDbTable() {
+        Nxt.getBlockchainProcessor().registerDerivedTable(this);
     }
 
     protected abstract String table();
 
-    void rollback(int height) {
+    public void rollback(int height) {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table() + "WHERE height >= ?")) {
             pstmtDelete.setInt(1, height);
@@ -34,6 +27,7 @@ public abstract class BasicDbTable {
     }
 
     public final void truncate() {
+        Logger.logDebugMessage("Truncating table " + table());
         try (Connection con = Db.getConnection();
              Statement stmt = con.createStatement()) {
             stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");

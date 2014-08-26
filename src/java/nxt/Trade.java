@@ -76,10 +76,6 @@ public final class Trade {
         return trade;
     }
 
-    static void clear() {
-        tradeTable.truncate();
-    }
-
     private final int timestamp;
     private final Long assetId;
     private final Long blockId;

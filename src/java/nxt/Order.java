@@ -2,7 +2,7 @@ package nxt;
 
 import nxt.db.Db;
 import nxt.db.DbKey;
-import nxt.db.VersioningEntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 
 import java.sql.Connection;
@@ -12,11 +12,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 public abstract class Order {
-
-    static void clear() {
-        Ask.askOrderTable.truncate();
-        Bid.bidOrderTable.truncate();
-    }
 
     private static void matchOrders(Long assetId) {
 
@@ -157,7 +152,7 @@ public abstract class Order {
 
         };
 
-        private static final VersioningEntityDbTable<Ask> askOrderTable = new VersioningEntityDbTable<Ask>(askOrderDbKeyFactory) {
+        private static final VersionedEntityDbTable<Ask> askOrderTable = new VersionedEntityDbTable<Ask>(askOrderDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -291,7 +286,7 @@ public abstract class Order {
 
         };
 
-        private static final VersioningEntityDbTable<Bid> bidOrderTable = new VersioningEntityDbTable<Bid>(bidOrderDbKeyFactory) {
+        private static final VersionedEntityDbTable<Bid> bidOrderTable = new VersionedEntityDbTable<Bid>(bidOrderDbKeyFactory) {
 
             @Override
             protected String table() {

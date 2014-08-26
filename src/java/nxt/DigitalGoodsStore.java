@@ -3,8 +3,8 @@ package nxt;
 import nxt.crypto.EncryptedData;
 import nxt.db.Db;
 import nxt.db.DbKey;
-import nxt.db.VersioningEntityDbTable;
-import nxt.db.VersioningValuesDbTable;
+import nxt.db.VersionedEntityDbTable;
+import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -83,7 +83,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersioningEntityDbTable<Goods> goodsTable = new VersioningEntityDbTable<Goods>(goodsDbKeyFactory) {
+        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>(goodsDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -237,7 +237,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersioningEntityDbTable<Purchase> purchaseTable = new VersioningEntityDbTable<Purchase>(purchaseDbKeyFactory) {
+        private static final VersionedEntityDbTable<Purchase> purchaseTable = new VersionedEntityDbTable<Purchase>(purchaseDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -265,7 +265,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersioningValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersioningValuesDbTable<Purchase, EncryptedData>(feedbackDbKeyFactory) {
+        private static final VersionedValuesDbTable<Purchase, EncryptedData> feedbackTable = new VersionedValuesDbTable<Purchase, EncryptedData>(feedbackDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -303,7 +303,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersioningValuesDbTable<Purchase, String> publicFeedbackTable = new VersioningValuesDbTable<Purchase, String>(publicFeedbackDbKeyFactory) {
+        private static final VersionedValuesDbTable<Purchase, String> publicFeedbackTable = new VersionedValuesDbTable<Purchase, String>(publicFeedbackDbKeyFactory) {
 
             @Override
             protected String table() {
@@ -666,11 +666,6 @@ public final class DigitalGoodsStore {
         Purchase purchase = new Purchase(transaction, attachment, sellerId);
         Purchase.purchaseTable.insert(purchase);
         purchaseListeners.notify(purchase, Event.PURCHASE);
-    }
-
-    static void clear() {
-        Goods.goodsTable.truncate();
-        Purchase.purchaseTable.truncate();
     }
 
     static void listGoods(Transaction transaction, Attachment.DigitalGoodsListing attachment) {

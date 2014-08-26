@@ -1,7 +1,7 @@
 package nxt;
 
 import nxt.db.DbKey;
-import nxt.db.VersioningEntityDbTable;
+import nxt.db.VersionedEntityDbTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -46,7 +46,7 @@ public class Hub {
 
     };
 
-    private static final VersioningEntityDbTable<Hub> hubTable = new VersioningEntityDbTable<Hub>(hubDbKeyFactory) {
+    private static final VersionedEntityDbTable<Hub> hubTable = new VersionedEntityDbTable<Hub>(hubDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -67,10 +67,6 @@ public class Hub {
 
     static void addOrUpdateHub(Transaction transaction, Attachment.MessagingHubAnnouncement attachment) {
         hubTable.insert(new Hub(transaction, attachment));
-    }
-
-    static void clear() {
-        hubTable.truncate();
     }
 
     private static Long lastBlockId;

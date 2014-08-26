@@ -2,11 +2,11 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
-import nxt.db.BasicDbTable;
 import nxt.db.Db;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
-import nxt.db.VersioningEntityDbTable;
+import nxt.db.DerivedDbTable;
+import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -186,9 +186,8 @@ public final class Account {
 
     };
 
-    private static final VersioningEntityDbTable<Account> accountTable = new VersioningEntityDbTable<Account>(accountDbKeyFactory) {
+    private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>(accountDbKeyFactory) {
 
-        @Override
         protected String table() {
             return "account";
         }
@@ -214,7 +213,7 @@ public final class Account {
 
     };
 
-    private static final VersioningEntityDbTable<AccountAsset> accountAssetTable = new VersioningEntityDbTable<AccountAsset>(accountAssetDbKeyFactory) {
+    private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>(accountAssetDbKeyFactory) {
 
         @Override
         protected String table() {
@@ -233,7 +232,7 @@ public final class Account {
 
     };
 
-    private static final BasicDbTable accountGuaranteedBalanceTable = new BasicDbTable() {
+    private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable() {
         @Override
         protected String table() {
             return "account_guaranteed_balance";
@@ -309,12 +308,6 @@ public final class Account {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-    }
-
-    static void clear() {
-        accountTable.truncate();
-        accountAssetTable.truncate();
-        accountGuaranteedBalanceTable.truncate();
     }
 
     private final Long id;

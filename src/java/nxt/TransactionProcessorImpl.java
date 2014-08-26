@@ -282,7 +282,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     void clear() {
-        unconfirmedTransactionTable.truncate();
         nonBroadcastedTransactions.clear();
     }
 

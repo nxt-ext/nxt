@@ -5,14 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public abstract class VersioningEntityDbTable<T> extends EntityDbTable<T> {
+public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
-    protected VersioningEntityDbTable(DbKey.Factory<T> dbKeyFactory) {
+    protected VersionedEntityDbTable(DbKey.Factory<T> dbKeyFactory) {
         super(dbKeyFactory, true);
     }
 
     @Override
-    final void rollback(int height) {
+    public final void rollback(int height) {
         rollback(table(), height, dbKeyFactory);
     }
 

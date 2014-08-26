@@ -87,10 +87,6 @@ public final class Poll {
         pollTable.insert(new Poll(transaction.getId(), attachment));
     }
 
-    static void clear() {
-        pollTable.truncate();
-    }
-
     public static Poll getPoll(Long id) {
         return pollTable.get(pollDbKeyFactory.newKey(id));
     }
