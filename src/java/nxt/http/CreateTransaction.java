@@ -108,18 +108,6 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         long feeNQT = ParameterParser.getFeeNQT(req);
-        if (feeNQT < minimumFeeNQT()) {
-            return INCORRECT_FEE;
-        }
-
-        try {
-            if (Convert.safeAdd(amountNQT, feeNQT) > senderAccount.getUnconfirmedBalanceNQT()) {
-                return NOT_ENOUGH_FUNDS;
-            }
-        } catch (ArithmeticException e) {
-            return NOT_ENOUGH_FUNDS;
-        }
-
         if (referencedTransactionId != null) {
             return INCORRECT_REFERENCED_TRANSACTION;
         }
@@ -149,7 +137,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             Transaction transaction = builder.build();
             transaction.validate();
-
+            try {
+                if (Convert.safeAdd(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {
+                    return NOT_ENOUGH_FUNDS;
+                }
+            } catch (ArithmeticException e) {
+                return NOT_ENOUGH_FUNDS;
+            }
             if (secretPhrase != null) {
                 transaction.sign(secretPhrase);
                 response.put("transaction", transaction.getStringId());
@@ -181,9 +175,4 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     final boolean requirePost() {
         return true;
     }
-
-    long minimumFeeNQT() {
-        return Constants.ONE_NXT;
-    }
-
 }

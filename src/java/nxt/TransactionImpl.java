@@ -196,7 +196,6 @@ final class TransactionImpl implements Transaction {
         this.senderPublicKey = builder.senderPublicKey;
         this.recipientId = builder.recipientId;
         this.amountNQT = builder.amountNQT;
-        this.feeNQT = builder.feeNQT;
         this.referencedTransactionFullHash = builder.referencedTransactionFullHash;
         this.signature = builder.signature;
         this.type = builder.type;
@@ -232,10 +231,21 @@ final class TransactionImpl implements Transaction {
             appendagesSize += appendage.getSize();
         }
         this.appendagesSize = appendagesSize;
+        int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
+        long minimumFeeNQT = type.minimumFeeNQT(effectiveHeight, appendagesSize);
+        if (builder.feeNQT > 0 && builder.feeNQT < minimumFeeNQT) {
+            throw new NxtException.NotValidException(String.format("Requested fee %d less than the minimum fee %d",
+                    builder.feeNQT, minimumFeeNQT));
+        }
+        if (builder.feeNQT <= 0) {
+            feeNQT = minimumFeeNQT;
+        } else {
+            feeNQT = builder.feeNQT;
+        }
 
         if ((timestamp == 0 && Arrays.equals(senderPublicKey, Genesis.CREATOR_PUBLIC_KEY))
                 ? (deadline != 0 || feeNQT != 0)
-                : (deadline < 1 || feeNQT < Constants.ONE_NXT)
+                : deadline < 1
                 || feeNQT > Constants.MAX_BALANCE_NQT
                 || amountNQT < 0
                 || amountNQT > Constants.MAX_BALANCE_NQT
@@ -762,6 +772,11 @@ final class TransactionImpl implements Transaction {
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.validate(this);
+        }
+        long minimumFeeNQT = type.minimumFeeNQT(Nxt.getBlockchain().getHeight(), appendagesSize);
+        if (feeNQT < minimumFeeNQT) {
+            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %d less than minimum fee %d at height %d",
+                    feeNQT, minimumFeeNQT, Nxt.getBlockchain().getHeight()));
         }
     }
 
