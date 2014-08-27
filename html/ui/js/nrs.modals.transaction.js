@@ -121,9 +121,11 @@ var NRS = (function(NRS, $, undefined) {
 								$output.append("<div style='padding-bottom:10px'>" + $.t("encrypted_message_no_permission") + "</div>");
 							}
 						}
-
-						$output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
+					} else {
+						$output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
 					}
+
+					$output.append("<table><tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr><tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr></table>").show();
 
 					break;
 				case 1:
