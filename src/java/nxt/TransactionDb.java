@@ -20,13 +20,12 @@ final class TransactionDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
-            ResultSet rs = pstmt.executeQuery();
-            Transaction transaction = null;
-            if (rs.next()) {
-                transaction = loadTransaction(con, rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return loadTransaction(con, rs);
+                }
+                return null;
             }
-            rs.close();
-            return transaction;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
@@ -38,13 +37,12 @@ final class TransactionDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
-            ResultSet rs = pstmt.executeQuery();
-            Transaction transaction = null;
-            if (rs.next()) {
-                transaction = loadTransaction(con, rs);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return loadTransaction(con, rs);
+                }
+                return null;
             }
-            rs.close();
-            return transaction;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
@@ -56,8 +54,9 @@ final class TransactionDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -67,8 +66,9 @@ final class TransactionDb {
         try (Connection con = Db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM transaction WHERE full_hash = ?")) {
             pstmt.setBytes(1, Convert.parseHexString(fullHash));
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -149,11 +149,11 @@ final class TransactionDb {
         List<TransactionImpl> list = new ArrayList<>();
         try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE block_id = ? ORDER BY id")) {
             pstmt.setLong(1, blockId);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                list.add(loadTransaction(con, rs));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(loadTransaction(con, rs));
+                }
             }
-            rs.close();
             return list;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

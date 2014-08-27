@@ -103,9 +103,18 @@ var NRS = (function(NRS, $, undefined) {
 		if (requestType == "getAccountId") {
 			var accountId = NRS.getAccountId(data.secretPhrase);
 
+			var nxtAddress = new NxtAddress();
+
+			if (nxtAddress.set(accountId)) {
+				var accountRS = nxtAddress.toString();
+			} else {
+				var accountRS = "";
+			}
+
 			if (callback) {
 				callback({
-					"accountId": accountId
+					"account": accountId,
+					"accountRS": accountRS
 				});
 			}
 			return;

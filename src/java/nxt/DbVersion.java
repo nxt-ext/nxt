@@ -148,72 +148,56 @@ final class DbVersion {
             case 37:
                 if (!Constants.isTestnet) {
                     apply("INSERT INTO peer (address) VALUES " +
-                            "('178.194.110.193'), ('nrs01.nxtsolaris.info'), ('xeqtorcreed2.vps.nxtcrypto.org'), ('5.101.101.137'), " +
-                            "('54.76.203.25'), ('ns1.anameserver.de'), ('cryptkeeper.vps.nxtcrypto.org'), ('vps11.nxtcrypto.org'), " +
-                            "('80.137.236.53'), ('wallet.nxtty.com'), ('2.84.130.26'), ('91.121.223.107'), ('80.137.229.25'), " +
-                            "('enricoip.no-ip.biz'), ('195.154.127.172'), ('69.64.35.62'), ('88.168.85.129:7874'), ('105.229.160.133'), " +
-                            "('rigel1.ddns.net'), ('59.36.74.47'), ('n2.nxtportal.org'), ('samson.vps.nxtcrypto.org'), " +
-                            "('nrs02.nxtsolaris.info'), ('miasik.no-ip.org'), ('vh44.ddns.net:7873'), ('212.18.225.173'), " +
-                            "('91.121.41.192'), ('serras.homenet.org'), ('217.17.88.5'), ('77.179.100.57'), ('89.98.191.95'), " +
-                            "('nxt1107.no-ip.biz'), ('mycrypto.no-ip.biz'), ('89.250.240.63'), ('vps4.nxtcrypto.org'), " +
-                            "('89.72.57.246'), ('bitsy10.vps.nxtcrypto.org'), ('85.191.52.188'), ('gayka.no-ip.info'), " +
-                            "('77.179.99.25'), ('106.186.127.189'), ('23.238.198.218'), ('www.mycoinmine.org'), ('162.201.61.133'), " +
-                            "('54.191.200.44'), ('54.186.166.78'), ('212.129.12.103'), ('node0.forgenxt.com'), ('188.226.179.119'), " +
-                            "('lyynx.vps.nxtcrypto.org'), ('nxt.phukhew.com'), ('162.242.16.147'), ('pakisnxt.no-ip.org'), " +
-                            "('85.214.200.59'), ('101.164.96.109'), ('nxt.alkeron.com'), ('83.212.102.244'), ('23.88.229.194'), " +
-                            "('162.243.213.190'), ('87.139.122.157'), ('nxt1.webice.ru'), ('37.59.41.216'), ('46.149.84.141'), " +
-                            "('87.138.143.21'), ('151.236.29.228'), ('99.244.142.34'), ('nxt10.webice.ru'), ('cobaltskky.hopto.org'), " +
-                            "('83.212.103.18'), ('nxt9.webice.ru'), ('89.70.254.145'), ('190.10.9.166'), ('95.85.46.177'), " +
-                            "('dreschel2.dyndns.org'), ('113.77.223.63'), ('50.98.11.195'), ('209.126.70.159'), ('178.24.158.31'), " +
-                            "('54.210.102.135'), ('83.212.102.193'), ('195.154.174.124'), ('162.243.243.32'), ('87.148.12.130'), " +
-                            "('83.69.2.13'), ('cryonet.de'), ('79.24.191.97'), ('nxt.homer.ru'), ('nxtpi.zapto.org'), " +
-                            "('nxs1.hanza.co.id'), ('23.102.0.45'), ('2.86.61.231'), ('87.230.14.1'), ('105.224.252.123'), " +
-                            "('88.163.78.131'), ('50.43.35.122'), ('80.137.233.81'), ('24.149.8.238'), ('91.34.227.212'), " +
-                            "('217.186.178.66'), ('178.198.145.191'), ('73.36.141.199'), ('192.3.157.232'), ('2.225.88.10'), " +
-                            "('74.192.195.151'), ('108.61.57.76'), ('109.230.224.65'), ('94.26.187.66'), ('124.244.49.12'), " +
-                            "('88.12.55.125'), ('180.129.0.77'), ('162.243.145.83'), ('93.171.209.103'), ('87.139.122.48'), " +
-                            "('89.250.240.60'), ('83.212.102.234'), ('112.199.191.219'), ('vps10.nxtcrypto.org'), ('85.10.201.15'), " +
-                            "('179.43.128.136'), ('85.25.134.59'), ('80.86.92.70'), ('178.162.39.12'), ('46.194.145.144'), " +
-                            "('bitsy09.vps.nxtcrypto.org'), ('147.32.246.247'), ('74.91.124.3'), ('95.68.87.206'), " +
-                            "('115.28.220.183'), ('91.34.239.93'), ('121.40.84.99'), ('168.63.232.16'), ('105.227.3.50'), " +
-                            "('211.149.213.86'), ('nxtcoint119a.no-ip.org'), ('186.220.71.26'), ('bitsy05.vps.nxtcrypto.org'), " +
-                            "('80.137.229.62'), ('162.243.198.24'), ('61.131.37.210'), ('n1.nxtportal.org'), ('nxtx.ru'), " +
-                            "('201.209.45.121'), ('5.35.119.103'), ('105.229.173.29'), ('114.215.142.34:15011'), ('caelum.no-ip.org'), " +
-                            "('46.109.166.244'), ('89.250.240.56'), ('77.179.96.66'), ('90.184.9.47'), ('188.226.206.41'), " +
-                            "('nxtnode.noip.me'), ('bitsy07.vps.nxtcrypto.org'), ('abctc.vps.nxtcrypto.org'), " +
-                            "('bitsy01.vps.nxtcrypto.org'), ('107.170.189.27'), ('109.74.203.187:7874'), ('188.35.156.10'), " +
-                            "('cubie-solar.mjke.de:7873'), ('46.173.9.98'), ('xyzzyx.vps.nxtcrypto.org'), ('188.226.197.131'), " +
-                            "('jefdiesel.vps.nxtcrypto.org'), ('89.250.243.166'), ('46.194.14.81'), ('109.254.63.44'), " +
-                            "('80.86.92.139'), ('91.121.41.45'), ('nxt01.now.im'), ('54.179.177.81'), ('83.212.124.193'), " +
-                            "('bitsy03.vps.nxtcrypto.org'), ('xeqtorcreed.vps.nxtcrypto.org'), ('bitsy08.vps.nxtcrypto.org'), " +
-                            "('178.62.50.75'), ('212.83.145.17'), ('107.170.164.129'), ('67.212.71.172'), ('oldnbold.vps.nxtcrypto.org'), " +
-                            "('54.72.17.26'), ('24.224.68.29'), ('107.170.35.110'), ('nxt7.webice.ru'), ('88.79.173.189'), " +
-                            "('83.212.102.194'), ('113.10.136.142'), ('54.187.11.72'), ('139.228.37.156'), ('105.224.252.84'), " +
-                            "('bitsy02.vps.nxtcrypto.org'), ('199.217.119.33'), ('silvanoip.dhcp.biz'), ('84.242.91.139'), " +
-                            "('80.153.101.190'), ('198.199.81.29'), ('54.86.132.52'), ('77.58.253.73'), ('213.46.57.77'), " +
-                            "('54.84.4.195'), ('105.229.177.132'), ('217.26.24.27'), ('raspnxt.hopto.org'), ('188.138.88.154'), " +
-                            "('113.78.101.129'), ('nxt2.webice.ru'), ('vps5.nxtcrypto.org'), ('80.86.92.66'), ('107.170.3.62'), " +
-                            "('85.214.222.82'), ('94.74.170.10'), ('24.230.136.187'), ('99.47.218.132'), ('nxt.hofhom.nl'), " +
-                            "('nxt.sx'), ('188.167.90.118'), ('77.103.104.254'), ('allbits.vps.nxtcrypto.org'), ('24.161.110.115'), " +
-                            "('90.146.62.91'), ('91.69.121.229'), ('131.151.103.114'), ('82.146.36.253'), ('162.243.80.209'), " +
-                            "('89.250.243.200'), ('83.167.48.253'), ('54.88.54.58'), ('105.224.252.58'), ('nxt6.webice.ru'), " +
-                            "('178.15.99.67'), ('54.85.132.143'), ('89.250.243.167'), ('85.214.199.215'), ('82.46.194.21'), " +
-                            "('83.212.102.247'), ('bitsy06.vps.nxtcrypto.org'), ('nxs2.hanza.co.id'), ('23.238.198.144'), " +
-                            "('screenname.vps.nxtcrypto.org'), ('67.212.71.171'), ('54.191.19.147'), ('24.91.143.15'), ('83.212.103.90'), " +
-                            "('83.212.97.126'), ('77.249.237.229'), ('67.212.71.173'), ('37.120.168.131'), ('nxt4.webice.ru'), " +
-                            "('184.57.30.220'), ('95.24.87.207'), ('162.243.38.34'), ('14.200.16.219'), ('80.137.243.161'), " +
-                            "('113.78.102.157'), ('59.37.188.95'), ('nxt8.webice.ru'), ('nxtnode.hopto.org'), ('113.77.25.179'), " +
-                            "('178.33.203.157'), ('91.120.22.146'), ('178.150.207.53'), ('77.179.117.226'), ('69.141.139.8'), " +
-                            "('vh44.ddns.net'), ('83.212.103.212'), ('95.85.24.151'), ('5.39.76.123'), ('209.126.70.170'), " +
-                            "('cubie-solar.mjke.de'), ('106.187.95.232'), ('185.12.44.108'), ('vps9.nxtcrypto.org'), ('nxt5.webice.ru'), " +
-                            "('bitsy04.vps.nxtcrypto.org'), ('nxt3.webice.ru'), ('69.122.140.198'), ('54.210.102.134'), " +
-                            "('46.109.165.4'), ('panzetti.vps.nxtcrypto.org'), ('80.137.230.115')");
+                            "('54.84.4.195'), ('139.30.62.180'), ('bitsy05.vps.nxtcrypto.org'), ('128.199.151.235'), ('199.233.245.105'), " +
+                            "('54.201.228.27'), ('209.126.70.159'), ('77.123.25.170'), ('wallet.nxtty.com'), ('198.27.64.207'), " +
+                            "('188.226.245.226'), ('79.215.198.253'), ('88.12.55.125'), ('nxt.sx'), ('24.149.8.238'), ('abctc.vps.nxtcrypto.org'), " +
+                            "('162.243.198.24'), ('178.32.221.221'), ('nxt3.grit.tk:37874'), ('54.187.153.45'), ('24.161.110.115'), " +
+                            "('nxtnode.hopto.org'), ('89.12.92.15'), ('191.238.101.73'), ('nxt.homer.ru'), ('nxtcoint119a.no-ip.org'), " +
+                            "('84.46.53.162'), ('178.15.99.67'), ('107.17.66.127'), ('77.179.112.19'), ('195.154.136.165'), ('210.188.36.5'), " +
+                            "('212.18.225.173'), ('109.254.63.44'), ('90.146.62.91'), ('nxt01.now.im'), ('node10.mynxt.info'), ('198.98.119.85'), " +
+                            "('zobue.com'), ('89.250.240.56'), ('bitsy08.vps.nxtcrypto.org'), ('beor.homeip.net'), ('vps12.nxtcrypto.org'), " +
+                            "('188.35.156.10'), ('54.88.54.58'), ('77.249.237.229'), ('mycrypto.no-ip.biz'), ('213.46.57.77'), ('nxtpi.zapto.org'), " +
+                            "('nxt4.grit.tk'), ('80.82.209.82'), ('ns1.anameserver.de'), ('46.28.111.249'), ('178.194.110.193'), ('106.187.95.232'), " +
+                            "('nebula-gw.hopto.org'), ('vps3.nxtcrypto.org'), ('198.57.198.33'), ('168.63.232.16'), ('77.179.97.27'), " +
+                            "('178.33.203.157'), ('79.24.191.97'), ('bitsy04.vps.nxtcrypto.org'), ('humanoide.thican.net'), " +
+                            "('bitsy09.vps.nxtcrypto.org'), ('bitsy07.vps.nxtcrypto.org'), ('173.17.82.130'), ('vps2.nxtcrypto.org'), " +
+                            "('80.86.92.139'), ('180.157.101.215'), ('54.214.250.209'), ('87.230.14.1'), ('zdani.szn.dk'), ('nxt5.webice.ru'), " +
+                            "('188.226.206.41'), ('nxt7.webice.ru'), ('nxt1.grit.tk:17874'), ('node13.mynxt.info'), ('90.153.116.122'), " +
+                            "('66.30.204.105'), ('nxt1.webice.ru'), ('63.165.243.112'), ('oldnbold.vps.nxtcrypto.org'), ('sluni.szn.dk'), " +
+                            "('105.229.177.106'), ('88.163.78.131'), ('80.153.101.190'), ('188.138.88.154'), ('85.25.198.120'), ('89.250.243.200'), " +
+                            "('nxtx.ru'), ('87.139.122.48'), ('188.226.179.119'), ('vps5.nxtcrypto.org'), ('dreschel2.dyndns.org'), " +
+                            "('67.212.71.173'), ('88.153.5.179'), ('rigel1.ddns.net'), ('77.58.253.73'), ('miasik.no-ip.org'), ('217.26.24.27'), " +
+                            "('cyborg.thican.net'), ('cryptkeeper.vps.nxtcrypto.org'), ('cryonet.de'), ('nxt2.webice.ru'), ('43.252.230.48'), " +
+                            "('91.202.253.240'), ('nxtforgersr.ddns.net'), ('silvanoip.dhcp.biz'), ('85.214.222.82'), ('87.139.122.157'), " +
+                            "('54.164.174.175'), ('24.230.136.187'), ('128.199.189.226'), ('101.164.96.109'), ('allbits.vps.nxtcrypto.org'), " +
+                            "('211.149.213.86'), ('node7.mynxt.info'), ('107.170.189.27'), ('89.12.202.115'), ('49.245.169.94'), ('91.121.41.192'), " +
+                            "('xeqtorcreed.vps.nxtcrypto.org'), ('knattereule.sytes.net'), ('jefdiesel.vps.nxtcrypto.org'), ('node1.mynxt.info'), " +
+                            "('111.199.191.99'), ('nxt1107.no-ip.biz'), ('95.68.48.56'), ('87.138.143.21'), ('mycoinmine.org'), ('46.173.9.98'), " +
+                            "('ct.flipflop.mooo.com'), ('83.172.25.92'), ('xyzzyx.vps.nxtcrypto.org'), ('31.15.211.201'), ('84.128.162.88'), " +
+                            "('80.86.92.70'), ('108.61.57.76'), ('samson.vps.nxtcrypto.org'), ('screenname.vps.nxtcrypto.org'), ('nxt.hofhom.nl'), " +
+                            "('111.194.210.159'), ('58.95.145.117'), ('95.68.86.118'), ('54.245.255.250'), ('bitsy06.vps.nxtcrypto.org'), " +
+                            "('vps4.nxtcrypto.org'), ('54.88.120.117'), ('54.164.98.250'), ('46.165.208.108'), ('xeqtorcreed2.vps.nxtcrypto.org'), " +
+                            "('vps1.nxtcrypto.org'), ('nxt8.webice.ru'), ('162.201.61.133'), ('54.191.138.175'), ('54.85.132.143'), " +
+                            "('80.86.92.66'), ('84.242.91.139'), ('82.211.30.183'), ('bitsy03.vps.nxtcrypto.org'), ('vh44.ddns.net:7873'), " +
+                            "('node0.forgenxt.com'), ('185.4.72.115'), ('108.170.9.170'), ('54.200.164.31'), ('bitsy01.vps.nxtcrypto.org'), " +
+                            "('178.150.207.53'), ('71.90.207.16'), ('107.170.3.62'), ('54.86.132.52'), ('85.214.199.215'), ('cubie-solar.mjke.de'), " +
+                            "('nxt2.grit.tk:27874'), ('108.231.13.250'), ('104.131.254.22'), ('cerub.ddns.net'), ('216.36.3.42'), " +
+                            "('37.120.168.131'), ('54.77.63.53'), ('93.103.20.35'), ('54.213.222.141'), ('162.243.213.190'), ('89.250.240.60'), " +
+                            "('67.255.7.120'), ('87.254.182.122'), ('95.143.216.60'), ('79.164.108.1'), ('67.212.71.171'), " +
+                            "('node15.mynxt.info'), ('192.51.0.12'), ('76.164.201.91'), ('88.198.74.99'), ('bitsy10.vps.nxtcrypto.org'), " +
+                            "('node2.mynxt.info'), ('vps9.nxtcrypto.org'), ('46.165.209.144'), ('46.4.212.230'), ('185.12.44.108'), " +
+                            "('162.243.87.10'), ('76.250.84.156'), ('91.69.121.229'), ('178.24.158.31'), ('209.126.70.170'), ('93.129.172.14'), " +
+                            "('93.219.140.96'), ('serras.homenet.org'), ('89.72.57.246'), ('37.187.21.28'), ('lyynx.vps.nxtcrypto.org'), " +
+                            "('105.224.254.145'), ('195.154.174.124'), ('184.57.30.220'), ('54.83.4.11'), ('nxt.phukhew.com'), ('nxt5.grit.tk'), " +
+                            "('nxt4.webice.ru'), ('162.243.145.83'), ('89.133.34.109'), ('73.36.141.199'), ('90.153.30.215'), " +
+                            "('209.126.70.156'), ('bitsy02.vps.nxtcrypto.org'), ('pakisnxt.no-ip.org'), ('188.167.90.118'), ('107.170.164.129'), " +
+                            "('23.102.0.45'), ('46.194.8.79')");
                 } else {
                     apply("INSERT INTO peer (address) VALUES " +
                             "('178.150.207.53'), ('192.241.223.132'), ('node9.mynxtcoin.org'), ('node10.mynxtcoin.org'), " +
                             "('node3.mynxtcoin.org'), ('109.87.169.253'), ('nxtnet.fr'), ('50.112.241.97'), " +
                             "('2.84.142.149'), ('bug.airdns.org'), ('83.212.103.14'), ('62.210.131.30'), ('104.131.254.22'), " +
-                            "('46.28.111.249')");
+                            "('46.28.111.249'), ('94.79.54.205')");
                 }
             case 38:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
@@ -309,99 +293,103 @@ final class DbVersion {
             case 68:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 69:
+                apply("CREATE INDEX IF NOT EXISTS transaction_block_timestamp_idx ON transaction (block_timestamp DESC)");
+            case 70:
+                apply("DROP INDEX transaction_timestamp_idx");
+            case 71:
                 apply("CREATE TABLE IF NOT EXISTS alias (id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES transaction (id), "
                         + "account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
                         + "alias_name_lower VARCHAR AS LOWER (alias_name) NOT NULL, "
                         + "alias_uri VARCHAR NOT NULL, timestamp INT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 70:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_id_height_idx ON alias (id, height DESC)");
-            case 71:
-                apply("CREATE INDEX IF NOT EXISTS alias_account_id_idx ON alias (account_id, height DESC)");
             case 72:
-                apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_id_height_idx ON alias (id, height DESC)");
             case 73:
+                apply("CREATE INDEX IF NOT EXISTS alias_account_id_idx ON alias (account_id, height DESC)");
+            case 74:
+                apply("CREATE INDEX IF NOT EXISTS alias_name_lower_idx ON alias (alias_name_lower)");
+            case 75:
                 apply("CREATE TABLE IF NOT EXISTS alias_offer (id BIGINT NOT NULL, "
                         + "price BIGINT NOT NULL, buyer_id BIGINT, "
                         + "height INT NOT NULL, latest BOOLEAN DEFAULT TRUE NOT NULL)");
-            case 74:
+            case 76:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS alias_offer_id_height_idx ON alias_offer (id, height DESC)");
-            case 75:
+            case 77:
                 apply("CREATE TABLE IF NOT EXISTS asset (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, description VARCHAR, quantity BIGINT NOT NULL, decimals TINYINT NOT NULL, "
                         + "height INT NOT NULL)");
-            case 76:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_idx ON asset (id)");
-            case 77:
-                apply("CREATE INDEX IF NOT EXISTS asset_account_id_idx ON asset (account_id)");
             case 78:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_idx ON asset (id)");
+            case 79:
+                apply("CREATE INDEX IF NOT EXISTS asset_account_id_idx ON asset (account_id)");
+            case 80:
                 apply("CREATE TABLE IF NOT EXISTS trade (db_id INT IDENTITY, asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) "
                         + "REFERENCES asset (id), block_id BIGINT NOT NULL, FOREIGN KEY (block_id) REFERENCES block (id), "
                         + "ask_order_id BIGINT NOT NULL, bid_order_id BIGINT NOT NULL, quantity BIGINT NOT NULL, "
                         + "price BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
-            case 79:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS trade_ask_bid_idx ON trade (ask_order_id, bid_order_id)");
-            case 80:
-                apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id, height DESC)");
             case 81:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS trade_ask_bid_idx ON trade (ask_order_id, bid_order_id)");
+            case 82:
+                apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id, height DESC)");
+            case 83:
                 apply("CREATE TABLE IF NOT EXISTS ask_order (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), account_id BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) REFERENCES asset (id), price BIGINT NOT NULL, "
                         + "quantity BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 82:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS ask_order_id_height_idx ON ask_order (id, height DESC)");
-            case 83:
-                apply("CREATE INDEX IF NOT EXISTS ask_order_account_id_idx ON ask_order (account_id, height DESC)");
             case 84:
-                apply("CREATE INDEX IF NOT EXISTS ask_order_asset_id_price_idx ON ask_order (asset_id, price)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS ask_order_id_height_idx ON ask_order (id, height DESC)");
             case 85:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_account_id_idx ON ask_order (account_id, height DESC)");
+            case 86:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_asset_id_price_idx ON ask_order (asset_id, price)");
+            case 87:
                 apply("CREATE TABLE IF NOT EXISTS bid_order (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), account_id BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) REFERENCES asset (id), price BIGINT NOT NULL, "
                         + "quantity BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 86:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS bid_order_id_height_idx ON bid_order (id, height DESC)");
-            case 87:
-                apply("CREATE INDEX IF NOT EXISTS bid_order_account_id_idx ON bid_order (account_id, height DESC)");
             case 88:
-                apply("CREATE INDEX IF NOT EXISTS bid_order_asset_id_price_idx ON bid_order (asset_id, price DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS bid_order_id_height_idx ON bid_order (id, height DESC)");
             case 89:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_account_id_idx ON bid_order (account_id, height DESC)");
+            case 90:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_asset_id_price_idx ON bid_order (asset_id, price DESC)");
+            case 91:
                 apply("CREATE TABLE IF NOT EXISTS vote (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                        + "transaction (id), poll_id BIGINT NOT NULL, "
                         + "voter_id BIGINT NOT NULL, vote_bytes VARBINARY NOT NULL, height INT NOT NULL)");
-            case 90:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
-            case 91:
-                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
             case 92:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS vote_id_idx ON vote (id)");
+            case 93:
+                apply("CREATE INDEX IF NOT EXISTS vote_poll_id_idx ON vote (poll_id)");
+            case 94:
                 apply("CREATE TABLE IF NOT EXISTS poll (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), name VARCHAR NOT NULL, "
                         + "description VARCHAR, options ARRAY NOT NULL, min_num_options TINYINT, max_num_options TINYINT, "
                         +" binary_options BOOLEAN NOT NULL, height INT NOT NULL)");
-            case 93:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
-            case 94:
-                apply("ALTER TABLE vote ADD FOREIGN KEY (poll_id) REFERENCES poll (id)");
             case 95:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS poll_id_idx ON poll (id)");
+            case 96:
+                apply("ALTER TABLE vote ADD FOREIGN KEY (poll_id) REFERENCES poll (id)");
+            case 97:
                 apply("CREATE TABLE IF NOT EXISTS hub (db_id INT IDENTITY, account_id BIGINT NOT NULL, min_fee_per_byte "
                         + "BIGINT NOT NULL, uris ARRAY NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 96:
+            case 98:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS hub_account_id_height_idx ON hub (account_id, height DESC)");
-            case 97:
+            case 99:
                 apply("CREATE TABLE IF NOT EXISTS goods (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) REFERENCES "
                         + "transaction (id), seller_id BIGINT NOT NULL, name VARCHAR NOT NULL, description VARCHAR, "
                         + "tags VARCHAR, timestamp INT NOT NULL, quantity INT NOT NULL, price BIGINT NOT NULL, "
                         + "delisted BOOLEAN NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 98:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS goods_id_height_idx ON goods (id, height DESC)");
-            case 99:
-                apply("CREATE INDEX IF NOT EXISTS goods_seller_id_name_idx ON goods (seller_id, name)");
             case 100:
-                apply("CREATE INDEX IF NOT EXISTS goods_timestamp_idx ON goods (timestamp DESC, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS goods_id_height_idx ON goods (id, height DESC)");
             case 101:
+                apply("CREATE INDEX IF NOT EXISTS goods_seller_id_name_idx ON goods (seller_id, name)");
+            case 102:
+                apply("CREATE INDEX IF NOT EXISTS goods_timestamp_idx ON goods (timestamp DESC, height DESC)");
+            case 103:
                 apply("CREATE TABLE IF NOT EXISTS purchase (db_id INT IDENTITY, id BIGINT NOT NULL, FOREIGN KEY (id) "
                         + "REFERENCES transaction (id), buyer_id BIGINT NOT NULL, goods_id BIGINT NOT NULL, "
                         + "seller_id BIGINT NOT NULL, quantity INT NOT NULL, "
@@ -410,58 +398,58 @@ final class DbVersion {
                         + "refund_note VARBINARY, refund_nonce BINARY(32), has_feedback_notes BOOLEAN NOT NULL DEFAULT FALSE, "
                         + "has_public_feedbacks BOOLEAN NOT NULL DEFAULT FALSE, discount BIGINT NOT NULL, refund BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 102:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS purchase_id_height_idx ON purchase (id, height DESC)");
-            case 103:
-                apply("CREATE INDEX IF NOT EXISTS purchase_buyer_id_height_idx ON purchase (buyer_id, height DESC)");
             case 104:
-                apply("CREATE INDEX IF NOT EXISTS purchase_seller_id_height_idx ON purchase (seller_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS purchase_id_height_idx ON purchase (id, height DESC)");
             case 105:
-                apply("CREATE INDEX IF NOT EXISTS purchase_deadline_idx ON purchase (deadline DESC, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS purchase_buyer_id_height_idx ON purchase (buyer_id, height DESC)");
             case 106:
+                apply("CREATE INDEX IF NOT EXISTS purchase_seller_id_height_idx ON purchase (seller_id, height DESC)");
+            case 107:
+                apply("CREATE INDEX IF NOT EXISTS purchase_deadline_idx ON purchase (deadline DESC, height DESC)");
+            case 108:
                 apply("CREATE TABLE IF NOT EXISTS account (db_id INT IDENTITY, id BIGINT NOT NULL, creation_height INT NOT NULL, "
                         + "public_key BINARY(32), key_height INT, balance BIGINT NOT NULL, unconfirmed_balance BIGINT NOT NULL, "
                         + "forged_balance BIGINT NOT NULL, name VARCHAR, description VARCHAR, current_leasing_height_from INT, "
                         + "current_leasing_height_to INT, current_lessee_id BIGINT NULL, next_leasing_height_from INT, "
                         + "next_leasing_height_to INT, next_lessee_id BIGINT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 107:
+            case 109:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_id_height_idx ON account (id, height DESC)");
-            case 108:
+            case 110:
                 apply("CREATE INDEX IF NOT EXISTS account_current_lessee_id_leasing_height_idx ON account (current_lessee_id, "
                         + "current_leasing_height_to DESC)");
-            case 109:
+            case 111:
                 apply("CREATE TABLE IF NOT EXISTS account_asset (db_id INT IDENTITY, account_id BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, FOREIGN KEY (asset_id) REFERENCES asset (id), quantity BIGINT NOT NULL, "
                         + "unconfirmed_quantity BIGINT NOT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 110:
+            case 112:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_asset_id_height_idx ON account_asset (account_id, asset_id, height DESC)");
-            case 111:
+            case 113:
                 apply("CREATE TABLE IF NOT EXISTS account_guaranteed_balance (db_id INT IDENTITY, account_id BIGINT NOT NULL, "
                         + "additions BIGINT NOT NULL, height INT NOT NULL)");
-            case 112:
+            case 114:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_guaranteed_balance_id_height_idx ON account_guaranteed_balance "
                         + "(account_id, height DESC)");
-            case 113:
+            case 115:
                 apply("CREATE TABLE IF NOT EXISTS purchase_feedback (db_id INT IDENTITY, id BIGINT NOT NULL, feedback_data VARBINARY NOT NULL, "
                         + "feedback_nonce BINARY(32) NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 114:
+            case 116:
                 apply("CREATE INDEX IF NOT EXISTS purchase_feedback_id_height_idx ON purchase_feedback (id, height DESC)");
-            case 115:
+            case 117:
                 apply("CREATE TABLE IF NOT EXISTS purchase_public_feedback (db_id INT IDENTITY, id BIGINT NOT NULL, public_feedback "
                         + "VARCHAR NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 116:
+            case 118:
                 apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_id_height_idx ON purchase_public_feedback (id, height DESC)");
-            case 117:
+            case 119:
                 apply("CREATE TABLE IF NOT EXISTS unconfirmed_transaction (id BIGINT NOT NULL, expiration INT NOT NULL, "
                         + "transaction_bytes VARBINARY NOT NULL, height INT NULL DEFAULT NULL)");
-            case 118:
+            case 120:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
-            case 119:
+            case 121:
                 BlockchainProcessorImpl.getInstance().forceScanAtStart();
                 apply(null);
-            case 120:
+            case 122:
                 return;
             default:
                 throw new RuntimeException("Database inconsistent with code, probably trying to run older code on newer database");
