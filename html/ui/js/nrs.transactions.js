@@ -2,7 +2,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	NRS.lastTransactionsTimestamp = 0;
 	NRS.lastTransactions = "";
 
 	NRS.unconfirmedTransactions = [];
@@ -15,7 +14,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getAccountTransactions", {
 			"account": NRS.account,
 			"firstIndex": 0,
-			"lastIndex": 10
+			"lastIndex": 9
 		}, function(response) {
 			if (response.transactions && response.transactions.length) {
 				var transactions = [];
@@ -47,15 +46,8 @@ var NRS = (function(NRS, $, undefined) {
 
 			transactions.sort(NRS.sortArray);
 
-			if (transactions.length >= 1) {
+			if (transactionIds.length) {
 				NRS.lastTransactions = transactionIds.toString();
-
-				for (var i = transactions.length - 1; i >= 0; i--) {
-					if (transactions[i].confirmed) {
-						NRS.lastTransactionsTimestamp = transactions[i].timestamp;
-						break;
-					}
-				}
 			}
 
 			for (var i = 0; i < transactions.length; i++) {
@@ -80,44 +72,37 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getNewTransactions = function() {
+		//check if there is a new transaction..
 		NRS.sendRequest("getAccountTransactionIds", {
 			"account": NRS.account,
-			"timestamp": NRS.lastTransactionsTimestamp
+			"timestamp": NRS.blocks[0].timestamp + 1,
+			"firstIndex": 0,
+			"lastIndex": 0
 		}, function(response) {
+			//if there is, get latest 10 transactions
 			if (response.transactionIds && response.transactionIds.length) {
-				var transactionIds = response.transactionIds.slice(0, 10);
+				NRS.sendRequest("getAccountTransactions", {
+					"account": NRS.account,
+					"firstIndex": 0,
+					"lastIndex": 9
+				}, function(response) {
+					if (response.transactions && response.transactions.length) {
+						var transactionIds = [];
 
-				if (transactionIds.toString() == NRS.lastTransactions) {
-					NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-						NRS.handleIncomingTransactions(unconfirmedTransactions);
-					});
-					return;
-				}
+						$.each(response.transactions, function(key, transaction) {
+							transactionIds.push(transaction.transaction);
+							response.transactions[key].confirmed = true;
+						});
 
-				NRS.transactionIds = transactionIds;
-
-				var nrTransactions = 0;
-
-				var newTransactions = [];
-
-				//if we have a new transaction, we just get them all.. (10 max)
-				for (var i = 0; i < transactionIds.length; i++) {
-					NRS.sendRequest("getTransaction", {
-						"transaction": transactionIds[i]
-					}, function(transaction, input) {
-						nrTransactions++;
-
-						transaction.transaction = input.transaction;
-						transaction.confirmed = true;
-						newTransactions.push(transaction);
-
-						if (nrTransactions == transactionIds.length) {
-							NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-								NRS.handleIncomingTransactions(newTransactions.concat(unconfirmedTransactions), transactionIds);
-							});
-						}
-					});
-				}
+						NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+							NRS.handleIncomingTransactions(response.transactions.concat(unconfirmedTransactions), transactionIds);
+						});
+					} else {
+						NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+							NRS.handleIncomingTransactions(unconfirmedTransactions);
+						});
+					}
+				});
 			} else {
 				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
 					NRS.handleIncomingTransactions(unconfirmedTransactions);
@@ -208,13 +193,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (confirmedTransactionIds.length) {
 			NRS.lastTransactions = confirmedTransactionIds.toString();
-
-			for (var i = transactions.length - 1; i >= 0; i--) {
-				if (transactions[i].confirmed) {
-					NRS.lastTransactionsTimestamp = transactions[i].timestamp;
-					break;
-				}
-			}
 		}
 
 		if (confirmedTransactionIds.length || NRS.unconfirmedTransactionsChange) {
