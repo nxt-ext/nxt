@@ -28,7 +28,7 @@ final class BlockDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!");
+            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!", e);
         }
     }
 
@@ -75,7 +75,7 @@ final class BlockDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database at height " + height + ", does not pass validation!");
+            throw new RuntimeException("Block already in database at height " + height + ", does not pass validation!", e);
         }
     }
 
@@ -92,7 +92,7 @@ final class BlockDb {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Last block already in database does not pass validation!");
+            throw new RuntimeException("Last block already in database does not pass validation!", e);
         }
     }
 
