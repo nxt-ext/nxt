@@ -44,6 +44,10 @@ var NRS = (function(NRS, $, undefined) {
 
 			var rows = "";
 
+			block.transactions.sort(function(a, b) {
+				return a.timestamp - b.timestamp;
+			});
+
 			for (var i = 0; i < block.transactions.length; i++) {
 				var transaction = block.transactions[i];
 
