@@ -413,4 +413,42 @@ public interface Appendix {
 
     }
 
+    public static class TwoPhased extends AbstractAppendix {
+        static TwoPhased parse(JSONObject attachmentData) throws NxtException.NotValidException {
+            return null;
+        }
+
+        TwoPhased(ByteBuffer buffer, byte transactionVersion) {}
+        TwoPhased(JSONObject attachmentData) {}
+
+        @Override
+        String getAppendixName() {
+            return "TwoPhased";
+        }
+
+        @Override
+        int getMySize() {
+            return 0; //todo:
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            json.put("", "");
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+        }
+    }
+
 }
