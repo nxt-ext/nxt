@@ -104,6 +104,9 @@ public class Hub {
 
     }
 
+    static void init() {}
+
+
     private final Long accountId;
     private final long minFeePerByteNQT;
     private final List<String> uris;

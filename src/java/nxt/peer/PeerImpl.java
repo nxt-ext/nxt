@@ -206,7 +206,7 @@ final class PeerImpl implements Peer {
             return;
         }
         if (! isBlacklisted()) {
-            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString());
+            Logger.logDebugMessage("Blacklisting " + peerAddress + " because of: " + cause.toString(), cause);
         }
         blacklist();
     }

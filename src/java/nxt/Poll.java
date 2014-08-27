@@ -40,6 +40,9 @@ public final class Poll {
 
     };
 
+    static void init() {}
+
+
     private final Long id;
     private final String name;
     private final String description;
@@ -98,6 +101,7 @@ public final class Poll {
     public static int getCount() {
         return pollTable.getCount();
     }
+
 
     public Long getId() {
         return id;

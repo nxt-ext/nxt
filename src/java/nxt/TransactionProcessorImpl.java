@@ -97,8 +97,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                     synchronized (BlockchainImpl.getInstance()) {
                         try (Connection con = Db.beginTransaction();
-                             PreparedStatement pstmt = con.prepareStatement("SELECT FOR UPDATE * FROM unconfirmed_transaction "
-                                     + "WHERE expiration < ? ")) {
+                             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM unconfirmed_transaction "
+                                     + "WHERE expiration < ? FOR UPDATE")) {
                             pstmt.setInt(1, curTime);
                             try (ResultSet rs = pstmt.executeQuery()) {
                                 while (rs.next()) {

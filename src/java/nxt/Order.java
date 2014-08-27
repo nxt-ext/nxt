@@ -48,6 +48,12 @@ public abstract class Order {
 
     }
 
+    static void init() {
+        Ask.init();
+        Bid.init();
+    }
+
+
     private final Long id;
     private final Long accountId;
     private final Long assetId;
@@ -236,6 +242,9 @@ public abstract class Order {
             askOrderTable.delete(getAskOrder(orderId));
         }
 
+        static void init() {}
+
+
         private Ask(Transaction transaction, Attachment.ColoredCoinsAskOrderPlacement attachment) {
             super(transaction, attachment);
         }
@@ -368,6 +377,9 @@ public abstract class Order {
         static void removeOrder(Long orderId) {
             bidOrderTable.delete(getBidOrder(orderId));
         }
+
+        static void init() {}
+
 
         private Bid(Transaction transaction, Attachment.ColoredCoinsBidOrderPlacement attachment) {
             super(transaction, attachment);

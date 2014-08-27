@@ -166,6 +166,9 @@ public final class Alias {
         offerTable.delete(offer);
     }
 
+    static void init() {}
+
+
     private Long accountId;
     private final Long id;
     private final String aliasName;

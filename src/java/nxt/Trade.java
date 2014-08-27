@@ -76,6 +76,9 @@ public final class Trade {
         return trade;
     }
 
+    static void init() {}
+
+
     private final int timestamp;
     private final Long assetId;
     private final Long blockId;

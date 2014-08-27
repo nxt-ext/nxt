@@ -156,26 +156,7 @@ public final class Account {
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() % 1440 != 0) {
-                    return;
-                }
-                try (Connection con = Db.getConnection();
-                     PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
-                             + "WHERE height < ?")) {
-                    pstmtDelete.setInt(1, block.getHeight() - maxTrackedBalanceConfirmations);
-                    pstmtDelete.executeUpdate();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e.toString(), e);
-                }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-
     }
-
-    private static final int maxTrackedBalanceConfirmations = 2881;
 
     private static final DbKey.LongKeyFactory<Account> accountDbKeyFactory = new DbKey.LongKeyFactory<Account>("id") {
 
@@ -233,10 +214,25 @@ public final class Account {
     };
 
     private static final DerivedDbTable accountGuaranteedBalanceTable = new DerivedDbTable() {
+
         @Override
         protected String table() {
             return "account_guaranteed_balance";
         }
+
+        @Override
+        public void trim(int height) {
+            //Logger.logDebugMessage("Trimming account_guaranteed_balance");
+            try (Connection con = Db.getConnection();
+                 PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
+                         + "WHERE height < ?")) {
+                pstmtDelete.setInt(1, height - 1440);
+                pstmtDelete.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        }
+
     };
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
@@ -309,6 +305,9 @@ public final class Account {
             throw new RuntimeException(e.toString(), e);
         }
     }
+
+    static void init() {}
+
 
     private final Long id;
     private final int creationHeight;
@@ -502,8 +501,8 @@ public final class Account {
         if (numberOfConfirmations >= Nxt.getBlockchain().getLastBlock().getHeight()) {
             return 0;
         }
-        if (numberOfConfirmations > maxTrackedBalanceConfirmations || numberOfConfirmations < 0) {
-            throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + maxTrackedBalanceConfirmations);
+        if (numberOfConfirmations > 2880 || numberOfConfirmations < 0) {
+            throw new IllegalArgumentException("Number of required confirmations must be between 0 and " + 2880);
         }
         int height = Nxt.getBlockchain().getHeight() - numberOfConfirmations;
         try (Connection con = Db.getConnection();

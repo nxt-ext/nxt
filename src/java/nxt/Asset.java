@@ -60,6 +60,9 @@ public final class Asset {
         assetTable.insert(new Asset(transaction, attachment));
     }
 
+    static void init() {}
+
+
     private final Long assetId;
     private final Long accountId;
     private final String name;

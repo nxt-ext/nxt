@@ -11,4 +11,9 @@ public abstract class VersionedValuesDbTable<T, V> extends ValuesDbTable<T, V> {
         VersionedEntityDbTable.rollback(table(), height, dbKeyFactory);
     }
 
+    @Override
+    public final void trim(int height) {
+        VersionedEntityDbTable.trim(table(), height, dbKeyFactory);
+    }
+
 }

@@ -160,6 +160,15 @@ public final class Nxt {
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 DbVersion.init();
+                Account.init();
+                Alias.init();
+                Asset.init();
+                DigitalGoodsStore.init();
+                Hub.init();
+                Order.init();
+                Poll.init();
+                Trade.init();
+                Vote.init();
                 Peers.init();
                 Generator.init();
                 API.init();

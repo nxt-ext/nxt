@@ -71,6 +71,9 @@ public final class Vote {
         return map;
     }
 
+    static void init() {}
+
+
     private final Long id;
     private final Long pollId;
     private final Long voterId;

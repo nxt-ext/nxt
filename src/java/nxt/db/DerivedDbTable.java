@@ -37,4 +37,9 @@ public abstract class DerivedDbTable {
             throw new RuntimeException(e.toString(), e);
         }
     }
+
+    public void trim(int height) {
+        //nothing to trim
+    }
+
 }

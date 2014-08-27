@@ -72,6 +72,11 @@ public final class DigitalGoodsStore {
         return purchaseListeners.removeListener(listener, eventType);
     }
 
+    static void init() {
+        Goods.init();
+        Purchase.init();
+    }
+
     public static final class Goods {
 
         private static final DbKey.LongKeyFactory<Goods> goodsDbKeyFactory = new DbKey.LongKeyFactory<Goods>("id") {
@@ -101,6 +106,9 @@ public final class DigitalGoodsStore {
             }
 
         };
+
+        static void init() {}
+
 
         private final Long id;
         private final Long sellerId;
@@ -328,6 +336,9 @@ public final class DigitalGoodsStore {
             }
 
         };
+
+        static void init() {}
+
 
         private final Long id;
         private final Long buyerId;
@@ -636,7 +647,7 @@ public final class DigitalGoodsStore {
 
     static Purchase getPendingPurchase(Long purchaseId) {
         Purchase purchase = getPurchase(purchaseId);
-        return purchase.isPending() ? purchase : null;
+        return purchase == null || ! purchase.isPending() ? null : purchase;
     }
 
     private static List<Purchase> getExpiredPendingPurchases(int timestamp) {
