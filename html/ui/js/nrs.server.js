@@ -726,7 +726,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				pos += 8;
 
-				transaction.decimals = byteArray[pos];
+				transaction.decimals = String(byteArray[pos]);
 
 				pos++;
 
