@@ -284,12 +284,18 @@ var NRS = (function(NRS, $, undefined) {
 							}
 						}
 
-						//TODO fix
 						NRS.getAccountError(match[1], function(response) {
+							if (response.noPublicKey) {
+								modal.find(".recipient_public_key").show();
+							} else {
+								modal.find("input[name=recipientPublicKey]").val("");
+								modal.find(".recipient_public_key").hide();
+							}
+
 							accountInputField.val(match[1].escapeHTML());
 							callout.html($.t("alias_account_link", {
-								"account_id": String(match[1]).escapeHTMl()
-							}) + ", " + response.message.replace("The recipient account", "which") + " " + $.t("alias_account_link", {
+								"account_id": String(match[1]).escapeHTML()
+							}) + ". " + $.t("recipient_unknown_pka") + " " + $.t("alias_last_adjusted", {
 								"timestamp": NRS.formatTimestamp(timestamp)
 							})).removeClass(classes).addClass("callout-" + response.type).show();
 						});
