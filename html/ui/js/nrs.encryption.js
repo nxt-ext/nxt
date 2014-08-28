@@ -457,7 +457,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#decrypt_note_form_container, " + formEl).show();
 		} else {
 			NRS.removeDecryptionForm();
-			$(outputEl).html(output).show();
+			$(outputEl).append(output).show();
 		}
 	}
 
@@ -581,7 +581,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		var outputEl = (_encryptedNote.options.outputEl ? String(_encryptedNote.options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
 
-		$(outputEl).html(output).show();
+		$(outputEl).append(output).show();
 
 		_encryptedNote = null;
 
