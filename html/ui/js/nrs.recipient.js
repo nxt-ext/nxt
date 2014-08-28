@@ -210,6 +210,13 @@ var NRS = (function(NRS, $, undefined) {
 					if (!error && contact.length) {
 						contact = contact[0];
 						NRS.getAccountError(contact.accountRS, function(response) {
+							if (response.noPublicKey) {
+								modal.find(".recipient_public_key").show();
+							} else {
+								modal.find("input[name=recipientPublicKey]").val("");
+								modal.find(".recipient_public_key").hide();
+							}
+
 							callout.removeClass(classes).addClass("callout-" + response.type).html($.t("contact_account_link", {
 								"account_id": NRS.getAccountFormatted(contact, "account")
 							}) + " " + response.message.escapeHTML()).show();
