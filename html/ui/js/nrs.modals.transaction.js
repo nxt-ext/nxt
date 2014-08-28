@@ -54,6 +54,21 @@ var NRS = (function(NRS, $, undefined) {
 
 		var incorrect = false;
 
+		if (transaction.senderRS == NRS.accountRS) {
+			$("#transaction_info_actions").hide();
+		} else {
+			if (transaction.senderRS in NRS.contacts) {
+				var account = NRS.contacts[transaction.senderRS].name.escapeHTML();
+				$("#transaction_info_modal_add_as_contact").hide();
+			} else {
+				var account = transaction.senderRS;
+				$("#transaction_info_modal_add_as_contact").show();
+			}
+
+			$("#transaction_info_actions").show();
+			$("#transaction_info_actions_tab button").data("account", account);
+		}
+
 		if (transaction.type == 0) {
 			switch (transaction.subtype) {
 				case 0:

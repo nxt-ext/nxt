@@ -3799,6 +3799,7 @@
 			      		<div class="tabbable">
 							<ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
 								<li class="active"><a href="#transaction_info_tab" data-toggle="tab" id="transaction_info_tab_link" data-i18n="info">Info</a></li>
+                                <li id="transaction_info_actions"><a href="#transaction_info_actions_tab" data-toggle="tab" data-i18n="actions">Actions</a></li>
 								<li><a href="#transaction_info_details_tab" data-toggle="tab" data-i18n="transaction_details">Transaction Details</a></li>
 							</ul>
 							<div class="tab-content">
@@ -3816,6 +3817,15 @@
 						      		<div id="transaction_info_output_bottom" style="display: none;margin-top:10px;"></div>
 						      		<div id="transaction_info_bottom" style="display: none;"></div>
 							    </div>
+                                <div class="tab-pane" id="transaction_info_actions_tab">
+                                    <div class="row">
+                                        <div class="col-xs-8 col-md-8" style="margin-left:auto;margin-right:auto;float:none;">
+                                            <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="" data-i18n="send_nxt_to_sender">Send NXT to Sender</button>
+                                            <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="" data-i18n="send_message_to_sender">Send Message to Sender</button>
+                                            <button type="button" id="transaction_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="" data-i18n="add_sender_as_contact">Add Sender as Contact</button>
+                                        </div>
+                                    </div>
+                                </div>
 							    <div class="tab-pane" id="transaction_info_details_tab" style="max-height:350px;overflow:auto;">
 									<table class="table table-striped" id="transaction_info_details_table" style="margin-bottom:0;table-layout:fixed;">
 									    <tbody>
