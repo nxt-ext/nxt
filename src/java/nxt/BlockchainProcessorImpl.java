@@ -333,16 +333,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, Event.BLOCK_SCANNED);
 
-        blockListeners.addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() % 1440 == 0) {
-                    for (DerivedDbTable table : derivedTables) {
-                        table.trim(block.getHeight() - 1440);
+        if (Nxt.getBooleanProperty("nxt.trimDerivedTables")) {
+            blockListeners.addListener(new Listener<Block>() {
+                @Override
+                public void notify(Block block) {
+                    if (block.getHeight() % 1440 == 0) {
+                        for (DerivedDbTable table : derivedTables) {
+                            table.trim(block.getHeight() - 1440);
+                        }
                     }
                 }
-            }
-        }, Event.AFTER_BLOCK_APPLY);
+            }, Event.AFTER_BLOCK_APPLY);
+        }
 
         ThreadPool.runBeforeStart(new Runnable() {
             @Override
