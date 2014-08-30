@@ -53,6 +53,7 @@ public final class Constants {
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MONEY_TRANSFER_COMMENT_LENGTH = 1000;
     public static final int MAX_MINTING_RATIO = 1000000;
+    public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
