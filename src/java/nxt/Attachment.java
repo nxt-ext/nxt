@@ -2183,4 +2183,112 @@ public interface Attachment extends Appendix {
 
     }
 
+    public final static class MonetarySystemShufflingInitiation extends AbstractAttachment {
+
+        MonetarySystemShufflingInitiation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemShufflingInitiation(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingInitiation";
+        }
+
+        @Override
+        int getMySize() {
+            return 0;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_INITIATION;
+        }
+    }
+
+    public final static class MonetarySystemShufflingContinuation extends AbstractAttachment {
+
+        MonetarySystemShufflingContinuation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemShufflingContinuation(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingContinuation";
+        }
+
+        @Override
+        int getMySize() {
+            return 0;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_CONTINUATION;
+        }
+    }
+
+    public final static class MonetarySystemShufflingFinalization extends AbstractAttachment {
+
+        MonetarySystemShufflingFinalization(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemShufflingFinalization(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        @Override
+        String getAppendixName() {
+            return "ShufflingFinalization";
+        }
+
+        @Override
+        int getMySize() {
+            return 0;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.MonetarySystem.SHUFFLING_FINALIZATION;
+        }
+    }
+
 }

@@ -54,6 +54,9 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE_OFFER_PUBLICATION = 4;
     private static final byte SUBTYPE_MONETARY_SYSTEM_EXCHANGE = 5;
     private static final byte SUBTYPE_MONETARY_SYSTEM_MONEY_MINTING = 6;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION = 7;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION = 8;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION = 9;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
 
@@ -2414,6 +2417,171 @@ public abstract class TransactionType {
                 return false;
             }
 
+        };
+
+        public static final TransactionType SHUFFLING_INITIATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_INITIATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingInitiation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingInitiation(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                /**/return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling initiation not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+        };
+
+        public static final TransactionType SHUFFLING_CONTINUATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CONTINUATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingContinuation(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingContinuation(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                /**/return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling continuation not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
+        };
+
+        public static final TransactionType SHUFFLING_FINALIZATION = new MonetarySystem() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_FINALIZATION;
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingFinalization(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MonetarySystemShufflingFinalization(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getLastBlock().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Monetary System not yet enabled at height " + Nxt.getBlockchain().getLastBlock().getHeight());
+                }
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                /**/return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+
+            }
+
+            @Override
+            void undoAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) throws UndoNotSupportedException {
+                throw new UndoNotSupportedException("Reversal of shuffling finalization not supported");
+            }
+
+            @Override
+            void updateSpending(Transaction transaction, SuperComplexNumber spending) {
+                throw new UnsupportedOperationException("Not required in DB-based version");
+            }
+
+            @Override
+            public boolean hasRecipient() {
+                return false;
+            }
         };
 
     }
